@@ -1,0 +1,178 @@
+<html>
+  <head>
+  <script>
+  </script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap");
+*, *:after, *:before {
+  box-sizing: border-box;
+}
+body {
+  font-family: "DM Sans", sans-serif;
+  font-size: 12;
+  line-height: 1.5;
+  background-color: #F8F8FC;
+  padding: 0 1rem;
+}
+.card-form {
+  padding: 0rem 0rem 0;
+}
+.input {
+  display: flex;
+  flex-direction: column-reverse;
+  position: relative;
+  padding-top: 1.0rem;
+}
+.input + .input {
+  margin-top: 0rem;
+}
+.input-label {
+  color: #8597a3;
+  position: absolute;
+  top: 1.5rem;
+  transition: 0.25s ease;
+}
+.input-field {
+  border: 0;
+  z-index: 1;
+  background-color: transparent;
+  border-bottom: 1px solid #eee;
+  font: inherit;
+  padding: 0.25rem 0;
+}
+.input-field:focus, .input-field:valid {
+  outline: 0;
+  border-bottom-color: #6658d3;
+}
+.input-field:focus + .input-label, .input-field:valid + .input-label {
+  color: #6658d3;
+  transform: translateY(-1.5rem);
+}
+.action {
+  margin-top: 2rem;
+}
+.action-button {
+  font: inherit;
+  font-size: 1.00rem;
+  padding: 0.3em;
+  width: 100%;
+  font-weight: 500;
+  background-color: #6658d3;
+  border-radius: 16px;
+  color: #FFF;
+  border: 0;
+  cursor: pointer;
+}
+.action-button:focus {
+  outline: 0;
+}
+.action-button:hover {
+  box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+  transform: translateY(-2px);
+}
+.action-button:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+  </style>
+  </head>
+  <body>
+  <div id="form" class="container">
+    <p style="text-align:center">Before contacting an agent, can you provide us with some data? We will take care of it.</p>
+
+    <div class="input">
+      <input type="text" class="input-field" id="name" required/>
+			<label class="input-label">Fullname</label>
+    </div>
+    
+    <div class="input">
+      <input type="text" class="input-field" id="email" required/>
+			<label class="input-label">Email</label>
+    </div>
+  
+    <div class="input">
+      <label for="privacy" id='privacy_section' style="display: block;">
+        <input style='vertical-align: middle;position: relative;bottom: 1px;' type='checkbox' id='privacy' value=''/>
+        I agree to your <a href="https://tiledesk.com/privacy.html" target="_blank">Privacy policy</a>
+      </label>
+    </div>
+    
+    <input type='hidden' id='messageid' value='${messageid}'/>
+
+    <div class="action">
+			<button id='send_btn' class="action-button">Send</button>
+		</div>
+  </div>
+  <script>
+    const btn = document.getElementById('send_btn');
+    function sendData( data ) {
+      console.log( 'Sending data' );
+      const XHR = new XMLHttpRequest();
+      let urlEncodedData = "",
+          urlEncodedDataPairs = [],
+          name;
+      for( name in data ) {
+        urlEncodedDataPairs.push( encodeURIComponent( name ) + '=' + encodeURIComponent( data[name] ) );
+      }
+      urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( /%20/g, '+' );
+      XHR.addEventListener("loadend", function(event) {
+        console.log( 'Data sent and response loaded.' );
+        document.body.lineHeight = '32px';
+        document.body.style.verticalAlign = 'middle';
+        document.body.innerHTML = "<p style='text-align:center'><b>Thanks 🙂</b></p><p style='text-align:center'><b>Your data are secure</b></p>";
+      });
+      XHR.addEventListener( 'error', function(event) {
+        console.log( 'Oops! Something went wrong.' );
+      } );
+      XHR.open( 'POST', '/apps/prechatform/save' );
+      XHR.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+      XHR.send( urlEncodedData );
+    }
+    btn.addEventListener( 'click', function() {
+      
+      let error = false;
+      let originalbgcolor;
+      const email = document.getElementById('email');
+      if (email.value.trim().length == 0) {
+        error = true;
+        console.log("Email error.");
+        email.style.borderColor = '#FF603E';
+      }
+      else {
+        email.style.borderColor = '';
+      }
+
+      const name = document.getElementById('name');
+      if (name.value.trim().length == 0) {
+        error = true;
+        console.log("Name error.");
+        name.style.borderColor = '#FF603E';
+      }
+      else {
+        name.style.borderColor = '';
+      }
+
+      const privacy = document.getElementById('privacy');
+      if (!privacy.checked) {
+        error = true;
+        console.log("Accept privacy please.");
+        privacy.style.borderColor = '#FF603E';
+      }
+      else {
+        privacy.style.borderColor = '';
+      }
+
+      if (error) {
+        return;
+      }
+      
+      const messageid = document.getElementById('messageid');
+      sendData( {
+        email:email.value,
+        name:name.value,
+        messageid:messageid.value
+      });
+    } )
+  </script>
+  </body>
+  </html>

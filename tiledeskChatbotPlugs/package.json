@@ -1,0 +1,27 @@
+{
+  "name": "@tiledesk/tiledesk-chatbot-plugs",
+  "version": "0.1.1",
+  "description": "Tiledesk Chatbot Plugs",
+  "engines": {
+    "node": ">=12.x"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tiledesk/tiledesk-chatbot.git"
+  },
+  "author": "Andrea Sponziello",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Tiledesk/tiledesk-chatbot/issues"
+  },
+  "homepage": "https://github.com/Tiledesk/tiledesk-chatbot#readme",
+  "dependencies": {
+    "@tiledesk/tiledesk-chatbot-util": "^0.8.36",
+    "@tiledesk/tiledesk-client": "^0.8.28",
+    "axios": "^0.27.2"
+  }
+}

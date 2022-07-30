@@ -1,0 +1,15 @@
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/_mocha","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/flat","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/he","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/js-yaml","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/mocha","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/nanoid","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/node-which","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/sshpk-conv","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/sshpk-sign","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/sshpk-verify","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/.bin/uuid","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/@tiledesk/tiledesk-client/node_modules/.bin/uuid","time":"2022-07-30T18:00:42Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/jsonwebtoken/node_modules/.bin/semver","time":"2022-07-30T18:00:43Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/mocha/node_modules/.bin/nanoid","time":"2022-07-30T18:00:43Z"}
+{"error":".zip archives do not support non-regular files","level":"error","msg":"unable to write file node_modules/send/node_modules/.bin/mime","time":"2022-07-30T18:00:44Z"}
