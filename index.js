@@ -1,17 +1,19 @@
 const express = require('express');
-// const uuid = require('uuid');
 const bodyParser = require('body-parser');
-// var jwt = require('jsonwebtoken');
-//const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
-const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
-const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
-//const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
+//const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
+//const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
+//const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
+//const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
+
+const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
+const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
+const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
+const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');
+
 var path = require("path");
 var fs = require('fs');
-//const { KVBaseReplit } = require('./KVBaseReplit');
+
 const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
@@ -313,13 +315,16 @@ function apiurl() {
 
 
 app.get('/', (req, res) => {
-  res.send('Hello Tiledesk Widget app!');
+  res.send('Hello Tiledesk Chatbot!');
 });
 
 var connection = mongoose.connect(process.env.mongoUrl, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
   if (err) { 
     console.error('Failed to connect to MongoDB on ' + process.env.mongoUrl + " ", err);
-    process.exit(1);
+    //process.exit(1);
+  }
+  else {
+    console.info("Mongodb connection ok")
   }
 });
 
