@@ -106,10 +106,10 @@ FaqSchema.index({ id_project: 1, id_faq_kb: 1, intent_display_name: 1  }, { uniq
 
  var faq = mongoose.model('faq', FaqSchema);
 
- faq.on('index', function(error) {
+ //faq.on('index', function(error) {
   // "_id index cannot be sparse"
-  console.debug('index', error);
-});
+  //console.debug('index:', error);
+//});
 
 if (process.env.MONGOOSE_SYNCINDEX) {
   faq.syncIndexes();
