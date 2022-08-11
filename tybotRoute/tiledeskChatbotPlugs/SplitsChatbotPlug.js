@@ -14,8 +14,9 @@ class SplitsChatbotPlug {
 
   exec(pipeline) {
     let message = pipeline.message;
-    if (message.attributes && message.attributes.splits && message.attributes.splits == false) {
-      completionCallback(message);
+    if (message.attributes && (message.attributes.splits == undefined || message.attributes.splits == false)) { // defaults to disabled
+      console.log("Splits disabled.")
+      pipeline.nextplug();
       return;
     }
     console.log("Splitting...")
@@ -34,6 +35,7 @@ class SplitsChatbotPlug {
     //next(pipeline, completionCallback);
   }
 
+  /*
   next(pipeline, completionCallback) {
     const plug = pipeline.nextplug();
     if (!plug) {
@@ -42,7 +44,7 @@ class SplitsChatbotPlug {
     else {
       plug.exec(pipeline);
     }
-  }
+  }*/
 }
 
 module.exports = { SplitsChatbotPlug };

@@ -8,31 +8,32 @@ router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 // DEV
-//const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
-//const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-//const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-//const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
-//const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
+const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
+const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
+const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
+const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
+const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
 
 // PROD
-const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
-const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
-const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
-const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');
+//const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
+//const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
+//const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
+//const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
+//const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');
 
-var path = require("path");
-var fs = require('fs');
+let path = require("path");
+let fs = require('fs');
 
 const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 
 // THE IMPORT
-var mongoose = require('mongoose');
-var Faq = require('./models/faq');
-var Faq_kb = require('./models/faq_kb');
+let mongoose = require('mongoose');
+let Faq = require('./models/faq');
+let Faq_kb = require('./models/faq_kb');
 let connection;
+let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
   console.log("Reques body:", req.body);
@@ -51,7 +52,7 @@ router.post('/ext/:botid', async (req, res) => {
   // CREATE TOKEN
   //var botWithSecret = await Faq_kb.findById(bot._id).select('+secret').exec();
 
-  var signOptions = {
+  let signOptions = {
     issuer:  'https://tiledesk.com',
     subject:  'bot',
     audience:  'https://tiledesk.com/bots/'+bot._id,   
@@ -157,25 +158,16 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     static_bot_answer.attributes = {}
   }
   static_bot_answer.attributes.directives = true;
-  static_bot_answer.attributes.splits = false;
+  static_bot_answer.attributes.splits = true;
   static_bot_answer.attributes.markbot = true;
   
   static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
-  console.log("static_bot_answer.attributes", static_bot_answer.attributes)
 
   // faq[0] => PIPELINE => bot_answer
-  const APIURL = "https://tiledesk-server-pre.herokuapp.com"
-  const messagePipeline = new MessagePipeline(static_bot_answer, context);
-  const webhookurl = bot.webhook_url;
-  messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
-  let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
-  messagePipeline.addPlug(directivesPlug);
-  messagePipeline.addPlug(new SplitsChatbotPlug());
-  messagePipeline.addPlug(new MarkbotChatbotPlug());
-  const bot_answer = await messagePipeline.exec();
-  console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));
+  // execPipeline() was here Placeholder
   
-  var attr = bot_answer.attributes;
+  //let attr = bot_answer.attributes;
+  let attr = static_bot_answer.attributes;
   if (!attr) {
     attr = {};
   }
@@ -201,6 +193,8 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   }
   console.debug("intent_info", intent_info);
   attr.intent_info = intent_info;
+  let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
+  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, directivesPlug, token);
   const tdclient = new TiledeskChatbotClient(
   {
     request: req,
@@ -214,6 +208,19 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
       console.log("End processing directives.");
     })
   });
+}
+
+async function execPipeline(static_bot_answer, message, bot, context, directivesPlug, token) {
+  const messagePipeline = new MessagePipeline(static_bot_answer, context);
+  const webhookurl = bot.webhook_url;
+  messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
+  //let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
+  messagePipeline.addPlug(directivesPlug);
+  messagePipeline.addPlug(new SplitsChatbotPlug());
+  messagePipeline.addPlug(new MarkbotChatbotPlug());
+  const bot_answer = await messagePipeline.exec();
+  console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));
+  return bot_answer;
 }
 
 function getIntentByDisplayName(name, bot) {
@@ -303,6 +310,7 @@ function getIntentByDisplayName(name, bot) {
 
 
 
+/*
 function apiurl() {
   const server = "pre";
   //const server = "prod";
@@ -315,6 +323,7 @@ function apiurl() {
   }
   return API_URL;
 }
+*/
 
 
 router.get('/', (req, res) => {
@@ -331,8 +340,8 @@ function startTybot(settings, completionCallback) {
     throw new Error("settings.API_ENDPOINT is mandatory.");
   }
   else {
-    API_ENDPOINT = settings.API_ENDPOINT;
-    console.log("(Tybot) settings.API_ENDPOINT:", API_ENDPOINT);
+    APIURL = settings.API_ENDPOINT;
+    console.log("(Tybot) settings.API_ENDPOINT:", APIURL);
   }
   if (!settings.log) {
     log = false;
