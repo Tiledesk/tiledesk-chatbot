@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-chatbot-plugs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Tiledesk Chatbot Plugs",
   "engines": {
     "node": ">=12.x"
