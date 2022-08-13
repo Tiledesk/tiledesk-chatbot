@@ -36,7 +36,7 @@ let connection;
 let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
-  console.log("Reques body:", req.body);
+  console.log("REQUEST BODY:", JSON.stringify(req.body));
   res.status(200).send({"success":true});
 
   const botId = req.params.botid;
@@ -58,6 +58,8 @@ router.post('/ext/:botid', async (req, res) => {
     audience:  'https://tiledesk.com/bots/'+bot._id,   
     jwtid: uuidv4()
   };
+
+  // DEPRECATED, REMOVE
   const bot_token = jwt.sign(bot.toObject(), bot.secret, signOptions);
   console.log("bot_token:", bot_token);
   //
@@ -89,7 +91,7 @@ router.post('/ext/:botid', async (req, res) => {
     }
     if (faqs && faqs.length > 0 && faqs[0].answer) { // EXACT MATCH!
       console.log("FAQ:", faqs[0]);
-      execFaq(req, res, faqs, botId, message, bot_token, bot);
+      execFaq(req, res, faqs, botId, message, token, bot); // bot_token
     }
     else { // FULL TEXT
       console.log("Go fulltext...");
@@ -113,15 +115,14 @@ router.post('/ext/:botid', async (req, res) => {
           console.erro("Error:", err);
           return console.error('Error getting fulltext objects.', err);
         }
-        console.debug("faqs:", faqs);
         if (faqs && faqs.length > 0 && faqs[0].answer) {
-          execFaq(req, res, faqs, botId, message, bot_token, bot);
+          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
         }
         else {
           // fallback
           const fallbackIntent = await getIntentByDisplayName("defaultFallback", bot);
           const faqs = [fallbackIntent];
-          execFaq(req, res, faqs, botId, message, bot_token, bot);
+          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
         }
       });
     }
@@ -191,7 +192,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
       question_payload: question_payload,
       others: clonedfaqs
   }
-  console.debug("intent_info", intent_info);
+  //console.debug("intent_info", intent_info);
   attr.intent_info = intent_info;
   let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
   const bot_answer = await execPipeline(static_bot_answer, message, bot, context, directivesPlug, token);

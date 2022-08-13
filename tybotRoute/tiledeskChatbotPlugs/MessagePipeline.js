@@ -88,7 +88,7 @@ exec(completionCallback) {
     if (this.counter < this.plugs.length) {
       console.log("Still plugs...")
       let nextp = this.plugs[this.counter];
-      console.log("nextp is:", nextp)
+      //console.log("nextp is:", nextp)
       nextp.exec(this);
     }
     else {

@@ -17,11 +17,9 @@ class WebhookChatbotPlug {
   exec(pipeline) {
     let message = pipeline.message;
     let context = pipeline.context;
-    console.log("EXECUTIN WEBHOOK", message.attributes)
-    console.log("EXECUTIN WEBHOOK.webhook", message.attributes.webhook)
-    console.log("EXECUTIN WEBHOOK", message.attributes)
+    console.log("WEBHOOK?", message.attributes.webhook)
     if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
-      console.log("EXECUTING WEBHOOK!", this.webhookurl);
+      console.log("EXECUTING WEBHOOK URL!", this.webhookurl);
       this.execWebhook(message, context, this.webhookurl, (err, message_from_webhook) => {
         console.log("Err", err)
         console.log("message", message_from_webhook)
