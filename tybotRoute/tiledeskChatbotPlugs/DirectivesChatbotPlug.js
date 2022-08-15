@@ -81,10 +81,10 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
-    
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       console.log("No directives to process.");
+      theend();
       return;
     }
     const supportRequest = this.supportRequest;
