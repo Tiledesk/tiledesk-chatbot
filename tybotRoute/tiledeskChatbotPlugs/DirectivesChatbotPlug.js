@@ -1,6 +1,6 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { HelpCenter } = require('./HelpCenter');
+//const { HelpCenter } = require('./HelpCenter');
 
 class DirectivesChatbotPlug {
 
@@ -81,6 +81,7 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
+    
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       console.log("No directives to process.");

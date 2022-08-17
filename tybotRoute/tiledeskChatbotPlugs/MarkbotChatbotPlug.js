@@ -37,9 +37,16 @@ class MarkbotChatbotPlug {
       console.log("parsed", JSON.stringify(parsed_reply));
       if (parsed_reply) {
         message.text = parsed_reply.message.text;
-        message.type = parsed_reply.message.type;
-        message.metadata = parsed_reply.message.metadata;
+        if (!message.type || message.type === "text") {
+          // if message type != text the message already provided his own type (i.e. "image"). Only messages of type == text can be modified by markbot to change their type.
+          message.type = parsed_reply.message.type;
+        }
+        if (!message.metadata) {
+          // if already present, do not modify metadata
+          message.metadata = parsed_reply.message.metadata;
+        }
         console.log("parsed_reply.message.attributes", parsed_reply.message.attributes);
+        //this.mergeCurrentMessageButtons(message, parsed_reply);
         if (parsed_reply.message.attributes) {
           for(const [key, value] of Object.entries(parsed_reply.message.attributes)) {
             console.log("key:", key)
@@ -69,6 +76,16 @@ class MarkbotChatbotPlug {
     pipeline.nextplug(pipeline);
     
   }
+
+  /*mergeCurrentMessageButtons(message, parsed_reply) {
+    if (message && message.attributes && message.attributes.attachment && message.attributes.attachment.buttons) {
+      if (parsed_reply && parsed_reply.attributes && parsed_reply.attributes.attachment && parsed_reply.attributes.attachment.buttons) {
+        message.attributes.attachment.buttons.forEach(b => {
+          parsed_reply.attributes.attachment.buttons.push(b);
+        });
+      }
+    }
+  }*/
   
 /*
   next(pipeline, completionCallback) {
