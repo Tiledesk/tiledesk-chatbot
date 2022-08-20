@@ -1,6 +1,7 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 //const { HelpCenter } = require('./HelpCenter');
+const { DirDeflectToHelpCenter } = require('./DirDeflectToHelpCenter');
 
 class DirectivesChatbotPlug {
 
@@ -161,7 +162,7 @@ class DirectivesChatbotPlug {
           });
         }
       }
-      else if (directive_name === "\\agent") {
+      else if (directive_name === TiledeskChatbotUtil.AGENT_DIRECTIVE) {
         console.log("assign to request:", requestId);
         console.log("assign to dep:", depId);
         console.log("assign to dep name:", supportRequest.department.name);
@@ -176,7 +177,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === "\\removecurrentbot") {
+      else if (directive_name === "removecurrentbot") {
         console.log("assign to request:", requestId);
         console.log("assign to dep:", depId);
         console.log("assign to dep name:", request.department.name);
@@ -191,6 +192,8 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      // wait millis
+      // intent intent_display_name
       else {
         console.log("Unknown directive:", directive.name);
         process(nextDirective());
@@ -264,9 +267,19 @@ processInlineDirectives(pipeline, theend) {
           process(nextDirective());
         });
       }*/
-      else if (directive_name === "\\deflecttohelpcenter") {
-        console.log("deflecttohelpcenter dir")
-        let workspace_id = null;
+      else if (directive_name === "deflecttohelpcenter") {
+        console.log("deflecttohelpcenter dir");
+        const helpcenter = new HelpCenter({
+          SERVER_URL: "https://tiledesk-cms-server-prod.herokuapp.com",
+          projectId: projectId,
+          workspace_id: workspace_id,
+          log: false
+        });
+        const helpDir = new DirDeflectToHelpCenter(helpcenter);
+        helpDir.execute(directive, pipeline, 3, () => {
+          process(nextDirective());
+        });
+        /*let workspace_id = null;
         let hc_reply = "No matching reply but...\n\nI found something interesting in the Help Center 🧐\n\nTake a look..."
         if (directive.parameter) {
           const params = directive.parameter.trim().split(" ");
@@ -310,6 +323,7 @@ processInlineDirectives(pipeline, theend) {
         else {
           process(nextDirective());
         }
+        */
       }
       else {
         console.log("Unknown directive:", directive.name);
