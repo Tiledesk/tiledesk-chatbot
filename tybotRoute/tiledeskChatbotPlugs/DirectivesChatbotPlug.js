@@ -1,10 +1,12 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-//const { HelpCenter } = require('./HelpCenter');
 const { DirDeflectToHelpCenter } = require('./DirDeflectToHelpCenter');
+const { DirOfflineHours } = require('./DirOfflineHours');
+DirOfflineHours
+const { Directives } = require('./Directives');
 
 class DirectivesChatbotPlug {
-
+  
   /**
    * @example
    * const { DirectivesChatbotPlug } = require('./DirectivesChatbotPlug');
@@ -118,7 +120,7 @@ class DirectivesChatbotPlug {
       if (directive == null) {
         theend();
       }
-      else if (directive_name === TiledeskChatbotUtil.DEPARTMENT_DIRECTIVE) {
+      else if (directive_name === Directives.DEPARTMENT) {
         let dep_name = "default department";
         if (directive.parameter) {
           dep_name = directive.parameter;
@@ -129,7 +131,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === TiledeskChatbotUtil.HMESSAGE_DIRECTIVE) {
+      else if (directive_name === Directives.HMESSAGE) {
         if (directive.parameter) {
           let text = directive.parameter.trim();
           let message = {
@@ -144,7 +146,7 @@ class DirectivesChatbotPlug {
           });
         }
       }
-      else if (directive_name === TiledeskChatbotUtil.MESSAGE_DIRECTIVE) {
+      else if (directive_name === Directives.MESSAGE) {
         if (directive.parameter) {
           let text = directive.parameter.trim();
           let message = {text: text};
@@ -162,7 +164,7 @@ class DirectivesChatbotPlug {
           });
         }
       }
-      else if (directive_name === TiledeskChatbotUtil.AGENT_DIRECTIVE) {
+      else if (directive_name === Directives.AGENT) {
         console.log("assign to request:", requestId);
         console.log("assign to dep:", depId);
         console.log("assign to dep name:", supportRequest.department.name);
@@ -177,7 +179,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === "removecurrentbot") {
+      else if (directive_name === Directives.REMOVE_CURRENT_BOT) {
         console.log("assign to request:", requestId);
         console.log("assign to dep:", depId);
         console.log("assign to dep name:", request.department.name);
@@ -191,6 +193,26 @@ class DirectivesChatbotPlug {
           }
           process(nextDirective());
         });
+      }
+      else if (directive_name === Directives.CHANGE_BOT) {
+        console.log("changebot, requestId:", requestId);
+        if (directive.parameter) {
+          let botId = directive.parameter.trim();
+          tdclient.log = true;
+          tdclient.changeBot(requestId, botId, (err) => {
+            if (err) {
+              console.error("Error removeCurrentBot():", err);
+            }
+            else {
+              console.log("Successfully removeCurrentBot()");
+            }
+            process(nextDirective());
+          });
+        }
+        else {
+          console.error("changeBot no parameter error");
+          process(nextDirective());
+        }
       }
       // wait millis
       // intent intent_display_name
@@ -215,8 +237,7 @@ class DirectivesChatbotPlug {
     }
   }
 
-processInlineDirectives(pipeline, theend) {
-    
+  processInlineDirectives(pipeline, theend) {
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       console.log("No directives to process.");
@@ -251,82 +272,24 @@ processInlineDirectives(pipeline, theend) {
       if (directive == null) {
         theend();
       }
-      /*else if (directive_name === "\\whenOfflineMessageLabel") {
-        if (directive.parameter) {
-          let label = directive.parameter.trim();
-          console.log("ifOfflineSendLabel param:", label);
-        }
+      else if (directive_name === Directives.WHEN_OFFLINE_HOURS) {
         tdclient.log = true;
-        tdclient.removeCurrentBot(requestId, (err) => {
-          if (err) {
-            console.error("Error removeCurrentBot():", err);
-          }
-          else {
-            console.log("Successfully removeCurrentBot()");
-          }
+        const offlineHoursDir = new DirOfflineHours(tdclient);
+        offlineHoursDir.execute(directive, pipeline, () => {
           process(nextDirective());
         });
-      }*/
-      else if (directive_name === "deflecttohelpcenter") {
+      }
+      else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
         console.log("deflecttohelpcenter dir");
-        const helpcenter = new HelpCenter({
-          SERVER_URL: "https://tiledesk-cms-server-prod.herokuapp.com",
-          projectId: projectId,
-          workspace_id: workspace_id,
-          log: false
-        });
-        const helpDir = new DirDeflectToHelpCenter(helpcenter);
+        const helpcenter_api_endpoint = "https://tiledesk-cms-server-prod.herokuapp.com";
+        const helpDir = new DirDeflectToHelpCenter(helpcenter_api_endpoint, projectId);
         helpDir.execute(directive, pipeline, 3, () => {
           process(nextDirective());
         });
-        /*let workspace_id = null;
-        let hc_reply = "No matching reply but...\n\nI found something interesting in the Help Center 🧐\n\nTake a look..."
-        if (directive.parameter) {
-          const params = directive.parameter.trim().split(" ");
-          if (params.length >= 1) {
-            workspace_id = params[0];
-          }
-          const params_for_message = directive.parameter.trim().split("\"");
-          if (params_for_message.length >= 2) {
-            hc_reply = params_for_message[1].replaceAll("\\n", "\n");
-          }
-          console.log("workspace_id param:", workspace_id);
-          console.log("hc_reply param:", hc_reply);
-        }
-        const helpcenter = new HelpCenter({
-          SERVER_URL: "https://tiledesk-cms-server-prod.herokuapp.com",
-          projectId: projectId,
-          workspace_id: workspace_id,
-          log: false
-        });
-        let message = pipeline.message;
-        console.log("help center message", JSON.stringify(message));
-        const original_text = message.attributes.intent_info.question_payload.text
-        if (original_text && original_text.trim() != '') {
-          helpcenter.search(original_text, 3, (err, results) => {
-            if (err) {
-              console.error("deflectToHelpCenter Error:", err);
-            }
-            else if (results && results.length > 0) {
-              console.log("Successfully got results", results);
-              pipeline.message.text = hc_reply;
-              results.forEach(content => {
-                if (content.url.charAt(content.url.length -1) != "/") {
-                    content.url = content.url + "/"
-                }
-                pipeline.message.text += "\n* " + content.title + " > " + content.url;
-              });
-            }
-            process(nextDirective());
-          });
-        }
-        else {
-          process(nextDirective());
-        }
-        */
       }
       else {
-        console.log("Unknown directive:", directive.name);
+        console.log("Unknown directive:", directive_name);
+        console.log("Unknown directive:", Directives.WHEN_OFFLINE_HOURS);
         process(nextDirective());
       }
     }
@@ -334,10 +297,8 @@ processInlineDirectives(pipeline, theend) {
     
     function nextDirective() {
       i += 1;
-      console.log("i:", i);
       if (i < directives.length) {
         let nextd = directives[i];
-        console.log("next:", nextd);
         return nextd;
       }
       else {

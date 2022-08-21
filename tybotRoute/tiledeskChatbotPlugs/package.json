@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/Tiledesk/tiledesk-chatbot#readme",
   "dependencies": {
-    "@tiledesk/tiledesk-chatbot-util": "^0.8.36",
+    "@tiledesk/tiledesk-chatbot-util": "^0.8.37",
     "@tiledesk/tiledesk-client": "^0.8.28",
     "axios": "^0.27.2"
   }

@@ -1,19 +1,14 @@
-const { HelpCenter } = require('./HelpCenter');
 
-class DirDeflectToHelpCenter {
+class DirNoAvailableAgents {
 
-  constructor(helpcenter_api_endpoint, projectId) {
-    if (!helpcenter_api_endpoint) {
-      throw new Error('helpcenter_api_endpoint object is mandatory.');
-    }
+  constructor(projectId) {
     if (!projectId) {
       throw new Error('projectId object is mandatory.');
     }
-    this.helpcenter_api_endpoint = helpcenter_api_endpoint;
     this.projectId = projectId;
   }
 
-  execute(directive, pipeline, maxresults, callback) {
+  execute(directive, pipeline, callback) {
     let workspace_id = null;
     let hc_reply = "No matching reply but...\n\nI found something interesting in the Help Center 🧐\n\nTake a look 👇";
     if (directive.parameter) {
@@ -63,4 +58,4 @@ class DirDeflectToHelpCenter {
   }
 }
 
-module.exports = { DirDeflectToHelpCenter };
+module.exports = { DirNoAvailableAgents };
