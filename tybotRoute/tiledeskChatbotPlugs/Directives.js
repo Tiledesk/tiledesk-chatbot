@@ -11,6 +11,7 @@ class Directives {
   static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents";
   static WHEN_OFFLINE_HOURS = "whenofflinehours";
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
+  static WAIT = "wait";
   
 }
 

@@ -214,8 +214,19 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         }
       }
-      // wait millis
-      // intent intent_display_name
+      else if (directive_name === Directives.WAIT) {
+        let millis = 1000;
+        if (directive.parameter) {
+          const _millis = parseInt(directive.parameter.trim());
+          if (!Number.isNaN(millis)) {
+            millis = _millis;
+          }
+        }
+        console.log("Wait millis:", millis);
+        setTimeout( () => {
+          process(nextDirective());
+        }, millis);
+      }
       else {
         console.log("Unknown directive:", directive.name);
         process(nextDirective());
