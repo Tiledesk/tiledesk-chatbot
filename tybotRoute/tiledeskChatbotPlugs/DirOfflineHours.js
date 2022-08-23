@@ -30,7 +30,13 @@ class DirOfflineHours {
       else if (result) {
         console.log("whenofflinehoursSuccessfully got result", result);
         if (!result.isopen) {
-          pipeline.message.text = offline_reply + "\n\n" + pipeline.message.text;
+          if (directive.replaceMessage) {
+            pipeline.message.text = offline_reply;
+          }
+          else {
+            pipeline.message.text = offline_reply + "\n\n" + pipeline.message.text;
+          }
+          
         }
         //pipeline.message.text = reply;
       }

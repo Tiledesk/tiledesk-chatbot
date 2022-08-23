@@ -2,7 +2,7 @@ const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirDeflectToHelpCenter } = require('./DirDeflectToHelpCenter');
 const { DirOfflineHours } = require('./DirOfflineHours');
-DirOfflineHours
+const { DirMoveToAgent } = require('./DirMoveToAgent');
 const { Directives } = require('./Directives');
 
 class DirectivesChatbotPlug {
@@ -165,17 +165,27 @@ class DirectivesChatbotPlug {
         }
       }
       else if (directive_name === Directives.AGENT) {
-        console.log("assign to request:", requestId);
-        console.log("assign to dep:", depId);
-        console.log("assign to dep name:", supportRequest.department.name);
-        tdclient.log = true;
-        tdclient.agent(requestId, depId, (err) => {
+        tdclient.log = false;
+        const agentDir = new DirMoveToAgent(tdclient);
+        directive.whenOnlineOnly = false;
+        agentDir.execute(directive, requestId, depId, () => {
+          process(nextDirective());
+        });
+        /*tdclient.agent(requestId, depId, (err) => {
           if (err) {
             console.error("Error moving to agent:", err);
           }
           else {
             console.log("Successfully moved to agent");
           }
+          process(nextDirective());
+        });*/
+      }
+      else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
+        tdclient.log = false;
+        const agentDir = new DirMoveToAgent(tdclient);
+        directive.whenOnlineOnly = true;
+        agentDir.execute(directive, requestId, depId, () => {
           process(nextDirective());
         });
       }
@@ -236,7 +246,6 @@ class DirectivesChatbotPlug {
     
     function nextDirective() {
       i += 1;
-      console.log("i:", i);
       if (i < directives.length) {
         let nextd = directives[i];
         console.log("next:", nextd);
@@ -284,7 +293,15 @@ class DirectivesChatbotPlug {
         theend();
       }
       else if (directive_name === Directives.WHEN_OFFLINE_HOURS) {
-        tdclient.log = true;
+        tdclient.log = false;
+        const offlineHoursDir = new DirOfflineHours(tdclient);
+        offlineHoursDir.execute(directive, pipeline, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.WHEN_OFFLINE_HOURS_REPLACE_MESSAGE) {
+        directive.replaceMessage = true;
+        tdclient.log = false;
         const offlineHoursDir = new DirOfflineHours(tdclient);
         offlineHoursDir.execute(directive, pipeline, () => {
           process(nextDirective());
