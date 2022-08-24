@@ -28,13 +28,16 @@ class DirOfflineHours {
           console.log("params_for_intent_message[1]:", params_for_intent_message[1]);
           const intent_display_name = params_for_intent_message[1].trim();
           console.log("SECOND: try reply_with:intent_display_name. OK. intent_display_name", intent_display_name);
-          console.log("querying bot:", pipeline.context.payload.bot._id)
-          this.tdclient.getIntents(pipeline.context.payload.bot._id, intent_display_name, 0, 0, null, (err, faqs) => {
+          const botId = pipeline.context.payload.botId;
+          console.log("botId:", botId)
+          this.tdclient.getIntents(botId, intent_display_name, 0, 0, null, (err, faqs) => {
             console.log("got faqs:", faqs);
             if (faqs && faqs.length > 0 && faqs[0].answer) {
-              this.reply(pipeline, directive, faqs[0].answer);
+              console.log("faqs[0].answer OK", faqs[0].answer);
+              this.reply(pipeline, directive, faqs[0].answer, callback);
             }
             else {
+              console.log("No faqs[0].answer");
               this.reply(pipeline, directive, offline_reply, callback);
             }
           });

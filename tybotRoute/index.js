@@ -140,7 +140,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   
   const context = {
     payload: {
-      //text: text,
+      botId: botId,
       bot: bot,
       message: message, // USER MESSAGE (JSON)
       intent: answerObj
