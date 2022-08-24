@@ -16,4 +16,4 @@ class Directives {
   static WAIT = "wait";
 }
 
-module.exports = { Directives }; 
+module.exports = { Directives };

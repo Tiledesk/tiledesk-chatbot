@@ -238,7 +238,7 @@ class DirectivesChatbotPlug {
         }, millis);
       }
       else {
-        console.log("Unknown directive:", directive.name);
+        console.log("Unhandled Post-message Directive:", directive_name);
         process(nextDirective());
       }
     }
@@ -316,8 +316,7 @@ class DirectivesChatbotPlug {
         });
       }
       else {
-        console.log("Unknown directive:", directive_name);
-        console.log("Unknown directive:", Directives.WHEN_OFFLINE_HOURS);
+        console.log("Unhandled Inline Directive:", directive_name);
         process(nextDirective());
       }
     }

@@ -10,16 +10,48 @@ class DirOfflineHours {
   }
 
   execute(directive, pipeline, callback) {
-    console.log("whenofflinehours...")
-    let offline_reply = "We're sorry but we are closed right now";
+    console.log("whenofflinehours...pipeline");//, JSON.stringify(pipeline))
+    let offline_reply = "**We're sorry but we are closed right now**";
     if (directive.parameter) {
-      const params = directive.parameter.trim().split(" ");
+      //const params = directive.parameter.trim().split(" ");
+      // FIRST: try string in commas
       const params_for_message = directive.parameter.trim().split("\"");
       if (params_for_message.length >= 2) {
         offline_reply = params_for_message[1].replaceAll("\\n", "\n");
+        console.log("FIRST: try string in commas. OK")
+        this.reply(pipeline, directive, offline_reply, callback);
       }
-      console.log("reply param:", offline_reply);
+      else {
+        // SECOND: try intent static reply
+        const params_for_intent_message = directive.parameter.trim().split("reply_with:");
+        if (params_for_intent_message.length >= 2) {
+          console.log("params_for_intent_message[1]:", params_for_intent_message[1]);
+          const intent_display_name = params_for_intent_message[1].trim();
+          console.log("SECOND: try reply_with:intent_display_name. OK. intent_display_name", intent_display_name);
+          console.log("querying bot:", pipeline.context.payload.bot._id)
+          this.tdclient.getIntents(pipeline.context.payload.bot._id, intent_display_name, 0, 0, null, (err, faqs) => {
+            console.log("got faqs:", faqs);
+            if (faqs && faqs.length > 0 && faqs[0].answer) {
+              this.reply(pipeline, directive, faqs[0].answer);
+            }
+            else {
+              this.reply(pipeline, directive, offline_reply, callback);
+            }
+          });
+        }
+        else {
+          // THIRD: use standard offline reply
+          console.log("THIRD: use standard offline reply. OK")
+          this.reply(pipeline, directive, offline_reply, callback);
+        }
+      }
     }
+    else {
+      this.reply(pipeline, directive, offline_reply, callback);
+    }
+  }
+
+  reply(pipeline, directive, offline_reply, callback) {
     let message = pipeline.message;
     const original_text = message.attributes.intent_info.question_payload.text
     this.tdclient.openNow((err, result) => {
@@ -43,6 +75,7 @@ class DirOfflineHours {
       callback();
     });
   }
+  
 }
 
 module.exports = { DirOfflineHours };
