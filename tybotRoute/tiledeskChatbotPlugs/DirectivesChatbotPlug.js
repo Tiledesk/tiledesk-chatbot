@@ -1,9 +1,9 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { DirDeflectToHelpCenter } = require('./DirDeflectToHelpCenter');
-const { DirOfflineHours } = require('./DirOfflineHours');
-const { DirMoveToAgent } = require('./DirMoveToAgent');
-const { Directives } = require('./Directives');
+const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
+const { DirOfflineHours } = require('./directives/DirOfflineHours');
+const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
+const { Directives } = require('./directives/Directives');
 
 class DirectivesChatbotPlug {
   
@@ -132,9 +132,11 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.HMESSAGE) {
+        //tdclient.log = true;
         if (directive.parameter) {
           let text = directive.parameter.trim();
           let message = {
+            sender: "system22", // bot doesn't reply to himself
             text: text,
             attributes: {
               subtype: "info"

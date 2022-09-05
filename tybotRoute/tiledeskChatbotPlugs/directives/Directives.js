@@ -5,7 +5,7 @@ class Directives {
   static DEPARTMENT = 'department';
   static JSONMESSAGE = 'jsonmessage';
   static MESSAGE = 'message';
-  static HIDDEN_MESSAGE = 'hmessage';
+  static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";
   static CHANGE_BOT = "changebot";

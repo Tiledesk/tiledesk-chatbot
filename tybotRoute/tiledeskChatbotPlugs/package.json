@@ -22,6 +22,7 @@
   "dependencies": {
     "@tiledesk/tiledesk-chatbot-util": "^0.8.37",
     "@tiledesk/tiledesk-client": "^0.8.29",
+    "@tiledesk/helpcenter-query-client": "^0.1.2",
     "axios": "^0.27.2"
   }
 }

@@ -29,7 +29,31 @@ class WebhookChatbotPlug {
         }
         else {
           console.log("Webhook successfully end:", message_from_webhook);
+          const pipeline_original_message = pipeline.message
+          console.log("pipeline.message before webhook", pipeline.message)
+
+          // **** setting message from webhook,
+          // **** MERGING with original not overwritten data, manually
           pipeline.message = message_from_webhook;
+          // restore on message the original intent_info, necessary FOR further processING the message in the plugs pipeline
+          if (pipeline.message && !pipeline.message.attributes) {
+            console.log("!pipeline.message.attributes", pipeline.message.attributes)
+            pipeline.message.attributes = {};
+          }
+          pipeline.message.attributes.intent_info = pipeline_original_message.attributes.intent_info;
+          // restoring plugs processing flags
+          if (pipeline.message.attributes.directives === undefined) {
+            pipeline.message.attributes.directives = pipeline_original_message.attributes.directives;
+          }
+          if (pipeline.message.attributes.splits === undefined) {
+            pipeline.message.attributes.splits = pipeline_original_message.attributes.splits;
+          }
+          if (pipeline.message.attributes.markbot === undefined) {
+            pipeline.message.attributes.markbot = pipeline_original_message.attributes.markbot;
+          }
+          //if (pipeline.message.attributes.webhook === undefined) {
+          //  pipeline.message.attributes.webhook = pipeline_original_message.attributes.webhook;
+          //}
           pipeline.nextplug();
         }
       });

@@ -1,13 +1,14 @@
-const { HelpCenter } = require('./HelpCenter');
+//const { HelpCenter } = require('./HelpCenter');
+const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
 
 class DirDeflectToHelpCenter {
 
   constructor(helpcenter_api_endpoint, projectId) {
     if (!helpcenter_api_endpoint) {
-      throw new Error('helpcenter_api_endpoint object is mandatory.');
+      throw new Error('helpcenter_api_endpoint is mandatory.');
     }
     if (!projectId) {
-      throw new Error('projectId object is mandatory.');
+      throw new Error('projectId is mandatory.');
     }
     this.helpcenter_api_endpoint = helpcenter_api_endpoint;
     this.projectId = projectId;
@@ -32,10 +33,10 @@ class DirDeflectToHelpCenter {
     console.log("help center message", JSON.stringify(message));
     const original_text = message.attributes.intent_info.question_payload.text
     if (original_text && original_text.trim() != '') {
-      const helpcenter = new HelpCenter({
-        SERVER_URL: this.helpcenter_api_endpoint,
+      const helpcenter = new HelpCenterQuery({
+        APIKEY: "__",
         projectId: this.projectId,
-        workspace_id: workspace_id,
+        workspaceId: workspace_id,
         log: false
       });
       helpcenter.search(original_text, maxresults, (err, results) => {

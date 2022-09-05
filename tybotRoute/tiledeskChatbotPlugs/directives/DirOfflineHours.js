@@ -56,6 +56,7 @@ class DirOfflineHours {
 
   reply(pipeline, directive, offline_reply, callback) {
     let message = pipeline.message;
+    console.log("message in pipeline:", JSON.stringify(message));
     const original_text = message.attributes.intent_info.question_payload.text
     this.tdclient.openNow((err, result) => {
       console.log("whenofflinehours result...", result);
