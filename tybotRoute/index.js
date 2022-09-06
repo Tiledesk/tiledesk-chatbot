@@ -348,9 +348,22 @@ function startApp(settings, completionCallback) {
   if (!settings.log) {
     log = false;
   }
+  /*
+  if (!process.env.MONGODB_URI) {
+    throw new Error("process.env.MONGODB_URI is mandatory.");
+  }
+  if (!process.env.API_ENDPOINT) {
+    throw new Error("settings.API_ENDPOINT is mandatory.");
+  }
+  if (!process.env.TILEBOT_LOG) {
+    log = false;
+  }
+  else {
+    log = true;
+  }*/
   
-  console.log("Starting Tybot connector...");
-  console.log("(Tybot) Connecting to mongodb...");
+  console.log("Starting Tilebot connector...");
+  console.log("(Tilebot) Connecting to mongodb...");
 
   connection = mongoose.connect(process.env.mongoUrl, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
   if (err) { 
@@ -358,7 +371,7 @@ function startApp(settings, completionCallback) {
     //process.exit(1); // add => exitOnFail: true
   }
   else {
-    console.info("Tybot Mongodb connected.");
+    console.info("Tilebot start.");
     if (completionCallback) {
       completionCallback();
     }

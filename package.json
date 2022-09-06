@@ -13,6 +13,7 @@
   "dependencies": {
     "@replit/database": "^2.0.2",
     "@tiledesk/tiledesk-chatbot-client": "^0.5.30",
+    "@tiledesk/tiledesk-tybot-connector": "^0.1.1",
     "@tiledesk/tiledesk-chatbot-util": "^0.8.36",
     "@tiledesk/tiledesk-client": "^0.8.28",
     "@tiledesk/tiledesk-chatbot-plugs": "^0.1.1",
