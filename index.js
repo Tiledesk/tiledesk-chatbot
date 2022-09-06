@@ -21,7 +21,7 @@ tybot.startApp(
   }
 );
 
-/*
+/* GETS PARAMS FROM PROCESS.ENV
 tybot.startApp(() => {
     console.log("Tybot route successfully started.");
     var port = process.env.PORT || 3000;
@@ -30,11 +30,4 @@ tybot.startApp(() => {
     });
   }
 );
-*/
-
-/*
-var port = process.env.PORT || 3000;
-app.listen(port, function () {
-  console.log('Tybot connector listening on port ', port);
-});
 */
