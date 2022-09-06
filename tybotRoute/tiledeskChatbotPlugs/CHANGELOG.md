@@ -1,4 +1,4 @@
-# Tiledesk native chatbot
+# Tiledesk Plugs
 
 ### 0.1.6 bugfix
 

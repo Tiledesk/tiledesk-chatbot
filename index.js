@@ -7,7 +7,7 @@ const tybot = require("./tybotRoute");
 const tybotRoute = tybot.router;
 app.use("/", tybotRoute); // /tybot
 
-tybot.startTybot(
+tybot.startApp(
   {
     //KVBASE_COLLECTION : process.env.KVBASE_COLLECTION,
     MONGODB_URI: process.env.mongoUrl,
