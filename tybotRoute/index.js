@@ -365,7 +365,7 @@ function startApp(settings, completionCallback) {
   console.log("Starting Tilebot connector...");
   console.log("(Tilebot) Connecting to mongodb...");
 
-  connection = mongoose.connect(process.env.mongoUrl, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
+  connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
   if (err) { 
     console.error('Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
     //process.exit(1); // add => exitOnFail: true
