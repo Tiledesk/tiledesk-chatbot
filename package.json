@@ -11,10 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    
-    
     "@tiledesk/tiledesk-tybot-connector": "^0.1.4",
     "express": "^4.17.1"
-    
   }
 }

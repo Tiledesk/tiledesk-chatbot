@@ -31,13 +31,15 @@ class DirDeflectToHelpCenter {
     }
     let message = pipeline.message;
     console.log("help center message", JSON.stringify(message));
-    const original_text = message.attributes.intent_info.question_payload.text
+    const original_text = message.attributes.intent_info.question_payload.text;
+    console.log("original_text", original_text);
     if (original_text && original_text.trim() != '') {
+      console.log("hc continue");
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
         projectId: this.projectId,
         workspaceId: workspace_id,
-        log: false
+        log: true
       });
       helpcenter.search(original_text, maxresults, (err, results) => {
         if (err) {
