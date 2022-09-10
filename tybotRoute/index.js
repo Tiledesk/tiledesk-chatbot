@@ -74,7 +74,7 @@ router.post('/ext/:botid', async (req, res) => {
     if (action_parameters_index > -1) {
         action = action.substring(0, action_parameters_index);
     }
-    console.debug("action: " + action);
+    // console.debug("action: " + action);
     query = { "id_project": message.id_project, "id_faq_kb": botId, "intent_display_name": action };
     //var isObjectId = mongoose.Types.ObjectId.isValid(action);
     //console.debug("isObjectId:" + isObjectId);
