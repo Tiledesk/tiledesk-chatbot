@@ -84,15 +84,14 @@ exec(completionCallback) {
 
   nextplug() {
     this.counter += 1;
-    console.log(`processing plug[${this.counter}]`);
+    if (this.log) {console.log(`processing plug[${this.counter}]`);}
     if (this.counter < this.plugs.length) {
-      console.log("Still plugs...")
+      if (this.log) {console.log("Still plugs...")}
       let nextp = this.plugs[this.counter];
-      //console.log("nextp is:", nextp)
       nextp.exec(this);
     }
     else {
-      console.log("no more plugs");
+      if (this.log) {console.log("no more plugs");}
       this.resolve(this.message);
     }
   }

@@ -13,10 +13,11 @@ class DirectivesChatbotPlug {
    * 
    */
 
-  constructor(supportRequest, API_URL, token) {
+  constructor(supportRequest, API_URL, token, log) {
     this.supportRequest = supportRequest;
     this.API_URL = API_URL;
     this.token = token;
+    this.log = log;
   }
 
   exec(pipeline) {
@@ -26,17 +27,19 @@ class DirectivesChatbotPlug {
       return;
     }
     const message_text = message.text;
-    console.log("processing message:", message_text);
+    if (this.log) {console.log("processing message:", message_text);}
     let parsed_result = TiledeskChatbotUtil.parseDirectives(message_text);
-    console.log("Message directives:", parsed_result);
-    console.log("Message text ripped from directives:", parsed_result.text);
+    if (this.log) {
+      console.log("Message directives:", parsed_result);
+      console.log("Message text ripped from directives:", parsed_result.text);  
+    }
     if (parsed_result && parsed_result.directives && parsed_result.directives.length > 0) {
       // do not process more intents. Process directives and return
       const text = parsed_result.text;
       message.text = text;
       this.directives = parsed_result.directives;
       this.processInlineDirectives(pipeline, () => {
-        console.log("End process directives.");
+        if (this.log) {console.log("End process directives.");}
         pipeline.nextplug();
       });
       //pipeline.nextplug();
@@ -87,7 +90,7 @@ class DirectivesChatbotPlug {
     
     const directives = this.directives;
     if (!directives || directives.length === 0) {
-      console.log("No directives to process.");
+      if (this.log) {console.log("No directives to process.");}
       theend();
       return;
     }
@@ -107,11 +110,11 @@ class DirectivesChatbotPlug {
     });
     
     let i = -1;
-    console.log("processing directives:", directives);
+    if (this.log) {console.log("processing directives:", directives);}
     function process(directive) {
       if (directive) {
-        console.log("directive:", directive);
-        console.log("directive.name:", directive.name);
+        //console.log("directive:", directive);
+        //console.log("directive.name:", directive.name);
       }
       let directive_name = null;
       if (directive && directive.name) {
@@ -240,7 +243,7 @@ class DirectivesChatbotPlug {
         }, millis);
       }
       else {
-        console.log("Unhandled Post-message Directive:", directive_name);
+        //console.log("Unhandled Post-message Directive:", directive_name);
         process(nextDirective());
       }
     }
@@ -250,7 +253,6 @@ class DirectivesChatbotPlug {
       i += 1;
       if (i < directives.length) {
         let nextd = directives[i];
-        console.log("next:", nextd);
         return nextd;
       }
       else {
@@ -281,12 +283,11 @@ class DirectivesChatbotPlug {
     });
     
     let i = -1;
-    console.log("processing Inline directives:", directives);
+    if (this.log) {console.log("processing Inline directives:", directives);}
     function process(directive) {
-      if (directive) {
-        console.log("directive:", directive);
-        console.log("directive.name:", directive.name);
-      }
+      //if (directive) {
+      //  console.log("directive.name:", directive.name);
+      //}
       let directive_name = null;
       if (directive && directive.name) {
         directive_name = directive.name.toLowerCase();
@@ -310,7 +311,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
-        console.log("deflecttohelpcenter dir");
+        //console.log("deflecttohelpcenter dir");
         const helpcenter_api_endpoint = "https://tiledesk-cms-server-prod.herokuapp.com";
         const helpDir = new DirDeflectToHelpCenter(helpcenter_api_endpoint, projectId);
         helpDir.execute(directive, pipeline, 3, () => {
@@ -318,7 +319,7 @@ class DirectivesChatbotPlug {
         });
       }
       else {
-        console.log("Unhandled Inline Directive:", directive_name);
+        //console.log("Unhandled Inline Directive:", directive_name);
         process(nextDirective());
       }
     }

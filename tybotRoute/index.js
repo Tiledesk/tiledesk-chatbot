@@ -7,13 +7,14 @@ var cors = require('cors');
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
+let log = false;
+
 // DEV
 const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
 const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
 const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
-
 
 // PROD
 /*const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
@@ -37,18 +38,18 @@ let connection;
 let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
-  console.log("REQUEST BODY:", JSON.stringify(req.body));
+  if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   res.status(200).send({"success":true});
 
   const botId = req.params.botid;
-  console.log("query botId:", botId);
+  if (log) {console.log("query botId:", botId);}
   const message = req.body.payload;
   const faq_kb = req.body.hook;
   const token = req.body.token;
   
   //const bot = await Faq_kb.findById(botId).exec();
   const bot = await Faq_kb.findById(botId).select('+secret').exec();
-  console.log("bot:", bot);
+  if (log) {console.log("bot:", bot);}
 
   // CREATE TOKEN
   //var botWithSecret = await Faq_kb.findById(bot._id).select('+secret').exec();
@@ -62,8 +63,7 @@ router.post('/ext/:botid', async (req, res) => {
 
   // DEPRECATED, REMOVE
   const bot_token = jwt.sign(bot.toObject(), bot.secret, signOptions);
-  console.log("bot_token:", bot_token);
-  //
+  //console.log("bot_token:", bot_token);
   
   // SETUP EXACT MATCH
   let query = { "id_project": message.id_project, "id_faq_kb": botId, "question": message.text };
@@ -90,12 +90,12 @@ router.post('/ext/:botid', async (req, res) => {
     if (err) {
       return console.error("Error getting faq object.", err);
     }
-    if (faqs && faqs.length > 0 && faqs[0].answer) { // EXACT MATCH!
-      console.log("FAQ:", faqs[0]);
+    if (faqs && faqs.length > 0 && faqs[0].answer) {
+      if (log) {console.log("EXACT MATCH FAQ:", faqs[0]);}
       execFaq(req, res, faqs, botId, message, token, bot); // bot_token
     }
     else { // FULL TEXT
-      console.log("Go fulltext...");
+      if (log) {console.log("NLP decode intent...");}
       query = { "id_project": message.id_project, "id_faq_kb": botId };
       var mongoproject = undefined;
       var sort = undefined;
@@ -105,15 +105,15 @@ router.post('/ext/:botid', async (req, res) => {
           search_obj["$language"] = faq_kb.language;
       }
       query.$text = search_obj;
-      console.debug("fulltext search query", query);
+      //console.debug("fulltext search query", query);
 
       mongoproject = { score: { $meta: "textScore" } };
       sort = { score: { $meta: "textScore" } } 
       // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
       Faq.find(query, mongoproject).sort(sort).lean().exec(async (err, faqs) => {
-        console.log("Found:", faqs);
+        if (log) {console.log("Found:", faqs);}
         if (err) {
-          console.erro("Error:", err);
+          console.error("Error:", err);
           return console.error('Error getting fulltext objects.', err);
         }
         if (faqs && faqs.length > 0 && faqs[0].answer) {
@@ -133,11 +133,10 @@ router.post('/ext/:botid', async (req, res) => {
 
 async function execFaq(req, res, faqs, botId, message, token, bot) {
   let sender = 'bot_' + botId;
-  console.debug("sender", sender);
   var answerObj;
   answerObj = faqs[0];
   answerObj.score = 100; //exact search not set score
-  console.debug("answerObj.score", answerObj.score);
+  //console.debug("answerObj.score", answerObj.score);
   
   const context = {
     payload: {
@@ -195,7 +194,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   }
   //console.debug("intent_info", intent_info);
   attr.intent_info = intent_info;
-  let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
+  let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token, log);
   const bot_answer = await execPipeline(static_bot_answer, message, bot, context, directivesPlug, token);
   const tdclient = new TiledeskChatbotClient(
   {
@@ -203,11 +202,10 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     APIKEY: '__APIKEY__',
     APIURL: APIURL
   });
-  console.log("Sending back:", JSON.stringify(bot_answer));
+  if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
   tdclient.sendMessage(bot_answer, () => {
-    console.log("Message sent.");
     directivesPlug.processDirectives(() => {
-      console.log("End processing directives.");
+      if (log) {console.log("After message execute directives end.");}
     })
   });
 }
@@ -216,24 +214,23 @@ async function execPipeline(static_bot_answer, message, bot, context, directives
   const messagePipeline = new MessagePipeline(static_bot_answer, context);
   const webhookurl = bot.webhook_url;
   messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
-  //let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token);
   messagePipeline.addPlug(directivesPlug);
-  messagePipeline.addPlug(new SplitsChatbotPlug());
-  messagePipeline.addPlug(new MarkbotChatbotPlug());
+  messagePipeline.addPlug(new SplitsChatbotPlug(log));
+  messagePipeline.addPlug(new MarkbotChatbotPlug(log));
   const bot_answer = await messagePipeline.exec();
-  console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));
+  if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
   return bot_answer;
 }
 
 function getIntentByDisplayName(name, bot) {
   return new Promise(function(resolve, reject) {
     var query = { "id_project": bot.id_project, "id_faq_kb": bot._id, "intent_display_name": name};
-    console.debug('query', query);
+    if (log) {console.debug('query', query);}
     Faq.find(query).lean().exec(function (err, faqs) {
       if (err) {
         return reject();
       }
-      console.debug("faqs", faqs);
+      if (log) {console.debug("faqs", faqs);}
       if (faqs && faqs.length > 0) {
         const intent = faqs[0];
         return resolve(intent);
@@ -366,17 +363,17 @@ function startApp(settings, completionCallback) {
   console.log("(Tilebot) Connecting to mongodb...");
 
   connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
-  if (err) { 
-    console.error('Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
-    //process.exit(1); // add => exitOnFail: true
-  }
-  else {
-    console.info("Tilebot start.");
-    if (completionCallback) {
-      completionCallback();
+    if (err) { 
+      console.error('Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
+      //process.exit(1); // add => exitOnFail: true
     }
-  }
-});  
+    else {
+      console.info("Tilebot start.");
+      if (completionCallback) {
+        completionCallback();
+      }
+    }
+  });
 }
 
 /*

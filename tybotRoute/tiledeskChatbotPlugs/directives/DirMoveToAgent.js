@@ -10,7 +10,7 @@ class DirMoveToAgent {
   }
 
   execute(directive, requestId, depId, callback) {
-    console.log("DirMoveToAgent...")
+    //console.log("DirMoveToAgent...")
     if (directive.whenOnlineOnly === true) {
       this.tdclient.openNow((err, result) => {
         if (err) {
@@ -24,7 +24,7 @@ class DirMoveToAgent {
                 console.error("Error moving to agent during online hours:", err);
               }
               else {
-                console.log("Successfully moved to agent during online hours");
+                //console.log("Successfully moved to agent during online hours");
               }
               callback();
             });
@@ -41,7 +41,7 @@ class DirMoveToAgent {
           console.error("Error moving to agent:", err);
         }
         else {
-          console.log("Successfully moved to agent");
+          //console.log("Successfully moved to agent");
         }
         callback();
       });

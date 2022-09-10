@@ -8,36 +8,36 @@ class WebhookChatbotPlug {
    * 
    */
 
-  constructor(supportRequest, webhookurl, token) {
+  constructor(supportRequest, webhookurl, token, log) {
     this.supportRequest = supportRequest;
     this.webhookurl = webhookurl;
     this.token = token;
+    this.log = log;
   }
 
   exec(pipeline) {
     let message = pipeline.message;
     let context = pipeline.context;
-    console.log("WEBHOOK?", message.attributes.webhook)
+    if (this.log) {console.log("WEBHOOK?", message.attributes.webhook);}
     if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
-      console.log("EXECUTING WEBHOOK URL!", this.webhookurl);
+      if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
       this.execWebhook(message, context, this.webhookurl, (err, message_from_webhook) => {
-        console.log("Err", err)
-        console.log("message", message_from_webhook)
+        if (this.log) {console.log("message", message_from_webhook);}
         if (err) {
-          console.error("Error calling webhook", this.webhookurl)
+          console.error("Error calling webhook:", this.webhookurl)
           pipeline.nextplug();
         }
         else {
-          console.log("Webhook successfully end:", message_from_webhook);
+          if (this.log) {console.log("Webhook successfully end:", message_from_webhook);}
           const pipeline_original_message = pipeline.message
-          console.log("pipeline.message before webhook", pipeline.message)
+          if (this.log) {console.log("pipeline.message before webhook", pipeline.message);}
 
           // **** setting message from webhook,
           // **** MERGING with original not overwritten data, manually
           pipeline.message = message_from_webhook;
           // restore on message the original intent_info, necessary FOR further processING the message in the plugs pipeline
           if (pipeline.message && !pipeline.message.attributes) {
-            console.log("!pipeline.message.attributes", pipeline.message.attributes)
+            if (this.log) {console.log("!pipeline.message.attributes", pipeline.message.attributes);}
             pipeline.message.attributes = {};
           }
           pipeline.message.attributes.intent_info = pipeline_original_message.attributes.intent_info;
@@ -59,16 +59,18 @@ class WebhookChatbotPlug {
       });
     }
     else {
-      console.log("NO WEBHOOK!");
+      if (this.log) {console.log("NO WEBHOOK!");}
       pipeline.nextplug();
       return;
     }
-    console.log("Start processing webhook...");
+    if (this.log) {console.log("Start processing webhook...");}
   }
   
   execWebhook(reply_message, context, webhookurl, callback) {
-    console.log("WEBHOOK. on context", context)
-    console.log("WEBHOOK. on message", reply_message)
+    if (this.log) {
+      console.log("WEBHOOK. on context", context)
+      console.log("WEBHOOK. on message", reply_message)
+    }
     const HTTPREQUEST = {
       url: webhookurl,
       headers: {
@@ -89,7 +91,6 @@ class WebhookChatbotPlug {
           }
         }
         else {
-          console.log("Hello", res.data)
           if (callback) {
             callback(null, res.data);
           }
