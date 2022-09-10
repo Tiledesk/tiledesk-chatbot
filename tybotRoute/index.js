@@ -345,6 +345,10 @@ function startApp(settings, completionCallback) {
   if (!settings.log) {
     log = false;
   }
+  else {
+    log = true;
+  }
+  console.log("(Tybot) log:", log);
   /*
   if (!process.env.MONGODB_URI) {
     throw new Error("process.env.MONGODB_URI is mandatory.");
