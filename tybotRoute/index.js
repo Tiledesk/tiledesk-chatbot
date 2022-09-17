@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 var cors = require('cors');
+let path = require("path");
+let fs = require('fs');
+const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { ApiExt } = require('./ApiExt.js');
+const { ExtUtil } = require('./ExtUtil.js');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -12,8 +20,8 @@ let log = false;
 // DEV
 const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
+/*const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
+const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');*/
 const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
 
 // PROD
@@ -23,12 +31,7 @@ const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsCh
 const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
 const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');*/
 
-let path = require("path");
-let fs = require('fs');
 
-const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 
 // THE IMPORT
 let mongoose = require('mongoose');
@@ -128,7 +131,42 @@ router.post('/ext/:botid', async (req, res) => {
       });
     }
   });
-  
+});
+
+router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
+  //if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
+  //if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
+  const projectId = req.params.projectId;
+  //console.log("projectId", projectId);
+  const requestId = req.params.requestId;
+  //console.log("requestId", requestId);
+  const token = req.headers["authorization"];
+  //console.log("Authorization", token);
+  let answer = req.body;
+  //console.log("Answer", answer);
+  const tdclient = new TiledeskClient({
+    projectId: projectId,
+    token: token,
+    APIURL: APIURL,
+    APIKEY: "___",
+    log: true
+  });
+  tdclient.getRequestById(requestId, async (err, request) => {
+    let directivesPlug = new DirectivesChatbotPlug(request, APIURL, token, log);
+    // PIPELINE-EXT
+    const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
+    /*if (!validMessage(bot_answer)) {
+      console.log("Empty message. Cancel sending.");
+      res.json({success:true});
+      return;
+    }*/
+    tdclient.sendSupportMessage(requestId, bot_answer, () => {
+      directivesPlug.processDirectives(() => {
+        console.log("After message execute directives end.");
+        res.json({success:true});
+      });
+    });
+  });
 });
 
 async function execFaq(req, res, faqs, botId, message, token, bot) {
@@ -194,29 +232,50 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   }
   //console.debug("intent_info", intent_info);
   attr.intent_info = intent_info;
-  let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token, log);
-  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, directivesPlug, token);
-  const tdclient = new TiledeskChatbotClient(
+  //let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token, log); // remove
+  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); // webhook only
+  const chatbot_client = new TiledeskChatbotClient(
   {
     request: req,
     APIKEY: '__APIKEY__',
     APIURL: APIURL
   });
   if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
-  tdclient.sendMessage(bot_answer, () => {
-    directivesPlug.processDirectives(() => {
+  let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
+  if (process.env.TYBOT_ENDPOINT) {
+    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+  }
+  const apiext = new ApiExt({
+    ENDPOINT: extEndpoint
+  });
+  apiext.sendSupportMessageExt(bot_answer, chatbot_client.projectId, chatbot_client.requestId, chatbot_client.token, () => {
+    if (log) {console.log("Message sent.");}
+    /*directivesPlug.processDirectives(() => {
       if (log) {console.log("After message execute directives end.");}
-    })
+    });*/
   });
 }
 
-async function execPipeline(static_bot_answer, message, bot, context, directivesPlug, token) {
+/*function validMessage(message) {
+  console.log("validating message", message)
+  if (!message.type) {
+    message.type = 'text';
+  }
+  if (message.text === '' && message.type === 'text') {
+    console.log("in-valid message", message)
+    return false;
+  }
+  console.log("valid message", message)
+  return true;
+}*/
+
+async function execPipeline(static_bot_answer, message, bot, context, token) {
   const messagePipeline = new MessagePipeline(static_bot_answer, context);
   const webhookurl = bot.webhook_url;
   messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
-  messagePipeline.addPlug(directivesPlug);
-  messagePipeline.addPlug(new SplitsChatbotPlug(log));
-  messagePipeline.addPlug(new MarkbotChatbotPlug(log));
+  //messagePipeline.addPlug(directivesPlug);
+  //messagePipeline.addPlug(new SplitsChatbotPlug(log));
+  //messagePipeline.addPlug(new MarkbotChatbotPlug(log));
   const bot_answer = await messagePipeline.exec();
   if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
   return bot_answer;

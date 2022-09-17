@@ -8,10 +8,10 @@ class Directives {
   static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";
-  static CHANGE_BOT = "changebot";
+  static REPLACE_BOT = "replacebot";
   static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents";
-  static WHEN_OFFLINE_HOURS = "whenofflinehours";
-  static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage";
+  static WHEN_OFFLINE_HOURS = "whenofflinehours"; // adds a message on top of the original message when offline hours opts: --replace
+  //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
   static WAIT = "wait";
 }
