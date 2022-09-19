@@ -1,6 +1,5 @@
-const { ApiExt } = require('../../ApiExt.js');
+const { ExtApi } = require('../../ExtApi.js');
 
-console.log("APIEXT", ApiExt)
 class DirMessage {
 
   constructor() {
@@ -23,7 +22,7 @@ class DirMessage {
       if (process.env.TYBOT_ENDPOINT) {
         extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
       }
-      const apiext = new ApiExt({
+      const apiext = new ExtApi({
         ENDPOINT: extEndpoint
       });
       if (!message.attributes) {

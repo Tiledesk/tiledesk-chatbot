@@ -2,7 +2,6 @@
 class DirMoveToAgent {
 
   constructor(tdclient) {
-    // tdclient.openNow(callback) {
     if (!tdclient) {
       throw new Error('tdclient (TiledeskClient) object is mandatory.');
     }

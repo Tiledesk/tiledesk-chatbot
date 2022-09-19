@@ -8,7 +8,7 @@ const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { ApiExt } = require('./ApiExt.js');
+const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 
 //router.use(cors());
@@ -136,6 +136,7 @@ router.post('/ext/:botid', async (req, res) => {
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   //if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   //if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
+  console.log("req.headers:", JSON.stringify(req.headers));
   const projectId = req.params.projectId;
   //console.log("projectId", projectId);
   const requestId = req.params.requestId;
@@ -240,12 +241,12 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     APIKEY: '__APIKEY__',
     APIURL: APIURL
   });
-  if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
+  //if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
   let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
   }
-  const apiext = new ApiExt({
+  const apiext = new ExtApi({
     ENDPOINT: extEndpoint
   });
   apiext.sendSupportMessageExt(bot_answer, chatbot_client.projectId, chatbot_client.requestId, chatbot_client.token, () => {
@@ -277,7 +278,7 @@ async function execPipeline(static_bot_answer, message, bot, context, token) {
   //messagePipeline.addPlug(new SplitsChatbotPlug(log));
   //messagePipeline.addPlug(new MarkbotChatbotPlug(log));
   const bot_answer = await messagePipeline.exec();
-  if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
+  //if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
   return bot_answer;
 }
 
@@ -422,7 +423,7 @@ function startApp(settings, completionCallback) {
     log = true;
   }*/
   
-  console.log("Starting Tilebot connector...");
+  console.log("Starting Tilebot connector.....");
   console.log("(Tilebot) Connecting to mongodb...");
 
   connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, function(err) {

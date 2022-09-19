@@ -1,6 +1,6 @@
 let axios = require('axios');
 
-class ApiExt {
+class ExtApi {
 
   constructor(options) {
     if (!options.ENDPOINT) {
@@ -107,4 +107,4 @@ class ApiExt {
   }*/
 }
 
-module.exports = { ApiExt };
+module.exports = { ExtApi };

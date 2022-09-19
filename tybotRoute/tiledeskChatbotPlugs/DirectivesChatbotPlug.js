@@ -4,6 +4,8 @@ const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter'
 const { DirOfflineHours } = require('./directives/DirOfflineHours');
 const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
+const { DirWait } = require('./directives/DirWait');
+const { DirReplaceBot } = require('./directives/DirReplaceBot');
 
 const { Directives } = require('./directives/Directives');
 
@@ -89,7 +91,7 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
-
+    console.log("processing...")
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -168,6 +170,8 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
+        // TODO remove this directive and
+        // improve: \agent -whenonline
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = true;
         agentDir.execute(directive, requestId, depId, () => {
@@ -181,27 +185,14 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.REPLACE_BOT) {
         console.log("REPLACE_BOT, requestId:", requestId);
-        if (directive.parameter) {
-          let botName = directive.parameter.trim();
-          tdclient.replaceBotByName(requestId, botName, () => {
-            process(nextDirective());
-          });
-        }
-        else {
+        new DirReplaceBot(tdclient).execute(directive, requestId, () => {
           process(nextDirective());
-        }
+        });
       }
       else if (directive_name === Directives.WAIT) {
-        let millis = 1000;
-        if (directive.parameter) {
-          const _millis = parseInt(directive.parameter.trim());
-          if (!Number.isNaN(millis)) {
-            millis = _millis;
-          }
-        }
-        setTimeout(() => {
+        new DirWait().execute(directive, () => {
           process(nextDirective());
-        }, millis);
+        });
       }
       else {
         //console.log("Unhandled Post-message Directive:", directive_name);
