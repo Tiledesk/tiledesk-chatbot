@@ -91,7 +91,6 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
-    console.log("processing...")
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }

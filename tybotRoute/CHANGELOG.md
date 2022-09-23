@@ -1,5 +1,7 @@
 # Tiledesk tybotRoute
 
+### 0.1.5 - ExtApi added - New directives added (DirWait, DirMessage, DirReplaceBot)
+
 ### 0.1.4 updated "@tiledesk/tiledesk-chatbot-plugs" to "^0.1.8"
 
 ### 0.1.2 fixes to enhance as-a-route installation
