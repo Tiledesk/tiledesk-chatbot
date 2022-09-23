@@ -150,7 +150,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     token: token,
     APIURL: APIURL,
     APIKEY: "___",
-    log: true
+    log: false
   });
   tdclient.getRequestById(requestId, async (err, request) => {
     let directivesPlug = new DirectivesChatbotPlug(request, APIURL, token, log);

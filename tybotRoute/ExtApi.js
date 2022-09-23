@@ -28,7 +28,7 @@ class ExtApi {
   sendSupportMessageExt(message, projectId, requestId, token, callback) {
     const jwt_token = this.fixToken(token);
     const url = `${this.ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
-    console.log("sendSupportMessageExt URL", url);
+    if (this.log) {console.log("sendSupportMessageExt URL", url);}
     const HTTPREQUEST = {
       url: url,
       headers: {

@@ -11,7 +11,7 @@ tybot.startApp(
   {
     MONGODB_URI: process.env.mongoUrl,
     API_ENDPOINT: process.env.API_ENDPOINT,
-    log: true
+    log: process.env.API_LOG
   }, () => {
     console.log("Tilebot route successfully started.");
     var port = process.env.PORT || 3000;
