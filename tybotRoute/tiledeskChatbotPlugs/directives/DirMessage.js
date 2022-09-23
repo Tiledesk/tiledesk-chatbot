@@ -9,15 +9,14 @@ class DirMessage {
     if (directive.parameter) {
       let text = directive.parameter.trim();
       let message = {text: text};
-      console.log("text.lastIndexOf(hide)", text.lastIndexOf("\\hide"))
       if (text.lastIndexOf("\\hide") >= 0) {
-        console.log("HIDDEN");
+        //console.log("HIDDEN");
         message.text = text.slice(0, text.lastIndexOf("\\hide")).trim();
         message.attributes = {
           subtype: "info"
         }
       }
-      console.log("Message:", message);
+      //console.log("Message:", message);
       let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
       if (process.env.TYBOT_ENDPOINT) {
         extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
@@ -32,9 +31,9 @@ class DirMessage {
       message.attributes.splitted = false;
       message.attributes.markbot = true;
       if (message.text) {
-        console.log("original message:", message.text);
+        //console.log("original message:", message.text);
         message.text = message.text.replace("\\n", "\n");
-        console.log("cr replaced:", message.text);
+        //console.log("cr replaced:", message.text);
       }
       apiext.sendSupportMessageExt(
         message,

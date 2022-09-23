@@ -1,5 +1,7 @@
 # Tiledesk tybotRoute
 
+### 0.1.6 online - API_ENDPOINT fix for sendMessageExt. Getting it from tyboyRoute property API_ENDPOINT
+
 ### 0.1.5 - ExtApi added - New directives added (DirWait, DirMessage, DirReplaceBot)
 
 ### 0.1.4 updated "@tiledesk/tiledesk-chatbot-plugs" to "^0.1.8"

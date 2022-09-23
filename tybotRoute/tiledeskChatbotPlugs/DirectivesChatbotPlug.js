@@ -237,7 +237,7 @@ class DirectivesChatbotPlug {
     if (this.log) { console.log("processing Inline directives:", directives); }
     function process(directive) {
       if (directive) {
-        console.log("directive.name:", directive.name);
+        if (this.log) {console.log("directive.name:", directive.name);}
       }
       let directive_name = null;
       if (directive && directive.name) {
