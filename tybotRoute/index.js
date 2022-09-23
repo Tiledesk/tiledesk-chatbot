@@ -136,7 +136,7 @@ router.post('/ext/:botid', async (req, res) => {
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   //if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   //if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
-  console.log("req.headers:", JSON.stringify(req.headers));
+  if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
   const projectId = req.params.projectId;
   //console.log("projectId", projectId);
   const requestId = req.params.requestId;
@@ -163,7 +163,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }*/
     tdclient.sendSupportMessage(requestId, bot_answer, () => {
       directivesPlug.processDirectives(() => {
-        console.log("After message execute directives end.");
+        if (log) {console.log("After message execute directives end.");}
         res.json({success:true});
       });
     });
@@ -242,7 +242,13 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     APIURL: APIURL
   });
   //if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
-  let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
+  //let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
+  // NOTE
+  // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
+  // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
+  // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
+  // THE ALTERNATIVE ROUTE.
+  let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
   }
