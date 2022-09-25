@@ -1,5 +1,7 @@
 # Tiledesk tybotRoute
 
+### 0.1.7 online - fixed: converted function process() to Arrow function: const process = (directive) => {}
+
 ### 0.1.6 online - API_ENDPOINT fix for sendMessageExt. Getting it from tyboyRoute property API_ENDPOINT
 
 ### 0.1.5 - ExtApi added - New directives added (DirWait, DirMessage, DirReplaceBot)
