@@ -1,5 +1,14 @@
 # Tiledesk tybotRoute
 
+**npm @tiledesk/tiledesk-tybot-connector@0.1.9**
+
+available on:
+ ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.9 online - set log on ExtApi class
+
+### 0.1.8 online - fixed: import minimist-string fix
+
 ### 0.1.7 online - fixed: converted function process() to Arrow function: const process = (directive) => {}
 
 ### 0.1.6 online - API_ENDPOINT fix for sendMessageExt. Getting it from tyboyRoute property API_ENDPOINT
