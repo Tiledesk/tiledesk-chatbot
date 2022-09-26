@@ -253,7 +253,8 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
   }
   const apiext = new ExtApi({
-    ENDPOINT: extEndpoint
+    ENDPOINT: extEndpoint,
+    log: log
   });
   apiext.sendSupportMessageExt(bot_answer, chatbot_client.projectId, chatbot_client.requestId, chatbot_client.token, () => {
     if (log) {console.log("Message sent.");}
