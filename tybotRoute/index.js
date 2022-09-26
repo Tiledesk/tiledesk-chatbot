@@ -430,7 +430,7 @@ function startApp(settings, completionCallback) {
     log = true;
   }*/
   
-  console.log("Starting Tilebot connector.....");
+  console.log("Starting Tilebot connector v0.1.10 ...");
   console.log("(Tilebot) Connecting to mongodb...");
 
   connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
