@@ -105,13 +105,15 @@ class DirDeflectToHelpCenter {
     
     if (params.m) {
       console.log("_params.m:", params.m)
-      hc_reply = params.m.replaceAll("\\n", "\n");
-      console.log("hc_reply with replaced slash n", hc_reply)
+      //hc_reply = params.m.replaceAll("\\n", "\n");
+      hc_reply = params.m.replace(/\\n/g, "\n");
+      console.log("hc_reply with replaced slash n regex|replaceAll", hc_reply)
     }
     if (params.message) {
       console.log("_params.message:", params.message)
-      hc_reply = params.message.replaceAll("\\n", "\n");
-      console.log("hc_reply -message with replaced slash n", hc_reply)
+      //hc_reply = params.message.replaceAll("\\n", "\n");
+      hc_reply = params.message.replace(/\\n/g, "\n");
+      console.log("hc_reply -message with replaced slash n replace(/\\n/g", hc_reply)
     }
     return {
       workspace_id: workspace_id,
