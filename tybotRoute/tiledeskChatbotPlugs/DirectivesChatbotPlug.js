@@ -103,8 +103,8 @@ class DirectivesChatbotPlug {
     const API_URL = this.API_URL;
 
     const requestId = supportRequest.request_id
-    //const depId = supportRequest.department._id;
-    const depId = supportRequest.attributes.departmentId;
+    const depId = supportRequest.department._id;
+    //const depId = supportRequest.attributes.departmentId;
     const projectId = supportRequest.id_project;
     const tdclient = new TiledeskClient({
       projectId: projectId,
@@ -226,8 +226,8 @@ class DirectivesChatbotPlug {
 
     console.log("supportRequest", supportRequest)
     const requestId = supportRequest.request_id
-    //const depId = supportRequest.department._id;
-    const depId = supportRequest.attributes.departmentId;
+    const depId = supportRequest.department._id;
+    //const depId = supportRequest.attributes.departmentId;
     const projectId = supportRequest.id_project;
     const tdclient = new TiledeskClient({
       projectId: projectId,
