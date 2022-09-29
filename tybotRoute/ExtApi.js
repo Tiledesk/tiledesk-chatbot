@@ -24,7 +24,16 @@ class ExtApi {
       return 'JWT ' + token;
     }
   }
-  
+
+  /**
+   * A stub to send message to the "ext" endpoint, hosted by tilebot on:
+   * /${TILEBOT_ROUTE}/ext/${projectId}/requests/${requestId}/messages
+   *
+   * @param {Object} message. The message to send
+   * @param {string} projectId. Tiledesk projectId
+   * @param {string} requestId. Tiledesk requestId
+   * @param {string} token. User token
+   */
   sendSupportMessageExt(message, projectId, requestId, token, callback) {
     const jwt_token = this.fixToken(token);
     const url = `${this.ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;

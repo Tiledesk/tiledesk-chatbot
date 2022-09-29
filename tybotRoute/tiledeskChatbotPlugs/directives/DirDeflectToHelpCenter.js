@@ -4,15 +4,15 @@ const ms = require('minimist-string');
 
 class DirDeflectToHelpCenter {
 
-  constructor(helpcenter_api_endpoint, projectId) {
-    if (!helpcenter_api_endpoint) {
-      throw new Error('helpcenter_api_endpoint is mandatory.');
-    }
-    if (!projectId) {
+  constructor(config) {
+    if (!config.projectId) {
       throw new Error('projectId is mandatory.');
     }
-    this.helpcenter_api_endpoint = helpcenter_api_endpoint;
-    this.projectId = projectId;
+    if (config.HELP_CENTER_API_ENDPOINT) {
+      this.helpcenter_api_endpoint = config.HELP_CENTER_API_ENDPOINT;
+    }
+    console.log("Using helpcenter_api_endpoint:", this.helpcenter_api_endpoint)
+    this.projectId = config.projectId;
   }
 
   async execute(directive, pipeline, maxresults, completion) {
@@ -20,11 +20,14 @@ class DirDeflectToHelpCenter {
     let default_hc_reply = "No matching reply but...\n\nI found something interesting in the Help Center 🧐\n\nTake a look 👇";
     let hc_reply = default_hc_reply;
     if (directive.parameter) {
-      //console.log("processing parameters")
+      console.log("processing parameters")
       const params = this.parseParams(directive.parameter);
+      console.log("parameters found", params);
       workspace_id = params.workspace_id;
+      console.log("workspaceid found", workspace_id);
       if (params.hc_reply) {
         hc_reply = params.hc_reply;
+        console.log("hc_reply found", hc_reply);
       }
     }
     else {
@@ -39,6 +42,7 @@ class DirDeflectToHelpCenter {
     if (original_text && original_text.trim() != '') {
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
+        APIURL: this.helpcenter_api_endpoint,
         projectId: this.projectId,
         log: false
       });
@@ -89,7 +93,9 @@ class DirDeflectToHelpCenter {
   parseParams(directive_parameter) {
     let workspace_id = null;
     let hc_reply = null;
+    console.log("ms found:", ms)
     const params = ms(directive_parameter);
+    console.log("ms decoded params:", params)
     if (params.w) {
       workspace_id = params.w
     }
@@ -98,12 +104,14 @@ class DirDeflectToHelpCenter {
     }
     
     if (params.m) {
-      //console.log("_param m", params.m)
+      console.log("_params.m:", params.m)
       hc_reply = params.m.replaceAll("\\n", "\n");
+      console.log("hc_reply with replaced slash n", hc_reply)
     }
     if (params.message) {
-      //console.log("_param message", params.message)
+      console.log("_params.message:", params.message)
       hc_reply = params.message.replaceAll("\\n", "\n");
+      console.log("hc_reply -message with replaced slash n", hc_reply)
     }
     return {
       workspace_id: workspace_id,

@@ -17,11 +17,12 @@ class DirectivesChatbotPlug {
    * 
    */
 
-  constructor(supportRequest, API_URL, token, log) {
-    this.supportRequest = supportRequest;
-    this.API_URL = API_URL;
-    this.token = token;
-    this.log = log;
+  constructor(config) {
+    this.supportRequest = config.supportRequest;
+    this.API_URL = config.TILEDESK_API_ENDPOINT;
+    this.token = config.token;
+    this.log = config.log;
+    this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
   }
 
   exec(pipeline) {
@@ -102,7 +103,8 @@ class DirectivesChatbotPlug {
     const API_URL = this.API_URL;
 
     const requestId = supportRequest.request_id
-    const depId = supportRequest.department._id;
+    //const depId = supportRequest.department._id;
+    const depId = supportRequest.attributes.departmentId;
     const projectId = supportRequest.id_project;
     const tdclient = new TiledeskClient({
       projectId: projectId,
@@ -222,8 +224,10 @@ class DirectivesChatbotPlug {
     const token = this.token;
     const API_URL = this.API_URL;
 
+    console.log("supportRequest", supportRequest)
     const requestId = supportRequest.request_id
-    const depId = supportRequest.department._id;
+    //const depId = supportRequest.department._id;
+    const depId = supportRequest.attributes.departmentId;
     const projectId = supportRequest.id_project;
     const tdclient = new TiledeskClient({
       projectId: projectId,
@@ -252,23 +256,13 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      /*else if (directive_name === Directives.WHEN_OFFLINE_HOURS_REPLACE_MESSAGE) {
-        directive.replaceMessage = true;
-        tdclient.log = false;
-        const offlineHoursDir = new DirOfflineHours(tdclient);
-        offlineHoursDir.execute(directive, pipeline, () => {
-          process(nextDirective());
-        });
-      }*/
       else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
-        const helpcenter_api_endpoint = "https://tiledesk-cms-server-prod.herokuapp.com";
-        const helpDir = new DirDeflectToHelpCenter(helpcenter_api_endpoint, projectId);
+        const helpDir = new DirDeflectToHelpCenter({HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId});
         helpDir.execute(directive, pipeline, 3, () => {
           process(nextDirective());
         });
       }
       else {
-        //console.log("Unhandled Inline Directive:", directive_name);
         process(nextDirective());
       }
     }
