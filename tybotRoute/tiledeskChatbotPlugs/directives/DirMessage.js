@@ -32,7 +32,7 @@ class DirMessage {
       message.attributes.markbot = true;
       if (message.text) {
         //console.log("original message:", message.text);
-        message.text = message.text.replace("\\n", "\n");
+        message.text = message.text.replace(/\\n/g, "\n");
         //console.log("cr replaced:", message.text);
       }
       apiext.sendSupportMessageExt(

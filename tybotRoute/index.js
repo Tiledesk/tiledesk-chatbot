@@ -153,7 +153,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     log: false
   });
   tdclient.getRequestById(requestId, async (err, request) => {
-    console.log("got remote request:", request);
+    //console.log("got remote request:", request);
     let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
     // PIPELINE-EXT
     const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);

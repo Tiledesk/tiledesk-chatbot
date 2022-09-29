@@ -84,11 +84,11 @@ class DirOfflineHours {
     
     if (params.m) {
       //console.log("_param m", params.m)
-      message = params.m.replaceAll("\\n", "\n");
+      message = params.m.replace(/\\n/g, "\n");
     }
     if (params.message) {
       //console.log("_param message", params.message)
-      message = params.message.replaceAll("\\n", "\n");
+      message = params.message.replace(/\\n/g, "\n");
     }
 
     if (params.ir) {

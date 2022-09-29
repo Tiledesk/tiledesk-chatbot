@@ -224,7 +224,7 @@ class DirectivesChatbotPlug {
     const token = this.token;
     const API_URL = this.API_URL;
 
-    console.log("supportRequest", supportRequest)
+    //console.log("supportRequest", supportRequest)
     const requestId = supportRequest.request_id
     const depId = supportRequest.department._id;
     //const depId = supportRequest.attributes.departmentId;
