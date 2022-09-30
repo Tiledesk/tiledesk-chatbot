@@ -1,9 +1,21 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.9**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.14**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.14 online
+- more replaceAll moved to replace(//)
+- console.log clean
+
+### 0.1.13 online
+- replaceAll replaced by replace(//)
+- TEMP: const depId = supportRequest.department._id
+
+### 0.1.12 online - TEMP: const depId = supportRequest.department._id;
+
+### 0.1.11 online - logs update for debug deflect to help center directive parsing
 
 ### 0.1.9 online - set log on ExtApi class
 
