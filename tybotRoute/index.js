@@ -10,12 +10,14 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
+const { TdCache } = require('./TdCache.js');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
+let tdcache = null;
 
 // DEV
 const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
@@ -152,6 +154,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     APIKEY: "___",
     log: false
   });
+  
   tdclient.getRequestById(requestId, async (err, request) => {
     //console.log("got remote request:", request);
     let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
@@ -410,6 +413,14 @@ function startApp(settings, completionCallback) {
     APIURL = settings.API_ENDPOINT;
     console.log("(Tybot) settings.API_ENDPOINT:", APIURL);
   }
+  if (settings.REDIS_HOST && settings.REDIS_PORT) {
+    tdcache = new TdCache({
+      host: settings.REDIS_HOST,
+      port: settings.REDIS_PORT,
+      password: settings.REDIS_PASSWORD
+    });
+  }
+  
   if (!settings.log) {
     log = false;
   }
@@ -440,7 +451,17 @@ function startApp(settings, completionCallback) {
       //process.exit(1); // add => exitOnFail: true
     }
     else {
-      console.info("Tilebot start.");
+      if (tdcache) {
+        try {
+          await tdcache.connect();
+        }
+        catch (error) {
+          tdcache = null;
+          console.error("tdcache (Redis) connection error:", error);
+        }
+        console.log("tdcache (Redis) connected.");
+      }
+      console.info("Tilebot started.");
       if (completionCallback) {
         completionCallback();
       }

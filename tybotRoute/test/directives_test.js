@@ -33,6 +33,8 @@ message2
             assert(directivesPlug.directives != null);
             assert(directivesPlug.directives.length == 1);
             assert(directivesPlug.directives[0].name.toLowerCase() == "wait");
+
+            assert()
         });
     
 });
