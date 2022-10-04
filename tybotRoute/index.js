@@ -449,7 +449,7 @@ function startApp(settings, completionCallback) {
     APIURL = settings.API_ENDPOINT;
     console.log("(Tybot) settings.API_ENDPOINT:", APIURL);
   }
-  if (settings.REDIS_HOST && settings.REDIS_PORT) {
+  if (settings.REDIS_HOST && settings.REDIS_PORT && settings.CACHE_ENABLED) {
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
       port: settings.REDIS_PORT,
@@ -464,21 +464,8 @@ function startApp(settings, completionCallback) {
     log = true;
   }
   console.log("(Tybot) log:", log);
-  /*
-  if (!process.env.MONGODB_URI) {
-    throw new Error("process.env.MONGODB_URI is mandatory.");
-  }
-  if (!process.env.API_ENDPOINT) {
-    throw new Error("settings.API_ENDPOINT is mandatory.");
-  }
-  if (!process.env.TILEBOT_LOG) {
-    log = false;
-  }
-  else {
-    log = true;
-  }*/
   var pjson = require('./package.json');
-  console.log("Starting Tilebot connector v" + pjson.version);
+  console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
   console.log("(Tilebot) Connecting to mongodb...");
 
   connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
@@ -493,9 +480,9 @@ function startApp(settings, completionCallback) {
         }
         catch (error) {
           tdcache = null;
-          console.error("tdcache (Redis) connection error:", error);
+          console.error("(Tilebot) tdcache (Redis) connection error:", error);
         }
-        console.log("Tilebot tdcache (Redis) connected.");
+        console.log("(Tilebot) tdcache (Redis) connected.");
       }
       console.info("Tilebot started.");
       if (completionCallback) {
