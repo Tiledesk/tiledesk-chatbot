@@ -155,16 +155,45 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     log: false
   });
   
+  let request;
+  const request_key = "tilebot:" + requestId;
+  console.log("Getting by request key:", request_key)
+  if (tdcache) {
+    request = await tdcache.getJSON(request_key)
+    console.log("HIT! Request from cache:", request.request_id);
+    if (!request) {
+      console.log("!Request from cache", requestId);
+      request = await tdclient.getRequestById(requestId);
+      console.log("Got request with APIs (after no cache hit)");
+    }
+  }
+  else {
+    console.log("No tdcache. Getting request with APIs", requestId);
+    request = await tdclient.getRequestById(requestId);
+    console.log("(No tdcache) Got request with APIs");
+    
+  }
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
+    // PIPELINE-EXT
+  const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
+  tdclient.sendSupportMessage(requestId, bot_answer, () => {
+    directivesPlug.processDirectives(() => {
+      if (log) {console.log("After message execute directives end.");}
+      res.json({success:true});
+    });
+  });
+  
+  /*
   tdclient.getRequestById(requestId, async (err, request) => {
     //console.log("got remote request:", request);
     let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
     // PIPELINE-EXT
     const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
-    /*if (!validMessage(bot_answer)) {
-      console.log("Empty message. Cancel sending.");
-      res.json({success:true});
-      return;
-    }*/
+    //if (!validMessage(bot_answer)) {
+    //  console.log("Empty message. Cancel sending.");
+    //  res.json({success:true});
+    //  return;
+    //}
     tdclient.sendSupportMessage(requestId, bot_answer, () => {
       directivesPlug.processDirectives(() => {
         if (log) {console.log("After message execute directives end.");}
@@ -172,10 +201,10 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
       });
     });
   });
+  */
 });
 
 async function execFaq(req, res, faqs, botId, message, token, bot) {
-  console.log("execFaq.", faqs, botId);
   let sender = 'bot_' + botId;
   var answerObj;
   answerObj = faqs[0];
@@ -260,6 +289,13 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     ENDPOINT: extEndpoint,
     log: log
   });
+  //console.log("request__:", message.request);
+  if (tdcache) {
+    const request_key = "tilebot:" + message.request.request_id
+    console.log("Setting request key:", request_key)
+    tdcache.setJSON(request_key, message.request);
+    //await tdcache.setJSON(request_key, message.request);
+  }
   apiext.sendSupportMessageExt(bot_answer, chatbot_client.projectId, chatbot_client.requestId, chatbot_client.token, () => {
     if (log) {console.log("Message sent.");}
     /*directivesPlug.processDirectives(() => {
@@ -441,11 +477,11 @@ function startApp(settings, completionCallback) {
   else {
     log = true;
   }*/
-  
-  console.log("Starting Tilebot connector v0.1.10 ...");
+  var pjson = require('./package.json');
+  console.log("Starting Tilebot connector v" + pjson.version);
   console.log("(Tilebot) Connecting to mongodb...");
 
-  connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, function(err) {
+  connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
     if (err) { 
       console.error('Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
       //process.exit(1); // add => exitOnFail: true
@@ -459,7 +495,7 @@ function startApp(settings, completionCallback) {
           tdcache = null;
           console.error("tdcache (Redis) connection error:", error);
         }
-        console.log("tdcache (Redis) connected.");
+        console.log("Tilebot tdcache (Redis) connected.");
       }
       console.info("Tilebot started.");
       if (completionCallback) {

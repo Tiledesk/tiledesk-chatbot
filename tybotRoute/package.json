@@ -22,7 +22,7 @@
     "uuid": "^3.3.3",
 
     "@tiledesk/tiledesk-chatbot-util": "^0.8.38",
-    "@tiledesk/tiledesk-client": "^0.8.30",
+    "@tiledesk/tiledesk-client": "^0.8.34",
     "@tiledesk/helpcenter-query-client": "^0.1.8",
     "minimist-string": "^1.0.2"
   }
