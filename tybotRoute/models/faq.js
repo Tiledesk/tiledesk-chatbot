@@ -1,8 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var { nanoid } = require("nanoid");
-const uuidv4 = require('uuid/v4');
-
+//const { v4: uuidv4 } = require('uuid');
 var defaultFullTextLanguage = process.env.DEFAULT_FULLTEXT_INDEX_LANGUAGE || "none";
 
 var FaqSchema = new Schema({
@@ -13,10 +12,10 @@ var FaqSchema = new Schema({
   intent_id: { 
     type: String,
     required: false,
-    index:true,
-    default: function() {
-      return uuidv4();
-    } 
+    index:true
+    //default: function() {
+    //  return uuidv4();
+    //} 
   },
   intent_display_name: { //documentare
     type: String,

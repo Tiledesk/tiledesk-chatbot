@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-const uuidv4 = require('uuid/v4');
+//const uuidv4 = require('uuid/v4');
+//const uuidv4 = require('uuid');
 
 var Faq_kbSchema = new Schema({
   name: {
@@ -49,7 +50,7 @@ var Faq_kbSchema = new Schema({
   secret: {
     type: String,
     required: true,
-    default: uuidv4(),
+    //default: uuidv4(),
     select: false
   },
   language: {
