@@ -11,6 +11,7 @@ const { v4: uuidv4 } = require('uuid');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
+const { IntentForm } = require('./IntentForm.js');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -55,10 +56,26 @@ router.post('/ext/:botid', async (req, res) => {
   //const bot = await Faq_kb.findById(botId).exec();
   const bot = await Faq_kb.findById(botId).select('+secret').exec();
   if (log) {console.log("bot:", bot);}
-
+  
+  console.log("bot:", bot);
+  const locked_intent = await currentLockedIntent(message.request.request_id);
+  console.log("got locked intent", locked_intent)
+  if (locked_intent) {
+    const tdclient = new TiledeskClient({
+      projectId: message.id_project,
+      token: token,
+      APIURL: APIURL,
+      APIKEY: "___",
+      log: false
+    });
+    const faqs = await tdclient.getIntents(botId, locked_intent, 0, 0, null);
+     console.log("got faqs", faqs)
+    execFaq(req, res, faqs, botId, message, token, bot);
+    return;
+  }
   // CREATE TOKEN
   //var botWithSecret = await Faq_kb.findById(bot._id).select('+secret').exec();
-
+/*
   let signOptions = {
     issuer:  'https://tiledesk.com',
     subject:  'bot',
@@ -69,7 +86,7 @@ router.post('/ext/:botid', async (req, res) => {
   // DEPRECATED, REMOVE
   const bot_token = jwt.sign(bot.toObject(), bot.secret, signOptions);
   //console.log("bot_token:", bot_token);
-  
+  */
   // SETUP EXACT MATCH
   let query = { "id_project": message.id_project, "id_faq_kb": botId, "question": message.text };
   // BUT CHECKING ACTION BUTTON...
@@ -171,7 +188,6 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     console.log("No tdcache. Getting request with APIs", requestId);
     request = await tdclient.getRequestById(requestId);
     console.log("(No tdcache) Got request with APIs");
-    
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
     // PIPELINE-EXT
@@ -205,10 +221,84 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
 });
 
 async function execFaq(req, res, faqs, botId, message, token, bot) {
+  answerObj = faqs[0];
+  console.log("answerObj:", answerObj)
   let sender = 'bot_' + botId;
   var answerObj;
-  answerObj = faqs[0];
   answerObj.score = 100; //exact search not set score
+
+  const requestId = message.request.request_id;
+  const projectId = message.id_project;
+  console.log("requestId:", requestId)
+  //console.log("token:", token)
+  console.log("projectId:", projectId)
+  
+  if (tdcache) {
+    const requestKey = "tilebot:" + requestId
+    //console.log("Setting request key:", requestKey)
+    // best effort, do not "await", go on, trust redis speed.
+    tdcache.setJSON(requestKey, message.request);
+    //await tdcache.setJSON(requestKey, message.request);
+  }
+  // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
+  // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
+  // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
+  // THE ALTERNATIVE ROUTE.
+  let extEndpoint = `${APIURL}/modules/tilebot/`;
+  if (process.env.TYBOT_ENDPOINT) {
+    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+  }
+  const apiext = new ExtApi({
+    ENDPOINT: extEndpoint,
+    log: log
+  });
+  
+
+  // THE FORM
+  let intent_form = null
+  let intent_name = answerObj.intent_display_name
+  if (intent_name === "test_form_intent") {
+    intent_form = {
+      "name": "form_name",
+      "id": "form_id",
+      "fields": [
+        {
+          "name": "userFullname",
+          "type": "text",
+          "label": "What is your name?"
+        },
+        {
+          "name": "userEmail",
+          "type": "text",
+          "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
+          "label": "Your email?",
+          "errorLabel": "This email address is invalid\n\nCan you insert a correct email address?"
+        }
+      ]
+    }
+  }
+  
+  if (intent_form) {
+    await lockIntent(requestId, intent_name);
+    const user_reply = message.text;
+    const intent_answer = req.body.payload.text;
+    let form_reply_message = await execIntentForm(user_reply, intent_answer, requestId, intent_form);
+    if (form_reply_message) {
+      console.log("sending...", form_reply_message)
+      // reply with this message (ex. please enter your fullname)
+      apiext.sendSupportMessageExt(form_reply_message, projectId, requestId, token, () => {
+        if (log) {console.log("FORM Message sent.", );}
+      });
+      return;
+    }
+    else {
+      console.log("unlocking intent for request", requestId);
+      unlockIntent(requestId);
+      console.log("await currentLockedIntent", await currentLockedIntent(requestId))
+    }
+  }
+
+  // FORM END
   
   const context = {
     payload: {
@@ -235,11 +325,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   static_bot_answer.attributes.markbot = true;
   
   static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
-
-  // faq[0] => PIPELINE => bot_answer
-  // execPipeline() was here Placeholder
   
-  //let attr = bot_answer.attributes;
   let attr = static_bot_answer.attributes;
   if (!attr) {
     attr = {};
@@ -264,44 +350,49 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
       question_payload: question_payload,
       others: clonedfaqs
   }
-  //console.debug("intent_info", intent_info);
   attr.intent_info = intent_info;
-  //let directivesPlug = new DirectivesChatbotPlug(message.request, APIURL, token, log); // remove
+  
   const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); // webhook only
-  const chatbot_client = new TiledeskChatbotClient(
-  {
-    request: req,
-    APIKEY: '__APIKEY__',
-    APIURL: APIURL
-  });
-  //if (log) {console.log("Sending back:", JSON.stringify(bot_answer));}
-  //let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
-  // NOTE
-  // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
-  // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
-  // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
-  // THE ALTERNATIVE ROUTE.
-  let extEndpoint = `${APIURL}/modules/tilebot/`;
-  if (process.env.TYBOT_ENDPOINT) {
-    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-  }
-  const apiext = new ExtApi({
-    ENDPOINT: extEndpoint,
-    log: log
-  });
-  //console.log("request__:", message.request);
-  if (tdcache) {
-    const request_key = "tilebot:" + message.request.request_id
-    console.log("Setting request key:", request_key)
-    tdcache.setJSON(request_key, message.request);
-    //await tdcache.setJSON(request_key, message.request);
-  }
-  apiext.sendSupportMessageExt(bot_answer, chatbot_client.projectId, chatbot_client.requestId, chatbot_client.token, () => {
+  
+  bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
+  apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
     if (log) {console.log("Message sent.");}
-    /*directivesPlug.processDirectives(() => {
-      if (log) {console.log("After message execute directives end.");}
-    });*/
   });
+}
+
+async function fillWithRequestParams(message_text, requestId) {
+  const all_parameters = await tdcache.hgetall("tilebot:requests:" + requestId + ":parameters");
+  console.log("collected parameters:", all_parameters);
+  if (all_parameters) {
+    for (const [key, value] of Object.entries(all_parameters)) {
+    console.log("checking parameter", key)
+    message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), all_parameters[key]);
+  }
+  console.log("final:", message_text);
+  }
+  return message_text;
+}
+
+async function execIntentForm(userInputReply, original_intent_answer_text, requestId, form) {
+  console.log("executing intent form...")
+  let intentForm = new IntentForm({form: form, requestId: requestId, db: tdcache});
+  console.log("executing intent form...2")
+  let message = await intentForm.getMessage(userInputReply, original_intent_answer_text);
+  console.log("form message:", message);
+  return message;
+}
+
+async function lockIntent(requestId, intent_name) {
+  await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+  console.log("locked.", intent_name);
+}
+
+async function currentLockedIntent(requestId) {
+  return await tdcache.get("tilebot:requests:"  + requestId + ":locked");
+}
+
+async function unlockIntent(requestId) {
+  await tdcache.del("tilebot:requests:"  + requestId + ":locked");
 }
 
 /*function validMessage(message) {

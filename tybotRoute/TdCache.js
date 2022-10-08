@@ -39,55 +39,129 @@ class TdCache {
     }
 
     async set(key, value, options) {
-        return new Promise( async (resolve, reject) => {
-            if (options && options.EX) {
-                console.log("expires:", options.EX)
-                await this.client.set(
-                    key,
-                    value,
-                    'EX', options.EX);
-            }
-            else {
-                await this.client.set(
-                    key,
-                    value);
-            }
-            if (options && options.callback) {
-                options.callback();
-            }
-            return resolve();
-        });
+      console.log("setting key value", key, value)
+      return new Promise( async (resolve, reject) => {
+        if (options && options.EX) {
+          console.log("expires:", options.EX)
+          try {
+            await this.client.set(
+              key,
+              value,
+              'EX', options.EX);
+          }
+          catch(error) {
+            reject(error)
+          }
+        }
+        else {
+          try {
+            console.log("setting here...key", key, value)
+            await this.client.set(
+              key,
+              value);
+          }
+          catch(error) {
+            console.error("ERRORRRRR", error);
+            reject(error)
+          }
+        }
+        if (options && options.callback) {
+            options.callback();
+        }
+        console.log("resolving...", key);
+        return resolve();
+      });
     }
 
+    async hset(dict_key, key, value, options) {
+      console.log("hsetting dict_key key value", dict_key, key, value)
+      return new Promise( async (resolve, reject) => {
+        if (options && options.EX) {
+          console.log("expires:", options.EX)
+          try {
+            await this.client.hset(
+              dict_key,
+              key,
+              value,
+              'EX', options.EX);
+          }
+          catch(error) {
+            reject(error)
+          }
+        }
+        else {
+          try {
+            console.log("setting here...key", key, value)
+            await this.client.hset(
+              dict_key,
+              key,
+              value);
+          }
+          catch(error) {
+            console.error("ERRORRRRR", error);
+            reject(error)
+          }
+        }
+        if (options && options.callback) {
+            options.callback();
+        }
+        console.log("resolving...", key);
+        return resolve();
+      });
+    }
+    
     async setJSON(key, value, options) {
-        const _string = JSON.stringify(value);
-        return await this.set(key, _string, options);
+      const _string = JSON.stringify(value);
+      return await this.set(key, _string, options);
     }
-
+    
     async get(key, callback) {
-        return new Promise( async (resolve, reject) => {
-            this.client.get(key, (err, value) => {
-                if (callback) {
-                    callback(value);
-                }
-                return resolve(value);
-            });
-        });
-    }
-
-    async getJSON(key, callback) {
-        const value = await this.get(key);
-        return JSON.parse(value);
-    }
-
-    async del(key, callback) {
-        return new Promise( async (resolve, reject) => {
-            await this.client.del(key);
+      console.log("getting key", key)
+      return new Promise( async (resolve, reject) => {
+        this.client.get(key, (err, value) => {
+          if (err) {
+            reject(err);
+          }
+          else {
             if (callback) {
-                callback();
-            }
-            return resolve();
-        })
+              callback(value);
+          }
+          return resolve(value);
+          }
+        });
+      });
+    }
+
+    async hgetall(dict_key, callback) {
+      console.log("hgetting dics", dict_key);
+      return new Promise( async (resolve, reject) => {
+        this.client.hgetall(dict_key, (err, value) => {
+          if (err) {
+            reject(err);
+          }
+          else {
+            if (callback) {
+              callback(value);
+          }
+          return resolve(value);
+          }
+        });
+      });
+    }
+    
+    async getJSON(key, callback) {
+      const value = await this.get(key);
+      return JSON.parse(value);
+    }
+    
+    async del(key, callback) {
+      return new Promise( async (resolve, reject) => {
+        await this.client.del(key);
+        if (callback) {
+            callback();
+        }
+        return resolve();
+      })
     }
 }
 
