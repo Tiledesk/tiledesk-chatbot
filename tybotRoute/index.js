@@ -189,7 +189,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     request = await tdclient.getRequestById(requestId);
     console.log("(No tdcache) Got request with APIs");
   }
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
     // PIPELINE-EXT
   const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
   tdclient.sendSupportMessage(requestId, bot_answer, () => {

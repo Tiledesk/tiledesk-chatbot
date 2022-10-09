@@ -6,7 +6,8 @@ const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
 const { DirWait } = require('./directives/DirWait');
 const { DirReplaceBot } = require('./directives/DirReplaceBot');
-
+const { DirLockIntent } = require('./directives/DirLockIntent');
+const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { Directives } = require('./directives/Directives');
 
 class DirectivesChatbotPlug {
@@ -23,6 +24,7 @@ class DirectivesChatbotPlug {
     this.token = config.token;
     this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
+    this.tdcache = config.cache;
   }
 
   exec(pipeline) {
@@ -106,6 +108,8 @@ class DirectivesChatbotPlug {
     const depId = supportRequest.department._id;
     //const depId = supportRequest.attributes.departmentId;
     const projectId = supportRequest.id_project;
+    const tdcache = this.tdcache;
+    //console.log("TDCACHE:", this.tdcache, tdcache)
     const tdclient = new TiledeskClient({
       projectId: projectId,
       token: token,
@@ -192,6 +196,16 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.WAIT) {
         new DirWait().execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.LOCK_INTENT) {
+        new DirLockIntent(tdcache).execute(directive, requestId, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.UNLOCK_INTENT) {
+        new DirUnlockIntent(tdcache).execute(requestId, () => {
           process(nextDirective());
         });
       }

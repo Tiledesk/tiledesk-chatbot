@@ -39,7 +39,7 @@ class TdCache {
     }
 
     async set(key, value, options) {
-      console.log("setting key value", key, value)
+      //console.log("setting key value", key, value)
       return new Promise( async (resolve, reject) => {
         if (options && options.EX) {
           console.log("expires:", options.EX)
@@ -55,7 +55,7 @@ class TdCache {
         }
         else {
           try {
-            console.log("setting here...key", key, value)
+            //console.log("setting here...key", key, value)
             await this.client.set(
               key,
               value);
@@ -91,7 +91,7 @@ class TdCache {
         }
         else {
           try {
-            console.log("setting here...key", key, value)
+            //console.log("setting here...key", key, value)
             await this.client.hset(
               dict_key,
               key,

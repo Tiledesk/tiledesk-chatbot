@@ -14,6 +14,8 @@ class Directives {
   //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
   static WAIT = "wait";
+  static LOCK_INTENT = "lockintent";
+  static UNLOCK_INTENT = "unlockintent";
 }
 
 module.exports = { Directives };
