@@ -191,7 +191,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
     // PIPELINE-EXT
-  const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
+  const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache);
   tdclient.sendSupportMessage(requestId, bot_answer, () => {
     directivesPlug.processDirectives(() => {
       if (log) {console.log("After message execute directives end.");}
@@ -320,20 +320,14 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   if (!static_bot_answer.attributes) {
     static_bot_answer.attributes = {}
   }
-  static_bot_answer.attributes.directives = true;
-  static_bot_answer.attributes.splits = true;
-  static_bot_answer.attributes.markbot = true;
-  
-  static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
-  
-  let attr = static_bot_answer.attributes;
+  /*let attr = static_bot_answer.attributes;
   if (!attr) {
     attr = {};
-  }
+  }*/
   var timestamp = Date.now();
-  attr['clienttimestamp'] = timestamp;
+  static_bot_answer.attributes['clienttimestamp'] = timestamp;
   if (answerObj && answerObj._id) {
-    attr._answerid = answerObj._id.toString();
+    static_bot_answer.attributes._answerid = answerObj._id.toString();
   }
   // DECORATES THE FINAL ANSWER
   // question_payload = clone of user's original message
@@ -350,28 +344,37 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
       question_payload: question_payload,
       others: clonedfaqs
   }
-  attr.intent_info = intent_info;
+  static_bot_answer.attributes.intent_info = intent_info;
+
+  static_bot_answer.attributes.directives = true;
+  static_bot_answer.attributes.splits = true;
+  static_bot_answer.attributes.markbot = true;
+  static_bot_answer.attributes.fillParams = true;
+  static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
+
+  // exec webhook (only)
+  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); 
   
-  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); // webhook only
-  
-  bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
+  //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
   apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
     if (log) {console.log("Message sent.");}
   });
 }
 
+/*
 async function fillWithRequestParams(message_text, requestId) {
   const all_parameters = await tdcache.hgetall("tilebot:requests:" + requestId + ":parameters");
   console.log("collected parameters:", all_parameters);
   if (all_parameters) {
     for (const [key, value] of Object.entries(all_parameters)) {
-    console.log("checking parameter", key)
-    message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), all_parameters[key]);
-  }
+      console.log("checking parameter", key)
+      message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), all_parameters[key]);
+    }
   console.log("final:", message_text);
   }
   return message_text;
 }
+*/
 
 async function execIntentForm(userInputReply, original_intent_answer_text, requestId, form) {
   console.log("executing intent form...")

@@ -64,7 +64,7 @@ class MarkbotChatbotPlug {
       }
     }
     if (this.log) {console.log("Message out of Markbot:", JSON.stringify(message));}
-    pipeline.nextplug(pipeline);
+    pipeline.nextplug();
     
   }
 

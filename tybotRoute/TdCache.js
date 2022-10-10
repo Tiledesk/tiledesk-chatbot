@@ -138,12 +138,15 @@ class TdCache {
         this.client.hgetall(dict_key, (err, value) => {
           if (err) {
             reject(err);
+            if (callback) {
+              callback(err, null);
+            }
           }
           else {
             if (callback) {
-              callback(value);
-          }
-          return resolve(value);
+              callback(null, value);
+            }
+            resolve(value);
           }
         });
       });

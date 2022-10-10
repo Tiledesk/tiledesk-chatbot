@@ -3,7 +3,8 @@ const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
 const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
-const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
+const { FillParamsChatbotPlug } = require('./tiledeskChatbotPlugs/FillParamsChatbotPlug');
+//const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
 
 // PROD
 /*const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
@@ -14,13 +15,14 @@ const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Webhook
 
 class ExtUtil {
 
-  static async execPipelineExt(static_bot_answer, directivesPlug) {
+  static async execPipelineExt(request, static_bot_answer, directivesPlug, tdcache) {
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
     //const webhookurl = bot.webhook_url;
     //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
     messagePipeline.addPlug(directivesPlug);
     messagePipeline.addPlug(new SplitsChatbotPlug(this.log));
     messagePipeline.addPlug(new MarkbotChatbotPlug(this.log));
+    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, true));
     const bot_answer = await messagePipeline.exec();
     if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
