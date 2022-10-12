@@ -22,7 +22,8 @@ class DirMessage {
         extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
       }
       const apiext = new ExtApi({
-        ENDPOINT: extEndpoint
+        ENDPOINT: extEndpoint,
+        log: true
       });
       if (!message.attributes) {
         message.attributes = {}
@@ -35,6 +36,7 @@ class DirMessage {
         message.text = message.text.replace(/\\n/g, "\n");
         //console.log("cr replaced:", message.text);
       }
+      console.log("sendSupportMessageExt from dirmessage")
       apiext.sendSupportMessageExt(
         message,
         projectId,

@@ -22,7 +22,7 @@ class ExtUtil {
     messagePipeline.addPlug(directivesPlug);
     messagePipeline.addPlug(new SplitsChatbotPlug(this.log));
     messagePipeline.addPlug(new MarkbotChatbotPlug(this.log));
-    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, true));
+    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, this.log));
     const bot_answer = await messagePipeline.exec();
     if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;

@@ -12,6 +12,7 @@ const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 const { IntentForm } = require('./IntentForm.js');
+let axios = require('axios');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -57,9 +58,8 @@ router.post('/ext/:botid', async (req, res) => {
   const bot = await Faq_kb.findById(botId).select('+secret').exec();
   if (log) {console.log("bot:", bot);}
   
-  console.log("bot:", bot);
   const locked_intent = await currentLockedIntent(message.request.request_id);
-  console.log("got locked intent", locked_intent)
+  if (log) {console.log("got locked intent", locked_intent)}
   if (locked_intent) {
     const tdclient = new TiledeskClient({
       projectId: message.id_project,
@@ -69,7 +69,7 @@ router.post('/ext/:botid', async (req, res) => {
       log: false
     });
     const faqs = await tdclient.getIntents(botId, locked_intent, 0, 0, null);
-     console.log("got faqs", faqs)
+    if (log) {console.log("locked intent. got faqs", faqs)}
     execFaq(req, res, faqs, botId, message, token, bot);
     return;
   }
@@ -153,17 +153,11 @@ router.post('/ext/:botid', async (req, res) => {
 });
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
-  //if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
-  //if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
-  if (log) {console.log("req.headers:", JSON.stringify(req.headers));}
+  res.json({success:true});
   const projectId = req.params.projectId;
-  //console.log("projectId", projectId);
   const requestId = req.params.requestId;
-  //console.log("requestId", requestId);
   const token = req.headers["authorization"];
-  //console.log("Authorization", token);
   let answer = req.body;
-  //console.log("Answer", answer);
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -174,64 +168,43 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   
   let request;
   const request_key = "tilebot:" + requestId;
-  console.log("Getting by request key:", request_key)
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    console.log("HIT! Request from cache:", request.request_id);
+    if (log) {console.log("HIT! Request from cache:", request.request_id);}
     if (!request) {
-      console.log("!Request from cache", requestId);
+      if (log) {console.log("!Request from cache", requestId);}
       request = await tdclient.getRequestById(requestId);
-      console.log("Got request with APIs (after no cache hit)");
+      if (log) {console.log("Got request with APIs (after no cache hit)");}
     }
   }
   else {
-    console.log("No tdcache. Getting request with APIs", requestId);
+    if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
     request = await tdclient.getRequestById(requestId);
-    console.log("(No tdcache) Got request with APIs");
+    if (log) {console.log("(No tdcache) Got request with APIs");}
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
-    // PIPELINE-EXT
+  // PIPELINE-EXT
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache);
+  //const bot_answer = answer;
   tdclient.sendSupportMessage(requestId, bot_answer, () => {
     directivesPlug.processDirectives(() => {
       if (log) {console.log("After message execute directives end.");}
-      res.json({success:true});
     });
   });
-  
-  /*
-  tdclient.getRequestById(requestId, async (err, request) => {
-    //console.log("got remote request:", request);
-    let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT});
-    // PIPELINE-EXT
-    const bot_answer = await ExtUtil.execPipelineExt(answer, directivesPlug);
-    //if (!validMessage(bot_answer)) {
-    //  console.log("Empty message. Cancel sending.");
-    //  res.json({success:true});
-    //  return;
-    //}
-    tdclient.sendSupportMessage(requestId, bot_answer, () => {
-      directivesPlug.processDirectives(() => {
-        if (log) {console.log("After message execute directives end.");}
-        res.json({success:true});
-      });
-    });
-  });
-  */
 });
 
 async function execFaq(req, res, faqs, botId, message, token, bot) {
   answerObj = faqs[0];
-  console.log("answerObj:", answerObj)
+  //console.log("answerObj:", answerObj)
   let sender = 'bot_' + botId;
   var answerObj;
   answerObj.score = 100; //exact search not set score
 
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  console.log("requestId:", requestId)
+  //console.log("requestId:", requestId)
   //console.log("token:", token)
-  console.log("projectId:", projectId)
+  //console.log("projectId:", projectId)
   
   if (tdcache) {
     const requestKey = "tilebot:" + requestId
@@ -255,47 +228,79 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   
 
   // THE FORM
-  let intent_form = null
+  let intent_form = answerObj.form;
   let intent_name = answerObj.intent_display_name
   if (intent_name === "test_form_intent") {
     intent_form = {
       "name": "form_name",
       "id": "form_id",
+      "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
+      "cancelReply": "Form Annullata",
       "fields": [
         {
           "name": "userFullname",
           "type": "text",
           "label": "What is your name?"
+        },{
+          "name": "companyName",
+          "type": "text",
+          "label": "Thank you ${userFullname}! What is your Company name?"
         },
         {
           "name": "userEmail",
           "type": "text",
           "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
-          "label": "Your email?",
-          "errorLabel": "This email address is invalid\n\nCan you insert a correct email address?"
+          "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂",
+          "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
         }
       ]
-    }
+    };
   }
   
   if (intent_form) {
     await lockIntent(requestId, intent_name);
     const user_reply = message.text;
     const intent_answer = req.body.payload.text;
-    let form_reply_message = await execIntentForm(user_reply, intent_answer, requestId, intent_form);
-    if (form_reply_message) {
-      console.log("sending...", form_reply_message)
+    let form_reply = await execIntentForm(user_reply, intent_answer, requestId, intent_form);
+    console.log("got form reply", form_reply)
+    //if (form_reply_message) {
+    if (!form_reply.canceled && form_reply.message) {
+      console.log("Form replying for next field...");
+      if (log) {console.log("Sending form reply...", form_reply_message)}
       // reply with this message (ex. please enter your fullname)
-      apiext.sendSupportMessageExt(form_reply_message, projectId, requestId, token, () => {
+      if (!form_reply.message.attributes) {
+        form_reply.message.attributes = {}
+      }
+      form_reply.message.attributes.fillParams = true;
+      form_reply.message.attributes.splits = true;
+      apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
         if (log) {console.log("FORM Message sent.", );}
       });
       return;
     }
-    else {
-      console.log("unlocking intent for request", requestId);
+    else if (form_reply.end) {
+      console.log("Form end.");
+      if (log) {console.log("unlocking intent for request", requestId);}
       unlockIntent(requestId);
-      console.log("await currentLockedIntent", await currentLockedIntent(requestId))
+      populatePrechatFormAndLead(message, projectId, token, APIURL);
     }
+    else if (form_reply.canceled) {
+      console.log("Form canceled.");
+      if (log) {console.log("unlocking intent due to canceling, for request", requestId);}
+      unlockIntent(requestId);
+      if (log) {console.log("sending form 'cancel' reply...", form_reply.message)}
+      // reply with this message (ex. please enter your fullname)
+      if (!form_reply.message.attributes) {
+        form_reply.message.attributes = {}
+      }
+      form_reply.message.attributes.fillParams = true;
+      form_reply.message.attributes.splits = true;
+      apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
+        if (log) {console.log("FORM Message sent.", );}
+      });
+      return;
+    }
+    console.log("form_reply is", form_reply)
   }
 
   // FORM END
@@ -356,38 +361,186 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); 
   
   //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
+  
   apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-    if (log) {console.log("Message sent.");}
+    if (log) {console.log("Message sent");}
   });
+  
+  /// TEST BUG
+  /*const tdclient = new TiledeskClient({
+    projectId: projectId,
+    token: token,
+    APIURL: APIURL,
+    APIKEY: "___",
+    log: false
+  });
+  let i = 1;
+  setInterval(() => {
+    bot_answer.text = bot_answer.text + " : i" + i
+    tdclient.sendSupportMessage(requestId, bot_answer, () => {
+      if (log) {console.log("Message sent", i);}
+    });
+    i += 1;
+  }, "1000")*/
+
+  ///
+  /*
+  let i = 1;
+  setInterval(() => {
+    bot_answer.text = bot_answer.text + " : i" + i
+    apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
+      if (log) {console.log("Message sent", i);}
+    });
+    i += 1;
+    console.log("Delayed 2 seconds.");
+  }, "1000");
+  */
+
+  /*
+  let i = 1;
+  setInterval(() => {
+    bot_answer.text = bot_answer.text + " : i" + i
+    sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
+      console.log("Message sent", i);
+    });
+    i += 1;
+    console.log("Delayed 2 seconds.");
+  }, "1000");
+  */
+  
 }
 
-/*
-async function fillWithRequestParams(message_text, requestId) {
-  const all_parameters = await tdcache.hgetall("tilebot:requests:" + requestId + ":parameters");
-  console.log("collected parameters:", all_parameters);
+async function populatePrechatFormAndLead(message, projectId, token, APIURL, callback) {
+  const tdclient = new TiledeskClient({
+    projectId: projectId,
+    token: token,
+    APIURL: APIURL,
+    APIKEY: "___"
+  });
+  
+  const leadId = message.request.lead._id;
+  const requestId = message.request.request_id;
+
+  const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+  const all_parameters = await tdcache.hgetall(parameters_key);
   if (all_parameters) {
-    for (const [key, value] of Object.entries(all_parameters)) {
-      console.log("checking parameter", key)
-      message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), all_parameters[key]);
-    }
-  console.log("final:", message_text);
-  }
-  return message_text;
+    //console.log("all_parameters['userEmail']", all_parameters['userEmail'])
+    //console.log("all_parameters['userFullname']", all_parameters['userFullname']); 
+    tdclient.updateLeadEmailFullname(leadId, null, all_parameters['userFullname'], () => {
+      if (log) {console.log("lead updated.")}
+      tdclient.updateRequestAttributes(requestId, {
+        preChatForm: all_parameters,
+        updated: Date.now
+      }, () => {
+        if (log) {console.log("prechat updated.");}
+        if (callback) {
+          callback();
+        }
+      });
+    });
+  };
 }
-*/
+
+
+
+
+/** TEST BUG
+  function fixToken(token) {
+    if (token.startsWith('JWT ')) {
+      return token;
+    }
+    else {
+      return 'JWT ' + token;
+    }
+  }
+
+function sendSupportMessageExt(message, projectId, requestId, token, callback) {
+  let extEndpoint = `${APIURL}/modules/tilebot/`;
+  if (process.env.TYBOT_ENDPOINT) {
+    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+  }
+    const jwt_token = fixToken(token);
+    const url = `${extEndpoint}/ext/${projectId}/requests/${requestId}/messages`;
+    if (this.log) {console.log("sendSupportMessageExt URL", url);}
+    //console.log("sendSupportMessageExt:", url);
+    const HTTPREQUEST = {
+      url: url,
+      headers: {
+        'Content-Type' : 'application/json',
+        'Authorization': jwt_token
+      },
+      json: message,
+      method: 'POST'
+    };
+    myrequest(
+      HTTPREQUEST,
+      function(err, resbody) {
+        //console.log("sendSupportMessageExt resbody:", resbody);
+        if (err) {
+          //console.error("sendSupportMessageExt error:", err)
+          if (callback) {
+            callback(err);
+          }
+        }
+        else {
+          if (callback) {
+            console.log("resbody:", resbody);
+            callback(null, resbody);
+          }
+        }
+      }, this.log
+    );
+  }
+
+
+  function myrequest(options, callback, log) {
+    //console.log("API URL:", options.url);
+    axios(
+      {
+        url: options.url,
+        method: options.method,
+        data: options.json,
+        params: options.params,
+        headers: options.headers
+      })
+    .then((res) => {
+      //console.log("Response for url:", options.url);
+      //console.log("Response headers:\n", res.headers);
+      if (res && res.status == 200 && res.data) {
+        if (callback) {
+          callback(null, res.data);
+        }
+      }
+      else {
+        if (callback) {
+          callback(TiledeskClient.getErr({message: "Response status not 200"}, options, res), null, null);
+        }
+      }
+    })
+    .catch( (error) => {
+      console.error("An error occurred:", error);
+      if (callback) {
+        callback(error, null, null);
+      }
+    });
+  }
+  *** END TEST*/
+
+
+
+
+
 
 async function execIntentForm(userInputReply, original_intent_answer_text, requestId, form) {
-  console.log("executing intent form...")
-  let intentForm = new IntentForm({form: form, requestId: requestId, db: tdcache});
-  console.log("executing intent form...2")
+  if (log) {console.log("executing intent form...")}
+  let intentForm = new IntentForm({form: form, requestId: requestId, db: tdcache, log: log});
   let message = await intentForm.getMessage(userInputReply, original_intent_answer_text);
-  console.log("form message:", message);
   return message;
 }
 
 async function lockIntent(requestId, intent_name) {
   await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
-  console.log("locked.", intent_name);
+  //console.log("locked.", intent_name);
 }
 
 async function currentLockedIntent(requestId) {

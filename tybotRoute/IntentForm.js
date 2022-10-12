@@ -9,25 +9,22 @@ class IntentForm {
     this.form = options.form;
     this.CURRENT_FIELD_INDEX_KEY = "tilebot:requests:" + this.requestId + ":currentFieldIndex"
     this.CURRENT_FORM_KEY = "tilebot:requests:" + this.requestId + ":currentForm"
+    this.log = options.log;
   }
 
   async setValue(key, value) {
     let db_key = key; //this.requestId + ":"+ key;
-    console.log("setting key:", db_key);
-    console.log("setting value:", value);
     await this.db.set(db_key, value);
   }
 
   async getValue(key) {
     let db_key = key; //this.requestId + ":"+ key;
-    console.log("getting key:", db_key);
     const value = await this.db.get(db_key);
     return value;
   }
 
   async delValue(key) {
     let db_key = key; //this.requestId + ":"+ key;
-    console.log("removing key:", db_key);
     await this.db.del(db_key);
   }
 
@@ -54,57 +51,74 @@ class IntentForm {
     }
   */
   async getMessage(user_text, intent_text) {
+    console.log("get message:", user_text)
+    if (
+    this.form &&
+    this.form.cancelCommands &&
+    this.form.cancelCommands.includes(user_text.toLowerCase())) {
+      const cancelReply = this.form.cancelReply ? this.form.cancelReply : "Canceled"
+      console.log("get messagetoLowerCase annulla")
+      await this.delValue(this.CURRENT_FIELD_INDEX_KEY)
+      await this.delValue(this.CURRENT_FORM_KEY)
+      return {
+        canceled: true,
+        message: {
+          text: cancelReply
+        }
+      };
+    }
     let current_field = null;
     const _current_field = await this.getValue(this.CURRENT_FIELD_INDEX_KEY);
-    console.log("_current_field", _current_field)
     if (_current_field) {
       current_field = Number(_current_field);
     }
-    console.log("CURRENT FIELD VALUE:", current_field);
-    //const FIELD_VALUE_K = current_field; // key:0 => value:"user text"
     let current_form = null;
     const _current_form = await this.getValue(this.CURRENT_FORM_KEY);
     if (_current_form) {
       current_form = JSON.parse(_current_form);
     }
-    console.log("CURRENT FORM IS", current_form);
+    //console.log("CURRENT FORM IS", current_form);
     if (current_field == null) {
-      console.log("current_field is undefined");
+      if (this.log) {console.log("current_field is undefined")}
       current_field = 0;
       await this.setValue(this.CURRENT_FORM_KEY, JSON.stringify(this.form));
       await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
       //this.printdb();
-      console.log("INTENT_FORM:", this.form);
-      console.log("CURRENT FIELD:", current_field);
+      if (this.log) {console.log("INTENT_FORM:", this.form);}
+      if (this.log) {console.log("CURRENT FIELD:", current_field);}
       let message = {
         text: this.form.fields[current_field].label
       }
-      console.log("form reply message:", message);
-      return message;
+      if (this.log) {console.log("form reply message:", message);}
+      return {
+        message: message
+      }
     }
     else {
       //console.log("current_form:", current_form);
-      console.log("current_field:", current_field);
+      if (this.log) {console.log("current_field:", current_field);}
       
       if (current_form.fields[current_field].regex) {
         if (!this.validate(user_text, current_form.fields[current_field].regex)) {
-          console.log("text is invalid");
+          if (this.log) {console.log("text is invalid");}
           // send error message
           let error_reply_text = this.form.fields[current_field].label;
-          console.log("text is invalid label", error_reply_text);
+          if (this.log) {console.log("text is invalid label", error_reply_text);}
           if (current_form.fields[current_field].errorLabel) {
-            console.log("text is invalid errorLabel", current_form.fields[current_field].errorLabel);
+            if (this.log) {console.log("text is invalid errorLabel", current_form.fields[current_field].errorLabel);}
             error_reply_text = current_form.fields[current_field].errorLabel;
           }
           let message = {
             text: error_reply_text // Error
           }
-          console.log("error message", message)
-          return message;
+          console.log("IntentForm error message:", message)
+          return {
+            message: message
+          };
         }
       }
       else {
-        console.log("no regex validation requested. next field...");
+        if (this.log) {console.log("no regex validation requested. next field...")}
       }
       
       // text ok?
@@ -117,28 +131,28 @@ class IntentForm {
       // persist parameter
       const parameter_name = current_form.fields[current_field].name;
       const parameter_value = user_text;
-      console.log("adding parameters, name:", parameter_name, "value:", parameter_value);
+      if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
       await this.addParameter(this.requestId, parameter_name, parameter_value);
-      console.log("next field...");
+      if (this.log) {console.log("next field...");}
 
       current_field += 1;
       if (current_field === current_form.fields.length) {
         // Form completed!
         await this.delValue(this.CURRENT_FIELD_INDEX_KEY)
         await this.delValue(this.CURRENT_FORM_KEY)
-        return null;
-        /*let message = {
-          text: intent_text //ex. "Form completed\n\\agent"
-        }
-        return message;*/
+        return {
+          end: true
+        };
       }
       else {
-        console.log("Processing next field:", current_field)
+        if (this.log) {console.log("Processing next field:", current_field)}
         await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
         let message = {
           text: current_form.fields[current_field].label
         }
-        return message;
+        return {
+          message: message
+        };
       }
     }
   }
@@ -149,7 +163,6 @@ class IntentForm {
   
   validate(text, regex) {
     var _regex = regex.substring(1, regex.length-1);
-    console.log(_regex);
     const rg = new RegExp(_regex, "g");
     return rg.test(text);
   }

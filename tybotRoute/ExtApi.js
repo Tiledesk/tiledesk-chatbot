@@ -38,7 +38,6 @@ class ExtApi {
     const jwt_token = this.fixToken(token);
     const url = `${this.ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
     if (this.log) {console.log("sendSupportMessageExt URL", url);}
-    console.log("sendSupportMessageExt:", url);
     const HTTPREQUEST = {
       url: url,
       headers: {
@@ -51,8 +50,9 @@ class ExtApi {
     this.myrequest(
       HTTPREQUEST,
       function(err, resbody) {
-        console.log("sendSupportMessageExt resbody:", resbody);
+        //console.log("sendSupportMessageExt resbody:", resbody);
         if (err) {
+          //console.error("sendSupportMessageExt error:", err)
           if (callback) {
             callback(err);
           }
@@ -104,18 +104,6 @@ class ExtApi {
       }
     });
   }
-/*
-  static async execPipelineExt(static_bot_answer, directivesPlug) {
-    const messagePipeline = new MessagePipeline(static_bot_answer, null);
-    //const webhookurl = bot.webhook_url;
-    //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
-    messagePipeline.addPlug(directivesPlug);
-    messagePipeline.addPlug(new SplitsChatbotPlug(this.log));
-    messagePipeline.addPlug(new MarkbotChatbotPlug(this.log));
-    const bot_answer = await messagePipeline.exec();
-    if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
-    return bot_answer;
-  }*/
 }
 
 module.exports = { ExtApi };

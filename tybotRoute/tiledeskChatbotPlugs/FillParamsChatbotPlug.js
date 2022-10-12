@@ -16,12 +16,11 @@ class FillParamsChatbotPlug {
   }
 
   exec(pipeline) {
-    console.log("fillParams...")
+    if (this.log) {console.log("fillParams...")}
     let message = pipeline.message;
+    if (this.log) {console.log("fill params message", message)}
     if (message.attributes && (message.attributes.fillParams == undefined || message.attributes.fillParams == false)) { // defaults to disabled
-      if (this.log) {
-        console.log("fillParams disabled.");
-      }
+      if (this.log) {console.log("fillParams disabled.");}
       pipeline.nextplug();
       return;
     }
@@ -31,14 +30,14 @@ class FillParamsChatbotPlug {
     const requestId = this.request.request_id;
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = this.tdcache.hgetall(parameters_key, (err, all_parameters) => {
-      console.log("got parameters", all_parameters);
+      if (this.log) {console.log("got parameters", all_parameters);}
       if (err) {
         console.error("An error occurred while filling paprameters:", err);
       }
       else if (all_parameters) {
         const filled_message_text = this.fillWithRequestParams(message.text, all_parameters);
         message.text = filled_message_text;
-        console.log("message filled_message_text:", message)
+        //console.log("message filled_message_text:", message)
         if (!message.attributes) {
           message.attributes = {}
         }
@@ -63,9 +62,10 @@ class FillParamsChatbotPlug {
           }
         }
       }
-      
+
+      //console.log("FINAL:", message)
       if (this.log) {
-        console.log("Message out of fillAttributes plugin:", JSON.stringify(message));
+        //console.log("Message out of fillAttributes plugin:", JSON.stringify(message));
       }
       pipeline.nextplug();
     });

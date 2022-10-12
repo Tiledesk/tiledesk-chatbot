@@ -19,7 +19,7 @@ class TdCache {
                     password: this.redis_password
                 });
             this.client.on('error', err => {
-                console.log('Redis Error', err);
+                console.log('Redis connection error', err);
                 reject(err);
                 if (callback) {
                     callback(err);
@@ -33,7 +33,7 @@ class TdCache {
                 if (callback) {
                     callback();
                 }
-                console.log("Redis is ready");
+                console.log("Redis is ready.");
             });
         });
     }
@@ -42,7 +42,7 @@ class TdCache {
       //console.log("setting key value", key, value)
       return new Promise( async (resolve, reject) => {
         if (options && options.EX) {
-          console.log("expires:", options.EX)
+          //console.log("expires:", options.EX)
           try {
             await this.client.set(
               key,
@@ -61,23 +61,23 @@ class TdCache {
               value);
           }
           catch(error) {
-            console.error("ERRORRRRR", error);
+            console.error("Error", error);
             reject(error)
           }
         }
         if (options && options.callback) {
             options.callback();
         }
-        console.log("resolving...", key);
+        //console.log("resolving...", key);
         return resolve();
       });
     }
 
     async hset(dict_key, key, value, options) {
-      console.log("hsetting dict_key key value", dict_key, key, value)
+      //console.log("hsetting dict_key key value", dict_key, key, value)
       return new Promise( async (resolve, reject) => {
         if (options && options.EX) {
-          console.log("expires:", options.EX)
+          //console.log("expires:", options.EX)
           try {
             await this.client.hset(
               dict_key,
@@ -98,14 +98,13 @@ class TdCache {
               value);
           }
           catch(error) {
-            console.error("ERRORRRRR", error);
+            console.error("Error", error);
             reject(error)
           }
         }
         if (options && options.callback) {
             options.callback();
         }
-        console.log("resolving...", key);
         return resolve();
       });
     }
@@ -116,7 +115,7 @@ class TdCache {
     }
     
     async get(key, callback) {
-      console.log("getting key", key)
+      //console.log("getting key", key)
       return new Promise( async (resolve, reject) => {
         this.client.get(key, (err, value) => {
           if (err) {
@@ -133,7 +132,7 @@ class TdCache {
     }
 
     async hgetall(dict_key, callback) {
-      console.log("hgetting dics", dict_key);
+      //console.log("hgetting dics", dict_key);
       return new Promise( async (resolve, reject) => {
         this.client.hgetall(dict_key, (err, value) => {
           if (err) {
