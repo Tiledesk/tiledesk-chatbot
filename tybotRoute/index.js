@@ -152,6 +152,9 @@ router.post('/ext/:botid', async (req, res) => {
   });
 });
 
+/**
+  /support_ext/
+*/
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   res.json({success:true});
   const projectId = req.params.projectId;
@@ -226,37 +229,33 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     log: log
   });
   
-
-  // THE FORM
-  let intent_form = answerObj.form;
   let intent_name = answerObj.intent_display_name
+  // THE FORM
   if (intent_name === "test_form_intent") {
-    intent_form = {
-      "name": "form_name",
-      "id": "form_id",
+    answerObj.form = {
       "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
-      "cancelReply": "Form Annullata",
+      "cancelReply": "Ok annullato!",
       "fields": [
         {
           "name": "userFullname",
           "type": "text",
-          "label": "What is your name?"
+          "label": "What is your name?\n* Andrea\n* Marco\n* Mirco\n* Luca Leo"
         },{
           "name": "companyName",
           "type": "text",
-          "label": "Thank you ${userFullname}! What is your Company name?"
+          "label": "Thank you ${userFullname}! What is your Company name?\n* Tiledesk\n* Frontiere21"
         },
         {
           "name": "userEmail",
           "type": "text",
           "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
-          "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂",
+          "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂\n* andrea@libero.it\n* andrea@tiledesk.com",
           "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
         }
       ]
     };
   }
-  
+  let intent_form = answerObj.form;
   if (intent_form) {
     await lockIntent(requestId, intent_name);
     const user_reply = message.text;
@@ -273,6 +272,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
       }
       form_reply.message.attributes.fillParams = true;
       form_reply.message.attributes.splits = true;
+      form_reply.message.attributes.markbot = true;
       apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
         if (log) {console.log("FORM Message sent.", );}
       });
@@ -357,31 +357,33 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   static_bot_answer.attributes.fillParams = true;
   static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
-  // exec webhook (only)
-  const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token); 
-  
-  //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
-  
-  apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-    if (log) {console.log("Message sent");}
-  });
+  if (intent_name !== "testloop-good" && intent_name !== "loopfail") {
+    // exec webhook (only)
+    const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token);
+    
+    apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
+      if (log) {console.log("Message sent");}
+    });
+  }
   
   /// TEST BUG
-  /*const tdclient = new TiledeskClient({
-    projectId: projectId,
-    token: token,
-    APIURL: APIURL,
-    APIKEY: "___",
-    log: false
-  });
-  let i = 1;
-  setInterval(() => {
-    bot_answer.text = bot_answer.text + " : i" + i
-    tdclient.sendSupportMessage(requestId, bot_answer, () => {
-      if (log) {console.log("Message sent", i);}
+  /* if (intent_name === "testloop-good") {
+    const tdclient = new TiledeskClient({
+      projectId: projectId,
+      token: token,
+      APIURL: APIURL,
+      APIKEY: "___",
+      log: false
     });
-    i += 1;
-  }, "1000")*/
+    let i = 1;
+    setInterval(() => {
+      bot_answer.text = bot_answer.text + " : i" + i
+      tdclient.sendSupportMessage(requestId, bot_answer, () => {
+        if (log) {console.log("Message sent", i);}
+      });
+      i += 1;
+    }, "1000")
+  }*/
 
   ///
   /*
@@ -396,17 +398,19 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   }, "1000");
   */
 
-  /*
-  let i = 1;
-  setInterval(() => {
-    bot_answer.text = bot_answer.text + " : i" + i
-    sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-      console.log("Message sent", i);
-    });
-    i += 1;
-    console.log("Delayed 2 seconds.");
-  }, "1000");
-  */
+  if (intent_name === "loopfail") {
+    let i = 1;
+    setInterval(() => {
+      static_bot_answer.text = static_bot_answer.text + " : i" + i
+      sendSupportMessageExt(static_bot_answer, projectId, requestId, token, () => {
+        console.log("Message sent", i);
+      });
+      i += 1;
+      console.log("Delayed 1 seconds.");
+    }, "500");
+  }
+  
+  
   
 }
 
@@ -444,7 +448,7 @@ async function populatePrechatFormAndLead(message, projectId, token, APIURL, cal
 
 
 
-/** TEST BUG
+//TEST BUG
   function fixToken(token) {
     if (token.startsWith('JWT ')) {
       return token;
@@ -461,7 +465,7 @@ function sendSupportMessageExt(message, projectId, requestId, token, callback) {
   }
     const jwt_token = fixToken(token);
     const url = `${extEndpoint}/ext/${projectId}/requests/${requestId}/messages`;
-    if (this.log) {console.log("sendSupportMessageExt URL", url);}
+    console.log("sendSupportMessageExt URL", url);
     //console.log("sendSupportMessageExt:", url);
     const HTTPREQUEST = {
       url: url,
@@ -524,7 +528,7 @@ function sendSupportMessageExt(message, projectId, requestId, token, callback) {
       }
     });
   }
-  *** END TEST*/
+// END TEST
 
 
 
