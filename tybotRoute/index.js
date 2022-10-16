@@ -366,48 +366,6 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     if (log) {console.log("Message sent");}
   });
   
-  /// TEST BUG
-  /*const tdclient = new TiledeskClient({
-    projectId: projectId,
-    token: token,
-    APIURL: APIURL,
-    APIKEY: "___",
-    log: false
-  });
-  let i = 1;
-  setInterval(() => {
-    bot_answer.text = bot_answer.text + " : i" + i
-    tdclient.sendSupportMessage(requestId, bot_answer, () => {
-      if (log) {console.log("Message sent", i);}
-    });
-    i += 1;
-  }, "1000")*/
-
-  ///
-  /*
-  let i = 1;
-  setInterval(() => {
-    bot_answer.text = bot_answer.text + " : i" + i
-    apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-      if (log) {console.log("Message sent", i);}
-    });
-    i += 1;
-    console.log("Delayed 2 seconds.");
-  }, "1000");
-  */
-
-  /*
-  let i = 1;
-  setInterval(() => {
-    bot_answer.text = bot_answer.text + " : i" + i
-    sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-      console.log("Message sent", i);
-    });
-    i += 1;
-    console.log("Delayed 2 seconds.");
-  }, "1000");
-  */
-  
 }
 
 async function populatePrechatFormAndLead(message, projectId, token, APIURL, callback) {
