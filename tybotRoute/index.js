@@ -139,13 +139,13 @@ router.post('/ext/:botid', async (req, res) => {
           return console.error('Error getting fulltext objects.', err);
         }
         if (faqs && faqs.length > 0 && faqs[0].answer) {
-          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+          execFaq(req, res, faqs, botId, message, token, bot);
         }
         else {
           // fallback
           const fallbackIntent = await getIntentByDisplayName("defaultFallback", bot);
           const faqs = [fallbackIntent];
-          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+          execFaq(req, res, faqs, botId, message, token, bot);
         }
       });
     }
