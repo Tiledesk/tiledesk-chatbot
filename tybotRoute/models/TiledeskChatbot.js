@@ -1,31 +1,45 @@
-let Faq = require('./models/faq');
-let Faq_kb = require('./models/faq_kb');
+let Faq = require('./faq');
+let Faq_kb = require('./faq_kb');
+const { ExtApi } = require('../ExtApi.js');
+const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
+const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
+const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { IntentForm } = require('../IntentForm.js');
 
-class Chatbot {
+class TiledeskChatbot {
 
-  constructor() {
-    
+  constructor(config) {
+    this.botId = config.botId;
+    this.token = config.token;
+    this.faq_kb = config.faq_kb;
+    this.tdcache = config.tdcache;
+    this.APIURL = config.APIURL;
+    this.APIKEY = config.APIKEY;
+    this.requestId = config.requestId;
+    this.projectId = config.projectId;
+    this.log = config.log;
   }
   
-  find(text, callback) {
-    return new Promise( (resolve, reject) => {
+  async query(message, callback) {
+    return new Promise( async (resolve, reject) => {
 
-      const bot = await Faq_kb.findById(botId).select('+secret').exec();
-      if (log) {console.log("bot:", bot);}
+      const bot = await Faq_kb.findById(this.botId).select('+secret').exec();
+      if (this.log) {console.log("bot:", bot);}
       
-      const locked_intent = await currentLockedIntent(message.request.request_id);
-      if (log) {console.log("got locked intent", locked_intent)}
+      const locked_intent = await this.currentLockedIntent(this.requestId);
+      if (this.log) {console.log("got locked intent", locked_intent)}
       if (locked_intent) {
         const tdclient = new TiledeskClient({
           projectId: message.id_project,
-          token: token,
-          APIURL: APIURL,
-          APIKEY: "___",
+          token: this.token,
+          APIURL: this.APIURL,
+          APIKEY: this.APIKEY,
           log: false
         });
-        const faqs = await tdclient.getIntents(botId, locked_intent, 0, 0, null);
-        if (log) {console.log("locked intent. got faqs", faqs)}
-        execFaq(req, res, faqs, botId, message, token, bot);
+        const faqs = await tdclient.getIntents(this.botId, locked_intent, 0, 0, null);
+        if (this.log) {console.log("locked intent. got faqs", faqs)}
+        resolve(this.execFaq(faqs, this.botId, message, bot));
         return;
       }
       // CREATE TOKEN
@@ -43,7 +57,7 @@ class Chatbot {
       //console.log("bot_token:", bot_token);
       */
       // SETUP EXACT MATCH
-      let query = { "id_project": message.id_project, "id_faq_kb": botId, "question": message.text };
+      let query = { "id_project": this.projectId, "id_faq_kb": this.botId, "question": message.text };
       // BUT CHECKING ACTION BUTTON...
       if (message.attributes && message.attributes.action) {
         var action = message.attributes.action;
@@ -51,15 +65,7 @@ class Chatbot {
         if (action_parameters_index > -1) {
             action = action.substring(0, action_parameters_index);
         }
-        // console.debug("action: " + action);
-        query = { "id_project": message.id_project, "id_faq_kb": botId, "intent_display_name": action };
-        //var isObjectId = mongoose.Types.ObjectId.isValid(action);
-        //console.debug("isObjectId:" + isObjectId);
-        //if (isObjectId) {
-        //    query = { "id_project": message.id_project, "id_faq_kb": botId, "_id": action };
-        //} else {
-        // query = { "id_project": message.id_project, "id_faq_kb": botId, $or: [{ "intent_id": action }, { "intent_display_name": action }] };
-        //}
+        query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": action };
       }
       
       // SEARCH INTENTS
@@ -68,18 +74,18 @@ class Chatbot {
           return console.error("Error getting faq object.", err);
         }
         if (faqs && faqs.length > 0 && faqs[0].answer) {
-          if (log) {console.log("EXACT MATCH FAQ:", faqs[0]);}
-          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+          if (this.log) {console.log("EXACT MATCH FAQ:", faqs[0]);}
+          resolve(this.execFaq(faqs, this.botId, message, bot)); // bot_token
         }
         else { // FULL TEXT
-          if (log) {console.log("NLP decode intent...");}
-          query = { "id_project": message.id_project, "id_faq_kb": botId };
+          if (this.log) {console.log("NLP decode intent...");}
+          query = { "id_project": this.projectId, "id_faq_kb": this.botId };
           var mongoproject = undefined;
           var sort = undefined;
           var search_obj = { "$search": message.text };
     
-          if (faq_kb.language) {
-              search_obj["$language"] = faq_kb.language;
+          if (this.faq_kb.language) {
+              search_obj["$language"] = this.faq_kb.language;
           }
           query.$text = search_obj;
           //console.debug("fulltext search query", query);
@@ -88,19 +94,18 @@ class Chatbot {
           sort = { score: { $meta: "textScore" } } 
           // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
           Faq.find(query, mongoproject).sort(sort).lean().exec(async (err, faqs) => {
-            if (log) {console.log("Found:", faqs);}
+            if (this.log) {console.log("Found:", faqs);}
             if (err) {
               console.error("Error:", err);
-              return console.error('Error getting fulltext objects.', err);
             }
             if (faqs && faqs.length > 0 && faqs[0].answer) {
-              execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+              resolve(this.execFaq(faqs, this.botId, message, bot)); // bot_token
             }
             else {
               // fallback
               const fallbackIntent = await getIntentByDisplayName("defaultFallback", bot);
               const faqs = [fallbackIntent];
-              execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+              resolve(this.execFaq(faqs, this.botId, message, bot)); // bot_token
             }
           });
         }
@@ -111,12 +116,12 @@ class Chatbot {
   getIntentByDisplayName(name, bot) {
     return new Promise(function(resolve, reject) {
       var query = { "id_project": bot.id_project, "id_faq_kb": bot._id, "intent_display_name": name};
-      if (log) {console.debug('query', query);}
+      if (this.log) {console.debug('query', query);}
       Faq.find(query).lean().exec(function (err, faqs) {
         if (err) {
           return reject();
         }
-        if (log) {console.debug("faqs", faqs);}
+        if (this.log) {console.debug("faqs", faqs);}
         if (faqs && faqs.length > 0) {
           const intent = faqs[0];
           return resolve(intent);
@@ -128,40 +133,37 @@ class Chatbot {
     });
   }
 
-  function execFaq(faqs, botId, message, token, bot) {
+  async execFaq(faqs, botId, message, bot) {
     answerObj = faqs[0];
-    //console.log("answerObj:", answerObj)
+    console.log("answerObj:", answerObj)
     let sender = 'bot_' + botId;
     var answerObj;
     answerObj.score = 100; //exact search not set score
   
     const requestId = message.request.request_id;
     const projectId = message.id_project;
-    //console.log("requestId:", requestId)
-    //console.log("token:", token)
-    //console.log("projectId:", projectId)
+    console.log("requestId:", requestId)
+    console.log("token:", this.token)
+    console.log("projectId:", projectId)
     
-    if (tdcache) {
+    if (this.tdcache) {
       const requestKey = "tilebot:" + requestId
-      //console.log("Setting request key:", requestKey)
       // best effort, do not "await", go on, trust redis speed.
-      tdcache.setJSON(requestKey, message.request);
-      //await tdcache.setJSON(requestKey, message.request);
+      this.tdcache.setJSON(requestKey, message.request);
     }
     // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
     // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
     // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
     // THE ALTERNATIVE ROUTE.
-    let extEndpoint = `${APIURL}/modules/tilebot/`;
+    let extEndpoint = `${this.APIURL}/modules/tilebot/`;
     if (process.env.TYBOT_ENDPOINT) {
       extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
     }
     const apiext = new ExtApi({
       ENDPOINT: extEndpoint,
-      log: log
+      log: this.log
     });
-    
-  
+    console.log("the form...")
     // THE FORM
     let intent_form = answerObj.form;
     let intent_name = answerObj.intent_display_name
@@ -193,37 +195,38 @@ class Chatbot {
     }
     
     if (intent_form) {
-      await lockIntent(requestId, intent_name);
+      await this.lockIntent(requestId, intent_name);
       const user_reply = message.text;
       const intent_answer = message.text;
-      let form_reply = await execIntentForm(user_reply, intent_answer, requestId, intent_form);
+      let form_reply = await this.execIntentForm(user_reply, intent_answer, intent_form);
       console.log("got form reply", form_reply)
       //if (form_reply_message) {
       if (!form_reply.canceled && form_reply.message) {
         console.log("Form replying for next field...");
-        if (log) {console.log("Sending form reply...", form_reply_message)}
+        if (this.log) {console.log("Sending form reply...", form_reply.message)}
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
           form_reply.message.attributes = {}
         }
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
-        apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
-          if (log) {console.log("FORM Message sent.", );}
-        });
-        return;
+        return form_reply.message;
+        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, this.token, () => {
+        //  if (this.log) {console.log("FORM Message sent.", );}
+        //});
+        //return;
       }
       else if (form_reply.end) {
         console.log("Form end.");
-        if (log) {console.log("unlocking intent for request", requestId);}
-        unlockIntent(requestId);
-        populatePrechatFormAndLead(message, projectId, token, APIURL);
+        if (this.log) {console.log("unlocking intent for request", requestId);}
+        this.unlockIntent(requestId);
+        populatePrechatFormAndLead(message, projectId, this.token, this.APIURL);
       }
       else if (form_reply.canceled) {
         console.log("Form canceled.");
-        if (log) {console.log("unlocking intent due to canceling, for request", requestId);}
-        unlockIntent(requestId);
-        if (log) {console.log("sending form 'cancel' reply...", form_reply.message)}
+        if (this.log) {console.log("unlocking intent due to canceling, for request", requestId);}
+        this.unlockIntent(requestId);
+        if (this.log) {console.log("sending form 'cancel' reply...", form_reply.message)}
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
           form_reply.message.attributes = {}
@@ -248,8 +251,10 @@ class Chatbot {
         message: message, // USER MESSAGE (JSON)
         intent: answerObj
       },
-      token: token
+      token: this.token
     };
+
+    console.log("the static_bot_answer...")
     const static_bot_answer = { // static design of the chatbot reply
       //type: answerObj.type,
       text: answerObj.answer,
@@ -286,7 +291,7 @@ class Chatbot {
         others: clonedfaqs
     }
     static_bot_answer.attributes.intent_info = intent_info;
-  
+    
     static_bot_answer.attributes.directives = true;
     static_bot_answer.attributes.splits = true;
     static_bot_answer.attributes.markbot = true;
@@ -294,10 +299,10 @@ class Chatbot {
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
   
     // exec webhook (only)
-    const bot_answer = await execPipeline(static_bot_answer, message, bot, context, token);
+    const bot_answer = await this.execPipeline(static_bot_answer, message, bot, context, this.token);
     
     //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
-
+    console.log("returning answer", bot_answer)
     return bot_answer;
     
     /*apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
@@ -305,6 +310,37 @@ class Chatbot {
     });*/
     
   }
+
+  async lockIntent(requestId, intent_name) {
+    await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+  }
+  
+  async currentLockedIntent(requestId) {
+    return await this.tdcache.get("tilebot:requests:"  + requestId + ":locked");
+  }
+  
+  async unlockIntent(requestId) {
+    await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+  }
+
+  async execPipeline(static_bot_answer, message, bot, context) {
+    const messagePipeline = new MessagePipeline(static_bot_answer, context);
+    const webhookurl = bot.webhook_url;
+    messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, this.token));
+    //messagePipeline.addPlug(directivesPlug);
+    //messagePipeline.addPlug(new SplitsChatbotPlug(log));
+    //messagePipeline.addPlug(new MarkbotChatbotPlug(log));
+    const bot_answer = await messagePipeline.exec();
+    //if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
+    return bot_answer;
+  }
+
+  async execIntentForm(userInputReply, original_intent_answer_text, form) {
+  if (this.log)   {console.log("executing intent form...")}
+    let intentForm = new IntentForm({form: form, requestId: this.requestId, db: this.tdcache, log: this.log});
+    let message = await intentForm.getMessage(userInputReply, original_intent_answer_text);
+    return message;
+  }
 }
 
-modeule.exports = { Chatbot };
+module.exports = { TiledeskChatbot };

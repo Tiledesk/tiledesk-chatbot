@@ -12,7 +12,6 @@ const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 const { IntentForm } = require('./IntentForm.js');
-const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 let axios = require('axios');
 
 //router.use(cors());
@@ -40,8 +39,8 @@ const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Webhook
 
 // THE IMPORT
 let mongoose = require('mongoose');
-//let Faq = require('./models/faq');
-//let Faq_kb = require('./models/faq_kb');
+let Faq = require('./models/faq');
+let Faq_kb = require('./models/faq_kb');
 let connection;
 let APIURL = null;
 
@@ -54,36 +53,103 @@ router.post('/ext/:botid', async (req, res) => {
   const message = req.body.payload;
   const faq_kb = req.body.hook;
   const token = req.body.token;
-  const requestId = message.request.request_id;
-  const projectId = message.id_project;
   
-  const chatbot = new TiledeskChatbot({
-    botId: botId,
-    token: token,
-    faq_kb: faq_kb,
-    APIURL: APIURL,
-    APIKEY: "___",
-    tdcache: tdcache,
-    requestId: requestId,
-    projectId: projectId,
-    log: true
-  });
-
-  let reply = await chatbot.query(message);
-  console.log("reply ok", reply)
-  let extEndpoint = `${APIURL}/modules/tilebot/`;
-  if (process.env.TYBOT_ENDPOINT) {
-    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+  //const bot = await Faq_kb.findById(botId).exec();
+  const bot = await Faq_kb.findById(botId).select('+secret').exec();
+  if (log) {console.log("bot:", bot);}
+  
+  const locked_intent = await currentLockedIntent(message.request.request_id);
+  if (log) {console.log("got locked intent", locked_intent)}
+  if (locked_intent) {
+    const tdclient = new TiledeskClient({
+      projectId: message.id_project,
+      token: token,
+      APIURL: APIURL,
+      APIKEY: "___",
+      log: false
+    });
+    const faqs = await tdclient.getIntents(botId, locked_intent, 0, 0, null);
+    if (log) {console.log("locked intent. got faqs", faqs)}
+    execFaq(req, res, faqs, botId, message, token, bot);
+    return;
   }
-  const apiext = new ExtApi({
-    ENDPOINT: extEndpoint,
-    log: log
-  });
+  // CREATE TOKEN
+  //var botWithSecret = await Faq_kb.findById(bot._id).select('+secret').exec();
+/*
+  let signOptions = {
+    issuer:  'https://tiledesk.com',
+    subject:  'bot',
+    audience:  'https://tiledesk.com/bots/'+bot._id,   
+    jwtid: uuidv4()
+  };
 
-  apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-    if (log) {console.log("FORM Message sent.", );}
-  });
+  // DEPRECATED, REMOVE
+  const bot_token = jwt.sign(bot.toObject(), bot.secret, signOptions);
+  //console.log("bot_token:", bot_token);
+  */
+  // SETUP EXACT MATCH
+  let query = { "id_project": message.id_project, "id_faq_kb": botId, "question": message.text };
+  // BUT CHECKING ACTION BUTTON...
+  if (message.attributes && message.attributes.action) {
+    var action = message.attributes.action;
+    var action_parameters_index = action.indexOf("?");
+    if (action_parameters_index > -1) {
+        action = action.substring(0, action_parameters_index);
+    }
+    // console.debug("action: " + action);
+    query = { "id_project": message.id_project, "id_faq_kb": botId, "intent_display_name": action };
+    //var isObjectId = mongoose.Types.ObjectId.isValid(action);
+    //console.debug("isObjectId:" + isObjectId);
+    //if (isObjectId) {
+    //    query = { "id_project": message.id_project, "id_faq_kb": botId, "_id": action };
+    //} else {
+    // query = { "id_project": message.id_project, "id_faq_kb": botId, $or: [{ "intent_id": action }, { "intent_display_name": action }] };
+    //}
+  }
   
+  // SEARCH INTENTS
+  Faq.find(query).lean().exec(async (err, faqs) => {
+    if (err) {
+      return console.error("Error getting faq object.", err);
+    }
+    if (faqs && faqs.length > 0 && faqs[0].answer) {
+      if (log) {console.log("EXACT MATCH FAQ:", faqs[0]);}
+      execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+    }
+    else { // FULL TEXT
+      if (log) {console.log("NLP decode intent...");}
+      query = { "id_project": message.id_project, "id_faq_kb": botId };
+      var mongoproject = undefined;
+      var sort = undefined;
+      var search_obj = { "$search": message.text };
+
+      if (faq_kb.language) {
+          search_obj["$language"] = faq_kb.language;
+      }
+      query.$text = search_obj;
+      //console.debug("fulltext search query", query);
+
+      mongoproject = { score: { $meta: "textScore" } };
+      sort = { score: { $meta: "textScore" } } 
+      // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
+      Faq.find(query, mongoproject).sort(sort).lean().exec(async (err, faqs) => {
+        if (log) {console.log("Found:", faqs);}
+        if (err) {
+          console.error("Error:", err);
+          return console.error('Error getting fulltext objects.', err);
+        }
+        if (faqs && faqs.length > 0 && faqs[0].answer) {
+          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+        }
+        else {
+          // fallback
+          const fallbackIntent = await getIntentByDisplayName("defaultFallback", bot);
+          const faqs = [fallbackIntent];
+          execFaq(req, res, faqs, botId, message, token, bot); // bot_token
+        }
+      });
+    }
+  });
 });
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
@@ -127,7 +193,6 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   });
 });
 
-/*
 async function execFaq(req, res, faqs, botId, message, token, bot) {
   answerObj = faqs[0];
   //console.log("answerObj:", answerObj)
@@ -260,7 +325,10 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   if (!static_bot_answer.attributes) {
     static_bot_answer.attributes = {}
   }
-  
+  /*let attr = static_bot_answer.attributes;
+  if (!attr) {
+    attr = {};
+  }*/
   var timestamp = Date.now();
   static_bot_answer.attributes['clienttimestamp'] = timestamp;
   if (answerObj && answerObj._id) {
@@ -298,7 +366,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
     if (log) {console.log("Message sent");}
   });
   
-}*/
+}
 
 async function populatePrechatFormAndLead(message, projectId, token, APIURL, callback) {
   const tdclient = new TiledeskClient({
@@ -420,16 +488,14 @@ function sendSupportMessageExt(message, projectId, requestId, token, callback) {
 
 
 
-/*
+
 async function execIntentForm(userInputReply, original_intent_answer_text, requestId, form) {
   if (log) {console.log("executing intent form...")}
   let intentForm = new IntentForm({form: form, requestId: requestId, db: tdcache, log: log});
   let message = await intentForm.getMessage(userInputReply, original_intent_answer_text);
   return message;
 }
-*/
 
-/*
 async function lockIntent(requestId, intent_name) {
   await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
   //console.log("locked.", intent_name);
@@ -442,7 +508,6 @@ async function currentLockedIntent(requestId) {
 async function unlockIntent(requestId) {
   await tdcache.del("tilebot:requests:"  + requestId + ":locked");
 }
-*/
 
 /*function validMessage(message) {
   console.log("validating message", message)
