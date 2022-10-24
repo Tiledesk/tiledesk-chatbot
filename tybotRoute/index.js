@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-var cors = require('cors');
-let path = require("path");
-let fs = require('fs');
+//var cors = require('cors');
+//let path = require("path");
+//let fs = require('fs');
 const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+//const jwt = require('jsonwebtoken');
+//const { v4: uuidv4 } = require('uuid');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
-const { IntentForm } = require('./IntentForm.js');
+//const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
-let axios = require('axios');
+//let axios = require('axios');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -66,10 +66,10 @@ router.post('/ext/:botid', async (req, res) => {
     tdcache: tdcache,
     requestId: requestId,
     projectId: projectId,
-    log: true
+    log: log
   });
 
-  let reply = await chatbot.query(message);
+  let reply = await chatbot.replyTo(message);
   console.log("reply ok", reply)
   let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
@@ -300,6 +300,7 @@ async function execFaq(req, res, faqs, botId, message, token, bot) {
   
 }*/
 
+/*
 async function populatePrechatFormAndLead(message, projectId, token, APIURL, callback) {
   const tdclient = new TiledeskClient({
     projectId: projectId,
@@ -331,7 +332,7 @@ async function populatePrechatFormAndLead(message, projectId, token, APIURL, cal
   };
 }
 
-
+*/
 
 
 /** TEST BUG
@@ -457,6 +458,7 @@ async function unlockIntent(requestId) {
   return true;
 }*/
 
+/*
 async function execPipeline(static_bot_answer, message, bot, context, token) {
   const messagePipeline = new MessagePipeline(static_bot_answer, context);
   const webhookurl = bot.webhook_url;
@@ -468,7 +470,9 @@ async function execPipeline(static_bot_answer, message, bot, context, token) {
   //if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
   return bot_answer;
 }
+*/
 
+/*
 function getIntentByDisplayName(name, bot) {
   return new Promise(function(resolve, reject) {
     var query = { "id_project": bot.id_project, "id_faq_kb": bot._id, "intent_display_name": name};
@@ -488,39 +492,6 @@ function getIntentByDisplayName(name, bot) {
     });
   });
 }
-
-// IGNORALA
-/*app.post('/extorig', (req, res) => {
-  res.status(200).send({"success":true});
-  const tdclient = 
-    new TiledeskChatbotClient(
-      {
-        APIURL: apiurl(),
-        request: req,
-        APIKEY: '__APIKEY__'
-      });
-  if (tdclient.text === "\\start") {
-    tdclient.sendMessage(
-      {
-        text: 'started',
-        attributes: {
-          attachment: {
-            type:"template",
-            buttons: [
-              {
-                  type: "text",
-                  value: "Ok"
-              }
-            ]
-          }
-        }
-      }
-    );
-  }
-  else {
-    tdclient.sendMessage({text: 'Not trained for this'});
-  }
-});
 */
 
 // Tiledesk Resolution-bot webhook endpoint
@@ -573,7 +544,7 @@ function apiurl() {
 
 
 router.get('/', (req, res) => {
-  res.send('Hello Tybot!');
+  res.send('Hello Tilebot!');
 });
 
 function startApp(settings, completionCallback) {
@@ -605,26 +576,27 @@ function startApp(settings, completionCallback) {
   }
   console.log("(Tybot) log:", log);
   var pjson = require('./package.json');
-  console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
-  console.log("(Tilebot) Connecting to mongodb...");
+  console.log("(Tybot) Starting Tilebot connector v" + pjson.version);
+  console.log("(Tybot) Connecting to mongodb...");
 
   connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
     if (err) { 
-      console.error('Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
+      console.error('(Tybot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
       //process.exit(1); // add => exitOnFail: true
     }
     else {
+      console.log("(Tybot) mongodb connection ok.");
       if (tdcache) {
         try {
           await tdcache.connect();
         }
         catch (error) {
           tdcache = null;
-          console.error("(Tilebot) tdcache (Redis) connection error:", error);
+          console.error("(Tybot) tdcache (Redis) connection error:", error);
         }
-        console.log("(Tilebot) tdcache (Redis) connected.");
+        console.log("(Tybot) tdcache (Redis) connected.");
       }
-      console.info("Tilebot started.");
+      console.info("Tybot started.");
       if (completionCallback) {
         completionCallback();
       }

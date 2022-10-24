@@ -33,7 +33,7 @@ class TdCache {
                 if (callback) {
                     callback();
                 }
-                console.log("Redis is ready.");
+                //console.log("Redis is ready.");
             });
         });
     }

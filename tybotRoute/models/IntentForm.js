@@ -50,7 +50,7 @@ class IntentForm {
       ]
     }
   */
-  async getMessage(user_text, intent_text) {
+  async getMessage(user_text) {
     console.log("get message:", user_text)
     if (
     this.form &&

@@ -5,7 +5,7 @@ const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { IntentForm } = require('../IntentForm.js');
+const { IntentForm } = require('./IntentForm.js');
 
 class TiledeskChatbot {
 
@@ -21,7 +21,7 @@ class TiledeskChatbot {
     this.log = config.log;
   }
   
-  async query(message, callback) {
+  async replyTo(message, callback) {
     return new Promise( async (resolve, reject) => {
 
       const bot = await Faq_kb.findById(this.botId).select('+secret').exec();
@@ -103,7 +103,7 @@ class TiledeskChatbot {
             }
             else {
               // fallback
-              const fallbackIntent = await getIntentByDisplayName("defaultFallback", bot);
+              const fallbackIntent = await this.getIntentByDisplayName("defaultFallback", bot);
               const faqs = [fallbackIntent];
               resolve(this.execFaq(faqs, this.botId, message, bot)); // bot_token
             }
@@ -114,12 +114,12 @@ class TiledeskChatbot {
   }
 
   getIntentByDisplayName(name, bot) {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       var query = { "id_project": bot.id_project, "id_faq_kb": bot._id, "intent_display_name": name};
       if (this.log) {console.debug('query', query);}
-      Faq.find(query).lean().exec(function (err, faqs) {
+      Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {
-          return reject();
+          return reject(err);
         }
         if (this.log) {console.debug("faqs", faqs);}
         if (faqs && faqs.length > 0) {
@@ -135,16 +135,17 @@ class TiledeskChatbot {
 
   async execFaq(faqs, botId, message, bot) {
     answerObj = faqs[0];
-    console.log("answerObj:", answerObj)
     let sender = 'bot_' + botId;
     var answerObj;
     answerObj.score = 100; //exact search not set score
   
     const requestId = message.request.request_id;
     const projectId = message.id_project;
-    console.log("requestId:", requestId)
-    console.log("token:", this.token)
-    console.log("projectId:", projectId)
+    if (this.log) {
+      console.log("requestId:", requestId)
+      console.log("token:", this.token)
+      console.log("projectId:", projectId)
+    }
     
     if (this.tdcache) {
       const requestKey = "tilebot:" + requestId
@@ -164,41 +165,41 @@ class TiledeskChatbot {
       log: this.log
     });
     console.log("the form...")
+    
     // THE FORM
-    let intent_form = answerObj.form;
+    
     let intent_name = answerObj.intent_display_name
+  // THE FORM
     if (intent_name === "test_form_intent") {
-      intent_form = {
-        "name": "form_name",
-        "id": "form_id",
+      answerObj.form = {
         "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
-        "cancelReply": "Form Annullata",
+        "cancelReply": "Ok annullato!",
         "fields": [
           {
             "name": "userFullname",
             "type": "text",
-            "label": "What is your name?"
+            "label": "What is your name?\n* Andrea\n* Marco\n* Mirco\n* Luca Leo"
           },{
             "name": "companyName",
             "type": "text",
-            "label": "Thank you ${userFullname}! What is your Company name?"
+            "label": "Thank you ${userFullname}! What is your Company name?\n* Tiledesk\n* Frontiere21"
           },
           {
             "name": "userEmail",
             "type": "text",
             "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
-            "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂",
+            "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂\n* andrea@libero.it\n* andrea@tiledesk.com",
             "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
           }
         ]
       };
     }
-    
+    let intent_form = answerObj.form;
     if (intent_form) {
       await this.lockIntent(requestId, intent_name);
       const user_reply = message.text;
-      const intent_answer = message.text;
-      let form_reply = await this.execIntentForm(user_reply, intent_answer, intent_form);
+      //const intent_answer = answerObj.answer; //req.body.payload.text;
+      let form_reply = await this.execIntentForm(user_reply, intent_form);
       console.log("got form reply", form_reply)
       //if (form_reply_message) {
       if (!form_reply.canceled && form_reply.message) {
@@ -210,9 +211,10 @@ class TiledeskChatbot {
         }
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
+        form_reply.message.attributes.markbot = true;
         return form_reply.message;
-        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, this.token, () => {
-        //  if (this.log) {console.log("FORM Message sent.", );}
+        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
+        //  if (log) {console.log("FORM Message sent.", );}
         //});
         //return;
       }
@@ -220,7 +222,7 @@ class TiledeskChatbot {
         console.log("Form end.");
         if (this.log) {console.log("unlocking intent for request", requestId);}
         this.unlockIntent(requestId);
-        populatePrechatFormAndLead(message, projectId, this.token, this.APIURL);
+        this.populatePrechatFormAndLead(message);
       }
       else if (form_reply.canceled) {
         console.log("Form canceled.");
@@ -233,11 +235,11 @@ class TiledeskChatbot {
         }
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
-        return form_reply.message;
-        /*apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
-          if (log) {console.log("FORM Message sent.", );}
-        });
-        return;*/
+        return form_reply.message
+        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
+        //  if (log) {console.log("FORM Message sent.", );}
+        //});
+        //return;
       }
       console.log("form_reply is", form_reply)
     }
@@ -335,12 +337,44 @@ class TiledeskChatbot {
     return bot_answer;
   }
 
-  async execIntentForm(userInputReply, original_intent_answer_text, form) {
+  async execIntentForm(userInputReply, form) {
   if (this.log)   {console.log("executing intent form...")}
     let intentForm = new IntentForm({form: form, requestId: this.requestId, db: this.tdcache, log: this.log});
-    let message = await intentForm.getMessage(userInputReply, original_intent_answer_text);
+    let message = await intentForm.getMessage(userInputReply);
     return message;
   }
+
+  async populatePrechatFormAndLead(message, callback) {
+    const tdclient = new TiledeskClient({
+      projectId: this.projectId,
+      token: this.token,
+      APIURL: this.APIURL,
+      APIKEY: this.APIKEY
+    });
+    
+    const leadId = message.request.lead._id;
+    const requestId = message.request.request_id;
+  
+    const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    const all_parameters = await this.tdcache.hgetall(parameters_key);
+    if (all_parameters) {
+      //console.log("all_parameters['userEmail']", all_parameters['userEmail'])
+      //console.log("all_parameters['userFullname']", all_parameters['userFullname']); 
+      tdclient.updateLeadEmailFullname(leadId, null, all_parameters['userFullname'], () => {
+        if (this.log) {console.log("lead updated.")}
+        tdclient.updateRequestAttributes(requestId, {
+          preChatForm: all_parameters,
+          updated: Date.now
+        }, () => {
+          if (this.log) {console.log("prechat updated.");}
+          if (callback) {
+            callback();
+          }
+        });
+      });
+    };
+  }
+    
 }
 
 module.exports = { TiledeskChatbot };
