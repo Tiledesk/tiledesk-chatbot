@@ -13,7 +13,6 @@ const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 //const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
-//let axios = require('axios');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
