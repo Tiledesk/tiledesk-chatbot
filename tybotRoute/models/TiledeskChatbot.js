@@ -325,6 +325,26 @@ class TiledeskChatbot {
     await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
   }
 
+  async addParameter(requestId, parameter_name, parameter_value) {
+    //await this.tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
+    await TiledeskChatbot.addParameterStatic(this.tdcache, requestId, parameter_name, parameter_value);
+  }
+
+  static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    await _tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
+  }
+
+  async allParameters(requestId) {
+    //const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    //return await this.tdcache.hgetall(parameters_key);
+    return await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
+  }
+
+  static async allParametersStatic(_tdcache, requestId) {
+    const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hgetall(parameters_key);
+  }
+  
   async execPipeline(static_bot_answer, message, bot, context) {
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
@@ -339,7 +359,7 @@ class TiledeskChatbot {
 
   async execIntentForm(userInputReply, form) {
   if (this.log)   {console.log("executing intent form...")}
-    let intentForm = new IntentForm({form: form, requestId: this.requestId, db: this.tdcache, log: this.log});
+    let intentForm = new IntentForm({form: form, requestId: this.requestId, chatbot: this, log: this.log});
     let message = await intentForm.getMessage(userInputReply);
     return message;
   }

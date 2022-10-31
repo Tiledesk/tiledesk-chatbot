@@ -19,12 +19,13 @@ class ExtUtil {
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
     //const webhookurl = bot.webhook_url;
     //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
+    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log)); // in original message
     messagePipeline.addPlug(directivesPlug);
     messagePipeline.addPlug(new SplitsChatbotPlug(log));
     messagePipeline.addPlug(new MarkbotChatbotPlug(log));
-    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log));
+    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log)); // in splits
     const bot_answer = await messagePipeline.exec();
-    if (log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
+    if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
   }
   
