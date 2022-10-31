@@ -4,7 +4,8 @@ const CURRENT_FORM_K = "CURRENT_FORM"; // form json
 class IntentForm {
 
   constructor(options) {
-    this.db = options.db;
+    this.db = options.chatbot.tdcache;
+    this.chatbot = options.chatbot;
     this.requestId = options.requestId;
     this.form = options.form;
     this.CURRENT_FIELD_INDEX_KEY = "tilebot:requests:" + this.requestId + ":currentFieldIndex"
@@ -132,7 +133,7 @@ class IntentForm {
       const parameter_name = current_form.fields[current_field].name;
       const parameter_value = user_text;
       if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
-      await this.addParameter(this.requestId, parameter_name, parameter_value);
+      await this.chatbot.addParameter(this.requestId, parameter_name, parameter_value);
       if (this.log) {console.log("next field...");}
 
       current_field += 1;
@@ -157,9 +158,11 @@ class IntentForm {
     }
   }
 
+  /*
   async addParameter(requestId, parameter_name, parameter_value) {
     await this.db.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
   }
+  */
   
   validate(text, regex) {
     var _regex = regex.substring(1, regex.length-1);

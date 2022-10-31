@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.15
+- refactored with the models/TiledeskChatbot class
+- added triggeredByMessageId property to the bot reply
+- added "tdMessageId" parameter to be used during processing
+
 ### 0.1.14 online
 - more replaceAll moved to replace(//)
 - console.log clean

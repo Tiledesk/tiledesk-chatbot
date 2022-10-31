@@ -14,7 +14,6 @@ const { TdCache } = require('./TdCache.js');
 //const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 
-
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
@@ -52,10 +51,25 @@ router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
   if (log) {console.log("query botId:", botId);}
   const message = req.body.payload;
+  const messageId = message._id;
   const faq_kb = req.body.hook;
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
+
+  const message_context = {
+    projectId: projectId,
+    requestId: requestId,
+    token: token
+  }
+  const message_context_key = "tiledesk:messages:context:" + messageId;
+  await tdcache.set(
+    message_context_key,
+    JSON.stringify(message_context),
+    {EX: 86400}
+  );
+  if (log) {console.log("message context saved for messageid:", message_context_key)}
+  // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   
   const chatbot = new TiledeskChatbot({
     botId: botId,
@@ -69,8 +83,13 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
 
+  const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+  await chatbot.addParameter(requestId, "tdMessageId", messageId);
+  all_params = await chatbot.allParameters(requestId);
+  console.log("Allparams", all_params);
   let reply = await chatbot.replyTo(message);
-  console.log("reply ok", reply)
+  reply.triggeredByMessageId = messageId;
+  console.log("reply ok", reply);
   let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
@@ -118,7 +137,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
-  const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache);
+  const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   //const bot_answer = answer;
   tdclient.sendSupportMessage(requestId, bot_answer, () => {
     directivesPlug.processDirectives(() => {
@@ -542,6 +561,18 @@ function apiurl() {
 }
 */
 
+router.get('/message/context/:messageid', async (req, res) => {
+  const messageid = req.params.messageid;
+  const message_key = "tiledesk:messages:context:" + messageid;
+  const message_context_s = await tdcache.get(message_key);
+  if (message_context_s) {
+    const message_context = JSON.parse(message_context_s);
+    res.send(message_context);
+  }
+  else {
+    res.send(null);
+  }
+});
 
 router.get('/', (req, res) => {
   res.send('Hello Tilebot!');
