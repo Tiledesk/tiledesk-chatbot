@@ -15,16 +15,16 @@ const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Webhook
 
 class ExtUtil {
 
-  static async execPipelineExt(request, static_bot_answer, directivesPlug, tdcache) {
+  static async execPipelineExt(request, static_bot_answer, directivesPlug, tdcache, log) {
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
     //const webhookurl = bot.webhook_url;
     //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
     messagePipeline.addPlug(directivesPlug);
-    messagePipeline.addPlug(new SplitsChatbotPlug(this.log));
-    messagePipeline.addPlug(new MarkbotChatbotPlug(this.log));
-    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, this.log));
+    messagePipeline.addPlug(new SplitsChatbotPlug(log));
+    messagePipeline.addPlug(new MarkbotChatbotPlug(log));
+    messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log));
     const bot_answer = await messagePipeline.exec();
-    if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
+    if (log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
   }
   
