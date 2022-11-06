@@ -85,9 +85,9 @@ router.post('/ext/:botid', async (req, res) => {
 
   const parameters_key = "tilebot:requests:" + requestId + ":parameters";
   await chatbot.addParameter(requestId, "tdMessageId", messageId);
-  all_params = await chatbot.allParameters(requestId);
-  console.log("Allparams", all_params);
-  let reply = await chatbot.replyTo(message);
+  //all_params = await chatbot.allParameters(requestId);
+  //console.log("Allparams", all_params);
+  let reply = await chatbot.replyToMessage(message);
   reply.triggeredByMessageId = messageId;
   console.log("reply ok", reply);
   let extEndpoint = `${APIURL}/modules/tilebot/`;
