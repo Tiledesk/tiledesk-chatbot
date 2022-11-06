@@ -1,9 +1,12 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.14**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.16**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.16
+- added Redis support to share some parameters (message.requestId, message.projectId) with Apps
 
 ### 0.1.15
 - refactored with the models/TiledeskChatbot class
