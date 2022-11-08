@@ -2,8 +2,8 @@ require('dotenv').config();
 var express = require('express');
 
 var app = express();
-//const tybot = require("@tiledesk/tiledesk-tybot-connector");
-const tybot = require("./tybotRoute");
+const tybot = require("@tiledesk/tiledesk-tybot-connector");
+//const tybot = require("./tybotRoute");
 const tybotRoute = tybot.router;
 app.use("/", tybotRoute); // /tybot
 
