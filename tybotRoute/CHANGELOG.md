@@ -1,9 +1,12 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.17**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.18**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.18
+- removed support for CACHE_ENABLED. Redis is mandatory.
 
 ### 0.1.17
 - removed deprecated files

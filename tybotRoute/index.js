@@ -582,16 +582,19 @@ function startApp(settings, completionCallback) {
   console.log("Starting Tybot with Settings:", settings);
 
   if (!settings.MONGODB_URI) {
-    throw new Error("settings.MONGODB_URI is mandatory.");
+    throw new Error("settings.MONGODB_URI is mandatory");
   }
   if (!settings.API_ENDPOINT) {
-    throw new Error("settings.API_ENDPOINT is mandatory.");
+    throw new Error("settings.API_ENDPOINT is mandatory");
   }
   else {
     APIURL = settings.API_ENDPOINT;
     console.log("(Tybot) settings.API_ENDPOINT:", APIURL);
   }
-  if (settings.REDIS_HOST && settings.REDIS_PORT && settings.CACHE_ENABLED) {
+  if (!settings.REDIS_HOST && !settings.REDIS_PORT) {
+    throw new Error("settings.REDIS_HOST && settings.REDIS_PORT are mandatory");
+  }
+  else { // (settings.REDIS_HOST && settings.REDIS_PORT) { // && settings.CACHE_ENABLED) {
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
       port: settings.REDIS_PORT,
