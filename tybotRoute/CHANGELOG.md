@@ -6,7 +6,8 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.18
-- removed support for CACHE_ENABLED. Redis is mandatory.
+- removed support for CACHE_ENABLED.
+- Redis is now mandatory: settings.REDIS_PORT, settings.REDIS_HOST are mandatory. settings.REDIS_PASSWORD is optional
 
 ### 0.1.17
 - removed deprecated files
