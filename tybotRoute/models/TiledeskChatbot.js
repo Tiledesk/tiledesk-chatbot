@@ -249,7 +249,7 @@ class TiledeskChatbot {
         //});
         //return;
       }
-      console.log("form_reply is", form_reply)
+      //console.log("form_reply is", form_reply)
     }
   
     // FORM END
