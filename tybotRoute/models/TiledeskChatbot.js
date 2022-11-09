@@ -169,7 +169,7 @@ class TiledeskChatbot {
       ENDPOINT: extEndpoint,
       log: this.log
     });
-    console.log("the form...")
+    //console.log("the form...")
     
     // THE FORM
     
@@ -261,7 +261,7 @@ class TiledeskChatbot {
       token: this.token
     };
 
-    console.log("the static_bot_answer...")
+    //console.log("the static_bot_answer...")
     const static_bot_answer = { // static design of the chatbot reply
       //type: answerObj.type,
       text: answerObj.answer,
@@ -309,7 +309,6 @@ class TiledeskChatbot {
     const bot_answer = await this.execPipeline(static_bot_answer, message, bot, context, this.token);
     
     //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
-    console.log("returning answer", bot_answer)
     return bot_answer;
     
     /*apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {

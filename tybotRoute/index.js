@@ -89,7 +89,7 @@ router.post('/ext/:botid', async (req, res) => {
   //console.log("Allparams", all_params);
   let reply = await chatbot.replyToMessage(message);
   reply.triggeredByMessageId = messageId;
-  console.log("reply ok", reply);
+  //console.log("reply ok", reply);
   let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
