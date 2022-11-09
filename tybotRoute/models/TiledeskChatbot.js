@@ -66,7 +66,7 @@ class TiledeskChatbot {
         if (action_parameters_index > -1) {
             action = action.substring(0, action_parameters_index);
         }
-        query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": action };
+        query = { "id_project": this.projectId, "id_faq_kb": this.botId, "intent_display_name": action };
       }
       
       // SEARCH INTENTS
