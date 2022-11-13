@@ -137,7 +137,7 @@ class TiledeskChatbot {
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
         if (intents && intents.length > 0) {
-          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].name);
+          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let reply;
           try {
             reply = await this.execIntent(faq, message, bot);
@@ -209,7 +209,7 @@ class TiledeskChatbot {
     // console.log("the form...")
     
     // THE FORM
-    console.log("answerObj", answerObj)
+    
     let intent_name = answerObj.intent_display_name
   // THE FORM
     if (intent_name === "test_form_intent") {

@@ -72,7 +72,7 @@ router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
-  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: faq_kb.language, log: true});
+  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: faq_kb.language});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS, 
     intentsFinder: intentsMachine,
@@ -83,7 +83,7 @@ router.post('/ext/:botid', async (req, res) => {
     tdcache: tdcache,
     requestId: requestId,
     projectId: projectId,
-    log: log
+    log: true
   });
 
   const parameters_key = "tilebot:requests:" + requestId + ":parameters";
@@ -92,7 +92,6 @@ router.post('/ext/:botid', async (req, res) => {
   //console.log("Allparams", all_params);
   let reply = await chatbot.replyToMessage(message);
   reply.triggeredByMessageId = messageId;
-  console.log("reply ok", reply);
   let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
     extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
