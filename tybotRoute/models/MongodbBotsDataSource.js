@@ -7,11 +7,7 @@ class MongodbBotsDataSource {
     if (!config.projectId) {
       throw new Error("config.projectId is mandatory");
     }
-    if (!config.botId) {
-      throw new Error("config.botId is mandatory");
-    }
     this.projectId = config.projectId;
-    this.botId = config.botId;
   }
   
   async getBotById(botId) {
@@ -27,10 +23,10 @@ class MongodbBotsDataSource {
    * @param {String} text 
    * @returns an Array of matches
    */
-  async getByExactMatch(text) {
+  async getByExactMatch(botId, text) {
     // SEARCH INTENTS
     return new Promise( (resolve, reject) => {
-      let query = { "id_project": this.projectId, "id_faq_kb": this.botId, "question": text };
+      let query = { "id_project": this.projectId, "id_faq_kb": botId, "question": text };
       Faq.find(query).lean().exec(async (err, faqs) => {
         if (err) {
           console.error("Error getting faq object.", err);
@@ -52,9 +48,9 @@ class MongodbBotsDataSource {
    * @param {String} intentName
    * @returns a single Intent
    */
-  async getByIntentDisplayName(name, bot) {
+  async getByIntentDisplayName(botId, name) {
     return new Promise((resolve, reject) => {
-      var query = { "id_project": bot.id_project, "id_faq_kb": bot._id, "intent_display_name": name};
+      var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
       if (this.log) {console.debug('query', query);}
       Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {

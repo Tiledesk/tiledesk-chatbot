@@ -14,7 +14,7 @@ const { TdCache } = require('./TdCache.js');
 //const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
-const { MongodbIntentsFinder } = require('./models/MongodbIntentsFinder.js');
+const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
@@ -72,10 +72,10 @@ router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
-  const intentsFinder = new MongodbIntentsFinder({projectId: projectId, botId: botId, language: faq_kb.language});
+  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: faq_kb.language, log: true});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS, 
-    intentsFinder: intentsFinder,
+    intentsFinder: intentsMachine,
     botId: botId,
     token: token,
     APIURL: APIURL,

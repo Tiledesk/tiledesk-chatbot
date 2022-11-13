@@ -7,12 +7,9 @@ class MongodbIntentsMachine {
     if (!config.projectId) {
       throw new Error("config.projectId is mandatory");
     }
-    if (!config.botId) {
-      throw new Error("config.botId is mandatory");
-    }
     this.projectId = config.projectId;
-    this.botId = config.botId;
     this.language = config.language;
+    this.log = config.log;
   }
 
   /**
@@ -20,23 +17,24 @@ class MongodbIntentsMachine {
    * @param {String} text 
    * @returns the matching intents' names array
    */
-  async decode(text) {
-    if (this.log) {console.log("NLP decode intent...");}
-      let query = { "id_project": this.projectId, "id_faq_kb": this.bot._id };
+  async decode(botId, text) {
+    return new Promise( (resolve, reject) => {
+      if (this.log) {console.log("NLP decode intent...");}
+      let query = { "id_project": this.projectId, "id_faq_kb": botId };
       var mongoproject = undefined;
       var sort = undefined;
       var search_obj = { "$search": text };
-
+  
       if (this.language) {
           search_obj["$language"] = this.language;
       }
       query.$text = search_obj;
       //console.debug("fulltext search query", query);
-
+  if (this.log) {console.log("NLP decode intent...2");}
       mongoproject = { score: { $meta: "textScore" } };
       sort = { score: { $meta: "textScore" } } 
       // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
-      Faq.find(query, mongoproject).sort(sort).lean().exec(async (err, faqs) => {
+      Faq.find(query, mongoproject).sort(sort).lean().exec( (err, faqs) => {
         if (this.log) {console.log("Found:", faqs);}
         if (err) {
           console.error("Error:", err);
@@ -51,6 +49,7 @@ class MongodbIntentsMachine {
           resolve([]);
         }
       });
+    })
   }
   
 }
