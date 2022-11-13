@@ -50,10 +50,10 @@ const testBots = {
       },
       "intents_nlp" : {
         "query1": {
-          "name": "intent1"
+          "intent_display_name": "intent1"
         },
         "query2": {
-          "name": "intent2"
+          "intent_display_name": "intent2"
         }
       }
     }
@@ -149,7 +149,7 @@ describe('Basic replyToMessage()', function() {
       tdcache: null,
       requestId: "requestId",
       projectId: "projectId",
-      log: true
+      log: false
     });
     assert(chatbot != null);
     const message = {
