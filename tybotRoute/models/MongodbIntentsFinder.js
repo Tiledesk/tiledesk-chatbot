@@ -1,8 +1,18 @@
 let mongoose = require('mongoose');
+let Faq = require('./faq');
 
-class MongoDBIntentsFinder {
+class MongodbIntentsFinder {
 
-  constructor() {
+  constructor(config) {
+    if (!config.projectId) {
+      throw new Error("config.projectId is mandatory");
+    }
+    if (!config.botId) {
+      throw new Error("config.botId is mandatory");
+    }
+    this.projectId = config.projectId;
+    this.botId = config.botId;
+    this.language = config.language;
   }
 
   /**
@@ -12,13 +22,13 @@ class MongoDBIntentsFinder {
    */
   async decode(text) {
     if (this.log) {console.log("NLP decode intent...");}
-      query = { "id_project": this.projectId, "id_faq_kb": this.botId };
+      let query = { "id_project": this.projectId, "id_faq_kb": this.bot._id };
       var mongoproject = undefined;
       var sort = undefined;
-      var search_obj = { "$search": message.text };
+      var search_obj = { "$search": text };
 
-      if (this.faq_kb.language) {
-          search_obj["$language"] = this.faq_kb.language;
+      if (this.language) {
+          search_obj["$language"] = this.language;
       }
       query.$text = search_obj;
       //console.debug("fulltext search query", query);
@@ -32,19 +42,17 @@ class MongoDBIntentsFinder {
           console.error("Error:", err);
         }
         if (faqs && faqs.length > 0 && faqs[0].answer) {
-          let reply = await this.execIntent(faqs, this.botId, message, bot);
-          resolve(reply);
+          resolve(faqs);
         }
         else {
           // fallback
-          const fallbackIntent = await this.getIntentByDisplayName("defaultFallback", bot);
-          const faqs = [fallbackIntent];
-          let reply = await this.execIntent(faqs, this.botId, message, bot);
-          resolve(reply); // bot_token
+          //const fallbackIntent = await this.getIntentByDisplayName("defaultFallback", bot);
+          //const faqs = [fallbackIntent];
+          resolve([]);
         }
       });
   }
   
 }
 
-module.exports = { MongoDBIntentsFinder }
+module.exports = { MongodbIntentsFinder }

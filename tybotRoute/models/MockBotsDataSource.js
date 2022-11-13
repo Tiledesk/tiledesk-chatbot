@@ -14,7 +14,7 @@ class MockBotsDataSource {
   // let intents = await this.intentsFinder.find(message.text);
 
   async getBotById(botId) {
-    const bot = this.bots[botId];
+    const bot = this.data.bots[botId];
     if (bot) {
       return bot;
     }
@@ -26,10 +26,10 @@ class MockBotsDataSource {
    * @param {String} text 
    * @returns an Array of matches
    */
-  async getByExactMatch(text) {
-    const intent_display_name = this.data.questions_intent[text];
+  async getByExactMatch(botId, text) {
+    const intent_display_name = this.data.bots[botId].questions_intent[text];
     if (intent_display_name) {
-      return [this.data.intents[intent_display_name]];
+      return [this.data.bots[botId].intents[intent_display_name]];
     }
     return null;
   }
@@ -39,8 +39,8 @@ class MockBotsDataSource {
    * @param {String} intentName
    * @returns a single Intent
    */
-  async getByIntentDisplayName(intentName) {
-    return this.data.intents[intentName];
+  async getByIntentDisplayName(botId, intentName) {
+    return this.data.bots[botId].intents[intentName];
   }
 
   /**
@@ -48,9 +48,9 @@ class MockBotsDataSource {
    * @param {String} text 
    * @returns the matching intents' names array
    */
-   async decode(text) {
+   async decode(botId, text) {
     if (this.data.intents_nlp[text]) {
-      return [ this.data.intents_nlp[text] ];
+      return [ this.data.bots[botId].intents_nlp[text] ];
     }
     else {
       return [];

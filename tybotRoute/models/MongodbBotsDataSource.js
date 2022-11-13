@@ -3,7 +3,15 @@ let Faq_kb = require('./faq_kb');
 
 class MongodbBotsDataSource {
 
-  constructor() {
+  constructor(config) {
+    if (!config.projectId) {
+      throw new Error("config.projectId is mandatory");
+    }
+    if (!config.botId) {
+      throw new Error("config.botId is mandatory");
+    }
+    this.projectId = config.projectId;
+    this.botId = config.botId;
   }
   
   async getBotById(botId) {
@@ -22,6 +30,7 @@ class MongodbBotsDataSource {
   async getByExactMatch(text) {
     // SEARCH INTENTS
     return new Promise( (resolve, reject) => {
+      let query = { "id_project": this.projectId, "id_faq_kb": this.botId, "question": text };
       Faq.find(query).lean().exec(async (err, faqs) => {
         if (err) {
           console.error("Error getting faq object.", err);
