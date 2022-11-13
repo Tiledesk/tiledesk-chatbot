@@ -10,19 +10,9 @@ const { IntentForm } = require('./IntentForm.js');
 class TiledeskChatbot {
 
   constructor(config) {
-    if (!config.intentsDataSource) {
-      throw new Error("config.intentsDataSource is mandatory");
-    }
-    if (!config.intentsFinder) {
-      throw new Error("config.intentsFinder is mandatory");
-    }
-    if (!config.bot) {
-      throw new Error("config.bot is mandatory");
-    }
-    this.intentsDataSource = config.intentsDataSource;
-    this.intentsFinder = config.intentsFinder;
-    this.bot = config.bot;
+    this.botId = config.botId;
     this.token = config.token;
+    this.faq_kb = config.faq_kb;
     this.tdcache = config.tdcache;
     this.APIURL = config.APIURL;
     this.APIKEY = config.APIKEY;
@@ -30,10 +20,13 @@ class TiledeskChatbot {
     this.projectId = config.projectId;
     this.log = config.log;
   }
-
+  
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
-      // Checking locked intent
+
+      const bot = await Faq_kb.findById(this.botId).select('+secret').exec();
+      if (this.log) {console.log("bot:", bot);}
+      
       const locked_intent = await this.currentLockedIntent(this.requestId);
       if (this.log) {console.log("got locked intent", locked_intent)}
       if (locked_intent) {
@@ -44,105 +37,84 @@ class TiledeskChatbot {
           APIKEY: this.APIKEY,
           log: false
         });
-        // it only gets the locked_intent
-        const faq = await this.intentsDataSource.getByIntentDisplayName(locked_intent);
+        const faqs = await tdclient.getIntents(this.botId, locked_intent, 0, 0, null);
         if (this.log) {console.log("locked intent. got faqs", faqs)}
-        let reply;
-        if (faq) {
-          reply = await this.execIntent(faq, message, bot);
-        }
-        else {
-          reply = {
-            "text": "An error occurred while getting locked intent:'" + locked_intent
-          }
-        }
+        let reply = await this.execIntent(faqs, this.botId, message, bot);
         resolve(reply);
         return;
       }
-      
-      // Checking Action button
+      // CREATE TOKEN
+      //var botWithSecret = await Faq_kb.findById(bot._id).select('+secret').exec();
+    /*
+      let signOptions = {
+        issuer:  'https://tiledesk.com',
+        subject:  'bot',
+        audience:  'https://tiledesk.com/bots/'+bot._id,   
+        jwtid: uuidv4()
+      };
+    
+      // DEPRECATED, REMOVE
+      const bot_token = jwt.sign(bot.toObject(), bot.secret, signOptions);
+      //console.log("bot_token:", bot_token);
+      */
+      // SETUP EXACT MATCH
+      let query = { "id_project": this.projectId, "id_faq_kb": this.botId, "question": message.text };
+      // BUT CHECKING ACTION BUTTON...
       if (message.attributes && message.attributes.action) {
-        
         var action = message.attributes.action;
         var action_parameters_index = action.indexOf("?");
         if (action_parameters_index > -1) {
             action = action.substring(0, action_parameters_index);
         }
-        
-        let faq = await this.intentsDataSource.getByIntentDisplayName(action);
-        
-        let reply;
-        if (faq) {
-          try {
-            reply = await this.execIntent(faq, message, this.bot);
-          }
-          catch(error) {
-            console.error("error");
-            reject(error);
-          }
-        }
-        else {
-          reply = {
-            "text": "An error occurred while getting intent by action:'" + action
-          }
-        }
-        resolve(reply);
-        return;
+        query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": action };
       }
       
-      // let faqs = await this.intentsDataSource.getByExactMatch(message.text);
-      // let faq = await this.intentsDataSource.getIntentByDisplayName(display_name);
-      // let intents = await this.intentsFinder.find(message.text);
-      // let intent = {
-      //   "name": "intent_name"
-      // }
-
       // SEARCH INTENTS
-      let faqs;
-      try {
-        faqs = await this.intentsDataSource.getByExactMatch(message.text)
-      }
-      catch (error) {
-        console.error("An error occurred:", error);
-      }
-      console.log("faqs......", faqs)
-      if (faqs && faqs.length > 0 && faqs[0].answer) {
-        if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
-        let reply;
-        try {
-          reply = await this.execIntent(faqs[0], message, bot);
+      Faq.find(query).lean().exec(async (err, faqs) => {
+        if (err) {
+          return console.error("Error getting faq object.", err);
         }
-        catch(error) {
-          console.error("error during exact match execIntent():", error);
-          reject(error);
-        }
-        resolve(reply);
-        return;
-      }
-      else { // NLP
-        if (this.log) {console.log("NLP decode intent...");}
-        let intents;
-        try {
-          intents = await this.intentsFinder.find(message.text);
-        }
-        catch(error) {
-          console.error("An error occurred:", error);
-        }
-        if (this.log) {console.log("NLP decoded found:", intents);}
-        if (intents && intents.length > 0) {
-          let faq = await this.intentsDataSource.getByIntentDisplayName(intents[0].name);
-          let reply = await this.execIntent(faqs, message, bot);
+        if (faqs && faqs.length > 0 && faqs[0].answer) {
+          if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
+          let reply = await this.execIntent(faqs, this.botId, message, bot);
           resolve(reply);
-          return;
+          //resolve(this.execIntent(faqs, this.botId, message, bot)); // bot_token
         }
-        else {
-          // fallback
-          const fallbackIntent = await this.intentsDataSource.getByIntentDisplayName("defaultFallback");
-          let reply = await this.execIntent(fallbackIntent, message, bot);
-          resolve(reply);
-          return;
+        else { // FULL TEXT
+          if (this.log) {console.log("NLP decode intent...");}
+          query = { "id_project": this.projectId, "id_faq_kb": this.botId };
+          var mongoproject = undefined;
+          var sort = undefined;
+          var search_obj = { "$search": message.text };
+    
+          if (this.faq_kb.language) {
+              search_obj["$language"] = this.faq_kb.language;
+          }
+          query.$text = search_obj;
+          //console.debug("fulltext search query", query);
+    
+          mongoproject = { score: { $meta: "textScore" } };
+          sort = { score: { $meta: "textScore" } } 
+          // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
+          Faq.find(query, mongoproject).sort(sort).lean().exec(async (err, faqs) => {
+            if (this.log) {console.log("Found:", faqs);}
+            if (err) {
+              console.error("Error:", err);
+            }
+            if (faqs && faqs.length > 0 && faqs[0].answer) {
+              let reply = await this.execIntent(faqs, this.botId, message, bot);
+              resolve(reply);
+            }
+            else {
+              // fallback
+              const fallbackIntent = await this.getIntentByDisplayName("defaultFallback", bot);
+              const faqs = [fallbackIntent];
+              let reply = await this.execIntent(faqs, this.botId, message, bot);
+              resolve(reply); // bot_token
+            }
+          });
         }
-      }
+      });
     });
   }
 
@@ -166,12 +138,11 @@ class TiledeskChatbot {
     });
   }
 
-  async execIntent(faq, message, bot) {
-    let answerObj = faq; // faqs[0];
-    const botId = bot._id;
+  async execIntent(faqs, botId, message, bot) {
+    answerObj = faqs[0];
     let sender = 'bot_' + botId;
-    //var answerObj;
-    //answerObj.score = 100; // exact search has max score
+    var answerObj;
+    answerObj.score = 100; //exact search not set score
   
     const requestId = message.request.request_id;
     const projectId = message.id_project;
@@ -180,6 +151,7 @@ class TiledeskChatbot {
       console.log("token:", this.token)
       console.log("projectId:", projectId)
     }
+    
     if (this.tdcache) {
       const requestKey = "tilebot:" + requestId
       // best effort, do not "await", go on, trust redis speed.
@@ -189,14 +161,14 @@ class TiledeskChatbot {
     // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
     // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
     // THE ALTERNATIVE ROUTE.
-    // let extEndpoint = `${this.APIURL}/modules/tilebot/`;
-    // if (process.env.TYBOT_ENDPOINT) {
-    //   extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-    // }
-    // const apiext = new ExtApi({
-    //   ENDPOINT: extEndpoint,
-    //   log: this.log
-    // });
+    let extEndpoint = `${this.APIURL}/modules/tilebot/`;
+    if (process.env.TYBOT_ENDPOINT) {
+      extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+    }
+    const apiext = new ExtApi({
+      ENDPOINT: extEndpoint,
+      log: this.log
+    });
     console.log("the form...")
     
     // THE FORM
@@ -314,16 +286,16 @@ class TiledeskChatbot {
     // question_payload = clone of user's original message
     let question_payload = Object.assign({}, message);
     delete question_payload.request;
-    // let clonedfaqs = faqs.slice();
-    // if (clonedfaqs && clonedfaqs.length > 0) {
-    //     clonedfaqs = clonedfaqs.shift()
-    // }
+    let clonedfaqs = faqs.slice();
+    if (clonedfaqs && clonedfaqs.length > 0) {
+        clonedfaqs = clonedfaqs.shift()
+    }
     const intent_info = {
         intent_name: answerObj.intent_display_name,
         is_fallback: false,
         confidence: answerObj.score,
         question_payload: question_payload,
-        // others: clonedfaqs
+        others: clonedfaqs
     }
     static_bot_answer.attributes.intent_info = intent_info;
     
@@ -351,12 +323,7 @@ class TiledeskChatbot {
   }
   
   async currentLockedIntent(requestId) {
-    if (this.tdcache) {
-      return await this.tdcache.get("tilebot:requests:"  + requestId + ":locked");
-    }
-    else {
-      return null;
-    }
+    return await this.tdcache.get("tilebot:requests:"  + requestId + ":locked");
   }
   
   async unlockIntent(requestId) {
