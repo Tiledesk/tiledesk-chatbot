@@ -149,7 +149,7 @@ describe('Basic replyToMessage()', function() {
       tdcache: null,
       requestId: "requestId",
       projectId: "projectId",
-      log: false
+      log: true
     });
     assert(chatbot != null);
     const message = {

@@ -29,8 +29,6 @@ class MongodbIntentsMachine {
           search_obj["$language"] = this.language;
       }
       query.$text = search_obj;
-      //console.debug("fulltext search query", query);
-  if (this.log) {console.log("NLP decode intent...2");}
       mongoproject = { score: { $meta: "textScore" } };
       sort = { score: { $meta: "textScore" } } 
       // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
