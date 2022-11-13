@@ -1,7 +1,7 @@
 let mongoose = require('mongoose');
 let Faq = require('./faq');
 
-class MongodbIntentsFinder {
+class MongodbIntentsMachine {
 
   constructor(config) {
     if (!config.projectId) {
@@ -55,4 +55,4 @@ class MongodbIntentsFinder {
   
 }
 
-module.exports = { MongodbIntentsFinder }
+module.exports = { MongodbIntentsMachine }

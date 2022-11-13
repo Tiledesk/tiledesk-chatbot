@@ -1,7 +1,8 @@
 
 var assert = require('assert');
-const { TiledeskChatbot } = require('../models/TiledeskChatbot_Intents_Adapter.js');
+const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
 const { MockBotsDataSource } = require('../models/MockBotsDataSource.js');
+const { MockIntentsMachine } = require('../models/MockIntentsMachine.js');
 
 const testBots = {
   "bots": {
@@ -76,12 +77,12 @@ describe('Basic replyToMessage()', function() {
     assert(chatbot != null);
   });
 
-  it('query intent action', async () => {
+  it('query intent-action', async () => {
     const dataSource = new MockBotsDataSource(testBots);
     const botId = "bot1";
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
-      intentsFinder: dataSource,
+      intentsFinder: {},
       botId: botId,
       token: "token",
       APIURL: "APIURL",
@@ -111,7 +112,7 @@ describe('Basic replyToMessage()', function() {
     const botId = "bot1";
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
-      intentsFinder: dataSource,
+      intentsFinder: {},
       botId: botId,
       token: "token",
       APIURL: "APIURL",
@@ -130,16 +131,17 @@ describe('Basic replyToMessage()', function() {
     }
     const reply = await chatbot.replyToMessage(message);
     assert(reply);
-    assert(reply.text === testIntents.intents.intent1.answer);
+    assert(reply.text === testBots.bots[botId].intents.intent1.answer);
     assert(reply.attributes.intent_info.intent_name === testBots.bots[botId].intents.intent1.intent_display_name);
   });
 
   it('query NLP', async () => {
     const dataSource = new MockBotsDataSource(testBots);
+    const intentsMachine = new MockIntentsMachine(testBots);
     const botId = "bot1";
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
-      intentsFinder: dataSource,
+      intentsFinder: intentsMachine,
       botId: botId,
       token: "token",
       APIURL: "APIURL",
@@ -158,8 +160,8 @@ describe('Basic replyToMessage()', function() {
     }
     const reply = await chatbot.replyToMessage(message);
     assert(reply);
-    assert(reply.text === testIntents.intents.intent1.answer);
-    assert(reply.attributes.intent_info.intent_name === testBots.bots[botId].intent1.intent_display_name);
+    assert(reply.text === testBots.bots[botId].intents.intent1.answer);
+    assert(reply.attributes.intent_info.intent_name === testBots.bots[botId].intents.intent1.intent_display_name);
   });
 
   it('query with defaultFallback', async () => {
@@ -171,16 +173,14 @@ describe('Basic replyToMessage()', function() {
     const botId = "bot1";
     testIntents_with_defaultFallback.bots[botId].intents["defaultFallback"] = {
       intent_display_name: "defaultFallback",
-      questions: [
-        "defaultFallback question1",
-        "defaultFallback question2"
-      ],
-      answer: "reply to defaultFallback"
+      questions: [],
+      answer: "reply for defaultFallback"
     }
-    const dataSource = new MockBotsDataSource(testBots, testIntents_with_defaultFallback);
+    const dataSource = new MockBotsDataSource(testIntents_with_defaultFallback);
+    const intentsMachine = new MockIntentsMachine(testBots);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
-      intentsFinder: dataSource,
+      intentsFinder: intentsMachine,
       botId: botId,
       token: "token",
       APIURL: "APIURL",
@@ -199,14 +199,15 @@ describe('Basic replyToMessage()', function() {
     }
     const reply = await chatbot.replyToMessage(message);
     assert(reply);
-    assert(reply.text === testIntents_with_defaultFallback.intents["defaultFallback"].answer);
+    assert(reply.text === testIntents_with_defaultFallback.bots[botId].intents["defaultFallback"].answer);
   });
 
   it('query with missing defaultFallback', async () => {
     const dataSource = new MockBotsDataSource(testBots);
+    const intentsMachine = new MockIntentsMachine(testBots);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
-      intentsFinder: dataSource,
+      intentsFinder: intentsMachine,
       botId: "bot1",
       token: "token",
       APIURL: "APIURL",

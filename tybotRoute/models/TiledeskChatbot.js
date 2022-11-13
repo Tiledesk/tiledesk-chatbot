@@ -55,7 +55,7 @@ class TiledeskChatbot {
           log: false
         });
         // it only gets the locked_intent
-        const faq = await this.botsDataSource.getByIntentDisplayName(locked_intent);
+        const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
         if (this.log) {console.log("locked intent. got faqs", faqs)}
         let reply;
         if (faq) {
@@ -77,7 +77,7 @@ class TiledeskChatbot {
         if (action_parameters_index > -1) {
             action = action.substring(0, action_parameters_index);
         }
-        let faq = await this.botsDataSource.getByIntentDisplayName(action);
+        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, action);
         let reply;
         if (faq) {
           try {
@@ -107,10 +107,10 @@ class TiledeskChatbot {
       // SEARCH INTENTS
       let faqs;
       try {
-        faqs = await this.botsDataSource.getByExactMatch(message.text)
+        faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
       }
       catch (error) {
-        console.error("An error occurred:", error);
+        console.error("An error occurred during exact match:", error);
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
@@ -130,14 +130,14 @@ class TiledeskChatbot {
         if (this.log) {console.log("NLP decode intent...");}
         let intents;
         try {
-          intents = await this.intentsFinder.decode(message.text);
+          intents = await this.intentsFinder.decode(this.botId, message.text);
         }
         catch(error) {
           console.error("An error occurred:", error);
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
         if (intents && intents.length > 0) {
-          let faq = await this.botsDataSource.getByIntentDisplayName(intents[0].name);
+          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].name);
           let reply;
           try {
             reply = await this.execIntent(faq, message, bot);
@@ -152,7 +152,7 @@ class TiledeskChatbot {
         }
         else {
           // fallback
-          let fallbackIntent = await this.botsDataSource.getByIntentDisplayName("defaultFallback");
+          let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
           if (!fallbackIntent) {
             resolve(null);
             return;
