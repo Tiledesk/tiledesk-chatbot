@@ -91,6 +91,11 @@ router.post('/ext/:botid', async (req, res) => {
   //all_params = await chatbot.allParameters(requestId);
   //console.log("Allparams", all_params);
   let reply = await chatbot.replyToMessage(message);
+  if (!reply) {
+    reply = {
+      "text": "No messages found. Is 'defaultFallback' intent missing?"
+    }
+  }
   reply.triggeredByMessageId = messageId;
   let extEndpoint = `${APIURL}/modules/tilebot/`;
   if (process.env.TYBOT_ENDPOINT) {
