@@ -15,6 +15,8 @@ const { TdCache } = require('./TdCache.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
+const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
+
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
@@ -35,8 +37,6 @@ const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Dire
 const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
 const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
 const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');*/
-
-
 
 // THE IMPORT
 let mongoose = require('mongoose');
@@ -73,6 +73,7 @@ router.post('/ext/:botid', async (req, res) => {
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
   const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: faq_kb.language});
+  //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS, 
     intentsFinder: intentsMachine,
