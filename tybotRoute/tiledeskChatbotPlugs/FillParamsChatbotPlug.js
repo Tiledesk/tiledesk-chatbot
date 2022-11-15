@@ -33,9 +33,10 @@ class FillParamsChatbotPlug {
     if (this.log) {console.log("all_parameters of requestId:", requestId)}
     const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
     if (this.log) {console.log("--got parameters", all_parameters);}
-    //if (!all_parameters) {
-    //  all_parameters = {}
-    //}
+    if (!all_parameters) {
+      pipeline.nextplug();
+      return;
+    }
     //all_parameters["tdMessageId"] = message.triggeredByMessageId;
     //console.log("FillParamsChatbotPlug message:", message);
     //console.log("all_parameters[tdMessageId]:", all_parameters["tdMessageId"]);
