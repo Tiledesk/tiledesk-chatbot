@@ -123,11 +123,11 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const request_key = "tilebot:" + requestId;
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    if (log) {console.log("HIT! Request from cache:", request.request_id);}
+    if (log) {console.log("HIT! Request from cache:", request);}
     if (!request) {
       if (log) {console.log("!Request from cache", requestId);}
       request = await tdclient.getRequestById(requestId);
-      if (log) {console.log("Got request with APIs (after no cache hit)");}
+      if (log) {console.log("Got request with APIs (after no cache hit):", request);}
     }
   }
   else {
