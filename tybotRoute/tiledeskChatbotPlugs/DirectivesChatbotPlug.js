@@ -161,7 +161,7 @@ class DirectivesChatbotPlug {
         }
       }
       else if (directive_name === Directives.MESSAGE) {
-        const messageDir = new DirMessage();
+        const messageDir = new DirMessage({API_ENDPOINT: API_URL});
         messageDir.execute(directive, projectId, requestId, token, () => {
           process(nextDirective());
         });

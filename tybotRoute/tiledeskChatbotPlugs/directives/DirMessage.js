@@ -2,7 +2,11 @@ const { ExtApi } = require('../../ExtApi.js');
 
 class DirMessage {
 
-  constructor() {
+  constructor(settings) {
+    if (!settings.API_ENDPOINT) {
+      throw new Error("settings.API_ENDPOINT is mandatory!");
+    }
+    this.API_ENDPOINT = settings.API_ENDPOINT;
   }
 
   execute(directive, projectId, requestId, token, callback) {
@@ -17,10 +21,10 @@ class DirMessage {
         }
       }
       //console.log("Message:", message);
-      let extEndpoint = `${process.env.API_ENDPOINT}/modules/tilebot/`;
-      if (process.env.TYBOT_ENDPOINT) {
-        extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-      }
+      let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
+      //if (process.env.TYBOT_ENDPOINT) {
+      //  extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+      //}
       const apiext = new ExtApi({
         ENDPOINT: extEndpoint,
         log: true
@@ -29,7 +33,7 @@ class DirMessage {
         message.attributes = {}
       }
       message.attributes.directives = false;
-      message.attributes.splitted = false;
+      message.attributes.splitted = true;
       message.attributes.markbot = true;
       if (message.text) {
         //console.log("original message:", message.text);
