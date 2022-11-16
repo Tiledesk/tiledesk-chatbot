@@ -1,0 +1,20 @@
+const templates = [
+  {  
+    "id": "welcome_message",
+    "title": "Welcome message",
+    "description": "This chatbot welcomes the user with different messages according to online or offline hours",
+    "banner": {
+      image: "https://images.pexels.com/photos/2693208/pexels-photo-2693208.png?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    }
+  },
+  {
+    "id": "basic_handoff",
+    "title": "Quick replies and Human handoff",
+    "description": "This chabot welcomes the user proposing three replies to some frequent question. The chatbot also propose explicitly engage a uuman agent with a button",
+    "banner": {
+      image: "https://images.pexels.com/photos/2156881/pexels-photo-2156881.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    }
+  }
+];
+
+module.exports = templates;
