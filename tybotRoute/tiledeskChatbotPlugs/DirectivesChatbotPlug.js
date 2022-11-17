@@ -62,7 +62,7 @@ class DirectivesChatbotPlug {
   }
 
 
-
+/*
   moveToDepartment(tdclient, requestId, depName, callback) {
     tdclient.getAllDepartments((err, deps) => {
       console.log("deps:", deps, err);
@@ -91,7 +91,7 @@ class DirectivesChatbotPlug {
         });
       }
     });
-  }
+  }*/
 
   processDirectives(theend) {
     const directives = this.directives;
@@ -138,8 +138,14 @@ class DirectivesChatbotPlug {
           dep_name = directive.parameter;
         }
         console.log("department:", dep_name);
-        moveToDepartment(tdclient, requestId, dep_name, () => {
+        
+        /*this.moveToDepartment(tdclient, requestId, dep_name, () => {
           console.log("moved to department:", dep_name);
+          process(nextDirective());
+        });*/
+
+        const departmentDir = new DirDepartment(tdclient);
+        departmentDir.execute(requestId, dep_name, () => {
           process(nextDirective());
         });
       }
@@ -167,7 +173,6 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.AGENT) {
-        tdclient.log = false;
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = false;
         agentDir.execute(directive, requestId, depId, () => {
