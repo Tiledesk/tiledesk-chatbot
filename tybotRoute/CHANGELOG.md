@@ -1,10 +1,13 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.19**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.20**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.20
+- fixed tdDepartment (introduced DirDepartment class)
+ 
 ### 0.1.19
 - fixed action-intent not working
 

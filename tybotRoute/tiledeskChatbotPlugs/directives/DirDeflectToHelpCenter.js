@@ -44,7 +44,7 @@ class DirDeflectToHelpCenter {
         APIKEY: "__",
         APIURL: this.helpcenter_api_endpoint,
         projectId: this.projectId,
-        log: false
+        log: true
       });
       if (!workspace_id) {
         try {
@@ -52,10 +52,10 @@ class DirDeflectToHelpCenter {
           const workspaces = await helpcenter.allWorkspaces();
           if (workspaces.length > 0) {
             workspace_id = workspaces[0]._id;
-            //console.log("First Workspace selected", workspaces[0]);
+            console.log("First Workspace selected", workspaces[0]);
           }
           else {
-            //console.log("No Workspace found");
+            console.log("No Workspace found");
             completion();
           }
         }
@@ -64,12 +64,12 @@ class DirDeflectToHelpCenter {
           completion();
         }
       }
-      
+      console.log("searching on workspace_id:", workspace_id);
       try {
         const results = await helpcenter.search(workspace_id, original_text, maxresults);
         if (results && results.length > 0) {
-          //console.log("Successfully got results", results);
-          //console.log("Sending REPL", hc_reply);
+          console.log("Successfully got results", results);
+          console.log("Sending REPL", hc_reply);
           pipeline.message.text = hc_reply;
           results.forEach(content => {
             if (content.url.charAt(content.url.length -1) != "/") {

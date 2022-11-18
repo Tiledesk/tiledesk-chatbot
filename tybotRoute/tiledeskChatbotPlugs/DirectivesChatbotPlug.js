@@ -28,6 +28,7 @@ class DirectivesChatbotPlug {
   }
 
   exec(pipeline) {
+    console.log("direccccc")
     let message = pipeline.message;
     if (message.attributes && (message.attributes.directives == undefined || message.attributes.directives == false)) { // defaults to disabled
       pipeline.nextplug();
