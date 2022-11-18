@@ -1,31 +1,33 @@
 
 class DirDepartment {
 
-  constructor(tdclient) {
-    if (!tdclient) {
+  constructor(config) {
+    if (!config.tdclient) {
       throw new Error('tdclient (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = tdclient;
+    this.tdclient = config.tdclient;
+    this.log = config.log;
   }
 
-  moveToDepartment(tdclient, requestId, depName, callback) {
-    tdclient.getAllDepartments((err, deps) => {
-      console.log("deps:", deps, err);
+  moveToDepartment(requestId, depName, callback) {
+    this.tdclient.getAllDepartments((err, deps) => {
+      if (this.log) {console.log("deps:", deps, err);}
       if (err) {
         console.error("getAllDepartments() error:", err);
         callback(err);
         return;
       }
       let dep = null;
+      let i;
       for (i = 0; i < deps.length; i++) {
-        d = deps[i];
+        let d = deps[i];
         if (d.name.toLowerCase() === depName.toLowerCase()) {
           dep = d;
           break;
         }
       }
       if (dep) {
-        tdclient.updateRequestDepartment(requestId, dep._id, null, (err) => {
+        this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err) => {
           if (err) {
             console.error("An error:", err);
             callback(err);
@@ -39,12 +41,12 @@ class DirDepartment {
   }
   
   execute(requestId, dep_name, callback) {
-    console.log("DirDepartment:", dep_name);
-    this.moveToDepartment(tdclient, requestId, dep_name, () => {
-      console.log("moved to department:", dep_name);
-      callback());
+    if (this.log) {console.log("DirDepartment:", dep_name);}
+    this.moveToDepartment(requestId, dep_name, () => {
+      callback();
     });
   }
+
 }
 
 module.exports = { DirDepartment };

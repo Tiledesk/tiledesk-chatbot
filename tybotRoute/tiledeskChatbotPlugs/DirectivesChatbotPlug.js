@@ -8,6 +8,7 @@ const { DirWait } = require('./directives/DirWait');
 const { DirReplaceBot } = require('./directives/DirReplaceBot');
 const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
+const { DirDepartment } = require('./directives/DirDepartment');
 const { Directives } = require('./directives/Directives');
 
 class DirectivesChatbotPlug {
@@ -28,7 +29,6 @@ class DirectivesChatbotPlug {
   }
 
   exec(pipeline) {
-    console.log("direccccc")
     let message = pipeline.message;
     if (message.attributes && (message.attributes.directives == undefined || message.attributes.directives == false)) { // defaults to disabled
       pipeline.nextplug();
@@ -138,14 +138,7 @@ class DirectivesChatbotPlug {
         if (directive.parameter) {
           dep_name = directive.parameter;
         }
-        console.log("department:", dep_name);
-        
-        /*this.moveToDepartment(tdclient, requestId, dep_name, () => {
-          console.log("moved to department:", dep_name);
-          process(nextDirective());
-        });*/
-
-        const departmentDir = new DirDepartment(tdclient);
+        const departmentDir = new DirDepartment({tdclient: tdclient, log: false});
         departmentDir.execute(requestId, dep_name, () => {
           process(nextDirective());
         });
@@ -161,7 +154,6 @@ class DirectivesChatbotPlug {
               subtype: "info"
             }
           };
-          console.log("Message:", message)
           tdclient.sendSupportMessage(requestId, message, () => {
             process(nextDirective());
           });
