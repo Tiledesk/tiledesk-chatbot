@@ -16,6 +16,7 @@ const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Webhook
 class ExtUtil {
 
   static async execPipelineExt(request, static_bot_answer, directivesPlug, tdcache, log) {
+    console.log("Buuu")
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
     //const webhookurl = bot.webhook_url;
     //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
