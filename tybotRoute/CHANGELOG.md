@@ -1,9 +1,15 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.19**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.21**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.21
+- fixed orginal_text unused var that creating problems in DirOfflineHours
+
+### 0.1.20
+- bug fixing on ExtApi endpoint (External chatbots compromised messaging)
 
 ### 0.1.19
 - fixed action-intent not working
