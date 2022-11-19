@@ -1,9 +1,12 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.21**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.22**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.22
+- introduced new DirDepartment class
 
 ### 0.1.21
 - fixed orginal_text unused var that creating problems in DirOfflineHours
