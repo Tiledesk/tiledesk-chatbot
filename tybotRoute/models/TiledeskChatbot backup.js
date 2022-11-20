@@ -19,7 +19,6 @@ class TiledeskChatbot {
     this.requestId = config.requestId;
     this.projectId = config.projectId;
     this.log = config.log;
-    this.intentsDataSource = config.intentsDataSource
   }
   
   async replyToMessage(message, callback) {
