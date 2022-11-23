@@ -47,11 +47,10 @@ router.get('/public/templates/:botid', (req, res) => {
     } else {
       console.log('FAQ-KB: ', faq_kb)
 
-
-      faqService.getAll(id_faq_kb).then((faqs) => {
-        
+      let faqs = null;
+      try {
+        faqs = await faqService.getAll(id_faq_kb); //.then((faqs) => {
         const intents = faqs.map(({_id, id_project, topic, status, id_faq_kb, createdBy, intent_id, createdAt, updatedAt, __v, ...keepAttrs}) => keepAttrs)
-      
         let json = {
           webhook_enabled: faq_kb.webhook_enabled,
           webhook_url: faq_kb.webhook_url,
@@ -60,15 +59,12 @@ router.get('/public/templates/:botid', (req, res) => {
           description: faq_kb.description,
           intents: intents
         }
-
-        //let json_string = JSON.stringify(json);
-        //res.set({"Content-Disposition":"attachment; filename=\"bot.txt\""});
         return res.send(json);
-
-      }).catch((err) => {
+      }
+      catch((err) => {
         console.error('GET FAQ ERROR: ', err)
         return res.status(500).send({ success: false, msg: 'Error getting faqs.' });
-      })
+      });
     }
   })
 });
