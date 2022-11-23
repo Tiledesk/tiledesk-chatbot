@@ -170,20 +170,19 @@ class IntentForm {
     return rg.test(text);
   }
 
-  /*async printdb() {
-    console.log("****** PRINT DB ***********************")
-    const current_field_value = this.getValue("CURRENT_FIELD");
-    console.log("Current edit field:", current_field_value);
-    const form = await this.getValue("CURRENT_FORM");
-    for (let i = 0; i < form.length; i++) {
-      const field_id = i;
-      console.log("field_id:", field_id);
-      const field_value_key = field_id;
-      console.log("field value key:", field_value_key);
-      console.log("field value:", await this.getValue(field_value_key));
+  static isValidForm(form) {
+    let is_valid = true;
+    if (!form) {
+      is_valid = false;
     }
-    console.log("****** PRINT DB END ***********************");
-  }*/
+    else if (form && !form.fields) {
+      is_valid = false;
+    }
+    else if (form && form.fields.length === 0) {
+      is_valid = false;
+    }
+    return is_valid;
+  }
 
 }
 

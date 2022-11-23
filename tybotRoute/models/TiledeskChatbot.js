@@ -56,7 +56,7 @@ class TiledeskChatbot {
         });
         // it only gets the locked_intent
         const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
-        if (this.log) {console.log("locked intent. got faqs", faqs)}
+        if (this.log) {console.log("locked intent. got faqs", faq)}
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, bot);
@@ -237,7 +237,8 @@ class TiledeskChatbot {
       };
     }
     let intent_form = answerObj.form;
-    if (intent_form) {
+    console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form))
+    if (intent_form && IntentForm.isValidForm(intent_form)) {
       await this.lockIntent(requestId, intent_name);
       const user_reply = message.text;
       //const intent_answer = answerObj.answer; //req.body.payload.text;
