@@ -6,12 +6,14 @@ class FaqService {
   getAll(faq_kb_id) {
     console.log("(Service) GET ALL FAQ OF THE BOT ID (req.query): ", faq_kb_id);
     return new Promise((resolve, reject) => {
-      Faq.find({ id_faq_kb: faq_kb_id}, (err, faqs) => {
+      let query = { id_faq_kb: faq_kb_id};
+      // Faq.find(query).lean().exec(async (err, faqs) => {
+      Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {
           reject(err);
         }
         resolve(faqs);
-      });//.lean().exec()
+      });
     })
   }
 
