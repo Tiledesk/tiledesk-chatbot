@@ -40,8 +40,8 @@ router.get('/public/templates', (req, res) => {
 
 router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
-  Faq_kb.findById(id_faq_kb, (err, faq_kb) => {
-    if (err){
+  Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
+    if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
     } else {
@@ -61,10 +61,10 @@ router.get('/public/templates/:botid', (req, res) => {
         }
         return res.send(json);
       }
-      catch((err) => {
+      catch(err) {
         console.error('GET FAQ ERROR: ', err)
         return res.status(500).send({ success: false, msg: 'Error getting faqs.' });
-      });
+      }
     }
   })
 });
