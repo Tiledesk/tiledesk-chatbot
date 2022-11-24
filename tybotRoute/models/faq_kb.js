@@ -63,6 +63,10 @@ var Faq_kbSchema = new Schema({
     type: Boolean,
     index: true
   },
+  certified: {
+    type: Boolean,
+    index: true
+  },
   attributes: {
     type: Object,
   },

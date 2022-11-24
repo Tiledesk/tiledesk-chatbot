@@ -3,14 +3,24 @@ const bodyParser = require('body-parser');
 const router = express.Router();
 let Faq_kb = require('../tybotRoute/models/faq_kb');
 let faqService = require('../tybotRoute/models/faqService');
-let templates = require('./templates.js');
+let faqKbService = require('../tybotRoute/models/faqKbService');
+//let templates = require('./templates.js');
 
 router.get('/', (req, res) => {
   res.send('Hello Chatbot Templates!');
 });
 
-router.get('/public/templates', (req, res) => {
-  res.send(templates);
+router.get('/public/templates', async (req, res) => {
+  let bots = [];
+  let query = {public: true, certified: true};
+  try {
+    bots = await faqKbService.getAll(query);
+    res.send(bots);
+  }
+  catch (err) {
+    console.error('GET FAQ-KBs ERROR ', err);
+    return res.status(500).send({ success: false, msg: 'Error getting bots.' });
+  }
 });
 
 router.get('/public/templates/:botid', (req, res) => {
