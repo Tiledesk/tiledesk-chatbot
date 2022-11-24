@@ -59,6 +59,10 @@ var Faq_kbSchema = new Schema({
     default: 'en'
     // index: true
   },
+  public: {
+    type: Boolean,
+    index: true
+  },
   attributes: {
     type: Object,
   },
