@@ -17,7 +17,7 @@ router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
     console.log('FAQ-KB: ', faq_kb);
-    console.log('FAQ-KB.public?: ', faq_kb["public"]);
+    console.log('public: ', faq_kb["public"]);
     console.log('webhook_enabled', faq_kb["webhook_enabled"]);
     console.log('type', faq_kb["type"]);
     console.log('language', faq_kb["language"]);
