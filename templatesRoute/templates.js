@@ -19,4 +19,4 @@ let templates = [
   }
 ];
 
-modules.export = {templates: templates};
+module.exports = {templates: templates};

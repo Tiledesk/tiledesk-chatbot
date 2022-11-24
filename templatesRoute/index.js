@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const router = express.Router();
 let Faq_kb = require('../tybotRoute/models/faq_kb');
 let faqService = require('../tybotRoute/models/faqService');
-let templates = require('./templates.json');
+let templates = require('./templates.js');
 
 router.get('/', (req, res) => {
   res.send('Hello Chatbot Templates!');
