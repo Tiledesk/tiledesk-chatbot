@@ -17,11 +17,11 @@ router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
     console.log('FAQ-KB: ', faq_kb);
-    console.log('FAQ-KB.public?: ', faq_kb.public);
+    console.log('FAQ-KB.public?: ', faq_kb["public"]);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
-    } else if (faq_kb.public) {
+    } else if (faq_kb["public"]) {
       console.log("public chatbot");
       let faqs = null;
       try {
