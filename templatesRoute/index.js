@@ -18,6 +18,12 @@ router.get('/public/templates/:botid', (req, res) => {
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
     console.log('FAQ-KB: ', faq_kb);
     console.log('FAQ-KB.public?: ', faq_kb["public"]);
+    console.log('webhook_enabled', faq_kb["webhook_enabled"]);
+    console.log('type', faq_kb["type"]);
+    console.log('language', faq_kb["language"]);
+    console.log('name', faq_kb["name"]);
+    console.log('id_project', faq_kb["id_project"]);
+    console.log('trashed', faq_kb["trashed"]);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
