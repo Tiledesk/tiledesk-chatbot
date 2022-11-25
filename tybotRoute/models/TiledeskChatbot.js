@@ -72,7 +72,7 @@ class TiledeskChatbot {
 
       // Explicit intent invocation
       if (message.text.startsWith("/")) {
-        let intent_name = message.substring(message.text.indexOf("/") + 1);
+        let intent_name = message.text.substring(message.text.indexOf("/") + 1);
         if (!message.attributes) {
           message.attributes = {}
         }
