@@ -69,6 +69,15 @@ class TiledeskChatbot {
         resolve(reply);
         return;
       }
+
+      // Explicit intent invocation
+      if (message.text.startWith("/")) {
+        let intent_name = message.substring(message.text.indexOf("/") + 1);
+        if (!message.attributes) {
+          message.attributes = {}
+        }
+        message.attributes.action = intent_name;        
+      }
       
       // Checking Action button
       if (message.attributes && message.attributes.action) {
