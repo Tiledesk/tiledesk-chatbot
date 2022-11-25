@@ -1,7 +1,5 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-//const uuidv4 = require('uuid/v4');
-//const uuidv4 = require('uuid');
 
 var Faq_kbSchema = new Schema({
   name: {
@@ -10,16 +8,13 @@ var Faq_kbSchema = new Schema({
     index:true
   },
   description: {
-    type: String,
-    // index:true
+    type: String
   },
   url: { 
-    type: String,
-    // required: true
+    type: String
   },
   webhook_url: {
-    type: String,
-    // required: true
+    type: String
   },
   webhook_enabled: { 
     type: Boolean,
@@ -31,18 +26,11 @@ var Faq_kbSchema = new Schema({
     required: true,
     index: true
   },
-  // kbkey_remote: { //serve?
-  //   type: String,
-  // },  
   type: {
     type: String,
     default: 'internal',
     index: true
   },
-  // external: {
-  //   type: Boolean,
-  //   default: false
-  // },
   trashed: {
     type: Boolean,
     index: true
@@ -57,7 +45,6 @@ var Faq_kbSchema = new Schema({
     type: String,
     required: false,
     default: 'en'
-    // index: true
   },
   public: {
     type: Boolean,
@@ -79,18 +66,6 @@ var Faq_kbSchema = new Schema({
 }
 );
 
-Faq_kbSchema.virtual('fullName').get(function () {
-  // winston.debug("faq_kb fullName virtual called");
-  return (this.name);
-});
-
 var faq_kb = mongoose.model('faq_kb', Faq_kbSchema);
-
-if (process.env.MONGOOSE_SYNCINDEX) {
-  faq_kb.syncIndexes();
-  console.log("faq_kb syncIndexes");
-}
-
-
 
 module.exports = faq_kb

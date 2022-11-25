@@ -18,7 +18,7 @@ class FaqKbService {
         }
         resolve(bots);
       });
-    })
+    });
   }
 
 }
