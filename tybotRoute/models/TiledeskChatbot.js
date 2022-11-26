@@ -72,23 +72,28 @@ class TiledeskChatbot {
 
       // Explicit intent invocation
       if (message.text.startsWith("/")) {
+        if (this.log) {console.log("Intent was explicitly invoked:", message.text);}
         let intent_name = message.text.substring(message.text.indexOf("/") + 1);
+        if (this.log) {console.log("Invoked Intent:", intent_name);}
         if (!message.attributes) {
           message.attributes = {}
         }
         message.attributes.action = intent_name;
+        if (this.log) {console.log("Message action:", message.attributes.action)}
       }
       
       // Checking Action button
       if (message.attributes && message.attributes.action) {
-        let action = message.attributes.action;
-        let action_parameters_index = action.indexOf("?");
+        if (this.log) {console.log("Message has action:", message.attributes.action)}
+        let intent_name = message.attributes.action;
+        /*let action_parameters_index = action.indexOf("?");
         if (action_parameters_index > -1) {
-            action = action.substring(0, action_parameters_index);
-        }
-        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, action);
+            intent_name = intent_name.substring(0, action_parameters_index);
+        }*/
+        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent_name);
         let reply;
         if (faq) {
+          if (this.log) {console.log("Got a reply from Intent name:", faq);}
           try {
             reply = await this.execIntent(faq, message, bot);
           }
@@ -98,6 +103,7 @@ class TiledeskChatbot {
           }
         }
         else {
+          if (this.log) {console.log("No Reply found by Intent name:", intent_name);}
           reply = {
             "text": "An error occurred while getting intent by action:'" + action
           }
