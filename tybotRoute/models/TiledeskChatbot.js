@@ -43,7 +43,7 @@ class TiledeskChatbot {
         reject(error);
         return;
       }
-      const lead = null;
+      let lead = null;
       if (message.request) {
         this.request = message.request;
         lead = message.request.lead;
@@ -407,7 +407,7 @@ class TiledeskChatbot {
     return message;
   }
 
-  populatePrechatFormAndLead(leadId, requestId) {
+  async populatePrechatFormAndLead(leadId, requestId) {
     if (!leadId && !requestId) {
       if (this.log) {console.log("(populatePrechatFormAndLead) !leadId && !requestId");}
       return;
