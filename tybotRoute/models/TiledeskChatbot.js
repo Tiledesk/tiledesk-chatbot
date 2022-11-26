@@ -327,19 +327,14 @@ class TiledeskChatbot {
     // question_payload = clone of user's original message
     let question_payload = Object.assign({}, message);
     delete question_payload.request;
-    // let clonedfaqs = faqs.slice();
-    // if (clonedfaqs && clonedfaqs.length > 0) {
-    //     clonedfaqs = clonedfaqs.shift()
-    // }
     const intent_info = {
         intent_name: answerObj.intent_display_name,
         is_fallback: false,
         confidence: answerObj.score,
         question_payload: question_payload,
-        // others: clonedfaqs
+        botId: botId
     }
     static_bot_answer.attributes.intent_info = intent_info;
-    
     static_bot_answer.attributes.directives = true;
     static_bot_answer.attributes.splits = true;
     static_bot_answer.attributes.markbot = true;

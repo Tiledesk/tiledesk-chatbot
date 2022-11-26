@@ -150,7 +150,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   //const bot_answer = answer;
   tdclient.sendSupportMessage(requestId, bot_answer, () => {
-    directivesPlug.processDirectives(() => {
+    directivesPlug.processDirectives(bot_answer, () => {
       if (log) {console.log("After message execute directives end.");}
     });
   });

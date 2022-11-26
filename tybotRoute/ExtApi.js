@@ -66,6 +66,43 @@ class ExtApi {
     );
   }
 
+  /**
+   * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
+   * /${TILEBOT_ROUTE}/ext/${botId}
+   *
+   * @param {Object} message. The message to send
+   * @param {string} botId. Tiledesk botId
+   * @param {string} token. User token
+   */
+  sendMessageToBot(message, botId, token, callback) {
+    const jwt_token = this.fixToken(token);
+    const url = `${this.ENDPOINT}/ext/${botId}`;
+    if (this.log) {console.log("sendMessageToBot URL", url);}
+    const HTTPREQUEST = {
+      url: url,
+      headers: {
+        'Content-Type' : 'application/json',
+        'Authorization': jwt_token
+      },
+      json: message,
+      method: 'POST'
+    };
+    this.myrequest(
+      HTTPREQUEST,
+      function(err, resbody) {
+        if (err) {
+          if (callback) {
+            callback(err);
+          }
+        }
+        else {
+          if (callback) {
+            callback(null, resbody);
+          }
+        }
+      }, this.log
+    );
+  }
 
   myrequest(options, callback, log) {
     if (this.log) {

@@ -94,7 +94,7 @@ class DirectivesChatbotPlug {
     });
   }*/
 
-  processDirectives(theend) {
+  processDirectives(message, theend) {
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -154,6 +154,54 @@ class DirectivesChatbotPlug {
               subtype: "info"
             }
           };
+          tdclient.sendSupportMessage(requestId, message, () => {
+            process(nextDirective());
+          });
+        }
+      }
+      else if (directive_name === Directives.INTENT) {
+        //tdclient.log = true;
+        if (directive.parameter) {
+          let intent_name = directive.parameter.trim();
+          let message = {
+            sender: "system22", // bot doesn't reply to himself
+            text: "/" + intent_name,
+            request: {
+              request_id: requestId
+            },
+            id_project: projectId
+          };
+          // send message to /ext/botId
+          const req_body = {
+            payload: message,
+            token: token
+          }
+          let extEndpoint = `${APIURL}/modules/tilebot/`;
+          if (process.env.TYBOT_ENDPOINT) {
+            extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+          }
+          const apiext = new ExtApi({
+            ENDPOINT: extEndpoint,
+            log: log
+          });
+          
+          apiext.sendMessageToBot(req_body, botId, token, () => {
+            if (log) {
+              console.log("sendMessageToBot() req_body sent:", req_body);
+            }
+          });
+          /*
+          }
+          const botId = req.params.botid;
+          if (log) {console.log("query botId:", botId);}
+          const message = req.body.payload;
+          const messageId = message._id;
+          const faq_kb = req.body.hook;
+          const token = req.body.token;
+          const requestId = message.request.request_id;
+          const projectId = message.id_project;
+          */
+          
           tdclient.sendSupportMessage(requestId, message, () => {
             process(nextDirective());
           });
