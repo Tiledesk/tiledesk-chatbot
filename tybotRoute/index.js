@@ -108,7 +108,9 @@ router.post('/ext/:botid', async (req, res) => {
   });
 
   apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-    if (log) {console.log("FORM Message sent.", );}
+    if (log) {
+      console.log("SupportMessageExt() reply sent:", reply);
+    }
   });
   
 });
