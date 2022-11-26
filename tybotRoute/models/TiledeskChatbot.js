@@ -105,7 +105,7 @@ class TiledeskChatbot {
         else {
           if (this.log) {console.log("No Reply found by Intent name:", intent_name);}
           reply = {
-            "text": "An error occurred while getting intent by action:'" + action
+            "text": "An error occurred while getting intent by action:'" + intent_name
           }
         }
         resolve(reply);
