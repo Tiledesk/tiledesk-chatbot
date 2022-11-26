@@ -43,12 +43,18 @@ class TiledeskChatbot {
         reject(error);
         return;
       }
+      const lead = null;
+      if (message.request) {
+        this.request = message.request;
+        lead = message.request.lead;
+      }
+      
       // Checking locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
       if (this.log) {console.log("got locked intent", locked_intent)}
       if (locked_intent) {
         const tdclient = new TiledeskClient({
-          projectId: message.id_project,
+          projectId: this.projectId,
           token: this.token,
           APIURL: this.APIURL,
           APIKEY: this.APIKEY,
@@ -59,7 +65,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("locked intent. got faqs", faq)}
         let reply;
         if (faq) {
-          reply = await this.execIntent(faq, message);//, bot);
+          reply = await this.execIntent(faq, message, lead);//, bot);
         }
         else {
           reply = {
@@ -95,7 +101,7 @@ class TiledeskChatbot {
         if (faq) {
           if (this.log) {console.log("Got a reply from Intent name:", faq);}
           try {
-            reply = await this.execIntent(faq, message);//, bot);
+            reply = await this.execIntent(faq, message, lead);//, bot);
           }
           catch(error) {
             console.error("error");
@@ -131,7 +137,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
         let reply;
         try {
-          reply = await this.execIntent(faqs[0], message);//, bot);
+          reply = await this.execIntent(faqs[0], message, lead);//, bot);
         }
         catch(error) {
           console.error("error during exact match execIntent():", error);
@@ -155,7 +161,7 @@ class TiledeskChatbot {
           let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let reply;
           try {
-            reply = await this.execIntent(faq, message);//, bot);
+            reply = await this.execIntent(faq, message, lead);//, bot);
           }
           catch(error) {
             console.error("error during NLP decoding:", error);
@@ -175,7 +181,7 @@ class TiledeskChatbot {
           else {
             let reply;
             try {
-              reply = await this.execIntent(fallbackIntent, message);//, bot);
+              reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
             }
             catch(error) {
               console.error("error during defaultFallback:", error);
@@ -189,25 +195,22 @@ class TiledeskChatbot {
       }
     });
   }
-
-  async execIntent(faq, message) {//, bot) {
+  
+  async execIntent(faq, message, lead) {//, bot) {
     let answerObj = faq; // faqs[0];
     const botId = this.bot._id;
     let sender = 'bot_' + botId;
     //var answerObj;
     //answerObj.score = 100; // exact search has max score
-  
-    const requestId = message.request.request_id;
-    const projectId = message.id_project;
     if (this.log) {
-      console.log("requestId:", requestId)
+      console.log("requestId:", this.requestId)
       console.log("token:", this.token)
-      console.log("projectId:", projectId)
+      console.log("projectId:", this.projectId)
     }
     if (this.tdcache) {
-      const requestKey = "tilebot:" + requestId
+      const requestKey = "tilebot:" + this.requestId
       // best effort, do not "await", go on, trust redis speed.
-      this.tdcache.setJSON(requestKey, message.request);
+      this.tdcache.setJSON(requestKey, this.request);
     }
     // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
     // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
@@ -223,10 +226,8 @@ class TiledeskChatbot {
     // });
     // console.log("the form...")
     
-    // THE FORM
-    
     let intent_name = answerObj.intent_display_name
-  // THE FORM
+    // THE FORM
     if (intent_name === "test_form_intent") {
       answerObj.form = {
         "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
@@ -254,12 +255,10 @@ class TiledeskChatbot {
     let intent_form = answerObj.form;
     console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form))
     if (IntentForm.isValidForm(intent_form)) {
-      await this.lockIntent(requestId, intent_name);
+      await this.lockIntent(this.requestId, intent_name);
       const user_reply = message.text;
-      //const intent_answer = answerObj.answer; //req.body.payload.text;
       let form_reply = await this.execIntentForm(user_reply, intent_form);
       console.log("got form reply", form_reply)
-      //if (form_reply_message) {
       if (!form_reply.canceled && form_reply.message) {
         console.log("Form replying for next field...");
         if (this.log) {console.log("Sending form reply...", form_reply.message)}
@@ -271,25 +270,21 @@ class TiledeskChatbot {
         form_reply.message.attributes.splits = true;
         form_reply.message.attributes.markbot = true;
         return form_reply.message;
-        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
-        //  if (log) {console.log("FORM Message sent.", );}
-        //});
-        //return;
       }
       else if (form_reply.end) {
         if (this.log) {
           console.log("FORM end.", );}
-          console.log("unlocking intent for request:", requestId);
+          console.log("unlocking intent for request:", this.requestId);
         }
-        this.unlockIntent(requestId);
-        if (message.request && message.request.lead) {
-          this.populatePrechatFormAndLead(message.request.request_id, message.request.lead._id);
+        this.unlockIntent(this.requestId);
+        if (lead) {
+          this.populatePrechatFormAndLead(this.requestId, lead._id);
         }
       }
       else if (form_reply.canceled) {
         console.log("Form canceled.");
-        if (this.log) {console.log("unlocking intent due to canceling, for request", requestId);}
-        this.unlockIntent(requestId);
+        if (this.log) {console.log("unlocking intent due to canceling, for request", this.requestId);}
+        this.unlockIntent(this.requestId);
         if (this.log) {console.log("sending form 'cancel' reply...", form_reply.message)}
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
@@ -298,13 +293,8 @@ class TiledeskChatbot {
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
         return form_reply.message
-        //apiext.sendSupportMessageExt(form_reply.message, projectId, requestId, token, () => {
-        //  if (log) {console.log("FORM Message sent.", );}
-        //});
-        //return;
       }
     }
-  
     // FORM END
     
     const context = {
@@ -316,8 +306,7 @@ class TiledeskChatbot {
       },
       token: this.token
     };
-
-    // console.log("the static_bot_answer...")
+    
     const static_bot_answer = { // static design of the chatbot reply
       //type: answerObj.type,
       text: answerObj.answer,
@@ -329,10 +318,6 @@ class TiledeskChatbot {
     if (!static_bot_answer.attributes) {
       static_bot_answer.attributes = {}
     }
-    /*let attr = static_bot_answer.attributes;
-    if (!attr) {
-      attr = {};
-    }*/
     var timestamp = Date.now();
     static_bot_answer.attributes['clienttimestamp'] = timestamp;
     if (answerObj && answerObj._id) {
@@ -363,15 +348,7 @@ class TiledeskChatbot {
 
     // exec webhook (only)
     const bot_answer = await this.execPipeline(static_bot_answer, message, this.bot, context, this.token);
-    
-    //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
-    // console.log("returning answer", bot_answer)
     return bot_answer;
-    
-    /*apiext.sendSupportMessageExt(bot_answer, projectId, requestId, token, () => {
-      if (log) {console.log("Message sent");}
-    });*/
-    
   }
 
   async lockIntent(requestId, intent_name) {
