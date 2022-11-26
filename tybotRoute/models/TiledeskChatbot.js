@@ -273,7 +273,7 @@ class TiledeskChatbot {
       }
       else if (form_reply.end) {
         if (this.log) {
-          console.log("FORM end.", );}
+          console.log("FORM end.", );
           console.log("unlocking intent for request:", this.requestId);
         }
         this.unlockIntent(this.requestId);
