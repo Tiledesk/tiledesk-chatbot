@@ -34,9 +34,9 @@ class TiledeskChatbot {
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
       // get bot info
-      let bot;
+      //let bot;
       try {
-        bot = await this.botsDataSource.getBotById(this.botId);
+        this.bot = await this.botsDataSource.getBotById(this.botId);
       }
       catch(error) {
         console.error("error", error);
@@ -59,7 +59,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("locked intent. got faqs", faq)}
         let reply;
         if (faq) {
-          reply = await this.execIntent(faq, message, bot);
+          reply = await this.execIntent(faq, message);//, bot);
         }
         else {
           reply = {
@@ -95,7 +95,7 @@ class TiledeskChatbot {
         if (faq) {
           if (this.log) {console.log("Got a reply from Intent name:", faq);}
           try {
-            reply = await this.execIntent(faq, message, bot);
+            reply = await this.execIntent(faq, message);//, bot);
           }
           catch(error) {
             console.error("error");
@@ -131,7 +131,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
         let reply;
         try {
-          reply = await this.execIntent(faqs[0], message, bot);
+          reply = await this.execIntent(faqs[0], message);//, bot);
         }
         catch(error) {
           console.error("error during exact match execIntent():", error);
@@ -155,7 +155,7 @@ class TiledeskChatbot {
           let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let reply;
           try {
-            reply = await this.execIntent(faq, message, bot);
+            reply = await this.execIntent(faq, message);//, bot);
           }
           catch(error) {
             console.error("error during NLP decoding:", error);
@@ -175,7 +175,7 @@ class TiledeskChatbot {
           else {
             let reply;
             try {
-              reply = await this.execIntent(fallbackIntent, message, bot);
+              reply = await this.execIntent(fallbackIntent, message);//, bot);
             }
             catch(error) {
               console.error("error during defaultFallback:", error);
@@ -190,9 +190,9 @@ class TiledeskChatbot {
     });
   }
 
-  async execIntent(faq, message, bot) {
+  async execIntent(faq, message) {//, bot) {
     let answerObj = faq; // faqs[0];
-    const botId = bot._id;
+    const botId = this.bot._id;
     let sender = 'bot_' + botId;
     //var answerObj;
     //answerObj.score = 100; // exact search has max score
@@ -253,7 +253,7 @@ class TiledeskChatbot {
     }
     let intent_form = answerObj.form;
     console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form))
-    if (intent_form && IntentForm.isValidForm(intent_form)) {
+    if (IntentForm.isValidForm(intent_form)) {
       await this.lockIntent(requestId, intent_name);
       const user_reply = message.text;
       //const intent_answer = answerObj.answer; //req.body.payload.text;
@@ -306,7 +306,7 @@ class TiledeskChatbot {
     const context = {
       payload: {
         botId: botId,
-        bot: bot,
+        bot: this.bot,
         message: message, // USER MESSAGE (JSON)
         intent: answerObj
       },
@@ -358,7 +358,7 @@ class TiledeskChatbot {
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
     // exec webhook (only)
-    const bot_answer = await this.execPipeline(static_bot_answer, message, bot, context, this.token);
+    const bot_answer = await this.execPipeline(static_bot_answer, message, this.bot, context, this.token);
     
     //bot_answer.text = await fillWithRequestParams(bot_answer.text, requestId); // move to "ext" pipeline
     // console.log("returning answer", bot_answer)
