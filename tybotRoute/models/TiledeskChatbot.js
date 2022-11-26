@@ -277,10 +277,14 @@ class TiledeskChatbot {
         //return;
       }
       else if (form_reply.end) {
-        // console.log("Form end.");
-        if (this.log) {console.log("unlocking intent for request", requestId);}
+        if (this.log) {
+          console.log("FORM end.", );}
+          console.log("unlocking intent for request:", requestId);
+        }
         this.unlockIntent(requestId);
-        this.populatePrechatFormAndLead(message);
+        if (message.request && message.request.lead) {
+          this.populatePrechatFormAndLead(message.request.request_id, message.request.lead._id);
+        }
       }
       else if (form_reply.canceled) {
         console.log("Form canceled.");
@@ -426,32 +430,27 @@ class TiledeskChatbot {
     return message;
   }
 
-  async populatePrechatFormAndLead(message, callback) {
+  populatePrechatFormAndLead(leadId, requestId) {
+    if (!leadId && !requestId) {
+      if (this.log) {console.log("(populatePrechatFormAndLead) !leadId && !requestId");}
+      return;
+    }
     const tdclient = new TiledeskClient({
       projectId: this.projectId,
       token: this.token,
       APIURL: this.APIURL,
       APIKEY: this.APIKEY
     });
-    
-    const leadId = message.request.lead._id;
-    const requestId = message.request.request_id;
-  
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.tdcache.hgetall(parameters_key);
-    if (all_parameters) {
-      //console.log("all_parameters['userEmail']", all_parameters['userEmail'])
-      //console.log("all_parameters['userFullname']", all_parameters['userFullname']); 
+    if (all_parameters) { 
       tdclient.updateLeadEmailFullname(leadId, null, all_parameters['userFullname'], () => {
-        if (this.log) {console.log("lead updated.")}
+        if (this.log) {console.log("Lead updated.")}
         tdclient.updateRequestAttributes(requestId, {
           preChatForm: all_parameters,
           updated: Date.now
         }, () => {
-          if (this.log) {console.log("prechat updated.");}
-          if (callback) {
-            callback();
-          }
+          if (this.log) {console.log("Prechat updated.");}
         });
       });
     };
