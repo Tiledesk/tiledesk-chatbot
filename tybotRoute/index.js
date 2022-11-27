@@ -46,7 +46,7 @@ let connection;
 let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
-  if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
+  console.log("REQUEST BODY:", JSON.stringify(req.body));
   res.status(200).send({"success":true});
 
   const botId = req.params.botid;
