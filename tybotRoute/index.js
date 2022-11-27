@@ -71,11 +71,13 @@ router.post('/ext/:botid', async (req, res) => {
   );
   if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
+  
+  const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
 
   // get the bot metadata
   let bot = null;
   try {
-    bot = await this.botsDataSource.getBotById(botId);
+    bot = await botsDS.getBotById(botId);
   }
   catch(error) {
     console.error("Error getting botId:", botId);
@@ -83,7 +85,6 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
   
-  const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
   const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
