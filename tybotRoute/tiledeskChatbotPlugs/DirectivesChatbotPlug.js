@@ -105,6 +105,7 @@ class DirectivesChatbotPlug {
     const supportRequest = this.supportRequest;
     const token = this.token;
     const API_URL = this.API_URL;
+    const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
 
     const requestId = supportRequest.request_id
     const depId = supportRequest.department._id;
@@ -178,8 +179,8 @@ class DirectivesChatbotPlug {
             token: token
           }
           let extEndpoint = `${API_URL}/modules/tilebot/`;
-          if (this.TILEBOT_ENDPOINT) {
-            extEndpoint = `${this.TILEBOT_ENDPOINT}`;
+          if (TILEBOT_ENDPOINT) {
+            extEndpoint = `${TILEBOT_ENDPOINT}`;
           }
           const apiext = new ExtApi({
             ENDPOINT: extEndpoint,
