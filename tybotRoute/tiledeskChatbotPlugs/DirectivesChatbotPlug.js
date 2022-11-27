@@ -185,7 +185,7 @@ class DirectivesChatbotPlug {
           }
           const apiext = new ExtApi({
             ENDPOINT: extEndpoint,
-            log: log
+            log: true
           });
           
           apiext.sendMessageToBot(req_body, botId, token, () => {
