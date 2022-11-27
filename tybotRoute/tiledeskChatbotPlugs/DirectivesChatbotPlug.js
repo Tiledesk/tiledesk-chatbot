@@ -167,7 +167,6 @@ class DirectivesChatbotPlug {
         //tdclient.log = true;
         if (directive.parameter) {
           let intent_name = directive.parameter.trim();
-          
           let message_to_bot = {
             sender: "system22", // bot doesn't reply to himself
             text: "/" + intent_name,
@@ -193,20 +192,6 @@ class DirectivesChatbotPlug {
           console.log("(sending to bot) the req_body:", req_body);
           apiext.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
             console.log("sendMessageToBot() req_body sent:", req_body);
-          });
-          /*
-          }
-          const botId = req.params.botid;
-          if (log) {console.log("query botId:", botId);}
-          const message = req.body.payload;
-          const messageId = message._id;
-          const faq_kb = req.body.hook;
-          const token = req.body.token;
-          const requestId = message.request.request_id;
-          const projectId = message.id_project;
-          */
-          
-          tdclient.sendSupportMessage(requestId, message, () => {
             process(nextDirective());
           });
         }
