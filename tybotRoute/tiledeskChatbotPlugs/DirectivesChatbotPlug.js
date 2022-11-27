@@ -176,7 +176,7 @@ class DirectivesChatbotPlug {
             payload: message,
             token: token
           }
-          let extEndpoint = `${APIURL}/modules/tilebot/`;
+          let extEndpoint = `${API_URL}/modules/tilebot/`;
           if (process.env.TYBOT_ENDPOINT) {
             extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
           }
