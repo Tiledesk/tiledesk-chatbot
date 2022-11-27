@@ -19,9 +19,13 @@ class TiledeskChatbot {
     if (!config.botId) {
       throw new Error("config.botId is mandatory");
     }
+    if (!config.bot) {
+      throw new Error("config.bot is mandatory");
+    }
     this.botsDataSource = config.botsDataSource;
     this.intentsFinder = config.intentsFinder;
     this.botId = config.botId;
+    this.bot = config.bot;
     this.token = config.token;
     this.tdcache = config.tdcache;
     this.APIURL = config.APIURL;
@@ -35,14 +39,6 @@ class TiledeskChatbot {
     return new Promise( async (resolve, reject) => {
       // get bot info
       //let bot;
-      try {
-        this.bot = await this.botsDataSource.getBotById(this.botId);
-      }
-      catch(error) {
-        console.error("error", error);
-        reject(error);
-        return;
-      }
       let lead = null;
       if (message.request) {
         this.request = message.request;
@@ -198,7 +194,7 @@ class TiledeskChatbot {
   
   async execIntent(faq, message, lead) {//, bot) {
     let answerObj = faq; // faqs[0];
-    const botId = this.bot._id;
+    const botId = this.botId;
     let sender = 'bot_' + botId;
     //var answerObj;
     //answerObj.score = 100; // exact search has max score
@@ -328,11 +324,12 @@ class TiledeskChatbot {
     let question_payload = Object.assign({}, message);
     delete question_payload.request;
     const intent_info = {
-        intent_name: answerObj.intent_display_name,
-        is_fallback: false,
-        confidence: answerObj.score,
-        question_payload: question_payload,
-        botId: botId
+      intent_name: answerObj.intent_display_name,
+      is_fallback: false,
+      confidence: answerObj.score,
+      question_payload: question_payload,
+      botId: this.botId,
+      bot: this.bot
     }
     static_bot_answer.attributes.intent_info = intent_info;
     static_bot_answer.attributes.directives = true;

@@ -53,7 +53,7 @@ router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("query botId:", botId);}
   const message = req.body.payload;
   const messageId = message._id;
-  const faq_kb = req.body.hook;
+  //const faq_kb = req.body.hook; now it is "bot"
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
@@ -71,13 +71,26 @@ router.post('/ext/:botid', async (req, res) => {
   );
   if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
+
+  // get the bot metadata
+  let bot = null;
+  try {
+    bot = await this.botsDataSource.getBotById(botId);
+  }
+  catch(error) {
+    console.error("Error getting botId:", botId);
+    console.error("Error getting bot was:", error);
+    return;
+  }
+  
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
-  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: faq_kb.language});
+  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS, 
     intentsFinder: intentsMachine,
     botId: botId,
+    bot: bot,
     token: token,
     APIURL: APIURL,
     APIKEY: "___",
