@@ -22,6 +22,7 @@ class DirectivesChatbotPlug {
   constructor(config) {
     this.supportRequest = config.supportRequest;
     this.API_URL = config.TILEDESK_API_ENDPOINT;
+    this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
@@ -177,8 +178,8 @@ class DirectivesChatbotPlug {
             token: token
           }
           let extEndpoint = `${API_URL}/modules/tilebot/`;
-          if (process.env.TYBOT_ENDPOINT) {
-            extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+          if (this.TILEBOT_ENDPOINT) {
+            extEndpoint = `${this.TILEBOT_ENDPOINT}`;
           }
           const apiext = new ExtApi({
             ENDPOINT: extEndpoint,
