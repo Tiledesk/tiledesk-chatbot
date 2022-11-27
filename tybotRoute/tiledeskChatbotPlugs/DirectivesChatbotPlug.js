@@ -10,6 +10,7 @@ const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
 const { Directives } = require('./directives/Directives');
+const { ExtApi } = require('../ExtApi.js');
 
 class DirectivesChatbotPlug {
 
