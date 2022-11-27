@@ -7,51 +7,44 @@ class DirIntent {
       throw new Error("settings.API_ENDPOINT is mandatory!");
     }
     this.API_ENDPOINT = settings.API_ENDPOINT;
+    this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
   }
 
-  execute(directive, projectId, requestId, token, callback) {
+  execute(directive, message, projectId, requestId, token, callback) {
     if (directive.parameter) {
-      let text = directive.parameter.trim();
-      let message = {text: text};
-      if (text.lastIndexOf("\\hide") >= 0) {
-        //console.log("HIDDEN");
-        message.text = text.slice(0, text.lastIndexOf("\\hide")).trim();
-        message.attributes = {
-          subtype: "info"
-        }
+      let intent_name = directive.parameter.trim();
+      let message_to_bot = {
+        sender: "system22", // bot doesn't reply to himself
+        text: "/" + intent_name,
+        request: {
+          request_id: requestId
+        },
+        id_project: projectId
+      };
+      // send message to /ext/botId
+      const req_body = {
+        payload: message_to_bot,
+        token: token
       }
-      //console.log("Message:", message);
       let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
-      //if (process.env.TYBOT_ENDPOINT) {
-      //  extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-      //}
-      const apiext = new ExtApi({
+      if (this.TILEBOT_ENDPOINT) {
+        extEndpoint = `${this.TILEBOT_ENDPOINT}`;
+      }
+      const extapi = new ExtApi({
         ENDPOINT: extEndpoint,
         log: true
       });
-      if (!message.attributes) {
-        message.attributes = {}
-      }
-      message.attributes.directives = false;
-      message.attributes.splitted = true;
-      message.attributes.markbot = true;
-      if (message.text) {
-        //console.log("original message:", message.text);
-        message.text = message.text.replace(/\\n/g, "\n");
-        //console.log("cr replaced:", message.text);
-      }
-      console.log("sendSupportMessageExt from dirmessage")
-      apiext.sendSupportMessageExt(
-        message,
-        projectId,
-        requestId,
-        token,
-        () => {
-          if (this.log) {console.log("Ext message sent.");}
-          callback();
+      console.log("(sending to bot) incoming message:", message);
+      console.log("(sending to bot) the req_body:", req_body);
+      extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
+        console.log("sendMessageToBot() req_body sent:", req_body);
+        callback();
       });
+    }
+    else {
+      callback();
     }
   }
 }
 
-module.exports = { DirMessage };
+module.exports = { DirIntent };

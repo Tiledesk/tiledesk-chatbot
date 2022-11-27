@@ -9,6 +9,7 @@ const { DirReplaceBot } = require('./directives/DirReplaceBot');
 const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
+const { DirIntent } = require('./directives/DirIntent');
 const { Directives } = require('./directives/Directives');
 const { ExtApi } = require('../ExtApi.js');
 
@@ -63,38 +64,6 @@ class DirectivesChatbotPlug {
     }
 
   }
-
-
-/*
-  moveToDepartment(tdclient, requestId, depName, callback) {
-    tdclient.getAllDepartments((err, deps) => {
-      console.log("deps:", deps, err);
-      if (err) {
-        console.error("getAllDepartments() error:", err);
-        callback(err);
-        return;
-      }
-      let dep = null;
-      for (i = 0; i < deps.length; i++) {
-        d = deps[i];
-        if (d.name.toLowerCase() === depName.toLowerCase()) {
-          dep = d;
-          break;
-        }
-      }
-      if (dep) {
-        tdclient.updateRequestDepartment(requestId, dep._id, null, (err) => {
-          if (err) {
-            console.error("An error:", err);
-            callback(err);
-          }
-          else {
-            callback();
-          }
-        });
-      }
-    });
-  }*/
 
   processDirectives(message, theend) {
     if (this.log) { console.log("Directives on message:", message); }
@@ -164,8 +133,18 @@ class DirectivesChatbotPlug {
         }
       }
       else if (directive_name === Directives.INTENT) {
+        const intentDir = new DirIntent(
+          {
+            API_ENDPOINT: API_URL,
+            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+            log: false
+          }
+        );
+        intentDir.execute(directive, message, projectId, requestId, token, () => {
+          process(nextDirective());
+        });
         //tdclient.log = true;
-        if (directive.parameter) {
+        /*if (directive.parameter) {
           let intent_name = directive.parameter.trim();
           let message_to_bot = {
             sender: "system22", // bot doesn't reply to himself
@@ -194,7 +173,7 @@ class DirectivesChatbotPlug {
             console.log("sendMessageToBot() req_body sent:", req_body);
             process(nextDirective());
           });
-        }
+        }*/
       }
       else if (directive_name === Directives.MESSAGE) {
         const messageDir = new DirMessage({API_ENDPOINT: API_URL});
