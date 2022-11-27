@@ -189,9 +189,9 @@ class DirectivesChatbotPlug {
             ENDPOINT: extEndpoint,
             log: true
           });
-          console.log("(sending to bot) incoming message:", req_body);
+          console.log("(sending to bot) incoming message:", message);
           console.log("(sending to bot) the req_body:", req_body);
-          apiext.sendMessageToBot(req_body, botId, token, () => {
+          apiext.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
             if (log) {
               console.log("sendMessageToBot() req_body sent:", req_body);
             }
