@@ -97,6 +97,7 @@ class DirectivesChatbotPlug {
   }*/
 
   processDirectives(message, theend) {
+    if (this.log) { console.log("Directives on message:", message); }
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -166,7 +167,8 @@ class DirectivesChatbotPlug {
         //tdclient.log = true;
         if (directive.parameter) {
           let intent_name = directive.parameter.trim();
-          let message = {
+          
+          let message_to_bot = {
             sender: "system22", // bot doesn't reply to himself
             text: "/" + intent_name,
             request: {
@@ -176,7 +178,7 @@ class DirectivesChatbotPlug {
           };
           // send message to /ext/botId
           const req_body = {
-            payload: message,
+            payload: message_to_bot,
             token: token
           }
           let extEndpoint = `${API_URL}/modules/tilebot`;
@@ -187,7 +189,8 @@ class DirectivesChatbotPlug {
             ENDPOINT: extEndpoint,
             log: true
           });
-          console.log("req_body:", req_body)
+          console.log("(sending to bot) incoming message:", req_body);
+          console.log("(sending to bot) the req_body:", req_body);
           apiext.sendMessageToBot(req_body, botId, token, () => {
             if (log) {
               console.log("sendMessageToBot() req_body sent:", req_body);
