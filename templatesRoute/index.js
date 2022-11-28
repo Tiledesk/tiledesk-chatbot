@@ -27,18 +27,22 @@ router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
     console.log('FAQ-KB: ', faq_kb);
-    console.log('public: ', faq_kb["public"]);
-    console.log('webhook_enabled', faq_kb["webhook_enabled"]);
-    console.log('type', faq_kb["type"]);
-    console.log('language', faq_kb["language"]);
-    console.log('name', faq_kb["name"]);
-    console.log('id_project', faq_kb["id_project"]);
-    console.log('trashed', faq_kb["trashed"]);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
-    } else if (faq_kb["public"]) {
+    }
+    else if (!faq_kb) {
+      return res.status(404).send({ success: false, msg: 'Not found.' });
+    }
+    else if (faq_kb["public"]) {
       console.log("public chatbot");
+      console.log('public: ', faq_kb["public"]);
+      console.log('webhook_enabled', faq_kb["webhook_enabled"]);
+      console.log('type', faq_kb["type"]);
+      console.log('language', faq_kb["language"]);
+      console.log('name', faq_kb["name"]);
+      console.log('id_project', faq_kb["id_project"]);
+      console.log('trashed', faq_kb["trashed"]);
       let faqs = null;
       try {
         faqs = await faqService.getAll(id_faq_kb); //.then((faqs) => {
