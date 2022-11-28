@@ -181,6 +181,18 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      else if (directive_name === Directives.WHENOPEN) {
+        const whenDir = new DirWhen({API_ENDPOINT: API_URL, checkOpen: true});
+        whenDir.execute(directive, directives, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.WHENCLOSED) {
+        const whenDir = new DirWhen({API_ENDPOINT: API_URL, checkClosed: true});
+        whenDir.execute(directive, directives, () => {
+          process(nextDirective());
+        });
+      }
       else if (directive_name === Directives.AGENT) {
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = false;
@@ -189,8 +201,6 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
-        // TODO remove this directive and
-        // improve: \agent -whenonline
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = true;
         agentDir.execute(directive, requestId, depId, () => {
@@ -203,7 +213,6 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.REPLACE_BOT) {
-        console.log("REPLACE_BOT, requestId:", requestId);
         new DirReplaceBot(tdclient).execute(directive, requestId, () => {
           process(nextDirective());
         });
