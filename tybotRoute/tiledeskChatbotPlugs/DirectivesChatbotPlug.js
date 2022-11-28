@@ -10,6 +10,7 @@ const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
 const { DirIntent } = require('./directives/DirIntent');
+const { DirWhenOpen } = require('./directives/DirWhenOpen');
 const { Directives } = require('./directives/Directives');
 const { ExtApi } = require('../ExtApi.js');
 
@@ -92,7 +93,7 @@ class DirectivesChatbotPlug {
       log: false
     });
 
-    let i = -1;
+    let curr_directive_index = -1;
     if (this.log) { console.log("processing directives:", directives); }
     function process(directive) {
       if (directive) {
@@ -181,15 +182,22 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.WHENOPEN) {
-        const whenDir = new DirWhen({API_ENDPOINT: API_URL, checkOpen: true});
-        whenDir.execute(directive, directives, () => {
+      else if (directive_name === Directives.WHEN_OPEN) {
+        const whenOpenDir = new DirWhenOpen(
+          {
+            tdclinet: tdclient // matches open hours
+          });
+        whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.WHENCLOSED) {
-        const whenDir = new DirWhen({API_ENDPOINT: API_URL, checkClosed: true});
-        whenDir.execute(directive, directives, () => {
+      else if (directive_name === Directives.WHEN_CLOSED) {
+        const whenOpenDir = new DirWhenOpen(
+          {
+            tdclinet: tdclient,
+            checkOpen: false // matches closed hours
+          });
+        whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
         });
       }
@@ -240,9 +248,9 @@ class DirectivesChatbotPlug {
     process(nextDirective());
 
     function nextDirective() {
-      i += 1;
-      if (i < directives.length) {
-        let nextd = directives[i];
+      curr_directive_index += 1;
+      if (curr_directive_index < directives.length) {
+        let nextd = directives[curr_directive_index];
         return nextd;
       }
       else {
