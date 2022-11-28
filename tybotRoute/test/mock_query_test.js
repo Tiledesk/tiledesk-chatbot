@@ -61,18 +61,19 @@ const testBots = {
 }
 
 describe('Basic replyToMessage()', function() {
-  it('create TiledeskChatbot instance', () => {
-      const chatbot = new TiledeskChatbot({
-        botsDataSource: {},
-        intentsFinder: {},
-        botId: "bot1",
-        token: "token",
-        APIURL: "APIURL",
-        APIKEY: "___",
-        tdcache: null,
-        requestId: "request1",
-        projectId: "project1",
-        log: false
+  it('create TiledeskChatbot instance',async () => {
+    const chatbot = new TiledeskChatbot({
+      botsDataSource: {},
+      intentsFinder: {},
+      botId: "bot1",
+      bot: {},
+      token: "token",
+      APIURL: "APIURL",
+      APIKEY: "___",
+      tdcache: null,
+      requestId: "request1",
+      projectId: "project1",
+      log: false
     });
     assert(chatbot != null);
   });
@@ -80,10 +81,12 @@ describe('Basic replyToMessage()', function() {
   it('query intent-action', async () => {
     const dataSource = new MockBotsDataSource(testBots);
     const botId = "bot1";
+    const bot = await dataSource.getBotById(botId);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
       intentsFinder: {},
       botId: botId,
+      bot: bot,
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
@@ -110,10 +113,12 @@ describe('Basic replyToMessage()', function() {
   it('query exact match', async () => {
     const dataSource = new MockBotsDataSource(testBots);
     const botId = "bot1";
+    const bot = await dataSource.getBotById(botId);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
       intentsFinder: {},
       botId: botId,
+      bot: bot,
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
@@ -139,10 +144,12 @@ describe('Basic replyToMessage()', function() {
     const dataSource = new MockBotsDataSource(testBots);
     const intentsMachine = new MockIntentsMachine(testBots);
     const botId = "bot1";
+    const bot = await dataSource.getBotById(botId);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
       intentsFinder: intentsMachine,
       botId: botId,
+      bot: bot,
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
@@ -177,11 +184,13 @@ describe('Basic replyToMessage()', function() {
       answer: "reply for defaultFallback"
     }
     const dataSource = new MockBotsDataSource(testIntents_with_defaultFallback);
+    const bot = await dataSource.getBotById(botId);
     const intentsMachine = new MockIntentsMachine(testBots);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
       intentsFinder: intentsMachine,
       botId: botId,
+      bot: bot,
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
@@ -204,11 +213,14 @@ describe('Basic replyToMessage()', function() {
 
   it('query with missing defaultFallback', async () => {
     const dataSource = new MockBotsDataSource(testBots);
+    const botId = "bot1";
+    const bot = await dataSource.getBotById(botId);
     const intentsMachine = new MockIntentsMachine(testBots);
     const chatbot = new TiledeskChatbot({
       botsDataSource: dataSource,
       intentsFinder: intentsMachine,
-      botId: "bot1",
+      botId: botId,
+      bot: bot,
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
