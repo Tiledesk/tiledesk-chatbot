@@ -37,7 +37,11 @@ router.get('/public/templates/:botid', (req, res) => {
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
-    } else if (faq_kb["public"]) {
+    }
+    else if (!faq_kb) {
+      return res.status(404).send({ success: false, msg: 'Not found.' });
+    }
+    else if (faq_kb["public"]) {
       console.log("public chatbot");
       let faqs = null;
       try {
