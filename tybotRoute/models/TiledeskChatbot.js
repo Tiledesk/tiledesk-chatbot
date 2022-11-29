@@ -105,9 +105,9 @@ class TiledeskChatbot {
           }
         }
         else {
-          if (this.log) {console.log("No reply found by intent direct invocation:", intent_name);}
+          if (this.log) {console.log("No reply found by direct intent invocation:", intent_name);}
           reply = {
-            "text": "No reply found by intent direct invocation: " + intent_name
+            "text": "No reply found by direct intent invocation: " + intent_name
           }
         }
         resolve(reply);
