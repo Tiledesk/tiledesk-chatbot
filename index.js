@@ -1,6 +1,8 @@
 require('dotenv').config();
 var express = require('express');
 var app = express();
+var cors = require('cors');
+app.use(cors());
 
 //const tybot = require("@tiledesk/tiledesk-tybot-connector");
 const tybot = require("./tybotRoute");
