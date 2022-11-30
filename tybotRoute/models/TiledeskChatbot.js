@@ -72,27 +72,35 @@ class TiledeskChatbot {
         return;
       }
 
+      let explicit_intent_name = null;
       // Explicit intent invocation
       if (message.text.startsWith("/")) {
         if (this.log) {console.log("Intent was explicitly invoked:", message.text);}
         let intent_name = message.text.substring(message.text.indexOf("/") + 1);
         if (this.log) {console.log("Invoked Intent:", intent_name);}
-        if (!message.attributes) {
-          message.attributes = {}
-        }
-        message.attributes.action = intent_name;
-        if (this.log) {console.log("Message action:", message.attributes.action)}
+        explicit_intent_name = intent_name;
+        // if (!message.attributes) {
+        //   message.attributes = {}
+        // }
+        // message.attributes.action = intent_name;
+        // if (this.log) {console.log("Message action:", message.attributes.action)}
       }
       
-      // Checking Action button
+      // Intent invocation with action
       if (message.attributes && message.attributes.action) {
         if (this.log) {console.log("Message has action:", message.attributes.action)}
-        let intent_name = message.attributes.action;
+        explicit_intent_name = message.attributes.action;
         /*let action_parameters_index = action.indexOf("?");
         if (action_parameters_index > -1) {
             intent_name = intent_name.substring(0, action_parameters_index);
         }*/
-        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent_name);
+        if (this.log) {console.log("Intent was explicitly invoked with an action:", explicit_intent_name);}
+      }
+
+      // Checking Action button
+      if (explicit_intent_name) {
+        if (this.log) {console.log("Executing explicit intent:", explicit_intent_name)}
+        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, explicit_intent_name);
         let reply;
         if (faq) {
           if (this.log) {console.log("Got a reply from Intent name:", faq);}
@@ -113,13 +121,6 @@ class TiledeskChatbot {
         resolve(reply);
         return;
       }
-      
-      // let faqs = await this.botsDataSource.getByExactMatch(message.text);
-      // let faq = await this.botsDataSource.getIntentByDisplayName(display_name);
-      // let intents = await this.intentsFinder.find(message.text);
-      // let intent = {
-      //   "name": "intent_name"
-      // }
 
       // SEARCH INTENTS
       let faqs;
