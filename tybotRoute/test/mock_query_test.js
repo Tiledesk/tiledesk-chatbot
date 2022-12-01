@@ -140,6 +140,36 @@ describe('Basic replyToMessage()', function() {
     assert(reply.attributes.intent_info.intent_name === testBots.bots[botId].intents.intent1.intent_display_name);
   });
 
+  it('query with /intent_name query syntax', async () => {
+    const dataSource = new MockBotsDataSource(testBots);
+    const botId = "bot1";
+    const bot = await dataSource.getBotById(botId);
+    const chatbot = new TiledeskChatbot({
+      botsDataSource: dataSource,
+      intentsFinder: {},
+      botId: botId,
+      bot: bot,
+      token: "token",
+      APIURL: "APIURL",
+      APIKEY: "___",
+      tdcache: null,
+      requestId: "requestId",
+      projectId: "projectId",
+      log: false
+    });
+    assert(chatbot != null);
+    const message = {
+      text: "/intent1",
+      request: {
+          request_id: "requestId"
+      }
+    }
+    const reply = await chatbot.replyToMessage(message);
+    assert(reply);
+    assert(reply.text === testBots.bots[botId].intents.intent1.answer);
+    assert(reply.attributes.intent_info.intent_name === testBots.bots[botId].intents.intent1.intent_display_name);
+  });
+
   it('query NLP', async () => {
     const dataSource = new MockBotsDataSource(testBots);
     const intentsMachine = new MockIntentsMachine(testBots);
