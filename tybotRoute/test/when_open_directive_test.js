@@ -4,7 +4,7 @@ const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesCha
 const { DirWhenOpen } = require('../tiledeskChatbotPlugs/directives/DirWhenOpen');
 const supportRequest = require('./support_request.js').request;
 
-describe('Directives', function () {
+describe('Directive DirWhenOpen', function () {
 
     it('test DirWhenOpen (only one directive) checkOpen=true, matching isopen=true', async () => {
         let directives = [

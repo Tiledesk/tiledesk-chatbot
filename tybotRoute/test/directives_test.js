@@ -1,7 +1,6 @@
 var assert = require('assert');
 const { ExtUtil } = require('../ExtUtil');
 const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
-const { DirWhenOpen } = require('../tiledeskChatbotPlugs/directives/DirWhenOpen');
 const supportRequest = require('./support_request.js').request;
 
 describe('Directives', function() {
@@ -17,9 +16,7 @@ message2
       attributes: {
           splits: true,
           directives: true,
-          markbot: true,
-          disableInputMessage: true,
-          inputMessagePlaceholder: 'Compile the form before proceeding'
+          markbot: true
       }
     }
     let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, TILEDESK_API_ENDPOINT: "APIURL", token: "token", log: false, HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});

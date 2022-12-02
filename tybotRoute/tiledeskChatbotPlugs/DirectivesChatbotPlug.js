@@ -11,6 +11,7 @@ const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
 const { DirIntent } = require('./directives/DirIntent');
 const { DirWhenOpen } = require('./directives/DirWhenOpen');
+const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { Directives } = require('./directives/Directives');
 const { ExtApi } = require('../ExtApi.js');
 
