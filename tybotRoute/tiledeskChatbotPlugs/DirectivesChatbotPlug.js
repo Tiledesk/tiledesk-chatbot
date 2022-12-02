@@ -144,37 +144,6 @@ class DirectivesChatbotPlug {
         intentDir.execute(directive, message, projectId, requestId, token, () => {
           process(nextDirective());
         });
-        //tdclient.log = true;
-        /*if (directive.parameter) {
-          let intent_name = directive.parameter.trim();
-          let message_to_bot = {
-            sender: "system22", // bot doesn't reply to himself
-            text: "/" + intent_name,
-            request: {
-              request_id: requestId
-            },
-            id_project: projectId
-          };
-          // send message to /ext/botId
-          const req_body = {
-            payload: message_to_bot,
-            token: token
-          }
-          let extEndpoint = `${API_URL}/modules/tilebot`;
-          if (TILEBOT_ENDPOINT) {
-            extEndpoint = `${TILEBOT_ENDPOINT}`;
-          }
-          const apiext = new ExtApi({
-            ENDPOINT: extEndpoint,
-            log: true
-          });
-          console.log("(sending to bot) incoming message:", message);
-          console.log("(sending to bot) the req_body:", req_body);
-          apiext.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
-            console.log("sendMessageToBot() req_body sent:", req_body);
-            process(nextDirective());
-          });
-        }*/
       }
       else if (directive_name === Directives.MESSAGE) {
         const messageDir = new DirMessage({API_ENDPOINT: API_URL});
@@ -298,6 +267,12 @@ class DirectivesChatbotPlug {
       else if (directive_name === Directives.WHEN_OFFLINE_HOURS) {
         const offlineHoursDir = new DirOfflineHours(tdclient);
         offlineHoursDir.execute(directive, pipeline, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.DISABLE_INPUT_TEXT) {
+        const disableInputTextDir = new DirDisableInputText();
+        disableInputTextDir.execute(directive, pipeline, () => {
           process(nextDirective());
         });
       }
