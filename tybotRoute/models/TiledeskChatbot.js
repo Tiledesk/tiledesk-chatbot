@@ -250,7 +250,9 @@ class TiledeskChatbot {
       };
     }
     let intent_form = answerObj.form;
-    console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form))
+    if (this.log) {
+      console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form));
+    }
     if (IntentForm.isValidForm(intent_form)) {
       await this.lockIntent(this.requestId, intent_name);
       const user_reply = message.text;

@@ -60,7 +60,7 @@ const testBots = {
   }
 }
 
-describe('Basic replyToMessage()', function() {
+describe('Basic Tilebot', function() {
   it('create TiledeskChatbot instance',async () => {
     const chatbot = new TiledeskChatbot({
       botsDataSource: {},
