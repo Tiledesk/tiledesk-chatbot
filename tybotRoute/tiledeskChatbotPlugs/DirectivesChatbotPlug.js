@@ -147,7 +147,13 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.MESSAGE) {
-        const messageDir = new DirMessage({API_ENDPOINT: API_URL});
+        const messageDir = new DirMessage(
+          {
+            API_ENDPOINT: API_URL,
+            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+            log: true
+          }
+        );
         messageDir.execute(directive, projectId, requestId, token, () => {
           process(nextDirective());
         });

@@ -21,7 +21,7 @@ class DirMessage {
           subtype: "info"
         }
       }
-      //console.log("Message:", message);
+      if (this.log) {console.log("Message to extEndpoint:", message)};
       let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
       if (this.TILEBOT_ENDPOINT) {
         extEndpoint = `${this.TILEBOT_ENDPOINT}`;
