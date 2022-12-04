@@ -7,6 +7,7 @@ class DirMessage {
       throw new Error("settings.API_ENDPOINT is mandatory!");
     }
     this.API_ENDPOINT = settings.API_ENDPOINT;
+    this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
   }
 
   execute(directive, projectId, requestId, token, callback) {
@@ -22,9 +23,9 @@ class DirMessage {
       }
       //console.log("Message:", message);
       let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
-      //if (process.env.TYBOT_ENDPOINT) {
-      //  extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-      //}
+      if (this.TILEBOT_ENDPOINT) {
+        extEndpoint = `${this.TILEBOT_ENDPOINT}`;
+      }
       const apiext = new ExtApi({
         ENDPOINT: extEndpoint,
         log: true
