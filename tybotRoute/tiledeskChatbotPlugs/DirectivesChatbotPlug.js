@@ -12,8 +12,9 @@ const { DirDepartment } = require('./directives/DirDepartment');
 const { DirIntent } = require('./directives/DirIntent');
 const { DirWhenOpen } = require('./directives/DirWhenOpen');
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
+const { DirClose } = require('./directives/DirClose');
 const { Directives } = require('./directives/Directives');
-const { ExtApi } = require('../ExtApi.js');
+// const { ExtApi } = require('../ExtApi.js');
 
 class DirectivesChatbotPlug {
 
@@ -181,6 +182,12 @@ class DirectivesChatbotPlug {
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = false;
         agentDir.execute(directive, requestId, depId, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.CLOSE) {
+        const closeDir = new DirClose({tdclient: tdclient});
+        closeDir.execute(directive, requestId, () => {
           process(nextDirective());
         });
       }
