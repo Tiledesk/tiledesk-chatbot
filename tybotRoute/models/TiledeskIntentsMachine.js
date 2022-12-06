@@ -18,8 +18,8 @@ class TiledeskIntentsMachine {
    */
   async decode(botId, text) {
     return new Promise( (resolve, reject) => {
-      if (this.log) {console.log("NLP AI mock decode intent...");}
-      const url = `${this.API_ENDPOINT}/search`;
+      if (this.log) {console.log("NLP AI...");}
+      const url = `${this.API_ENDPOINT}/model/parse`;
       if (this.log) {console.log("AI URL", url);}
       const HTTPREQUEST = {
         url: url,

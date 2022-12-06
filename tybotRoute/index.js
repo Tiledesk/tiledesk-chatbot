@@ -85,7 +85,16 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
   
-  const intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
+  let intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
+  if (bot.intentsEngine === "tiledesk-ai") {
+    intentsMachine = new TiledeskIntentsMachine(
+      {
+        projectId: projectId,
+        language: bot.language,
+        TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
+      });
+  }
+  
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS, 
