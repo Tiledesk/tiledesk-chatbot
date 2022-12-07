@@ -1,9 +1,18 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.22**
+**npm @tiledesk/tiledesk-tybot-connector@0.1.23**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.24
+- @tiledesk/tiledesk-client => 0.8.39
+
+### 0.1.23
+- introduced new DirClose \_tdClose
+- introduced new DirWhenOpen \_tdWhenOpen \_tdWhenClosed
+- introduced DirDisableInputText \_tdDisableInputText
+- fixed form intent-blocking bug
 
 ### 0.1.22
 - introduced new DirDepartment class

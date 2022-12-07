@@ -229,6 +229,7 @@ class TiledeskChatbot {
       answerObj.form = {
         "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
         "cancelReply": "Ok annullato!",
+        "cancelReplyIntent": "formCanceled", // TODO IDEA
         "fields": [
           {
             "name": "userFullname",
