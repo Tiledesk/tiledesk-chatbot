@@ -36,10 +36,14 @@ class DirIntent {
       });
       console.log("(sending to bot) incoming message:", message);
       console.log("(sending to bot) the req_body:", req_body);
-      extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
-        console.log("sendMessageToBot() req_body sent:", req_body);
+      extapi.sendSupportMessageExt(message, projectId, requestId, token, () => {
+        console.log("/intent sent:", req_body);
         callback();
       });
+      // extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
+      //   console.log("sendMessageToBot() req_body sent:", req_body);
+      //   callback();
+      // });
     }
     else {
       callback();
