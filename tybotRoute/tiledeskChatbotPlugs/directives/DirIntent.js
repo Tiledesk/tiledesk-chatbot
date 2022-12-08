@@ -38,7 +38,7 @@ class DirIntent {
       console.log("move to intent message:", intent_command_message);
       // console.log("(sending to bot) the req_body:", req_body);
       extapi.sendSupportMessageExt(intent_command_message, projectId, requestId, token, () => {
-        console.log("command " + intent_command + " sent", JSON.stringify(req_body));
+        console.log("command " + intent_command + " sent.");
         callback();
       });
       // extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
