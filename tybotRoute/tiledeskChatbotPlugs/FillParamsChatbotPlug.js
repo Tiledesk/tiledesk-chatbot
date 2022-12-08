@@ -16,9 +16,8 @@ class FillParamsChatbotPlug {
   }
 
   async exec(pipeline) {
-    if (this.log) {console.log("fillParams...")}
     let message = pipeline.message;
-    if (this.log) {console.log("fill params message", message)}
+    // if (this.log) {console.log("fill params message", message)}
     if (message.attributes && (message.attributes.fillParams == undefined || message.attributes.fillParams == false)) { // defaults to disabled
       if (this.log) {console.log("fillParams disabled.");}
       pipeline.nextplug();
@@ -59,7 +58,7 @@ class FillParamsChatbotPlug {
 
     if (message.attributes && message.attributes.commands) {
       let commands = message.attributes.commands;
-      if (this.log) {console.log("commands for fillMessage:", commands);}
+      // if (this.log) {console.log("commands for fillMessage:", JSON.stringify(commands));}
       if (commands.length > 1) {
         for (let i = 0; i < commands.length; i++) {
           if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
@@ -69,12 +68,10 @@ class FillParamsChatbotPlug {
         }
       }
     }
-    if (this.log) {
-      console.log("Message out of fillAttributes plugin:", JSON.stringify(message));
-    }
+    // if (this.log) {
+    //   console.log("Message out of fillAttributes plugin:", JSON.stringify(message));
+    // }
     pipeline.nextplug();
-    //});
-    
   }
 
   fillWithRequestParams(message_text, all_parameters, requestId) {
