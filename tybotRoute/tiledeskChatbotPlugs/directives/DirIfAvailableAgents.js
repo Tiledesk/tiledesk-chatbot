@@ -29,12 +29,14 @@ class DirIfAvailableAgents {
         if (directive.parameter) {
           if (result && result.isopen) {
             this.tdclient.getProjectAvailableAgents((err, agents) => {
+              if (this.log) {console.log("Agents on 'open'", agents);}
+              if (this.log) {console.log("Checking agents:", checkAgents);}
               if (err || !agents) {
                 console.error("Error getting available agents in DirWhenAvailableAgents", err);
                 callback();
               }
               else {
-                if (this.log) {console.log("got agents on 'open'", agents.count);}
+                if (this.log) {console.log("Agents count:", agents.count);}
                 if (agents.count === 0 && !this.checkAgents) { // check no agents
                   let directive_to_execute = this.directiveFromParameter(directive.parameter);
                   if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
