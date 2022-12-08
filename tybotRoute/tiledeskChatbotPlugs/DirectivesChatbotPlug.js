@@ -69,7 +69,7 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(message, theend) {
-    if (this.log) { console.log("Directives on message:", message); }
+    if (this.log) { console.log("Directives on message:", JSON.stringify(message)); }
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
