@@ -46,7 +46,7 @@ let connection;
 let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
-  console.log("REQUEST BODY:", JSON.stringify(req.body));
+  if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   res.status(200).send({"success":true});
 
   const botId = req.params.botid;
@@ -107,7 +107,7 @@ router.post('/ext/:botid', async (req, res) => {
     tdcache: tdcache,
     requestId: requestId,
     projectId: projectId,
-    log: true
+    log: log
   });
 
   const parameters_key = "tilebot:requests:" + requestId + ":parameters";
