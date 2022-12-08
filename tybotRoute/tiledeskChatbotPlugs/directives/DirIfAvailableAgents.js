@@ -36,8 +36,8 @@ class DirIfAvailableAgents {
                 callback();
               }
               else {
-                if (this.log) {console.log("Agents count:", agents.count);}
-                if (agents.count === 0 && !this.checkAgents) { // check no agents
+                if (this.log) {console.log("Agents count:", agents.length);}
+                if (agents.length === 0 && !this.checkAgents) { // check no agents
                   let directive_to_execute = this.directiveFromParameter(directive.parameter);
                   if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
                   if (directive_to_execute) {
@@ -46,7 +46,7 @@ class DirIfAvailableAgents {
                   callback();
                   return;
                 }
-                else if (agents.count > 0 && this.checkAgents) { // check agents
+                else if (agents.length > 0 && this.checkAgents) { // check agents
                   let directive_to_execute = this.directiveFromParameter(directive.parameter);
                   if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
                   if (directive_to_execute) {
