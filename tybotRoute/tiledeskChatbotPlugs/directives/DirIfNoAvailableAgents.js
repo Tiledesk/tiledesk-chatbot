@@ -7,6 +7,13 @@ class DirIfNoAvailableAgents {
       throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
     }
     this.tdclient = config.tdclient;
+    if (config.checkAgents == null || config.checkAgents === true) {
+      // null => defaults to checkNoAgents
+      this.checkAgents = true;
+    }
+    else {
+      this.checkAgents = false;
+    }
     this.log = config.log;
   }
 
@@ -28,7 +35,16 @@ class DirIfNoAvailableAgents {
               }
               else {
                 if (this.log) {console.log("got agents on 'open'", agents.count);}
-                if (agents.count === 0) {
+                if (agents.count === 0 && !this.checkAgents) { // check no agents
+                  let directive_to_execute = this.directiveFromParameter(directive.parameter);
+                  if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
+                  if (directive_to_execute) {
+                    directives.splice(current_directive_index + 1, 0, directive_to_execute);
+                  }
+                  callback();
+                  return;
+                }
+                else if (agents.count > 0 && this.checkAgents) { // check agents
                   let directive_to_execute = this.directiveFromParameter(directive.parameter);
                   if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
                   if (directive_to_execute) {

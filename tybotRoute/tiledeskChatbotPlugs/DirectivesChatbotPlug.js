@@ -13,6 +13,7 @@ const { DirIntent } = require('./directives/DirIntent');
 const { DirWhenOpen } = require('./directives/DirWhenOpen');
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
+const { DirIfNoAvailableAgents } = require('./directives/DirIfNoAvailableAgents');
 const { Directives } = require('./directives/Directives');
 // const { ExtApi } = require('../ExtApi.js');
 
@@ -178,10 +179,22 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      else if (directive_name === Directives.IF_AGENTS) {
+        const ifNoAgentsDir = new DirIfNoAvailableAgents(
+          {
+            tdclient: tdclient,
+            checkAgents: true, // check available agents > 0
+            log: true
+          });
+        ifNoAgentsDir.execute(directive, directives, curr_directive_index, () => {
+          process(nextDirective());
+        });
+      }
       else if (directive_name === Directives.IF_NO_AGENTS) {
         const ifNoAgentsDir = new DirIfNoAvailableAgents(
           {
             tdclient: tdclient,
+            checkAgents: false, // check no available agents
             log: true
           });
         ifNoAgentsDir.execute(directive, directives, curr_directive_index, () => {

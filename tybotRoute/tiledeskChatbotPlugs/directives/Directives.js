@@ -16,6 +16,7 @@ class Directives {
   static WHEN_OPEN = "whenopen";
   static WHEN_CLOSED = "whenclosed";
   static IF_NO_AGENTS = "ifnoagents";
+  static IF_AGENTS = "ifagents";
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";
