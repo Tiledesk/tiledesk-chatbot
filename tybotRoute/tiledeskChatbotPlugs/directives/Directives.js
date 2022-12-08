@@ -15,6 +15,7 @@ class Directives {
   static DISABLE_INPUT_TEXT = "disableinputtext";
   static WHEN_OPEN = "whenopen";
   static WHEN_CLOSED = "whenclosed";
+  static IF_NO_AGENTS = "ifnoagents";
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";

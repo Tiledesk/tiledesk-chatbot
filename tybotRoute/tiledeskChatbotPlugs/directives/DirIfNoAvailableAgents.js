@@ -1,19 +1,12 @@
 const { param } = require("express/lib/request");
 
-class DirWhenAvailableAgents {
+class DirIfNoAvailableAgents {
 
   constructor(config) {
     if (!config.tdclient) {
       throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
     }
     this.tdclient = config.tdclient;
-    if (config.checkOpen == null || config.checkOpen === true) {
-      // null => defaults to checkOpen
-      this.checkOpen = true;  
-    }
-    else {
-      this.checkOpen = false;
-    }
     this.log = config.log;
   }
 
@@ -27,32 +20,34 @@ class DirWhenAvailableAgents {
       }
       else {
         if (directive.parameter) {
-          if (result && result.isopen && this.checkOpen) {
-            if (this.log) {console.log("execute the action on 'open'");}
-            let directive_to_execute = this.directiveFromParameter(directive.parameter);
-            if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
-            if (directive_to_execute) {
-              directives.splice(current_directive_index + 1, 0, directive_to_execute);
-            }
+          if (result && result.isopen) {
+            this.tdclient.getProjectAvailableAgents((err, agents) => {
+              if (err || !agents) {
+                console.error("Error getting available agents in DirWhenAvailableAgents", err);
+                callback();
+              }
+              else {
+                if (this.log) {console.log("got agents on 'open'", agents.count);}
+                if (agents.count === 0) {
+                  let directive_to_execute = this.directiveFromParameter(directive.parameter);
+                  if (this.log) {console.log("directive_to_execute:", directive_to_execute);}
+                  if (directive_to_execute) {
+                    directives.splice(current_directive_index + 1, 0, directive_to_execute);
+                  }
+                  callback();
+                  return;
+                }
+                else {
+                  callback();
+                  return;
+                }
+              }
+            });
+          }
+          else {
             callback();
             return;
           }
-          
-          if (result && !result.isopen && this.checkOpen === false) {
-            if (this.log) {console.log("execute the action on 'closed'");}
-            let directive_to_execute = this.directiveFromParameter(directive.parameter);
-            if (directive_to_execute) {
-              directives.splice(current_directive_index + 1, 0, directive_to_execute);
-            }
-            callback();
-            return;
-          }
-          if (this.log) {
-            console.log("condition is checkOpen:", this.checkOpen);
-            console.log("result.isopen:", result.isopen);
-            console.log("condition not matched!");
-          }
-          callback();
         }
         else {
           if (this.log) {console.log("no directive to execute.");}
@@ -92,4 +87,4 @@ class DirWhenAvailableAgents {
   }
 }
 
-module.exports = { DirWhenAvailableAgents };
+module.exports = { DirIfNoAvailableAgents };

@@ -178,6 +178,16 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      else if (directive_name === Directives.IF_NO_AGENTS) {
+        const ifNoAgentsDir = new DirIfNoAvailableAgents(
+          {
+            tdclient: tdclient,
+            log: true
+          });
+        ifNoAgentsDir.execute(directive, directives, curr_directive_index, () => {
+          process(nextDirective());
+        });
+      }
       else if (directive_name === Directives.AGENT) {
         const agentDir = new DirMoveToAgent(tdclient);
         directive.whenOnlineOnly = false;
