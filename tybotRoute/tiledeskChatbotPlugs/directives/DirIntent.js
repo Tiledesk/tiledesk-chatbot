@@ -8,6 +8,7 @@ class DirIntent {
     }
     this.API_ENDPOINT = settings.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
+    this.log = settings.log;
   }
 
   execute(directive, message, projectId, requestId, token, callback) {
@@ -36,12 +37,12 @@ class DirIntent {
       }
       const extapi = new ExtApi({
         ENDPOINT: extEndpoint,
-        log: true
+        log: this.log
       });
-      console.log("move to intent message:", intent_command_message);
+      if (this.log) {console.log("move to intent message:", intent_command_message);}
       // console.log("(sending to bot) the req_body:", req_body);
       extapi.sendSupportMessageExt(intent_command_message, projectId, requestId, token, () => {
-        console.log("command " + intent_command + " sent.");
+        if (this.log) {console.log("command " + intent_command + " sent.");}
         callback();
       });
       // extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
