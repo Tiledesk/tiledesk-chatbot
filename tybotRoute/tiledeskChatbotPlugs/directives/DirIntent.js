@@ -15,7 +15,7 @@ class DirIntent {
       let intent_name = directive.parameter.trim();
       let intent_command = "/" + intent_name;
       let intent_command_message = {
-        sender: "system22", // bot doesn't reply to himself
+        sender: "system", // bot doesn't reply to himself
         text: intent_command,
         attributes: {
           subtype: "info"
