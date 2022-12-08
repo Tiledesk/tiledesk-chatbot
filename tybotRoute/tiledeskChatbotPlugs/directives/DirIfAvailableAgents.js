@@ -30,7 +30,7 @@ class DirIfAvailableAgents {
           if (result && result.isopen) {
             this.tdclient.getProjectAvailableAgents((err, agents) => {
               if (this.log) {console.log("Agents on 'open'", agents);}
-              if (this.log) {console.log("Checking agents:", checkAgents);}
+              if (this.log) {console.log("Checking agents:", this.checkAgents);}
               if (err || !agents) {
                 console.error("Error getting available agents in DirWhenAvailableAgents", err);
                 callback();
