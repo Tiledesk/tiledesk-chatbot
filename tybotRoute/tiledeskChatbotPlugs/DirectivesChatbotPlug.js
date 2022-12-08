@@ -153,7 +153,7 @@ class DirectivesChatbotPlug {
           {
             API_ENDPOINT: API_URL,
             TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: true
+            log: false
           }
         );
         messageDir.execute(directive, projectId, requestId, token, () => {
@@ -184,7 +184,7 @@ class DirectivesChatbotPlug {
           {
             tdclient: tdclient,
             checkAgents: true, // check available agents > 0
-            log: true
+            log: false
           });
         ifNoAgentsDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
@@ -195,7 +195,7 @@ class DirectivesChatbotPlug {
           {
             tdclient: tdclient,
             checkAgents: false, // check no available agents
-            log: true
+            log: false
           });
         ifNoAgentsDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
