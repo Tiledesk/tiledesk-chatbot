@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.25
+introduced new \_tdIfNoAgents \_tdIfAgents (DirIfAvailableAgents)
+
 ### 0.1.24
 - @tiledesk/tiledesk-client => 0.8.39
 

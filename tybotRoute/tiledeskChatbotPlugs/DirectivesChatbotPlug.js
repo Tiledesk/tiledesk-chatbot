@@ -13,7 +13,7 @@ const { DirIntent } = require('./directives/DirIntent');
 const { DirWhenOpen } = require('./directives/DirWhenOpen');
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
-const { DirIfNoAvailableAgents } = require('./directives/DirIfNoAvailableAgents');
+const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents');
 const { Directives } = require('./directives/Directives');
 // const { ExtApi } = require('../ExtApi.js');
 
@@ -180,7 +180,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.IF_AGENTS) {
-        const ifNoAgentsDir = new DirIfNoAvailableAgents(
+        const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
             checkAgents: true, // check available agents > 0
@@ -191,7 +191,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.IF_NO_AGENTS) {
-        const ifNoAgentsDir = new DirIfNoAvailableAgents(
+        const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
             checkAgents: false, // check no available agents

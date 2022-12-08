@@ -1,6 +1,6 @@
 const { param } = require("express/lib/request");
 
-class DirIfNoAvailableAgents {
+class DirIfAvailableAgents {
 
   constructor(config) {
     if (!config.tdclient) {
@@ -103,4 +103,4 @@ class DirIfNoAvailableAgents {
   }
 }
 
-module.exports = { DirIfNoAvailableAgents };
+module.exports = { DirIfAvailableAgents };
