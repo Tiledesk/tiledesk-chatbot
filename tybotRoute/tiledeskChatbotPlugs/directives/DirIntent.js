@@ -16,7 +16,10 @@ class DirIntent {
       let intent_command = "/" + intent_name;
       let intent_command_message = {
         sender: "system22", // bot doesn't reply to himself
-        text: intent_command//,
+        text: intent_command,
+        attributes: {
+          subtype: "info"
+        }
         // request: {
         //   request_id: requestId
         // },
