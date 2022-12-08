@@ -14,19 +14,19 @@ class DirIntent {
     if (directive.parameter) {
       let intent_name = directive.parameter.trim();
       let intent_command = "/" + intent_name;
-      let message_to_bot = {
+      let intent_command_message = {
         sender: "system22", // bot doesn't reply to himself
-        text: intent_command,
-        request: {
-          request_id: requestId
-        },
-        id_project: projectId
+        text: intent_command//,
+        // request: {
+        //   request_id: requestId
+        // },
+        // id_project: projectId
       };
       // send message to /ext/botId
-      const req_body = {
-        payload: message_to_bot,
-        token: token
-      }
+      // const req_body = {
+      //   payload: message_to_bot,
+      //   token: token
+      // }
       let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
       if (this.TILEBOT_ENDPOINT) {
         extEndpoint = `${this.TILEBOT_ENDPOINT}`;
@@ -35,9 +35,9 @@ class DirIntent {
         ENDPOINT: extEndpoint,
         log: true
       });
-      console.log("(sending to bot) incoming message:", message);
-      console.log("(sending to bot) the req_body:", req_body);
-      extapi.sendSupportMessageExt(message, projectId, requestId, token, () => {
+      console.log("move to intent message:", intent_command_message);
+      // console.log("(sending to bot) the req_body:", req_body);
+      extapi.sendSupportMessageExt(intent_command_message, projectId, requestId, token, () => {
         console.log("command " + intent_command + " sent", JSON.stringify(req_body));
         callback();
       });
