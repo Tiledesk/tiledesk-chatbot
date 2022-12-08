@@ -13,9 +13,10 @@ class DirIntent {
   execute(directive, message, projectId, requestId, token, callback) {
     if (directive.parameter) {
       let intent_name = directive.parameter.trim();
+      let intent_command = "/" + intent_name;
       let message_to_bot = {
         sender: "system22", // bot doesn't reply to himself
-        text: "/" + intent_name,
+        text: intent_command,
         request: {
           request_id: requestId
         },
@@ -37,7 +38,7 @@ class DirIntent {
       console.log("(sending to bot) incoming message:", message);
       console.log("(sending to bot) the req_body:", req_body);
       extapi.sendSupportMessageExt(message, projectId, requestId, token, () => {
-        console.log("/intent sent:", req_body);
+        console.log("command " + intent_command + " sent", JSON.stringify(req_body));
         callback();
       });
       // extapi.sendMessageToBot(req_body, message.attributes.intent_info.botId, token, () => {
