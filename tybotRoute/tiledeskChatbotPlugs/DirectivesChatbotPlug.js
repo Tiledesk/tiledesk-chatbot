@@ -163,7 +163,8 @@ class DirectivesChatbotPlug {
       else if (directive_name === Directives.WHEN_OPEN) {
         const whenOpenDir = new DirWhenOpen(
           {
-            tdclient: tdclient // matches open hours
+            tdclient: tdclient, // matches open hours
+            log: true
           });
         whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
@@ -173,7 +174,8 @@ class DirectivesChatbotPlug {
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient,
-            checkOpen: false // matches closed hours
+            checkOpen: false, // matches closed hours
+            log: true
           });
         whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
