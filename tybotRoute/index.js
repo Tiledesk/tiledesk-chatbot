@@ -128,7 +128,6 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
 
-  console.log("Sending reply to ext:", reply)
   apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
     if (log) {
       console.log("SupportMessageExt() reply sent:", reply);
@@ -193,14 +192,22 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   //      },
   //      triggeredByMessageId: '6392e5e8408e0000437aa383'
   //    }
-  tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
-    if (err) {
-      console.error("Error sending message", err);
-    }
-    directivesPlug.processDirectives( () => {
-      if (log) {console.log("After message execute directives end.");}
+  if (bot_answer) {
+    tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+      if (err) {
+        console.error("Error sending message", err);
+      }
+      directivesPlug.processDirectives( () => {
+        if (log) {console.log("After message - Directives executed.");}
+      });
     });
-  });
+  }
+  else {
+    directivesPlug.processDirectives( () => {
+      if (log) {console.log("Directives executed.");}
+    });
+  }
+  
 });
 
 router.get('/message/context/:messageid', async (req, res) => {

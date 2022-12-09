@@ -25,8 +25,11 @@ class MarkbotChatbotPlug {
     if (!message.attributes) {
       message.attributes = {}
     }
-    
-    if (message.text && message.text !== "") {
+    if (!message.text) {
+      message.text = "";
+    }
+
+    if (message.text.trim() !== "") {
       if (this.log) {console.log("markbotting main message...");}
       let parsed_reply = TiledeskChatbotUtil.parseReply(message.text);
       if (this.log) {console.log("parsed", JSON.stringify(parsed_reply));}
@@ -74,7 +77,7 @@ class MarkbotChatbotPlug {
     console.log("before taking decision:")
     console.log("message.text:", message.text)
     console.log("message commands:", commands)
-    if ((!message.text === "" || !message.text) && !commands) {
+    if (message.text === "" && !commands) {
       console.log("message with no content. Ignoring");
       pipeline.message = null;
     }
