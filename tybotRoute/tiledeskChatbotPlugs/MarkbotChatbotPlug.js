@@ -49,6 +49,9 @@ class MarkbotChatbotPlug {
         }
       }
     }
+    else {
+      console.log("no message text:", message.text);
+    }
     
     if (message.attributes && message.attributes.commands) {
       let commands = message.attributes.commands;
