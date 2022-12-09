@@ -15,7 +15,7 @@ class MarkbotChatbotPlug {
 
   exec(pipeline) {
     let message = pipeline.message;
-    //console.log("markbot, message.attributes", message.attributes)
+    console.log("markbot on message", message)
     if (message.attributes && (message.attributes.markbot == undefined || message.attributes.markbot == false)) { // defaults to disabled
       if (this.log) {console.log("markbot disabled")}
       pipeline.nextplug();
