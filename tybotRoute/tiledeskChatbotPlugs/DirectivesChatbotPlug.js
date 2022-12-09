@@ -69,8 +69,8 @@ class DirectivesChatbotPlug {
 
   }
 
-  processDirectives(message, theend) {
-    if (this.log) { console.log("Directives on message:", JSON.stringify(message)); }
+  processDirectives(theend) {
+    // if (this.log) { console.log("Directives on message:", JSON.stringify(message)); }
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -144,7 +144,7 @@ class DirectivesChatbotPlug {
             log: false
           }
         );
-        intentDir.execute(directive, message, projectId, requestId, token, () => {
+        intentDir.execute(directive, projectId, requestId, token, () => {
           process(nextDirective());
         });
       }

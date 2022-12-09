@@ -173,8 +173,32 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   //const bot_answer = answer;
   console.log("bot_answer to send:", bot_answer);
-  tdclient.sendSupportMessage(requestId, bot_answer, () => {
-    directivesPlug.processDirectives(bot_answer, () => {
+  // empty answer
+  // let b = {
+  //      text: '',
+  //      attributes: {
+  //        clienttimestamp: 1670571497092,
+  //        _answerid: '638c7b0c1db44900351104b1',
+  //        intent_info: {
+  //          intent_name: 'wantagent',
+  //          is_fallback: false,
+  //          question_payload: [Object],
+  //          botId: '638c78d71db44900351101c2',
+  //          bot: [Object]
+  //        },
+  //        directives: true,
+  //        splits: true,
+  //        markbot: true,
+  //        fillParams: true,
+  //        webhook: false
+  //      },
+  //      triggeredByMessageId: '6392e5e8408e0000437aa383'
+  //    }
+  tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+    if (err) {
+      console.error("Error sending message", err);
+    }
+    directivesPlug.processDirectives( () => {
       if (log) {console.log("After message execute directives end.");}
     });
   });

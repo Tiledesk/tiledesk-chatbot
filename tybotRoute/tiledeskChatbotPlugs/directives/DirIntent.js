@@ -11,7 +11,7 @@ class DirIntent {
     this.log = settings.log;
   }
 
-  execute(directive, message, projectId, requestId, token, callback) {
+  execute(directive, projectId, requestId, token, callback) {
     if (directive.parameter) {
       let intent_name = directive.parameter.trim();
       let intent_command = "/" + intent_name;
