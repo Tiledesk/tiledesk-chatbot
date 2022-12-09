@@ -24,6 +24,10 @@ class MarkbotChatbotPlug {
 
     let incoming_message_text = message.text.trim();
 
+    let commands = null;
+    if (message.attributes && message.attributes.commands) {
+      commands = message.attributes.commands;
+    }
     console.log("before taking decision:");
     console.log("message.text:", incoming_message_text);
     console.log("message commands:", commands)
@@ -64,9 +68,10 @@ class MarkbotChatbotPlug {
       console.log("no message text:", message.text);
     }
     
-    let commands = null;
-    if (message.attributes && message.attributes.commands) {
-      commands = message.attributes.commands;
+    // let commands = null;
+    // if (message.attributes && message.attributes.commands) {
+    //   commands = message.attributes.commands;
+    if (commands) {
       if (this.log) {console.log("commands for markbot:", commands);}
       if (commands.length > 1) {
         for (let i = 0; i < commands.length; i++) {
