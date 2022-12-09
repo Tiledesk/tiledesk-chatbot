@@ -54,6 +54,10 @@ var Faq_kbSchema = new Schema({
     type: Boolean,
     index: true
   },
+  mainCategory: {
+    type: String,
+    required: false
+  },
   attributes: {
     type: Object,
   },

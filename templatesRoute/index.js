@@ -4,7 +4,6 @@ const router = express.Router();
 let Faq_kb = require('../tybotRoute/models/faq_kb');
 let faqService = require('../tybotRoute/models/faqService');
 let faqKbService = require('../tybotRoute/models/faqKbService');
-//let templates = require('./templates.js');
 
 router.get('/', (req, res) => {
   res.send('Hello Chatbot Templates!');
@@ -53,7 +52,8 @@ router.get('/public/templates/:botid', (req, res) => {
           language: faq_kb.language,
           name: faq_kb.name,
           description: faq_kb.description,
-          intents: intents
+          intents: intents,
+          mainCategory: faq_kb.mainCategory
         }
         return res.send(json);
       }
