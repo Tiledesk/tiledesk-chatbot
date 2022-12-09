@@ -17,61 +17,56 @@ class FillParamsChatbotPlug {
 
   async exec(pipeline) {
     let message = pipeline.message;
-    // if (this.log) {console.log("fill params message", message)}
-    if (message.attributes && (message.attributes.fillParams == undefined || message.attributes.fillParams == false)) { // defaults to disabled
-      if (this.log) {console.log("fillParams disabled.");}
-      pipeline.nextplug();
-      return;
-    }
-    if (this.log) {
-      console.log("fillParams: true");
-    }
-    const requestId = this.request.request_id;
-    //const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    //this.tdcache.hgetall(parameters_key, (err, all_parameters) => {
-    if (this.log) {console.log("all_parameters of requestId:", requestId)}
-    const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
-    if (this.log) {console.log("--got parameters", all_parameters);}
-    if (!all_parameters) {
-      pipeline.nextplug();
-      return;
-    }
-    //all_parameters["tdMessageId"] = message.triggeredByMessageId;
-    //console.log("FillParamsChatbotPlug message:", message);
-    //console.log("all_parameters[tdMessageId]:", all_parameters["tdMessageId"]);
-    //if (err) {
-    //  console.error("An error occurred while filling paprameters:", err);
-    //}
-    const filled_message_text = this.fillWithRequestParams(message.text, all_parameters);
-    message.text = filled_message_text;
-    //console.log("message filled_message_text:", message)
-    if (!message.attributes) {
-      message.attributes = {}
-    }
-    // Reserved names: userEmail, userFullname (and firstMessage)
-    if (all_parameters['userEmail']) {
-       message.attributes.updateUserEmail = all_parameters['userEmail'];
-    }
-    if (all_parameters['userFullname']) {
-      message.attributes.updateUserFullname = all_parameters['userFullname'];
-    }
-
-    if (message.attributes && message.attributes.commands) {
-      let commands = message.attributes.commands;
-      // if (this.log) {console.log("commands for fillMessage:", JSON.stringify(commands));}
-      if (commands.length > 1) {
-        for (let i = 0; i < commands.length; i++) {
-          if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-            let filled_reply = this.fillWithRequestParams(commands[i].message.text, all_parameters);
-            commands[i].message.text = filled_reply;
+    if (message) {
+      if (message.attributes && (message.attributes.fillParams == undefined || message.attributes.fillParams == false)) { // defaults to disabled
+        if (this.log) {console.log("fillParams disabled.");}
+        pipeline.nextplug();
+        return;
+      }
+      if (this.log) {
+        console.log("fillParams: true");
+      }
+      const requestId = this.request.request_id;
+      if (this.log) {console.log("all_parameters of requestId:", requestId)}
+      const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
+      if (this.log) {console.log("--got parameters", all_parameters);}
+      if (!all_parameters) {
+        pipeline.nextplug();
+        return;
+      }
+      const filled_message_text = this.fillWithRequestParams(message.text, all_parameters);
+      message.text = filled_message_text;
+      //console.log("message filled_message_text:", message)
+      if (!message.attributes) {
+        message.attributes = {}
+      }
+      // Reserved names: userEmail, userFullname (and firstMessage)
+      if (all_parameters['userEmail']) {
+         message.attributes.updateUserEmail = all_parameters['userEmail'];
+      }
+      if (all_parameters['userFullname']) {
+        message.attributes.updateUserFullname = all_parameters['userFullname'];
+      }
+  
+      if (message.attributes && message.attributes.commands) {
+        let commands = message.attributes.commands;
+        // if (this.log) {console.log("commands for fillMessage:", JSON.stringify(commands));}
+        if (commands.length > 1) {
+          for (let i = 0; i < commands.length; i++) {
+            if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
+              let filled_reply = this.fillWithRequestParams(commands[i].message.text, all_parameters);
+              commands[i].message.text = filled_reply;
+            }
           }
         }
       }
+      pipeline.nextplug();
     }
-    // if (this.log) {
-    //   console.log("Message out of fillAttributes plugin:", JSON.stringify(message));
-    // }
-    pipeline.nextplug();
+    else {
+      if (this.log) {console.log("Fillparams. No message.");}
+      pipeline.nextplug();
+    }
+    
   }
 
   fillWithRequestParams(message_text, all_parameters, requestId) {
