@@ -15,7 +15,7 @@ class MarkbotChatbotPlug {
 
   exec(pipeline) {
     let message = pipeline.message;
-    console.log("markbot on message", message)
+    // console.log("markbot on message", message)
     if (message.attributes && (message.attributes.markbot == undefined || message.attributes.markbot == false)) { // defaults to disabled
       if (this.log) {console.log("markbot disabled")}
       pipeline.nextplug();
@@ -28,9 +28,9 @@ class MarkbotChatbotPlug {
     if (message.attributes && message.attributes.commands) {
       commands = message.attributes.commands;
     }
-    console.log("before taking decision:");
-    console.log("message.text:", incoming_message_text);
-    console.log("message commands:", commands)
+    // console.log("before taking decision:");
+    // console.log("message.text:", incoming_message_text);
+    // console.log("message commands:", commands)
     if (incoming_message_text === "" && !commands) {
       console.log("message with no content. Ignoring");
       pipeline.message = null;

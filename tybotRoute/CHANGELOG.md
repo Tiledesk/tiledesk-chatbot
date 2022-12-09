@@ -5,8 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.26 - online
+- no message is sent when there is no message for markbot out of the pipeline. Only directives are admitted.
+
 ### 0.1.25
-introduced new \_tdIfNoAgents \_tdIfAgents (DirIfAvailableAgents)
+- introduced new \_tdIfNoAgents \_tdIfAgents (DirIfAvailableAgents)
 
 ### 0.1.24
 - @tiledesk/tiledesk-client => 0.8.39

@@ -34,10 +34,7 @@ describe('Directive DirClose', function() {
     }
     let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, TILEDESK_API_ENDPOINT: "APIURL", token: "token", log: false, HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});
     const bot_answer = await ExtUtil.execPipelineExt(supportRequest, answer, directivesPlug, null, false);
-    // console.log("bot_answer:", bot_answer);
-    // console.log("directivesPlug.directives:", directivesPlug.directives);
-    assert.strictEqual(bot_answer.text, "");
-    assert(bot_answer.attributes.commands == null);
+    assert(bot_answer == null);
     assert(directivesPlug.directives != null);
     assert(directivesPlug.directives.length == 1);
     assert(directivesPlug.directives[0].name === "close");

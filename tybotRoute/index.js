@@ -170,7 +170,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   // PIPELINE-EXT
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   //const bot_answer = answer;
-  console.log("bot_answer to send:", bot_answer);
+  // console.log("bot_answer to send:", bot_answer);
   // empty answer
   // let b = {
   //      text: '',
