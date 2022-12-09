@@ -21,17 +21,25 @@ class MarkbotChatbotPlug {
       pipeline.nextplug();
       return;
     }
-    
+
+    let incoming_message_text = message.text.trim();
+
+    console.log("before taking decision:");
+    console.log("message.text:", incoming_message_text);
+    console.log("message commands:", commands)
+    if (incoming_message_text === "" && !commands) {
+      console.log("message with no content. Ignoring");
+      pipeline.message = null;
+      pipeline.nextplug();
+      return;
+    }
+
     if (!message.attributes) {
       message.attributes = {}
     }
-    if (!message.text) {
-      message.text = "";
-    }
-
-    if (message.text.trim() !== "") {
+    if (incoming_message_text !== "") {
       if (this.log) {console.log("markbotting main message...");}
-      let parsed_reply = TiledeskChatbotUtil.parseReply(message.text);
+      let parsed_reply = TiledeskChatbotUtil.parseReply(incoming_message_text);
       if (this.log) {console.log("parsed", JSON.stringify(parsed_reply));}
       if (parsed_reply) {
         message.text = parsed_reply.message.text;
@@ -74,13 +82,6 @@ class MarkbotChatbotPlug {
       console.log("no message commands.");
     }
     if (this.log) {console.log("Message out of Markbot:", JSON.stringify(message));}
-    console.log("before taking decision:")
-    console.log("message.text:", message.text)
-    console.log("message commands:", commands)
-    if (message.text === "" && !commands) {
-      console.log("message with no content. Ignoring");
-      pipeline.message = null;
-    }
     pipeline.nextplug();
     
   }
