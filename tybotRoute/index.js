@@ -193,6 +193,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   //      triggeredByMessageId: '6392e5e8408e0000437aa383'
   //    }
   if (bot_answer) {
+    bot_answer["_raw_message"] = answer.text;
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
       if (err) {
         console.error("Error sending message", err);

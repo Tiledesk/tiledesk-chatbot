@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.27 - online
+- log fix
+
 ### 0.1.26 - online
 - no message is sent when there is no message for markbot out of the pipeline. Only directives are admitted.
 
