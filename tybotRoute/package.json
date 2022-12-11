@@ -10,9 +10,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "dotenv": "^16.0.3"
-  },
   "dependencies": {
     "@tiledesk/helpcenter-query-client": "^0.1.8",
     "@tiledesk/tiledesk-chatbot-client": "^0.5.30",
@@ -27,6 +24,7 @@
     "mongoose": "^6.3.5",
     "nanoid": "^3.1.25",
     "redis": "^3.1.2",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "dotenv": "^16.0.3"
   }
 }
