@@ -51,6 +51,7 @@ router.get('/public/templates/:botid', (req, res) => {
           webhook_url: faq_kb.webhook_url,
           language: faq_kb.language,
           name: faq_kb.name,
+          type: faq_kb.type,
           description: faq_kb.description,
           intents: intents,
           mainCategory: faq_kb.mainCategory

@@ -149,26 +149,43 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     APIKEY: "___",
     log: false
   });
-  
   let request;
   const request_key = "tilebot:" + requestId;
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    if (log) {console.log("HIT! Request from cache:", request.request_id);}
+    if (log) {console.log("Request from cache:", request);}
     if (!request) {
       if (log) {console.log("!Request from cache", requestId);}
-      request = await tdclient.getRequestById(requestId);
+      try {
+        request = await tdclient.getRequestById(requestId);
+      }
+      catch(err) {
+        console.error("Error getting the request:", err)
+      }
       if (log) {console.log("Got request with APIs (after no cache hit)");}
     }
   }
   else {
+    console.log("6:");
     if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
-    request = await tdclient.getRequestById(requestId);
+    try {
+      request = await tdclient.getRequestById(requestId);
+    }
+    catch(err) {
+      console.log("Request not found.");
+    }
     if (log) {console.log("(No tdcache) Got request with APIs");}
+  }
+  if (!request) {
+    // chatbot-pure directives still work. Tiledesk specific directives don't
+    request = {
+      request_id: requestId
+    }
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
+  // console.log("bot_answer", bot_answer)
   //const bot_answer = answer;
   // console.log("bot_answer to send:", bot_answer);
   // empty answer
