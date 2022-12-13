@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.30 - online
+- Fixed wrong bot_answer["_raw_message"]
+
 ### 0.1.29 - online
 - Added process.exit(1) in tybot-route.startApp when no Redis connection is available to facilitate Cluster start
 - Debug console.log() removed.
