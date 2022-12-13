@@ -217,7 +217,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   //      triggeredByMessageId: '6392e5e8408e0000437aa383'
   //    }
   if (bot_answer) {
-    if (log) {console.log("adding to bot_answer original_answer_text:", original_answer_text);}
+    if (log) {console.log("adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
     bot_answer["_raw_message"] = original_answer_text;
     if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
