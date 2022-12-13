@@ -32,7 +32,7 @@ class MarkbotChatbotPlug {
     // console.log("message.text:", incoming_message_text);
     // console.log("message commands:", commands)
     if (incoming_message_text === "" && !commands) {
-      console.log("message with no content. Ignoring");
+      // console.log("message with no content. Ignoring");
       pipeline.message = null;
       pipeline.nextplug();
       return;

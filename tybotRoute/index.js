@@ -151,6 +151,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   });
   let request;
   const request_key = "tilebot:" + requestId;
+  if (log) {console.log("request_key:", request_key);}
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
     if (log) {console.log("Request from cache:", request);}
@@ -166,7 +167,6 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }
   }
   else {
-    console.log("6:");
     if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
     try {
       request = await tdclient.getRequestById(requestId);
@@ -179,9 +179,14 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (!request) {
     // chatbot-pure directives still work. Tiledesk specific directives don't
     request = {
-      request_id: requestId
+      request_id: requestId,
+      id_project: projectId
     }
   }
+  else {
+    if (log) {console.log("request", request);}
+  }
+  if (log) {console.log("request...", request);}
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
@@ -286,13 +291,15 @@ function startApp(settings, completionCallback) {
       console.log("(Tilebot) mongodb connection ok.");
       if (tdcache) {
         try {
+          console.log("(Tilebot) Connecting Redis...");
           await tdcache.connect();
         }
         catch (error) {
           tdcache = null;
-          console.error("(Tilebot) tdcache (Redis) connection error:", error);
+          console.error("(Tilebot) Redis connection error:", error);
+          process.exit(1);
         }
-        console.log("(Tilebot) tdcache (Redis) connected.");
+        console.log("(Tilebot) Redis connected.");
       }
       console.info("Tilebot started.");
       if (completionCallback) {

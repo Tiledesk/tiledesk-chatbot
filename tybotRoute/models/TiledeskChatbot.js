@@ -258,9 +258,9 @@ class TiledeskChatbot {
       await this.lockIntent(this.requestId, intent_name);
       const user_reply = message.text;
       let form_reply = await this.execIntentForm(user_reply, intent_form);
-      console.log("got form reply", form_reply)
+      // console.log("got form reply", form_reply)
       if (!form_reply.canceled && form_reply.message) {
-        console.log("Form replying for next field...");
+        // console.log("Form replying for next field...");
         if (this.log) {console.log("Sending form reply...", form_reply.message)}
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {

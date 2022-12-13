@@ -9,7 +9,7 @@ class DirLockIntent {
   }
 
   async execute(directive, requestId, callback) {
-    console.log("Locking intent");
+    // console.log("Locking intent");
     if (directive.parameter) {
       let intent_name = directive.parameter.trim();
       await this.lockIntent(requestId, intent_name);
@@ -22,7 +22,7 @@ class DirLockIntent {
 
   async lockIntent(requestId, intent_name) {
     await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
-    console.log("locked.", intent_name);
+    // console.log("locked.", intent_name);
   }
   
 }

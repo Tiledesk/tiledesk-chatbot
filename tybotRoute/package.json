@@ -1,10 +1,10 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha  --exit",
     "start": "node index.js"
   },
   "keywords": [],

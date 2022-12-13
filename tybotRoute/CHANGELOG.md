@@ -1,9 +1,18 @@
 # Tiledesk tybotRoute
 
-**npm @tiledesk/tiledesk-tybot-connector@0.1.23**
+**npm @tiledesk/tiledesk-tybot-connector**
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+
+### 0.1.29 - online
+- Added process.exit(1) in tybot-route.startApp when no Redis connection is available to facilitate Cluster start
+- Debug console.log() removed.
+
+### 0.1.28 - online
+- Added a 'serious' integration test for chatbot
+- Removed reference to requestId and depId from processInlineDirectives()
+- Added id_project to the 'minimum' request object used in directives not accessing Tiledesk APIs
 
 ### 0.1.27 - online
 - log fix

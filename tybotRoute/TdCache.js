@@ -19,7 +19,6 @@ class TdCache {
                     password: this.redis_password
                 });
             this.client.on('error', err => {
-                console.log('Redis connection error', err);
                 reject(err);
                 if (callback) {
                     callback(err);

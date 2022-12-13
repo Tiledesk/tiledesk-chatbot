@@ -83,8 +83,10 @@ class DirectivesChatbotPlug {
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
 
     const requestId = supportRequest.request_id
-    const depId = supportRequest.department._id;
-    //const depId = supportRequest.attributes.departmentId;
+    let depId;
+    if (supportRequest.department && supportRequest.department._id) {
+      depId = supportRequest.department._id;
+    }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
     //console.log("TDCACHE:", this.tdcache, tdcache)
@@ -204,11 +206,17 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.AGENT) {
-        const agentDir = new DirMoveToAgent(tdclient);
-        directive.whenOnlineOnly = false;
-        agentDir.execute(directive, requestId, depId, () => {
+        if (depId) {
+          const agentDir = new DirMoveToAgent(tdclient);
+          directive.whenOnlineOnly = false;
+          agentDir.execute(directive, requestId, depId, () => {
+            process(nextDirective());
+          });  
+        }
+        else {
+          console.log("Warning. DepId null while calling 'AGENT' directive")
           process(nextDirective());
-        });
+        }
       }
       else if (directive_name === Directives.CLOSE) {
         const closeDir = new DirClose({tdclient: tdclient});
@@ -217,11 +225,17 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
-        const agentDir = new DirMoveToAgent(tdclient);
-        directive.whenOnlineOnly = true;
-        agentDir.execute(directive, requestId, depId, () => {
+        if (depId) {
+          const agentDir = new DirMoveToAgent(tdclient);
+          directive.whenOnlineOnly = true;
+          agentDir.execute(directive, requestId, depId, () => {
+            process(nextDirective());
+          });
+        }
+        else {
+          console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
           process(nextDirective());
-        });
+        }
       }
       else if (directive_name === Directives.REMOVE_CURRENT_BOT) {
         tdclient.removeCurrentBot(requestId, (err) => {
@@ -276,11 +290,11 @@ class DirectivesChatbotPlug {
     const supportRequest = this.supportRequest;
     const token = this.token;
     const API_URL = this.API_URL;
-
-    //console.log("supportRequest", supportRequest)
-    const requestId = supportRequest.request_id
-    const depId = supportRequest.department._id;
-    //const depId = supportRequest.attributes.departmentId;
+    // const requestId = supportRequest.request_id
+    // let depId;
+    // if (supportRequest.department && supportRequest.department._id) {
+    //   depId = supportRequest.department._id;
+    // }
     const projectId = supportRequest.id_project;
     const tdclient = new TiledeskClient({
       projectId: projectId,
@@ -289,7 +303,6 @@ class DirectivesChatbotPlug {
       APIKEY: "___",
       log: false
     });
-
     let i = -1;
     if (this.log) { console.log("processing Inline directives:", directives); }
     const process = (directive) => {
