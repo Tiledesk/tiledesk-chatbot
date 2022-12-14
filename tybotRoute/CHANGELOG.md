@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.31 - online
+- Fixed bot_answer["_raw_message"] moved to bot_answer.attributes.["_raw_message"] 
+
 ### 0.1.30 - online
 - Fixed wrong bot_answer["_raw_message"]
 
