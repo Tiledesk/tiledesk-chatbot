@@ -47,6 +47,10 @@ let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
+  if (log) {
+    console.log("TiledeskClient.version09()...");
+    TiledeskClient.version09();
+  }
   res.status(200).send({"success":true});
 
   const botId = req.params.botid;
