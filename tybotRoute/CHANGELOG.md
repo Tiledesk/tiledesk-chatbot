@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.32 - online
+- @tiledesk/tiledesk-client => 0.8.42 - it now defaults to rejectUnauthorized=false for HTTPS connections
+
 ### 0.1.31 - online
 - Fixed bot_answer["_raw_message"] moved to bot_answer.attributes.["_raw_message"] 
 
