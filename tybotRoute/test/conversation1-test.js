@@ -52,7 +52,7 @@ after(function(done) {
 describe('Conversation1', async() => {
     
     it('/start', (done) => {
-      console.log("/start...ing story...");
+      // console.log("/start...ing story...");
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
@@ -110,7 +110,7 @@ describe('Conversation1', async() => {
     });
     
     it('/disable_input', (done) => {
-      console.log("/disable_input...");
+      // console.log("/disable_input...");
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
@@ -160,7 +160,7 @@ describe('Conversation1', async() => {
     });
 
     it('/good_form', (done) => {
-      console.log("/good_form...");
+      // console.log("/good_form...");
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
