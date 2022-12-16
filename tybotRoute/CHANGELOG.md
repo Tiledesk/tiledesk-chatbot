@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.34 - online
+- @tiledesk/tiledesk-client => 0.9.2 - TiledeskClient.version09()
+
 ### 0.1.32 - online
 - @tiledesk/tiledesk-client => 0.8.42 - it now defaults to rejectUnauthorized=false for HTTPS connections
 

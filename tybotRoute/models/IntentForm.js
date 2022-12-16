@@ -14,19 +14,16 @@ class IntentForm {
   }
 
   async setValue(key, value) {
-    let db_key = key; //this.requestId + ":"+ key;
-    await this.db.set(db_key, value);
+    await this.db.set(key, value);
   }
 
   async getValue(key) {
-    let db_key = key; //this.requestId + ":"+ key;
-    const value = await this.db.get(db_key);
+    const value = await this.db.get(key);
     return value;
   }
 
   async delValue(key) {
-    let db_key = key; //this.requestId + ":"+ key;
-    await this.db.del(db_key);
+    await this.db.del(key);
   }
 
   /**

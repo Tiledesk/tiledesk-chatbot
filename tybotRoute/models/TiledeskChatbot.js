@@ -38,12 +38,18 @@ class TiledeskChatbot {
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
       // get bot info
-      //let bot;
+      if (this.log) {
+        console.log("replyToMessage():", message);
+      }
       let lead = null;
       if (message.request) {
         this.request = message.request;
         lead = message.request.lead;
       }
+      if (this.log) {
+        console.log("replyToMessage() > lead:", lead);
+      }
+      
       
       // Checking locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
