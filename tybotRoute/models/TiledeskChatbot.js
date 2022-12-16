@@ -352,9 +352,11 @@ class TiledeskChatbot {
     static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
-    const userFullname = await this.allParameters(this.requestId);
-    console.log("We have the userFullname:", userFullname);
-    if (userFullname) {
+    const all_parameters = await this.allParameters(this.requestId);
+    console.log("We have all_parameters:", all_parameters);
+    if (all_parameters && all_parameters["userFullname"]) {
+      const userFullname = all_parameters["userFullname"];
+      console.log("We have the userFullname:", userFullname);
       static_bot_answer.attributes.updateUserFullname = userFullname;
     }
 
