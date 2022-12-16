@@ -385,7 +385,7 @@ class TiledeskChatbot {
     console.log("addParameterStatic. Setting parameter_name:", parameter_name);
     console.log("addParameterStatic. Setting parameter_value:", parameter_value);
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
-    all_parameters = await allParametersStatic(_tdcache, requestId);
+    all_parameters = await TiledeskChatbot.allParametersStatic(_tdcache, requestId);
     console.log("addParameterStatic. Verify. all_parameters:", all_parameters);
   }
 
