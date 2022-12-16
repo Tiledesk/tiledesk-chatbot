@@ -352,8 +352,9 @@ class TiledeskChatbot {
     static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
-    // exec webhook (only)
-    const bot_answer = await this.execPipeline(static_bot_answer, message, this.bot, context, this.token);
+    // exec webhook
+    const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
+    console.log("bot_answer ready:", JSON.stringify(bot_answer));
     return bot_answer;
   }
 
@@ -399,7 +400,7 @@ class TiledeskChatbot {
     return await _tdcache.hgetall(parameters_key);
   }
   
-  async execPipeline(static_bot_answer, message, bot, context) {
+  async execWebhook(static_bot_answer, message, bot, context) {
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
     messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, this.token));
