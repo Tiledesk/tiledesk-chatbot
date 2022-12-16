@@ -424,11 +424,14 @@ class TiledeskChatbot {
       projectId: this.projectId,
       token: this.token,
       APIURL: this.APIURL,
-      APIKEY: this.APIKEY
+      APIKEY: this.APIKEY,
+      log: true
     });
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.tdcache.hgetall(parameters_key);
-    if (all_parameters) { 
+    if (all_parameters) {
+      if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
+      if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}
       tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
         if (this.log) {console.log("Lead updated.")}
         tdclient.updateRequestAttributes(requestId, {
