@@ -281,10 +281,14 @@ class TiledeskChatbot {
         if (this.log) {
           console.log("FORM end.", );
           console.log("unlocking intent for request:", this.requestId);
+          console.log("populate data on lead:", lead);
         }
         this.unlockIntent(this.requestId);
         if (lead) {
           this.populatePrechatFormAndLead(this.requestId, lead._id);
+        }
+        else {
+          if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
         }
       }
       else if (form_reply.canceled) {
@@ -410,6 +414,8 @@ class TiledeskChatbot {
   }
 
   async populatePrechatFormAndLead(leadId, requestId) {
+    if (this.log) {console.log("(populatePrechatFormAndLead) leadId:", leadId);}
+    if (this.log) {console.log("(populatePrechatFormAndLead) requestId:", requestId);}
     if (!leadId && !requestId) {
       if (this.log) {console.log("(populatePrechatFormAndLead) !leadId && !requestId");}
       return;
