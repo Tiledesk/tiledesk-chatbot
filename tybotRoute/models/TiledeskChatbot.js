@@ -429,7 +429,7 @@ class TiledeskChatbot {
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.tdcache.hgetall(parameters_key);
     if (all_parameters) { 
-      tdclient.updateLeadEmailFullname(leadId, null, all_parameters['userFullname'], () => {
+      tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
         if (this.log) {console.log("Lead updated.")}
         tdclient.updateRequestAttributes(requestId, {
           preChatForm: all_parameters,
