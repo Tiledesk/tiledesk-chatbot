@@ -285,7 +285,7 @@ class TiledeskChatbot {
         }
         this.unlockIntent(this.requestId);
         if (lead) {
-          this.populatePrechatFormAndLead(this.requestId, lead._id);
+          this.populatePrechatFormAndLead(lead._id, this.requestId);
         }
         else {
           if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
