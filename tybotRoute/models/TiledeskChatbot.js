@@ -429,6 +429,7 @@ class TiledeskChatbot {
     });
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.tdcache.hgetall(parameters_key);
+    if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", all_parameters);}
     if (all_parameters) {
       if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
       if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}
