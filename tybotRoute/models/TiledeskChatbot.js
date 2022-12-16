@@ -260,6 +260,7 @@ class TiledeskChatbot {
     if (this.log) {
       console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form));
     }
+    let clientUpdateUserFullname = null;
     if (IntentForm.isValidForm(intent_form)) {
       await this.lockIntent(this.requestId, intent_name);
       const user_reply = message.text;
@@ -289,6 +290,11 @@ class TiledeskChatbot {
         }
         else {
           if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
+        }
+        const all_parameters = await this.allParameters(this.requestId);
+        if (this.log) {console.log("We have all_parameters:", all_parameters)};
+        if (all_parameters && all_parameters["userFullname"]) {
+          clientUpdateUserFullname = all_parameters["userFullname"];
         }
       }
       else if (form_reply.canceled) {
@@ -352,12 +358,9 @@ class TiledeskChatbot {
     static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
-    const all_parameters = await this.allParameters(this.requestId);
-    if (this.log) {console.log("We have all_parameters:", all_parameters)};
-    if (all_parameters && all_parameters["userFullname"]) {
-      const userFullname = all_parameters["userFullname"];
-      if (this.log) {console.log("We have the userFullname:", userFullname)};
-      static_bot_answer.attributes.updateUserFullname = userFullname;
+    if (clientUpdateUserFullname) {
+      if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
+      static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
 
     // exec webhook

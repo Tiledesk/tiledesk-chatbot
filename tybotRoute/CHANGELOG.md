@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.35
+- fix updateLeadData (email, fullname, reply.attributes.updateUserFullname)
+
 ### 0.1.34 - online
 - @tiledesk/tiledesk-client => 0.9.2 - TiledeskClient.version09()
 
