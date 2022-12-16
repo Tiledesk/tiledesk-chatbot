@@ -380,17 +380,22 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
-    await _tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
+    const parameter_key = "tilebot:requests:" + requestId + ":parameters";
+    console.log("addParameterStatic. Setting parameter. Parameters key:", parameter_key);
+    console.log("addParameterStatic. Setting parameter_name:", parameter_name);
+    console.log("addParameterStatic. Setting parameter_value:", parameter_value);
+    await _tdcache.hset(parameter_key, parameter_name, parameter_value);
+    all_parameters = await allParametersStatic(_tdcache, requestId);
+    console.log("addParameterStatic. Verify. all_parameters:", all_parameters);
   }
 
   async allParameters(requestId) {
-    //const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    //return await this.tdcache.hgetall(parameters_key);
     return await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
   }
 
   static async allParametersStatic(_tdcache, requestId) {
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    console.log("allParametersStatic. Paramters key:", parameters_key);
     return await _tdcache.hgetall(parameters_key);
   }
   
@@ -427,8 +432,8 @@ class TiledeskChatbot {
       APIKEY: this.APIKEY,
       log: true
     });
-    const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    const all_parameters = await this.tdcache.hgetall(parameters_key);
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    const all_parameters = await this.allParameters(requestId);//this.tdcache.hgetall(parameters_key);
     if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", all_parameters);}
     if (all_parameters) {
       if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
