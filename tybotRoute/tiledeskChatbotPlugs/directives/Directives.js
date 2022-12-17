@@ -21,6 +21,7 @@ class Directives {
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";
   static UNLOCK_INTENT = "unlockintent";
+  static FIRE_TILEDESK_EVENT = "firetiledeskevent";
 }
 
 module.exports = { Directives };

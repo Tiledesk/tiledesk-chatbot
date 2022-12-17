@@ -45,9 +45,17 @@ class TiledeskChatbot {
       if (message.request) {
         this.request = message.request;
         lead = message.request.lead;
+        if (lead && lead.fullname) {
+          if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
+          await this.addParameter(this.requestId, "userFullname", lead.fullname);
+        }
+        if (lead && lead.email) {
+          if (this.log) {console.log("lead.email => params.userEmail:", lead.fullname)}
+          await this.addParameter(this.requestId, "userEmail", lead.email);
+        }
       }
       if (this.log) {
-        console.log("replyToMessage() > lead:", lead);
+        console.log("replyToMessage() > lead found:", lead);
       }
       
       

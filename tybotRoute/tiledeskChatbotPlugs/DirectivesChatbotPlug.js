@@ -14,8 +14,8 @@ const { DirWhenOpen } = require('./directives/DirWhenOpen');
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
 const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents');
+const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
 const { Directives } = require('./directives/Directives');
-// const { ExtApi } = require('../ExtApi.js');
 
 class DirectivesChatbotPlug {
 
@@ -259,6 +259,11 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.UNLOCK_INTENT) {
         new DirUnlockIntent(tdcache).execute(requestId, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.FIRE_TILEDESK_EVENT) {
+        new DirFireTiledeskEvent(tdcache).execute(directive, () => {
           process(nextDirective());
         });
       }
