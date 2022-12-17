@@ -1,4 +1,4 @@
-const { ExtApi } = require('../../ExtApi.js');
+const ms = require('minimist-string');
 
 class DirFireTiledeskEvent {
 
