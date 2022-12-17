@@ -263,7 +263,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.FIRE_TILEDESK_EVENT) {
-        new DirFireTiledeskEvent(tdclient).execute(directive, () => {
+        new DirFireTiledeskEvent({tdclient: tdclient}).execute(directive, () => {
           process(nextDirective());
         });
       }
