@@ -257,7 +257,7 @@ router.get('/message/context/:messageid', async (req, res) => {
   }
 });
 
-router.get('/ext/params/request/:requestid', async (req, res) => {
+router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   res.send(parameters);
