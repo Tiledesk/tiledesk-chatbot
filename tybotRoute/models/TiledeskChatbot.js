@@ -401,12 +401,12 @@ class TiledeskChatbot {
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
     const parameter_key = "tilebot:requests:" + requestId + ":parameters";
-    console.log("addParameterStatic. Setting parameter. Parameters key:", parameter_key);
-    console.log("addParameterStatic. Setting parameter_name:", parameter_name);
-    console.log("addParameterStatic. Setting parameter_value:", parameter_value);
+    // console.log("addParameterStatic. Setting parameter. Parameters key:", parameter_key);
+    // console.log("addParameterStatic. Setting parameter_name:", parameter_name);
+    // console.log("addParameterStatic. Setting parameter_value:", parameter_value);
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
     const all_parameters = await TiledeskChatbot.allParametersStatic(_tdcache, requestId);
-    console.log("addParameterStatic. Verify. all_parameters:", all_parameters);
+    // console.log("addParameterStatic. Verify. all_parameters:", all_parameters);
   }
 
   async allParameters(requestId) {
@@ -415,7 +415,7 @@ class TiledeskChatbot {
 
   static async allParametersStatic(_tdcache, requestId) {
     const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    console.log("allParametersStatic. Paramters key:", parameters_key);
+    // console.log("allParametersStatic. Paramters key:", parameters_key);
     return await _tdcache.hgetall(parameters_key);
   }
   
