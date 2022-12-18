@@ -115,7 +115,7 @@ router.post('/ext/:botid', async (req, res) => {
   });
 
   const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-  await chatbot.addParameter(requestId, "tdMessageId", messageId);
+  await chatbot.addParameter(requestId, "_tdMessageId", messageId);
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
     reply = {
