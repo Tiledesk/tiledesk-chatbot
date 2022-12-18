@@ -55,7 +55,6 @@ class IntentForm {
     this.form.cancelCommands &&
     this.form.cancelCommands.includes(user_text.toLowerCase())) {
       const cancelReply = this.form.cancelReply ? this.form.cancelReply : "Canceled"
-      console.log("get messagetoLowerCase annulla")
       await this.delValue(this.CURRENT_FIELD_INDEX_KEY)
       await this.delValue(this.CURRENT_FORM_KEY)
       return {
@@ -109,7 +108,7 @@ class IntentForm {
           let message = {
             text: error_reply_text // Error
           }
-          console.log("IntentForm error message:", message)
+          if (this.log) {console.log("IntentForm error message:", message);}
           return {
             message: message
           };
@@ -131,6 +130,9 @@ class IntentForm {
       const parameter_value = user_text;
       if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
       await this.chatbot.addParameter(this.requestId, parameter_name, parameter_value);
+      if (current_form.fields[current_field].type) { // adding type
+        await this.chatbot.addParameter(this.requestId, "_tdTypeOf:" + parameter_name, current_form.fields[current_field].type);
+      }
       if (this.log) {console.log("next field...");}
 
       current_field += 1;
@@ -162,7 +164,12 @@ class IntentForm {
   */
   
   validate(text, regex) {
-    var _regex = regex.substring(1, regex.length-1);
+    let _regex = regex;
+    if (regex.startsWith("/")) {
+      // removing leading and trailing / if regex is sorrounded by (legacy support, to be removed)
+      _regex = regex.substring(1, regex.length-1);
+    }
+    if (this.log) {console.log("Validating using regex:", _regex);}
     const rg = new RegExp(_regex, "g");
     return rg.test(text);
   }
