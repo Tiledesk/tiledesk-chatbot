@@ -260,14 +260,22 @@ router.get('/message/context/:messageid', async (req, res) => {
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
-  let userParams = {};
-  for (const [key, value] of Object.entries(parameters)) {
-    console.log(key, value);
-    if (!key.startsWith("_td")) {
-      userParams[key] = value;
-    }
+  console.log("req.query.all:", req.query.all);
+  if (req.query.all) {
+    res.send(parameters);
   }
-  res.send(userParams);
+  else {
+    let userParams = {};
+    for (const [key, value] of Object.entries(parameters)) {
+      console.log(key, value);
+      if (!key.startsWith("_td")) {
+        userParams[key] = value;
+      }
+    }
+    res.send(userParams);
+  }
+  
+  
 });
 
 router.get('/', (req, res) => {
