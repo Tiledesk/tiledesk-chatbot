@@ -261,7 +261,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   let userParams = {};
-  for (const [key, value] of Object.entries(objeparametersct)) {
+  for (const [key, value] of Object.entries(parameters)) {
     console.log(key, value);
     if (!key.startsWith("_td")) {
       userParams[key] = value;
