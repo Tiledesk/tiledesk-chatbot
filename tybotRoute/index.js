@@ -261,7 +261,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   console.log("req.query.all:", req.query.all);
-  if (req.query.all) {
+  if (req.query.all != null) {
     res.send(parameters);
   }
   else {
