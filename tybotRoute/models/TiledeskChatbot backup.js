@@ -341,7 +341,7 @@ class TiledeskChatbot {
       preChatForm: all_parameters,
       updated: Date.now
     }, () => {
-      if (this.log) {console.log("prechat updated.");}
+      console.log("prechat updated.");
     });
     await _tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
   }
