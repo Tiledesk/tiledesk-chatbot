@@ -336,6 +336,13 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    const all_parameters = await allParametersStatic(_tdcache, requestId); // every time we set a parameter we update the tiledesk request
+    tdclient.updateRequestAttributes(requestId, {
+      preChatForm: all_parameters,
+      updated: Date.now
+    }, () => {
+      if (this.log) {console.log("prechat updated.");}
+    });
     await _tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
   }
 
@@ -387,15 +394,15 @@ class TiledeskChatbot {
       //console.log("all_parameters['userFullname']", all_parameters['userFullname']); 
       tdclient.updateLeadEmailFullname(leadId, null, all_parameters['userFullname'], () => {
         if (this.log) {console.log("lead updated.")}
-        tdclient.updateRequestAttributes(requestId, {
-          preChatForm: all_parameters,
-          updated: Date.now
-        }, () => {
-          if (this.log) {console.log("prechat updated.");}
-          if (callback) {
-            callback();
-          }
-        });
+        // tdclient.updateRequestAttributes(requestId, {
+        //   preChatForm: all_parameters,
+        //   updated: Date.now
+        // }, () => {
+        //   if (this.log) {console.log("prechat updated.");}
+        //   if (callback) {
+        //     callback();
+        //   }
+        // });
       });
     };
   }
