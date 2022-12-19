@@ -62,6 +62,8 @@ router.post('/ext/:botid', async (req, res) => {
   const requestId = message.request.request_id;
   const projectId = message.id_project;
 
+
+  // NEXTTTTTTT
   const message_context = {
     projectId: projectId,
     requestId: requestId,
@@ -75,7 +77,9 @@ router.post('/ext/:botid', async (req, res) => {
   );
   if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
-  
+  // NEXTTTTTTT
+
+
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
 
   // get the bot metadata
@@ -114,8 +118,8 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
 
-  const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-  await chatbot.addParameter(requestId, "_tdLastMessageId", messageId);
+  await chatbot.addParameter("_tdLastMessageId", messageId);
+  await chatbot.addParameter("_tdProjectId", projectId);
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
     reply = {

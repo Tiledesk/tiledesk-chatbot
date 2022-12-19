@@ -221,12 +221,12 @@ describe('IntentForm', function() {
 
 class Chatbot {
       
-  constructor(requestId) {
+  constructor() {
     this.tdcache = new MockTdCache();
     this.requestParameters = new Map();
   }
 
-  async addParameter(requestId, parameter_name, parameter_value) {
+  async addParameter(parameter_name, parameter_value) {
     this.requestParameters.set(parameter_name, parameter_value);
     return true;
   }

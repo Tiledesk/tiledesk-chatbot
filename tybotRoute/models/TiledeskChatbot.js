@@ -299,7 +299,7 @@ class TiledeskChatbot {
         else {
           if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
         }
-        const all_parameters = await this.allParameters(this.requestId);
+        const all_parameters = await this.allParameters();
         if (this.log) {console.log("We have all_parameters:", all_parameters)};
         if (all_parameters && all_parameters["userFullname"]) {
           clientUpdateUserFullname = all_parameters["userFullname"];
@@ -394,9 +394,9 @@ class TiledeskChatbot {
     await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
   }
 
-  async addParameter(requestId, parameter_name, parameter_value) {
+  async addParameter(parameter_name, parameter_value) {
     //await this.tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
-    await TiledeskChatbot.addParameterStatic(this.tdcache, requestId, parameter_name, parameter_value);
+    await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, parameter_name, parameter_value);
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
@@ -405,12 +405,10 @@ class TiledeskChatbot {
     // console.log("addParameterStatic. Setting parameter_name:", parameter_name);
     // console.log("addParameterStatic. Setting parameter_value:", parameter_value);
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
-    const all_parameters = await TiledeskChatbot.allParametersStatic(_tdcache, requestId);
-    // console.log("addParameterStatic. Verify. all_parameters:", all_parameters);
   }
 
-  async allParameters(requestId) {
-    return await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
+  async allParameters() {
+    return await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
   }
 
   static async allParametersStatic(_tdcache, requestId) {
@@ -453,7 +451,7 @@ class TiledeskChatbot {
       log: true
     });
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    const all_parameters = await this.allParameters(requestId);//this.tdcache.hgetall(parameters_key);
+    const all_parameters = await this.allParameters();//this.tdcache.hgetall(parameters_key);
     if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", all_parameters);}
     if (all_parameters) {
       if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}

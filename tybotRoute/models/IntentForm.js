@@ -129,9 +129,9 @@ class IntentForm {
       const parameter_name = current_form.fields[current_field].name;
       const parameter_value = user_text;
       if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
-      await this.chatbot.addParameter(this.requestId, parameter_name, parameter_value);
+      await this.chatbot.addParameter(parameter_name, parameter_value);
       if (current_form.fields[current_field].type) { // adding type
-        await this.chatbot.addParameter(this.requestId, "_tdTypeOf:" + parameter_name, current_form.fields[current_field].type);
+        await this.chatbot.addParameter("_tdTypeOf:" + parameter_name, current_form.fields[current_field].type);
       }
       if (this.log) {console.log("next field...");}
 
@@ -156,12 +156,6 @@ class IntentForm {
       }
     }
   }
-
-  /*
-  async addParameter(requestId, parameter_name, parameter_value) {
-    await this.db.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
-  }
-  */
   
   validate(text, regex) {
     let _regex = regex;

@@ -7,13 +7,18 @@ var app = express();
 app.use("/", tybotRoute);
 require('dotenv').config();
 const bodyParser = require('body-parser');
+const { v4: uuidv4 } = require('uuid');
 
 const PROJECT_ID = process.env.TEST_PROJECT_ID;
-const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + Date.now();
+const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
 
-// console.log("REQUEST_ID:", REQUEST_ID);
+console.log("Testing conversation setup:");
+console.log("PROJECT_ID:", PROJECT_ID);
+console.log("REQUEST_ID:", REQUEST_ID);
+console.log("BOT_ID:", BOT_ID);
+
 let app_listener;
 
 before( () => {
@@ -53,6 +58,7 @@ describe('Conversation1', async() => {
     
     it('/start', (done) => {
       // console.log("/start...ing story...");
+      let message_id = uuidv4();
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
@@ -75,9 +81,20 @@ describe('Conversation1', async() => {
         assert(command2.type === "wait");
         assert(command2.time === 500);
 
-        listener.close( () => {
-          // console.log('closed.');
-          done();
+
+        getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            console.log("params /start:", params);
+            assert(params);
+            assert(params["_tdLastMessageId"] === message_id);
+            assert(params["_tdProjectId"] === PROJECT_ID);
+            listener.close( () => {
+              done();
+            });
+          }
         });
         
       });
@@ -85,12 +102,9 @@ describe('Conversation1', async() => {
       listener = endpointServer.listen(10002, '0.0.0.0', function () {
         // console.log('endpointServer started', listener.address());
       });
-      
-      // const botId = process.env.TEST_BOT_ID;
-      // console.log("botId:", botId);
       let request = {
         "payload": {
-          "_id": "ID",
+          "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
@@ -138,7 +152,7 @@ describe('Conversation1', async() => {
         // console.log("REQUEST_ID:", REQUEST_ID);
         let request = {
           "payload": {
-            "_id": "ID",
+            "_id": uuidv4(),
             "senderFullname": "guest#367e",
             "type": "text",
             "sender": "A-SENDER",
@@ -161,6 +175,8 @@ describe('Conversation1', async() => {
 
     it('/good_form', (done) => {
       // console.log("/good_form...");
+      const message_id = uuidv4();
+      const reply_text = "Andrea";
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
@@ -170,10 +186,9 @@ describe('Conversation1', async() => {
         const message = req.body;
 
         if (message.text === "Your name?") {
-          const reply_text = "Andrea";
           let request = {
             "payload": {
-              "_id": "ID",
+              "_id": message_id,
               "senderFullname": "guest#367e",
               "type": "text",
               "sender": "A-SENDER",
@@ -192,9 +207,24 @@ describe('Conversation1', async() => {
           });
         }
         else if (message.text === "It's a good form Andrea") {
-          listener.close( () => {
-            done();
+          // verify parameters
+          getChatbotParameters(REQUEST_ID, (err, params) => {
+            if (err) {
+              assert.ok(false);
+            }
+            else {
+              console.log("params:", params);
+              assert(params);
+              assert(params["_tdLastMessageId"] === message_id);
+              assert(params["_tdProjectId"] === PROJECT_ID);
+              assert(params["fullname"] === reply_text);
+              assert(params["_tdTypeOf:fullname"] === "text");
+              listener.close( () => {
+                done();
+              });
+            }
           });
+          
         }
         else {
           console.error("Unexpected message.");
@@ -208,7 +238,7 @@ describe('Conversation1', async() => {
         // console.log("REQUEST_ID:", REQUEST_ID);
         let request = {
           "payload": {
-            "_id": "ID",
+            "_id": uuidv4(),
             "senderFullname": "guest#367e",
             "type": "text",
             "sender": "A-SENDER",
@@ -293,6 +323,39 @@ function sendMessageToBot(message, botId, token, callback) {
     },
     json: message,
     method: 'POST'
+  };
+  myrequest(
+    HTTPREQUEST,
+    function(err, resbody) {
+      if (err) {
+        if (callback) {
+          callback(err);
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, resbody);
+        }
+      }
+    }, true
+  );
+}
+
+/**
+ * A stub to get the request parameters, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
+ *
+ * @param {string} requestId. Tiledesk chatbot/requestId parameters
+ */
+ function getChatbotParameters(requestId, callback) {
+  // const jwt_token = this.fixToken(token);
+  const url = `${process.env.CHATBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+  const HTTPREQUEST = {
+    url: url,
+    headers: {
+      'Content-Type' : 'application/json'
+    },
+    method: 'get'
   };
   myrequest(
     HTTPREQUEST,

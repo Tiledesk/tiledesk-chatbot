@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.36
+- added /ext/params/requests/:requestid service
+- removed requestId as parameter of addParameter()/allParameters() of TiledeskChatbot instance method
+- added testing intent_form_test.js for IntentForm
+- improved conversation1 test with parameters check
+
 ### 0.1.35
 - fix updateLeadData (email, fullname, reply.attributes.updateUserFullname)
 
