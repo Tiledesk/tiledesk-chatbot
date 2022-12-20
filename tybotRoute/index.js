@@ -271,10 +271,12 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   }
   else {
     let userParams = {};
-    for (const [key, value] of Object.entries(parameters)) {
-      console.log(key, value);
-      if (!key.startsWith("_td")) {
-        userParams[key] = value;
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        console.log(key, value);
+        if (!key.startsWith("_td")) {
+          userParams[key] = value;
+        }
       }
     }
     res.send(userParams);
