@@ -57,7 +57,7 @@ router.post('/lang_select', (req, res) => {
                     tdclient.sendSupportMessage(
                         requestId,
                         {
-                            text: `\_tdreplacebot ${bot.name}`
+                            text: `\\_tdreplacebot ${bot.name}`
                         }
                     );
 
