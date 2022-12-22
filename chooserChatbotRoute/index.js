@@ -81,6 +81,10 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
             callback(err, null);
             return;
         }
+        let selected_bot = null;
+        let pivot_bot = null;
+        let pivot_lang = "en";
+        let first_bot = null;
         for (i = 0; i < bots.length; i++) {
             const bot = bots[i];
             if (bot.language && bot.name != "_tdLanguageChooser") {
@@ -89,11 +93,27 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
                 console.log("lang_iso:", lang_iso);
                 if (bot.language === lang_iso) {
                     console.log("Bot found:", bot.name, bot._id);
+                    selected_bot = bot;
                     break;
+                }
+                if (bot.language === pivot_lang) {
+                    pivot_bot = bot;
+                }
+                if (first_bot === null) {
+                    first_bot = bot;
                 }
             }
         }
-        callback(null, bot);
+        if (selected_bot) {
+            callback(null, selected_bot);
+        }
+        else if (pivot_bot) {
+            callback(null, pivot_bot);
+        }
+        else {
+            callback(null, first_bot);
+        }
+        
     });
 }
 
