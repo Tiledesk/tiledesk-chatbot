@@ -16,9 +16,11 @@ router.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 APIURL = process.env.API_ENDPOINT;
 
 router.post('/lang_select', (req, res) => {
+    console.log("REQ.BODY", req.body)
     let intent = req.body.payload.intent.intent_display_name;
     let user_lang = req.body.payload.message.request.language;
     if (intent === 'start') {
+        console.log("intent start")
         const projectId = req.body.payload.bot.id_project;
         const token = req.body.token;
         const requestId = req.body.payload.message.request.request_id;
@@ -30,6 +32,8 @@ router.post('/lang_select', (req, res) => {
                 APIKEY: "___"
             }
         );
+
+        console.log("tdclient:", tdclient);
 
         // let message = {  // repling with an hidden message
         //   text: req.body.payload.text + '...',
@@ -77,8 +81,6 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
             callback(err, null);
             return;
         }
-        let bot_id = null;
-        let bot_name = null;
         for (i = 0; i < bots.length; i++) {
             const bot = bots[i];
             if (bot.language && bot.name != "_tdLanguageChooser") {
