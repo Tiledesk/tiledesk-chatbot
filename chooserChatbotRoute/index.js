@@ -40,7 +40,7 @@ router.post('/lang_select', (req, res) => {
         // res.json(message);
 
         // now searching for a bot supporting the user language
-        getBotIdByLang(API_URL, projectId, token, user_lang, (err, bot) => {
+        getBotIdByLang(APIURL, projectId, token, user_lang, (err, bot) => {
             if (err) {
                 tdclient.sendSupportMessage(requestId,
                     {
