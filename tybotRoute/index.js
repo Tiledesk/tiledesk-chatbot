@@ -52,7 +52,7 @@ router.post('/ext/:botid', async (req, res) => {
     TiledeskClient.version09();
   }
   res.status(200).send({"success":true});
-
+  
   const botId = req.params.botid;
   if (log) {console.log("query botId:", botId);}
   const message = req.body.payload;
@@ -61,10 +61,17 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  const requestSourcePage = message.payload.sourcePage;
-  const requestLanguage = message.payload.language;
-  const requestUserAgent = message.payload.userAgent;
 
+  let requestSourcePage = null;
+  let requestLanguage = null; 
+  let requestUserAgent = null;
+
+  if (message.payload) {
+    requestSourcePage = message.payload.sourcePage;
+    requestLanguage = message.payload.language;
+    requestUserAgent = message.payload.userAgent;
+  }
+  
   // NEXTTTTTTT
   const message_context = {
     projectId: projectId,
@@ -119,7 +126,7 @@ router.post('/ext/:botid', async (req, res) => {
     projectId: projectId,
     log: log
   });
-
+  
   // initial request context
   await chatbot.addParameter("_tdLastMessageId", messageId);
   await chatbot.addParameter("_tdProjectId", projectId);
@@ -148,7 +155,7 @@ router.post('/ext/:botid', async (req, res) => {
     ENDPOINT: extEndpoint,
     log: log
   });
-
+  
   apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
     if (log) {
       console.log("SupportMessageExt() reply sent:", reply);

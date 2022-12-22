@@ -63,7 +63,7 @@ describe('Conversation1', async() => {
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
       endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-        // console.log("req.body:", JSON.stringify(req.body));
+        //console.log("req.body:", JSON.stringify(req.body));
         res.send({success: true});
         const message = req.body;
         assert(message.text === "Hello");
@@ -100,7 +100,7 @@ describe('Conversation1', async() => {
       });
       
       listener = endpointServer.listen(10002, '0.0.0.0', function () {
-        // console.log('endpointServer started', listener.address());
+        //console.log('endpointServer started', listener.address());
       });
       let request = {
         "payload": {
@@ -119,7 +119,7 @@ describe('Conversation1', async() => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        //console.log("Message sent.");
       });
     });
     
@@ -418,7 +418,7 @@ function sendMessageToBot(message, botId, token, callback) {
           callback(null, resbody);
         }
       }
-    }, true
+    }, false
   );
 }
 
@@ -451,12 +451,12 @@ function sendMessageToBot(message, botId, token, callback) {
           callback(null, resbody);
         }
       }
-    }, true
+    }, false
   );
 }
 
 function myrequest(options, callback, log) {
-  if (this.log) {
+  if (log) {
     console.log("API URL:", options.url);
     console.log("** Options:", options);
   }
@@ -469,7 +469,7 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
   .then((res) => {
-    if (this.log) {
+    if (log) {
       console.log("Response for url:", options.url);
       console.log("Response headers:\n", res.headers);
       //console.log("******** Response for url:", res);
