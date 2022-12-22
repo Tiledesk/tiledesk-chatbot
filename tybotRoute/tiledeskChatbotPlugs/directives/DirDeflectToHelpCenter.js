@@ -11,7 +11,7 @@ class DirDeflectToHelpCenter {
     if (config.HELP_CENTER_API_ENDPOINT) {
       this.helpcenter_api_endpoint = config.HELP_CENTER_API_ENDPOINT;
     }
-    console.log("Using helpcenter_api_endpoint:", this.helpcenter_api_endpoint)
+    //console.log("Using helpcenter_api_endpoint:", this.helpcenter_api_endpoint)
     this.projectId = config.projectId;
   }
 

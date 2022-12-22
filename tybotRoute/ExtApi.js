@@ -121,7 +121,6 @@ class ExtApi {
       if (this.log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", res.headers);
-        //console.log("******** Response for url:", res);
       }
       if (res && res.status == 200 && res.data) {
         if (callback) {

@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.37 - online
+- log clean
+
 ### 0.1.36 - online
 - added /ext/params/requests/:requestid service
 - removed requestId as parameter of addParameter()/allParameters() of TiledeskChatbot instance method

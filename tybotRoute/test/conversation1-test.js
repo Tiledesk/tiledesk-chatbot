@@ -49,7 +49,7 @@ before( () => {
 
 after(function(done) {
   app_listener.close( () => {
-    console.log('app_listener closed.');
+    // console.log('app_listener closed.');
     done();
   });
 });
@@ -87,7 +87,7 @@ describe('Conversation1', async() => {
             assert.ok(false);
           }
           else {
-            console.log("params /start:", params);
+            // console.log("params /start:", params);
             assert(params);
             assert(params["_tdLastMessageId"] === message_id);
             assert(params["_tdProjectId"] === PROJECT_ID);
@@ -213,7 +213,7 @@ describe('Conversation1', async() => {
               assert.ok(false);
             }
             else {
-              console.log("params:", params);
+              // console.log("params:", params);
               assert(params);
               assert(params["_tdLastMessageId"] === message_id);
               assert(params["_tdProjectId"] === PROJECT_ID);
@@ -244,6 +244,87 @@ describe('Conversation1', async() => {
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
             "text": "/good_form",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+              "id_project": PROJECT_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+          // console.log("Message sent.");
+        });
+      });
+    });
+
+    it('/splitted', (done) => {
+      // console.log("/splitted...");
+      const message_id = uuidv4();
+      const reply_text = "Andrea";
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+        // console.log("req.body:", JSON.stringify(req.body));
+        res.send({success: true});
+        const message = req.body;
+        // console.log("message:", JSON.stringify(message));
+        if (message.attributes.commands) {
+          assert(message.attributes.commands.length === 5);
+          assert(message.attributes.commands[0].type === "message");
+          assert(message.attributes.commands[0].message.text === "Row1");
+          assert(message.attributes.commands[0].message.type === "text");
+          
+          assert(message.attributes.commands[1].type === "wait");
+          assert(message.attributes.commands[1].time === 500);
+
+          assert(message.attributes.commands[2].type === "message");
+          assert(message.attributes.commands[2].message.text === "Row2");
+          assert(message.attributes.commands[2].message.type === "image");
+          assert(message.attributes.commands[2].message.metadata);
+
+          assert(message.attributes.commands[3].type === "wait");
+          assert(message.attributes.commands[3].time === 500);
+
+          assert(message.attributes.commands[4].type === "message");
+          assert(message.attributes.commands[4].message.text === "Row4");
+          assert(message.attributes.commands[4].message.type === "text");
+          assert(message.attributes.commands[4].message.attributes);
+          assert(message.attributes.commands[4].message.attributes.attachment);
+          assert(message.attributes.commands[4].message.attributes.attachment.type === 'template');          
+          assert(message.attributes.commands[4].message.attributes.attachment.buttons.length === 1);
+          assert(message.attributes.commands[4].message.attributes.attachment.buttons[0].type === 'text');
+          assert(message.attributes.commands[4].message.attributes.attachment.buttons[0].value === '/start');
+          
+          const expected_raw_message = 'Row1\n' +
+          '\n' +
+          'Row2\n' +
+          'tdImage:https://nypost.com/wp-content/uploads/sites/2/2020/03/covid-tiger-01.jpg?quality=75&strip=all&w=1488\n' +
+          '\n' +
+          'Row4\n' +
+          '* /start';
+          assert(message.attributes._raw_message === expected_raw_message);
+          done();
+        }
+        else {
+          console.error("Unexpected message.");
+          assert.ok(false);
+        }
+        
+      });
+      
+      listener = endpointServer.listen(10002, '0.0.0.0', function () {
+        // console.log('endpointServer started', listener.address());
+        // console.log("REQUEST_ID:", REQUEST_ID);
+        let request = {
+          "payload": {
+            "_id": uuidv4(),
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "/splitted",
             "id_project": PROJECT_ID,
             "request": {
               "request_id": REQUEST_ID,

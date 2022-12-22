@@ -61,7 +61,9 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-
+  const requestSourcePage = message.payload.sourcePage;
+  const requestLanguage = message.payload.language;
+  const requestUserAgent = message.payload.userAgent;
 
   // NEXTTTTTTT
   const message_context = {
@@ -118,8 +120,19 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
 
+  // initial request context
   await chatbot.addParameter("_tdLastMessageId", messageId);
   await chatbot.addParameter("_tdProjectId", projectId);
+  if (requestSourcePage) {
+    await chatbot.addParameter("requestSourcePage", sourcePage);
+  }
+  if (requestLanguage) {
+    await chatbot.addParameter("requestLanguage", language);
+  }
+  if (requestUserAgent) {
+    await chatbot.addParameter("requestUserAgent", userAgent);
+  }
+
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
     reply = {
@@ -264,8 +277,8 @@ router.get('/message/context/:messageid', async (req, res) => {
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
-  console.log("parameters:", parameters);
-  console.log("req.query.all:", req.query.all);
+  // console.log("parameters:", parameters);
+  // console.log("req.query.all:", req.query.all);
   if (req.query.all != null) {
     res.send(parameters);
   }
@@ -273,7 +286,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
     let userParams = {};
     if (parameters) {
       for (const [key, value] of Object.entries(parameters)) {
-        console.log(key, value);
+        // console.log(key, value);
         if (!key.startsWith("_td")) {
           userParams[key] = value;
         }
