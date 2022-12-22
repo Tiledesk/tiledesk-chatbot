@@ -316,6 +316,7 @@ class TiledeskChatbot {
         }
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
+        form_reply.message.attributes.directives = true;
         return form_reply.message
       }
     }
