@@ -42,14 +42,15 @@ router.post('/lang_select', (req, res) => {
             if (err) {
                 tdclient.sendSupportMessage(requestId,
                     {
-                        text: "An error occurred 🙁 Contact administrator..." + err
+                        text: "No chatbot found 🙁 Contact the Administrator: " + err
                     }
                 );
             }
             else {
                 if (bot && bot.name) {
                     let message = {  // repling with an hidden message
-                        text: `\\_tdreplacebot ${bot.name}`,
+                        text: `\\_tdreplacebot ${bot.name}
+\\_tdIntent start`,
                         attributes: {
                           subtype: 'info'
                         }
@@ -58,9 +59,10 @@ router.post('/lang_select', (req, res) => {
                     // tdclient.sendSupportMessage(
                     //     requestId,
                     //     {
-                    //         text: `\\_tdreplacebot ${bot.name}`
+                    //         text: "/start"
                     //     }
                     // );
+                    
 
                     //   tdclient.changeBot(requestId, botId, (err) => {
                     //     console.log("bot changed to", botId);
