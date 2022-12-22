@@ -35,13 +35,7 @@ router.post('/lang_select', (req, res) => {
 
         console.log("tdclient:", tdclient);
 
-        // let message = {  // repling with an hidden message
-        //   text: req.body.payload.text + '...',
-        //   attributes: {
-        //     subtype: 'info'
-        //   }
-        // }
-        // res.json(message);
+        
 
         // now searching for a bot supporting the user language
         getBotIdByLang(APIURL, projectId, token, user_lang, (err, bot) => {
@@ -54,12 +48,19 @@ router.post('/lang_select', (req, res) => {
             }
             else {
                 if (bot && bot.name) {
-                    tdclient.sendSupportMessage(
-                        requestId,
-                        {
-                            text: `\\_tdreplacebot ${bot.name}`
+                    let message = {  // repling with an hidden message
+                        text: `\\_tdreplacebot ${bot.name}`,
+                        attributes: {
+                          subtype: 'info'
                         }
-                    );
+                      }
+                      res.json(message);
+                    // tdclient.sendSupportMessage(
+                    //     requestId,
+                    //     {
+                    //         text: `\\_tdreplacebot ${bot.name}`
+                    //     }
+                    // );
 
                     //   tdclient.changeBot(requestId, botId, (err) => {
                     //     console.log("bot changed to", botId);
