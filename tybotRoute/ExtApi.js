@@ -1,4 +1,5 @@
 let axios = require('axios');
+let https = require("https");
 
 class ExtApi {
 
@@ -109,14 +110,20 @@ class ExtApi {
       console.log("API URL:", options.url);
       console.log("** Options:", options);
     }
-    axios(
-      {
-        url: options.url,
-        method: options.method,
-        data: options.json,
-        params: options.params,
-        headers: options.headers
-      })
+    let axios_options = {
+      url: options.url,
+      method: options.method,
+      data: options.json,
+      params: options.params,
+      headers: options.headers
+    }
+    if (options.url.startsWith("https:")) {
+      const httpsAgent = new https.Agent({
+        rejectUnauthorized: false,
+      });
+      axios_options.httpsAgent = httpsAgent;
+    }
+    axios(axios_options)
     .then((res) => {
       if (this.log) {
         console.log("Response for url:", options.url);
