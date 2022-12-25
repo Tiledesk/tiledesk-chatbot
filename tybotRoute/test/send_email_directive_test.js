@@ -6,7 +6,7 @@ const supportRequest = require('./support_request.js').request;
 
 describe('Directive DirSendEmail', function() {
 
-  it('test directive DirSendEmail with missing "to"', async () => {
+  it('test directive DirSendEmail', async () => {
     class MockTdClient {
       async sendEmail(message, callback) {
         if (callback) {
@@ -17,7 +17,7 @@ describe('Directive DirSendEmail', function() {
     };
     send_email_directive = {
       name: "sendemail",
-      parameter: '--to "test@test" --subject "test" --body "test"'
+      parameter: '--to "test@test" --subject "test" --text "test"'
     };
     let dir = new DirSendEmail({
         tdclient: new MockTdClient()
@@ -25,10 +25,10 @@ describe('Directive DirSendEmail', function() {
     let requestId = null;
     const message =  await dir.execute(send_email_directive, requestId) //, "err").to.be.null;
     // console.error("Was expecting an error for the 'to' missing parameter");
-    // console.log("nnnnesa", message);
+    console.log("message:", message);
     assert(message);
     assert(message.to);
-    assert(message.body);
+    assert(message.text);
     assert(message.subject);
   });
 
@@ -43,7 +43,7 @@ describe('Directive DirSendEmail', function() {
     };
     send_email_directive = {
       name: "sendemail",
-      parameter: '--subject "test" --body "test"'
+      parameter: '--subject "test" --text "_test"'
     };
     let dir = new DirSendEmail({
         tdclient: new MockTdClient()
@@ -55,7 +55,7 @@ describe('Directive DirSendEmail', function() {
       assert(message == null);
     }
     catch(err) {
-      // console.log("Error is ok", err);
+      //console.log("Error is ok", err);
       if (!err.message.startsWith("sendEmail missing mandatory parameters")) {
         assert.ok(false);
       }
@@ -63,7 +63,7 @@ describe('Directive DirSendEmail', function() {
   });
 
   it('test directive DirSendEmail in pipeline', async () => {
-    const message_text = `\\_tdsendemail --to "test@test" --subject "_sub" --body "_body"`;
+    const message_text = `\\_tdsendemail --to "test@test" --subject "_sub" --text "_body"`;
     const answer = {
       text: message_text,
       attributes: {
@@ -78,7 +78,7 @@ describe('Directive DirSendEmail', function() {
     assert(directivesPlug.directives != null);
     assert(directivesPlug.directives.length == 1);
     assert(directivesPlug.directives[0].name === "sendemail");
-    assert(directivesPlug.directives[0].parameter === '--to "test@test" --subject "_sub" --body "_body"');
+    assert(directivesPlug.directives[0].parameter === '--to "test@test" --subject "_sub" --text "_body"');
   });
     
 });

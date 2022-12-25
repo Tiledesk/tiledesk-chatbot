@@ -30,11 +30,11 @@ class DirSendEmail {
         // reject(error);
         throw error;
       }
-      if (params.subject && params.body && params.to) {
+      if (params.subject && params.text && params.to) {
         try {
           const message_echo = await this.tdclient.sendEmail({
             subject: params.subject,
-            body: params.body,
+            text: params.text,
             to: params.to
           });
           // console.log("echo", message_echo)
@@ -54,8 +54,8 @@ class DirSendEmail {
         }
       }
       else {
-        // console.log("sendEmail missing mandatory parameters (to|subject|body):");
-        const error = new Error("sendEmail missing mandatory parameters (to|subject|body)");
+        // console.log("sendEmail missing mandatory parameters (to|subject|text):");
+        const error = new Error("sendEmail missing mandatory parameters (to|subject|text)");
         if (completion) {
           completion(error);
         }
@@ -67,14 +67,14 @@ class DirSendEmail {
 
   parseParams(directive_parameter) {
     let subject = null;
-    let body = null;
+    let text = null;
     let to = null
     const params = ms(directive_parameter);
     if (params.subject) {
       subject = params.subject
     }
-    if (params.body) {
-      body = params.body.replace(/\\n/g, "\n");
+    if (params.text) {
+      text = params.text.replace(/\\n/g, "\n");
     }    
     if (params.to) {
       to = params.to;
@@ -82,7 +82,7 @@ class DirSendEmail {
     return {
       subject: subject,
       to: to,
-      body: body
+      text: text
     }
   }
 }
