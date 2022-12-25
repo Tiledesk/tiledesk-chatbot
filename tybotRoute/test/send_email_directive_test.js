@@ -49,17 +49,17 @@ describe('Directive DirSendEmail', function() {
         tdclient: new MockTdClient()
     });
     let requestId = null;
-    try {
+    // try {
       const message =  await dir.execute(send_email_directive, requestId) //, "err").to.be.null;
       // console.error("Was expecting an error for the 'to' missing parameter");
       assert(message == null);
-    }
-    catch(err) {
-      //console.log("Error is ok", err);
-      if (!err.message.startsWith("sendEmail missing mandatory parameters")) {
-        assert.ok(false);
-      }
-    }
+    // }
+    // catch(err) {
+    //   //console.log("Error is ok", err);
+    //   if (!err.message.startsWith("sendEmail missing mandatory parameters")) {
+    //     assert.ok(false);
+    //   }
+    // }
   });
 
   it('test directive DirSendEmail in pipeline', async () => {

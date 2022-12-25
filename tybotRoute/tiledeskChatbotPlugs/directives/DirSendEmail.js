@@ -28,7 +28,7 @@ class DirSendEmail {
           completion(error);
         }
         // reject(error);
-        throw error;
+        // throw error;
       }
       if (params.subject && params.text && params.to) {
         try {
@@ -45,12 +45,12 @@ class DirSendEmail {
           return message_echo;
         }
         catch(err) {
-          // console.error("sendEmail error:", err);
+          console.error("sendEmail error:", err);
           if (completion) {
             completion(err);
           }
           // reject(error);
-          throw err;
+          // throw err;
         }
       }
       else {
@@ -60,7 +60,7 @@ class DirSendEmail {
           completion(error);
         }
         // reject(err);
-        throw error;
+        // throw error;
       }
     // });
   }
