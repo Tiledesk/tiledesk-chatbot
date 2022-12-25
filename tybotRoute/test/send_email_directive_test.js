@@ -22,8 +22,8 @@ describe('Directive DirSendEmail', function() {
     let dir = new DirSendEmail({
         tdclient: new MockTdClient()
     });
-    let pipeline = null;
-    const message =  await dir.execute(send_email_directive, pipeline) //, "err").to.be.null;
+    let requestId = null;
+    const message =  await dir.execute(send_email_directive, requestId) //, "err").to.be.null;
     // console.error("Was expecting an error for the 'to' missing parameter");
     // console.log("nnnnesa", message);
     assert(message);
@@ -48,9 +48,9 @@ describe('Directive DirSendEmail', function() {
     let dir = new DirSendEmail({
         tdclient: new MockTdClient()
     });
-    let pipeline = null;
+    let requestId = null;
     try {
-      const message =  await dir.execute(send_email_directive, pipeline) //, "err").to.be.null;
+      const message =  await dir.execute(send_email_directive, requestId) //, "err").to.be.null;
       // console.error("Was expecting an error for the 'to' missing parameter");
       assert(message == null);
     }

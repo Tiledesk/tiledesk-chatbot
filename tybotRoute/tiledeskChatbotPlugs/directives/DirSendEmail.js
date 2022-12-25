@@ -13,13 +13,13 @@ class DirSendEmail {
     this.log = config.log;
   }
 
-  async execute(directive, pipeline, completion) {
+  async execute(directive, requestId, completion) {
     // return new Promise( (resolve, reject) => {
       let params = null;
       if (directive.parameter) {
-        console.log("processing sendEmail parameters");
+        // console.log("processing sendEmail parameters");
         params = this.parseParams(directive.parameter);
-        console.log("parameters found", params);
+        // console.log("parameters found", params);
       }
       else {
         console.log("sendEmail missing parameter error. Skipping");
@@ -31,9 +31,7 @@ class DirSendEmail {
         throw error;
       }
       if (params.subject && params.body && params.to) {
-        console.log("-....---")
         try {
-          // console.log("...", params)
           const message_echo = await this.tdclient.sendEmail({
             subject: params.subject,
             body: params.body,
