@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.40
-- @tiledesk/tiledesk-client => 0.9.4
+- tiledesk-client => 0.9.4
 
 ### 0.1.39 - online
 - ExtApi.sendSupportMessageExt => added support for rejectUnauthorized: false

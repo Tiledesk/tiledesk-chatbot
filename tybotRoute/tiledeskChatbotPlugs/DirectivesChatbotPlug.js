@@ -15,6 +15,7 @@ const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
 const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents');
 const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
+const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 
 class DirectivesChatbotPlug {
@@ -264,6 +265,11 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.FIRE_TILEDESK_EVENT) {
         new DirFireTiledeskEvent({tdclient: tdclient}).execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.SEND_EMAIL) {
+        new DirSendEmail({tdclient: tdclient}).execute(directive, pipeline, () => {
           process(nextDirective());
         });
       }
