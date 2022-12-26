@@ -1,47 +1,53 @@
-//const { HelpCenter } = require('./HelpCenter');
 const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { Filler } = require('../Filler');
 
 class DirSendEmail {
 
   constructor(config) {
     if (!config.tdclient) {
-      throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
+      throw new Error('config.tdclient (TiledeskClient) is mandatory.');
+    }
+    if (!config.tdcache) {
+      throw new Error('config.tdcache (TdCache) is mandatory.');
+    }
+    if (!config.requestId) {
+      throw new Error('config.requestId is mandatory.');
     }
     this.tdclient = config.tdclient;
+    this.tdcache = config.tdcache;
+    this.requestId = config.requestId;
     this.log = config.log;
   }
 
-  async execute(directive, requestId, completion) {
-    // return new Promise( (resolve, reject) => {
+  async execute(directive, completion) {
       let params = null;
       if (directive.parameter) {
-        // console.log("processing sendEmail parameters");
         params = this.parseParams(directive.parameter);
-        // console.log("parameters found", params);
       }
       else {
-        console.log("sendEmail missing parameter error. Skipping");
         const error = new Error("sendEmail missing 'parameter' error. Skipping");
         if (completion) {
           completion(error);
         }
-        // reject(error);
-        // throw error;
       }
       if (params.subject && params.text && params.to) {
         try {
+          const requestVariables = 
+          await TiledeskChatbot.allParametersStatic(
+            this.tdcache, this.requestId
+          );
+          const filler = new Filler();
           const message_echo = await this.tdclient.sendEmail({
-            subject: params.subject,
-            text: params.text,
-            to: params.to
+            subject: filler.fill(params.subject, requestVariables),
+            text: filler.fill(params.text, requestVariables),
+            to: filler.fill(params.to, requestVariables)
           });
-          // console.log("echo", message_echo)
           if (completion) {
             completion(null, message_echo);
           }
-          // resolve(message_echo);
           return message_echo;
         }
         catch(err) {
@@ -49,20 +55,14 @@ class DirSendEmail {
           if (completion) {
             completion(err);
           }
-          // reject(error);
-          // throw err;
         }
       }
       else {
-        // console.log("sendEmail missing mandatory parameters (to|subject|text):");
         const error = new Error("sendEmail missing mandatory parameters (to|subject|text)");
         if (completion) {
           completion(error);
         }
-        // reject(err);
-        // throw error;
       }
-    // });
   }
 
   parseParams(directive_parameter) {

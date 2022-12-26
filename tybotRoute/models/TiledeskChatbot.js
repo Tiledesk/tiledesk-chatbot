@@ -413,9 +413,14 @@ class TiledeskChatbot {
   }
 
   static async allParametersStatic(_tdcache, requestId) {
-    const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    // console.log("allParametersStatic. Paramters key:", parameters_key);
-    return await _tdcache.hgetall(parameters_key);
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hgetall(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+  }
+
+  static requestCacheKey(requestId) {
+    const request_key = "tilebot:requests:" + requestId;
+    return request_key;
   }
   
   async execWebhook(static_bot_answer, message, bot, context) {

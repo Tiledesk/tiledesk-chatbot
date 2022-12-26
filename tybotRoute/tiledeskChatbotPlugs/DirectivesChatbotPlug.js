@@ -269,8 +269,13 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.SEND_EMAIL) {
-        new DirSendEmail({tdclient: tdclient}).execute(directive, requestId, () => {
-          process(nextDirective());
+        new DirSendEmail(
+          {
+            tdclient: tdclient,
+            tdcache: tdcache,
+            requestId: requestId
+          }).execute(directive, () => {
+            process(nextDirective());
         });
       }
       else {
