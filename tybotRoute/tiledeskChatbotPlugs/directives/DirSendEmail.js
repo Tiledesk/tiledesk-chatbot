@@ -10,12 +10,6 @@ class DirSendEmail {
     if (!config.tdclient) {
       throw new Error('config.tdclient (TiledeskClient) is mandatory.');
     }
-    if (!config.tdcache) {
-      throw new Error('config.tdcache (TdCache) is mandatory.');
-    }
-    if (!config.requestId) {
-      throw new Error('config.requestId is mandatory.');
-    }
     this.tdclient = config.tdclient;
     this.tdcache = config.tdcache;
     this.requestId = config.requestId;
@@ -35,10 +29,13 @@ class DirSendEmail {
       }
       if (params.subject && params.text && params.to) {
         try {
-          const requestVariables = 
-          await TiledeskChatbot.allParametersStatic(
-            this.tdcache, this.requestId
-          );
+          let requestVariables = null;
+          if (this.tdcache) {
+            requestVariables = 
+            await TiledeskChatbot.allParametersStatic(
+              this.tdcache, this.requestId
+            );
+          }
           const filler = new Filler();
           const message_echo = await this.tdclient.sendEmail({
             subject: filler.fill(params.subject, requestVariables),
