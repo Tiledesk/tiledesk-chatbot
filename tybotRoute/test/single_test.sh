@@ -4,4 +4,5 @@
 #npx mocha ./test/close_directive_test.js
 #npx mocha ./test/conversation1-test.js --exit
 #npx mocha ./test/intent_form_test.js --exit
-npx mocha ./test/send_email_directive_test.js --exit
+#npx mocha ./test/send_email_directive_test.js --exit
+npx mocha ./test/intent_form_pre_filled_test.js --exit

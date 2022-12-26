@@ -7,7 +7,7 @@ const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
 describe('Directive DirSendEmail', function() {
 
-  it('test directive DirSendEmail', async () => {
+  it('test DirSendEmail', async () => {
     class MockTdClient {
       async sendEmail(message, callback) {
         if (callback) {
@@ -46,7 +46,7 @@ describe('Directive DirSendEmail', function() {
     assert(message.subject === 'Hello John B.');
   });
 
-  it('test directive DirSendEmail with missing "to"', async () => {
+  it('test DirSendEmail with missing "to"', async () => {
     class MockTdClient {
       async sendEmail(message, callback) {
         if (callback) {
@@ -66,7 +66,7 @@ describe('Directive DirSendEmail', function() {
     assert(message == null);
   });
 
-  it('test directive DirSendEmail in pipeline', async () => {
+  it('test DirSendEmail in pipeline', async () => {
     const message_text = `\\_tdsendemail --to "test@test" --subject "_sub" --text "_body"`;
     const answer = {
       text: message_text,

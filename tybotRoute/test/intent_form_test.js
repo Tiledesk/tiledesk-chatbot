@@ -12,7 +12,6 @@ describe('IntentForm', function() {
     const form = {
       "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
       "cancelReply": "Form canceled!",
-      "cancelReplyIntent": "formCanceled", // TODO IDEA
       "fields": [
         {
           "name": "userFullname",
@@ -29,6 +28,61 @@ describe('IntentForm', function() {
           "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
           "label": "Hi ${userFullname} from ${companyName}. Your email?",
           "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
+        }
+      ]
+    };
+
+    const REQUEST_ID = "support-group-PROJECT_X-" + uuidv4().replace(/-/g, "");
+
+    const chatbot = new Chatbot();
+    // console.log("executing intent form...")
+    let intentForm = new IntentForm(
+      {
+        form: form,
+        requestId: REQUEST_ID,
+        chatbot: chatbot,
+        log: false
+      }
+    );
+    let form_reply1 = await intentForm.getMessage("Trigger form message");
+    // console.log("Got form first field label:", form_reply1)
+    assert(form_reply1 !== null);
+    assert(!form_reply1.canceled);
+    // it replies with the next label (aka question)
+    assert(form_reply1.message.text === form.fields[0].label);
+
+    let form_reply2 = await intentForm.getMessage("John");
+    assert(form_reply2 !== null);
+    assert(!form_reply2.canceled);
+    const all_parameters = await chatbot.allParameters()
+    assert(all_parameters.get(form.fields[0].name) === "John");
+    assert(all_parameters.get(TYPE_PREFIX + form.fields[0].name) === form.fields[0].type);
+    // it replies with the next label (aka question)
+    assert(form_reply2.message.text === form.fields[1].label);
+
+    let form_reply3 = await intentForm.getMessage("Tiledesk");
+    assert(form_reply3 !== null);
+    assert(!form_reply3.canceled);
+    assert(all_parameters.get(form.fields[1].name) === "Tiledesk");
+    assert(all_parameters.get(TYPE_PREFIX + form.fields[1].name) === form.fields[1].type);
+    // it replies with the next label (aka question)
+    assert(form_reply3.message.text === form.fields[2].label);
+
+    // closing form
+    let form_reply4 = await intentForm.getMessage("john@email.it");
+    assert(form_reply4.end);
+    assert(all_parameters.get(form.fields[2].name) === "john@email.it");
+    assert(all_parameters.get(TYPE_PREFIX + form.fields[2].name) === form.fields[2].type);
+    
+  });
+
+  it('basic form with 1 field, pre-filled', async () => {
+    const form = {
+      "fields": [
+        {
+          "name": "userFullname",
+          "type": "type of userFullname",
+          "label": "What is your name?"
         }
       ]
     };

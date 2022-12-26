@@ -5,6 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.42
+- added IntentFormStudy pre-set parameters handling
+ 
+### 0.1.41
+- added Filler
+- added Filler to email .to .subject .text attributes
+
 ### 0.1.40
 - tiledesk-client => 0.9.5
 - added _tdSendEmail directive
