@@ -11,6 +11,18 @@ class IntentForm {
     this.CURRENT_FIELD_INDEX_KEY = "tilebot:requests:" + this.requestId + ":currentFieldIndex"
     this.CURRENT_FORM_KEY = "tilebot:requests:" + this.requestId + ":currentForm"
     this.log = options.log;
+    this.requestParameters = options.requestParameters;
+  }
+
+  getParam(paramKey) {
+    if (!this.requestParameters) {
+      return null;
+    }
+    if (this.log) {
+      console.log("this.requestParameters:", this.requestParameters);
+      console.log("this.requestParameters[" + paramKey + "]:", this.requestParameters[paramKey]);
+    }
+    return this.requestParameters[paramKey];
   }
 
   async setValue(key, value) {
@@ -78,9 +90,27 @@ class IntentForm {
     if (current_field == null) {
       if (this.log) {console.log("current_field is undefined")}
       current_field = 0;
+      
+      // first "freeze" the currente form, so that eventual form modifications
+      // do not compromise this form processing.
       await this.setValue(this.CURRENT_FORM_KEY, JSON.stringify(this.form));
+
+    //   if (getParam(this.form.fields[current_field].name)) {
+    //     //current_field++;
+    //     await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field); //=0
+    //     return this.getMessage(current_value)
+    //   }
+      // set the first field under the "await the response-value" state (=0)
       await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
-      //this.printdb();
+      // now look for an already set value for this field in request parameters
+      if (this.log) {console.log("params", this.requestParameters);}
+      if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
+      const is_current_value = this.getParam(this.form.fields[current_field].name);
+      if (is_current_value) {
+        if (this.log) {console.log("is_current_value!", is_current_value);}
+        return await this.getMessage(is_current_value);
+      }
+      if (this.log) {console.log("Form asking fist value. No 'is_current_value' for first form field", is_current_value);}
       if (this.log) {console.log("INTENT_FORM:", this.form);}
       if (this.log) {console.log("CURRENT FIELD:", current_field);}
       let message = {
@@ -92,8 +122,17 @@ class IntentForm {
       }
     }
     else {
+        // = 0
+        // current++ (1) y? => 
+        // 
+        //inc(current_field)=1 getMessage(null)
+        // == 1?
+        // n => continue => 
+        // param[1] n? => continue
+        // == 2? => set fields[2].name => user_text
       //console.log("current_form:", current_form);
       if (this.log) {console.log("current_field:", current_field);}
+      
       
       if (current_form.fields[current_field].regex) {
         if (!this.validate(user_text, current_form.fields[current_field].regex)) {
@@ -147,12 +186,23 @@ class IntentForm {
       else {
         if (this.log) {console.log("Processing next field:", current_field)}
         await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
-        let message = {
-          text: current_form.fields[current_field].label
+
+        if (this.log) {console.log("params", this.requestParameters);}
+        if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
+        
+        const is_current_value = this.getParam(this.form.fields[current_field].name);
+        if (is_current_value) {
+          if (this.log) {console.log("is_current_value!", is_current_value);}
+            return await this.getMessage(is_current_value);
         }
-        return {
-          message: message
-        };
+        else {
+            return {
+              message: {
+                text: current_form.fields[current_field].label
+              }
+            };
+        }
+        
       }
     }
   }

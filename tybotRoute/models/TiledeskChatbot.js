@@ -436,8 +436,17 @@ class TiledeskChatbot {
   }
 
   async execIntentForm(userInputReply, form) {
-  if (this.log)   {console.log("executing intent form...")}
-    let intentForm = new IntentForm({form: form, requestId: this.requestId, chatbot: this, log: this.log});
+    if (this.log) {console.log("executing intent form...")}
+    let all_parameters = await this.allParameters();
+    if (this.log) {console.log("allParameters for IntentForm:", all_parameters)}
+    let intentForm = new IntentForm(
+      {
+        form: form,
+        requestId: this.requestId,
+        chatbot: this,
+        requestParameters: all_parameters,
+        log: this.log
+      });
     let message = await intentForm.getMessage(userInputReply);
     return message;
   }
