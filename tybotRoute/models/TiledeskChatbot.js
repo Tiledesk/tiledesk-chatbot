@@ -400,11 +400,14 @@ class TiledeskChatbot {
     await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, parameter_name, parameter_value);
   }
 
+  async deleteParameter(parameter_name) {
+    //await this.tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
+    await TiledeskChatbot.deleteParameterStatic(this.tdcache, this.requestId, parameter_name);
+  }
+
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
-    const parameter_key = "tilebot:requests:" + requestId + ":parameters";
-    // console.log("addParameterStatic. Setting parameter. Parameters key:", parameter_key);
-    // console.log("addParameterStatic. Setting parameter_name:", parameter_name);
-    // console.log("addParameterStatic. Setting parameter_value:", parameter_value);
+    // const parameter_key = "tilebot:requests:" + requestId + ":parameters";
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
   }
 
@@ -416,6 +419,11 @@ class TiledeskChatbot {
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     return await _tdcache.hgetall(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+  }
+
+  static async deleteParameterStatic(_tdcache, requestId, paramName) {
+    return await _tdcache.hdel(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
   static requestCacheKey(requestId) {

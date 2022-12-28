@@ -106,9 +106,10 @@ router.post('/ext/:botid', async (req, res) => {
   if (bot.intentsEngine === "tiledesk-ai") {
     intentsMachine = new TiledeskIntentsMachine(
       {
-        projectId: projectId,
-        language: bot.language,
-        TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
+        //projectId: projectId,
+        //language: bot.language,
+        botId: botId
+        //TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
       });
   }
   
@@ -130,6 +131,7 @@ router.post('/ext/:botid', async (req, res) => {
   // initial request context
   await chatbot.addParameter("_tdLastMessageId", messageId);
   await chatbot.addParameter("_tdProjectId", projectId);
+  await chatbot.addParameter("_tdRequestId", requestId);
   if (requestSourcePage) {
     await chatbot.addParameter("requestSourcePage", sourcePage);
   }

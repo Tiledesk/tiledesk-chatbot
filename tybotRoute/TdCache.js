@@ -107,6 +107,40 @@ class TdCache {
         return resolve();
       });
     }
+
+    async hdel(dict_key, key, options) {
+      //console.log("hsetting dict_key key value", dict_key, key, value)
+      return new Promise( async (resolve, reject) => {
+        if (options && options.EX) {
+          //console.log("expires:", options.EX)
+          try {
+            await this.client.hdel(
+              dict_key,
+              key,
+              'EX', options.EX);
+          }
+          catch(error) {
+            reject(error)
+          }
+        }
+        else {
+          try {
+            //console.log("setting here...key", key, value)
+            await this.client.hdel(
+              dict_key,
+              key);
+          }
+          catch(error) {
+            console.error("Error", error);
+            reject(error);
+          }
+        }
+        if (options && options.callback) {
+            options.callback();
+        }
+        return resolve();
+      });
+    }
     
     async setJSON(key, value, options) {
       const _string = JSON.stringify(value);

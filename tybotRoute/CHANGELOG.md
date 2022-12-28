@@ -5,9 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.43
+- added context variable chatbot.addParameter("_tdRequestId", requestId);
+- completed TiledeskIntentsMachine.js
+
 ### 0.1.42
-- added IntentFormStudy pre-set parameters handling
- 
+- added IntentForm pre-set variables skipping
+
 ### 0.1.41
 - added Filler
 - added Filler to email .to .subject .text attributes

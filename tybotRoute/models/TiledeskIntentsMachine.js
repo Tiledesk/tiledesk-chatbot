@@ -5,9 +5,12 @@ class TiledeskIntentsMachine {
 
   constructor(config) {
     if (!config.API_ENDPOINT) {
-      throw new Error("config.API_ENDPOINT is mandatory");
+      //throw new Error("config.API_ENDPOINT is mandatory");
+      this.API_ENDPOINT = "http://34.65.210.38";
     }
-    this.API_ENDPOINT = config.API_ENDPOINT;
+    else {
+      this.API_ENDPOINT = config.API_ENDPOINT;
+    }
     this.log = config.log;
   }
 
@@ -27,8 +30,8 @@ class TiledeskIntentsMachine {
           'Content-Type' : 'application/json'
         },
         json: {
-          "text": text,
-          "botId": botId
+          "model": "models/" + botId,
+          "text": text
         },
         method: 'POST'
       };
@@ -45,6 +48,48 @@ class TiledeskIntentsMachine {
         }, false
       );
     })
+  }
+
+  translateForTiledesk(intents) {
+    // example reply
+    // {
+    //   "text": "chi sei",
+    //   "intent": {
+    //     "name": "chisei",
+    //     "confidence": 0.6671510338783264
+    //   },
+    //   "intent_ranking": [
+    //     {
+    //         "name": "chisei",
+    //         "confidence": 0.6671510338783264
+    //     },
+    //     {
+    //         "name": "saluti",
+    //         "confidence": 0.2318711280822754
+    //     },
+    //     {
+    //         "name": "dovesei",
+    //         "confidence": 0.09430444240570068
+    //     },
+    //     {
+    //         "name": "taxi",
+    //         "confidence": 0.006536041386425495
+    //     },
+    //     {
+    //         "name": "ristorante",
+    //         "confidence": 0.00013731778017245233
+    //     }
+    //   ]
+    // }
+    let intents_array = intents.intent_ranking;
+    let tiledesk_intents = [];
+    for (i = 0; i < intents_array.length; i++) {
+      let td_intent = {
+        "intent_display_name": intents_array[i].name
+      }
+      tiledesk_intents.push(td_intent);
+    }
+    return tiledesk_intents;
   }
 
   myrequest(options, callback, log) {
