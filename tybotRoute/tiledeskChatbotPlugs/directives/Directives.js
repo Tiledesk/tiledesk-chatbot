@@ -23,6 +23,7 @@ class Directives {
   static UNLOCK_INTENT = "unlockintent";
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
   static SEND_EMAIL = "sendemail";
+  static DELETE = "delete";
 }
 
 module.exports = { Directives };

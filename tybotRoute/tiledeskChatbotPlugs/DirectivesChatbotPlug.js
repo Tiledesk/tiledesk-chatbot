@@ -17,6 +17,7 @@ const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents');
 const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
 const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
+const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 
 class DirectivesChatbotPlug {
 
@@ -264,12 +265,25 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.FIRE_TILEDESK_EVENT) {
-        new DirFireTiledeskEvent({tdclient: tdclient}).execute(directive, () => {
+        new DirFireTiledeskEvent(
+          {
+            tdclient: tdclient
+          }).execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.SEND_EMAIL) {
         new DirSendEmail(
+          {
+            tdclient: tdclient,
+            tdcache: tdcache,
+            requestId: requestId
+          }).execute(directive, () => {
+            process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.DELETE) {
+        new DirDeleteVariable(
           {
             tdclient: tdclient,
             tdcache: tdcache,
