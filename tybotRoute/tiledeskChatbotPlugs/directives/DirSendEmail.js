@@ -72,7 +72,7 @@ class DirSendEmail {
     }
     if (params.text) {
       text = params.text.replace(/\\n/g, "\n");
-    }    
+    }
     if (params.to) {
       to = params.to;
     }

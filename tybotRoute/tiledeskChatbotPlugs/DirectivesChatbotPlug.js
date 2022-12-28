@@ -19,6 +19,8 @@ const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+
 class DirectivesChatbotPlug {
 
   /**
@@ -153,6 +155,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.MESSAGE) {
+        console.log("executing message send...");
         const messageDir = new DirMessage(
           {
             API_ENDPOINT: API_URL,
@@ -160,7 +163,12 @@ class DirectivesChatbotPlug {
             log: false
           }
         );
-        messageDir.execute(directive, projectId, requestId, token, () => {
+        messageDir.execute(directive, projectId, requestId, token, async () => {
+          const requestVariables = 
+            await TiledeskChatbot.allParametersStatic(
+              this.tdcache, this.requestId
+            );
+            console.log("message executed.", requestVariables);
           process(nextDirective());
         });
       }
@@ -289,8 +297,12 @@ class DirectivesChatbotPlug {
             tdclient: tdclient,
             tdcache: tdcache,
             requestId: requestId
-          }).execute(directive, () => {
-            console.log("delete executed.");
+          }).execute(directive, async () => {
+            const requestVariables = 
+            await TiledeskChatbot.allParametersStatic(
+              this.tdcache, this.requestId
+            );
+            console.log("delete executed.", requestVariables);
             process(nextDirective());
         });
       }
