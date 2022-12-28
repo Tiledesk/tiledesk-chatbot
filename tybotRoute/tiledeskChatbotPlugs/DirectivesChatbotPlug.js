@@ -166,7 +166,7 @@ class DirectivesChatbotPlug {
         messageDir.execute(directive, projectId, requestId, token, async () => {
           const requestVariables = 
             await TiledeskChatbot.allParametersStatic(
-              this.tdcache, this.requestId
+              tdcache, requestId
             );
             console.log("message executed.", requestVariables);
           process(nextDirective());
@@ -300,7 +300,7 @@ class DirectivesChatbotPlug {
           }).execute(directive, async () => {
             const requestVariables = 
             await TiledeskChatbot.allParametersStatic(
-              this.tdcache, this.requestId
+              tdcache, requestId
             );
             console.log("delete executed.", requestVariables);
             process(nextDirective());
