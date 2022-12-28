@@ -19,12 +19,14 @@ class DirDeleteVariable {
       }
       else {
         const error = new Error("missing 'parameter' error. Skipping");
+        if (error) {
+          console.log("error:", error);
+        }
         if (completion) {
-          completion(error);
+          completion();
         }
       }
       try {
-        let requestVariables = null;
         if (this.tdcache) {
           await TiledeskChatbot.deleteParameterStatic(
             this.tdcache, this.requestId, variableName

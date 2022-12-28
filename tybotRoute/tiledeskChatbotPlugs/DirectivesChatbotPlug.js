@@ -283,12 +283,14 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.DELETE) {
+        console.log("got delete dir...")
         new DirDeleteVariable(
           {
             tdclient: tdclient,
             tdcache: tdcache,
             requestId: requestId
           }).execute(directive, () => {
+            console.log("delete executed.");
             process(nextDirective());
         });
       }
