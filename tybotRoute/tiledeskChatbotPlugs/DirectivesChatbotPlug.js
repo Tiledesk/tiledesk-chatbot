@@ -19,7 +19,7 @@ const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
 class DirectivesChatbotPlug {
 
