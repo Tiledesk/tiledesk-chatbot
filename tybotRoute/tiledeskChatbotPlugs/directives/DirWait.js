@@ -12,8 +12,8 @@ class DirWait {
       if (!Number.isNaN(millis)) {
         millis = _millis;
       }
-      if (millis > 10000) {
-        millis = 10000
+      if (millis > 15000) {
+        millis = 15000
       }
       else if (millis < 1000) {
         millis = 1000

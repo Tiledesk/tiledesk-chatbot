@@ -28,7 +28,7 @@ class DirMessage {
       }
       const apiext = new ExtApi({
         ENDPOINT: extEndpoint,
-        log: true
+        log: false
       });
       if (!message.attributes) {
         message.attributes = {}

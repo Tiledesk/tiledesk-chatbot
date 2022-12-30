@@ -217,8 +217,8 @@ describe('Conversation1', async() => {
               assert(params);
               assert(params["_tdLastMessageId"] === message_id);
               assert(params["_tdProjectId"] === PROJECT_ID);
-              assert(params["fullname"] === reply_text);
-              assert(params["_tdTypeOf:fullname"] === "text");
+              assert(params["your_fullname"] === reply_text);
+              assert(params["_tdTypeOf:your_fullname"]);
               listener.close( () => {
                 done();
               });
@@ -252,6 +252,328 @@ describe('Conversation1', async() => {
           },
           "token": CHATBOT_TOKEN
         }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+          // console.log("Message sent.");
+        });
+      });
+    });
+
+    it('(intent-to-intent) /move_to => /target_intent', (done) => {
+      // console.log("(intent-to-intent) /move_to => /target_intent");
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+        res.send({success: true});
+        const message = req.body;
+        // console.log("received message:", JSON.stringify(message));
+        if (message.text === "The target!") {
+          // console.log("Got it. End.");
+          listener.close( () => {
+            done();
+          });
+        }
+      });
+      
+      listener = endpointServer.listen(10002, '0.0.0.0', function () {
+        // console.log('endpointServer started', listener.address());
+        // console.log("REQUEST_ID:", REQUEST_ID);
+        let request = {
+          "payload": {
+            "_id": uuidv4(),
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "/move_to",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+              "id_project": PROJECT_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        // console.log("sending message:", request);
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+          // console.log("Message sent.");
+        });
+      });
+    });
+
+    it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
+      // console.log("/all_filled (none) =>...");
+      let request0_uuid = uuidv4();
+      let request1_uuid = uuidv4();
+      let request2_uuid = uuidv4();
+      let request3_uuid = uuidv4();
+      let request4_uuid = uuidv4();
+      let request5_uuid = uuidv4();
+      let request6_uuid = uuidv4();
+      let request7_uuid = uuidv4();
+      let request8_uuid = uuidv4();
+      let request9_uuid = uuidv4();
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+        res.send({success: true});
+        const message = req.body;
+        // console.log("received message:", JSON.stringify(message));
+        if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}" && message.triggeredByMessageId === request0_uuid) {
+          // console.log("got #0 'You filled...' sending #1");
+          let request = {
+            "payload": {
+              "_id": request1_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/form_to_unfill",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+        }
+        else if (message.text === "Your name?" && message.triggeredByMessageId === request1_uuid) {
+          // console.log("got #1 sending #2");
+          let request = {
+            "payload": {
+              "_id": request2_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "Andrea",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "Your email?" && message.triggeredByMessageId === request2_uuid) {
+          // console.log("got #2 sending #3");
+          let request = {
+            "payload": {
+              "_id": request3_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "test@test.it",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "Thanks Andrea\nYour email test@test.it" && message.triggeredByMessageId === request3_uuid) {
+          // console.log("got #3 sending #4");
+          let request = {
+            "payload": {
+              "_id": request4_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/all_filled",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "You filled\nfullname: Andrea\nyouremail: test@test.it" && message.triggeredByMessageId === request4_uuid) {
+          // console.log("got #4 sending #5");
+          let request = {
+            "payload": {
+              "_id": request5_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/form_to_unfill",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "Thanks Andrea\nYour email test@test.it" && message.triggeredByMessageId === request5_uuid) {
+          // console.log("got #5 sending #6");
+          let request = {
+            "payload": {
+              "_id": request6_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/delete_fullname",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "deleting fullname..." && message.triggeredByMessageId === request6_uuid) {
+          // console.log("got #6 sending #7");
+          let request = {
+            "payload": {
+              "_id": request7_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/form_to_unfill",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "Your name?" && message.triggeredByMessageId === request7_uuid) {
+          // console.log("got #7 sending #8");
+          let request = {
+            "payload": {
+              "_id": request8_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "John",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+          // listener.close( () => {
+          //   done();
+          // });
+        }
+        else if (message.text === "Thanks John\nYour email test@test.it" && message.triggeredByMessageId === request8_uuid) {
+          // console.log("got #8 sending #9!");
+          let request = { // intent-to-intent connection
+            "payload": {
+              "_id": request9_uuid,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "/delete_all",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+                "id_project": PROJECT_ID
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+            // console.log("Message sent.", request);
+          });
+        }
+        else if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}") {
+          // console.log("got #9. End.");
+          listener.close( () => {
+            done();
+          });
+        }
+        // else {
+        //   console.error("Unexpected message.");
+        //   console.log("message.triggeredByMessageId", message.triggeredByMessageId)
+        //   console.log("request1_uuid", request1_uuid)
+        //   assert.ok(false);
+        // }
+        
+      });
+      
+      listener = endpointServer.listen(10002, '0.0.0.0', function () {
+        // console.log('endpointServer started', listener.address());
+        // console.log("REQUEST_ID:", REQUEST_ID);
+        let request = {
+          "payload": {
+            "_id": request0_uuid,
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "/all_filled",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+              "id_project": PROJECT_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        // console.log("sending message:", request);
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
           // console.log("Message sent.");
         });
@@ -395,7 +717,7 @@ describe('Conversation1', async() => {
  */
 function sendMessageToBot(message, botId, token, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.CHATBOT_ENDPOINT}/ext/${botId}`;
+  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
@@ -430,7 +752,7 @@ function sendMessageToBot(message, botId, token, callback) {
  */
  function getChatbotParameters(requestId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.CHATBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
   const HTTPREQUEST = {
     url: url,
     headers: {

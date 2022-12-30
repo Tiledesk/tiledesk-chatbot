@@ -31,16 +31,20 @@ class DirectivesChatbotPlug {
 
   constructor(config) {
     this.supportRequest = config.supportRequest;
+    // console.log("this.supportRequest:", this.supportRequest)
     this.API_URL = config.TILEDESK_API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
+    this.directives;
+    // this.message;
   }
 
   exec(pipeline) {
     let message = pipeline.message;
+    // this.message = message;
     if (message.attributes && (message.attributes.directives == undefined || message.attributes.directives == false)) { // defaults to disabled
       pipeline.nextplug();
       return;
@@ -74,7 +78,7 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
-    // if (this.log) { console.log("Directives on message:", JSON.stringify(message)); }
+    // console.log("Directives on request:", JSON.stringify(this.supportRequest));
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -150,7 +154,7 @@ class DirectivesChatbotPlug {
             log: false
           }
         );
-        intentDir.execute(directive, projectId, requestId, token, () => {
+        intentDir.execute(directive, supportRequest, token, () => {
           process(nextDirective());
         });
       }
@@ -176,7 +180,7 @@ class DirectivesChatbotPlug {
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient, // matches open hours
-            log: true
+            log: false
           });
         whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
@@ -187,7 +191,7 @@ class DirectivesChatbotPlug {
           {
             tdclient: tdclient,
             checkOpen: false, // matches closed hours
-            log: true
+            log: false
           });
         whenOpenDir.execute(directive, directives, curr_directive_index, () => {
           process(nextDirective());
@@ -291,7 +295,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.DELETE) {
-        console.log("got delete dir...")
+        // console.log("got delete dir...")
         new DirDeleteVariable(
           {
             tdclient: tdclient,
@@ -302,7 +306,7 @@ class DirectivesChatbotPlug {
             await TiledeskChatbot.allParametersStatic(
               tdcache, requestId
             );
-            console.log("delete executed.", requestVariables);
+            // console.log("delete executed.", requestVariables);
             process(nextDirective());
         });
       }

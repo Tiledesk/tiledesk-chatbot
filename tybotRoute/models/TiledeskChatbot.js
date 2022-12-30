@@ -471,7 +471,7 @@ class TiledeskChatbot {
       token: this.token,
       APIURL: this.APIURL,
       APIKEY: this.APIKEY,
-      log: true
+      log: this.log
     });
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.allParameters();//this.tdcache.hgetall(parameters_key);

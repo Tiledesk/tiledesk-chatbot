@@ -47,10 +47,6 @@ let APIURL = null;
 
 router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
-  if (log) {
-    console.log("TiledeskClient.version09()...");
-    TiledeskClient.version09();
-  }
   res.status(200).send({"success":true});
   
   const botId = req.params.botid;
@@ -61,9 +57,11 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
+  // adding info for internal context workflow
+  message.request.bot_id = botId;
 
   let requestSourcePage = null;
-  let requestLanguage = null; 
+  let requestLanguage = null;
   let requestUserAgent = null;
 
   if (message.payload) {
@@ -115,7 +113,7 @@ router.post('/ext/:botid', async (req, res) => {
   
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
-    botsDataSource: botsDS, 
+    botsDataSource: botsDS,
     intentsFinder: intentsMachine,
     botId: botId,
     bot: bot,
@@ -155,7 +153,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
   const apiext = new ExtApi({
     ENDPOINT: extEndpoint,
-    log: log
+    log: false
   });
   
   apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {

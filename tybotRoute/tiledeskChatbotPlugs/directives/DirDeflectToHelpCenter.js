@@ -44,7 +44,7 @@ class DirDeflectToHelpCenter {
         APIKEY: "__",
         APIURL: this.helpcenter_api_endpoint,
         projectId: this.projectId,
-        log: true
+        log: false
       });
       if (!workspace_id) {
         try {
