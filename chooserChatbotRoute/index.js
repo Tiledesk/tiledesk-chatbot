@@ -86,7 +86,6 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
         }
         let selected_bot = null;
         let pivot_bot = null;
-        let pivot_lang = "en";
         let first_bot = null;
         for (i = 0; i < bots.length; i++) {
             const bot = bots[i];
@@ -100,6 +99,10 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
                     break;
                 }
                 if (bot.language === pivot_lang) {
+                    pivot_bot = bot;
+                }
+                if (bot.description && bot.description.indexOf("#botpivot") >= 0) {
+                    console.log("bot pivot found:", bot);
                     pivot_bot = bot;
                 }
                 if (first_bot === null) {
