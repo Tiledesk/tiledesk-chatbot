@@ -77,7 +77,7 @@ router.post('/lang_select', (req, res) => {
 });
 
 function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
-    const tdclient = new TiledeskClient({ projectId: projectId, token: token, APIURL: API_URL, APIKEY: "___", log: false });
+    const tdclient = new TiledeskClient({ projectId: projectId, token: token, APIURL: API_URL, APIKEY: "___", log: true });
     tdclient.getAllBots((err, bots) => {
         console.log("bots:", bots);
         if (err) {
