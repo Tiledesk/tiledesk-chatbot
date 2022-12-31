@@ -98,9 +98,6 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
                     selected_bot = bot;
                     break;
                 }
-                if (bot.language === pivot_lang) {
-                    pivot_bot = bot;
-                }
                 if (bot.description && bot.description.indexOf("#botpivot") >= 0) {
                     console.log("bot pivot found:", bot);
                     pivot_bot = bot;
