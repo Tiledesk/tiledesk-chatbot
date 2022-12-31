@@ -106,6 +106,9 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
                     first_bot = bot;
                 }
             }
+            else {
+                console.log("Skipping:", bot.name);
+            }
         }
         if (selected_bot) {
             callback(null, selected_bot);
