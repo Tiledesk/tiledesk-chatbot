@@ -42,7 +42,7 @@ router.post('/lang_select', (req, res) => {
             if (err) {
                 tdclient.sendSupportMessage(requestId,
                     {
-                        text: "No chatbot found 🙁 Contact the Administrator: " + err
+                        text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
                     }
                 );
             }
@@ -68,11 +68,18 @@ router.post('/lang_select', (req, res) => {
                     //     console.log("bot changed to", botId);
                     //   });
                 }
+                else {
+                    tdclient.sendSupportMessage(requestId,
+                        {
+                            text: "Language Chooser didn't any suitable chatbot 🙁 Please contact the Administrator: " + err
+                        }
+                    );
+                }
             }
         });
     }
     else {
-        res.json({ text: "I don't understand" });
+        res.json({ text: "It looks like your *Language Chooser Chatbot* is misconfigured (missing 'start' intent?)" });
     }
 });
 
