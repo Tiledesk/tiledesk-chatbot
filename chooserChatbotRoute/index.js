@@ -40,11 +40,14 @@ router.post('/lang_select', (req, res) => {
         // now searching for a bot supporting the user language
         getBotIdByLang(APIURL, projectId, token, user_lang, (err, bot) => {
             if (err) {
-                tdclient.sendSupportMessage(requestId,
-                    {
-                        text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
-                    }
-                );
+                res.json({
+                    text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
+                });
+                // tdclient.sendSupportMessage(requestId,
+                //     {
+                //         text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
+                //     }
+                // );
             }
             else {
                 if (bot && bot.name) {
@@ -69,11 +72,14 @@ router.post('/lang_select', (req, res) => {
                     //   });
                 }
                 else {
-                    tdclient.sendSupportMessage(requestId,
-                        {
-                            text: "*Language Chooser Chatbot* didn't any suitable chatbot 🙁 Please contact the Administrator"
-                        }
-                    );
+                    res.json({
+                        text: "*Language Chooser Chatbot* didn't any suitable chatbot 🙁 Please contact the Administrator"
+                    });
+                    // tdclient.sendSupportMessage(requestId,
+                    //     {
+                    //         text: "*Language Chooser Chatbot* didn't any suitable chatbot 🙁 Please contact the Administrator"
+                    //     }
+                    // );
                 }
             }
         });
