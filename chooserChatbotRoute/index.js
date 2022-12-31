@@ -13,7 +13,7 @@ router.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 // ************** SELECT LANGUAGE FOR RESOLUTION BOTS ****************
 // *******************************************************************
 
-APIURL = process.env.API_ENDPOINT;
+APIURL = "https://api.tiledesk.com/v3"; //process.env.API_ENDPOINT;
 
 router.post('/lang_select', (req, res) => {
     console.log("REQ.BODY", req.body)
