@@ -111,12 +111,15 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
             }
         }
         if (selected_bot) {
+            console.log("Using language match bot, found:", selected_bot);
             callback(null, selected_bot);
         }
         else if (pivot_bot) {
+            console.log("Using pivot language bot, found:", pivot_bot);
             callback(null, pivot_bot);
         }
         else {
+            console.log("No match found, using first bot:", first_bot);
             callback(null, first_bot);
         }
         
