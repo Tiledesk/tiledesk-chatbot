@@ -71,7 +71,7 @@ router.post('/lang_select', (req, res) => {
                 else {
                     tdclient.sendSupportMessage(requestId,
                         {
-                            text: "Language Chooser didn't any suitable chatbot 🙁 Please contact the Administrator: " + err
+                            text: "*Language Chooser Chatbot* didn't any suitable chatbot 🙁 Please contact the Administrator"
                         }
                     );
                 }
