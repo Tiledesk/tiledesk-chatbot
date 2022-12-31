@@ -89,7 +89,7 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
         let first_bot = null;
         for (i = 0; i < bots.length; i++) {
             const bot = bots[i];
-            if (bot.language && bot.name != "_tdLanguageChooser") {
+            if (bot.language && bot.name != "_tdLanguageChooser" && bot.description.indexOf("#langbot-ignore") < 0) {
                 console.log("bot.language:", bot.language);
                 console.log("bot.name:", bot.name);
                 console.log("lang_iso:", lang_iso);
@@ -98,7 +98,7 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
                     selected_bot = bot;
                     break;
                 }
-                if (bot.description && bot.description.indexOf("#botpivot") >= 0) {
+                if (bot.description && bot.description.indexOf("#langbot-pivot") >= 0) {
                     console.log("bot pivot found:", bot);
                     pivot_bot = bot;
                 }
