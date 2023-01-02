@@ -150,6 +150,21 @@ router.post('/ext/:botid', async (req, res) => {
   }
   if (reply.actions) { // structured actions (coming from designer)
     let directives = actionsToDirectives(reply.actions);
+    let directivesPlug = new DirectivesChatbotPlug(
+      {
+        directives: directives,
+        supportRequest: message.request,
+        TILEDESK_API_ENDPOINT: APIURL,
+        TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
+        token: token,
+        log: log,
+        HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
+        cache: tdcache
+      }
+    );
+    directivesPlug.processDirectives( () => {
+      if (log) {console.log("Actions - Directives executed.");}
+    });
   }
   else { // text answer (parse text directives to get actions)
     reply.triggeredByMessageId = messageId;
