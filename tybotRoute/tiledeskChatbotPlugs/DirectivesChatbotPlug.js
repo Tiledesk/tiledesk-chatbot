@@ -157,7 +157,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.MESSAGE) {
-        console.log("executing message send...");
+        console.log("executing message send...", directive);
         const messageDir = new DirMessage(
           {
             API_ENDPOINT: API_URL,
@@ -229,7 +229,7 @@ class DirectivesChatbotPlug {
               depId: depId
             }
           );
-          directive.action.whenOnlineOnly = false;
+          directive['action']['body'].whenOnlineOnly = false;
           agentDir.execute(directive, () => {
             process(nextDirective());
           });  

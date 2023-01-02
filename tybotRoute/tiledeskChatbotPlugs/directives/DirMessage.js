@@ -25,7 +25,7 @@ class DirMessage {
         action.body.message.attributes.splits = false;
         action.body.message.attributes.markbot = false;
         // temp patch for a fix in the future
-        if (!action.body.message.text || action.body.message.text.trim() == "") {
+        if (!action.body.message.text || action.body.message.text.trim() === "") {
           action.body.message.text = "Text field was empty"
         }
       }
