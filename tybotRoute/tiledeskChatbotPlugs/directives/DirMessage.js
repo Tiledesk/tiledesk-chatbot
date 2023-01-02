@@ -24,8 +24,11 @@ class DirMessage {
         action.message.attributes.directives = false;
         action.message.attributes.splits = false;
         action. message.attributes.markbot = false;
+        // temp patch for a fix in the future
+        if (!action.message.text || action.message.text.trim() == "") {
+          action.message.text = "Text field was empty"
+        }
       }
-      
     }
     else if (directive.parameter) {
       let text = directive.parameter.trim();
