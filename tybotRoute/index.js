@@ -152,6 +152,7 @@ router.post('/ext/:botid', async (req, res) => {
   reply.actions = getMockActions();
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
+    console.log("Created directives:", directives);
     let directivesPlug = new DirectivesChatbotPlug(
       {
         directives: directives,
@@ -159,7 +160,7 @@ router.post('/ext/:botid', async (req, res) => {
         TILEDESK_API_ENDPOINT: APIURL,
         TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
         token: token,
-        log: log,
+        log: true,
         HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
         cache: tdcache
       }
