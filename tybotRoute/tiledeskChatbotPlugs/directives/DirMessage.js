@@ -14,8 +14,10 @@ class DirMessage {
   }
 
   execute(directive, callback) {
+    console.log("exec1 action:", JSON.stringify(directive));
     let action;
     if (directive.action) {
+      console.log("got action:", JSON.stringify(action));
       action = directive.action;
       if (action.body && action.body.message) {
         if (!action.body.message.attributes) {
@@ -28,6 +30,7 @@ class DirMessage {
         if (!action.body.message.text || action.body.message.text.trim() === "") {
           action.body.message.text = "Text field was empty"
         }
+        console.log("final message action:", JSON.stringify(action));
       }
     }
     else if (directive.parameter) {
@@ -55,6 +58,7 @@ class DirMessage {
   }
 
   go(action, callback) {
+    console.log("exec action:", JSON.stringify(action));
     const message = action.body.message;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
