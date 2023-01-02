@@ -149,8 +149,8 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
 
-  // reply.actions = getMockActions();
-  reply.actions = getMockActionsWithAgent();
+  reply.actions = getMockActions();
+  // reply.actions = getMockActionsWithAgent();
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
@@ -415,7 +415,6 @@ function getMockActions() {
       type: "reply",
       body: {
         message: {
-          "type": "commands",
           "attributes": {
             "commands": [{
               "type": "message",
@@ -445,7 +444,6 @@ function getMockActions() {
           }
         }
       }
-      
     }
   ]
 }
