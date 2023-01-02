@@ -33,7 +33,7 @@ class DirMoveToAgent {
   }
 
   go(action, callback) {
-    if (action.body.whenOnlineOnly === true) {
+    if (action.body && action.body.whenOnlineOnly === true) {
       this.tdclient.openNow((err, result) => {
         if (err) {
           console.error("Agent in DirOfflineHours Error:", err);
