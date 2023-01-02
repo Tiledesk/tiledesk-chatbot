@@ -51,7 +51,7 @@ class DirMessage {
     if (message.text) {
       message.text = message.text.replace(/\\n/g, "\n");
     }
-    console.log("sendSupportMessageExt from dirmessage")
+    console.log("sendSupportMessageExt from dirmessage", message);
     apiext.sendSupportMessageExt(
       message,
       this.projectId,
