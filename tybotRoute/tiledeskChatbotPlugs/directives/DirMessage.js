@@ -46,13 +46,13 @@ class DirMessage {
       message.attributes = {}
     }
     message.attributes.directives = false;
-    message.attributes.splitted = true;
+    message.attributes.splits = true;
     message.attributes.markbot = true;
     if (message.text) {
       message.text = message.text.replace(/\\n/g, "\n");
     }
-    message.text = "Ciao1\n\nCIao2"
-    console.log("sendSupportMessageExt from dirmessage", message);
+    // message.text = "Ciao1\n\nCIao2"
+    // console.log("sendSupportMessageExt from dirmessage", message);
     apiext.sendSupportMessageExt(
       message,
       this.projectId,
