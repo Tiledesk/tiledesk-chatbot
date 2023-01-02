@@ -412,37 +412,40 @@ function startApp(settings, completionCallback) {
 function getMockActions() {
   return [
     {
-      name: "message",
-      message: {
-        "type": "commands",
-        "attributes": {
-          "commands": [{
-            "type": "message",
-            "message": {
-              "text": "Hello by message directive!",
-              "type": "text"
-            }
-          }, {
-            "type": "wait",
-            "time": 500
-          }, {
-            "type": "message",
-            "message": {
-              "text": "Ciao",
-              "type": "text",
-              "attributes": {
-                "attachment": {
-                  "type": "template",
-                  "buttons": [{
-                    "type": "text",
-                    "value": "/start"
-                  }]
+      type: "reply",
+      body: {
+        message: {
+          "type": "commands",
+          "attributes": {
+            "commands": [{
+              "type": "message",
+              "message": {
+                "text": "Hello by message directive!",
+                "type": "text"
+              }
+            }, {
+              "type": "wait",
+              "time": 500
+            }, {
+              "type": "message",
+              "message": {
+                "text": "Ciao",
+                "type": "text",
+                "attributes": {
+                  "attachment": {
+                    "type": "template",
+                    "buttons": [{
+                      "type": "text",
+                      "value": "/start"
+                    }]
+                  }
                 }
               }
-            }
-          }]
+            }]
+          }
         }
       }
+      
     }
   ]
 }
@@ -450,39 +453,41 @@ function getMockActions() {
 function getMockActionsWithAgent() {
   return [
     {
-      name: "message",
-      message: {
-        "attributes": {
-          "commands": [{
-            "type": "message",
-            "message": {
-              "text": "Hello by message directive!",
-              "type": "text"
-            }
-          }, {
-            "type": "wait",
-            "time": 500
-          }, {
-            "type": "message",
-            "message": {
-              "text": "Ciao",
-              "type": "text",
-              "attributes": {
-                "attachment": {
-                  "type": "template",
-                  "buttons": [{
-                    "type": "text",
-                    "value": "/start"
-                  }]
+      type: "reply",
+      body: {
+        message: {
+          "attributes": {
+            "commands": [{
+              "type": "message",
+              "message": {
+                "text": "Hello by message action!",
+                "type": "text"
+              }
+            }, {
+              "type": "wait",
+              "time": 500
+            }, {
+              "type": "message",
+              "message": {
+                "text": "Choose an option",
+                "type": "text",
+                "attributes": {
+                  "attachment": {
+                    "type": "template",
+                    "buttons": [{
+                      "type": "text",
+                      "value": "/start"
+                    }]
+                  }
                 }
               }
-            }
-          }]
+            }]
+          }
         }
       }
     },
     {
-      name: "agent"
+      type: "agent"
     }
   ]
 }

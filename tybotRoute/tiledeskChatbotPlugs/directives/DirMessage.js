@@ -17,31 +17,37 @@ class DirMessage {
     let action;
     if (directive.action) {
       action = directive.action;
-      if (action.message) {
-        if (!action.message.attributes) {
-          action.message.attributes = {}
+      if (action.body && action.body.message) {
+        if (!action.body.message.attributes) {
+          action.body.message.attributes = {}
         }
-        action.message.attributes.directives = false;
-        action.message.attributes.splits = false;
-        action. message.attributes.markbot = false;
+        action.body.message.attributes.directives = false;
+        action.body.message.attributes.splits = false;
+        action.body.message.attributes.markbot = false;
         // temp patch for a fix in the future
-        if (!action.message.text || action.message.text.trim() == "") {
-          action.message.text = "Text field was empty"
+        if (!action.body.message.text || action.body.message.text.trim() == "") {
+          action.body.message.text = "Text field was empty"
         }
       }
     }
     else if (directive.parameter) {
       let text = directive.parameter.trim();
       action = {
-        message: {
-          text: text,
-          attributes: {
-            directives: false,
-            splits: true,
-            markbot: true
+        body: {
+          message: {
+            text: text,
+            attributes: {
+              directives: false,
+              splits: true,
+              markbot: true
+            }
           }
         }
       }
+    }
+    else {
+      console.error("Incorrect directive:", directive);
+      callback();
     }
     this.go(action, () => {
       callback();
@@ -49,7 +55,7 @@ class DirMessage {
   }
 
   go(action, callback) {
-    const message = action.message;
+    const message = action.body.message;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
     if (this.TILEBOT_ENDPOINT) {
