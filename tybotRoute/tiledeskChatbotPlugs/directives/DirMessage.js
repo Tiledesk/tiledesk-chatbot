@@ -17,12 +17,26 @@ class DirMessage {
     let action;
     if (directive.action) {
       action = directive.action;
+      if (action.message) {
+        if (!action.message.attributes) {
+          action.message.attributes = {}
+        }
+        action.message.attributes.directives = false;
+        action.message.attributes.splits = false;
+        action. message.attributes.markbot = false;
+      }
+      
     }
     else if (directive.parameter) {
       let text = directive.parameter.trim();
       action = {
         message: {
-          text: text
+          text: text,
+          attributes: {
+            directives: false,
+            splits: true,
+            markbot: true
+          }
         }
       }
     }
@@ -42,12 +56,6 @@ class DirMessage {
       ENDPOINT: extEndpoint,
       log: false
     });
-    if (!message.attributes) {
-      message.attributes = {}
-    }
-    message.attributes.directives = false;
-    message.attributes.splits = true;
-    message.attributes.markbot = true;
     if (message.text) {
       message.text = message.text.replace(/\\n/g, "\n");
     }
