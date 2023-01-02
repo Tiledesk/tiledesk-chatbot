@@ -224,9 +224,15 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.AGENT) {
         if (depId) {
-          const agentDir = new DirMoveToAgent(tdclient);
-          directive.whenOnlineOnly = false;
-          agentDir.execute(directive, requestId, depId, () => {
+          const agentDir = new DirMoveToAgent(
+            {
+              tdclient: tdclient,
+              requestId: requestId,
+              depId: depId
+            }
+          );
+          directive.action.whenOnlineOnly = false;
+          agentDir.execute(directive, () => {
             process(nextDirective());
           });  
         }
@@ -235,17 +241,17 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         }
       }
-      else if (directive_name === Directives.CLOSE) {
-        const closeDir = new DirClose({tdclient: tdclient});
-        closeDir.execute(directive, requestId, () => {
-          process(nextDirective());
-        });
-      }
       else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
         if (depId) {
-          const agentDir = new DirMoveToAgent(tdclient);
-          directive.whenOnlineOnly = true;
-          agentDir.execute(directive, requestId, depId, () => {
+          const agentDir = new DirMoveToAgent(
+            {
+              tdclient: tdclient,
+              requestId: requestId,
+              depId: depId
+            }
+          );
+          directive.action.whenOnlineOnly = true;
+          agentDir.execute(directive, () => {
             process(nextDirective());
           });
         }
@@ -253,6 +259,12 @@ class DirectivesChatbotPlug {
           console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
           process(nextDirective());
         }
+      }
+      else if (directive_name === Directives.CLOSE) {
+        const closeDir = new DirClose({tdclient: tdclient});
+        closeDir.execute(directive, requestId, () => {
+          process(nextDirective());
+        });
       }
       else if (directive_name === Directives.REMOVE_CURRENT_BOT) {
         tdclient.removeCurrentBot(requestId, (err) => {

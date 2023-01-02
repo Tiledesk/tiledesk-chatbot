@@ -2,16 +2,38 @@ const { Directives } = require("./Directives");
 
 class DirMoveToAgent {
 
-  constructor(tdclient) {
-    if (!tdclient) {
-      throw new Error('tdclient (TiledeskClient) object is mandatory.');
+  constructor(settings) {
+    if (!settings.tdclient) {
+      throw new Error('settings.tdclient (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = tdclient;
+    this.tdclient = settings.tdclient;
+
+    if (!settings.requestId) {
+      throw new Error('settings.requestId (TiledeskClient) object is mandatory.');
+    }
+    this.requestId = settings.requestId;
+
+    if (!settings.depId) {
+      throw new Error('settings.depId (TiledeskClient) object is mandatory.');
+    }
+    this.depId = settings.depId;
   }
 
-  execute(directive, requestId, depId, callback) {
-    //console.log("DirMoveToAgent...")
-    if (directive.whenOnlineOnly === true) {
+  execute(directive, callback) {
+    let action;
+    if (directive.action) {
+      action = directive.action;
+      this.go(action, () => {
+        callback();
+      });
+    }
+    else {
+      callback();
+    }
+  }
+
+  go(action, callback) {
+    if (action.whenOnlineOnly === true) {
       this.tdclient.openNow((err, result) => {
         if (err) {
           console.error("Agent in DirOfflineHours Error:", err);
@@ -19,7 +41,7 @@ class DirMoveToAgent {
         }
         else {
           if (result && result.isopen) {
-            this.tdclient.agent(requestId, depId, (err) => {
+            this.tdclient.agent(this.requestId, this.depId, (err) => {
               if (err) {
                 console.error("Error moving to agent during online hours:", err);
               }
@@ -48,12 +70,6 @@ class DirMoveToAgent {
     }
   }
 
-  // actionToDirective(action) {
-  //   let directive = {
-  //     name: Directives.AGENT
-  //   }
-  //   return directive;
-  // }
 }
 
 module.exports = { DirMoveToAgent };
