@@ -58,7 +58,7 @@ class DirMoveToAgent {
       });
     }
     else {
-      this.tdclient.agent(requestId, depId, (err) => {
+      this.tdclient.agent(this.requestId, this.depId, (err) => {
         if (err) {
           console.error("Error moving to agent:", err);
         }
