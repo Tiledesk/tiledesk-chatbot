@@ -154,7 +154,7 @@ router.post('/ext/:botid', async (req, res) => {
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
-    console.log("Created directives:", directives);
+    console.log("Created directives:", JSON.stringify(directives));
     let directivesPlug = new DirectivesChatbotPlug(
       {
         directives: directives,
