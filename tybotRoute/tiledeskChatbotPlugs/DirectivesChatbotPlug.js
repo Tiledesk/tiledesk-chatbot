@@ -164,15 +164,18 @@ class DirectivesChatbotPlug {
           {
             API_ENDPOINT: API_URL,
             TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false
+            log: false,
+            projectId: projectId,
+            requestId: requestId,
+            token: token
           }
         );
-        messageDir.execute(directive, projectId, requestId, token, async () => {
-          const requestVariables = 
-            await TiledeskChatbot.allParametersStatic(
-              tdcache, requestId
-            );
-            console.log("message executed.", requestVariables);
+        messageDir.execute(directive, async () => {
+          // const requestVariables = 
+          //   await TiledeskChatbot.allParametersStatic(
+          //     tdcache, requestId
+          //   );
+          //   console.log("message executed.", requestVariables);
           process(nextDirective());
         });
       }
