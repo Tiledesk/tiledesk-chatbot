@@ -412,7 +412,7 @@ function startApp(settings, completionCallback) {
 function getMockActions() {
   return [
     {
-      type: "reply",
+      type: "message",
       body: {
         message: {
           "attributes": {
@@ -451,7 +451,7 @@ function getMockActions() {
 function getMockActionsWithAgent() {
   return [
     {
-      type: "reply",
+      type: "message",
       body: {
         message: {
           "attributes": {
