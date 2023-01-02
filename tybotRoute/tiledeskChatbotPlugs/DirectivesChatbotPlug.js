@@ -253,7 +253,12 @@ class DirectivesChatbotPlug {
               depId: depId
             }
           );
-          directive.action.whenOnlineOnly = true;
+          if (!directive.body) {
+            directive.action = {}
+            directive.action.body = {
+              whenOnlineOnly: true
+            }
+          }
           agentDir.execute(directive, () => {
             process(nextDirective());
           });

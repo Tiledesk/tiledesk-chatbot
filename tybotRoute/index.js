@@ -149,8 +149,9 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
 
-  reply.actions = getMockActions();
+  // reply.actions = getMockActions();
   // reply.actions = getMockActionsWithAgent();
+  reply.actions = getMockActionsWithAgentWhenOnline();
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
@@ -486,6 +487,48 @@ function getMockActionsWithAgent() {
     },
     {
       type: "agent"
+    }
+  ]
+}
+
+function getMockActionsWithAgentWhenOnline() {
+  return [
+    {
+      type: "message",
+      body: {
+        message: {
+          "attributes": {
+            "commands": [{
+              "type": "message",
+              "message": {
+                "text": "Hello by message action!",
+                "type": "text"
+              }
+            }, {
+              "type": "wait",
+              "time": 500
+            }, {
+              "type": "message",
+              "message": {
+                "text": "Choose an option",
+                "type": "text",
+                "attributes": {
+                  "attachment": {
+                    "type": "template",
+                    "buttons": [{
+                      "type": "text",
+                      "value": "/start"
+                    }]
+                  }
+                }
+              }
+            }]
+          }
+        }
+      }
+    },
+    {
+      type: "whenonlinemovetoagent"
     }
   ]
 }
