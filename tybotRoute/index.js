@@ -413,6 +413,7 @@ function getMockActions() {
     {
       name: "message",
       message: {
+        "type": "commands",
         "attributes": {
           "commands": [{
             "type": "message",
