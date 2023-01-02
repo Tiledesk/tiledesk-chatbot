@@ -149,7 +149,8 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
 
-  reply.actions = getMockActions();
+  // reply.actions = getMockActions();
+  reply.actions = getMockActionsWithAgent();
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
@@ -444,6 +445,45 @@ function getMockActions() {
       }
     }
   ]
+}
 
+function getMockActionsWithAgent() {
+  return [
+    {
+      name: "message",
+      message: {
+        "attributes": {
+          "commands": [{
+            "type": "message",
+            "message": {
+              "text": "Hello by message directive!",
+              "type": "text"
+            }
+          }, {
+            "type": "wait",
+            "time": 500
+          }, {
+            "type": "message",
+            "message": {
+              "text": "Ciao",
+              "type": "text",
+              "attributes": {
+                "attachment": {
+                  "type": "template",
+                  "buttons": [{
+                    "type": "text",
+                    "value": "/start"
+                  }]
+                }
+              }
+            }
+          }]
+        }
+      }
+    },
+    {
+      name: "agent"
+    }
+  ]
 }
 module.exports = { router: router, startApp: startApp};
