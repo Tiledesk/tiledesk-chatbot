@@ -150,6 +150,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
 
   reply.actions = getMockActions();
+  console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
     console.log("Created directives:", directives);
@@ -199,6 +200,7 @@ function actionsToDirectives(actions) {
       }
     });
   }
+  return directives;
 }
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
