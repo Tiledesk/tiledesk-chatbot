@@ -31,15 +31,13 @@ class DirectivesChatbotPlug {
 
   constructor(config) {
     this.supportRequest = config.supportRequest;
-    // console.log("this.supportRequest:", this.supportRequest)
     this.API_URL = config.TILEDESK_API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
-    this.directives;
-    // this.message;
+    this.directives = config.directives;
   }
 
   exec(pipeline) {
