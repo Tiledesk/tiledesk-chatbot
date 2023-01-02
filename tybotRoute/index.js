@@ -40,6 +40,8 @@ const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/Webhook
 
 // THE IMPORT
 let mongoose = require('mongoose');
+const { DirSendEmail } = require('./tiledeskChatbotPlugs/directives/DirSendEmail.js');
+const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 //let Faq = require('./models/faq');
 //let Faq_kb = require('./models/faq_kb');
 let connection;
@@ -146,23 +148,40 @@ router.post('/ext/:botid', async (req, res) => {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
     }
   }
-  reply.triggeredByMessageId = messageId;
-  let extEndpoint = `${APIURL}/modules/tilebot/`;
-  if (process.env.TYBOT_ENDPOINT) {
-    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+  if (reply.actions) { // structured actions (coming from designer)
+    let directives = actionsToDirectives(reply.actions);
   }
-  const apiext = new ExtApi({
-    ENDPOINT: extEndpoint,
-    log: false
-  });
-  
-  apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-    if (log) {
-      console.log("SupportMessageExt() reply sent:", reply);
+  else { // text answer (parse text directives to get actions)
+    reply.triggeredByMessageId = messageId;
+    let extEndpoint = `${APIURL}/modules/tilebot/`;
+    if (process.env.TYBOT_ENDPOINT) {
+      extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
     }
-  });
+    const apiext = new ExtApi({
+      ENDPOINT: extEndpoint,
+      log: false
+    });
+    
+    apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
+      if (log) {
+        console.log("SupportMessageExt() reply sent:", reply);
+      }
+    });
+  }
   
 });
+
+function actionsToDirectives(actions) {
+  let directives = [];
+  if (actions && actions.length > 0) {
+    actions.forEach(action => {
+      let directive = Directives.actionToDirective(action);
+      if (directive) {
+        directives.push(directive);
+      }
+    });
+  }
+}
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   res.json({success:true});

@@ -24,6 +24,14 @@ class Directives {
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
   static SEND_EMAIL = "sendemail";
   static DELETE = "delete";
+
+  static actionToDirective(action) {
+    let directive = {
+      name: action.name,
+      action: action
+    }
+    return directive;
+  }
 }
 
 module.exports = { Directives };

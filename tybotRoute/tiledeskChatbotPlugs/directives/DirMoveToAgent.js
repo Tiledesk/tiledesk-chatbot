@@ -1,3 +1,5 @@
+const { Directives } = require("./Directives");
+const { DirectivesToActions } = require("./DirectivesToActions");
 
 class DirMoveToAgent {
 
@@ -45,6 +47,13 @@ class DirMoveToAgent {
         callback();
       });
     }
+  }
+
+  actionToDirective(action) {
+    let directive = {
+      name: Directives.AGENT
+    }
+    return directive;
   }
 }
 
