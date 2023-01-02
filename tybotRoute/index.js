@@ -204,6 +204,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const requestId = req.params.requestId;
   const token = req.headers["authorization"];
   let answer = req.body;
+  if (log) {console.log("answer on sendSupportMessageExt:", answer);}
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
