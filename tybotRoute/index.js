@@ -544,7 +544,7 @@ function getMockActionsWithClose() {
             "commands": [{
               "type": "message",
               "message": {
-                "text": "Hello by message action!",
+                "text": "Closing...",
                 "type": "text"
               }
             }]
