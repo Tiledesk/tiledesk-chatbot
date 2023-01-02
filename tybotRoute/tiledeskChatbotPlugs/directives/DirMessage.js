@@ -33,7 +33,7 @@ class DirMessage {
       if (!message.attributes) {
         message.attributes = {}
       }
-      message.attributes.directives = false;
+      message.attributes.directives = true;
       message.attributes.splitted = true;
       message.attributes.markbot = true;
       if (message.text) {
@@ -52,6 +52,23 @@ class DirMessage {
           callback();
       });
     }
+  }
+
+  static toAction(directive) {
+    if (directive.parameter) {
+      let text = directive.parameter.trim();
+      const action = {
+        type: "message",
+        message: {
+          text: text
+        }
+      }
+      return action
+    }
+    else {
+      return null;
+    }
+    
   }
 }
 

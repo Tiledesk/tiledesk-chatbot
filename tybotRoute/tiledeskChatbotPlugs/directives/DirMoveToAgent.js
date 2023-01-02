@@ -46,6 +46,13 @@ class DirMoveToAgent {
       });
     }
   }
+
+  static toAction() {
+    const action = {
+      type: "agent"
+    }
+    return action
+  }
 }
 
 module.exports = { DirMoveToAgent };

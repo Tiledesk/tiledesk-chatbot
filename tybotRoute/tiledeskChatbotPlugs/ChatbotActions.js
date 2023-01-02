@@ -21,11 +21,11 @@ const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
-class DirectivesChatbotPlug {
+class ChatbotActions {
 
   /**
    * @example
-   * const { DirectivesChatbotPlug } = require('./DirectivesChatbotPlug');
+   * const { ChatbotActions } = require('./ChatbotActions');
    * 
    */
 
@@ -77,7 +77,7 @@ class DirectivesChatbotPlug {
 
   }
 
-  processDirectives(theend) {
+  go(theend) {
     // console.log("Directives on request:", JSON.stringify(this.supportRequest));
     const directives = this.directives;
     if (!directives || directives.length === 0) {
@@ -225,7 +225,7 @@ class DirectivesChatbotPlug {
           directive.whenOnlineOnly = false;
           agentDir.execute(directive, requestId, depId, () => {
             process(nextDirective());
-          });
+          });  
         }
         else {
           console.log("Warning. DepId null while calling 'AGENT' directive")
@@ -402,4 +402,4 @@ class DirectivesChatbotPlug {
 
 }
 
-module.exports = { DirectivesChatbotPlug };
+module.exports = { ChatbotActions };

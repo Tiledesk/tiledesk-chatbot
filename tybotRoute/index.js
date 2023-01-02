@@ -147,20 +147,27 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
   reply.triggeredByMessageId = messageId;
-  let extEndpoint = `${APIURL}/modules/tilebot/`;
-  if (process.env.TYBOT_ENDPOINT) {
-    extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+
+  if (reply.actions) {
+    let directives = actionsToDirectives(reply.actions);
+    
   }
-  const apiext = new ExtApi({
-    ENDPOINT: extEndpoint,
-    log: false
-  });
-  
-  apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-    if (log) {
-      console.log("SupportMessageExt() reply sent:", reply);
+  else { // text answer
+    let extEndpoint = `${APIURL}/modules/tilebot/`;
+    if (process.env.TYBOT_ENDPOINT) {
+      extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
     }
-  });
+    const apiext = new ExtApi({
+      ENDPOINT: extEndpoint,
+      log: false
+    });
+    apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
+      if (log) {
+        console.log("SupportMessageExt() reply sent:", reply);
+      }
+    });
+  }
+  
   
 });
 
@@ -215,7 +222,8 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     if (log) {console.log("request", request);}
   }
   if (log) {console.log("request...", request);}
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  // let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  //let actions = new ChatbotActions({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
   if (log) {console.log("answer to process:", JSON.stringify(answer));}
   const original_answer_text = answer.text;
@@ -255,8 +263,8 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
       if (err) {
         console.error("Error sending message", err);
       }
-      directivesPlug.processDirectives( () => {
-        if (log) {console.log("After message - Directives executed.");}
+      actions.go( () => {
+        if (log) {console.log("After message - Actions executed.");}
       });
     });
   }

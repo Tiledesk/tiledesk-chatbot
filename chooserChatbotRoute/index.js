@@ -51,7 +51,7 @@ router.post('/lang_select', (req, res) => {
             }
             else {
                 if (bot && bot.name) {
-                    let message = {  // repling with an hidden message
+                    let message = {  // replying with an hidden message
                         text: `\\_tdreplacebot ${bot.name}
 \\_tdIntent start`,
                         attributes: {

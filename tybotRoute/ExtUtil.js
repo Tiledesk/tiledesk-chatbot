@@ -19,6 +19,7 @@ class ExtUtil {
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
     //const webhookurl = bot.webhook_url;
     //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
+    let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
     messagePipeline.addPlug(directivesPlug);
     messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log)); // in original message
     messagePipeline.addPlug(new SplitsChatbotPlug(log));
