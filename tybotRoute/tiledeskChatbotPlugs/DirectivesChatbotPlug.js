@@ -168,10 +168,12 @@ class DirectivesChatbotPlug {
           {
             API_ENDPOINT: API_URL,
             TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false
+            log: false,
+            supportRequest: supportRequest,
+            token: token
           }
         );
-        intentDir.execute(directive, supportRequest, token, () => {
+        intentDir.execute(directive, () => {
           process(nextDirective());
         });
       }
