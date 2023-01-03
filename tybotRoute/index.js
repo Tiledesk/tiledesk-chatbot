@@ -314,7 +314,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   //    }
   if (bot_answer) {
     if (!bot_answer.text) {
-      bot_answer.text = ""
+      bot_answer.text = "..."
     }
     if (log) {console.log("adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
     if (!bot_answer.attributes) {
