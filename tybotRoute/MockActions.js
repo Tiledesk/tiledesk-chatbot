@@ -147,5 +147,27 @@ class MockActions {
     ]
   }
 
+  static ChangeDepartment() {
+    return [
+      {
+        type: "department",
+        body: {
+          depName: "Support"
+        }
+      },
+      {
+        type: "message",
+        body: {
+          message: {
+            text: "/start",
+            "attributes": {
+              "subtype": "info"
+            }
+          }
+        }
+      }
+    ]
+  }
+
 }
 module.exports = { MockActions };

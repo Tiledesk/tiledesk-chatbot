@@ -153,7 +153,7 @@ router.post('/ext/:botid', async (req, res) => {
   // reply.actions = getMockActions();
   // reply.actions = getMockActionsWithAgent();
   // reply.actions = getMockActionsWithAgentWhenOnline();
-  reply.actions = MockActions.Message_plus_Close();
+  reply.actions = MockActions.ChangeDepartment();
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
