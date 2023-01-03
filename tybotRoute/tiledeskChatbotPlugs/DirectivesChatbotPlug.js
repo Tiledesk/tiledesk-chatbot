@@ -76,7 +76,7 @@ class DirectivesChatbotPlug {
   }
 
   processDirectives(theend) {
-    console.log("Directives to process:", JSON.stringify(this.directives));
+    // console.log("Directives to process:", JSON.stringify(this.directives));
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
@@ -134,20 +134,34 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.HMESSAGE) {
-        //tdclient.log = true;
-        if (directive.parameter) {
-          let text = directive.parameter.trim();
-          let message = {
-            sender: "system22", // bot doesn't reply to himself
-            text: text,
-            attributes: {
-              subtype: "info"
-            }
-          };
-          tdclient.sendSupportMessage(requestId, message, () => {
-            process(nextDirective());
-          });
-        }
+        const messageDir = new DirHiddenMessage(
+          {
+            API_ENDPOINT: API_URL,
+            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+            log: false,
+            projectId: projectId,
+            requestId: requestId,
+            token: token
+          }
+        );
+        messageDir.execute(directive, async () => {
+          process(nextDirective());
+        });
+        
+        // if (directive.parameter) {
+        //   let text = directive.parameter.trim();
+        //   let message = {
+        //     sender: "system22", // bot doesn't reply to himself
+        //     text: text,
+        //     attributes: {
+        //       subtype: "info"
+        //     }
+        //   };
+        //   tdclient.sendSupportMessage(requestId, message, () => {
+        //     process(nextDirective());
+        //   });
+        // }
+
       }
       else if (directive_name === Directives.INTENT) {
         const intentDir = new DirIntent(
@@ -162,7 +176,6 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.MESSAGE) {
-        console.log("executing message send...", directive);
         const messageDir = new DirMessage(
           {
             API_ENDPOINT: API_URL,

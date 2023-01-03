@@ -1,4 +1,5 @@
 const { ExtApi } = require('../../ExtApi.js');
+const { Directives } = require('./Directives.js');
 
 class DirMessage {
 
@@ -47,10 +48,14 @@ class DirMessage {
           }
         }
       }
+      if (directive.name === Directives.HMESSAGE) {
+        action.body.message.attributes.subtype = "info";
+      }
     }
     else {
       console.error("Incorrect directive:", directive);
       callback();
+      return;
     }
     this.go(action, () => {
       callback();

@@ -12,15 +12,38 @@ class DirIntent {
     this.API_ENDPOINT = settings.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
     this.log = settings.log;
+    this.supportRequest = settings.supportRequest;
+    this.token = settings.token;
   }
 
-  execute(directive, supportRequest, token, callback) {
-    const projectId = supportRequest.id_project;
-    const requestId = supportRequest.request_id;
-    const botId = supportRequest.bot_id;
-    if (directive.parameter) {
-      let intent_name = directive.parameter.trim();
-      let intent_command = "/" + intent_name;
+  execute(directive, callback) {
+    console.log("exec intent:", JSON.stringify(directive));
+    let action;
+    if (directive.action) {
+      console.log("got intent action:", JSON.stringify(action));
+      action = directive.action;
+    }
+    else if (directive.parameter && directive.parameter.trim() !== "") {
+      action.body = {
+        intentName: directive.parameter.trim()
+      }
+    }
+    else {
+      console.error("Incorrect directive:", directive);
+      callback();
+      return;
+    }
+    this.go(action, () => {
+      callback();
+    });
+  }
+
+  go(action, callback) {
+    const projectId = this.supportRequest.id_project;
+    const requestId = this.supportRequest.request_id;
+    const botId = this.supportRequest.bot_id;
+    if (action.intentName) {
+      let intent_command = "/" + action.intentName;
       let intent_command_request = {
         "payload": {
           "_id": uuidv4(),
@@ -76,7 +99,7 @@ class DirIntent {
       }
       
       this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
-        // console.log("sendMessageToBot() req_body sent:", intent_command_request);
+        console.log("sendMessageToBot() req_body sent:", intent_command_request);
         callback();
       });
     }

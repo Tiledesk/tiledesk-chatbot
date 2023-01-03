@@ -169,5 +169,16 @@ class MockActions {
     ]
   }
 
+  static Intent() {
+    return [
+      {
+        type: "intent",
+        body: {
+          intentName: "intentAction"
+        }
+      }
+    ]
+  }
+
 }
 module.exports = { MockActions };
