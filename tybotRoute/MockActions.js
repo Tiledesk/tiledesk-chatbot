@@ -49,16 +49,7 @@ class MockActions {
               "commands": [{
                 "type": "message",
                 "message": {
-                  "text": "Hello by message action!",
-                  "type": "text"
-                }
-              }, {
-                "type": "wait",
-                "time": 500
-              }, {
-                "type": "message",
-                "message": {
-                  "text": "Choose an option",
+                  "text": "Moving you to an agent...",
                   "type": "text",
                   "attributes": {
                     "attachment": {
