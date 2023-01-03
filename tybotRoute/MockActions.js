@@ -50,16 +50,7 @@ class MockActions {
                 "type": "message",
                 "message": {
                   "text": "Moving you to an agent...",
-                  "type": "text",
-                  "attributes": {
-                    "attachment": {
-                      "type": "template",
-                      "buttons": [{
-                        "type": "text",
-                        "value": "/start"
-                      }]
-                    }
-                  }
+                  "type": "text"
                 }
               }]
             }
