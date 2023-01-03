@@ -22,6 +22,11 @@ class MarkbotChatbotPlug {
       return;
     }
 
+    if (!message.text) {
+      pipeline.nextplug();
+      return;
+    }
+    
     let incoming_message_text = message.text.trim();
 
     let commands = null;
