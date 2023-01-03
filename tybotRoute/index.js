@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 //var cors = require('cors');
 //let path = require("path");
 //let fs = require('fs');
-const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
+// const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 //const jwt = require('jsonwebtoken');
 //const { v4: uuidv4 } = require('uuid');
@@ -16,6 +16,7 @@ const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
+const { MockActions } = require('./MockActions');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -152,7 +153,7 @@ router.post('/ext/:botid', async (req, res) => {
   // reply.actions = getMockActions();
   // reply.actions = getMockActionsWithAgent();
   // reply.actions = getMockActionsWithAgentWhenOnline();
-  reply.actions = getMockActionsWithClose();
+  reply.actions = MockActions.Message_plus_Close();
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);
@@ -411,150 +412,4 @@ function startApp(settings, completionCallback) {
   });
 }
 
-function getMockActions() {
-  return [
-    {
-      type: "message",
-      body: {
-        message: {
-          "attributes": {
-            "commands": [{
-              "type": "message",
-              "message": {
-                "text": "Hello by message directive!",
-                "type": "text"
-              }
-            }, {
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "text": "Ciao",
-                "type": "text",
-                "attributes": {
-                  "attachment": {
-                    "type": "template",
-                    "buttons": [{
-                      "type": "text",
-                      "value": "/start"
-                    }]
-                  }
-                }
-              }
-            }]
-          }
-        }
-      }
-    }
-  ]
-}
-
-function getMockActionsWithAgent() {
-  return [
-    {
-      type: "message",
-      body: {
-        message: {
-          "attributes": {
-            "commands": [{
-              "type": "message",
-              "message": {
-                "text": "Hello by message action!",
-                "type": "text"
-              }
-            }, {
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "text": "Choose an option",
-                "type": "text",
-                "attributes": {
-                  "attachment": {
-                    "type": "template",
-                    "buttons": [{
-                      "type": "text",
-                      "value": "/start"
-                    }]
-                  }
-                }
-              }
-            }]
-          }
-        }
-      }
-    },
-    {
-      type: "agent"
-    }
-  ]
-}
-
-function getMockActionsWithAgentWhenOnline() {
-  return [
-    {
-      type: "message",
-      body: {
-        message: {
-          "attributes": {
-            "commands": [{
-              "type": "message",
-              "message": {
-                "text": "Hello by message action!",
-                "type": "text"
-              }
-            }, {
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "text": "Choose an option",
-                "type": "text",
-                "attributes": {
-                  "attachment": {
-                    "type": "template",
-                    "buttons": [{
-                      "type": "text",
-                      "value": "/start"
-                    }]
-                  }
-                }
-              }
-            }]
-          }
-        }
-      }
-    },
-    {
-      type: "whenonlinemovetoagent"
-    }
-  ]
-}
-
-function getMockActionsWithClose() {
-  return [
-    {
-      type: "message",
-      body: {
-        message: {
-          "attributes": {
-            "commands": [{
-              "type": "message",
-              "message": {
-                "text": "Closing...",
-                "type": "text"
-              }
-            }]
-          }
-        }
-      }
-    },
-    {
-      type: "close"
-    }
-  ]
-}
 module.exports = { router: router, startApp: startApp};
