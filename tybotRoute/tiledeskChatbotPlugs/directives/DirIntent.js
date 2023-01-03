@@ -20,7 +20,7 @@ class DirIntent {
     console.log("exec intent:", JSON.stringify(directive));
     let action;
     if (directive.action) {
-      console.log("got intent action:", JSON.stringify(action));
+      console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
@@ -39,11 +39,12 @@ class DirIntent {
   }
 
   go(action, callback) {
+    console.log("action intent:", action);
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
-    if (action.intentName) {
-      let intent_command = "/" + action.intentName;
+    if (action.body.intentName) {
+      let intent_command = "/" + action.body.intentName;
       let intent_command_request = {
         "payload": {
           "_id": uuidv4(),
