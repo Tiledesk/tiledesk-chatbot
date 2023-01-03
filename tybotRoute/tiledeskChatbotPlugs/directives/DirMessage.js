@@ -109,7 +109,12 @@ class DirMessage {
     let text = "New message";
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
+      console.log("cheking command", command)
       if (command.type === "message") {
+        console.log("command.type: message!")
+        console.log("command.message.type!", command.message.type)
+        console.log("command.message.text!", command.message.text)
+        
         if (command.message.type) {
           type = command.message.type;
         }
@@ -119,10 +124,12 @@ class DirMessage {
         break;
       }
     }
-    return {
+    const message_info = {
       type: type,
       text: text
     }
+    console.log("message_info:", message_info);
+    return message_info;
   }
 
 }
