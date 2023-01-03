@@ -10,12 +10,13 @@ class DirClose {
     }
     
     execute(directive, callback) {
+        console.log("Exec close() directive on requestId", this.requestId);
         this.tdclient.closeRequest(this.requestId, (err) => {
             if (err) {
                 console.error("Error in 'close directive':", err);
             }
             else {
-                //console.log("Successfully moved to agent during online hours");
+                console.log("Successfully moved to agent during online hours");
             }
             callback();
         });

@@ -15,7 +15,7 @@ class SplitsChatbotPlug {
 
   exec(pipeline) {
     let message = pipeline.message;
-    console.log("Splits disabled on message?", message);
+    // console.log("Splits disabled on message?", message);
     if (message.attributes && (message.attributes.splits == undefined || message.attributes.splits == false)) { // defaults to disabled
       if (this.log) {
         console.log("Splits disabled.");

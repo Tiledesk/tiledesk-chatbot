@@ -269,6 +269,7 @@ class DirectivesChatbotPlug {
         }
       }
       else if (directive_name === Directives.CLOSE) {
+        console.log("Exec close()")
         const closeDir = new DirClose(
           {
             tdclient: tdclient,

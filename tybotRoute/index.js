@@ -226,7 +226,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (log) {console.log("request_key:", request_key);}
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    if (log) {console.log("Request from cache:", request);}
+    // if (log) {console.log("Request from cache:", request);}
     if (!request) {
       if (log) {console.log("!Request from cache", requestId);}
       try {
@@ -256,9 +256,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }
   }
   else {
-    if (log) {console.log("request", request);}
+    // if (log) {console.log("request", request);}
   }
-  if (log) {console.log("request...", request);}
+  // if (log) {console.log("request...", request);}
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
   if (log) {console.log("answer to process:", JSON.stringify(answer));}
