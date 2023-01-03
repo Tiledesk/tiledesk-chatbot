@@ -23,6 +23,10 @@ class SplitsChatbotPlug {
       pipeline.nextplug();
       return;
     }
+    if (!message.text) {
+      pipeline.nextplug();
+      return;
+    }
     if (this.log) {
       console.log("Splitting...");
     }
