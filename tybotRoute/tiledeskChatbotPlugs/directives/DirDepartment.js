@@ -7,6 +7,43 @@ class DirDepartment {
     }
     this.tdclient = config.tdclient;
     this.log = config.log;
+    this.requestId = config.requestId;
+  }
+
+  execute(directive, callback) {
+    if (this.log) {console.log("DirDepartment:", dep_name);}
+    let action;
+    if (directive.action) {
+      action = directive.action;
+    }
+    else {
+      dep_name = "default department";
+      if (directive.parameter) {
+        dep_name = directive.parameter;
+      }
+      action = {
+        body: {
+          depName: dep_name
+        }
+      }
+    }
+    this.go(action, () => {
+      callback();
+    });
+    
+  }
+
+  // execute(requestId, dep_name, callback) {
+  //   if (this.log) {console.log("DirDepartment:", dep_name);}
+  //   this.moveToDepartment(requestId, dep_name, () => {
+  //     callback();
+  //   });
+  // }
+
+  go(action, callback) {
+    this.moveToDepartment(this.requestId, action.body.depName, () => {
+      callback();
+    });
   }
 
   moveToDepartment(requestId, depName, callback) {
@@ -14,7 +51,7 @@ class DirDepartment {
       if (this.log) {console.log("deps:", deps, err);}
       if (err) {
         console.error("getAllDepartments() error:", err);
-        callback(err);
+        callback();
         return;
       }
       let dep = null;
@@ -29,21 +66,14 @@ class DirDepartment {
       if (dep) {
         this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err) => {
           if (err) {
-            console.error("An error:", err);
-            callback(err);
+            console.error("DirDepartment error:", err);
+            callback();
           }
           else {
             callback();
           }
         });
       }
-    });
-  }
-  
-  execute(requestId, dep_name, callback) {
-    if (this.log) {console.log("DirDepartment:", dep_name);}
-    this.moveToDepartment(requestId, dep_name, () => {
-      callback();
     });
   }
 

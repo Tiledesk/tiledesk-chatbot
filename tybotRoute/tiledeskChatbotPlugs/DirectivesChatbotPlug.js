@@ -119,12 +119,17 @@ class DirectivesChatbotPlug {
         theend();
       }
       else if (directive_name === Directives.DEPARTMENT) {
-        let dep_name = "default department";
-        if (directive.parameter) {
-          dep_name = directive.parameter;
-        }
-        const departmentDir = new DirDepartment({tdclient: tdclient, log: false});
-        departmentDir.execute(requestId, dep_name, () => {
+        // let dep_name = "default department";
+        // if (directive.parameter) {
+        //   dep_name = directive.parameter;
+        // }
+        const departmentDir = new DirDepartment(
+          {
+            tdclient: tdclient,
+            requestId: requestId,
+            log: false
+          });
+        departmentDir.execute(directive, () => {
           process(nextDirective());
         });
       }
@@ -269,7 +274,7 @@ class DirectivesChatbotPlug {
         }
       }
       else if (directive_name === Directives.CLOSE) {
-        console.log("Exec close()")
+        // console.log("Exec close()")
         const closeDir = new DirClose(
           {
             tdclient: tdclient,

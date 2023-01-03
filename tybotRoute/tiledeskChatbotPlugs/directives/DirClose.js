@@ -10,14 +10,13 @@ class DirClose {
     }
     
     execute(directive, callback) {
-        console.log("Exec close() directive on requestId", this.requestId);
-        this.tdclient.log = true
+        // console.log("Exec close() directive on requestId", this.requestId);
         this.tdclient.closeRequest(this.requestId, (err) => {
             if (err) {
                 console.error("Error in 'close directive':", err);
             }
             else {
-                console.log("Successfully closed on close()");
+                // console.log("Successfully closed on close()");
             }
             callback();
         });
