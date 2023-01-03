@@ -149,6 +149,7 @@ router.post('/ext/:botid', async (req, res) => {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
     }
   }
+  console.log("reply back:", JSON.stringify(reply));
 
   // TEMP
   switch (reply.intent_display_name) {
@@ -172,7 +173,7 @@ router.post('/ext/:botid', async (req, res) => {
       break;
   }
   
-  console.log("reply:", reply);
+  
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)
     let directives = actionsToDirectives(reply.actions);

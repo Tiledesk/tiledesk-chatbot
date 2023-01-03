@@ -73,6 +73,7 @@ class FillParamsChatbotPlug {
     if (this.log) {console.log("collected parameters:", all_parameters);}
     if (!message_text) {
       if (this.log) {console.log("fillWithRequestParams() Can't fill. message_text is null");}
+      return;
     }
     if (all_parameters) {
       for (const [key, value] of Object.entries(all_parameters)) {

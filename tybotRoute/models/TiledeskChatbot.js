@@ -39,7 +39,7 @@ class TiledeskChatbot {
     return new Promise( async (resolve, reject) => {
       // get bot info
       if (this.log) {
-        console.log("replyToMessage():", message);
+        console.log("replyToMessage():", JSON.stringify(message));
       }
       let lead = null;
       if (message.request) {
