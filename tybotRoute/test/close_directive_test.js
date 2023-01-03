@@ -16,9 +16,10 @@ describe('Directive DirClose', function() {
       name: "close"
     };
     let dir = new DirClose({
-        tdclient: new MockTdClient()
+        tdclient: new MockTdClient(),
+        requestId: "A-REQUEST-ID"
     });
-    dir.execute(close_directive, "A-REQUEST-ID", () => {
+    dir.execute(close_directive, () => {
     });
   });
 

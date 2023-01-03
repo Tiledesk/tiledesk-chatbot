@@ -16,7 +16,7 @@ class DirClose {
                 console.error("Error in 'close directive':", err);
             }
             else {
-                // console.log("Successfully closed on close()");
+                console.log("Successfully closed on close()");
             }
             callback();
         });
