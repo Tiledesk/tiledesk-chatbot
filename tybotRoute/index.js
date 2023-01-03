@@ -313,6 +313,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   //      triggeredByMessageId: '6392e5e8408e0000437aa383'
   //    }
   if (bot_answer) {
+    if (!bot_answer.text) {
+      bot_answer.text = ""
+    }
     if (log) {console.log("adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};
