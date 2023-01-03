@@ -59,7 +59,7 @@ class DirIntent {
             "id_project": projectId
           }
         },
-        "token": token
+        "token": this.token
       }
 
       // let intent_command_message = {
