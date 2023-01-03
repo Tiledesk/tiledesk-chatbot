@@ -361,10 +361,10 @@ class TiledeskChatbot {
       bot: this.bot
     }
     static_bot_answer.attributes.intent_info = intent_info;
-    static_bot_answer.attributes.directives = true;
-    static_bot_answer.attributes.splits = true;
-    static_bot_answer.attributes.markbot = true;
-    static_bot_answer.attributes.fillParams = true;
+    // static_bot_answer.attributes.directives = true;
+    // static_bot_answer.attributes.splits = true;
+    // static_bot_answer.attributes.markbot = true;
+    // static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
     if (clientUpdateUserFullname) {

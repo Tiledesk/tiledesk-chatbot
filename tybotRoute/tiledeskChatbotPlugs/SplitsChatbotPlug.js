@@ -24,7 +24,7 @@ class SplitsChatbotPlug {
       return;
     }
     if (this.log) {
-      console.log("Splitting...")
+      console.log("Splitting...");
     }
     // if splits found just a attributs.commands payload is attached
     // to the original json message with split commands

@@ -152,7 +152,7 @@ router.post('/ext/:botid', async (req, res) => {
   console.log("reply back:", JSON.stringify(reply));
 
   // TEMP
-  switch (reply.intent_display_name) {
+  switch (reply.attributes.intent_info.intent_name) {
     case "MessageActions":
       reply.actions = MockActions.MessageActions()
       break;
@@ -233,7 +233,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const requestId = req.params.requestId;
   const token = req.headers["authorization"];
   let answer = req.body;
-  if (log) {console.log("answer on sendSupportMessageExt:", answer);}
+  if (log) {console.log("answer on sendSupportMessageExt:", JSON.stringify(answer));}
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,

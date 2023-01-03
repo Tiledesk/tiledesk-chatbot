@@ -29,7 +29,7 @@ class FillParamsChatbotPlug {
       const requestId = this.request.request_id;
       if (this.log) {console.log("all_parameters of requestId:", requestId)}
       const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
-      if (this.log) {console.log("--got parameters", all_parameters);}
+      if (this.log) {console.log("--got parameters", JSON.stringify(all_parameters));}
       if (!all_parameters) {
         pipeline.nextplug();
         return;
