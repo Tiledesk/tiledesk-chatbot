@@ -1,3 +1,4 @@
+const { commands } = require('npm');
 const { ExtApi } = require('../../ExtApi.js');
 const { Directives } = require('./Directives.js');
 
@@ -27,9 +28,21 @@ class DirMessage {
         action.body.message.attributes.directives = false;
         action.body.message.attributes.splits = false;
         action.body.message.attributes.markbot = false;
+        action.body.message.attributes.fillParams = true; // fillParams can fill commands[].message.text
         // temp patch for a fix in the future
         if (!action.body.message.text || action.body.message.text.trim() === "") {
-          action.body.message.text = "Text field was empty"
+          // because server doesn't allow empty text
+          // because we anyway need a text/type for conversation summary
+          // we get info from first commands' message or set a default value
+          if (action.body.message && action.body.message.attributes && action.body.message.attributes.commands) {
+            const message_info = DirMessage.firstMessageInfoFromCommands(commands);
+            action.body.message.text = message_info.text;
+            action.body.message.type = message_info.type;
+          }
+          else {
+            action.body.message.text = "New message";
+            action.body.message.type = "text";
+          }
         }
         console.log("final message action:", JSON.stringify(action));
       }
@@ -43,7 +56,8 @@ class DirMessage {
             attributes: {
               directives: false,
               splits: true,
-              markbot: true
+              markbot: true,
+              fillParams: true
             }
           }
         }
@@ -88,6 +102,27 @@ class DirMessage {
         if (this.log) {console.log("Ext message sent.");}
         callback();
     });
+  }
+
+  static firstMessageInfoFromCommands(commands) {
+    let type = "text";
+    let text = "New message";
+    for (i=0; i < commands.length; i++) {
+      const command = commands[i];
+      if (command.type === "message") {
+        if (command.message.type) {
+          type = command.message.type;
+        }
+        if (command.message.text) {
+          text = command.message.text;
+        }
+        break;
+      }
+    }
+    return {
+      type: type,
+      text: text
+    }
   }
 
 }

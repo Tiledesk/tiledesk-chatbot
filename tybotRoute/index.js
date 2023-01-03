@@ -150,11 +150,28 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
 
-  // reply.actions = getMockActions();
-  // reply.actions = getMockActionsWithAgent();
-  // reply.actions = getMockActionsWithAgentWhenOnline();
-  // reply.actions = MockActions.ChangeDepartment();
-  // reply.actions = MockActions.Intent(); // generates a loop!
+  // TEMP
+  switch (reply.intent_display_name) {
+    case "MessageActions":
+      reply.actions = MockActions.MessageActions()
+      break;
+    case "Message_plus_Agent":
+      reply.actions = MockActions.Message_plus_Agent();
+      break;
+    case "Message_plus_AgentWhenOnline":
+      reply.actions = MockActions.Message_plus_AgentWhenOnline();
+      break;
+    case "Message_plus_Close":
+      reply.actions = MockActions.Message_plus_Close();
+      break;
+    case "ChangeDepartment":
+      reply.actions = MockActions.ChangeDepartment();
+      break;
+    case "Intent":
+      reply.actions = MockActions.Intent();
+      break;
+  }
+  
   console.log("reply:", reply);
   console.log("reply.actions:", reply.actions);
   if (reply.actions) { // structured actions (coming from chatbot designer)

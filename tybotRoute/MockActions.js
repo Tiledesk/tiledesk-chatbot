@@ -1,6 +1,6 @@
 class MockActions {
 
-  static Message() {
+  static MessageActions() {
     return [
       {
         type: "message",
