@@ -196,6 +196,10 @@ router.post('/ext/:botid', async (req, res) => {
   }
   else { // text answer (parse text directives to get actions)
     reply.triggeredByMessageId = messageId;
+    reply.attributes.directives = true;
+    reply.attributes.splits = true;
+    reply.attributes.markbot = true;
+    reply.attributes.fillParams = true;
     let extEndpoint = `${APIURL}/modules/tilebot/`;
     if (process.env.TYBOT_ENDPOINT) {
       extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
