@@ -107,7 +107,7 @@ class DirMessage {
   static firstMessageInfoFromCommands(commands) {
     let type = "text";
     let text = "New message";
-    for (i=0; i < commands.length; i++) {
+    for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
       if (command.type === "message") {
         if (command.message.type) {
