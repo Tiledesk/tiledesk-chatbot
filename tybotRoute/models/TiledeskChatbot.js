@@ -55,9 +55,8 @@ class TiledeskChatbot {
         }
       }
       if (this.log) {
-        console.log("replyToMessage() > lead found:", lead);
+        console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
-      
       
       // Checking locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
@@ -127,9 +126,9 @@ class TiledeskChatbot {
           }
         }
         else {
-          if (this.log) {console.log("No reply found by direct intent invocation:", explicit_intent_name);}
+          if (this.log) {console.log("Intent not found:", explicit_intent_name);}
           reply = {
-            "text": "No reply found by direct intent invocation: *" + explicit_intent_name + "*"
+            "text": "Intent not found: *" + explicit_intent_name + "*"
           }
         }
         resolve(reply);

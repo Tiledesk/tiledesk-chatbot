@@ -11,13 +11,13 @@ class DirDepartment {
   }
 
   execute(directive, callback) {
-    if (this.log) {console.log("DirDepartment:", dep_name);}
+    // if (this.log) {console.log("DirDepartment:", dep_name);}
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      dep_name = "default department";
+      let dep_name = "default department";
       if (directive.parameter) {
         dep_name = directive.parameter;
       }
