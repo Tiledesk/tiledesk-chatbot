@@ -63,7 +63,7 @@ describe('Conversation1', async() => {
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
       endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-        //console.log("req.body:", JSON.stringify(req.body));
+        // console.log("...req.body:", JSON.stringify(req.body));
         res.send({success: true});
         const message = req.body;
         assert(message.text === "Hello");

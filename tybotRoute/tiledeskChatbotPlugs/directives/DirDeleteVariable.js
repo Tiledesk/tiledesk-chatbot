@@ -14,6 +14,7 @@ class DirDeleteVariable {
 
   async execute(directive, completion) {
       let variableName = null;
+      // console.log("DirDeleteVariable:", directive);
       if (directive.parameter) {
         variableName = directive.parameter;
       }

@@ -17,7 +17,7 @@ class DirIntent {
   }
 
   execute(directive, callback) {
-    console.log("exec intent:", JSON.stringify(directive));
+    // console.log("exec intent:", JSON.stringify(directive));
     let action;
     if (directive.action) {
       console.log("got intent action:", JSON.stringify(directive.action));
@@ -41,7 +41,7 @@ class DirIntent {
   }
 
   go(action, callback) {
-    console.log("action intent:", action);
+    // console.log("action intent:", action);
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
@@ -102,7 +102,7 @@ class DirIntent {
       }
       
       this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
-        console.log("sendMessageToBot() req_body sent:", intent_command_request);
+        // console.log("sendMessageToBot() req_body sent:", intent_command_request);
         callback();
       });
     }

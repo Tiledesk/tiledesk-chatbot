@@ -149,7 +149,7 @@ router.post('/ext/:botid', async (req, res) => {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
     }
   }
-  console.log("reply back:", JSON.stringify(reply));
+  // console.log("reply back:", JSON.stringify(reply));
 
   // TEMP
   // if (reply.attributes && reply.attributes.intent_info) {
@@ -176,10 +176,11 @@ router.post('/ext/:botid', async (req, res) => {
   // }
   
   
-  console.log("reply.actions:", reply.actions);
-  if (reply.actions) { // structured actions (coming from chatbot designer)
+  // console.log("reply.actions:", reply.actions);
+  if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
     let directives = actionsToDirectives(reply.actions);
-    console.log("Created directives:", JSON.stringify(directives));
+    if (log) {console.log("the directives:", JSON.stringify(directives));}
     let directivesPlug = new DirectivesChatbotPlug(
       {
         directives: directives,
@@ -197,6 +198,7 @@ router.post('/ext/:botid', async (req, res) => {
     });
   }
   else { // text answer (parse text directives to get actions)
+    if (log) {console.log("an answer:", reply.text);}
     reply.triggeredByMessageId = messageId;
     if (!reply.attributes) {
       reply.attributes = {}

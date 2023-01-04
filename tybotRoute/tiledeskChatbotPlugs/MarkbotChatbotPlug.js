@@ -22,13 +22,14 @@ class MarkbotChatbotPlug {
       return;
     }
 
+    // console.log("message.text", message.text)
     if (!message.text) {
+      if (this.log) {console.log("No message.text (no content). Skipping markbot");}
+      pipeline.message = null;
       pipeline.nextplug();
       return;
     }
-    
     let incoming_message_text = message.text.trim();
-
     let commands = null;
     if (message.attributes && message.attributes.commands) {
       commands = message.attributes.commands;
@@ -37,7 +38,7 @@ class MarkbotChatbotPlug {
     // console.log("message.text:", incoming_message_text);
     // console.log("message commands:", commands)
     if (incoming_message_text === "" && !commands) {
-      // console.log("message with no content. Ignoring");
+      console.log("message with no content. Ignoring");
       pipeline.message = null;
       pipeline.nextplug();
       return;

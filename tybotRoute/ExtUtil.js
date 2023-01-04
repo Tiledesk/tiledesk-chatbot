@@ -17,8 +17,8 @@ class ExtUtil {
 
   static async execPipelineExt(request, static_bot_answer, directivesPlug, tdcache, log) {
     const messagePipeline = new MessagePipeline(static_bot_answer, null);
-    //const webhookurl = bot.webhook_url;
-    //messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
+    // /// const webhookurl = bot.webhook_url;
+    // /// messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, token));
     messagePipeline.addPlug(directivesPlug);
     messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log)); // in original message
     messagePipeline.addPlug(new SplitsChatbotPlug(log));
