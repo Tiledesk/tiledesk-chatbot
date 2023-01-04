@@ -332,7 +332,12 @@ class TiledeskChatbot {
     };
     
     let static_bot_answer;
-    if (answerObj.answer) {
+    if (answerObj.actions) {
+      static_bot_answer = { // actions workflow will be executed
+        actions: answerObj.actions
+      }
+    }
+    else if (answerObj.answer) {
       static_bot_answer = { // static design of the chatbot reply
         //type: answerObj.type,
         text: answerObj.answer,
@@ -343,9 +348,8 @@ class TiledeskChatbot {
       };
     }
     else {
-      static_bot_answer = { // actions workflow will be executed
-        actions: answerObj.actions
-      }
+      console.error("Invalid intent. No actions or answer.", JSON.stringify(answerObj) );
+      return null;
     }
     
     // TODO Should be included in each "message" in actions.
