@@ -24,8 +24,10 @@ class DirIntent {
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
-      action.body = {
-        intentName: directive.parameter.trim()
+      action = {
+        body: {
+          intentName: directive.parameter.trim()
+        }
       }
     }
     else {
