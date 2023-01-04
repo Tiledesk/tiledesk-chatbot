@@ -331,14 +331,24 @@ class TiledeskChatbot {
       token: this.token
     };
     
-    const static_bot_answer = { // static design of the chatbot reply
-      //type: answerObj.type,
-      text: answerObj.answer,
-      attributes: answerObj.attributes,
-      metadata: answerObj.metadata,
-      // language: ?
-      // channel: ? whatsapp|telegram|facebook...
-    };
+    let static_bot_answer;
+    if (answerObj.answer) {
+      static_bot_answer = { // static design of the chatbot reply
+        //type: answerObj.type,
+        text: answerObj.answer,
+        attributes: answerObj.attributes,
+        metadata: answerObj.metadata,
+        // language: ?
+        // channel: ? whatsapp|telegram|facebook...
+      };
+    }
+    else {
+      static_bot_answer = { // actions workflow will be executed
+        actions: answerObj.actions
+      }
+    }
+    
+    // TODO Should be included in each "message" in actions.
     if (!static_bot_answer.attributes) {
       static_bot_answer.attributes = {}
     }
