@@ -134,7 +134,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.HMESSAGE) {
-        const messageDir = new DirHiddenMessage(
+        const messageDir = new DirMessage(
           {
             API_ENDPOINT: API_URL,
             TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
