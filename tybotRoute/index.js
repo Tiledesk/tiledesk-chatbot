@@ -154,9 +154,9 @@ router.post('/ext/:botid', async (req, res) => {
   // TEMP
   if (reply.attributes && reply.attributes.intent_info) {
     switch (reply.attributes.intent_info.intent_name) {
-      case "MessageActions":
-        reply.actions = MockActions.MessageActions()
-        break;
+      // case "MessageActions":
+      //   reply.actions = MockActions.MessageActions()
+      //   break;
       case "Message_plus_Agent":
         reply.actions = MockActions.Message_plus_Agent();
         break;
