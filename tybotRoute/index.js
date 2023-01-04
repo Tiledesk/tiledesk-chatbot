@@ -198,6 +198,9 @@ router.post('/ext/:botid', async (req, res) => {
   }
   else { // text answer (parse text directives to get actions)
     reply.triggeredByMessageId = messageId;
+    if (!reply.attributes) {
+      reply.attributes = {}
+    }
     reply.attributes.directives = true;
     reply.attributes.splits = true;
     reply.attributes.markbot = true;
