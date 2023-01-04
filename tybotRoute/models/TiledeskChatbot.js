@@ -332,7 +332,7 @@ class TiledeskChatbot {
     };
     
     let static_bot_answer;
-    if (answerObj.actions) {
+    if (answerObj.actions && answerObj.actions.length > 0) {
       static_bot_answer = { // actions workflow will be executed
         actions: answerObj.actions
       }
