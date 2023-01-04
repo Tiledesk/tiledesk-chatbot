@@ -117,7 +117,7 @@ class TiledeskChatbot {
         let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, explicit_intent_name);
         let reply;
         if (faq) {
-          if (this.log) {console.log("Got a reply from Intent name:", faq);}
+          if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
           try {
             reply = await this.execIntent(faq, message, lead);//, bot);
           }
