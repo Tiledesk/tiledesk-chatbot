@@ -323,9 +323,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};
     }
-    if (!bot_answer.text) {
-      bot_answer.text = "..."
-    }
+    // if (!bot_answer.text) {
+    //   bot_answer.text = "..."
+    // }
     bot_answer.attributes["_raw_message"] = original_answer_text;
     if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
