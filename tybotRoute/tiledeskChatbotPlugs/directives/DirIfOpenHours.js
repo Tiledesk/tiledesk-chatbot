@@ -12,6 +12,7 @@ class DirIfOpenHours {
     else {
       this.checkOpen = false;
     }
+    this.intentDir = config.intentDir;
     this.log = config.log;
   }
 
