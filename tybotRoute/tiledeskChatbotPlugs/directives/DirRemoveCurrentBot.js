@@ -1,5 +1,5 @@
 
-class DirReplaceBot {
+class DirRemoveCurrentBot {
 
   constructor(config) {
     if (!config.tdclient) {
@@ -10,18 +10,13 @@ class DirReplaceBot {
   }
 
   execute(directive, callback) {
-    console.log("Replacing bot")
+    console.log("Remove current bot");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else if (directive.parameter) {
-      let botName = directive.parameter.trim();
-      action = {
-        body: {
-          botName: botName
-        }
-      }
+      action = {};
     }
     else {
       callback();
@@ -32,10 +27,10 @@ class DirReplaceBot {
   }
 
   go(action, callback) {
-    this.tdclient.replaceBotByName(this.requestId, action.body.botName, () => {
+    tdclient.removeCurrentBot(this.requestId, (err) => {
       callback();
     });
   }
 }
 
-module.exports = { DirReplaceBot };
+module.exports = { DirRemoveCurrentBot };

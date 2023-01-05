@@ -1,5 +1,8 @@
 const { param } = require("express/lib/request");
 
+/**
+ * DEPRECATED. Use "\_tdIfOpenHours intentName" instead
+ */
 class DirWhenOpen {
 
   constructor(config) {
