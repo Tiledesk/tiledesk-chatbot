@@ -1,23 +1,25 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
-const { DirOfflineHours } = require('./directives/DirOfflineHours');
+const { DirOfflineHours } = require('./directives/DirOfflineHours'); // DEPRECATED
 const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
 const { DirWait } = require('./directives/DirWait');
 const { DirReplaceBot } = require('./directives/DirReplaceBot');
+const { DirRemoveCurrentBot } = require('./directives/DirRemoveCurrentBot');
 const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
 const { DirIntent } = require('./directives/DirIntent');
-const { DirWhenOpen } = require('./directives/DirWhenOpen');
+const { DirWhenOpen } = require('./directives/DirWhenOpen'); // DEPRECATED
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
-const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents');
+const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents'); // DEPRECATED
 const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
 const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
+const { DirIfOpenHours} = require('./directives/DirIfOpenHours');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
@@ -197,6 +199,27 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      else if (directive_name === Directives.IF_OPEN_HOURS) {
+        const intentDir = new DirIntent(
+          {
+            API_ENDPOINT: API_URL,
+            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+            log: false,
+            supportRequest: supportRequest,
+            token: token
+          }
+        );
+        const ifOpenHoursDir = new DirIfOpenHours(
+          {
+            tdclient: tdclient,
+            intentDir: intentDir,
+            log: false
+          });
+        ifOpenHoursDir.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      // DEPRECATED
       else if (directive_name === Directives.WHEN_OPEN) {
         const whenOpenDir = new DirWhenOpen(
           {
@@ -207,6 +230,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      // DEPRECATED
       else if (directive_name === Directives.WHEN_CLOSED) {
         const whenOpenDir = new DirWhenOpen(
           {
@@ -218,6 +242,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      // DEPRECATED
       else if (directive_name === Directives.IF_AGENTS) {
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
@@ -229,6 +254,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      // DEPRECATED
       else if (directive_name === Directives.IF_NO_AGENTS) {
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
@@ -300,12 +326,21 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.REMOVE_CURRENT_BOT) {
-        tdclient.removeCurrentBot(requestId, (err) => {
+        new DirRemoveCurrentBot({
+          tdclient: tdclient,
+          requestId: requestId
+        }).execute(directive, requestId, () => {
           process(nextDirective());
         });
+        // tdclient.removeCurrentBot(requestId, (err) => {
+        //   process(nextDirective());
+        // });
       }
       else if (directive_name === Directives.REPLACE_BOT) {
-        new DirReplaceBot(tdclient).execute(directive, requestId, () => {
+        new DirReplaceBot({
+          tdclient: tdclient,
+          requestId: requestId
+        }).execute(directive, () => {
           process(nextDirective());
         });
       }
@@ -354,7 +389,7 @@ class DirectivesChatbotPlug {
             await TiledeskChatbot.allParametersStatic(
               tdcache, requestId
             );
-            // console.log("delete executed.", requestVariables);
+            // console.log("delete executed.",directive, requestVariables);
             process(nextDirective());
         });
       }

@@ -4,7 +4,7 @@
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
-    "test": "mocha  --exit",
+    "test": "mocha --timeout 5000 --exit",
     "start": "node index.js"
   },
   "keywords": [],

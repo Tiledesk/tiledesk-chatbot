@@ -341,8 +341,8 @@ class TiledeskChatbot {
       static_bot_answer = { // static design of the chatbot reply
         //type: answerObj.type,
         text: answerObj.answer,
-        attributes: answerObj.attributes,
-        metadata: answerObj.metadata,
+        // attributes: answerObj.attributes,
+        // metadata: answerObj.metadata,
         // language: ?
         // channel: ? whatsapp|telegram|facebook...
       };

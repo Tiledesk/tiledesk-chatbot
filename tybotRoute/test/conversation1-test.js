@@ -411,7 +411,7 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #3 sending #4. Message sent.", request);
           });
           // listener.close( () => {
           //   done();
@@ -436,7 +436,7 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #4 sending #5. Message sent.", request);
           });
           // listener.close( () => {
           //   done();
@@ -461,7 +461,7 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #5 sending #6. Message sent.", request);
           });
           // listener.close( () => {
           //   done();
@@ -486,7 +486,7 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #6 sending #7. Message sent.", request);
           });
           // listener.close( () => {
           //   done();
@@ -511,14 +511,14 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #7 sending #8. Message sent.", request);
           });
           // listener.close( () => {
           //   done();
           // });
         }
         else if (message.text === "Thanks John\nYour email test@test.it" && message.triggeredByMessageId === request8_uuid) {
-          // console.log("got #8 sending #9!");
+          // console.log("got #8 sending #9");
           let request = { // intent-to-intent connection
             "payload": {
               "_id": request9_uuid,
@@ -536,7 +536,7 @@ describe('Conversation1', async() => {
             "token": CHATBOT_TOKEN
           }
           sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-            // console.log("Message sent.", request);
+            // console.log("got #8 sending #9. Message sent.", request);
           });
         }
         else if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}") {
