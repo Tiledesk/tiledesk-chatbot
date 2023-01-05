@@ -1,5 +1,3 @@
-const { DirIntent } = require('./directives/DirIntent');
-
 class DirIfOpenHours {
 
   constructor(config) {
