@@ -29,6 +29,7 @@ class DirDeleteVariable {
       }
       try {
         if (this.tdcache) {
+          
           await TiledeskChatbot.deleteParameterStatic(
             this.tdcache, this.requestId, variableName
           );

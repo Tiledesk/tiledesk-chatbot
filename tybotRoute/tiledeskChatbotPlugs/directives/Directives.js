@@ -24,6 +24,7 @@ class Directives {
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
   static SEND_EMAIL = "sendemail";
   static DELETE = "delete";
+  static IF_OPEN_HOURS = "ifopenhours";
 
   static actionToDirective(action) {
     let directive = {
