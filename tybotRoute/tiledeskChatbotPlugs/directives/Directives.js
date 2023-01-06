@@ -13,10 +13,11 @@ class Directives {
   static WHEN_OFFLINE_HOURS = "whenofflinehours"; // adds a message on top of the original message when offline hours opts: --replace
   //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
   static DISABLE_INPUT_TEXT = "disableinputtext";
-  static WHEN_OPEN = "whenopen";
-  static WHEN_CLOSED = "whenclosed";
-  static IF_NO_AGENTS = "ifnoagents";
-  static IF_AGENTS = "ifagents";
+  static WHEN_OPEN = "whenopen"; // DEPRECATED
+  static WHEN_CLOSED = "whenclosed"; // DEPRECATED
+  static IF_NO_AGENTS = "ifnoagents"; // DEPRECATED
+  static IF_AGENTS = "ifagents"; // DEPRECATED
+
   static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";
@@ -26,6 +27,8 @@ class Directives {
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_NOT_OPEN_HOURS = "ifnotopenhours";
+  static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
+  static IF_NO_AVAILABLE_AGENTS = "ifnoavailableagents"; // TODO
 
   static actionToDirective(action) {
     let directive = {
