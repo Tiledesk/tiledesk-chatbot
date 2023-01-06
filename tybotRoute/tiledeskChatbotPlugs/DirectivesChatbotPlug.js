@@ -98,7 +98,6 @@ class DirectivesChatbotPlug {
     }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
-    //console.log("TDCACHE:", this.tdcache, tdcache)
     const tdclient = new TiledeskClient({
       projectId: projectId,
       token: token,
@@ -107,6 +106,18 @@ class DirectivesChatbotPlug {
       log: false
     });
 
+    let context =  {
+      projectId: projectId,
+      token: token,
+      supportRequest: supportRequest,
+      requestId: supportRequest.request_id,
+      TILEDESK_APIURL: API_URL,
+      TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+      departmentId: depId,
+      tdcache: tdcache,
+      log: false
+    }
+    
     let curr_directive_index = -1;
     if (this.log) { console.log("processing directives:", directives); }
     function process(directive) {
@@ -201,47 +212,47 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.IF_OPEN_HOURS) {
-        const intentDir = new DirIntent(
-          {
-            API_ENDPOINT: API_URL,
-            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false,
-            supportRequest: supportRequest,
-            token: token
-          }
-        );
-        const ifOpenHours = new DirIfOpenHours(
-          {
-            tdclient: tdclient,
-            intentDir: intentDir,
-            log: false
-          });
+        // const intentDir = new DirIntent(
+        //   {
+        //     API_ENDPOINT: API_URL,
+        //     TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+        //     log: false,
+        //     supportRequest: supportRequest,
+        //     token: token
+        //   }
+        // );
+
+        const ifOpenHours = new DirIfOpenHours(context);
+          // {
+          //   tdclient: tdclient,
+          //   intentDir: intentDir,
+          //   log: false
+          // });
         ifOpenHours.execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.IF_NOT_OPEN_HOURS) {
-        const intentDir = new DirIntent(
-          {
-            API_ENDPOINT: API_URL,
-            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false,
-            supportRequest: supportRequest,
-            token: token
-          }
-        );
-        const ifNotOpenHours = new DirIfNotOpenHours(
-          {
-            tdclient: tdclient,
-            intentDir: intentDir,
-            log: false
-          });
+        // const intentDir = new DirIntent(
+        //   {
+        //     API_ENDPOINT: API_URL,
+        //     TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+        //     log: false,
+        //     supportRequest: supportRequest,
+        //     token: token
+        //   }
+        // );
+        const ifNotOpenHours = new DirIfNotOpenHours(context);
+          // {
+          //   tdclient: tdclient,
+          //   intentDir: intentDir,
+          //   log: false
+          // });
         ifNotOpenHours.execute(directive, () => {
           process(nextDirective());
         });
       }
-      // DEPRECATED
-      else if (directive_name === Directives.WHEN_OPEN) {
+      else if (directive_name === Directives.WHEN_OPEN) { // DEPRECATED
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient, // matches open hours
@@ -251,8 +262,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      // DEPRECATED
-      else if (directive_name === Directives.WHEN_CLOSED) {
+      else if (directive_name === Directives.WHEN_CLOSED) { // DEPRECATED
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient,
@@ -263,8 +273,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      // DEPRECATED
-      else if (directive_name === Directives.IF_AGENTS) {
+      else if (directive_name === Directives.IF_AGENTS) { // DEPRECATED
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
@@ -275,8 +284,7 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      // DEPRECATED
-      else if (directive_name === Directives.IF_NO_AGENTS) {
+      else if (directive_name === Directives.IF_NO_AGENTS) { // DEPRECATED
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
@@ -350,12 +358,9 @@ class DirectivesChatbotPlug {
         new DirRemoveCurrentBot({
           tdclient: tdclient,
           requestId: requestId
-        }).execute(directive, requestId, () => {
+        }).execute(directive, () => {
           process(nextDirective());
         });
-        // tdclient.removeCurrentBot(requestId, (err) => {
-        //   process(nextDirective());
-        // });
       }
       else if (directive_name === Directives.REPLACE_BOT) {
         new DirReplaceBot({

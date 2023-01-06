@@ -1,12 +1,37 @@
 class DirIfOpenHours {
 
-  constructor(config) {
-    if (!config.tdclient) {
-      throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = config.tdclient;
-    this.intentDir = config.intentDir;
-    this.log = config.log;
+    // this.tdclient = config.tdclient;
+    this.tdclient = new TiledeskClient({
+      projectId: context.projectId,
+      token: context.token,
+      APIURL: context.TILEDESK_APIURL,
+      APIKEY: "___",
+      log: context.log
+    });
+    // this.intentDir = config.intentDir;
+    // let context =  {
+    //   projectId: projectId,
+    //   token: token,
+    //   requestId: supportRequest,
+    //   APIURL: API_URL,
+    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+    //   departmentId: depId,
+    //   log: false
+    // }
+    this.intentDir = new DirIntent(
+      {
+        API_ENDPOINT: context.API_URL,
+        TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
+        supportRequest: context.supportRequest,
+        token: context.token,
+        log: context.log
+      }
+    );
+    this.log = context.log;
   }
 
   execute(directive, callback) {
