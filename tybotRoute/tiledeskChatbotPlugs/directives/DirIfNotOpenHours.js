@@ -27,7 +27,7 @@ class DirIfNotOpenHours {
     // }
     this.intentDir = new DirIntent(
       {
-        API_ENDPOINT: context.API_URL,
+        API_ENDPOINT: context.TILEDESK_APIURL,
         TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
         supportRequest: context.supportRequest,
         token: context.token,
