@@ -1,10 +1,9 @@
-class DirIfOpenHours {
+class DirIfNotOpenHours {
 
   constructor(config) {
     if (!config.tdclient) {
       throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = config.tdclient;
     this.intentDir = config.intentDir;
     this.log = config.log;
   }
@@ -43,11 +42,11 @@ class DirIfOpenHours {
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
-        console.error("DirIfOpenHours Error:", err);
+        console.error("DirIfNotOpenHours Error:", err);
         callback();
       }
-      else if (result && result.isopen) {
-        if (this.log) {console.log("executing the action on 'open'");}
+      else if (result && !result.isopen) {
+        if (this.log) {console.log("executing the action on 'closed'");}
         this.intentDir.execute(intentDirective, () => {
           callback();
         });
@@ -60,4 +59,4 @@ class DirIfOpenHours {
 
 }
 
-module.exports = { DirIfOpenHours };
+module.exports = { DirIfNotOpenHours };

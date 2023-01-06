@@ -25,6 +25,7 @@ class Directives {
   static SEND_EMAIL = "sendemail";
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
+  static IF_NOT_OPEN_HOURS = "ifnotopenhours";
 
   static actionToDirective(action) {
     let directive = {

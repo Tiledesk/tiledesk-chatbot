@@ -219,6 +219,26 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
+      else if (directive_name === Directives.IF_NOT_OPEN_HOURS) {
+        const intentDir = new DirIntent(
+          {
+            API_ENDPOINT: API_URL,
+            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+            log: false,
+            supportRequest: supportRequest,
+            token: token
+          }
+        );
+        const ifOpenHoursDir = new DirIfOpenHours(
+          {
+            tdclient: tdclient,
+            intentDir: intentDir,
+            log: false
+          });
+        ifOpenHoursDir.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
       // DEPRECATED
       else if (directive_name === Directives.WHEN_OPEN) {
         const whenOpenDir = new DirWhenOpen(
