@@ -20,6 +20,7 @@ const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours} = require('./directives/DirIfOpenHours');
+const { DirIfNotOpenHours} = require('./directives/DirIfNotOpenHours');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
@@ -209,13 +210,13 @@ class DirectivesChatbotPlug {
             token: token
           }
         );
-        const ifOpenHoursDir = new DirIfOpenHours(
+        const ifOpenHours = new DirIfOpenHours(
           {
             tdclient: tdclient,
             intentDir: intentDir,
             log: false
           });
-        ifOpenHoursDir.execute(directive, () => {
+        ifOpenHours.execute(directive, () => {
           process(nextDirective());
         });
       }
@@ -229,13 +230,13 @@ class DirectivesChatbotPlug {
             token: token
           }
         );
-        const ifOpenHoursDir = new DirIfOpenHours(
+        const ifNotOpenHours = new DirIfNotOpenHours(
           {
             tdclient: tdclient,
             intentDir: intentDir,
             log: false
           });
-        ifOpenHoursDir.execute(directive, () => {
+        ifNotOpenHours.execute(directive, () => {
           process(nextDirective());
         });
       }
