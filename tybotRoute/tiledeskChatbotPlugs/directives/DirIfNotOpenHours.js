@@ -1,3 +1,5 @@
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+
 class DirIfNotOpenHours {
 
   constructor(context) {
