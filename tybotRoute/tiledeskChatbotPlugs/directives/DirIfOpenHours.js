@@ -1,4 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { DirIntent } = require('./DirIntent');
 
 class DirIfOpenHours {
 
