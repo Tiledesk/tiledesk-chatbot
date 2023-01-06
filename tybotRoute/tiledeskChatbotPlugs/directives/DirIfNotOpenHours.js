@@ -4,6 +4,7 @@ class DirIfNotOpenHours {
     if (!config.tdclient) {
       throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
     }
+    this.tdclient = config.tdclient;
     this.intentDir = config.intentDir;
     this.log = config.log;
   }
