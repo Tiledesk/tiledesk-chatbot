@@ -27,7 +27,7 @@ class Directives {
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_NOT_OPEN_HOURS = "ifnotopenhours";
-  static FUNCTION_VALUE = "functionValue";
+  static FUNCTION_VALUE = "functionvalue";
   static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
 
