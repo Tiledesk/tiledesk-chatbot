@@ -21,6 +21,7 @@ const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours} = require('./directives/DirIfOpenHours');
 const { DirIfNotOpenHours} = require('./directives/DirIfNotOpenHours');
+const { DirAssignFromFunction} = require('./directives/DirAssignFromFunction');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
@@ -249,6 +250,12 @@ class DirectivesChatbotPlug {
           //   log: false
           // });
         ifNotOpenHours.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.FUNCTION_VALUE) {
+        const assign = new DirAssignFromFunction(context);
+        assign.execute(directive, () => {
           process(nextDirective());
         });
       }
