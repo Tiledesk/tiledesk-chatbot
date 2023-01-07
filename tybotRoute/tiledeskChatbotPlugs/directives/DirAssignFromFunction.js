@@ -1,6 +1,6 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const ms = require('minimist-string');
-const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot.js');
 
 class DirAssignFromFunction {
 
