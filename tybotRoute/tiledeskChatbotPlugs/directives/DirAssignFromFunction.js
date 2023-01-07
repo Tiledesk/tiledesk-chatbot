@@ -113,17 +113,17 @@ class DirAssignFromFunction {
   }
   parseParams(directive_parameter) {
     let functionName = null;
-    let variableName = null;
+    let assignTo = null;
     const params = ms(directive_parameter);
     if (params.functionName) {
       functionName = params.functionName
     }
-    if (params.variableName) {
-      variableName = params.variableName;
+    if (params.assignTo) {
+      assignTo = params.assignTo;
     }
     return {
       functionName: functionName,
-      variableName: variableName
+      assignTo: assignTo
     }
   }
 
