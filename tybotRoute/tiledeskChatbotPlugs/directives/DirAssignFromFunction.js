@@ -101,7 +101,7 @@ class DirAssignFromFunction {
             // if (agents.length === 0) {
             // else if (agents.length > 0 && this.checkAgents) {
             callback(null, agents.length);
-            return;           
+            return;
           }
         });
         break;
