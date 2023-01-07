@@ -44,7 +44,7 @@ class DirAssignFromFunction {
       action = {
         body: {
           functionName: params.functionName,
-          variableName: params.variableName
+          assignTo: params.assignTo
         }
       }
     }
@@ -56,14 +56,15 @@ class DirAssignFromFunction {
   }
 
   async go(action, callback) {
+    console.log("invoke function => assign action:", action);
     const functionName = action.body.functionName;
-    const variableName = action.body.variableName;
-    console.log("functionName", functionName)
-    console.log("variableName", variableName)
+    const variableName = action.body.assignTo;
+    console.log("functionName:", functionName)
+    console.log("variableName:", variableName)
     this.invoke(functionName, async (err, value) => {
       if (!err) {
         await TiledeskChatbot.addParameterStatic(this.tdcache, this.context.requestId, variableName, value);
-        console.log("Assigned", value, "to", variableName);
+        console.log("Assigned:", value, "to", variableName);
       }
       else {
         console.error("invoke() error:", err);
