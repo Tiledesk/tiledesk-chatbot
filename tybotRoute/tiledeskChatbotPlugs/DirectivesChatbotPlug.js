@@ -22,6 +22,7 @@ const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours} = require('./directives/DirIfOpenHours');
 const { DirIfNotOpenHours} = require('./directives/DirIfNotOpenHours');
 const { DirAssignFromFunction} = require('./directives/DirAssignFromFunction');
+const { DirCondition} = require('./directives/DirCondition');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
