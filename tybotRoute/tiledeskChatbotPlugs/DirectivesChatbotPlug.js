@@ -55,7 +55,7 @@ class DirectivesChatbotPlug {
     if (this.log) { console.log("processing message:", message_text); }
     let parsed_result = TiledeskChatbotUtil.parseDirectives(message_text);
     if (this.log) {
-      console.log("Message directives:", parsed_result);
+      console.log("Message directives:", JSON.stringify(parsed_result));
       console.log("Message text ripped from directives:", parsed_result.text);
     }
     if (parsed_result && parsed_result.directives && parsed_result.directives.length > 0) {
@@ -120,7 +120,7 @@ class DirectivesChatbotPlug {
     }
     
     let curr_directive_index = -1;
-    if (this.log) { console.log("processing directives:", directives); }
+    if (this.log) { console.log("processing directives:", JSON.stringify(directives)); }
     function process(directive) {
       if (directive) {
         //console.log("directive:", directive);

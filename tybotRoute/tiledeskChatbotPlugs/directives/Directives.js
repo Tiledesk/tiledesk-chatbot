@@ -29,7 +29,7 @@ class Directives {
   static IF_NOT_OPEN_HOURS = "ifnotopenhours";
   static FUNCTION_VALUE = "functionvalue";
   static CONDITION = "condition";
-  static CONDITION = "assign";
+  static ASSIGN = "assign";
   static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
 
