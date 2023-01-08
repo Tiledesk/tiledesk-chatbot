@@ -7,11 +7,29 @@ class TiledeskExpression {
         ">" : {
             applyPattern: "Number(${1}) > Number(${2})"
         },
+        ">=" : {
+            applyPattern: "Number(${1}) >= Number(${2})"
+        },
+        "<" : {
+            applyPattern: "Number(${1}) < Number(${2})"
+        },
         "&&": {
+            applyPattern: " && ${2}"
+        },
+        "||": {
             applyPattern: " && ${2}"
         },
         "startsWith": {
             applyPattern: "${1}.startsWith(${2})"
+        },
+        "contains": {
+            applyPattern: "?"
+        },
+        "endsWith": {
+            applyPattern: "?"
+        },
+        "matches": {
+            applyPattern: "?"
         }
     }
 

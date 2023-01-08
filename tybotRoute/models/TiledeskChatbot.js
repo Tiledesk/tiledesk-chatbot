@@ -50,7 +50,7 @@ class TiledeskChatbot {
           await this.addParameter(this.requestId, "userFullname", lead.fullname);
         }
         if (lead && lead.email) {
-          if (this.log) {console.log("lead.email => params.userEmail:", lead.fullname)}
+          if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
           await this.addParameter(this.requestId, "userEmail", lead.email);
         }
       }
