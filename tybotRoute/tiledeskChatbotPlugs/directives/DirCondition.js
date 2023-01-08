@@ -1,5 +1,6 @@
 const { DirIntent } = require('./DirIntent');
 const { TiledeskExpression } = require('../../TiledeskExpression');
+const ms = require('minimist-string');
 
 class DirCondition {
 
