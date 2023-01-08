@@ -101,10 +101,16 @@ class DirCondition {
     }
     let variables = null;
     if (this.context.tdcache) {
+      console.log("this.requestId:", this.requestId)
+      console.log("this.context.tdcache:", this.context.tdcache)
       variables = 
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.requestId
       );
+      console.log("Variables:", variables)
+    }
+    else {
+      console.error("(DirCondition) No this.context.tdcache");
     }
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
