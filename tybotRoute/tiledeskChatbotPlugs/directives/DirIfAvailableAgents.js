@@ -1,5 +1,8 @@
 const { param } = require("express/lib/request");
 
+/**
+ * DEPRECATED
+ */
 class DirIfAvailableAgents {
 
   constructor(config) {

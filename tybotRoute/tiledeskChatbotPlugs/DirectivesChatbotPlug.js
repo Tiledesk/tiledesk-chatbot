@@ -255,8 +255,15 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.FUNCTION_VALUE) {
         console.log("...DirAssignFromFunction")
-        const assign = new DirAssignFromFunction(context);
-        assign.execute(directive, () => {
+        const assign_dir = new DirAssignFromFunction(context);
+        assign_dir.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.CONDITION) {
+        console.log("...DirCondition");
+        const condition_dir = new DirCondition(context);
+        condition_dir.execute(directive, () => {
           process(nextDirective());
         });
       }
