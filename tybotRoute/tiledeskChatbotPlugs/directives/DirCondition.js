@@ -105,7 +105,7 @@ class DirCondition {
       console.log("this.context.tdcache:", this.context.tdcache)
       variables = 
       await TiledeskChatbot.allParametersStatic(
-        this.context.tdcache, this.requestId
+        this.context.tdcache, this.context.requestId
       );
       console.log("Variables:", variables)
     }
