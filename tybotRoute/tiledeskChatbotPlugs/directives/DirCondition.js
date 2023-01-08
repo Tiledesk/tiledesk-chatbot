@@ -99,10 +99,10 @@ class DirCondition {
       }
     }
     let variables = null;
-    if (this.tdcache) {
+    if (this.context.tdcache) {
       variables = 
       await TiledeskChatbot.allParametersStatic(
-        this.tdcache, this.requestId
+        this.context.tdcache, this.requestId
       );
     }
     const result = await this.evaluateCondition(condition, variables);
