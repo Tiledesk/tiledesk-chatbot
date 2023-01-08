@@ -19,13 +19,13 @@ class DirCondition {
     //   tdcache: tdcache,
     //   log: false
     // }
-    this.tdclient = new TiledeskClient({
-      projectId: context.projectId,
-      token: context.token,
-      APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
-    });
+    // this.tdclient = new TiledeskClient({
+    //   projectId: context.projectId,
+    //   token: context.token,
+    //   APIURL: context.TILEDESK_APIURL,
+    //   APIKEY: "___",
+    //   log: context.log
+    // });
     this.intentDir = new DirIntent(
       {
         API_ENDPOINT: context.TILEDESK_APIURL,
