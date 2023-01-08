@@ -1,4 +1,5 @@
 const { DirIntent } = require('./DirIntent');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const ms = require('minimist-string');
 
