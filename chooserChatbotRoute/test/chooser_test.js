@@ -136,7 +136,7 @@ describe('chooser', function() {
     it('user "" language => pivot', async () => {
         chooser = new LanguageChooser();
         const lang_iso = ""
-        const bot = chooser.findIn(BOTS, lang_iso);    
+        const bot = chooser.findIn(BOTS, lang_iso);
         console.log("bot:", bot)    
         assert(bot !== null);
         assert(bot.name === "Ty");
