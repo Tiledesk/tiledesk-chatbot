@@ -6,6 +6,7 @@ const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
+const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
 
 class TiledeskChatbot {
 
@@ -126,6 +127,9 @@ class TiledeskChatbot {
           if (faq) {
             if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
+              if (intent.parameters) {
+
+              }
               reply = await this.execIntent(faq, message, lead);//, bot);
             }
             catch(error) {
