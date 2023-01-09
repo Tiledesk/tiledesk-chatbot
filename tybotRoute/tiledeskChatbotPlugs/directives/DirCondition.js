@@ -100,7 +100,7 @@ class DirCondition {
       }
     }
     let variables = null;
-    if (this.context.context.tdcache) {
+    if (this.context.tdcache) {
       console.log("this.requestId:", this.context.requestId);
       // console.log("this.context.tdcache:", this.context.tdcache)
       variables = 
