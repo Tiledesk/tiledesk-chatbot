@@ -3,7 +3,7 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 let axios = require('axios');
-const { LanguageChooser } = require('../LanguageChooser');
+const { LanguageChooser } = require('./LanguageChooser');
 
 const app = express();
 
