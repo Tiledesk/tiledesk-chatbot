@@ -131,9 +131,12 @@ router.post('/ext/:botid', async (req, res) => {
   // initial request context
   await chatbot.addParameter("_tdLastMessageId", messageId);
   await chatbot.addParameter("_tdProjectId", projectId);
-  if (message.request) {
-    await chatbot.addParameter("_tdRequestId", requestId);
-    await chatbot.addParameter("_tdRequest", message.request);
+  await chatbot.addParameter("_tdRequestId", requestId);
+  if (message.request.location.country) {
+    await chatbot.addParameter("_tdCountry", message.request.location.country);
+  }
+  if (message.request.location.city) {
+    await chatbot.addParameter("_tdCity", message.request.location.city);
   }
   
   if (requestSourcePage) {
