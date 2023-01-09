@@ -19,10 +19,11 @@ const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
 const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
-const { DirIfOpenHours} = require('./directives/DirIfOpenHours');
-const { DirIfNotOpenHours} = require('./directives/DirIfNotOpenHours');
-const { DirAssignFromFunction} = require('./directives/DirAssignFromFunction');
-const { DirCondition} = require('./directives/DirCondition');
+const { DirIfOpenHours } = require('./directives/DirIfOpenHours');
+const { DirIfNotOpenHours } = require('./directives/DirIfNotOpenHours');
+const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
+const { DirCondition } = require('./directives/DirCondition');
+const { DirAssign } = require('./directives/DirAssign');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
