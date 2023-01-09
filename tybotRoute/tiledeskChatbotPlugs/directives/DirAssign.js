@@ -34,7 +34,7 @@ class DirAssign {
       params = this.parseParams(directive.parameter);
       action = {
         body: {
-          condition: params.condition,
+          expression: params.expression,
           assignTo: params.assignTo
         }
       }
@@ -49,10 +49,10 @@ class DirAssign {
   }
 
   async go(action, callback) {
-    const condition = action.body.condition;
+    const expression = action.body.expression;
     const assignTo = action.body.assignTo;
-    if (!assignTo || !condition) {
-      if (this.log) {console.log("Invalid condition or assignTo parameters");}
+    if (!assignTo || !expression) {
+      if (this.log) {console.log("Invalid expression or assignTo parameters");}
       callback();
       return;
     }
@@ -68,41 +68,36 @@ class DirAssign {
       }
     }
     else {
-      console.error("(DirCondition) No this.context.tdcache");
+      console.error("(DirAssign) No this.context.tdcache");
     }
-    const result = await this.evaluateCondition(condition, variables);
-    if (this.log) {console.log("executed condition:", condition, "result:", result);}
+    const result = await this.evaluateExpression(expression, variables);
+    if (this.log) {console.log("executed expression:", expression, "result:", result);}
     await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
     console.log("Assigned:", value, "to", variableName);
   }
 
-  async evaluateCondition(_condition, variables) {
-    let condition = _condition.replace("$", "$data.");
-    console.log("Evaluating expression:", condition);
+  async evaluateExpression(_expression, variables) {
+    let expression = _expression.replace("$", "$data.");
+    console.log("Evaluating expression:", expression);
     console.log("With variables:", variables);
-    const result = new TiledeskExpression().evaluate(condition, variables);
+    const result = new TiledeskExpression().evaluate(expression, variables);
     console.log("Expression result:", result);
     return result;
   }
 
   parseParams(directive_parameter) {
-    let condition = null;
-    let trueIntent = null;
-    let falseIntent = null;
+    let expression = null;
+    let assignTo = null;
     const params = ms(directive_parameter);
-    if (params.condition) {
-      condition = params.condition
+    if (params.expression) {
+      expression = params.expression
     }
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
+    if (params.assignTo) {
+      assignTo = params.assignTo;
     }
     return {
-      condition: condition,
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
+      expression: expression,
+      assignTo: assignTo
     }
   }
 
