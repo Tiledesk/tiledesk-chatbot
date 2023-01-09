@@ -114,7 +114,7 @@ class TiledeskChatbot {
       if (explicit_intent_name) {
         if (this.log) {console.log("Processing explicit intent:", explicit_intent_name)}
         // look for parameters
-        const intent = TiledeskChatbotUtil.intentComponents(explicit_intent_name);
+        const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
         let reply;
         if (!intent || (intent && !intent.name)) {
           if (this.log) {console.log("Invalid intent:", explicit_intent_name);}
@@ -128,7 +128,10 @@ class TiledeskChatbot {
             if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
               if (intent.parameters) {
-
+                for (const [key, value] of Object.entries(intent.parameters)) {
+                  console.log(`Adding parameter from intent => ${key}: ${value}`);
+                  this.addParameter(key, value);
+                }
               }
               reply = await this.execIntent(faq, message, lead);//, bot);
             }

@@ -1,6 +1,6 @@
 class TiledeskChatbotUtil {
 
-    static intentComponents(explicit_intent_name) {
+    static parseIntent(explicit_intent_name) {
         let intent = {};
         if (explicit_intent_name === null) {
             return null; // invalid intent
