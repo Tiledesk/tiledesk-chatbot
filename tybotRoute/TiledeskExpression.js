@@ -33,10 +33,21 @@ class TiledeskExpression {
         }
     }
 
-    evaluate(conditionExpression, context) {
-        let fn = Function(`let $data = this;return (${conditionExpression})`);
+    // public
+    evaluateExpression(_expression, variables) {
+        let expression = String(_expression).replace(/\$/g, "$data.");//replaceAll("$", "$data.");
+        console.log("Evaluating expression:", expression);
+        console.log("With variables:", variables);
+        const result = new TiledeskExpression().evaluate(expression, variables);
+        console.log("Expression result:", result);
+        return result;
+    }
+
+    // private
+    evaluate(expression, context) {
+        let fn = Function(`let $data = this;return (${expression})`);
         // let fn = Function(`let $data = this;console.log('data', $data);return (${conditionExpression})`);
-        let res = fn.bind(context)();
+        let res = fn.bind(context)()
         return res;
     }
 

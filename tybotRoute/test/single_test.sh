@@ -6,5 +6,5 @@
 #npx mocha ./test/intent_form_test.js --exit
 #npx mocha ./test/send_email_directive_test.js --exit
 #npx mocha ./test/intent_form_pre_filled_test.js --exit
-#npx mocha ./test/condition_evaluator_test --exit
-npx mocha ./test/chatbot_util_test --exit
+npx mocha ./test/condition_evaluator_test --exit
+#npx mocha ./test/chatbot_util_test --exit

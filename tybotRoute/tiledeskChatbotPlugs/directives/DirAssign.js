@@ -64,7 +64,7 @@ class DirAssign {
         await TiledeskChatbot.allParametersStatic(
           this.context.tdcache, this.context.requestId);
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
-      const value = await this.evaluateExpression(expression, variables);
+      const value = await new TiledeskExpression().evaluateExpression(expression, variables);
       if (this.log) {console.log("(DirAssign) executed expression:", expression, "result:", result);}
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
       if (this.log) {console.log("(DirAssign) Assigned:", value, "to", variableName);}
@@ -76,14 +76,14 @@ class DirAssign {
     }
   }
 
-  async evaluateExpression(_expression, variables) {
-    let expression = _expression.replace("$", "$data.");
-    console.log("Evaluating expression:", expression);
-    console.log("With variables:", variables);
-    const result = new TiledeskExpression().evaluate(expression, variables);
-    console.log("Expression result:", result);
-    return result;
-  }
+  // async evaluateExpression(_expression, variables) {
+  //   let expression = _expression.replace("$", "$data.");
+  //   console.log("Evaluating expression:", expression);
+  //   console.log("With variables:", variables);
+  //   const result = new TiledeskExpression().evaluate(expression, variables);
+  //   console.log("Expression result:", result);
+  //   return result;
+  // }
 
   parseParams(directive_parameter) {
     let expression = null;
