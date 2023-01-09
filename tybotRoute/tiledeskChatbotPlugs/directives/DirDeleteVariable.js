@@ -6,7 +6,7 @@ const { Filler } = require('../Filler');
 
 class DirDeleteVariable {
 
-  constructor(config) {
+  constructor(context) {
     if (!context) {
       throw new Error('config (TiledeskClient) object is mandatory.');
     }
