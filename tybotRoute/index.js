@@ -89,7 +89,6 @@ router.post('/ext/:botid', async (req, res) => {
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   // NEXTTTTTTT
 
-
   const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
 
   // get the bot metadata
@@ -132,7 +131,11 @@ router.post('/ext/:botid', async (req, res) => {
   // initial request context
   await chatbot.addParameter("_tdLastMessageId", messageId);
   await chatbot.addParameter("_tdProjectId", projectId);
-  await chatbot.addParameter("_tdRequestId", requestId);
+  if (message.request) {
+    await chatbot.addParameter("_tdRequestId", requestId);
+    await chatbot.addParameter("_tdRequest", message.request);
+  }
+  
   if (requestSourcePage) {
     await chatbot.addParameter("requestSourcePage", sourcePage);
   }

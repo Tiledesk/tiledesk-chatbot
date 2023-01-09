@@ -324,28 +324,33 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.AGENT) {
-        if (depId) {
-          const agentDir = new DirMoveToAgent(
-            {
-              tdclient: tdclient,
-              requestId: requestId,
-              depId: depId
-            }
-          );
-          if (!directive.body) {
-            directive.action = {}
-            directive.action.body = {
-              whenOnlineOnly: false
-            }
-          }
-          agentDir.execute(directive, () => {
-            process(nextDirective());
-          });  
-        }
-        else {
-          console.log("Warning. DepId null while calling 'AGENT' directive")
+        console.log("...DirMoveToAgent");
+        const agentDir = new DirMoveToAgent(context);
+        agentDir.execute(directive, () => {
           process(nextDirective());
-        }
+        });
+        // if (depId) {
+        //   const agentDir = new DirMoveToAgent(
+        //     {
+        //       tdclient: tdclient,
+        //       requestId: requestId,
+        //       depId: depId
+        //     }
+        //   );
+        //   if (!directive.body) {
+        //     directive.action = {}
+        //     directive.action.body = {
+        //       whenOnlineOnly: false
+        //     }
+        //   }
+        //   agentDir.execute(directive, () => {
+        //     process(nextDirective());
+        //   });  
+        // }
+        // else {
+        //   console.log("Warning. DepId null while calling 'AGENT' directive")
+        //   process(nextDirective());
+        // }
       }
       else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
         if (depId) {
@@ -422,14 +427,20 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.SEND_EMAIL) {
-        new DirSendEmail(
-          {
-            tdclient: tdclient,
-            tdcache: tdcache,
-            requestId: requestId
-          }).execute(directive, () => {
-            process(nextDirective());
+        if (log) {console.log("...DirSendEmail");}
+        const email_dir = new DirSendEmail(context);
+        email_dir.execute(directive, () => {
+          process(nextDirective());
         });
+
+        // new DirSendEmail(
+        //   {
+        //     tdclient: tdclient,
+        //     tdcache: tdcache,
+        //     requestId: requestId
+        //   }).execute(directive, () => {
+        //     process(nextDirective());
+        // });
       }
       else if (directive_name === Directives.DELETE) {
         // console.log("got delete dir...")

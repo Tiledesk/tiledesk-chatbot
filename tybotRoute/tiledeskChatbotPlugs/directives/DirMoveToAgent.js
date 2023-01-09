@@ -2,21 +2,33 @@ const { Directives } = require("./Directives");
 
 class DirMoveToAgent {
 
-  constructor(settings) {
-    if (!settings.tdclient) {
-      throw new Error('settings.tdclient (TiledeskClient) object is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = settings.tdclient;
-
-    if (!settings.requestId) {
-      throw new Error('settings.requestId (TiledeskClient) object is mandatory.');
-    }
-    this.requestId = settings.requestId;
-
-    if (!settings.depId) {
-      throw new Error('settings.depId (TiledeskClient) object is mandatory.');
-    }
-    this.depId = settings.depId;
+    this.context = context;
+    // let context =  {
+    //   projectId: projectId,
+    //   token: token,
+    //   supportRequest: supportRequest,
+    //   requestId: supportRequest.request_id,
+    //   TILEDESK_APIURL: API_URL,
+    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+    //   departmentId: depId,
+    //   tdcache: tdcache,
+    //   log: false
+    // }
+    this.tdclient = new TiledeskClient({
+      projectId: context.projectId,
+      token: context.token,
+      APIURL: context.TILEDESK_APIURL,
+      APIKEY: "___",
+      log: context.log
+    });
+    this.tdcache = this.context.tdcache;
+    this.requestId = this.context.requestId;
+    this.depId = this.context.departmentId;
+    this.log = this.context.log;
   }
 
   execute(directive, callback) {

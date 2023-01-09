@@ -6,27 +6,63 @@ const { Filler } = require('../Filler');
 
 class DirSendEmail {
 
-  constructor(config) {
-    if (!config.tdclient) {
-      throw new Error('config.tdclient (TiledeskClient) is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
     }
-    this.tdclient = config.tdclient;
-    this.tdcache = config.tdcache;
-    this.requestId = config.requestId;
-    this.log = config.log;
+    this.context = context;
+    // let context =  {
+    //   projectId: projectId,
+    //   token: token,
+    //   supportRequest: supportRequest,
+    //   requestId: supportRequest.request_id,
+    //   TILEDESK_APIURL: API_URL,
+    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+    //   departmentId: depId,
+    //   tdcache: tdcache,
+    //   log: false
+    // }
+    this.tdclient = new TiledeskClient({
+      projectId: context.projectId,
+      token: context.token,
+      APIURL: context.TILEDESK_APIURL,
+      APIKEY: "___",
+      log: context.log
+    });
+    this.log = context.log;
+    this.tdcache = this.context.tdcache;
+    this.requestId = this.context.requestId;
+    this.log = this.context.log;
   }
 
-  async execute(directive, completion) {
-      let params = null;
-      if (directive.parameter) {
-        params = this.parseParams(directive.parameter);
-      }
-      else {
-        const error = new Error("sendEmail missing 'parameter' error. Skipping");
-        if (completion) {
-          completion(error);
+  execute(directive, callback) {
+    let action;
+    if (directive.action) {
+      console.log("got intent action:", JSON.stringify(directive.action));
+      action = directive.action;
+    }
+    else if (directive.parameter && directive.parameter.trim() !== "") {
+      const params = this.parseParams(directive.parameter);
+      action = {
+        body: {
+          subject: params.subject,
+          text: params.text,
+          to: params.to
         }
       }
+    }
+    else {
+      console.error("Incorrect directive:", directive);
+      callback();
+      return;
+    }
+    this.go(action, () => {
+      callback();
+    });
+  }
+
+  async go(action, completion) {
+      let params = action.body;
       if (params.subject && params.text && params.to) {
         try {
           let requestVariables = null;
