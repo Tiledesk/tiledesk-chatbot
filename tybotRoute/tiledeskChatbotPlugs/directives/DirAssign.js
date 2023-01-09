@@ -59,11 +59,11 @@ class DirAssign {
     
     if (this.context.tdcache) {
       if (this.log) {console.log("(DirAssign) this.requestId:", this.context.requestId);}
-      variables =
+      let variables =
         await TiledeskChatbot.allParametersStatic(
           this.context.tdcache, this.context.requestId);
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
-      const result = await this.evaluateExpression(expression, variables);
+      const value = await this.evaluateExpression(expression, variables);
       if (this.log) {console.log("(DirAssign) executed expression:", expression, "result:", result);}
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
       if (this.log) {console.log("(DirAssign) Assigned:", value, "to", variableName);}
