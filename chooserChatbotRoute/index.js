@@ -78,6 +78,7 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
     const tdclient = new TiledeskClient({ projectId: projectId, token: token, APIURL: API_URL, APIKEY: "___", log: true });
     tdclient.getAllBots((err, bots) => {
         if (err) {
+            console.error("Error chooser:", err);
             callback(err, null);
             return;
         }
@@ -88,6 +89,7 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
             callback(null, bot);
         }
         catch(err) {
+            console.error("Error LanguageChooser:", err);
             callback(err, null);
         }
         
