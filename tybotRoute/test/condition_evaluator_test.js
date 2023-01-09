@@ -76,7 +76,7 @@ describe('Evaluate basic conditions', function() {
     //     assert(result === true);
     // });
 
-    it('condition 5 - comapre string with a constant', async () => {
+    it('condition 5 - compare string with a constant', async () => {
         const condition = "$_tdCountry === 'IT'";
         console.log("Evaluating condition:", condition);
         context = {
