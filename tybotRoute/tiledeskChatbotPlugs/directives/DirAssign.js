@@ -3,7 +3,7 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const ms = require('minimist-string');
 
-class DirCondition {
+class DirAssign {
 
   constructor(context) {
     if (!context) {
@@ -21,22 +21,6 @@ class DirCondition {
     //   tdcache: tdcache,
     //   log: false
     // }
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    this.intentDir = new DirIntent(
-      {
-        API_ENDPOINT: context.TILEDESK_APIURL,
-        TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-        supportRequest: context.supportRequest,
-        token: context.token,
-        log: context.log
-      }
-    );
     this.log = context.log;
   }
 
@@ -48,15 +32,10 @@ class DirCondition {
     else if (directive.parameter) {
       let params;
       params = this.parseParams(directive.parameter);
-      if (!params.condition) {
-        callback();
-        return;
-      }
       action = {
         body: {
           condition: params.condition,
-          trueIntent: params.trueIntent,
-          falseIntent: params.falseIntent
+          assignTo: params.assignTo
         }
       }
     }
@@ -67,84 +46,41 @@ class DirCondition {
     this.go(action, () => {
       callback();
     });
-    
   }
 
   async go(action, callback) {
     const condition = action.body.condition;
-    const trueIntent = action.body.trueIntent;
-    const falseIntent = action.body.falseIntent;
-    if (!trueIntent && !falseIntent) {
-      if (this.log) {console.log("Invalid condition, no intents specified");}
+    const assignTo = action.body.assignTo;
+    if (!assignTo || !condition) {
+      if (this.log) {console.log("Invalid condition or assignTo parameters");}
       callback();
       return;
     }
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = {
-        action: {
-          body: {
-            intentName: trueIntent
-          }
-        }
-      }
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = {
-        action: {
-          body: {
-            intentName: falseIntent
-          }
-        }
-      }
-    }
-    let variables = null;
+    
     if (this.context.tdcache) {
-      console.log("this.requestId:", this.context.requestId);
-      // console.log("this.context.tdcache:", this.context.tdcache)
-      variables = 
-      await TiledeskChatbot.allParametersStatic(
-        this.context.tdcache, this.context.requestId
-      );
-      console.log("Variables:", variables)
+      if (this.log) {
+        console.log("this.requestId:", this.context.requestId);
+        variables = 
+        await TiledeskChatbot.allParametersStatic(
+          this.context.tdcache, this.context.requestId
+        );
+        console.log("Variables:", variables)
+      }
     }
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          callback();
-        });
-      }
-      else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
-        callback();
-        return;
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          callback();
-        });
-      }
-      else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
-        callback();
-        return;
-      }
-    }
+    await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
+    console.log("Assigned:", value, "to", variableName);
   }
 
   async evaluateCondition(_condition, variables) {
     let condition = _condition.replace("$", "$data.");
     console.log("Evaluating expression:", condition);
     console.log("With variables:", variables);
-    const result = new TiledeskExpression().evaluate(condition, variables)
+    const result = new TiledeskExpression().evaluate(condition, variables);
     console.log("Expression result:", result);
     return result;
   }
@@ -172,4 +108,4 @@ class DirCondition {
 
 }
 
-module.exports = { DirCondition };
+module.exports = { DirAssign };
