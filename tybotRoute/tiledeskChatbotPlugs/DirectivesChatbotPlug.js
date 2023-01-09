@@ -268,7 +268,15 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.WHEN_OPEN) { // DEPRECATED
+      else if (directive_name === Directives.ASSIGN) {
+        console.log("...DirAssign");
+        const assign_dir = new DirAssign(context);
+        assign_dir.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.WHEN_OPEN) {
+        // DEPRECATED
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient, // matches open hours
@@ -278,7 +286,8 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.WHEN_CLOSED) { // DEPRECATED
+      else if (directive_name === Directives.WHEN_CLOSED) {
+        // DEPRECATED
         const whenOpenDir = new DirWhenOpen(
           {
             tdclient: tdclient,
@@ -289,7 +298,8 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.IF_AGENTS) { // DEPRECATED
+      else if (directive_name === Directives.IF_AGENTS) {
+        // DEPRECATED
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
@@ -300,7 +310,8 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.IF_NO_AGENTS) { // DEPRECATED
+      else if (directive_name === Directives.IF_NO_AGENTS) {
+        // DEPRECATED
         const ifNoAgentsDir = new DirIfAvailableAgents(
           {
             tdclient: tdclient,
