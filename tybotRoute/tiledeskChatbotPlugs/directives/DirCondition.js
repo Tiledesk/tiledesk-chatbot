@@ -112,6 +112,7 @@ class DirCondition {
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
+    console.log("action.body.condition:", condition);
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
     if (result === true) {
