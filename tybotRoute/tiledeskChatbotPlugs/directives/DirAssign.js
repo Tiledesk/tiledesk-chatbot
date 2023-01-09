@@ -2,6 +2,7 @@ const { DirIntent } = require('./DirIntent');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const ms = require('minimist-string');
+const { Filler } = require('../Filler');
 
 class DirAssign {
 
@@ -57,17 +58,25 @@ class DirAssign {
       callback();
       return;
     }
-    
+
     if (this.context.tdcache) {
       if (this.log) {console.log("(DirAssign) this.requestId:", this.context.requestId);}
       let variables =
         await TiledeskChatbot.allParametersStatic(
           this.context.tdcache, this.context.requestId);
+
+      // filling
+      let variableName;
+      const filler = new Filler();
+      console.log("assign variable name:", variableName);
+      variableName = filler.fill(assignTo, variables);
+      console.log("assign variable name (after filling):", variableName);
+          
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
       const value = await new TiledeskExpression().evaluateExpression(expression, variables);
       if (this.log) {console.log("(DirAssign) executed expression:", expression, "result:", result);}
-      await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignTo, value);
-      if (this.log) {console.log("(DirAssign) Assigned:", value, "to", assignTo);}
+      await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
+      if (this.log) {console.log("(DirAssign) Assigned:", value, "to", variableName);}
       callback();
     }
     else {
