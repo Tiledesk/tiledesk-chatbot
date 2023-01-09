@@ -110,25 +110,34 @@ class TiledeskChatbot {
         if (this.log) {console.log("Intent was explicitly invoked with an action:", explicit_intent_name);}
       }
 
-      // Checking Action button
       if (explicit_intent_name) {
-        if (this.log) {console.log("Executing explicit intent:", explicit_intent_name)}
-        let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, explicit_intent_name);
-        let reply;
-        if (faq) {
-          if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
-          try {
-            reply = await this.execIntent(faq, message, lead);//, bot);
-          }
-          catch(error) {
-            console.error("error");
-            reject(error);
+        if (this.log) {console.log("Processing explicit intent:", explicit_intent_name)}
+        // look for parameters
+        const intent = TiledeskChatbotUtil.intentComponents(explicit_intent_name);
+        if (!intent || (intent && !intent.name)) {
+          if (this.log) {console.log("Invalid intent:", explicit_intent_name);}
+          reply = {
+            "text": "Invalid intent: *" + explicit_intent_name + "*"
           }
         }
         else {
-          if (this.log) {console.log("Intent not found:", explicit_intent_name);}
-          reply = {
-            "text": "Intent not found: *" + explicit_intent_name + "*"
+          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent.name);
+          let reply;
+          if (faq) {
+            if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
+            try {
+              reply = await this.execIntent(faq, message, lead);//, bot);
+            }
+            catch(error) {
+              console.error("error");
+              reject(error);
+            }
+          }
+          else {
+            if (this.log) {console.log("Intent not found:", explicit_intent_name);}
+            reply = {
+              "text": "Intent not found: *" + explicit_intent_name + "*"
+            }
           }
         }
         resolve(reply);
@@ -240,9 +249,8 @@ class TiledeskChatbot {
     // THE FORM
     if (intent_name === "test_form_intent") {
       answerObj.form = {
-        "cancelCommands": ['annulla', 'cancella', 'reset', 'cancel'],
-        "cancelReply": "Ok annullato!",
-        "cancelReplyIntent": "formCanceled", // TODO IDEA
+        "cancelCommands": ['reset', 'cancel'],
+        "cancelReply": "Ok canceled!",
         "fields": [
           {
             "name": "userFullname",

@@ -52,7 +52,6 @@ class DirIfOpenHours {
     this.go(action, () => {
       callback();
     });
-    
   }
 
   go(action, callback) {

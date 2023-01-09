@@ -2,40 +2,62 @@ const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { Filler } = require('../Filler');
 
 class DirDeleteVariable {
 
   constructor(config) {
-    this.tdclient = config.tdclient;
-    this.tdcache = config.tdcache;
-    this.requestId = config.requestId;
-    this.log = config.log;
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
+    }
+    this.context = context;
+    this.log = context.log;
   }
 
-  async execute(directive, completion) {
-      let variableName = null;
-      // console.log("DirDeleteVariable:", directive);
-      if (directive.parameter) {
-        variableName = directive.parameter;
-      }
-      else {
-        const error = new Error("missing 'parameter' error. Skipping");
-        if (error) {
-          console.log("error:", error);
-        }
-        if (completion) {
-          completion();
+  async execute(directive, callback) {
+    let action;
+    if (directive.action) {
+      action = directive.action
+    }
+    else if (directive.parameter) {
+      action = {
+        body: {
+          variableName: directive.parameter
         }
       }
+    }
+    this.go(action, () => {
+      callback();
+    });
+  }
+
+  async go(action, callback) {
+    let variableName = action.body.variableName;
+    // console.log("DirDeleteVariable:", directive);
+    if (!variableName) {
+      if (this.log) {console.log("Error deleting variable. Missing 'variableName' error. Skipping");}
+      if (callback) {
+        callback();
+      }
+    }
+    else {
       try {
-        if (this.tdcache) {
-          
+        if (this.context.tdcache) {
+          let variables = null;
+          variables = 
+          await TiledeskChatbot.allParametersStatic(
+            this.context.tdcache, this.context.requestId
+          );
+          const filler = new Filler();
+          console.log("delete variable name:", variableName);
+          variableName = filler.fill(variableName, variables);
+          console.log("delete variable name (after filling):", variableName);
           await TiledeskChatbot.deleteParameterStatic(
-            this.tdcache, this.requestId, variableName
+            this.context.tdcache, this.context.requestId, variableName
           );
         }
-        if (completion) {
-          completion();
+        if (callback) {
+          callback();
         }
       }
       catch(err) {
@@ -44,6 +66,7 @@ class DirDeleteVariable {
           completion();
         }
       }
+    }
   }
 }
 
