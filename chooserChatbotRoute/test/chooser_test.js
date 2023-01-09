@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { LanguageChooser } = require('../LanguageChooser');
+const { LanguageChooser } = require('./LanguageChooser');
 
 const BOTS = [{
     "webhook_enabled": false,
