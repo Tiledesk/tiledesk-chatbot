@@ -1,4 +1,4 @@
-const { Directives } = require("./Directives");
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirMoveToAgent {
 
