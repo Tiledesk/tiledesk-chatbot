@@ -61,7 +61,7 @@ class DirectivesChatbotPlug {
       console.log("Message text ripped from directives:", parsed_result.text);
     }
     if (parsed_result && parsed_result.directives && parsed_result.directives.length > 0) {
-      // do not process more intents. Process directives and return
+      if (this.log) {console.log("Do not process more intents. Process directives and return");}
       const text = parsed_result.text;
       message.text = text;
       this.directives = parsed_result.directives;

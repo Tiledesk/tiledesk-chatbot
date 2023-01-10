@@ -43,7 +43,7 @@ class SplitsChatbotPlug {
       message.attributes.commands = commands;
     }
     if (this.log) {
-      console.log("Message out of Splits plugin:", JSON.stringify(message));
+      // console.log("Message out of Splits plugin:", JSON.stringify(message));
     }
     pipeline.nextplug();
   }

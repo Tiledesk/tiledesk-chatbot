@@ -12,7 +12,11 @@ class MockBotsDataSource {
   // let intents = await this.intentsFinder.find(message.text);
 
   async getBotById(botId) {
-    const bot = this.data.bots[botId];
+    const bot = {
+      webhook_enabled: this.data.bots[botId].webhook_enabled,
+      language: this.data.bots[botId].language,
+      name: this.data.bots[botId].name
+    }
     if (bot) {
       return bot;
     }
@@ -38,7 +42,9 @@ class MockBotsDataSource {
    * @returns a single Intent
    */
   async getByIntentDisplayName(botId, intentName) {
+    // console.log("this.data_", JSON.stringify(this.data.bots[botId]))
     const intent = this.data.bots[botId].intents[intentName];
+    // console.log("got intent:", intent);
     return intent;
   }
 

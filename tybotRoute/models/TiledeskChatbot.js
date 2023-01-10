@@ -133,7 +133,7 @@ class TiledeskChatbot {
                   this.addParameter(key, value);
                 }
               }
-              reply = await this.execIntent(faq, message, lead);//, bot);
+              reply = await this.execIntent(faq, message, lead);
             }
             catch(error) {
               console.error("error");
@@ -235,8 +235,7 @@ class TiledeskChatbot {
     }
     if (this.tdcache) {
       const requestKey = "tilebot:" + this.requestId
-      // best effort, do not "await", go on, trust redis speed.
-      this.tdcache.setJSON(requestKey, this.request);
+      await this.tdcache.setJSON(requestKey, this.request);
     }
     // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
     // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
@@ -399,7 +398,7 @@ class TiledeskChatbot {
       if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
-
+    // console.log("...static_bot_answer ready:", JSON.stringify(static_bot_answer));
     // exec webhook
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
     if (this.log) {console.log("bot_answer ready:", JSON.stringify(bot_answer));}

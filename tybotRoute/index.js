@@ -16,7 +16,8 @@ const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
-const { MockActions } = require('./MockActions');
+// const { MockActions } = require('./MockActions');
+const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -47,6 +48,7 @@ const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js'
 //let Faq_kb = require('./models/faq_kb');
 let connection;
 let APIURL = null;
+let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
@@ -60,8 +62,12 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
+  if (log) {console.log("message.id_project:", message.id_project);}
   // adding info for internal context workflow
   message.request.bot_id = botId;
+  if (message.request.id_project === null || message.request.id_project === undefined) {
+    message.request.id_project = projectId;
+  }
 
   let requestSourcePage = null;
   let requestLanguage = null;
@@ -74,23 +80,30 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // NEXTTTTTTT
-  const message_context = {
-    projectId: projectId,
-    requestId: requestId,
-    token: token
-  }
-  const message_context_key = "tiledesk:messages:context:" + messageId;
-  await tdcache.set(
-    message_context_key,
-    JSON.stringify(message_context),
-    {EX: 86400}
-  );
-  if (log) {console.log("message context saved for messageid:", message_context_key)}
+  // const message_context = {
+  //   projectId: projectId,
+  //   requestId: requestId,
+  //   token: token
+  // }
+  // const message_context_key = "tiledesk:messages:context:" + messageId;
+  // await tdcache.set(
+  //   message_context_key,
+  //   JSON.stringify(message_context),
+  //   {EX: 86400}
+  // );
+  // if (log) {console.log("message context saved for messageid:", message_context_key)}
   // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
   // NEXTTTTTTT
 
-  const botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
-
+  let botsDS;
+  if (!staticBots) {
+    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
+  }
+  else {
+    botsDS = new MockBotsDataSource(staticBots);
+    // console.log("botDA.data.........", botsDS.data);
+  }
+  
   // get the bot metadata
   let bot = null;
   try {
@@ -102,17 +115,22 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
   
-  let intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
-  if (bot.intentsEngine === "tiledesk-ai") {
-    intentsMachine = new TiledeskIntentsMachine(
-      {
-        //projectId: projectId,
-        //language: bot.language,
-        botId: botId
-        //TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
-      });
+  let intentsMachine;
+  if (!staticBots) {
+    intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
+    if (bot.intentsEngine === "tiledesk-ai") {
+      intentsMachine = new TiledeskIntentsMachine(
+        {
+          //projectId: projectId,
+          //language: bot.language,
+          botId: botId
+          //TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
+        });
+    }
   }
-  
+  else {
+    intentsMachine = {}
+  }
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
@@ -148,7 +166,6 @@ router.post('/ext/:botid', async (req, res) => {
   if (requestUserAgent) {
     await chatbot.addParameter("requestUserAgent", userAgent);
   }
-
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
     reply = {
@@ -224,7 +241,7 @@ router.post('/ext/:botid', async (req, res) => {
     
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       if (log) {
-        console.log("SupportMessageExt() reply sent:", JSON.stringify(reply));
+        // console.log("SupportMessageExt() reply sent:", JSON.stringify(reply));
       }
     });
   }
@@ -250,7 +267,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const requestId = req.params.requestId;
   const token = req.headers["authorization"];
   let answer = req.body;
-  if (log) {console.log("answer on sendSupportMessageExt:", JSON.stringify(answer));}
+  // if (log) {console.log("answer on sendSupportMessageExt:", JSON.stringify(answer));}
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -263,7 +280,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (log) {console.log("request_key:", request_key);}
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    // if (log) {console.log("Request from cache:", request);}
+    if (log) {console.log("Request from cache:", request);}
     if (!request) {
       if (log) {console.log("!Request from cache", requestId);}
       try {
@@ -279,6 +296,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
     try {
       request = await tdclient.getRequestById(requestId);
+      console.log("Cache request found.");
     }
     catch(err) {
       console.log("Request not found.");
@@ -286,19 +304,19 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     if (log) {console.log("(No tdcache) Got request with APIs");}
   }
   if (!request) {
-    // chatbot-pure directives still work. Tiledesk specific directives don't
+    if (log) {console.log("chatbot-pure directives still work. Tiledesk specific directives don't");}
     request = {
       request_id: requestId,
       id_project: projectId
     }
   }
   else {
-    // if (log) {console.log("request", request);}
+    if (log) {console.log("request::", request);}
   }
-  // if (log) {console.log("request...", request);}
+  if (log) {console.log("request....", request);}
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
-  if (log) {console.log("answer to process:", JSON.stringify(answer));}
+  // if (log) {console.log("answer to process:", JSON.stringify(answer));}
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   // console.log("bot_answer", bot_answer)
@@ -335,7 +353,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     //   bot_answer.text = "..."
     // }
     bot_answer.attributes["_raw_message"] = original_answer_text;
-    if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
+    // if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
       if (err) {
         console.error("Error sending message", err);
@@ -394,19 +412,26 @@ router.get('/', (req, res) => {
   res.send('Hello Tilebot!');
 });
 
-function startApp(settings, completionCallback) {
+async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot with Settings:", settings);
 
-  if (!settings.MONGODB_URI) {
-    throw new Error("settings.MONGODB_URI is mandatory.");
+  if (settings.bots) { // static bots data source
+    staticBots = settings.bots;
   }
+  else { // mongodb data source
+    if (!settings.MONGODB_URI) {
+      throw new Error("settings.MONGODB_URI is mandatory id no settings.bots.");
+    }
+  }
+  
   if (!settings.API_ENDPOINT) {
-    throw new Error("settings.API_ENDPOINT is mandatory.");
+    throw new Error("settings.API_ENDPOINT is mandatory id no settings.bots.");
   }
   else {
     APIURL = settings.API_ENDPOINT;
     console.log("(Tilebot) settings.API_ENDPOINT:", APIURL);
   }
+
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
@@ -424,33 +449,68 @@ function startApp(settings, completionCallback) {
   console.log("(Tilebot) log:", log);
   var pjson = require('./package.json');
   console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
-  console.log("(Tilebot) Connecting to mongodb...");
 
-  connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
-    if (err) { 
-      console.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
-      //process.exit(1); // add => exitOnFail: true
-    }
-    else {
-      console.log("(Tilebot) mongodb connection ok.");
-      if (tdcache) {
-        try {
-          console.log("(Tilebot) Connecting Redis...");
-          await tdcache.connect();
-        }
-        catch (error) {
-          tdcache = null;
-          console.error("(Tilebot) Redis connection error:", error);
-          process.exit(1);
-        }
-        console.log("(Tilebot) Redis connected.");
+  if (!staticBots) {
+    console.log("(Tilebot) Connecting to mongodb...");
+    connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
+      if (err) { 
+        console.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
+        //process.exit(1); // add => exitOnFail: true
       }
-      console.info("Tilebot started.");
-      if (completionCallback) {
-        completionCallback();
+      else {
+        console.log("(Tilebot) mongodb connection ok.");
+        await connectRedis();
+        console.info("Tilebot started.");
+        if (completionCallback) {
+          completionCallback();
+        }
+        // if (tdcache) {
+        //   try {
+        //     console.log("(Tilebot) Connecting Redis...");
+        //     await tdcache.connect();
+        //   }
+        //   catch (error) {
+        //     tdcache = null;
+        //     console.error("(Tilebot) Redis connection error:", error);
+        //     process.exit(1);
+        //   }
+        //   console.log("(Tilebot) Redis connected.");
+        // }
+        // console.info("Tilebot started.");
+        // if (completionCallback) {
+        //   completionCallback();
+        // }
       }
+    });
+  }
+  else {
+    console.log("(Tilebot) Using static bots.");
+    await connectRedis();
+    console.info("Tilebot started.");
+    if (completionCallback) {
+      completionCallback();
     }
-  });
+  }
+}
+
+async function connectRedis() {
+  if (tdcache) {
+    try {
+      console.log("(Tilebot) Connecting Redis...");
+      await tdcache.connect();
+    }
+    catch (error) {
+      tdcache = null;
+      console.error("(Tilebot) Redis connection error:", error);
+      process.exit(1);
+    }
+    console.log("(Tilebot) Redis connected.");
+  }
+  return;
+  // console.info("Tilebot started.");
+  // if (completionCallback) {
+  //   completionCallback();
+  // }
 }
 
 module.exports = { router: router, startApp: startApp};

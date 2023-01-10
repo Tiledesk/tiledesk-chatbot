@@ -3,6 +3,7 @@ const { param } = require('express/lib/request');
 const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirSendEmail {
 

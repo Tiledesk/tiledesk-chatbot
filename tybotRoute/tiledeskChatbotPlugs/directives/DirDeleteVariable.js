@@ -48,11 +48,11 @@ class DirDeleteVariable {
           await TiledeskChatbot.allParametersStatic(
             this.context.tdcache, this.context.requestId
           );
-          console.log("All availabe variables before deletion:", variables);
+          // console.log("All availabe variables before deletion:", variables);
           const filler = new Filler();
-          console.log("delete variable name:", variableName);
+          // console.log("delete variable name:", variableName);
           variableName = filler.fill(variableName, variables);
-          console.log("delete variable name (after filling):", variableName);
+          // console.log("delete variable name (after filling):", variableName);
           await TiledeskChatbot.deleteParameterStatic(
             this.context.tdcache, this.context.requestId, variableName
           );

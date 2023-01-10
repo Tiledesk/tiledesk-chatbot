@@ -9,15 +9,15 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 
-const PROJECT_ID = process.env.TEST_ACTIONS_PROJECT_ID;
+const PROJECT_ID = process.env.TEST_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
-const BOT_ID = process.env.TEST_ACTIONS_BOT_ID;
-const CHATBOT_TOKEN = process.env.ACTIONS_CHATBOT_TOKEN;
+const BOT_ID = process.env.TEST_BOT_ID;
+const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
 
-console.log("ACTIONS Testing conversation setup:");
-console.log("ACTIONS PROJECT_ID:", PROJECT_ID);
-console.log("ACTIONS REQUEST_ID:", REQUEST_ID);
-console.log("ACTIONS BOT_ID:", BOT_ID);
+console.log("Testing conversation setup:");
+console.log("PROJECT_ID:", PROJECT_ID);
+console.log("REQUEST_ID:", REQUEST_ID);
+console.log("BOT_ID:", BOT_ID);
 
 let app_listener;
 
@@ -33,7 +33,7 @@ before( () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.API_LOG
         }, () => {
-          console.log("ACTIONS Tilebot route successfully started.");
+          console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
             console.log('Tilebot connector listening on port ', port);
@@ -49,7 +49,7 @@ before( () => {
 
 after(function(done) {
   app_listener.close( () => {
-    console.log('ACTIONS app_listener closed.');
+    // console.log('app_listener closed.');
     done();
   });
 });
@@ -101,25 +101,25 @@ describe('Conversation1', async() => {
       
       listener = endpointServer.listen(10002, '0.0.0.0', function () {
         //console.log('endpointServer started', listener.address());
-      });
-      let request = {
-        "payload": {
-          "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/start",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        //console.log("Message sent.");
+        let request = {
+          "payload": {
+            "_id": message_id,
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "/start",
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+          //console.log("Message sent.");
+        });
       });
     });
     

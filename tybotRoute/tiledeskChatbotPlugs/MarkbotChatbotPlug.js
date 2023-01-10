@@ -92,7 +92,7 @@ class MarkbotChatbotPlug {
     // else if (message.attributes && !message.attributes.commands) {
     //   console.log("no message commands.");
     // }
-    if (this.log) {console.log("Message out of Markbot:", JSON.stringify(message));}
+    // if (this.log) {console.log("Message out of Markbot:", JSON.stringify(message));}
     pipeline.nextplug();
     
   }

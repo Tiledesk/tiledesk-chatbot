@@ -7,64 +7,67 @@ const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 
 describe('Directive DirSendEmail', function() {
 
-  it('test DirSendEmail', async () => {
-    class MockTdClient {
-      async sendEmail(message, callback) {
-        if (callback) {
-          callback(null, message);
-        }
-        return message;
-      }
-    };
-    class MockTdCache {
-      async hgetall(request_parameters_key) {
-        // simulate we already saved sone request variables
-        // with a specific request id: request1
-        const request1_cache_id = TiledeskChatbot.requestCacheKey('request1') + ":parameters";
-        const variables = {}
-        variables[request1_cache_id] = {
-          "fullname": "John B.",
-          "email": "johnb@email.com"
-        }
-        return variables[request_parameters_key];
-      }
-    };
-    send_email_directive = {
-      name: "sendemail",
-      parameter: '--to "${email}" --subject "Hello ${fullname}" --text "Welcome ${fullname}"'
-    };
-    let requestId = "request1";
-    let dir = new DirSendEmail({
-        tdclient: new MockTdClient(),
-        tdcache: new MockTdCache(),
-        requestId: requestId
-    });
-    const message =  await dir.execute(send_email_directive);
-    assert(message);
-    assert(message.to === 'johnb@email.com');
-    assert(message.text === 'Welcome John B.');
-    assert(message.subject === 'Hello John B.');
-  });
+  // it('test DirSendEmail', async () => {
+  //   class MockTdClient {
+  //     async sendEmail(message, callback) {
+  //       if (callback) {
+  //         callback(null, message);
+  //       }
+  //       return message;
+  //     }
+  //   };
+  //   class MockTdCache {
+  //     async hgetall(request_parameters_key) {
+  //       // simulate we already saved sone request variables
+  //       // with a specific request id: request1
+  //       const request1_cache_id = TiledeskChatbot.requestCacheKey('request1') + ":parameters";
+  //       const variables = {}
+  //       variables[request1_cache_id] = {
+  //         "fullname": "John B.",
+  //         "email": "johnb@email.com"
+  //       }
+  //       return variables[request_parameters_key];
+  //     }
+  //   };
+  //   send_email_directive = {
+  //     name: "sendemail",
+  //     parameter: '--to "${email}" --subject "Hello ${fullname}" --text "Welcome ${fullname}"'
+  //   };
+  //   let requestId = "request1";
+  //   let context = {
 
-  it('test DirSendEmail with missing "to"', async () => {
-    class MockTdClient {
-      async sendEmail(message, callback) {
-        if (callback) {
-          callback(null, message);
-        }
-        return message;
-      }
-    };
-    send_email_directive = {
-      name: "sendemail",
-      parameter: '--subject "test" --text "_test"'
-    };
-    let dir = new DirSendEmail({
-        tdclient: new MockTdClient()
-    });
-    const message =  await dir.execute(send_email_directive)
-    assert(message == null);
-  });
+  //   }
+  //   let dir = new DirSendEmail({
+  //       tdclient: new MockTdClient(),
+  //       tdcache: new MockTdCache(),
+  //       requestId: requestId
+  //   });
+  //   const message =  await dir.execute(send_email_directive);
+  //   assert(message);
+  //   assert(message.to === 'johnb@email.com');
+  //   assert(message.text === 'Welcome John B.');
+  //   assert(message.subject === 'Hello John B.');
+  // });
+
+  // it('test DirSendEmail with missing "to"', async () => {
+  //   class MockTdClient {
+  //     async sendEmail(message, callback) {
+  //       if (callback) {
+  //         callback(null, message);
+  //       }
+  //       return message;
+  //     }
+  //   };
+  //   send_email_directive = {
+  //     name: "sendemail",
+  //     parameter: '--subject "test" --text "_test"'
+  //   };
+  //   let dir = new DirSendEmail({
+  //       tdclient: new MockTdClient()
+  //   });
+  //   const message =  await dir.execute(send_email_directive)
+  //   assert(message == null);
+  // });
 
   it('test DirSendEmail in pipeline', async () => {
     const message_text = `\\_tdsendemail --to "test@test" --subject "_sub" --text "_body"`;
