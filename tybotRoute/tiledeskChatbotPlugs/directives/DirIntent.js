@@ -20,7 +20,7 @@ class DirIntent {
     // console.log("exec intent:", JSON.stringify(directive));
     let action;
     if (directive.action) {
-      console.log("got intent action:", JSON.stringify(directive.action));
+      // console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {

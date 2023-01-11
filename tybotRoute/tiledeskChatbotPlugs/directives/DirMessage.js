@@ -16,10 +16,9 @@ class DirMessage {
   }
 
   execute(directive, callback) {
-    console.log("exec1 action:", JSON.stringify(directive));
     let action;
     if (directive.action) {
-      console.log("got action:", JSON.stringify(action));
+      // console.log("got action:", JSON.stringify(action));
       action = directive.action;
       if (action.body && action.body.message) {
         if (!action.body.message.attributes) {
@@ -44,7 +43,7 @@ class DirMessage {
             action.body.message.type = "text";
           }
         }
-        console.log("final message action:", JSON.stringify(action));
+        // console.log("final message action:", JSON.stringify(action));
       }
     }
     else if (directive.parameter) {
@@ -77,7 +76,6 @@ class DirMessage {
   }
 
   go(action, callback) {
-    console.log("exec action:", JSON.stringify(action));
     const message = action.body.message;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
@@ -128,7 +126,7 @@ class DirMessage {
       type: type,
       text: text
     }
-    console.log("message_info:", message_info);
+    // console.log("message_info:", message_info);
     return message_info;
   }
 

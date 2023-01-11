@@ -74,6 +74,7 @@ class DirCondition {
     const condition = action.body.condition;
     const trueIntent = action.body.trueIntent;
     const falseIntent = action.body.falseIntent;
+    console.log("condition action:", action);
     if (!trueIntent && !falseIntent) {
       if (this.log) {console.log("Invalid condition, no intents specified");}
       callback();
@@ -116,6 +117,7 @@ class DirCondition {
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
     if (result === true) {
+      console.log("result === true", trueIntentDirective)
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
           callback();
@@ -128,6 +130,7 @@ class DirCondition {
       }
     }
     else {
+      console.log("result === false", falseIntentDirective)
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
           callback();

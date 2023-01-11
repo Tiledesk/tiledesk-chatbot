@@ -129,7 +129,7 @@ class TiledeskChatbot {
             try {
               if (intent.parameters) {
                 for (const [key, value] of Object.entries(intent.parameters)) {
-                  console.log(`Adding parameter from intent => ${key}: ${value}`);
+                  if (this.log) {console.log(`Adding parameter from intent => ${key}: ${value}`);}
                   this.addParameter(key, value);
                 }
               }

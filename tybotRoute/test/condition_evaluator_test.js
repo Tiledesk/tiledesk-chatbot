@@ -78,12 +78,12 @@ describe('Evaluate basic conditions', function() {
 
     it('condition 5 - compare string with a constant', async () => {
         const condition = "$_tdCountry === 'IT'";
-        console.log("Evaluating condition:", condition);
+        // console.log("Evaluating condition:", condition);
         context = {
             "_tdCountry": "IT"
         };
         const result = new TiledeskExpression().evaluateExpression(condition, context);
-        console.log("conditionResult5:", result);
+        // console.log("conditionResult:", result);
         assert(result === true);
     });
 

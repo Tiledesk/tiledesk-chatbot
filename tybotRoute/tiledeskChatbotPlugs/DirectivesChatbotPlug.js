@@ -263,14 +263,14 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.CONDITION) {
-        console.log("...DirCondition");
+        // console.log("...DirCondition");
         const condition_dir = new DirCondition(context);
         condition_dir.execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.ASSIGN) {
-        console.log("...DirAssign");
+        // console.log("...DirAssign");
         const assign_dir = new DirAssign(context);
         assign_dir.execute(directive, () => {
           process(nextDirective());

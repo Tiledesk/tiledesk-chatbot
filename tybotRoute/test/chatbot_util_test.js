@@ -1,7 +1,7 @@
 var assert = require('assert');
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
-describe('intent name parsing', function() {
+describe('Intent name parsing', function() {
   
     it('parsing ""', async () => {
         const explicit_intent_name = "";

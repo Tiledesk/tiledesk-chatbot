@@ -211,7 +211,7 @@ router.post('/ext/:botid', async (req, res) => {
         TILEDESK_API_ENDPOINT: APIURL,
         TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
         token: token,
-        log: true,
+        log: log,
         HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
         cache: tdcache
       }
@@ -413,7 +413,7 @@ router.get('/', (req, res) => {
 });
 
 async function startApp(settings, completionCallback) {
-  console.log("Starting Tilebot with Settings:", settings);
+  // console.log("Starting Tilebot with Settings:", settings);
 
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;

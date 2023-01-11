@@ -80,7 +80,7 @@ class DirOfflineHours {
     let message = null;
     let replace = false;
     const params = ms(directive_parameter);
-    console.log("params:", params)
+    // console.log("params:", params)
     
     if (params.m) {
       //console.log("_param m", params.m)
