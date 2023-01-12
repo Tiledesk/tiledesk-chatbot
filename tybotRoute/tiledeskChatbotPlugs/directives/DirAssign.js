@@ -33,7 +33,7 @@ class DirAssign {
     else if (directive.parameter) {
       let params;
       params = this.parseParams(directive.parameter);
-      // console.log("params:", params);
+      console.log("DirAssign params:", params);
       action = {
         body: {
           expression: params.expression,

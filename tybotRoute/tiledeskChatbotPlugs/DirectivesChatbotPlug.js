@@ -270,7 +270,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.ASSIGN) {
-        // console.log("...DirAssign");
+        console.log("...DirAssign");
         const assign_dir = new DirAssign(context);
         assign_dir.execute(directive, () => {
           process(nextDirective());
