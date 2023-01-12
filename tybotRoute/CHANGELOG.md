@@ -8,6 +8,9 @@ available on:
 ### 0.1.43
 - added context variable chatbot.addParameter("_tdRequestId", requestId);
 - completed TiledeskIntentsMachine.js
+- tdCondition
+- tdAssign
+- /IntentName{"variableName":"value", ...}
 
 ### 0.1.42
 - added IntentForm pre-set variables skipping

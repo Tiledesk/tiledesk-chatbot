@@ -797,6 +797,22 @@ const bot = {
 		"answer": "You don't live in Italy!\n* /start",
 		"language": "en",
 		"intent_display_name": "live_outside_italy"
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [],
+		"question": "***",
+		"answer": "press this action button\n* Action Button tdIntent:action_button_intent{\"setupVar\":\"123\"}",
+		"language": "en",
+		"intent_display_name": "actionbutton"
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [],
+		"question": "***",
+		"answer": "setupVar is: ${setupVar}",
+		"language": "en",
+		"intent_display_name": "action_button_intent"
 	}]
 }
 

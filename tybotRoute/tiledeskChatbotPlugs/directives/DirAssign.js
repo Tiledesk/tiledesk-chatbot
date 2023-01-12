@@ -64,14 +64,13 @@ class DirAssign {
       let variables =
         await TiledeskChatbot.allParametersStatic(
           this.context.tdcache, this.context.requestId);
-
       // filling
       let variableName;
       const filler = new Filler();
       // console.log("assign variable name:", variableName);
       variableName = filler.fill(assignTo, variables);
       // console.log("assign variable name (after filling):", variableName);
-          
+      
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
       const value = await new TiledeskExpression().evaluateExpression(expression, variables);
       if (this.log) {console.log("(DirAssign) executed expression:", expression, "result:", result);}
