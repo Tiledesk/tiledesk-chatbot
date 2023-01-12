@@ -40,18 +40,20 @@ class DirAssign {
           assignTo: params.assignTo
         }
       }
+      console.log("DirAssign action:", action);
     }
     else {
       callback();
       return;
     }
+    console.log("go DirAssign with action:", action);
     this.go(action, () => {
       callback();
     });
   }
 
   async go(action, callback) {
-    console.log("DirAssign:", action)
+    console.log("DirAssign action processing:", action)
     const expression = action.body.expression;
     const assignTo = action.body.assignTo;
     if (!assignTo || !expression) {
