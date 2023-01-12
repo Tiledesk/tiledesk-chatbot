@@ -76,7 +76,7 @@ class DirAssign {
       
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
       const value = await new TiledeskExpression().evaluateExpression(expression, variables);
-      if (this.log) {console.log("(DirAssign) executed expression:", expression, "result:", result);}
+      if (this.log) {console.log("(DirAssign) executed expression:", expression, "value:", value);}
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
       if (this.log) {console.log("(DirAssign) Assigned:", value, "to", variableName);}
       callback();
