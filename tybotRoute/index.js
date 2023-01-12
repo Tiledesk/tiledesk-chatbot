@@ -310,10 +310,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
       id_project: projectId
     }
   }
-  else {
-    if (log) {console.log("request::", request);}
-  }
-  if (log) {console.log("request....", request);}
+  if (log) {console.log("request....", JSON.stringify(request));}
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // PIPELINE-EXT
   // if (log) {console.log("answer to process:", JSON.stringify(answer));}
