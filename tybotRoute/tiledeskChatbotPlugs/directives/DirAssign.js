@@ -68,9 +68,9 @@ class DirAssign {
       // filling
       let variableName;
       const filler = new Filler();
-      console.log("assign variable name:", variableName);
+      // console.log("assign variable name:", variableName);
       variableName = filler.fill(assignTo, variables);
-      console.log("assign variable name (after filling):", variableName);
+      // console.log("assign variable name (after filling):", variableName);
           
       if (this.log) {console.log("(DirAssign) Variables:", variables);}
       const value = await new TiledeskExpression().evaluateExpression(expression, variables);

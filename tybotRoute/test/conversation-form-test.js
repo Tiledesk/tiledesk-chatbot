@@ -71,7 +71,7 @@ describe('Conversation1 - Form filling', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      console.log('CONVERSATION FORM app_listener closed.');
+      // console.log('CONVERSATION FORM app_listener closed.');
       done();
     });
   });
@@ -601,7 +601,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/splitted', (done) => {
-    console.log("/splitted...");
+    // console.log("/splitted...");
     // const message_id = uuidv4();
     // const reply_text = "Andrea";
     let listener;
@@ -684,7 +684,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/assign_params{...}', (done) => {
-    console.log("/assign_params...");
+    // console.log("/assign_params...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -737,7 +737,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-    console.log("/if_you_live_IT...");
+    // console.log("/if_you_live_IT (TRUE)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -753,7 +753,7 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            console.log("params /condition:", params);
+            // console.log("params /condition:", params);
             assert(params);
             // assert(params["city"] === "Milan");
             assert(params["_tdCountry"] === "IT");
@@ -813,12 +813,12 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/if_you_live_IT (_tdCondition) FALSE', (done) => {
-    console.log("/if_you_live_IT...");
+    console.log("/if_you_live_IT (FALSE)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("req.body:", JSON.stringify(req.body));
+      // console.log("req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       // console.log("message:", JSON.stringify(message));
@@ -829,7 +829,7 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            console.log("params /condition:", params);
+            // console.log("params /if_you_live_IT:", params);
             assert(params);
             // assert(params["city"] === "Milan");
             assert(params["_tdCountry"] === "US");

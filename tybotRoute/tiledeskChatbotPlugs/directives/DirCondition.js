@@ -74,7 +74,7 @@ class DirCondition {
     const condition = action.body.condition;
     const trueIntent = action.body.trueIntent;
     const falseIntent = action.body.falseIntent;
-    console.log("condition action:", action);
+    if (this.log) {console.log("condition action:", action);}
     if (!trueIntent && !falseIntent) {
       if (this.log) {console.log("Invalid condition, no intents specified");}
       callback();
@@ -102,22 +102,19 @@ class DirCondition {
     }
     let variables = null;
     if (this.context.tdcache) {
-      console.log("this.requestId:", this.context.requestId);
-      // console.log("this.context.tdcache:", this.context.tdcache)
       variables = 
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      console.log("Variables:", variables)
+      if (this.log) {console.log("Variables:", variables)}
     }
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
-    console.log("action.body.condition:", condition);
+    if (this.log) {console.log("action.body.condition:", condition);}
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
     if (result === true) {
-      console.log("result === true", trueIntentDirective)
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
           callback();
@@ -130,7 +127,6 @@ class DirCondition {
       }
     }
     else {
-      console.log("result === false", falseIntentDirective)
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
           callback();
@@ -146,10 +142,14 @@ class DirCondition {
 
   async evaluateCondition(_condition, variables) {
     let condition = _condition.replace("$", "$data.");
-    console.log("Evaluating expression:", condition);
-    console.log("With variables:", variables);
+    if (this.log) {
+      console.log("Evaluating expression:", condition);
+      console.log("With variables:", variables);
+    }
     const result = new TiledeskExpression().evaluate(condition, variables)
-    console.log("Expression result:", result);
+    if (this.log) {
+      console.log("Expression result:", result);
+    }
     return result;
   }
 
