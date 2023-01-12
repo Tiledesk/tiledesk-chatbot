@@ -280,7 +280,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (log) {console.log("request_key:", request_key);}
   if (tdcache) {
     request = await tdcache.getJSON(request_key)
-    if (log) {console.log("Request from cache:", request);}
+    if (log) {console.log("Request from cache:", JSON.stringify(request));}
     if (!request) {
       if (log) {console.log("!Request from cache", requestId);}
       try {
