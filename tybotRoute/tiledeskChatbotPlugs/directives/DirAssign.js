@@ -51,6 +51,7 @@ class DirAssign {
   }
 
   async go(action, callback) {
+    console.log("DirAssign:", action)
     const expression = action.body.expression;
     const assignTo = action.body.assignTo;
     if (!assignTo || !expression) {
