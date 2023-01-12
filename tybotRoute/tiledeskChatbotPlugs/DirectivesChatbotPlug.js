@@ -118,7 +118,7 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      log: false
+      log: true
     }
     
     let curr_directive_index = -1;
@@ -270,7 +270,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.ASSIGN) {
-        console.log("...DirAssign");
+        console.log("...DirAssign", context.log);
         const assign_dir = new DirAssign(context);
         assign_dir.execute(directive, () => {
           process(nextDirective());
