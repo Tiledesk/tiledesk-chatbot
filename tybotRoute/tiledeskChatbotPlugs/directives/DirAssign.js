@@ -56,7 +56,7 @@ class DirAssign {
     console.log("DirAssign action processing:", action)
     const expression = action.body.expression;
     const assignTo = action.body.assignTo;
-    if (!assignTo || !expression) {
+    if (assignTo === null || expression === null) {
       if (this.log) {console.log("Invalid expression or assignTo parameters");}
       callback();
       return;
