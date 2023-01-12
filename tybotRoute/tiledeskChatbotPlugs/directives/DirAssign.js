@@ -102,12 +102,12 @@ class DirAssign {
     let assignTo = null;
     const params = ms(directive_parameter);
     console.log("params dirassign:", params)
-    if (params.expression) {
+    if (params.expression !== null) {
       console.log("go expression:", params.expression)
       expression = params.expression
       console.log("got it expression:", expression)
     }
-    if (params.assignTo) {
+    if (params.assignTo !== null) {
       assignTo = params.assignTo;
     }
     return {
