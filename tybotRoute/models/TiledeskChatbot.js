@@ -394,6 +394,9 @@ class TiledeskChatbot {
     // static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
+    const variables = await this.allParameters();
+    static_bot_answer.attributes.variables = variables;
+    
     if (clientUpdateUserFullname) {
       if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
