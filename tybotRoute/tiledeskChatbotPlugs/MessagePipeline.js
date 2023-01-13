@@ -6,9 +6,9 @@ class MessagePipeline {
    * 
    */
 
-  constructor(message, context) {
+  constructor(answer, context) {
     this.context = context;
-    this.message = message;
+    this.message = answer;
     this.plugs = [];
     this.counter = -1;
   }

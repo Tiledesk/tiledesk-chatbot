@@ -16,10 +16,10 @@ class WebhookChatbotPlug {
   }
 
   exec(pipeline) {
-    let message = pipeline.message;
+    let answer = pipeline.message;
     let context = pipeline.context;
-    if (this.log) {console.log("WEBHOOK?", message.attributes.webhook);}
-    if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
+    if (this.log) {console.log("WEBHOOK?", answer.attributes.webhook);}
+    if (answer.attributes && answer.attributes.webhook && answer.attributes.webhook === true) {
       if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
       if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", context);}
       this.execWebhook(message, context, this.webhookurl, (err, message_from_webhook) => {

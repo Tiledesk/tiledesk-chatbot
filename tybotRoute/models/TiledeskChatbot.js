@@ -458,16 +458,16 @@ class TiledeskChatbot {
     return request_key;
   }
   
-  async execWebhook(static_bot_answer, message, bot, context) {
-    console.log("message.attributes.webhook:", message.attributes.webhook)
-    if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
+  async execWebhook(static_bot_answer, userMessage, bot, context) {
+    console.log("static_bot_answer.attributes.webhook:", static_bot_answer.attributes.webhook)
+    if (static_bot_answer.attributes && static_bot_answer.attributes.webhook && static_bot_answer.attributes.webhook === true) {
       console.log("adding variables to context...")
       const variables = await this.allParameters();
       context.variables = variables;
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
-    messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, this.token, this.log));
+    messagePipeline.addPlug(new WebhookChatbotPlug(userMessage.request, webhookurl, this.token, this.log));
     //messagePipeline.addPlug(directivesPlug);
     //messagePipeline.addPlug(new SplitsChatbotPlug(log));
     //messagePipeline.addPlug(new MarkbotChatbotPlug(log));
