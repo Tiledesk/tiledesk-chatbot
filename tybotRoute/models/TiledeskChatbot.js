@@ -459,7 +459,9 @@ class TiledeskChatbot {
   }
   
   async execWebhook(static_bot_answer, message, bot, context) {
+    console.log("message.attributes.webhook:", message.attributes.webhook)
     if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
+      console.log("adding variables to context...")
       const variables = await this.allParameters();
       context.variables = variables;
     }
