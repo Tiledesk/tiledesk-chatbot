@@ -106,7 +106,7 @@ class DirCondition {
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      if (this.log) {console.log("Variables:", variables)}
+      if (this.log) {console.log("Variables:", JSON.stringify(variables))}
     }
     else {
       console.error("(DirCondition) No this.context.tdcache");

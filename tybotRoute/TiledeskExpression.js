@@ -38,7 +38,7 @@ class TiledeskExpression {
         console.log("Original expression:", _expression);
         let expression = String(_expression).replace(/\$/g, "$data.");
         console.log("Evaluating expression:", expression);
-        console.log("With variables:", variables);
+        // console.log("With variables:", JSON.stringify(variables));
         const result = new TiledeskExpression().evaluate(expression, variables);
         console.log("Expression result:", result);
         return result;
