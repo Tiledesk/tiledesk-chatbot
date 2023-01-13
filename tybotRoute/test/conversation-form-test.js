@@ -736,6 +736,62 @@ describe('Conversation1 - Form filling', async () => {
     });
   });
 
+  it('/assign_params{...} with multi-line JSON', (done) => {
+    // console.log("/assign_params...");
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      if (message.text) {
+        assert(message.text === "myvar: places");
+        getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            // console.log("params /assign_params:", params);
+            assert(params);
+            assert(params["var1"] === "value1");
+            assert(params["var2"] === "value2");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+      }
+      else {
+        console.error("Unexpected message.");
+        assert.ok(false);
+      }
+    });
+    listener = endpointServer.listen(10002, '0.0.0.0', function () {
+      let request = {
+        "payload": {
+          "_id": uuidv4(),
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": `/assign_params{
+              "var1": "value1",
+              "var2": "value2"
+          }`,
+          "id_project": PROJECT_ID,
+          "request": {
+            "request_id": REQUEST_ID,
+            "id_project": PROJECT_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        // console.log("Message sent.", request);
+      });
+    });
+  });
+
   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
     // console.log("/if_you_live_IT (TRUE)...");
     let listener;
