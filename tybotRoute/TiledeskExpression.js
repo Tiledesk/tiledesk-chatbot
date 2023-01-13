@@ -47,14 +47,15 @@ class TiledeskExpression {
     // private
     evaluate(expression, context) {
         let fn;
+        let res
         try{
             fn = Function(`let $data = this;return (${expression})`);
+            res = fn.bind(context)()
         }
         catch (err) {
             console.log("Invalid expression", err);
         }
         // let fn = Function(`let $data = this;console.log('data', $data);return (${conditionExpression})`);
-        let res = fn.bind(context)()
         return res;
     }
 
