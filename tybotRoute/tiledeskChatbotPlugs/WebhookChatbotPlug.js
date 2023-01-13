@@ -21,6 +21,7 @@ class WebhookChatbotPlug {
     if (this.log) {console.log("WEBHOOK?", message.attributes.webhook);}
     if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
       if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
+      if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", context);}
       this.execWebhook(message, context, this.webhookurl, (err, message_from_webhook) => {
         if (this.log) {console.log("message", message_from_webhook);}
         if (err) {
