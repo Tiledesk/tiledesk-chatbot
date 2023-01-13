@@ -395,13 +395,13 @@ class TiledeskChatbot {
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
     const variables = await this.allParameters();
-    static_bot_answer.attributes.variables = variables;
-    
+    message.variables = variables;
+
     if (clientUpdateUserFullname) {
       if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
-    // console.log("...static_bot_answer ready:", JSON.stringify(static_bot_answer));
+    console.log("...static_bot_answer ready:", JSON.stringify(static_bot_answer));
     // exec webhook
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
     if (this.log) {console.log("bot_answer ready:", JSON.stringify(bot_answer));}
