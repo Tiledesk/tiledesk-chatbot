@@ -22,6 +22,7 @@ router.post('/lang_select', (req, res) => {
     let user_lang = req.body.payload.message.request.language;
     if (intent === 'start') {
         console.log("intent start")
+        
         const projectId = req.body.payload.bot.id_project;
         const token = req.body.token;
         const requestId = req.body.payload.message.request.request_id;
