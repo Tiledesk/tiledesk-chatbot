@@ -394,9 +394,6 @@ class TiledeskChatbot {
     // static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
-    const variables = await this.allParameters();
-    message.variables = variables;
-
     if (clientUpdateUserFullname) {
       if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
@@ -462,6 +459,10 @@ class TiledeskChatbot {
   }
   
   async execWebhook(static_bot_answer, message, bot, context) {
+    if (message.attributes && message.attributes.webhook && message.attributes.webhook === true) {
+      const variables = await this.allParameters();
+      context.variables = variables;
+    }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
     messagePipeline.addPlug(new WebhookChatbotPlug(message.request, webhookurl, this.token, this.log));
