@@ -53,7 +53,7 @@ class TiledeskExpression {
             res = fn.bind(context)()
         }
         catch (err) {
-            console.log("Invalid expression", err);
+            console.error("Error evaluating expression:", err);
         }
         // let fn = Function(`let $data = this;console.log('data', $data);return (${conditionExpression})`);
         return res;
