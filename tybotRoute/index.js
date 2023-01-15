@@ -46,7 +46,7 @@ const { DirSendEmail } = require('./tiledeskChatbotPlugs/directives/DirSendEmail
 const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 //let Faq = require('./models/faq');
 //let Faq_kb = require('./models/faq_kb');
-let connection;
+// let connection;
 let APIURL = null;
 let staticBots;
 
@@ -156,7 +156,9 @@ router.post('/ext/:botid', async (req, res) => {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter("_tdCity", message.request.location.city);
   }
-  
+  if (message.text) {
+    await chatbot.addParameter("_tdUserText", message.text);
+  }
   if (requestSourcePage) {
     await chatbot.addParameter("requestSourcePage", sourcePage);
   }
@@ -449,7 +451,8 @@ async function startApp(settings, completionCallback) {
 
   if (!staticBots) {
     console.log("(Tilebot) Connecting to mongodb...");
-    connection = mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
+    // connection = 
+    mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
       if (err) { 
         console.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
         //process.exit(1); // add => exitOnFail: true

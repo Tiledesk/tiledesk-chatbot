@@ -225,7 +225,7 @@ class TiledeskChatbot {
   async execIntent(faq, message, lead) {//, bot) {
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
-    let sender = 'bot_' + botId;
+    // let sender = 'bot_' + botId;
     //var answerObj;
     //answerObj.score = 100; // exact search has max score
     if (this.log) {
@@ -253,30 +253,30 @@ class TiledeskChatbot {
     
     let intent_name = answerObj.intent_display_name
     // THE FORM
-    if (intent_name === "test_form_intent") {
-      answerObj.form = {
-        "cancelCommands": ['reset', 'cancel'],
-        "cancelReply": "Ok canceled!",
-        "fields": [
-          {
-            "name": "userFullname",
-            "type": "text",
-            "label": "What is your name?\n* Andrea\n* Marco\n* Mirco\n* Luca Leo"
-          },{
-            "name": "companyName",
-            "type": "text",
-            "label": "Thank you ${userFullname}! What is your Company name?\n* Tiledesk\n* Frontiere21"
-          },
-          {
-            "name": "userEmail",
-            "type": "text",
-            "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
-            "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂\n* andrea@libero.it\n* andrea@tiledesk.com",
-            "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
-          }
-        ]
-      };
-    }
+    // if (intent_name === "test_form_intent") {
+    //   answerObj.form = {
+    //     "cancelCommands": ['reset', 'cancel'],
+    //     "cancelReply": "Ok canceled!",
+    //     "fields": [
+    //       {
+    //         "name": "userFullname",
+    //         "type": "text",
+    //         "label": "What is your name?\n* Andrea\n* Marco\n* Mirco\n* Luca Leo"
+    //       },{
+    //         "name": "companyName",
+    //         "type": "text",
+    //         "label": "Thank you ${userFullname}! What is your Company name?\n* Tiledesk\n* Frontiere21"
+    //       },
+    //       {
+    //         "name": "userEmail",
+    //         "type": "text",
+    //         "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
+    //         "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂\n* andrea@libero.it\n* andrea@tiledesk.com",
+    //         "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
+    //       }
+    //     ]
+    //   };
+    // }
     let intent_form = answerObj.form;
     if (this.log) {
       console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form));
@@ -419,7 +419,8 @@ class TiledeskChatbot {
   }
   
   async unlockIntent(requestId) {
-    await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+    await DirUnlockIntent.unlockIntent(requestId);
+    // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
   }
 
   async addParameter(parameter_name, parameter_value) {

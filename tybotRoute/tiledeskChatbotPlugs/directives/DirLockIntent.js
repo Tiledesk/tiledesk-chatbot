@@ -1,14 +1,18 @@
 
 class DirLockIntent {
 
-  constructor(tdcache) {
-    if (!tdcache) {
+  constructor(context) {
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
+    }
+    this.context = context;
+    if (!context.tdcache) {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
-    this.tdcache = tdcache;
+    this.tdcache = this.context.tdcache;
   }
 
-  async execute(directive, requestId, callback) {
+  async execute(directive, callback) {
     console.log("Locking intent");
     let action;
     if (directive.action) {
@@ -19,8 +23,8 @@ class DirLockIntent {
       const params = this.parseParams(directive.parameter);
       action = {
         body: {
-          intentName: params.intentName, // directive.parameter.trim()
-          variableName: params.variableName
+          intentName: params.intentName // directive.parameter.trim()
+          // variableName: params.variableName
         }
       }
     }
@@ -29,7 +33,6 @@ class DirLockIntent {
       callback();
       return;
     }
-
     // if (directive.parameter) {
     //   let intent_name = directive.parameter.trim();
     //   await this.lockIntent(requestId, intent_name);
@@ -45,20 +48,20 @@ class DirLockIntent {
 
   async go(action, callback) {
     let intent_name = action.body.intentName;
-    let variable_name = action.body.variableName;
-    await this.lockIntent(requestId, intent_name, variable_name);
+    // let variable_name = action.body.variableName;
+    await DirLockIntent.lockIntent(this.context.requestId, intent_name); //, variable_name);
     if (callback) {
       callback();
     }
   }
 
-  async lockIntent(requestId, intent_name, variable_name) {
+  static async lockIntent(requestId, intent_name) { //}, variable_name) {
     await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
-    if (variable_name) {
-      console.log("locking intent with variable:", variable_name);
-      await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", variable_name);
-    }
-    console.log("locked. Intent name:", intent_name, "intent variable:", variable_name);
+    // if (variable_name) {
+    //   console.log("locking intent with variable:", variable_name);
+    //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);
+    // }
+    // console.log("locked. Intent name:", intent_name, "intent variable:", variable_name);
   }
   
   parseParams(directive_parameter) {

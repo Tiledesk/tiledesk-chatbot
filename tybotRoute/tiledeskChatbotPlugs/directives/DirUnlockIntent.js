@@ -1,21 +1,41 @@
 
 class DirUnlockIntent {
 
-  constructor(tdcache) {
-    if (!tdcache) {
+  constructor(context) {
+    if (!context) {
+      throw new Error('config (TiledeskClient) object is mandatory.');
+    }
+    this.context = context;
+    if (!context.tdcache) {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
-    this.tdcache = tdcache;
+    this.tdcache = context.tdcache;
+    this.log = context.log;
   }
 
-  async execute(requestId, callback) {
-    console.log("Unocking intent");
-    await this.unlockIntent(requestId);
-    callback();
+  async execute(directive, requestId, callback) {
+    if (this.log) {console.log("Unlocking current intent");}
+    this.go(action, () => {
+      callback();
+    });
   }
 
-  async unlockIntent(requestId) {
+  async go(action, callback) {
+    await DirUnlockIntent.unlockIntent(this.context.requestId);
+    if (callback) {
+      callback();
+    }
+  }
+
+  // async execute(requestId, callback) {
+  //   console.log("Unocking intent");
+  //   await this.unlockIntent(requestId);
+  //   callback();
+  // }
+
+  static async unlockIntent(requestId) {
     await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+    // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
     console.log("unlocked.")
   }
   
