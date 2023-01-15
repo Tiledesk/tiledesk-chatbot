@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.45
+- DirLockIntent added varibleName parameter
+
+### 0.1.44
+- Variables to webhook
+
 ### 0.1.43
 - added context variable chatbot.addParameter("_tdRequestId", requestId);
 - completed TiledeskIntentsMachine.js

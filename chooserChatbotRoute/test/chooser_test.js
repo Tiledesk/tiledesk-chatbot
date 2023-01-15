@@ -102,7 +102,7 @@ describe('chooser', function() {
         chooser = new LanguageChooser();
         const lang_iso = null;
         const bot = chooser.findIn(BOTS, lang_iso);
-        console.log("bot:", bot)    
+        console.log("bot:", bot)
         assert(bot !== null);
         assert(bot.name === "Ty");
     });
