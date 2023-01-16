@@ -408,7 +408,7 @@ class TiledeskChatbot {
 
   async lockIntent(requestId, intent_name) {
     // await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
-    await DirLockIntent.lockIntent(this.tdcache, requestId);
+    await DirLockIntent.lockIntent(this.tdcache, requestId, intent_name);
   }
   
   async currentLockedIntent(requestId) {
