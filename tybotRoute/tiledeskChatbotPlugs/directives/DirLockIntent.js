@@ -1,3 +1,4 @@
+const ms = require('minimist-string');
 
 class DirLockIntent {
 
