@@ -409,12 +409,12 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.LOCK_INTENT) {
-        new DirLockIntent(context).execute(directive, requestId, () => {
+        new DirLockIntent(context).execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.UNLOCK_INTENT) {
-        new DirUnlockIntent(context).execute(requestId, () => {
+        new DirUnlockIntent(context).execute( () => {
           process(nextDirective());
         });
       }
