@@ -11,10 +11,11 @@ class DirLockIntent {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
     this.tdcache = this.context.tdcache;
+    this.log = context.log;
   }
 
   async execute(directive, callback) {
-    console.log("Locking intent");
+    if (this.log) {console.log("Locking intent:", JSON.stringify(directive));}
     let action;
     if (directive.action) {
       // console.log("got intent action:", JSON.stringify(directive.action));
@@ -51,6 +52,7 @@ class DirLockIntent {
     let intent_name = action.body.intentName;
     // let variable_name = action.body.variableName;
     await DirLockIntent.lockIntent(this.context.requestId, intent_name); //, variable_name);
+    if (this.log) {console.log("Locked intent:", action.body.intentName);}
     if (callback) {
       callback();
     }
