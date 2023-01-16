@@ -51,15 +51,15 @@ class DirLockIntent {
   async go(action, callback) {
     let intent_name = action.body.intentName;
     // let variable_name = action.body.variableName;
-    await DirLockIntent.lockIntent(this.context.requestId, intent_name); //, variable_name);
+    await DirLockIntent.lockIntent(this.tdcache, this.context.requestId, intent_name); //, variable_name);
     if (this.log) {console.log("Locked intent:", action.body.intentName);}
     if (callback) {
       callback();
     }
   }
 
-  static async lockIntent(requestId, intent_name) { //}, variable_name) {
-    await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+  static async lockIntent(tdcache, requestId, intent_name) { //}, variable_name) {
+    await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
     // if (variable_name) {
     //   console.log("locking intent with variable:", variable_name);
     //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);

@@ -7,6 +7,7 @@ const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPl
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
+const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 
 class TiledeskChatbot {
 
@@ -406,7 +407,8 @@ class TiledeskChatbot {
   }
 
   async lockIntent(requestId, intent_name) {
-    await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+    // await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+    await DirLockIntent.lockIntent(this.tdcache, requestId);
   }
   
   async currentLockedIntent(requestId) {
