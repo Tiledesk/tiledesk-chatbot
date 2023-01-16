@@ -160,13 +160,13 @@ router.post('/ext/:botid', async (req, res) => {
     await chatbot.addParameter("_tdUserText", message.text);
   }
   if (requestSourcePage) {
-    await chatbot.addParameter("requestSourcePage", sourcePage);
+    await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
   }
   if (requestLanguage) {
-    await chatbot.addParameter("requestLanguage", language);
+    await chatbot.addParameter("_tdRequestLanguage", language);
   }
   if (requestUserAgent) {
-    await chatbot.addParameter("requestUserAgent", userAgent);
+    await chatbot.addParameter("_tdRequestUserAgent", userAgent);
   }
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
