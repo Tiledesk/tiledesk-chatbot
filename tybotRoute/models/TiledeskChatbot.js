@@ -8,6 +8,7 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
+const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 
 class TiledeskChatbot {
 

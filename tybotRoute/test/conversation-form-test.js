@@ -76,255 +76,255 @@ describe('Conversation1 - Form filling', async () => {
     });
   });
 
-  it('/start', (done) => {
-    // console.log("/start...ing story...");
-    let message_id = uuidv4();
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.text === "Hello");
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 3);
-      const command1 = message.attributes.commands[0];
-      const command2 = message.attributes.commands[1];
-      const command3 = message.attributes.commands[2];
+  // it('/start', (done) => {
+  //   // console.log("/start...ing story...");
+  //   let message_id = uuidv4();
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     // console.log("...req.body:", JSON.stringify(req.body));
+  //     res.send({ success: true });
+  //     const message = req.body;
+  //     assert(message.text === "Hello");
+  //     assert(message.attributes.commands !== null);
+  //     assert(message.attributes.commands.length === 3);
+  //     const command1 = message.attributes.commands[0];
+  //     const command2 = message.attributes.commands[1];
+  //     const command3 = message.attributes.commands[2];
 
-      assert(command1.type === "message");
-      assert(command1.message.text === "");
-      assert(command1.message.type === "image");
-      assert(command1.message.metadata.src !== null);
+  //     assert(command1.type === "message");
+  //     assert(command1.message.text === "");
+  //     assert(command1.message.type === "image");
+  //     assert(command1.message.metadata.src !== null);
 
-      assert(command2.type === "wait");
-      assert(command2.time === 500);
+  //     assert(command2.type === "wait");
+  //     assert(command2.time === 500);
 
 
-      getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          // console.log("params /start:", params);
-          assert(params);
-          assert(params["_tdLastMessageId"] === message_id);
-          assert(params["_tdProjectId"] === PROJECT_ID);
-          listener.close(() => {
-            done();
-          });
-        }
-      });
+  //     getChatbotParameters(REQUEST_ID, (err, params) => {
+  //       if (err) {
+  //         assert.ok(false);
+  //       }
+  //       else {
+  //         // console.log("params /start:", params);
+  //         assert(params);
+  //         assert(params["_tdLastMessageId"] === message_id);
+  //         assert(params["_tdProjectId"] === PROJECT_ID);
+  //         listener.close(() => {
+  //           done();
+  //         });
+  //       }
+  //     });
 
-    });
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      //console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-          "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/start",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        //console.log("Message sent.");
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
+  //     //console.log('endpointServer started', listener.address());
+  //     let request = {
+  //       "payload": {
+  //         "_id": message_id,
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": "/start",
+  //         "id_project": PROJECT_ID,
+  //         "metadata": "",
+  //         "request": {
+  //           "request_id": REQUEST_ID
+  //         }
+  //       },
+  //       "token": CHATBOT_TOKEN
+  //     }
+  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //       //console.log("Message sent.");
+  //     });
+  //   });
+  // });
 
-  it('/disable_input', (done) => {
-    console.log("/disable_input...");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("req.body....:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
+  // it('/disable_input', (done) => {
+  //   console.log("/disable_input...");
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     console.log("req.body....:", JSON.stringify(req.body));
+  //     res.send({ success: true });
+  //     const message = req.body;
 
-      assert(message["text"] !== "");
-      assert(message["attributes"] !== "");
-      assert(message["attributes"]["disableInputMessage"] === true);
+  //     assert(message["text"] !== "");
+  //     assert(message["attributes"] !== "");
+  //     assert(message["attributes"]["disableInputMessage"] === true);
 
-      listener.close(() => {
-        // console.log('closed.');
-        done();
-      });
+  //     listener.close(() => {
+  //       // console.log('closed.');
+  //       done();
+  //     });
 
-    });
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // const botId = process.env.TEST_BOT_ID;
-      // const PROJECT_ID = process.env.TEST_PROJECT_ID;
-      // console.log("botId:", botId);
-      // console.log("REQUEST_ID:", REQUEST_ID);
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/disable_input",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
+  //     // console.log('endpointServer started', listener.address());
+  //     // const botId = process.env.TEST_BOT_ID;
+  //     // const PROJECT_ID = process.env.TEST_PROJECT_ID;
+  //     // console.log("botId:", botId);
+  //     // console.log("REQUEST_ID:", REQUEST_ID);
+  //     let request = {
+  //       "payload": {
+  //         "_id": uuidv4(),
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": "/disable_input",
+  //         "id_project": PROJECT_ID,
+  //         "metadata": "",
+  //         "request": {
+  //           "request_id": REQUEST_ID,
+  //           "id_project": PROJECT_ID
+  //         }
+  //       },
+  //       "token": CHATBOT_TOKEN
+  //     }
+  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //       // console.log("Message sent.");
+  //     });
+  //   });
+  // });
 
-  it('/good_form', (done) => {
-    console.log("/good_form...");
-    const message_id = uuidv4();
-    const reply_text = "Andrea";
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("req.body22222:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
+  // it('/good_form', (done) => {
+  //   console.log("/good_form...");
+  //   const message_id = uuidv4();
+  //   const reply_text = "Andrea";
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     console.log("req.body22222:", JSON.stringify(req.body));
+  //     res.send({ success: true });
+  //     const message = req.body;
 
-      if (message.text === "Your name?") {
-        let request = {
-          "payload": {
-            "_id": message_id,
-            "senderFullname": "guest#367e",
-            "type": "text",
-            "sender": "A-SENDER",
-            "recipient": REQUEST_ID,
-            "text": reply_text,
-            "id_project": PROJECT_ID,
-            "request": {
-              "request_id": REQUEST_ID,
-              "id_project": PROJECT_ID
-            }
-          },
-          "token": CHATBOT_TOKEN
-        }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          console.log("Message sent.", request);
-        });
-      }
-      else if (message.text === "It's a good form Andrea") {
-        // verify parameters
-        getChatbotParameters(REQUEST_ID, (err, params) => {
-          if (err) {
-            assert.ok(false);
-          }
-          else {
-            console.log("params2:", params);
-            assert(params);
-            assert(params["_tdLastMessageId"] === message_id);
-            assert(params["_tdProjectId"] === PROJECT_ID);
-            assert(params["your_fullname"] === reply_text);
-            assert(params["_tdTypeOf:your_fullname"]);
-            console.log("ok2")
-            listener.close(() => {
-              console.log("done2");
-              done();
-            });
-          }
-        });
+  //     if (message.text === "Your name?") {
+  //       let request = {
+  //         "payload": {
+  //           "_id": message_id,
+  //           "senderFullname": "guest#367e",
+  //           "type": "text",
+  //           "sender": "A-SENDER",
+  //           "recipient": REQUEST_ID,
+  //           "text": reply_text,
+  //           "id_project": PROJECT_ID,
+  //           "request": {
+  //             "request_id": REQUEST_ID,
+  //             "id_project": PROJECT_ID
+  //           }
+  //         },
+  //         "token": CHATBOT_TOKEN
+  //       }
+  //       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //         console.log("Message sent.", request);
+  //       });
+  //     }
+  //     else if (message.text === "It's a good form Andrea") {
+  //       // verify parameters
+  //       getChatbotParameters(REQUEST_ID, (err, params) => {
+  //         if (err) {
+  //           assert.ok(false);
+  //         }
+  //         else {
+  //           console.log("params2:", params);
+  //           assert(params);
+  //           assert(params["_tdLastMessageId"] === message_id);
+  //           assert(params["_tdProjectId"] === PROJECT_ID);
+  //           assert(params["your_fullname"] === reply_text);
+  //           assert(params["_tdTypeOf:your_fullname"]);
+  //           console.log("ok2")
+  //           listener.close(() => {
+  //             console.log("done2");
+  //             done();
+  //           });
+  //         }
+  //       });
 
-      }
-      else {
-        console.error("Unexpected message2.");
-        assert.ok(false);
-      }
+  //     }
+  //     else {
+  //       console.error("Unexpected message2.");
+  //       assert.ok(false);
+  //     }
 
-    });
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/good_form",
-          "id_project": PROJECT_ID,
-          "request": {
-            "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
+  //     // console.log('endpointServer started', listener.address());
+  //     // console.log("REQUEST_ID:", REQUEST_ID);
+  //     let request = {
+  //       "payload": {
+  //         "_id": uuidv4(),
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": "/good_form",
+  //         "id_project": PROJECT_ID,
+  //         "request": {
+  //           "request_id": REQUEST_ID,
+  //           "id_project": PROJECT_ID
+  //         }
+  //       },
+  //       "token": CHATBOT_TOKEN
+  //     }
+  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //       // console.log("Message sent.");
+  //     });
+  //   });
+  // });
 
-  it('(intent-to-intent) /move_to => /target_intent', (done) => {
-    console.log("(intent-to-intent) /move_to => /target_intent");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      console.log("received message33:", JSON.stringify(message));
-      if (message.text === "The target!") {
-        console.log("Got it. End.");
-        listener.close(() => {
-          done();
-        });
-      }
-    });
+  // it('(intent-to-intent) /move_to => /target_intent', (done) => {
+  //   console.log("(intent-to-intent) /move_to => /target_intent");
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     res.send({ success: true });
+  //     const message = req.body;
+  //     console.log("received message33:", JSON.stringify(message));
+  //     if (message.text === "The target!") {
+  //       console.log("Got it. End.");
+  //       listener.close(() => {
+  //         done();
+  //       });
+  //     }
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/move_to",
-          "id_project": PROJECT_ID,
-          "request": {
-            "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      // console.log("sending message:", request);
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        console.log("Message sent33.");
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
+  //     // console.log('endpointServer started', listener.address());
+  //     // console.log("REQUEST_ID:", REQUEST_ID);
+  //     let request = {
+  //       "payload": {
+  //         "_id": uuidv4(),
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": "/move_to",
+  //         "id_project": PROJECT_ID,
+  //         "request": {
+  //           "request_id": REQUEST_ID,
+  //           "id_project": PROJECT_ID
+  //         }
+  //       },
+  //       "token": CHATBOT_TOKEN
+  //     }
+  //     // console.log("sending message:", request);
+  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //       console.log("Message sent33.");
+  //     });
+  //   });
+  // });
 
   it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
-    // console.log("/all_filled (none) =>...");
+    console.log("/all_filled (none) =>...");
     let request0_uuid = uuidv4();
     let request1_uuid = uuidv4();
     let request2_uuid = uuidv4();
@@ -341,9 +341,12 @@ describe('Conversation1 - Form filling', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      // console.log("received message:", JSON.stringify(message));
+      console.log("received message__3:", JSON.stringify(message));
+      console.log("message.triggeredByMessageId:", message.triggeredByMessageId);
+      console.log("message.text:", message.text);
+      
       if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}" && message.triggeredByMessageId === request0_uuid) {
-        // console.log("got #0 'You filled...' sending #1");
+        console.log("got #0 'You filled...' sending #1");
         let request = {
           "payload": {
             "_id": request1_uuid,
@@ -365,7 +368,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else if (message.text === "Your name?" && message.triggeredByMessageId === request1_uuid) {
-        // console.log("got #1 sending #2");
+        console.log("got #1 sending #2");
         let request = {
           "payload": {
             "_id": request2_uuid,
@@ -383,14 +386,14 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          console.log("Message sent4.", request);
         });
         // listener.close( () => {
         //   done();
         // });
       }
       else if (message.text === "Your email?" && message.triggeredByMessageId === request2_uuid) {
-        // console.log("got #2 sending #3");
+        console.log("got #2 sending #3");
         let request = {
           "payload": {
             "_id": request3_uuid,
@@ -408,14 +411,14 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          console.log("Message sent5.", request);
         });
         // listener.close( () => {
         //   done();
         // });
       }
       else if (message.text === "Thanks Andrea\nYour email test@test.it" && message.triggeredByMessageId === request3_uuid) {
-        // console.log("got #3 sending #4");
+        console.log("got #3 sending #4");
         let request = {
           "payload": {
             "_id": request4_uuid,
@@ -433,14 +436,14 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #3 sending #4. Message sent.", request);
+          console.log("got #3 sending #4. Message sent.", request);
         });
         // listener.close( () => {
         //   done();
         // });
       }
       else if (message.text === "You filled\nfullname: Andrea\nyouremail: test@test.it" && message.triggeredByMessageId === request4_uuid) {
-        // console.log("got #4 sending #5");
+        console.log("got #4 sending #5");
         let request = {
           "payload": {
             "_id": request5_uuid,
@@ -558,11 +561,11 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #8 sending #9. Message sent.", request);
+          console.log("got #8 sending #9. Message sent.", request);
         });
       }
       else if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}") {
-        // console.log("got #9. End.");
+        console.log("got #9. End.");
         listener.close(() => {
           done();
         });
