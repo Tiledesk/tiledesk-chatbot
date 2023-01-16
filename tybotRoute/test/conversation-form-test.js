@@ -144,12 +144,12 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/disable_input', (done) => {
-    // console.log("/disable_input...");
+    console.log("/disable_input...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
+      console.log("req.body....:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -194,14 +194,14 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/good_form', (done) => {
-    // console.log("/good_form...");
+    console.log("/good_form...");
     const message_id = uuidv4();
     const reply_text = "Andrea";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
+      console.log("req.body22222:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -223,7 +223,7 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          console.log("Message sent.", request);
         });
       }
       else if (message.text === "It's a good form Andrea") {
@@ -233,13 +233,15 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            // console.log("params:", params);
+            console.log("params2:", params);
             assert(params);
             assert(params["_tdLastMessageId"] === message_id);
             assert(params["_tdProjectId"] === PROJECT_ID);
             assert(params["your_fullname"] === reply_text);
             assert(params["_tdTypeOf:your_fullname"]);
+            console.log("ok2")
             listener.close(() => {
+              console.log("done2");
               done();
             });
           }
@@ -247,7 +249,7 @@ describe('Conversation1 - Form filling', async () => {
 
       }
       else {
-        console.error("Unexpected message.");
+        console.error("Unexpected message2.");
         assert.ok(false);
       }
 
@@ -279,16 +281,16 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('(intent-to-intent) /move_to => /target_intent', (done) => {
-    // console.log("(intent-to-intent) /move_to => /target_intent");
+    console.log("(intent-to-intent) /move_to => /target_intent");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      // console.log("received message:", JSON.stringify(message));
+      console.log("received message33:", JSON.stringify(message));
       if (message.text === "The target!") {
-        // console.log("Got it. End.");
+        console.log("Got it. End.");
         listener.close(() => {
           done();
         });
@@ -316,7 +318,7 @@ describe('Conversation1 - Form filling', async () => {
       }
       // console.log("sending message:", request);
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        console.log("Message sent33.");
       });
     });
   });

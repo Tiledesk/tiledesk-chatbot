@@ -404,7 +404,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.WAIT) {
-        new DirWait().execute(directive, () => {
+        new DirWait(context).execute(directive, () => {
           process(nextDirective());
         });
       }

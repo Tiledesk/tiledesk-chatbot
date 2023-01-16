@@ -60,32 +60,40 @@ class TiledeskChatbot {
         console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
       
-      // Checking locked intent
-      const locked_intent = await this.currentLockedIntent(this.requestId);
-      if (this.log) {console.log("got locked intent", locked_intent)}
-      if (locked_intent) {
-        const tdclient = new TiledeskClient({
-          projectId: this.projectId,
-          token: this.token,
-          APIURL: this.APIURL,
-          APIKEY: this.APIKEY,
-          log: false
-        });
-        // it only gets the locked_intent
-        const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
-        if (this.log) {console.log("locked intent. got faqs", faq)}
-        let reply;
-        if (faq) {
-          reply = await this.execIntent(faq, message, lead);//, bot);
-        }
-        else {
-          reply = {
-            "text": "An error occurred while getting locked intent:'" + locked_intent
+      // Checking locked intent (for non-internal intents)
+      // internal intents always "skip" the locked intent
+      // if (message.text.startsWith("/") && message.sender != "_tdinternal") {
+        const locked_intent = await this.currentLockedIntent(this.requestId);
+        if (this.log) {console.log("got locked intent", locked_intent)}
+        if (locked_intent) {
+          const tdclient = new TiledeskClient({
+            projectId: this.projectId,
+            token: this.token,
+            APIURL: this.APIURL,
+            APIKEY: this.APIKEY,
+            log: false
+          });
+          // it only gets the locked_intent
+          const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
+          if (this.log) {console.log("locked intent. got faqs", faq)}
+          let reply;
+          if (faq) {
+            reply = await this.execIntent(faq, message, lead);//, bot);
           }
+          else {
+            reply = {
+              "text": "An error occurred while getting locked intent:'" + locked_intent
+            }
+          }
+          resolve(reply);
+          return;
         }
-        resolve(reply);
-        return;
-      }
+      // }
+      // else if (message.text.startsWith("/")) {
+      //   if (this.log) {
+      //     console.log("Internal intent". message.text, "skips locked intent check");
+      //   }
+      // }
 
       let explicit_intent_name = null;
       // Explicit intent invocation
@@ -399,7 +407,6 @@ class TiledeskChatbot {
       if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
-    console.log("...static_bot_answer ready:", JSON.stringify(static_bot_answer));
     // exec webhook
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
     if (this.log) {console.log("bot_answer ready:", JSON.stringify(bot_answer));}
@@ -462,11 +469,11 @@ class TiledeskChatbot {
   }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
-    console.log("static_bot_answer.attributes.webhook:", static_bot_answer.attributes.webhook)
+    if (this.log) {console.log("static_bot_answer.attributes.webhook:", static_bot_answer.attributes.webhook);}
     if (static_bot_answer.attributes && static_bot_answer.attributes.webhook && static_bot_answer.attributes.webhook === true) {
-      console.log("adding variables to context...")
       const variables = await this.allParameters();
       context.variables = variables;
+      if (this.log) {console.log("adding variables to webhook context:", context.variables);}
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
