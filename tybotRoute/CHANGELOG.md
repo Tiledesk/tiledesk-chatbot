@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.46
+- weird npm import fix
+
 ### 0.1.45
 - DirLockIntent added varibleName parameter
 

@@ -33,8 +33,8 @@ class DirUnlockIntent {
   //   callback();
   // }
 
-  static async unlockIntent(requestId) {
-    await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+  static async unlockIntent(tdcache, requestId) {
+    await tdcache.del("tilebot:requests:"  + requestId + ":locked");
     // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
     console.log("unlocked.")
   }

@@ -429,7 +429,7 @@ class TiledeskChatbot {
   }
   
   async unlockIntent(requestId) {
-    await DirUnlockIntent.unlockIntent(requestId);
+    await DirUnlockIntent.unlockIntent(this.tdcache, requestId);
     // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
   }
 
