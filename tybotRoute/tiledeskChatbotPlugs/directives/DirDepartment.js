@@ -1,13 +1,15 @@
 
 class DirDepartment {
 
-  constructor(config) {
-    if (!config.tdclient) {
-      throw new Error('tdclient (TiledeskClient) object is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
     }
-    this.tdclient = config.tdclient;
-    this.log = config.log;
-    this.requestId = config.requestId;
+    this.context = context;
+    this.log = context.log;
+    this.tdclient = context.tdclient;
+    this.log = context.log;
+    this.requestId = context.requestId;
   }
 
   execute(directive, callback) {

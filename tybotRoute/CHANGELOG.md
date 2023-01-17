@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.47
+- Introduced _tdIfOnlineAgents --trueIntent -- falseIntent
+- Refactored _tdIfOpenHours --trueIntent -- falseIntent
+- Removed DirIfNotOpenHours
+- Refactored *context* passing *tdclient* object
+
 ### 0.1.46
 - weird npm import fix
 

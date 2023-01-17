@@ -1,5 +1,6 @@
 const ms = require('minimist-string');
 
+// DEPRECATED
 class DirOfflineHours {
 
   constructor(tdclient) {

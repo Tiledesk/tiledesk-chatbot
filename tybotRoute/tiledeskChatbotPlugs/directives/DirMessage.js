@@ -3,15 +3,27 @@ const { Directives } = require('./Directives.js');
 
 class DirMessage {
 
-  constructor(settings) {
-    if (!settings.API_ENDPOINT) {
-      throw new Error("settings.API_ENDPOINT is mandatory!");
+  // constructor(settings) {
+  //   if (!settings.API_ENDPOINT) {
+  //     throw new Error("settings.API_ENDPOINT is mandatory!");
+  //   }
+  //   this.API_ENDPOINT = settings.API_ENDPOINT;
+  //   this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
+  //   this.projectId = settings.projectId;
+  //   this.requestId = settings.requestId;
+  //   this.token = settings.token;
+  // }
+
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
     }
-    this.API_ENDPOINT = settings.API_ENDPOINT;
-    this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
-    this.projectId = settings.projectId;
-    this.requestId = settings.requestId;
-    this.token = settings.token;
+    this.context = context;
+    this.API_ENDPOINT = context.TILEDESK_APIURL,
+    this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
+    this.projectId = context.projectId;
+    this.requestId = context.requestId;
+    this.token = context.token;
   }
 
   execute(directive, callback) {

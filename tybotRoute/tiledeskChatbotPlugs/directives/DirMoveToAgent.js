@@ -4,7 +4,7 @@ class DirMoveToAgent {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
     this.context = context;
     // let context =  {
@@ -18,17 +18,18 @@ class DirMoveToAgent {
     //   tdcache: tdcache,
     //   log: false
     // }
-    this.tdclient = new TiledeskClient({
-      projectId: context.projectId,
-      token: context.token,
-      APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
-    });
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.depId = this.context.departmentId;
-    this.log = this.context.log;
+    // new TiledeskClient({
+    //   projectId: context.projectId,
+    //   token: context.token,
+    //   APIURL: context.TILEDESK_APIURL,
+    //   APIKEY: "___",
+    //   log: context.log
+    // });
+    this.tdclient = context.tdclient;
+    this.tdcache = context.tdcache;
+    this.requestId = context.requestId;
+    this.depId = context.departmentId;
+    this.log = context.log;
   }
 
   execute(directive, callback) {

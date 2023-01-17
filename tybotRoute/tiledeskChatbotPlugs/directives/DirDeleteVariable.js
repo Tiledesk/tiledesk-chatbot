@@ -8,7 +8,7 @@ class DirDeleteVariable {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
     this.context = context;
     this.log = context.log;

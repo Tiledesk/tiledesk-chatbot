@@ -9,9 +9,14 @@ class DirSendEmail {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
     this.context = context;
+    this.tdclient = context.tdclient;
+    this.tdcache = this.context.tdcache;
+    this.requestId = this.context.requestId;
+    this.log = this.context.log;
+    this.log = log;
     // let context =  {
     //   projectId: projectId,
     //   token: token,
@@ -23,17 +28,14 @@ class DirSendEmail {
     //   tdcache: tdcache,
     //   log: false
     // }
-    this.tdclient = new TiledeskClient({
-      projectId: context.projectId,
-      token: context.token,
-      APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
-    });
-    this.log = context.log;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.log = this.context.log;
+    // this.tdclient = new TiledeskClient({
+    //   projectId: context.projectId,
+    //   token: context.token,
+    //   APIURL: context.TILEDESK_APIURL,
+    //   APIKEY: "___",
+    //   log: context.log
+    // });
+    
   }
 
   execute(directive, callback) {

@@ -8,7 +8,7 @@ class DirAssign {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
     this.context = context;
     // let context =  {

@@ -6,16 +6,16 @@ class DirIfOpenHours {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
-    // this.tdclient = config.tdclient;
-    this.tdclient = new TiledeskClient({
-      projectId: context.projectId,
-      token: context.token,
-      APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
-    });
+    this.tdclient = context.tdclient;
+    // this.tdclient = new TiledeskClient({
+    //   projectId: context.projectId,
+    //   token: context.token,
+    //   APIURL: context.TILEDESK_APIURL,
+    //   APIKEY: "___",
+    //   log: context.log
+    // });
     // let context =  {
     //   projectId: projectId,
     //   token: token,

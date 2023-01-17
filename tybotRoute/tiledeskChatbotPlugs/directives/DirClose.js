@@ -1,16 +1,16 @@
 
 class DirClose {
 
-    constructor(config) {
-        if (!config.tdclient) {
-            throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
+    constructor(context) {
+        if (!context) {
+            throw new Error('context object is mandatory.');
         }
-        this.tdclient = config.tdclient;
-        this.requestId = config.requestId;
+        this.context = context;
+        this.tdclient = context.tdclient;
+        this.requestId = context.requestId;
     }
     
     execute(directive, callback) {
-        // console.log("Exec close() directive on requestId", this.requestId);
         this.tdclient.closeRequest(this.requestId, (err) => {
             if (err) {
                 console.error("Error in 'close directive':", err);

@@ -6,7 +6,7 @@ class DirAssignFromFunction {
 
   constructor(context) {
     if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
+      throw new Error('context object is mandatory.');
     }
     this.context = context;
     // let context =  {
@@ -20,13 +20,14 @@ class DirAssignFromFunction {
     //   tdcache: tdcache,
     //   log: false
     // }
-    this.tdclient = new TiledeskClient({
-      projectId: context.projectId,
-      token: context.token,
-      APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
-    });
+    this.tdclient = context.tdclient;
+    // new TiledeskClient({
+    //   projectId: context.projectId,
+    //   token: context.token,
+    //   APIURL: context.TILEDESK_APIURL,
+    //   APIKEY: "___",
+    //   log: context.log
+    // });
     this.log = context.log;
     this.tdcache = context.tdcache;
   }

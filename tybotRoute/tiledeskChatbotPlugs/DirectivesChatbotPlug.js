@@ -116,9 +116,10 @@ class DirectivesChatbotPlug {
       supportRequest: supportRequest,
       requestId: supportRequest.request_id,
       TILEDESK_APIURL: API_URL,
-      TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+      TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
+      tdclient: tdclient,
       log: true
     }
     
@@ -182,15 +183,16 @@ class DirectivesChatbotPlug {
 
       }
       else if (directive_name === Directives.INTENT) {
-        const intentDir = new DirIntent(
-          {
-            API_ENDPOINT: API_URL,
-            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false,
-            supportRequest: supportRequest,
-            token: token
-          }
-        );
+        // const intentDir = new DirIntent(
+        //   {
+        //     API_ENDPOINT: API_URL,
+        //     TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+        //     log: false,
+        //     supportRequest: supportRequest,
+        //     token: token
+        //   }
+        // );
+        const intentDir = new DirIntent(context);
         intentDir.execute(directive, () => {
           process(nextDirective());
         });
@@ -376,11 +378,7 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.CLOSE) {
         // console.log("Exec close()")
-        const closeDir = new DirClose(
-          {
-            tdclient: tdclient,
-            requestId: requestId
-          });
+        const closeDir = new DirClose(context);
         closeDir.execute(directive, () => {
           process(nextDirective());
         });
@@ -510,13 +508,13 @@ class DirectivesChatbotPlug {
       if (directive == null) {
         theend();
       }
-      else if (directive_name === Directives.WHEN_OFFLINE_HOURS) {
+      else if (directive_name === Directives.WHEN_OFFLINE_HOURS) { // DEPRECATED
         const offlineHoursDir = new DirOfflineHours(tdclient);
         offlineHoursDir.execute(directive, pipeline, () => {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.DISABLE_INPUT_TEXT) {
+      else if (directive_name === Directives.DISABLE_INPUT_TEXT) { // DEPRECATED => will change in a "message-option" --disableInput
         const disableInputTextDir = new DirDisableInputText();
         disableInputTextDir.execute(directive, pipeline, () => {
           process(nextDirective());
