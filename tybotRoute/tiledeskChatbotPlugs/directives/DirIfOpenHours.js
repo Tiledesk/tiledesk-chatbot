@@ -15,7 +15,6 @@ class DirIfOpenHours {
       APIKEY: "___",
       log: context.log
     });
-    // this.intentDir = config.intentDir;
     // let context =  {
     //   projectId: projectId,
     //   token: token,

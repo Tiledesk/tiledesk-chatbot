@@ -34,9 +34,9 @@ class DirUnlockIntent {
   // }
 
   static async unlockIntent(tdcache, requestId) {
-    await tdcache.del("tilebot:requests:"  + requestId + ":locked");
+    await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
     // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
-    console.log("unlocked.")
+    // console.log("unlocked.")
   }
   
 }

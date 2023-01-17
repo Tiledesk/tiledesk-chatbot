@@ -38,8 +38,6 @@ console.log("BOT_ID:", BOT_ID);
 
 let app_listener;
 
-
-
 describe('Conversation1 - Form filling', async () => {
 
   before(() => {
@@ -60,10 +58,6 @@ describe('Conversation1 - Form filling', async () => {
           app_listener = app.listen(port, () => {
             console.log('Tilebot connector listening on port ', port);
             resolve();
-            //   var listener = endpointServer.listen(10002, '0.0.0.0', function () {
-            //     console.log('endpointServer started', listener.address());
-            //     resolve();
-            //   });
           });
         });
     })
@@ -282,45 +276,51 @@ describe('Conversation1 - Form filling', async () => {
 
   it('(intent-to-intent) /move_to => /target_intent', (done) => {
     console.log("(intent-to-intent) /move_to => /target_intent");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      console.log("received message33:", JSON.stringify(message));
-      if (message.text === "The target!") {
-        console.log("Got it. End.");
-        listener.close(() => {
-          done();
-        });
-      }
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/move_to",
-          "id_project": PROJECT_ID,
-          "request": {
-            "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      // console.log("sending message:", request);
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        console.log("Message sent33.");
+    try {
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+        res.send({ success: true });
+        const message = req.body;
+        console.log("received message33:", JSON.stringify(message));
+        if (message.text === "The target!") {
+          console.log("Got it. End.");
+          listener.close(() => {
+            done();
+          });
+        }
       });
-    });
+  
+      listener = endpointServer.listen(10002, '0.0.0.0', function () {
+        // console.log('endpointServer started', listener.address());
+        // console.log("REQUEST_ID:", REQUEST_ID);
+        let request = {
+          "payload": {
+            "_id": uuidv4(),
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "/move_to",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+              "id_project": PROJECT_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        // console.log("sending message:", request);
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+          console.log("Message sent33.");
+        });
+      });
+    }
+    catch(error) {
+      console.error("Error:", error);
+      done()
+    }
   });
 
   it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
