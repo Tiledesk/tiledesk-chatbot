@@ -88,7 +88,7 @@ class DirIfOnlineAgents {
               if (agents.length > 0) {
                 if (action.body.trueIntent) {
                   let intentDirective = this.intentDirectiveFor(action.body.trueIntent);
-                  if (this.log) {console.log("executing the action on 'open'");}
+                  if (this.log) {console.log("agents (openHours) => trueIntent");}
                   this.intentDir.execute(intentDirective, () => {
                     callback();
                   });
@@ -100,7 +100,7 @@ class DirIfOnlineAgents {
               }
               else if (action.body.falseIntent) {
                 let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
-                if (this.log) {console.log("executing falseIntent", action.body.falseIntent);}
+                if (this.log) {console.log("!agents (openHours) => falseIntent", action.body.falseIntent);}
                 this.intentDir.execute(intentDirective, () => {
                   callback();
                 });
@@ -114,7 +114,7 @@ class DirIfOnlineAgents {
         else if (result && !result.isopen) {
           if (action.body.falseIntent) {
             let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
-            if (this.log) {console.log("executing the action on 'open'");}
+            if (this.log) {console.log("!agents (!openHours) => falseIntent");}
             this.intentDir.execute(intentDirective, () => {
               callback();
             });

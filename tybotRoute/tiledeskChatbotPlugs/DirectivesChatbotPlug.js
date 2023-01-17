@@ -26,6 +26,7 @@ const { DirCondition } = require('./directives/DirCondition');
 const { DirAssign } = require('./directives/DirAssign');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 
 class DirectivesChatbotPlug {
 
@@ -252,6 +253,17 @@ class DirectivesChatbotPlug {
           //   log: false
           // });
         ifNotOpenHours.execute(directive, () => {
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.IF_ONLINE_AGENTS) {
+        const ifOnlineAgents = new DirIfOnlineAgents(context);
+          // {
+          //   tdclient: tdclient,
+          //   intentDir: intentDir,
+          //   log: false
+          // });
+          ifOnlineAgents.execute(directive, () => {
           process(nextDirective());
         });
       }

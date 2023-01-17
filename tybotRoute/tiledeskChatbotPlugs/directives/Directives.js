@@ -26,6 +26,7 @@ class Directives {
   static SEND_EMAIL = "sendemail";
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
+  static IF_ONLINE_AGENTS = "ifonlineagents";
   static IF_NOT_OPEN_HOURS = "ifnotopenhours";
   static FUNCTION_VALUE = "functionvalue";
   static CONDITION = "condition";
