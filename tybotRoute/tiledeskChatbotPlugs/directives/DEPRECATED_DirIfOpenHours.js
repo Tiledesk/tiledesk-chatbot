@@ -1,6 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
-const ms = require('minimist-string');
 
 class DirIfOpenHours {
 
@@ -43,25 +42,11 @@ class DirIfOpenHours {
       action = directive.action
     }
     else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      if (!params.trueIntent && !params.falseIntent) {
-        if (this.log) {
-          console.log("missing both params.trueIntent & params.falseIntent");
-        }
-        callback();
-        return;
-      }
       action = {
         body: {
-          trueIntent: params.trueIntent,
-          falseIntent: params.falseIntent
+          intentName: directive.parameter
         }
       }
-    }
-    else {
-      callback();
-      return;
     }
     this.go(action, () => {
       callback();
@@ -69,6 +54,18 @@ class DirIfOpenHours {
   }
 
   go(action, callback) {
+    const intentName = action.body.intentName;
+    if (!intentName) {
+      if (this.log) {console.log("Invalid intent name for If-open-hours");}
+      callback();
+    }
+    let intentDirective = {
+      action: {
+        body: {
+          intentName: intentName
+        }
+      }
+    }
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
@@ -76,21 +73,7 @@ class DirIfOpenHours {
         callback();
       }
       else if (result && result.isopen) {
-        if (action.body.trueIntent) {
-          let intentDirective = this.intentDirectiveFor(action.body.trueIntent);
-          if (this.log) {console.log("agents (openHours) => trueIntent");}
-          this.intentDir.execute(intentDirective, () => {
-            callback();
-          });
-        }
-        else {
-          callback();
-          return;
-        }
-      }
-      else if (action.body.falseIntent) {
-        let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
-        if (this.log) {console.log("!agents (openHours) => falseIntent", action.body.falseIntent);}
+        if (this.log) {console.log("executing the action on 'open'");}
         this.intentDir.execute(intentDirective, () => {
           callback();
         });
@@ -99,33 +82,6 @@ class DirIfOpenHours {
         callback();
       }
     });
-  }
-
-  intentDirectiveFor(intent) {
-    let intentDirective = {
-      action: {
-        body: {
-          intentName: intent
-        }
-      }
-    }
-    return intentDirective;
-  }
-
-  parseParams(directive_parameter) {
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
   }
 
 }

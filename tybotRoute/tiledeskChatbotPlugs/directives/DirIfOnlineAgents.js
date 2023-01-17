@@ -66,7 +66,6 @@ class DirIfOnlineAgents {
     this.go(action, () => {
       callback();
     });
-    
   }
 
   go(action, callback) {
