@@ -20,7 +20,7 @@ const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours } = require('./directives/DirIfOpenHours');
-const { DirIfNotOpenHours } = require('./directives/DirIfNotOpenHours');
+// const { DirIfNotOpenHours } = require('./directives/DirIfNotOpenHours');
 const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
 const { DirAssign } = require('./directives/DirAssign');
@@ -236,26 +236,12 @@ class DirectivesChatbotPlug {
           process(nextDirective());
         });
       }
-      else if (directive_name === Directives.IF_NOT_OPEN_HOURS) {
-        // const intentDir = new DirIntent(
-        //   {
-        //     API_ENDPOINT: API_URL,
-        //     TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-        //     log: false,
-        //     supportRequest: supportRequest,
-        //     token: token
-        //   }
-        // );
-        const ifNotOpenHours = new DirIfNotOpenHours(context);
-          // {
-          //   tdclient: tdclient,
-          //   intentDir: intentDir,
-          //   log: false
-          // });
-        ifNotOpenHours.execute(directive, () => {
-          process(nextDirective());
-        });
-      }
+      // else if (directive_name === Directives.IF_NOT_OPEN_HOURS) {
+      //   const ifNotOpenHours = new DirIfNotOpenHours(context);
+      //   ifNotOpenHours.execute(directive, () => {
+      //     process(nextDirective());
+      //   });
+      // }
       else if (directive_name === Directives.IF_ONLINE_AGENTS) {
         const ifOnlineAgents = new DirIfOnlineAgents(context);
           // {
