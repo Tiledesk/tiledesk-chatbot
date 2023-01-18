@@ -28,7 +28,7 @@ class DirUnlockIntent {
   }
 
   async go(action, callback) {
-    await DirUnlockIntent.unlockIntent(this.context.requestId);
+    await DirUnlockIntent.unlockIntent(this.tdcache, this.context.requestId);
     if (callback) {
       callback();
     }
