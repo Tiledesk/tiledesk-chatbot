@@ -10,6 +10,7 @@ available on:
 - Refactored _tdIfOpenHours --trueIntent -- falseIntent
 - Removed DirIfNotOpenHours
 - Refactored *context* passing *tdclient* object
+- bug fixing
 
 ### 0.1.46
 - weird npm import fix
