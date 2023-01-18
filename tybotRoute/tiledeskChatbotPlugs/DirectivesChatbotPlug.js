@@ -410,7 +410,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.UNLOCK_INTENT) {
-        new DirUnlockIntent(context).execute( () => {
+        new DirUnlockIntent(context).execute(directive, () => {
           process(nextDirective());
         });
       }
