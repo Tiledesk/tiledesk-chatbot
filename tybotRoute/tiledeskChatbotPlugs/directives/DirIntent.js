@@ -49,9 +49,9 @@ class DirIntent {
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
       action = {
-        body: {
+        // body: {
           intentName: directive.parameter.trim()
-        }
+        // }
       }
     }
     else {
@@ -66,11 +66,12 @@ class DirIntent {
 
   go(action, callback) {
     // console.log("action intent:", action);
+    const intentName = action.intentName;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
-    if (action.body.intentName) {
-      let intent_command = "/" + action.body.intentName;
+    if (intentName) {
+      let intent_command = "/" + intentName;
       let intent_command_request = {
         "payload": {
           "_id": uuidv4(),
@@ -133,6 +134,17 @@ class DirIntent {
     else {
       callback();
     }
+  }
+
+  static intentDirectiveFor(intent) {
+    let intentDirective = {
+      action: {
+        // body: {
+          intentName: intent
+        // }
+      }
+    }
+    return intentDirective;
   }
 
   /**

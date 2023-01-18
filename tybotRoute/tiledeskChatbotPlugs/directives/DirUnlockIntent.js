@@ -13,7 +13,7 @@ class DirUnlockIntent {
     this.log = context.log;
   }
 
-  async execute(directive, requestId, callback) {
+  async execute(directive, callback) {
     if (this.log) {console.log("Unlocking current intent");}
     this.go(action, () => {
       callback();
@@ -34,7 +34,7 @@ class DirUnlockIntent {
   // }
 
   static async unlockIntent(tdcache, requestId) {
-    await tdcache.del("tilebot:requests:"  + requestId + ":locked");
+    await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
     // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
     // console.log("unlocked.")
   }

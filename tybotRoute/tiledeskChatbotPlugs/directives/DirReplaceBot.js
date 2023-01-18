@@ -20,9 +20,9 @@ class DirReplaceBot {
     else if (directive.parameter) {
       let botName = directive.parameter.trim();
       action = {
-        body: {
+        // body: {
           botName: botName
-        }
+        // }
       }
     }
     else {
@@ -34,7 +34,7 @@ class DirReplaceBot {
   }
 
   go(action, callback) {
-    this.tdclient.replaceBotByName(this.requestId, action.body.botName, () => {
+    this.tdclient.replaceBotByName(this.requestId, action.botName, () => {
       callback();
     });
   }

@@ -77,7 +77,7 @@ class DirIfOpenHours {
       }
       else if (result && result.isopen) {
         if (action.body.trueIntent) {
-          let intentDirective = this.intentDirectiveFor(action.body.trueIntent);
+          let intentDirective = DirIntent.intentDirectiveFor(action.body.trueIntent);
           if (this.log) {console.log("agents (openHours) => trueIntent");}
           this.intentDir.execute(intentDirective, () => {
             callback();
@@ -89,7 +89,7 @@ class DirIfOpenHours {
         }
       }
       else if (action.body.falseIntent) {
-        let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
+        let intentDirective = DirIntent.intentDirectiveFor(action.body.falseIntent);
         if (this.log) {console.log("!agents (openHours) => falseIntent", action.body.falseIntent);}
         this.intentDir.execute(intentDirective, () => {
           callback();
@@ -101,16 +101,16 @@ class DirIfOpenHours {
     });
   }
 
-  intentDirectiveFor(intent) {
-    let intentDirective = {
-      action: {
-        body: {
-          intentName: intent
-        }
-      }
-    }
-    return intentDirective;
-  }
+  // intentDirectiveFor(intent) {
+  //   let intentDirective = {
+  //     action: {
+  //       body: {
+  //         intentName: intent
+  //       }
+  //     }
+  //   }
+  //   return intentDirective;
+  // }
 
   parseParams(directive_parameter) {
     let trueIntent = null;

@@ -43,10 +43,10 @@ class DirAssignFromFunction {
         params = this.parseParams(directive.parameter);
       }
       action = {
-        body: {
+        // body: {
           functionName: params.functionName,
           assignTo: params.assignTo
-        }
+        // }
       }
     }
     console.log("execute assign");
@@ -58,8 +58,10 @@ class DirAssignFromFunction {
 
   async go(action, callback) {
     console.log("invoke function => assign action:", action);
-    const functionName = action.body.functionName;
-    const variableName = action.body.assignTo;
+    // const functionName = action.body.functionName;
+    // const variableName = action.body.assignTo;
+    const functionName = action.functionName;
+    const variableName = action.assignTo;
     console.log("functionName:", functionName)
     console.log("variableName:", variableName)
     this.invoke(functionName, async (err, value) => {

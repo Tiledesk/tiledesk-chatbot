@@ -53,11 +53,11 @@ class DirCondition {
         return;
       }
       action = {
-        body: {
+        // body: {
           condition: params.condition,
           trueIntent: params.trueIntent,
           falseIntent: params.falseIntent
-        }
+        // }
       }
     }
     else {
@@ -71,9 +71,12 @@ class DirCondition {
   }
 
   async go(action, callback) {
-    const condition = action.body.condition;
-    const trueIntent = action.body.trueIntent;
-    const falseIntent = action.body.falseIntent;
+    // const condition = action.body.condition;
+    // const trueIntent = action.body.trueIntent;
+    // const falseIntent = action.body.falseIntent;
+    const condition = action.condition;
+    const trueIntent = action.trueIntent;
+    const falseIntent = action.falseIntent;
     if (this.log) {console.log("condition action:", action);}
     if (!trueIntent && !falseIntent) {
       if (this.log) {console.log("Invalid condition, no intents specified");}
@@ -82,23 +85,25 @@ class DirCondition {
     }
     let trueIntentDirective = null;
     if (trueIntent) {
-      trueIntentDirective = {
-        action: {
-          body: {
-            intentName: trueIntent
-          }
-        }
-      }
+      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent);
+      // trueIntentDirective = {
+      //   action: {
+      //     body: {
+      //       intentName: trueIntent
+      //     }
+      //   }
+      // }
     }
     let falseIntentDirective = null;
     if (falseIntent) {
-      falseIntentDirective = {
-        action: {
-          body: {
-            intentName: falseIntent
-          }
-        }
-      }
+      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent);
+      // falseIntentDirective = {
+      //   action: {
+      //     body: {
+      //       intentName: falseIntent
+      //     }
+      //   }
+      // }
     }
     let variables = null;
     if (this.context.tdcache) {
@@ -111,7 +116,7 @@ class DirCondition {
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
-    if (this.log) {console.log("action.body.condition:", condition);}
+    if (this.log) {console.log("condition:", condition);}
     const result = await this.evaluateCondition(condition, variables);
     if (this.log) {console.log("executed condition:", condition, "result:", result);}
     if (result === true) {

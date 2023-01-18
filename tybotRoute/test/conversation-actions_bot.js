@@ -22,36 +22,32 @@ const bot = {
         "question": "***",
         "actions": [{
             "type": "message",
-            "body": {
-                "message": {
-                    "attributes": {
-                        "commands": [{
-                            "type": "message",
-                            "message": {
-                                "text": "Hello by message directive!",
-                                "type": "text"
-                            }
-                        }, {
-                            "type": "wait",
-                            "time": 500
-                        }, {
-                            "type": "message",
-                            "message": {
-                                "text": "Ciao",
-                                "type": "text",
-                                "attributes": {
-                                    "attachment": {
-                                        "type": "template",
-                                        "buttons": [{
-                                            "type": "text",
-                                            "value": "/start"
-                                        }]
-                                    }
-                                }
-                            }
-                        }]
+            "attributes": {
+                "commands": [{
+                    "type": "message",
+                    "message": {
+                        "text": "Hello by message directive!",
+                        "type": "text"
                     }
-                }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "text": "Ciao",
+                        "type": "text",
+                        "attributes": {
+                            "attachment": {
+                                "type": "template",
+                                "buttons": [{
+                                    "type": "text",
+                                    "value": "/start"
+                                }]
+                            }
+                        }
+                    }
+                }]
             }
         }],
         "language": "en",
@@ -63,18 +59,14 @@ const bot = {
         "answer": "***",
         "actions": [{
             "type": "message",
-            "body": {
-                "message": {
-                    "attributes": {
-                        "commands": [{
-                            "type": "message",
-                            "message": {
-                                "text": "Moving you to an agent...",
-                                "type": "text"
-                            }
-                        }]
+            "attributes": {
+                "commands": [{
+                    "type": "message",
+                    "message": {
+                        "text": "Moving you to an agent...",
+                        "type": "text"
                     }
-                }
+                }]
             }
         }, {
             "type": "agent"
@@ -87,19 +79,15 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "type": "message",
-            "body": {
-                "message": {
-                    "attributes": {
-                        "commands": [{
-                            "type": "message",
-                            "message": {
-                                "text": "Looking for an agent online...",
-                                "type": "text"
-                            }
-                        }]
+            "type": "message",  
+            "attributes": {
+                "commands": [{
+                    "type": "message",
+                    "message": {
+                        "text": "Looking for an agent online...",
+                        "type": "text"
                     }
-                }
+                }]
             }
         }, {
             "type": "whenonlinemovetoagent"
@@ -113,18 +101,14 @@ const bot = {
         "answer": "***",
         "actions": [{
             "type": "message",
-            "body": {
-                "message": {
-                    "attributes": {
-                        "commands": [{
-                            "type": "message",
-                            "message": {
-                                "text": "Closing...",
-                                "type": "text"
-                            }
-                        }]
+            "attributes": {
+                "commands": [{
+                    "type": "message",
+                    "message": {
+                        "text": "Closing...",
+                        "type": "text"
                     }
-                }
+                }]
             }
         }, {
             "type": "close"
@@ -136,20 +120,15 @@ const bot = {
         "enabled": true,
         "question": "***",
         "answer": "***",
-        "actions": [{
+        "actions": [
+        {
             "type": "department",
-            "body": {
-                "depName": "Support"
-            }
+            "depName": "Support"
         }, {
             "type": "message",
-            "body": {
-                "message": {
-                    "text": "/start",
-                    "attributes": {
-                        "subtype": "info"
-                    }
-                }
+            "text": "/start",
+            "attributes": {
+                "subtype": "info"
             }
         }],
         "language": "en",
@@ -161,9 +140,7 @@ const bot = {
         "answer": "***",
         "actions": [{
             "type": "intent",
-            "body": {
-                "intentName": "intentAction"
-            }
+            "intentName": "intentAction"
         }],
         "language": "en",
         "intent_display_name": "Intent"

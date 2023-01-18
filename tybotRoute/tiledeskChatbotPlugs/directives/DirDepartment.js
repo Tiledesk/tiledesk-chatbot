@@ -21,12 +21,12 @@ class DirDepartment {
     else {
       let dep_name = "default department";
       if (directive.parameter) {
-        dep_name = directive.parameter;
+        dep_name = directive.parameter.trim();
       }
       action = {
-        body: {
+        // body: {
           depName: dep_name
-        }
+        // }
       }
     }
     this.go(action, () => {
@@ -43,7 +43,7 @@ class DirDepartment {
   // }
 
   go(action, callback) {
-    this.moveToDepartment(this.requestId, action.body.depName, () => {
+    this.moveToDepartment(this.requestId, action.depName, () => {
       callback();
     });
   }

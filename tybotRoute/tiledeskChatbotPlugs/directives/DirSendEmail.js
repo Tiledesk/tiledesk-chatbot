@@ -47,11 +47,11 @@ class DirSendEmail {
     else if (directive.parameter && directive.parameter.trim() !== "") {
       const params = this.parseParams(directive.parameter);
       action = {
-        body: {
+        // body: {
           subject: params.subject,
           text: params.text,
           to: params.to
-        }
+        // }
       }
     }
     else {
@@ -65,8 +65,8 @@ class DirSendEmail {
   }
 
   async go(action, completion) {
-      let params = action.body;
-      if (params.subject && params.text && params.to) {
+      // let params = action.body;
+      if (action.subject && action.text && action.to) {
         try {
           let requestVariables = null;
           if (this.tdcache) {
@@ -77,9 +77,9 @@ class DirSendEmail {
           }
           const filler = new Filler();
           const message_echo = await this.tdclient.sendEmail({
-            subject: filler.fill(params.subject, requestVariables),
-            text: filler.fill(params.text, requestVariables),
-            to: filler.fill(params.to, requestVariables)
+            subject: filler.fill(action.subject, requestVariables),
+            text: filler.fill(action.text, requestVariables),
+            to: filler.fill(action.to, requestVariables)
           });
           if (completion) {
             completion(null, message_echo);

@@ -21,9 +21,9 @@ class DirDeleteVariable {
     }
     else if (directive.parameter) {
       action = {
-        body: {
+        // body: {
           variableName: directive.parameter
-        }
+        // }
       }
     }
     this.go(action, () => {
@@ -32,7 +32,8 @@ class DirDeleteVariable {
   }
 
   async go(action, callback) {
-    let variableName = action.body.variableName;
+    // let variableName = action.body.variableName;
+    let variableName = action.variableName;
     // console.log("DirDeleteVariable:", directive);
     if (!variableName) {
       if (this.log) {console.log("Error deleting variable. Missing 'variableName' error. Skipping");}

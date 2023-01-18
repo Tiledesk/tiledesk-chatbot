@@ -5,6 +5,9 @@ const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
 app.use("/", tybotRoute);
+app.use((err, req, res, next) => {
+  console.error("General error", err);
+});
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
@@ -71,13 +74,13 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/start', (done) => {
-    // console.log("/start...ing story...");
+    console.log("/start...ing Form story...");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      console.log(".....req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.text === "Hello");
@@ -85,7 +88,6 @@ describe('Conversation1 - Form filling', async () => {
       assert(message.attributes.commands.length === 3);
       const command1 = message.attributes.commands[0];
       const command2 = message.attributes.commands[1];
-      const command3 = message.attributes.commands[2];
 
       assert(command1.type === "message");
       assert(command1.message.text === "");

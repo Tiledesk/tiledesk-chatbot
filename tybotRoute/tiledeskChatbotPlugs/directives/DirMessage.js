@@ -31,37 +31,35 @@ class DirMessage {
     if (directive.action) {
       // console.log("got action:", JSON.stringify(action));
       action = directive.action;
-      if (action.body && action.body.message) {
-        if (!action.body.message.attributes) {
-          action.body.message.attributes = {}
-        }
-        action.body.message.attributes.directives = false;
-        action.body.message.attributes.splits = false;
-        action.body.message.attributes.markbot = false;
-        action.body.message.attributes.fillParams = true; // fillParams can fill commands[].message.text
-        // temp patch for a fix in the future
-        // if (!action.body.message.text || action.body.message.text.trim() === "") {
-        //   // because server doesn't allow empty text
-        //   // because we anyway need a text/type for conversation summary
-        //   // we get info from first commands' message or set a default value
-        //   if (action.body.message && action.body.message.attributes && action.body.message.attributes.commands) {
-        //     const message_info = DirMessage.firstMessageInfoFromCommands(commands);
-        //     action.body.message.text = message_info.text;
-        //     action.body.message.type = message_info.type;
-        //   }
-        //   else {
-        //     action.body.message.text = "New message";
-        //     action.body.message.type = "text";
-        //   }
-        // }
-        // console.log("final message action:", JSON.stringify(action));
+      if (!action.attributes) {
+        action.attributes = {}
       }
+      // action.message.attributes.directives = false;
+      // action.message.attributes.splits = false;
+      // action.message.attributes.markbot = false;
+      action.attributes.fillParams = true; // fillParams can fill commands[].message.text
+      // temp patch for a fix in the future
+      // if (!action.body.message.text || action.body.message.text.trim() === "") {
+      //   // because server doesn't allow empty text
+      //   // because we anyway need a text/type for conversation summary
+      //   // we get info from first commands' message or set a default value
+      //   if (action.body.message && action.body.message.attributes && action.body.message.attributes.commands) {
+      //     const message_info = DirMessage.firstMessageInfoFromCommands(commands);
+      //     action.body.message.text = message_info.text;
+      //     action.body.message.type = message_info.type;
+      //   }
+      //   else {
+      //     action.body.message.text = "New message";
+      //     action.body.message.type = "text";
+      //   }
+      // }
+      // console.log("final message action:", JSON.stringify(action));
     }
     else if (directive.parameter) {
       let text = directive.parameter.trim();
       action = {
-        body: {
-          message: {
+        // body: {
+          // message: {
             text: text,
             attributes: {
               directives: false,
@@ -69,11 +67,11 @@ class DirMessage {
               markbot: true,
               fillParams: true
             }
-          }
-        }
+          // }
+        // }
       }
       if (directive.name === Directives.HMESSAGE) {
-        action.body.message.attributes.subtype = "info";
+        action.attributes.subtype = "info";
       }
     }
     else {
@@ -87,7 +85,8 @@ class DirMessage {
   }
 
   go(action, callback) {
-    const message = action.body.message;
+    // const message = action.body.message;
+    const message = action;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
     if (this.TILEBOT_ENDPOINT) {

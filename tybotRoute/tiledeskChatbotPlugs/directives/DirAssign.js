@@ -35,10 +35,10 @@ class DirAssign {
       params = this.parseParams(directive.parameter);
       console.log("DirAssign params:", params);
       action = {
-        body: {
+        // body: {
           expression: params.expression,
           assignTo: params.assignTo
-        }
+        // }
       }
       console.log("DirAssign action:", action);
     }
@@ -54,8 +54,10 @@ class DirAssign {
 
   async go(action, callback) {
     console.log("DirAssign action processing:", action)
-    const expression = action.body.expression;
-    const assignTo = action.body.assignTo;
+    // const expression = action.body.expression;
+    // const assignTo = action.body.assignTo;
+    const expression = action.expression;
+    const assignTo = action.assignTo;
     if (assignTo === null || expression === null) {
       if (this.log) {console.log("Invalid expression or assignTo parameters");}
       callback();

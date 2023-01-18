@@ -23,16 +23,16 @@ class DirWait {
         millis = 1000
       }
       action = {
-        body: {
+        // body: {
           millis: millis
-        }
+        // }
       }
     }
     else {
       action = {
-        body: {
+        // body: {
           millis: 500
-        }
+        // }
       }
     }
     this.go(action, () => {
@@ -43,7 +43,7 @@ class DirWait {
   go(action, callback) {
     setTimeout(() => {
       callback();
-    }, action.body.millis);
+    }, action.millis);
   }
 }
 

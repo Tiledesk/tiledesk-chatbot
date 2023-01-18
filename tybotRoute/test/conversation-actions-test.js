@@ -5,6 +5,9 @@ const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
 app.use("/", tybotRoute);
+app.use((err, req, res, next) => {
+  console.error("General error", err);
+});
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
@@ -15,7 +18,7 @@ const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, 
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = process.env.ACTIONS_CHATBOT_TOKEN;
 
-describe('Conversation1', async () => {
+describe('Conversation for actions test', async () => {
 
   let app_listener;
 

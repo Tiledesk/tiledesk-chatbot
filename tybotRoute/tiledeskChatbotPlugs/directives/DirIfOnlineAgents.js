@@ -45,18 +45,18 @@ class DirIfOnlineAgents {
     else if (directive.parameter) {
       let params;
       params = this.parseParams(directive.parameter);
-      if (!params.trueIntent && !params.falseIntent) {
-        if (this.log) {
-          console.log("missing both params.trueIntent & params.falseIntent");
-        }
-        callback();
-        return;
-      }
+      // if (!params.trueIntent && !params.falseIntent) {
+      //   if (this.log) {
+      //     console.log("missing both params.trueIntent & params.falseIntent");
+      //   }
+      //   callback();
+      //   return;
+      // }
       action = {
-        body: {
+        // body: {
           trueIntent: params.trueIntent,
           falseIntent: params.falseIntent
-        }
+        // }
       }
     }
     else {
@@ -69,6 +69,15 @@ class DirIfOnlineAgents {
   }
 
   go(action, callback) {
+    if (!action.trueIntent && !action.falseIntent) {
+      if (this.log) {
+        console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");
+      }
+      callback();
+      return;
+    }
+    const trueIntent = action.trueIntent;
+    const falseIntent = action.falseIntent;
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
@@ -87,8 +96,8 @@ class DirIfOnlineAgents {
             else {
               if (this.log) {console.log("Agents count:", agents.length);}
               if (agents.length > 0) {
-                if (action.body.trueIntent) {
-                  let intentDirective = this.intentDirectiveFor(action.body.trueIntent);
+                if (trueIntent) {
+                  let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
                   if (this.log) {console.log("agents (openHours) => trueIntent");}
                   this.intentDir.execute(intentDirective, () => {
                     callback();
@@ -99,9 +108,9 @@ class DirIfOnlineAgents {
                   return;
                 }
               }
-              else if (action.body.falseIntent) {
-                let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
-                if (this.log) {console.log("!agents (openHours) => falseIntent", action.body.falseIntent);}
+              else if (falseIntent) {
+                let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+                if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
                 this.intentDir.execute(intentDirective, () => {
                   callback();
                 });
@@ -113,8 +122,8 @@ class DirIfOnlineAgents {
           });
         }
         else if (result && !result.isopen) {
-          if (action.body.falseIntent) {
-            let intentDirective = this.intentDirectiveFor(action.body.falseIntent);
+          if (falseIntent) {
+            let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
             if (this.log) {console.log("!agents (!openHours) => falseIntent");}
             this.intentDir.execute(intentDirective, () => {
               callback();
@@ -132,16 +141,16 @@ class DirIfOnlineAgents {
     });
   }
 
-  intentDirectiveFor(intent) {
-    let intentDirective = {
-      action: {
-        body: {
-          intentName: intent
-        }
-      }
-    }
-    return intentDirective;
-  }
+  // intentDirectiveFor(intent) {
+  //   let intentDirective = {
+  //     action: {
+  //       body: {
+  //         intentName: intent
+  //       }
+  //     }
+  //   }
+  //   return intentDirective;
+  // }
 
   parseParams(directive_parameter) {
     let trueIntent = null;
