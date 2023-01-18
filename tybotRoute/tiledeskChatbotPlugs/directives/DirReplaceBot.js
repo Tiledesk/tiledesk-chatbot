@@ -8,7 +8,7 @@ class DirReplaceBot {
     this.context = context;
     this.tdclient = context.tdclient;
     this.requestId = context.requestId;
-    this.log = log;
+    this.log = context.log;
   }
 
   execute(directive, callback) {
