@@ -67,12 +67,13 @@ class DirDepartment {
         }
       }
       if (dep) {
-        this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err) => {
+        this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
             console.error("DirDepartment error:", err);
             callback();
           }
           else {
+            console.log("Department response:", res);
             callback();
           }
         });
