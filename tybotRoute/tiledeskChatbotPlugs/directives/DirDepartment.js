@@ -8,7 +8,6 @@ class DirDepartment {
     this.context = context;
     this.log = context.log;
     this.tdclient = context.tdclient;
-    this.log = context.log;
     this.requestId = context.requestId;
   }
 
@@ -43,7 +42,9 @@ class DirDepartment {
   // }
 
   go(action, callback) {
+    console.log("Switching to department:", action.depName);
     this.moveToDepartment(this.requestId, action.depName, () => {
+      console.log("Switched, callbackalling");
       callback();
     });
   }

@@ -142,13 +142,9 @@ class DirectivesChatbotPlug {
         // if (directive.parameter) {
         //   dep_name = directive.parameter;
         // }
-        const departmentDir = new DirDepartment(
-          {
-            tdclient: tdclient,
-            requestId: requestId,
-            log: false
-          });
+        const departmentDir = new DirDepartment(context);
         departmentDir.execute(directive, () => {
+          console.log("departmentDir.executed", directive);
           process(nextDirective());
         });
       }
