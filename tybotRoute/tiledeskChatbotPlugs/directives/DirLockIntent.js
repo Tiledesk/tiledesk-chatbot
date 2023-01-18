@@ -63,7 +63,7 @@ class DirLockIntent {
       await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
     }
     else {
-      console.error("lockIntent recoverable error, one of tdcahce, requestId, intent_name is not valid", tdcache, requestId, intent_name);
+      console.error("lockIntent recoverable error, one of requestId:", requestId, "intent_name:", intent_name, "is not valid");
     }
     
     // if (variable_name) {
