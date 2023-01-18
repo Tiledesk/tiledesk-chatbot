@@ -16,7 +16,7 @@ const bots_data = require('./conversation-actions_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
-const CHATBOT_TOKEN = process.env.ACTIONS_CHATBOT_TOKEN;
+const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 
 describe('Conversation for actions test', async () => {
 
@@ -111,7 +111,7 @@ describe('Conversation for actions test', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      sendMessageToBot(request, BOT_ID, () => {
         // console.log("Message sent:\n", request);
       });
     });
@@ -169,7 +169,7 @@ describe('Conversation for actions test', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      sendMessageToBot(request, BOT_ID, () => {
         // console.log("Message sent.");
       });
     });
@@ -232,7 +232,7 @@ describe('Conversation for actions test', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      sendMessageToBot(request, BOT_ID, () => {
         // console.log("Message sent.");
       });
     });
@@ -248,7 +248,7 @@ describe('Conversation for actions test', async () => {
  * @param {string} botId. Tiledesk botId
  * @param {string} token. User token
  */
-function sendMessageToBot(message, botId, token, callback) {
+function sendMessageToBot(message, botId, callback) {
   // const jwt_token = this.fixToken(token);
   const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);

@@ -13,10 +13,9 @@ class DirSendEmail {
     }
     this.context = context;
     this.tdclient = context.tdclient;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.log = this.context.log;
-    this.log = log;
+    this.tdcache = context.tdcache;
+    this.requestId = context.requestId;
+    this.log = context.log;
     // let context =  {
     //   projectId: projectId,
     //   token: token,
