@@ -14,6 +14,13 @@ class DirUnlockIntent {
   }
 
   async execute(directive, callback) {
+    let action;
+    if (directive.action) {
+      action = directive.action;
+    }
+    else {
+      action = {}
+    }
     if (this.log) {console.log("Unlocking current intent");}
     this.go(action, () => {
       callback();

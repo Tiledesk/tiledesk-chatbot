@@ -6,14 +6,14 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "next",
-		"answer": "Hi I'm the next! And I locked nextone!\n\\_tdLockIntent nextone",
+		"answer": "Hi I'm the next! And I locked nextone!\n\\_tdLockIntent --intentName \"nextone\"",
 		"language": "en",
 		"intent_display_name": "next"
 	}, {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "lock next",
-		"answer": "next intent is now locked\n\\_tdLockIntent next",
+		"answer": "next intent is now locked\n\\_tdLockIntent --intentName \"next\"",
 		"language": "en",
 		"intent_display_name": "lock"
 	}, {
@@ -34,7 +34,7 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "Start a new dialog",
-		"answer": "Hi welcome to this dialog. Whatever you write I don't care about it 😎\n\\_tdLockIntent dialog_question2",
+		"answer": "Hi welcome to this dialog. Whatever you write I don't care about it 😎\n\\_tdLockIntent --intentName \"dialog_question2\"",
 		"language": "en",
 		"intent_display_name": "dialog_start"
 	}, {
@@ -81,7 +81,7 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "dialog_question3",
-		"answer": "And now tell me, do you feel stressed out by your habits?\n\\_tdLockIntent dialog_question4",
+		"answer": "And now tell me, do you feel stressed out by your habits?\n\\_tdLockIntent --intentName \"dialog_question4\"",
 		"language": "en",
 		"intent_display_name": "dialog_question3"
 	}, {
@@ -204,7 +204,7 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "dialog_question2",
-		"answer": "As I told you, whatever you wrote, I'll ask you... how do you feel today?\n\\_tdLockIntent dialog_question3",
+		"answer": "As I told you, whatever you wrote, I'll ask you... how do you feel today?\n\\_tdLockIntent --intentName \"dialog_question3\"",
 		"language": "en",
 		"intent_display_name": "dialog_question2"
 	}, {
