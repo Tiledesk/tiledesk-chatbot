@@ -419,7 +419,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.SEND_EMAIL) {
-        if (log) {console.log("...DirSendEmail");}
+        // console.log("...DirSendEmail");
         const email_dir = new DirSendEmail(context);
         email_dir.execute(directive, () => {
           process(nextDirective());
