@@ -1,3 +1,5 @@
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { Filler } = require('../Filler');
 
 class DirReplaceBot {
 
@@ -33,8 +35,16 @@ class DirReplaceBot {
     })
   }
 
-  go(action, callback) {
-    this.tdclient.replaceBotByName(this.requestId, action.botName, () => {
+  async go(action, callback) {
+    let botName = action.botName;
+    let variables = null;
+    variables = 
+    await TiledeskChatbot.allParametersStatic(
+      this.context.tdcache, this.context.requestId
+    );
+    const filler = new Filler();
+    botName = filler.fill(botName, variables);
+    this.tdclient.replaceBotByName(this.requestId, botName, () => {
       callback();
     });
   }

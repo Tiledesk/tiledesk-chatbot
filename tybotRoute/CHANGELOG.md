@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.48
+- fixed ReplaceBot "log" bug
+
 ### 0.1.47
 - Introduced _tdIfOnlineAgents --trueIntent -- falseIntent
 - Refactored _tdIfOpenHours --trueIntent -- falseIntent
