@@ -59,7 +59,13 @@ class DirLockIntent {
   }
 
   static async lockIntent(tdcache, requestId, intent_name) { //}, variable_name) {
-    await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+    if (tdcache != null && requestId != null && intent_name != null) {
+      await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
+    }
+    else {
+      console.error("lockIntent recoverable error, one of tdcahce, requestId, intent_name is not valid", tdcache, requestId, intent_name);
+    }
+    
     // if (variable_name) {
     //   console.log("locking intent with variable:", variable_name);
     //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);

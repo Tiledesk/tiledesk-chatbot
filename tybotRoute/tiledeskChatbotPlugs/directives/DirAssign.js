@@ -33,27 +33,27 @@ class DirAssign {
     else if (directive.parameter) {
       let params;
       params = this.parseParams(directive.parameter);
-      console.log("DirAssign params:", params);
+      // console.log("DirAssign params:", params);
       action = {
         // body: {
           expression: params.expression,
           assignTo: params.assignTo
         // }
       }
-      console.log("DirAssign action:", action);
+      // console.log("DirAssign action:", action);
     }
     else {
       callback();
       return;
     }
-    console.log("go DirAssign with action:", action);
+    // console.log("go DirAssign with action:", action);
     this.go(action, () => {
       callback();
     });
   }
 
   async go(action, callback) {
-    console.log("DirAssign action processing:", action)
+    // console.log("DirAssign action processing:", action)
     // const expression = action.body.expression;
     // const assignTo = action.body.assignTo;
     const expression = action.expression;
@@ -99,15 +99,15 @@ class DirAssign {
   // }
 
   parseParams(directive_parameter) {
-    console.log("Parsing directive_parameter:", directive_parameter);
+    // console.log("Parsing directive_parameter:", directive_parameter);
     let expression = null;
     let assignTo = null;
     const params = ms(directive_parameter);
-    console.log("params dirassign:", params)
+    // console.log("params dirassign:", params)
     if (params.expression !== null) {
-      console.log("go expression:", params.expression)
+      // console.log("go expression:", params.expression)
       expression = params.expression
-      console.log("got it expression:", expression)
+      // console.log("got it expression:", expression)
     }
     if (params.assignTo !== null) {
       assignTo = params.assignTo;

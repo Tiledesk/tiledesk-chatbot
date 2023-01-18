@@ -17,7 +17,7 @@ class TiledeskChatbotUtil {
         }
         if (parts.length > 1) {
             let json_string = explicit_intent_name.substring(parts[0].length);
-            console.log("json_string (params)", json_string);
+            // console.log("json_string (params)", json_string);
             try {
                 intent.parameters = JSON.parse(json_string);
             }

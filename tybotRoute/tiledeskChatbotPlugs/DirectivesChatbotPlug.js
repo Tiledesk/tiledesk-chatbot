@@ -107,7 +107,7 @@ class DirectivesChatbotPlug {
       token: token,
       APIURL: API_URL,
       APIKEY: "___",
-      log: false
+      log: this.log
     });
 
     let context =  {
@@ -120,7 +120,7 @@ class DirectivesChatbotPlug {
       departmentId: depId,
       tdcache: tdcache,
       tdclient: tdclient,
-      log: true
+      log: this.log
     }
     
     let curr_directive_index = -1;
@@ -256,7 +256,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.FUNCTION_VALUE) {
-        console.log("...DirAssignFromFunction")
+        // console.log("...DirAssignFromFunction")
         const assign_dir = new DirAssignFromFunction(context);
         assign_dir.execute(directive, () => {
           process(nextDirective());
@@ -270,7 +270,7 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.ASSIGN) {
-        console.log("...DirAssign", context.log);
+        // console.log("...DirAssign", context.log);
         const assign_dir = new DirAssign(context);
         assign_dir.execute(directive, () => {
           process(nextDirective());
