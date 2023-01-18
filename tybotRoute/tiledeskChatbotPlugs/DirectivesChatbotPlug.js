@@ -374,24 +374,17 @@ class DirectivesChatbotPlug {
       }
       else if (directive_name === Directives.CLOSE) {
         // console.log("Exec close()")
-        const closeDir = new DirClose(context);
-        closeDir.execute(directive, () => {
+        new DirClose(context).execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.REMOVE_CURRENT_BOT) {
-        new DirRemoveCurrentBot({
-          tdclient: tdclient,
-          requestId: requestId
-        }).execute(directive, () => {
+        new DirRemoveCurrentBot(context).execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.REPLACE_BOT) {
-        new DirReplaceBot({
-          tdclient: tdclient,
-          requestId: requestId
-        }).execute(directive, () => {
+        new DirReplaceBot(context).execute(directive, () => {
           process(nextDirective());
         });
       }
