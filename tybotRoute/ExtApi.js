@@ -108,7 +108,7 @@ class ExtApi {
   myrequest(options, callback, log) {
     if (this.log) {
       console.log("API URL:", options.url);
-      console.log("** Options:", options);
+      console.log("** Options:", JSON.stringify(options));
     }
     let axios_options = {
       url: options.url,
@@ -127,7 +127,7 @@ class ExtApi {
     .then((res) => {
       if (this.log) {
         console.log("Response for url:", options.url);
-        console.log("Response headers:\n", res.headers);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
       }
       if (res && res.status == 200 && res.data) {
         if (callback) {

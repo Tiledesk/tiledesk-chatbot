@@ -173,7 +173,7 @@ class WebhookChatbotPlug {
   static myrequest(options, callback, log) {
     if (log) {
       console.log("API URL:", options.url);
-      console.log("** Options:", options);
+      console.log("** Options:", JSON.stringify(options));
     }
     axios(
       {
@@ -185,7 +185,7 @@ class WebhookChatbotPlug {
     .then(function (res) {
       if (log) {
         console.log("Response for url:", options.url);
-        console.log("Response headers:\n", res.headers);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
         console.log("******** Response for url:", res);
         console.log("Response body:\n", res.data);
       }

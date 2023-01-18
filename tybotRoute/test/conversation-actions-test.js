@@ -313,7 +313,7 @@ function getChatbotParameters(requestId, callback) {
 function myrequest(options, callback, log) {
   if (log) {
     console.log("API URL:", options.url);
-    console.log("** Options:", options);
+    console.log("** Options:", JSON.stringify(options));
   }
   axios(
     {
@@ -326,7 +326,7 @@ function myrequest(options, callback, log) {
     .then((res) => {
       if (log) {
         console.log("Response for url:", options.url);
-        console.log("Response headers:\n", res.headers);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
         //console.log("******** Response for url:", res);
       }
       if (res && res.status == 200 && res.data) {
