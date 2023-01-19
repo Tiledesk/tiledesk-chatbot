@@ -1,3 +1,5 @@
+const {VM} = require('vm2');
+
 class TiledeskExpression {
     // rules:
     // check valid operators (only those in operators are allowed)
@@ -45,17 +47,33 @@ class TiledeskExpression {
     }
 
     // private
+    // evaluate(expression, context) {
+    //     let fn;
+    //     let res
+    //     try {
+    //         fn = Function(`let $data = this;return (${expression})`);
+    //         res = fn.bind(context)()
+    //     }
+    //     catch (err) {
+    //         console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+    //     }
+    //     // let fn = Function(`let $data = this;console.log('data', $data);return (${conditionExpression})`);
+    //     return res;
+    // }
+
     evaluate(expression, context) {
-        let fn;
-        let res
+        let res;
         try {
-            fn = Function(`let $data = this;return (${expression})`);
-            res = fn.bind(context)()
+            const vm = new VM({
+                timeout: 200,
+                allowAsync: false,
+                sandbox: context
+            });
+            res = vm.run(`let $data = this;${expression}`);
         }
         catch (err) {
             console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
-        // let fn = Function(`let $data = this;console.log('data', $data);return (${conditionExpression})`);
         return res;
     }
 
