@@ -1,6 +1,6 @@
 class LanguageChooser {
     findIn(bots, lang_iso) {
-        console.log("searching bots:", bots);
+        console.log("searching bots:", JSON.stringify(bots));
         let selected_bot = null;
         let pivot_bot = null;
         let first_bot = null;
@@ -25,7 +25,7 @@ class LanguageChooser {
                     break;
                 }
                 if (bot.description && bot.description.indexOf("#langbot-pivot") >= 0) {
-                    console.log("bot pivot found:", bot);
+                    console.log("bot pivot found:", JSON.stringify(bot));
                     pivot_bot = bot;
                 }
                 if (first_bot === null) {
@@ -37,15 +37,15 @@ class LanguageChooser {
             }
         }
         if (selected_bot) {
-            console.log("Using language match bot, found:", selected_bot);
+            console.log("Using language match bot, found:", JSON.stringify(selected_bot));
             return selected_bot;
         }
         else if (pivot_bot) {
-            console.log("Using pivot language bot, found:", pivot_bot);
+            console.log("Using pivot language bot, found:", JSON.stringify(pivot_bot));
             return pivot_bot;
         }
         else {
-            console.log("No match found, using first bot:", first_bot);
+            console.log("No match found, using first bot:", JSON.stringify(first_bot));
             return first_bot;
         }
     }

@@ -17,7 +17,7 @@ router.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 APIURL = "https://api.tiledesk.com/v3"; //process.env.API_ENDPOINT;
 
 router.post('/lang_select', (req, res) => {
-    console.log("REQ.BODY", req.body)
+    console.log("REQ.BODY", JSON.stringify(req.body))
     let intent = req.body.payload.intent.intent_display_name;
     let user_lang = req.body.payload.message.request.language;
     if (intent === 'start') {
@@ -35,7 +35,7 @@ router.post('/lang_select', (req, res) => {
             }
         );
 
-        console.log("tdclient:", tdclient);
+        // console.log("tdclient:", tdclient);
 
         
 

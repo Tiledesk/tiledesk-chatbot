@@ -325,30 +325,8 @@ class DirectivesChatbotPlug {
         agentDir.execute(directive, () => {
           process(nextDirective());
         });
-        // if (depId) {
-        //   const agentDir = new DirMoveToAgent(
-        //     {
-        //       tdclient: tdclient,
-        //       requestId: requestId,
-        //       depId: depId
-        //     }
-        //   );
-        //   if (!directive.body) {
-        //     directive.action = {}
-        //     directive.action.body = {
-        //       whenOnlineOnly: false
-        //     }
-        //   }
-        //   agentDir.execute(directive, () => {
-        //     process(nextDirective());
-        //   });  
-        // }
-        // else {
-        //   console.log("Warning. DepId null while calling 'AGENT' directive")
-        //   process(nextDirective());
-        // }
       }
-      else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) {
+      else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
         if (depId) {
           const agentDir = new DirMoveToAgent(
             {
@@ -404,41 +382,23 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.FIRE_TILEDESK_EVENT) {
-        new DirFireTiledeskEvent(
-          {
-            tdclient: tdclient
-          }).execute(directive, () => {
+        new DirFireTiledeskEvent(context).execute(directive, () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.SEND_EMAIL) {
         // console.log("...DirSendEmail");
-        const email_dir = new DirSendEmail(context);
-        email_dir.execute(directive, () => {
+        new DirSendEmail(context).execute(directive, () => {
           process(nextDirective());
         });
-
-        // new DirSendEmail(
-        //   {
-        //     tdclient: tdclient,
-        //     tdcache: tdcache,
-        //     requestId: requestId
-        //   }).execute(directive, () => {
-        //     process(nextDirective());
-        // });
       }
       else if (directive_name === Directives.DELETE) {
         // console.log("got delete dir...")
-        new DirDeleteVariable(
-          {
-            tdclient: tdclient,
-            tdcache: tdcache,
-            requestId: requestId
-          }).execute(directive, async () => {
-            const requestVariables = 
-            await TiledeskChatbot.allParametersStatic(
-              tdcache, requestId
-            );
+        new DirDeleteVariable(context).execute(directive, async () => {
+            // const requestVariables = 
+            // await TiledeskChatbot.allParametersStatic(
+            //   tdcache, requestId
+            // );
             // console.log("delete executed.",directive, requestVariables);
             process(nextDirective());
         });
