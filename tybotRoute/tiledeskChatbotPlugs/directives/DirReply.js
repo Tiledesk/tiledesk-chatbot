@@ -62,11 +62,11 @@ class DirReply {
       message.attributes = {}
     }
     // Reserved names: userEmail, userFullname
-    if (all_parameters['userEmail']) {
-        message.attributes.updateUserEmail = all_parameters['userEmail'];
+    if (requestVariables['userEmail']) {
+        message.attributes.updateUserEmail = requestVariables['userEmail'];
     }
-    if (all_parameters['userFullname']) {
-      message.attributes.updateUserFullname = all_parameters['userFullname'];
+    if (requestVariables['userFullname']) {
+      message.attributes.updateUserFullname = requestVariables['userFullname'];
     }
     // send!
     if (this.log) {console.log("Message to extEndpoint:", message)};
