@@ -37,7 +37,7 @@ class Directives {
 
   static actionToDirective(action) {
     let directive = {
-      name: action.type,
+      name: action["_tdActionType"],//.type, //_tdActionType
       action: action
     }
     return directive;
