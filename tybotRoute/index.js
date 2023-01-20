@@ -139,7 +139,7 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
   
-  updateRequestVariables(chatbot, message, projectId, requestId);
+  await updateRequestVariables(chatbot, message, projectId, requestId);
 
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
