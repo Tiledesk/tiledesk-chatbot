@@ -38,11 +38,12 @@ class DirReply {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     this.context.tdclient.sendSupportMessage(
-      message,
-      this.projectId,
       this.requestId,
-      this.token,
-      () => {
+      message,
+      (err) => {
+        if (err) {
+          console.error("Error sending reply:", err.message);
+        }
         if (this.log) {console.log("Message sent.");}
         callback();
     });
