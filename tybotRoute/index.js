@@ -241,11 +241,11 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   let requestLanguage = null;
   let requestUserAgent = null;
   if (message.payload) {
-    requestSourcePage = message.payload.sourcePage;
-    requestLanguage = message.payload.language;
-    requestUserAgent = message.payload.userAgent;
+    requestSourcePage = message.sourcePage;
+    requestLanguage = message.language;
+    requestUserAgent = message.userAgent;
   }
-  console.log("message.payload.sourcePage", message.payload.sourcePage);
+  console.log("message.payload.sourcePage", message.sourcePage);
   if (requestSourcePage) {
     await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
   }
@@ -263,7 +263,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
       if (this.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
     }
   }
-  // "attributes": {
+  // message["attributes"]: {
   //   "departmentId": "63c980054f857c00350535bc",
   //   "departmentName": "Default Department",
   //   "client": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
