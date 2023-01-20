@@ -1,4 +1,5 @@
 const { Filler } = require('../Filler');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
 class DirReply {
 
