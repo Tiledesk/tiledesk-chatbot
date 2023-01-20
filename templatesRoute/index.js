@@ -9,6 +9,19 @@ router.get('/', (req, res) => {
   res.send('Hello Chatbot Templates!');
 });
 
+router.get('/public/community', async (req, res) => {
+  let bots = [];
+  let query = {public: true, certified: false};
+  try {
+    bots = await faqKbService.getAll(query);
+    res.send(bots);
+  }
+  catch (err) {
+    console.error('Get Bots Error ', err);
+    return res.status(500).send({ success: false, msg: 'Error getting bots.' });
+  }
+});
+
 router.get('/public/templates', async (req, res) => {
   let bots = [];
   let query = {public: true, certified: true};
@@ -21,6 +34,19 @@ router.get('/public/templates', async (req, res) => {
     return res.status(500).send({ success: false, msg: 'Error getting bots.' });
   }
 });
+
+// router.get('/public/community/system/:mainCategory', async (req, res) => {
+//   let bots = [];
+//   let query = {public: true, certified: true};
+//   try {
+//     bots = await faqKbService.getAll(query);
+//     let botId = publicBotByCategory(bots, mainCategory);
+//   }
+//   catch (err) {
+//     console.error('GET FAQ-KBs ERROR ', err);
+//     return res.status(500).send({ success: false, msg: 'Error getting bots.' });
+//   }
+// });
 
 router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
@@ -69,5 +95,20 @@ router.get('/public/templates/:botid', (req, res) => {
     }
   })
 });
+
+// function publicBotByCategory(bots, category) {
+//   if (!bots || bots.length == 0) {
+//     console.error("Error: Bots are empty. Can't find by category");
+//     return null;
+//   }
+//   for (let i = 0; i < bots.length; i++)  {
+//     let bot = bots[i];
+//     console.log('Bot: ', JSON.stringify(bot));
+//     if (bot.mainCategory === category) {
+//       return bot._id;
+//     }
+//   }
+//   return null;
+// }
 
 module.exports = { router: router};
