@@ -37,7 +37,7 @@ class MongodbIntentsMachine {
         if (err) {
           console.error("Error:", err);
         }
-        if (faqs && faqs.length > 0 && faqs[0].answer) {
+        if (faqs && faqs.length > 0) {
           resolve(faqs);
         }
         else {
