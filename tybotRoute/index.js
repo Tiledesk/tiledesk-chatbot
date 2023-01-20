@@ -108,8 +108,10 @@ router.post('/ext/:botid', async (req, res) => {
   
   let intentsMachine;
   if (!staticBots) {
-    intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
+    if (log) {console.log("intentsMachine to MongoDB");}
+    intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language, log});
     if (bot.intentsEngine === "tiledesk-ai") {
+      if (log) {console.log("intentsMachine to tiledesk-ai");}
       intentsMachine = new TiledeskIntentsMachine(
         {
           //projectId: projectId,

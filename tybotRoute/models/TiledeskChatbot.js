@@ -184,7 +184,7 @@ class TiledeskChatbot {
         return;
       }
       else { // NLP
-        if (this.log) {console.log("NLP decode intent...");}
+        if (this.log) {console.log("Chatbot NLP decode intent...");}
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
