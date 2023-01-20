@@ -34,6 +34,7 @@ class DirReply {
   }
 
   async go(action, callback) {
+    const message = action;
     // fill
     let requestVariables = null;
     if (this.tdcache) {
@@ -68,7 +69,6 @@ class DirReply {
       message.attributes.updateUserFullname = all_parameters['userFullname'];
     }
     // send!
-    const message = action;
     if (this.log) {console.log("Message to extEndpoint:", message)};
     this.context.tdclient.sendSupportMessage(
       this.requestId,
