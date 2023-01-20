@@ -236,27 +236,31 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter("_tdCity", message.request.location.city);
   }
+  await chatbot.addParameter("_tdRequestSourcePage", message.sourcePage);
+  await chatbot.addParameter("_tdRequestLanguage", message.language);
+  await chatbot.addParameter("_tdRequestUserAgent", message.userAgent);
   
-  let requestSourcePage = null;
-  let requestLanguage = null;
-  let requestUserAgent = null;
-  if (message.payload) {
-    requestSourcePage = message.sourcePage;
-    requestLanguage = message.language;
-    requestUserAgent = message.userAgent;
+  if (message.attributes) {
+    await chatbot.addParameter("_tdRequestDepartmentId", message.attributes.departmentId);
+    await chatbot.addParameter("_tdRequestDepartmentName", message.attributes.departmentName);
+    await chatbot.addParameter("_tdRequestRequesterId", message.attributes.requester_id);
+    await chatbot.addParameter("_tdRequestIpAddress", message.attributes.ipAddress);
+    if (message.attributes.payload) {
+      try {
+        for (const [key, value] of Object.entries(message.attributes.payload)) {
+          const value = all_parameters[key];
+          const value_type = typeof value;
+          if (this.log) {console.log("importing payload parameter:", key, "value:", value, "type:", value_type)}
+          await chatbot.addParameter(key, String(value));
+        }
+      }
+      catch(err) {
+        console.error("Error importing message payload in request variables:", err);
+      }
+    }
   }
-  console.log("message.payload.sourcePage", message.sourcePage);
-  if (requestSourcePage) {
-    await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
-  }
-  if (requestLanguage) {
-    await chatbot.addParameter("_tdRequestLanguage", language);
-  }
-  if (requestUserAgent) {
-    await chatbot.addParameter("_tdRequestUserAgent", userAgent);
-  }
-  const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
   if (log) {
+    const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
     for (const [key, value] of Object.entries(all_parameters)) {
       const value = all_parameters[key];
       const value_type = typeof value;
