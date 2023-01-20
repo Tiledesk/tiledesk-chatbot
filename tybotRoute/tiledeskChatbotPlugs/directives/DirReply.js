@@ -10,6 +10,7 @@ class DirReply {
     this.projectId = context.projectId;
     this.requestId = context.requestId;
     this.token = context.token;
+    this.tdcache = context.tdcache;
   }
 
   execute(directive, callback) {
@@ -42,31 +43,31 @@ class DirReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-    }
-    const filler = new Filler();
-    // fill text attribute
-    message.text = filler.fill(message.text, requestVariables);
-    // fill commands' text attribute
-    if (message.attributes && message.attributes.commands) {
-      let commands = message.attributes.commands;
-      if (commands.length > 1) {
-        for (let i = 0; i < commands.length; i++) {
-          if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-            commands[i].message.text = this.fillWithRequestParams(commands[i].message.text, requestVariables);
+      const filler = new Filler();
+      // fill text attribute
+      message.text = filler.fill(message.text, requestVariables);
+      // fill commands' text attribute
+      if (message.attributes && message.attributes.commands) {
+        let commands = message.attributes.commands;
+        if (commands.length > 1) {
+          for (let i = 0; i < commands.length; i++) {
+            if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
+              commands[i].message.text = this.fillWithRequestParams(commands[i].message.text, requestVariables);
+            }
           }
         }
       }
-    }
-    // temporary send back of reserved attributes
-    if (!message.attributes) {
-      message.attributes = {}
-    }
-    // Reserved names: userEmail, userFullname
-    if (requestVariables['userEmail']) {
-        message.attributes.updateUserEmail = requestVariables['userEmail'];
-    }
-    if (requestVariables['userFullname']) {
-      message.attributes.updateUserFullname = requestVariables['userFullname'];
+      // temporary send back of reserved attributes
+      if (!message.attributes) {
+        message.attributes = {}
+      }
+      // Reserved names: userEmail, userFullname
+      if (requestVariables['userEmail']) {
+          message.attributes.updateUserEmail = requestVariables['userEmail'];
+      }
+      if (requestVariables['userFullname']) {
+        message.attributes.updateUserFullname = requestVariables['userFullname'];
+      }
     }
     // send!
     if (this.log) {console.log("Message to extEndpoint:", message)};
