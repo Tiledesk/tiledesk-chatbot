@@ -27,6 +27,7 @@ const { DirAssign } = require('./directives/DirAssign');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
+const { DirReply } = require('./directives/DirReply');
 
 class DirectivesChatbotPlug {
 
@@ -194,52 +195,23 @@ class DirectivesChatbotPlug {
         });
       }
       else if (directive_name === Directives.MESSAGE) {
-        const messageDir = new DirMessage(
-          {
-            API_ENDPOINT: API_URL,
-            TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-            log: false,
-            projectId: projectId,
-            requestId: requestId,
-            token: token
-          }
-        );
+        const messageDir = new DirMessage(context);
         messageDir.execute(directive, async () => {
-          // const requestVariables = 
-          //   await TiledeskChatbot.allParametersStatic(
-          //     tdcache, requestId
-          //   );
-          //   console.log("message executed.", requestVariables);
+          process(nextDirective());
+        });
+      }
+      else if (directive_name === Directives.REPLY) {
+        console.log("...DirReply");
+        new DirReply(context).execute(directive, async () => {
           process(nextDirective());
         });
       }
       else if (directive_name === Directives.IF_OPEN_HOURS) {
-        // const intentDir = new DirIntent(
-        //   {
-        //     API_ENDPOINT: API_URL,
-        //     TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-        //     log: false,
-        //     supportRequest: supportRequest,
-        //     token: token
-        //   }
-        // );
-
         const ifOpenHours = new DirIfOpenHours(context);
-          // {
-          //   tdclient: tdclient,
-          //   intentDir: intentDir,
-          //   log: false
-          // });
         ifOpenHours.execute(directive, () => {
           process(nextDirective());
         });
       }
-      // else if (directive_name === Directives.IF_NOT_OPEN_HOURS) {
-      //   const ifNotOpenHours = new DirIfNotOpenHours(context);
-      //   ifNotOpenHours.execute(directive, () => {
-      //     process(nextDirective());
-      //   });
-      // }
       else if (directive_name === Directives.IF_ONLINE_AGENTS) {
         const ifOnlineAgents = new DirIfOnlineAgents(context);
           // {

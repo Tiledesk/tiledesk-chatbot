@@ -58,17 +58,13 @@ class DirMessage {
     else if (directive.parameter) {
       let text = directive.parameter.trim();
       action = {
-        // body: {
-          // message: {
-            text: text,
-            attributes: {
-              directives: false,
-              splits: true,
-              markbot: true,
-              fillParams: true
-            }
-          // }
-        // }
+        text: text,
+        attributes: {
+          directives: false,
+          splits: true,
+          markbot: true,
+          fillParams: true
+        }
       }
       if (directive.name === Directives.HMESSAGE) {
         action.attributes.subtype = "info";
