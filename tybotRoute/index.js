@@ -260,7 +260,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     }
   }
   if (log) {
-    const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
+    const all_parameters = await TiledeskChatbot.allParametersStatic(chatbot.tdcache, requestId);
     for (const [key, value] of Object.entries(all_parameters)) {
       const value = all_parameters[key];
       const value_type = typeof value;
