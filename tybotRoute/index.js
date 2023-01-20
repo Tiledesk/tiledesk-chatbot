@@ -51,6 +51,9 @@ let APIURL = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  if (req && req.body && req.body.payload && req.body.payload.message && req.body.payload.message.request && req.body.payload.message.request.snapshot) {
+    delete req.body.payload.message.request.snapshot;
+  }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   res.status(200).send({"success":true});
   
@@ -67,16 +70,6 @@ router.post('/ext/:botid', async (req, res) => {
   message.request.bot_id = botId;
   if (message.request.id_project === null || message.request.id_project === undefined) {
     message.request.id_project = projectId;
-  }
-
-  let requestSourcePage = null;
-  let requestLanguage = null;
-  let requestUserAgent = null;
-
-  if (message.payload) {
-    requestSourcePage = message.payload.sourcePage;
-    requestLanguage = message.payload.language;
-    requestUserAgent = message.payload.userAgent;
   }
   
   // NEXTTTTTTT
@@ -146,28 +139,8 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
   
-  // initial request context
-  await chatbot.addParameter("_tdLastMessageId", messageId);
-  await chatbot.addParameter("_tdProjectId", projectId);
-  await chatbot.addParameter("_tdRequestId", requestId);
-  if (message.request && message.request.location && message.request.location.country) {
-    await chatbot.addParameter("_tdCountry", message.request.location.country);
-  }
-  if (message.request && message.request.location && message.request.location.city) {
-    await chatbot.addParameter("_tdCity", message.request.location.city);
-  }
-  if (message.text) {
-    await chatbot.addParameter("_tdUserText", message.text);
-  }
-  if (requestSourcePage) {
-    await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
-  }
-  if (requestLanguage) {
-    await chatbot.addParameter("_tdRequestLanguage", language);
-  }
-  if (requestUserAgent) {
-    await chatbot.addParameter("_tdRequestUserAgent", userAgent);
-  }
+  updateRequestVariables(chatbot, message, projectId, requestId);
+
   let reply = await chatbot.replyToMessage(message);
   if (!reply) {
     reply = {
@@ -249,6 +222,41 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
 });
+
+async function updateRequestVariables(chatbot, message, projectId, requestId) {
+  // update request context
+  const messageId = message._id;
+  await chatbot.addParameter("_tdProjectId", projectId);
+  await chatbot.addParameter("_tdRequestId", requestId);
+  if (message.text) {
+    await chatbot.addParameter("_tdLastUserText", message.text);
+  }
+  await chatbot.addParameter("_tdLastMessageId", messageId);
+  if (message.request && message.request.location && message.request.location.country) {
+    await chatbot.addParameter("_tdCountry", message.request.location.country);
+  }
+  if (message.request && message.request.location && message.request.location.city) {
+    await chatbot.addParameter("_tdCity", message.request.location.city);
+  }
+  
+  let requestSourcePage = null;
+  let requestLanguage = null;
+  let requestUserAgent = null;
+  if (message.payload) {
+    requestSourcePage = message.payload.sourcePage;
+    requestLanguage = message.payload.language;
+    requestUserAgent = message.payload.userAgent;
+  }
+  if (requestSourcePage) {
+    await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
+  }
+  if (requestLanguage) {
+    await chatbot.addParameter("_tdRequestLanguage", language);
+  }
+  if (requestUserAgent) {
+    await chatbot.addParameter("_tdRequestUserAgent", userAgent);
+  }
+}
 
 function actionsToDirectives(actions) {
   let directives = [];
