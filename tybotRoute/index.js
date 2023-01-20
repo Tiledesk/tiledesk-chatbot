@@ -27,32 +27,30 @@ let log = false;
 let tdcache = null;
 
 // DEV
-const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
+// const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-/*const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');*/
-const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
+// const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
+// const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
+// const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
 
 // PROD
-/*const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
-const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
-const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
-const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');*/
+// const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
+// const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
+// const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
+// const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
+// const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');
 
 // THE IMPORT
 let mongoose = require('mongoose');
-const { DirSendEmail } = require('./tiledeskChatbotPlugs/directives/DirSendEmail.js');
+// const { DirSendEmail } = require('./tiledeskChatbotPlugs/directives/DirSendEmail.js');
 const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
-//let Faq = require('./models/faq');
-//let Faq_kb = require('./models/faq_kb');
-// let connection;
 let APIURL = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
-  if (req && req.body && req.body.payload && req.body.payload.message && req.body.payload.message.request && req.body.payload.message.request.snapshot) {
-    delete req.body.payload.message.request.snapshot;
+  if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
+    delete req.body.payload.request.snapshot;
+    console.log("Removed req.body.payload.request.snapshot field");
   }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
   res.status(200).send({"success":true});
@@ -247,6 +245,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     requestLanguage = message.payload.language;
     requestUserAgent = message.payload.userAgent;
   }
+  console.log("message.payload.sourcePage", message.payload.sourcePage);
   if (requestSourcePage) {
     await chatbot.addParameter("_tdRequestSourcePage", sourcePage);
   }
@@ -256,6 +255,41 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (requestUserAgent) {
     await chatbot.addParameter("_tdRequestUserAgent", userAgent);
   }
+  const all_parameters = await TiledeskChatbot.allParametersStatic(this.tdcache, requestId);
+  if (log) {
+    for (const [key, value] of Object.entries(all_parameters)) {
+      const value = all_parameters[key];
+      const value_type = typeof value;
+      if (this.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
+    }
+  }
+  // "attributes": {
+  //   "departmentId": "63c980054f857c00350535bc",
+  //   "departmentName": "Default Department",
+  //   "client": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+  //   "sourcePage": "https://tiledesk-html-site.tiledesk.repl.co/custom-attributes.html",
+  //   "projectId": "63c980054f857c00350535b8",
+  //   "payload": {
+  //     "user_country": "Italy",
+  //     "user_code": "E001"
+  //   },
+  //   "userFullname": "guest#7216 ",
+  //   "requester_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
+  //   "ipAddress": "79.8.190.172",
+  //   "sourceTitle": "Custom attributes",
+  //   "widgetVer": "v.5.0.53-rc.4",
+  //   "subtype": "info",
+  //   "decoded_jwt": {
+  //     "_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
+  //     "firstname": "guest#7216",
+  //     "id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
+  //     "fullName": "guest#7216 ",
+  //     "iat": 1674201892,
+  //     "aud": "https://tiledesk.com",
+  //     "iss": "https://tiledesk.com",
+  //     "sub": "guest",
+  //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
+  //   }
 }
 
 function actionsToDirectives(actions) {
