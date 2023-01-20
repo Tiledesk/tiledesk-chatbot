@@ -41,6 +41,7 @@ class Directives {
       name: action["_tdActionType"],//.type, //_tdActionType
       action: action
     }
+    delete directive.action["_tdActionType"];
     console.log("Directive out:", directive);
     return directive;
   }

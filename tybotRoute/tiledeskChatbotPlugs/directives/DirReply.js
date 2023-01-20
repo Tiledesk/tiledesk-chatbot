@@ -17,8 +17,8 @@ class DirReply {
     console.log("Reply directive:", directive);
     let action;
     if (directive.action) {
-      console.log("got action:", JSON.stringify(action));
       action = directive.action;
+      console.log("got action:", JSON.stringify(action));
       if (!action.attributes) {
         action.attributes = {}
       }
