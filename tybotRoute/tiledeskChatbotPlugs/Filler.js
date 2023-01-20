@@ -3,7 +3,7 @@ class Filler {
   fill(text, parameters) {
     if (parameters) {
       for (const [key, value] of Object.entries(parameters)) {
-        text = text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), parameters[key]);
+        text = text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), value); //parameters[key]);
       }
     }
     return text;

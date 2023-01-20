@@ -77,7 +77,7 @@ class FillParamsChatbotPlug {
     }
     if (all_parameters) {
       for (const [key, value] of Object.entries(all_parameters)) {
-        const value = all_parameters[key];
+        // const value = all_parameters[key];
         const value_type = typeof value;
         if (this.log) {console.log("checking parameter:", key, "value:", value, "type:", value_type)}
         message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), value);

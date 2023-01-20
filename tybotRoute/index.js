@@ -248,9 +248,9 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     if (message.attributes.payload) {
       try {
         for (const [key, value] of Object.entries(message.attributes.payload)) {
-          const value = all_parameters[key];
+          // const value = all_parameters[key];
           const value_type = typeof value;
-          if (this.log) {console.log("importing payload parameter:", key, "value:", value, "type:", value_type)}
+          if (chatbot.log) {console.log("importing payload parameter:", key, "value:", value, "type:", value_type)}
           await chatbot.addParameter(key, String(value));
         }
       }
@@ -262,7 +262,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (chatbot.log) {
     const all_parameters = await TiledeskChatbot.allParametersStatic(chatbot.tdcache, requestId);
     for (const [key, value] of Object.entries(all_parameters)) {
-      const value = all_parameters[key];
+      // const value = all_parameters[key];
       const value_type = typeof value;
       if (chatbot.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
     }
