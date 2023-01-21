@@ -23,16 +23,12 @@ class DirWait {
         millis = 1000
       }
       action = {
-        // body: {
-          millis: millis
-        // }
+        millis: millis
       }
     }
     else {
       action = {
-        // body: {
-          millis: 500
-        // }
+        millis: 500
       }
     }
     this.go(action, () => {

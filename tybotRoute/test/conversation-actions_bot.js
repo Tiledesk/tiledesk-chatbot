@@ -21,7 +21,7 @@ const bot = {
         "enabled": true,
         "question": "***",
         "actions": [{
-            "type": "message",
+            "_tdActionType": "message",
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -58,7 +58,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "type": "message",
+            "_tdActionType": "message",
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -79,7 +79,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "type": "message",  
+            "_tdActionType": "message",  
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -100,7 +100,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "type": "message",
+            "_tdActionType": "message",
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -122,10 +122,10 @@ const bot = {
         "answer": "***",
         "actions": [
         {
-            "type": "department",
+            "_tdActionType": "department",
             "depName": "Support"
         }, {
-            "type": "message",
+            "_tdActionType": "message",
             "text": "/start",
             "attributes": {
                 "subtype": "info"
@@ -139,7 +139,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "type": "intent",
+            "_tdActionType": "intent",
             "intentName": "intentAction"
         }],
         "language": "en",
