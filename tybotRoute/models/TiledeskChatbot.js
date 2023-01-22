@@ -64,10 +64,6 @@ class TiledeskChatbot {
       }
       
       // any external invocation restarts the steps counter
-      if (message.text === "/anomaly") {
-        console.log(".................stop on /anomaly!");
-        resolve(null);
-      }
       if (message.sender != "_tdinternal") {
         if (this.log) {
           console.log("Resetting current step by request message:", message.text);
@@ -82,6 +78,11 @@ class TiledeskChatbot {
             if (this.log) {console.log("after reset step variables:", JSON.stringify(variables))}
           }
         }
+      }
+      // Emergency stop :)
+      if (message.text === "/anomaly") {
+        console.log(".................stop on /anomaly!");
+        resolve(null);
       }
 
       // Checking locked intent (for non-internal intents)
