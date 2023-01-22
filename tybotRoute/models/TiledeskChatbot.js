@@ -65,6 +65,7 @@ class TiledeskChatbot {
       
       // any external invocation restarts the steps counter
       if (message.text === "/anomaly") {
+        console.log(".................stop on /anomaly!");
         resolve(null);
       }
       if (message.sender != "_tdinternal") {
