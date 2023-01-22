@@ -12,6 +12,8 @@ const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnloc
 
 class TiledeskChatbot {
 
+  static MAX_STEPS = 20;
+
   constructor(config) {
     if (!config.botsDataSource) {
       throw new Error("config.botsDataSource is mandatory");
@@ -61,6 +63,23 @@ class TiledeskChatbot {
         console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
       
+      // any external invocation restarts the steps counter
+      if (message.sender != "_tdinternal") {
+        if (this.log) {
+          console.log("Resetting current step by request message:", message.text);
+        }
+        await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
+        if (this.log) {
+          if (this.tdcache) {
+            let variables = 
+            await TiledeskChatbot.allParametersStatic(
+              this.tdcache, this.requestId
+            );
+            if (this.log) {console.log("after reset step variables:", JSON.stringify(variables))}
+          }
+        }
+      }
+
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       // if (message.text.startsWith("/") && message.sender != "_tdinternal") {
@@ -449,6 +468,36 @@ class TiledeskChatbot {
     // const parameter_key = "tilebot:requests:" + requestId + ":parameters";
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
+  }
+
+  static async checkStep(_tdcache, requestId, max_steps) {
+    let go_on = true;
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
+    console.log("parameter_key:", parameter_key);
+    let _current_step = await _tdcache.get(parameter_key);
+    if (!_current_step) { // this shouldn't be happening
+      _current_step = 0;
+    }
+    console.log("_current_step:", _current_step);
+    let current_step = Number(_current_step);
+    console.log("current_step:", current_step);
+    if (current_step > max_steps) {
+      console.log("current_step > max_steps!", current_step);
+      await TiledeskChatbot.resetStep(_tdcache, requestId);
+      go_on = false;
+    }
+    else {
+      console.log("current_step < max_steps :)", current_step);
+      current_step += 1;
+      await _tdcache.set(parameter_key, current_step); // increment step
+      console.log("current_step from cache:", await _tdcache.get(parameter_key));
+    }
+    return go_on;
+  }
+
+  static async resetStep(_tdcache, requestId) {
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
+    await _tdcache.set(parameter_key, 0);
   }
 
   async allParameters() {

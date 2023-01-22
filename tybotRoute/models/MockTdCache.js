@@ -9,7 +9,7 @@ class MockTdCache {
 
   set(k, v) {
     return new Promise( (resolve, reject) => {
-        this.db.set(k, "" + v) // saves as string, to simulate Redis
+        this.db.set(k, "" + v) // saves as string
         resolve();
     });
   }

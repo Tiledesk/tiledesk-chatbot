@@ -7,7 +7,7 @@ available on:
 
 ### 0.1.48
 - fixed ReplaceBot "log" bug
-- ReplaceBot fill botName
+- ReplaceBot fill-variables botName
 
 ### 0.1.47
 - Introduced _tdIfOnlineAgents --trueIntent -- falseIntent

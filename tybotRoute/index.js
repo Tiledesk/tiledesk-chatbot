@@ -147,32 +147,6 @@ router.post('/ext/:botid', async (req, res) => {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
     }
   }
-  // console.log("reply back:", JSON.stringify(reply));
-
-  // TEMP
-  // if (reply.attributes && reply.attributes.intent_info) {
-  //   switch (reply.attributes.intent_info.intent_name) {
-  //     case "MessageActions":
-  //       reply.actions = MockActions.MessageActions()
-  //       break;
-  //     case "Message_plus_Agent":
-  //       reply.actions = MockActions.Message_plus_Agent();
-  //       break;
-  //     case "Message_plus_AgentWhenOnline":
-  //       reply.actions = MockActions.Message_plus_AgentWhenOnline();
-  //       break;
-  //     case "Message_plus_Close":
-  //       reply.actions = MockActions.Message_plus_Close();
-  //       break;
-  //     case "ChangeDepartment":
-  //       reply.actions = MockActions.ChangeDepartment();
-  //       break;
-  //     case "Intent":
-  //       reply.actions = MockActions.Intent();
-  //       break;
-  //   }
-  // }
-  
   
   // console.log("reply.actions:", reply.actions);
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)

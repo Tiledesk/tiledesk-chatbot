@@ -202,6 +202,17 @@ const bot = {
         "answer": "Eureka!\nThis is the reply for **intentAction4**\n* /start",
         "language": "en",
         "intent_display_name": "intentAction4"
+    }, {
+        "webhook_enabled": false,
+        "enabled": true,
+        "question": "***",
+        "answer": "***",
+        "actions": [{
+            "_tdActionType": "intent",
+            "intentName": "anomaly"
+        }],
+        "language": "en",
+        "intent_display_name": "anomaly"
     }]
 }
 
