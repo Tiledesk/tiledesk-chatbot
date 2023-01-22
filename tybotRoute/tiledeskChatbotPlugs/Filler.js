@@ -2,7 +2,7 @@ class Filler {
 
   fill(text, parameters) {
     console.log("filling text...", text)
-    if (text === null) {
+    if (text == null || text == undefined) {
       console.log("Skip filling. 'text' is null");
       return text;
     }
