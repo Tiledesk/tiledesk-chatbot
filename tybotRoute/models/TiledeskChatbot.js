@@ -71,11 +71,9 @@ class TiledeskChatbot {
         await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
         if (this.log) {
           if (this.tdcache) {
-            let variables = 
-            await TiledeskChatbot.allParametersStatic(
-              this.tdcache, this.requestId
-            );
-            if (this.log) {console.log("after reset step variables:", JSON.stringify(variables))}
+            let currentStep = 
+            await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
+            if (this.log) {console.log("after reset currentStep:", currentStep)}
           }
         }
       }
@@ -503,6 +501,11 @@ class TiledeskChatbot {
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     await _tdcache.set(parameter_key, 0);
+  }
+
+  static async currentStep(_tdcache, requestId) {
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
+    await _tdcache.get(parameter_key);
   }
 
   async allParameters() {
