@@ -53,7 +53,7 @@ class DirReply {
         if (commands.length > 1) {
           for (let i = 0; i < commands.length; i++) {
             if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-              commands[i].message.text = this.fillWithRequestParams(commands[i].message.text, requestVariables);
+              commands[i].message.text = filler.fill(commands[i].message.text, requestVariables);
             }
           }
         }
