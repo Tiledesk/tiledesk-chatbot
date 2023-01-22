@@ -1,6 +1,10 @@
 class Filler {
 
   fill(text, parameters) {
+    if (text === null) {
+      console.log("Skip filling. 'text' is null");
+      return text;
+    }
     if (parameters) {
       for (const [key, value] of Object.entries(parameters)) {
         text = text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), value); //parameters[key]);
