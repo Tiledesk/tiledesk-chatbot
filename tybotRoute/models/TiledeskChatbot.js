@@ -500,12 +500,14 @@ class TiledeskChatbot {
 
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
+    console.log("resetStep() parameter_key:", parameter_key);
     await _tdcache.set(parameter_key, 0);
   }
 
   static async currentStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    await _tdcache.get(parameter_key);
+    console.log("currentStep() parameter_key:", parameter_key);
+    return await _tdcache.get(parameter_key);
   }
 
   async allParameters() {
