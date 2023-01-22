@@ -1,6 +1,7 @@
 class Filler {
 
   fill(text, parameters) {
+    console.log("filling text...", text)
     if (text === null) {
       console.log("Skip filling. 'text' is null");
       return text;
