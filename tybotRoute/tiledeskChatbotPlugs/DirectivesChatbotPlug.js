@@ -142,7 +142,7 @@ class DirectivesChatbotPlug {
     // console.log("........nextDirective() currentStep:", current_step);
     if (!go_on) {
       // console.log("..nextDirective() Stopped!");
-      return this.errorMessage("Request error: anomaly detection. MAX_STEPS exeeded.");
+      return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
     else {
       // console.log("Go on!");

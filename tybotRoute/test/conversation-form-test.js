@@ -325,7 +325,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
-    // console.log("/all_filled (none) =>...");
+    console.log("/all_filled (none) =>...");
     let request0_uuid = uuidv4();
     let request1_uuid = uuidv4();
     let request2_uuid = uuidv4();
@@ -342,12 +342,12 @@ describe('Conversation1 - Form filling', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      // console.log("received message__3:", JSON.stringify(message));
+      console.log("received message__3:", JSON.stringify(message));
       // console.log("message.triggeredByMessageId:", message.triggeredByMessageId);
       // console.log("message.text:", message.text);
       
       if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}" && message.triggeredByMessageId === request0_uuid) {
-        // console.log("got #0 'You filled...' sending #1");
+        console.log("got #0 'You filled...' sending #1");
         let request = {
           "payload": {
             "_id": request1_uuid,
