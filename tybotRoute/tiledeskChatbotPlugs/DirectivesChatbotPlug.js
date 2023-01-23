@@ -85,10 +85,11 @@ class DirectivesChatbotPlug {
 
   async processDirectives(theend) {
     // console.log("Directives to process:", JSON.stringify(this.directives));
+    this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       if (this.log) { console.log("No directives to process."); }
-      theend();
+      this.theend();
       return;
     }
     const supportRequest = this.supportRequest;
@@ -184,7 +185,7 @@ class DirectivesChatbotPlug {
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is null", directive);}
-      theend();
+      this.theend();
     }
     else if (directive_name === Directives.DEPARTMENT) {
       new DirDepartment(context).execute(directive, async () => {
@@ -209,7 +210,7 @@ class DirectivesChatbotPlug {
       new DirMessage(context).execute(directive, async (stop) => {
         if (stop) {
           if (context.log) { console.log("Stopping Actions on:", directive);}
-          theend();
+          this.theend();
         }
         else {
           let next_dir = await this.nextDirective(this.directives);

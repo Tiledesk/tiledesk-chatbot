@@ -21,9 +21,7 @@ class DirDeleteVariable {
     }
     else if (directive.parameter) {
       action = {
-        // body: {
-          variableName: directive.parameter
-        // }
+        variableName: directive.parameter
       }
     }
     this.go(action, () => {
