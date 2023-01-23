@@ -35,10 +35,8 @@ class DirAssign {
       params = this.parseParams(directive.parameter);
       // console.log("DirAssign params:", params);
       action = {
-        // body: {
-          expression: params.expression,
-          assignTo: params.assignTo
-        // }
+        expression: params.expression,
+        assignTo: params.assignTo
       }
       // console.log("DirAssign action:", action);
     }

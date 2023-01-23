@@ -53,11 +53,9 @@ class DirCondition {
         return;
       }
       action = {
-        // body: {
-          condition: params.condition,
-          trueIntent: params.trueIntent,
-          falseIntent: params.falseIntent
-        // }
+        condition: params.condition,
+        trueIntent: params.trueIntent,
+        falseIntent: params.falseIntent
       }
     }
     else {

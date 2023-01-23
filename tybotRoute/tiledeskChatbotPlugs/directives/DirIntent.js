@@ -49,9 +49,7 @@ class DirIntent {
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
       action = {
-        // body: {
-          intentName: directive.parameter.trim()
-        // }
+        intentName: directive.parameter.trim()
       }
     }
     else {

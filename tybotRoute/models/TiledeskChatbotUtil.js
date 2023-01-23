@@ -28,6 +28,22 @@ class TiledeskChatbotUtil {
         return intent;
 
     }
+
+    // static errorMessage(message) {
+    //     return {
+    //         name: "message",
+    //         action: {
+    //             "_tdThenStop": true,
+    //             text: message,
+    //             attributes: {
+    //                 runtimeError: {
+    //                     message: message
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
 }
 
 module.exports = { TiledeskChatbotUtil };

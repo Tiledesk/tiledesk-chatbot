@@ -47,25 +47,25 @@ describe('Conversation for anomaly detection test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
   it('/anomaly', (done) => {
-    console.log("/anomaly story...");
+    // console.log("/anomaly story...");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("...req.body:", JSON.stringify(req.body));
+      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.error !== null);
-      assert(message.attributes.error.message !== null);
-      assert(message.attributes.error.message === "Request anomaly detection");
+      assert(message.attributes.runtimeError.message === "Request error: anomaly detection. MAX_STEPS exeeded.");
+      // console.log("/anomaly test success");
       listener.close(() => {
+        // console.log("/anomaly lister test closed");
         done();
       });
     });
@@ -89,7 +89,7 @@ describe('Conversation for anomaly detection test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
 

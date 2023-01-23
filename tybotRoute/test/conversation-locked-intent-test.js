@@ -65,7 +65,7 @@ describe('Conversation1 - Form filling', async () => {
       res.send({ success: true });
       const message = req.body;
       if (message.text.startsWith("Hi welcome to this dialog.")) {
-        console.log("got #0 sending #1", message.text);
+        // console.log("got #0 sending #1", message.text);
         let request = {
           "payload": {
             "_id": request1_uuid,
@@ -87,7 +87,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else if (message.text.startsWith("As I told you,")) {
-        console.log("got #1 sending #2", message.text);
+        // console.log("got #1 sending #2", message.text);
         let request = {
           "payload": {
             "_id": request2_uuid,
@@ -109,7 +109,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else if (message.text.startsWith("And now tell me,")) {
-        console.log("got #2 sending #3", message.text);
+        // console.log("got #2 sending #3", message.text);
         let request = {
           "payload": {
             "_id": request3_uuid,

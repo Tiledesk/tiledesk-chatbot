@@ -206,11 +206,13 @@ const bot = {
         "webhook_enabled": false,
         "enabled": true,
         "question": "***",
-        "answer": "***",
-        "actions": [{
-            "_tdActionType": "intent",
-            "intentName": "anomaly"
-        }],
+        "actions": [
+            
+            {
+                "_tdActionType": "intent",
+                "intentName": "anomaly"
+            }
+        ],
         "language": "en",
         "intent_display_name": "anomaly"
     }]

@@ -36,13 +36,13 @@ class Directives {
   static REPLY = 'reply';
 
   static actionToDirective(action) {
-    console.log("actionToDirective:", action);
+    // console.log("actionToDirective:", action);
     let directive = {
-      name: action["_tdActionType"],//.type, //_tdActionType
+      name: action["_tdActionType"],
       action: action
     }
     // delete directive.action["_tdActionType"];
-    console.log("Directive out:", directive);
+    // console.log("Directive out:", directive);
     return directive;
   }
 }

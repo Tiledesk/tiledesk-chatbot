@@ -75,8 +75,13 @@ class DirMessage {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, async () => {
+      if (action["_tdThenStop"] == true) {
+        callback(true);
+      }
+      else {
+        callback();
+      }
     });
   }
 

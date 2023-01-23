@@ -12,14 +12,11 @@ describe('checkStep()', function() {
     let i;
     // trying to brute-pass MAX_STEPS limit by doubling it
     for (i = 0; i < MAX_STEPS * 2; i++) {
-      console.log("i: " + i);
       let go_on = await TiledeskChatbot.checkStep(tdcache, requestId, MAX_STEPS);
-      console.log("go on?", go_on);
       if (!go_on) {
         break;
       }
     }
-    console.log("last i: " + i);
     assert(i === MAX_STEPS + 1);
   });
   

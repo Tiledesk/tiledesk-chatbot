@@ -78,10 +78,10 @@ class TiledeskChatbot {
         }
       }
       // Emergency stop :)
-      if (message.text === "/anomaly") {
-        console.log(".................stop on /anomaly!");
-        resolve(null);
-      }
+      // if (message.text === "/anomaly") {
+      //   console.log(".................stop on /anomaly!");
+      //   resolve(null);
+      // }
 
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
@@ -232,7 +232,6 @@ class TiledeskChatbot {
         else {
           // fallback
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
-          console.log("fallbackIntent found", fallbackIntent);
           if (!fallbackIntent) {
             console.log("No defaultFallback found!");
             resolve(null);
@@ -474,39 +473,41 @@ class TiledeskChatbot {
   }
 
   static async checkStep(_tdcache, requestId, max_steps) {
+    // console.log("CHECKING ON MAX_STEPS:", max_steps);
     let go_on = true;
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    console.log("parameter_key:", parameter_key);
+    // console.log("__parameter_key:", parameter_key);
     let _current_step = await _tdcache.get(parameter_key);
     if (!_current_step) { // this shouldn't be happening
       _current_step = 0;
     }
-    console.log("_current_step:", _current_step);
     let current_step = Number(_current_step);
-    console.log("current_step:", current_step);
+    // console.log("CURRENT-STEP:", current_step);
     if (current_step > max_steps) {
-      console.log("current_step > max_steps!", current_step);
-      await TiledeskChatbot.resetStep(_tdcache, requestId);
+      // console.log("CURRENT-STEP > MAX_STEPS!", current_step);
+      // await TiledeskChatbot.resetStep(_tdcache, requestId);
       go_on = false;
     }
     else {
-      console.log("current_step < max_steps :)", current_step);
+      // console.log("CURRENT-STEP UNDER MAX_STEPS THRESHOLD:)", current_step);
       current_step += 1;
       await _tdcache.set(parameter_key, current_step); // increment step
-      console.log("current_step from cache:", await _tdcache.get(parameter_key));
+      // console.log("current_step from cache:", await _tdcache.get(parameter_key));
     }
     return go_on;
   }
 
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    console.log("resetStep() parameter_key:", parameter_key);
-    await _tdcache.set(parameter_key, 0);
+    // console.log("resetStep() parameter_key:", parameter_key);
+    if (_tdcache) {
+      await _tdcache.set(parameter_key, 0);
+    }
   }
 
   static async currentStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    console.log("currentStep() parameter_key:", parameter_key);
+    // console.log("currentStep() parameter_key:", parameter_key);
     return await _tdcache.get(parameter_key);
   }
 
