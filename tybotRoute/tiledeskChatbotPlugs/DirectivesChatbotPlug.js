@@ -300,7 +300,7 @@ class DirectivesChatbotPlug {
       const ifNoAgentsDir = new DirIfAvailableAgents(
         {
           tdclient: tdclient,
-          checkAgents: false, // check no available agents
+          checkAgents: false, // check no available agents 
           log: false
         });
       ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
@@ -310,7 +310,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.AGENT) {
       console.log("...DirMoveToAgent");
-      new DirMoveToAgent(directive, async () => {
+      new DirMoveToAgent().execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
