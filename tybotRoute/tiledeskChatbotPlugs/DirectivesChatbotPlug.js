@@ -310,7 +310,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.AGENT) {
       console.log("...DirMoveToAgent");
-      new DirMoveToAgent().execute(directive, async () => {
+      new DirMoveToAgent(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
