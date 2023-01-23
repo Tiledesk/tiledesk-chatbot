@@ -15,7 +15,7 @@ class DirReply {
   }
 
   execute(directive, callback) {
-    console.log("Reply directive:", directive);
+    console.log("Reply directive:", JSON.stringify(directive));
     let action;
     if (directive.action) {
       action = directive.action;

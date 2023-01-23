@@ -129,7 +129,7 @@ class DirectivesChatbotPlug {
     if (this.log) { console.log("processing directives:", JSON.stringify(directives)); }
     
     const next_dir = await this.nextDirective(directives);
-    if (this.log) { console.log("next_dir:", next_dir);}
+    if (this.log) { console.log("next_dir:", JSON.stringify(next_dir));}
     await this.process(next_dir);
   }
 
@@ -184,7 +184,7 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
-      if (context.log) { console.log("stop process(). directive is null", directive);}
+      if (context.log) { console.log("stop process(). directive is (null?):", directive);}
       this.theend();
     }
     else if (directive_name === Directives.DEPARTMENT) {
@@ -203,7 +203,7 @@ class DirectivesChatbotPlug {
       // console.log(".....DirIntent")
       new DirIntent(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
-        await process(next_dir);
+        this.process(next_dir);
       });
     }
     else if (directive_name === Directives.MESSAGE) {
