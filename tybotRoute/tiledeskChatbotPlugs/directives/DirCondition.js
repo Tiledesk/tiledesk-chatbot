@@ -73,8 +73,14 @@ class DirCondition {
     // const trueIntent = action.body.trueIntent;
     // const falseIntent = action.body.falseIntent;
     const condition = action.condition;
-    const trueIntent = action.trueIntent;
-    const falseIntent = action.falseIntent;
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    if (trueIntent && trueIntent.trim() === "") {
+      trueIntent = null;
+    }
+    if (falseIntent && falseIntent.trim() === "") {
+      falseIntent = null;
+    }
     if (this.log) {console.log("condition action:", action);}
     if (!trueIntent && !falseIntent) {
       if (this.log) {console.log("Invalid condition, no intents specified");}
