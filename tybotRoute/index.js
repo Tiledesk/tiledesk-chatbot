@@ -212,10 +212,11 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter("_tdCity", message.request.location.city);
   }
-  await chatbot.addParameter("_tdRequestSourcePage", message.sourcePage);
-  await chatbot.addParameter("_tdRequestLanguage", message.language);
-  await chatbot.addParameter("_tdRequestUserAgent", message.userAgent);
-  
+  if (message.request) {
+    await chatbot.addParameter("_tdRequestSourcePage", message.sourcePage);
+    await chatbot.addParameter("_tdRequestLanguage", message.language);
+    await chatbot.addParameter("_tdRequestUserAgent", message.userAgent);
+  }
   if (message.attributes) {
     await chatbot.addParameter("_tdRequestDepartmentId", message.attributes.departmentId);
     await chatbot.addParameter("_tdRequestDepartmentName", message.attributes.departmentName);
