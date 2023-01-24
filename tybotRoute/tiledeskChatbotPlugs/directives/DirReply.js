@@ -12,6 +12,7 @@ class DirReply {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
+    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -44,17 +45,24 @@ class DirReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
+      if (this.log) {
+        for (const [key, value] of Object.entries(requestVariables)) {
+          const value_type = typeof value;
+          if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
+        }
+      }
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestVariables);
-      // fill commands' text attribute
+      if (this.log) {console.log("filling commands' text attribute");}
       if (message.attributes && message.attributes.commands) {
         let commands = message.attributes.commands;
         if (commands.length > 1) {
+          if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
             if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
               commands[i].message.text = filler.fill(commands[i].message.text, requestVariables);
-              
+              if (this.log) {console.log("command filled:", commands[i].message.text);}
             }
           }
         }

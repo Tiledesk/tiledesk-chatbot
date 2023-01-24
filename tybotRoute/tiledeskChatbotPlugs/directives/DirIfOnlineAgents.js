@@ -53,10 +53,8 @@ class DirIfOnlineAgents {
       //   return;
       // }
       action = {
-        // body: {
-          trueIntent: params.trueIntent,
-          falseIntent: params.falseIntent
-        // }
+        trueIntent: params.trueIntent,
+        falseIntent: params.falseIntent
       }
     }
     else {
