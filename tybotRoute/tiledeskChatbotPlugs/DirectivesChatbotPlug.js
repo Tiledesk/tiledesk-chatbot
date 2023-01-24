@@ -325,8 +325,8 @@ class DirectivesChatbotPlug {
         depId = context.supportRequest.department._id;
         const agentDir = new DirMoveToAgent(
           {
-            tdclient: tdclient,
-            requestId: requestId,
+            tdclient: context.tdclient,
+            requestId: context.requestId,
             depId: depId
           }
         );
