@@ -474,26 +474,40 @@ class TiledeskChatbot {
 
   static async checkStep(_tdcache, requestId, max_steps) {
     // console.log("CHECKING ON MAX_STEPS:", max_steps);
-    let go_on = true;
+    let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     // console.log("__parameter_key:", parameter_key);
+    await _tdcache.incr(parameter_key);
+    // console.log("incr-ed");
     let _current_step = await _tdcache.get(parameter_key);
-    if (!_current_step) { // this shouldn't be happening
-      _current_step = 0;
-    }
+    // if (!_current_step) { // this shouldn't be happening
+    //   _current_step = 0;
+    // }
     let current_step = Number(_current_step);
+    // current_step += 1;
+    // await _tdcache.set(parameter_key, current_step); // increment step
     // console.log("CURRENT-STEP:", current_step);
-    if (current_step > max_steps) {
+    if (current_step > max_steps) { // max_steps limit just violated
       // console.log("CURRENT-STEP > MAX_STEPS!", current_step);
       // await TiledeskChatbot.resetStep(_tdcache, requestId);
-      go_on = false;
+      // go_on = 1; // stop execution, send error message
+      go_on = false
     }
+    // else if (current_step > max_steps + 1) { // max_steps limit already violated
+    //   console.log("CURRENT-STEP > MAX_STEPS!", current_step);
+    //   // await TiledeskChatbot.resetStep(_tdcache, requestId);
+    //   go_on = 2; // stop execution, don't send error message (already sent with go_on = 1)
+    // }
     else {
-      // console.log("CURRENT-STEP UNDER MAX_STEPS THRESHOLD:)", current_step);
-      current_step += 1;
-      await _tdcache.set(parameter_key, current_step); // increment step
-      // console.log("current_step from cache:", await _tdcache.get(parameter_key));
+      // go_on = 0;
+      go_on = true;
     }
+    // else {
+      // console.log("CURRENT-STEP UNDER MAX_STEPS THRESHOLD:)", current_step);
+      // current_step += 1;
+      // await _tdcache.set(parameter_key, current_step); // increment step
+      // console.log("current_step from cache:", await _tdcache.get(parameter_key));
+    // }
     return go_on;
   }
 

@@ -72,6 +72,21 @@ class TdCache {
       });
     }
 
+    async incr(key) {
+      // console.log("incr key:", key)
+      return new Promise( async (resolve, reject) => {
+          try {
+            // console.log("incr here...key", key)
+            await this.client.incr(key);
+          }
+          catch(error) {
+            console.error("Error on incr:", error);
+            reject(error)
+          }
+        return resolve();
+      });
+    }
+
     async hset(dict_key, key, value, options) {
       //console.log("hsetting dict_key key value", dict_key, key, value)
       return new Promise( async (resolve, reject) => {

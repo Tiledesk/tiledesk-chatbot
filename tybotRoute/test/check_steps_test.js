@@ -17,7 +17,7 @@ describe('checkStep()', function() {
         break;
       }
     }
-    assert(i === MAX_STEPS + 1);
+    assert(i === MAX_STEPS);
   });
   
 });

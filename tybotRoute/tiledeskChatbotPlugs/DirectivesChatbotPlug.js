@@ -138,13 +138,16 @@ class DirectivesChatbotPlug {
     const go_on = await TiledeskChatbot.checkStep(
       this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS
     );
-    const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
+    // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
     // console.log("........nextDirective() currentStep:", current_step);
-    if (!go_on) {
+    if (go_on == false) {
       // console.log("..nextDirective() Stopped!");
       return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
-    else {
+    // else if (go_on == 2) {
+    //   return null;
+    // }
+    else { // continue with the next directive
       // console.log("Go on!");
     }
     this.curr_directive_index += 1;
@@ -265,8 +268,9 @@ class DirectivesChatbotPlug {
           tdclient: tdclient, // matches open hours
           log: false
         });
-      whenOpenDir.execute(directive, directives, curr_directive_index, () => {
-        process(nextDirective());
+      whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else if (directive_name === Directives.WHEN_CLOSED) {
@@ -316,7 +320,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
-      if (depId) {
+      let depId;
+      if (context.supportRequest && context.supportRequest.department && supportRequest.department._id) {
+        depId = supportRequest.department._id;
         const agentDir = new DirMoveToAgent(
           {
             tdclient: tdclient,
@@ -332,12 +338,13 @@ class DirectivesChatbotPlug {
         }
         agentDir.execute(directive, async () => {
           let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+          this.process(next_dir);
         });
       }
       else {
         console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
-        process(nextDirective());
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       }
     }
     else if (directive_name === Directives.CLOSE) {

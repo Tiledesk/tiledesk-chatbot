@@ -7,14 +7,38 @@ class MockTdCache {
     this.db = new Map();
   }
 
-  set(k, v) {
+  async set(k, v) {
     return new Promise( (resolve, reject) => {
         this.db.set(k, "" + v) // saves as string
         resolve();
     });
   }
 
-  get(k) {
+  async incr(k) {
+    // console.log("incr...", k)
+    // return new Promise( (resolve, reject) => {
+    // console.log("Promise incr...", k)
+    let value = await this.get(k);
+    // console.log("value.............", value)
+    if (value == undefined || value == null) {
+      value = 0;
+    }
+    try {
+      value = Number(value);
+    }
+    catch(error) {
+      // console.error("Error on value = Number(value);", error);
+      value = 0
+    }
+    // console.log("got", k, value)
+    let v_incr = Number(value) + 1;
+    this.db.set(k, "" + v_incr) // saves as string
+    // resolve();
+      
+    // });
+  }
+
+  async get(k) {
     return new Promise( (resolve, reject) => {
         const v = this.db.get(k);
         resolve(v);
