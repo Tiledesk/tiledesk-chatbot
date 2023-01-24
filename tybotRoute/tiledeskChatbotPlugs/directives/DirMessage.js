@@ -77,7 +77,7 @@ class DirMessage {
     }
     this.go(action, async () => {
       if (action["_tdThenStop"] == true) {
-        callback(true);
+        callback(true); // stopping the action flow
       }
       else {
         callback();

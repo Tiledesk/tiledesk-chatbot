@@ -321,7 +321,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
       let depId;
-      if (context.supportRequest && context.supportRequest.department && supportRequest.department._id) {
+      if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
         depId = supportRequest.department._id;
         const agentDir = new DirMoveToAgent(
           {
