@@ -212,6 +212,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter("_tdCity", message.request.location.city);
   }
+  console.log("message.request.language", message.request["language"])
   if (message.request) {
     await chatbot.addParameter("_tdRequestSourcePage", message.sourcePage);
     await chatbot.addParameter("_tdRequestLanguage", message.language);
