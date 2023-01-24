@@ -320,33 +320,33 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
-      let depId;
-      if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
-        depId = context.supportRequest.department._id;
-        console.log("context.supportRequest", JSON.stringify(context.supportRequest));
-        const agentDir = new DirMoveToAgent(
-          {
-            tdclient: context.tdclient,
-            requestId: context.requestId,
-            depId: depId
-          }
-        );
-        if (!directive.body) {
-          directive.action = {}
-          directive.action.body = {
-            whenOnlineOnly: true
-          }
-        }
-        agentDir.execute(directive, async () => {
+      // let depId;
+      // if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
+        // depId = context.supportRequest.department._id;
+        // console.log("context.supportRequest", JSON.stringify(context.supportRequest));
+        // const agentDir = new DirMoveToAgent(
+        //   {
+        //     tdclient: context.tdclient,
+        //     requestId: context.requestId,
+        //     depId: depId
+        //   }
+        // );
+        // if (!directive.action) {
+        //   directive.action = {}
+        //   directive.action = {
+        //     whenOnlineOnly: true
+        //   }
+        // }
+        new DirMoveToAgent(context).execute(directive, async () => {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         });
-      }
-      else {
-        console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      }
+      // }
+      // else {
+      //   console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
+      //   let next_dir = await this.nextDirective(this.directives);
+      //   this.process(next_dir);
+      // }
     }
     else if (directive_name === Directives.CLOSE) {
       // console.log("Exec close()")

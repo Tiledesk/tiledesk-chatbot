@@ -1,4 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { Directives } = require('./Directives');
 
 class DirMoveToAgent {
 
@@ -33,41 +34,42 @@ class DirMoveToAgent {
   }
 
   execute(directive, callback) {
-    let action;
-    // if (directive.action) {
-    //   action = directive.action;
-    // }
-    this.go(action, () => {
+    directive.action = {};
+    if (directive.name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // TEMP
+      directive.action = {
+        whenOnlineOnly: true
+      }
+    }
+    this.go(directive.action, () => {
       callback();
     });
   }
-
   go(action, callback) {
-    // if (action.whenOnlineOnly === true) {
-    //   this.tdclient.openNow((err, result) => {
-    //     if (err) {
-    //       console.error("Agent in DirOfflineHours Error:", err);
-    //       callback();
-    //     }
-    //     else {
-    //       if (result && result.isopen) {
-    //         this.tdclient.agent(this.requestId, this.depId, (err) => {
-    //           if (err) {
-    //             console.error("Error moving to agent during online hours:", err);
-    //           }
-    //           else {
-    //             //console.log("Successfully moved to agent during online hours");
-    //           }
-    //           callback();
-    //         });
-    //       }
-    //       else {
-    //         callback();
-    //       }
-    //     }
-    //   });
-    // }
-    // else {
+    if (action.whenOnlineOnly === true) {
+      this.tdclient.openNow((err, result) => {
+        if (err) {
+          console.error("Agent in DirOfflineHours Error:", err);
+          callback();
+        }
+        else {
+          if (result && result.isopen) {
+            this.tdclient.agent(this.requestId, this.depId, (err) => {
+              if (err) {
+                console.error("Error moving to agent during online hours:", err);
+              }
+              else {
+                //console.log("Successfully moved to agent during online hours");
+              }
+              callback();
+            });
+          }
+          else {
+            callback();
+          }
+        }
+      });
+    }
+    else {
       this.tdclient.agent(this.requestId, this.depId, (err) => {
         if (err) {
           console.error("Error moving to agent:", err);
@@ -77,7 +79,7 @@ class DirMoveToAgent {
         }
         callback();
       });
-    // }
+    }
   }
 
 }
