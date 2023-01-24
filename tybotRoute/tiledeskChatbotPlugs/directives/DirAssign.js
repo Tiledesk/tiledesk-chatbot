@@ -79,11 +79,11 @@ class DirAssign {
       if (this.log) {console.log("(DirAssign) executed expression:", expression, "value:", value);}
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
       if (this.log) {
-        console.log("(DirAssign) Assigned:", value, "to", variableName);
+        console.log("(DirAssign) Assigned:", variableName, "=", value);
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         for (const [key, value] of Object.entries(all_parameters)) {
           const value_type = typeof value;
-          if (chatbot.log) {console.log("(DirAssign) request parameter:", key, "value:", value, "type:", value_type)}
+          if (this.log) {console.log("(DirAssign) request parameter:", key, "value:", value, "type:", value_type)}
         }
       }
 
