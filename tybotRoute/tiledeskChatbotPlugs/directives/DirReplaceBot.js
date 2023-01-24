@@ -22,9 +22,7 @@ class DirReplaceBot {
     else if (directive.parameter) {
       let botName = directive.parameter.trim();
       action = {
-        // body: {
-          botName: botName
-        // }
+        botName: botName
       }
     }
     else {

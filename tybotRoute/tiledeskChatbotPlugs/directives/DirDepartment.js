@@ -23,9 +23,7 @@ class DirDepartment {
         dep_name = directive.parameter.trim();
       }
       action = {
-        // body: {
-          depName: dep_name
-        // }
+        depName: dep_name
       }
     }
     this.go(action, () => {
