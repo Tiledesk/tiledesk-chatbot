@@ -58,7 +58,8 @@ class DirReply {
       if (message.attributes && message.attributes.commands) {
         if (this.log) {console.log("filling commands'. commands found.");}
         let commands = message.attributes.commands;
-        if (commands.length > 1) {
+        if (this.log) {console.log("commands:", JSON.stringify(commands), commands.length);}
+        if (commands.length > 0) {
           if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
             if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
