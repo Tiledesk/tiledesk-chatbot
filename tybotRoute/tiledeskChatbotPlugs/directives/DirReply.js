@@ -107,7 +107,6 @@ class DirReply {
     if (!lang) {
       return;
     }
-    let commands = message.attributes.commands;
     if (commands.length > 0) {
       for (let i = commands.length - 1; i >= 0; i--) {
         console.log("commands[i]:", commands[i]);
