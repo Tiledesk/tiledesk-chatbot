@@ -147,6 +147,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("Processing explicit intent:", explicit_intent_name)}
         // look for parameters
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
+        console.log("parsed intent:", intent);
         let reply;
         if (!intent || (intent && !intent.name)) {
           if (this.log) {console.log("Invalid intent:", explicit_intent_name);}
