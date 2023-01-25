@@ -3,7 +3,7 @@ const { param } = require('express/lib/request');
 const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirSendEmail {
 
@@ -46,11 +46,9 @@ class DirSendEmail {
     else if (directive.parameter && directive.parameter.trim() !== "") {
       const params = this.parseParams(directive.parameter);
       action = {
-        // body: {
-          subject: params.subject,
-          text: params.text,
-          to: params.to
-        // }
+        subject: params.subject,
+        text: params.text,
+        to: params.to
       }
     }
     else {

@@ -23,7 +23,7 @@ class Directives {
   static LOCK_INTENT = "lockintent";
   static UNLOCK_INTENT = "unlockintent";
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
-  static SEND_EMAIL = "sendemail";
+  static SEND_EMAIL = "email";
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_ONLINE_AGENTS = "ifonlineagents";
