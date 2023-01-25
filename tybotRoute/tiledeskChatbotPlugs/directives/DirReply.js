@@ -54,8 +54,9 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestVariables);
-      if (this.log) {console.log("filling commands' text attribute");}
+      if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
       if (message.attributes && message.attributes.commands) {
+        if (this.log) {console.log("filling commands'. commands found.");}
         let commands = message.attributes.commands;
         if (commands.length > 1) {
           if (this.log) {console.log("commands' found");}
