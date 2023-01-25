@@ -126,7 +126,7 @@ class DirectivesChatbotPlug {
     }
     
     this.curr_directive_index = -1;
-    if (this.log) { console.log("processing directives:", JSON.stringify(directives)); }
+    if (this.log) { console.log("processing directives...");}
     
     const next_dir = await this.nextDirective(directives);
     if (this.log) { console.log("next_dir:", JSON.stringify(next_dir));}
@@ -180,7 +180,7 @@ class DirectivesChatbotPlug {
     // console.log("process(directive):", JSON.stringify(directive));
     let context = this.context;
     if (directive) {
-      if (context.log) { console.log("process(directive):", JSON.stringify(directive));}
+      // if (context.log) { console.log("process(directive):", JSON.stringify(directive));}
     }
     let directive_name = null;
     if (directive && directive.name) {

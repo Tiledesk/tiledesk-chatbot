@@ -87,6 +87,11 @@ class DirCondition {
       callback();
       return;
     }
+    if (condition === null || (condition !== null && condition.trim === "")) {
+      if (this.log) {console.log("Invalid condition, empty or null:", condition);}
+      callback();
+      return;
+    }
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent);
