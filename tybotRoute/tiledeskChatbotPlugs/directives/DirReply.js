@@ -69,6 +69,21 @@ class DirReply {
           }
         }
       }
+
+      // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
+      const mylang = requestVariables["mylang"];
+      console.log("mylang:", mylang);
+      if (message.attributes && message.attributes.commands) {
+        let commands = message.attributes.commands;
+        if (commands.length > 0) {
+          for (let i = 0; i < commands.length; i++) {
+            if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
+              if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
+            }
+          }
+        }
+      }
+
       // temporary send back of reserved attributes
       if (!message.attributes) {
         message.attributes = {}

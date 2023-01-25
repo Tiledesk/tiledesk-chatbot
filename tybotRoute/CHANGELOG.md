@@ -5,9 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.49
+- anomaly detection
+- bug fix
+
 ### 0.1.48
 - fixed ReplaceBot "log" bug
 - ReplaceBot fill-variables botName
+- fixing
 
 ### 0.1.47
 - Introduced _tdIfOnlineAgents --trueIntent -- falseIntent
