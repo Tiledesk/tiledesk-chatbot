@@ -54,7 +54,7 @@ class TiledeskChatbotUtil {
             if (commands[i].type === "message") { // is a message, not wait
                 console.log("commands[i]:", commands[i].message.lang);
                 // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
-                if (!(commands[i].message["lang"] === lang)) { // filter is false, remove
+                if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                     console.log("commands[i]lang:", commands[i]);
                     commands.splice(i, 1);
                     if (commands[i-1]) {
