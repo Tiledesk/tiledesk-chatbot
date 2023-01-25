@@ -214,8 +214,8 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
   // console.log("message.request.language", message.request["language"])
   if (message.request) {
-    await chatbot.addParameter("_tdSourcePage", message.request.sourcePage);
-    await chatbot.addParameter("_tdLanguage", message.request["language"]);
+    await chatbot.addParameter("_tdUserSourcePage", message.request.sourcePage);
+    await chatbot.addParameter("_tdUserLanguage", message.request["language"]);
     await chatbot.addParameter("_tdUserAgent", message.request.userAgent);
   }
   if (message.attributes) {
