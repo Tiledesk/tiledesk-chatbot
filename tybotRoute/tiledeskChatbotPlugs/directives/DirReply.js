@@ -1,5 +1,6 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 
 class DirReply {
 
@@ -74,7 +75,7 @@ class DirReply {
       const mylang = requestVariables["mylang"];
       console.log("mylang:", mylang);
       if (message.attributes && message.attributes.commands) {
-        this.filterOnLanguage(message.attributes.commands, mylang);
+        TiledeskChatbotUtil.filterOnLanguage(message.attributes.commands, mylang);
       }
 
       // temporary send back of reserved attributes
@@ -103,36 +104,32 @@ class DirReply {
     });
   }
 
-  filterOnLanguage(commands, lang) {
-    if (!lang) {
-      return;
-    }
-    if (commands.length > 0) {
-      for (let i = commands.length - 1; i >= 0; i--) {
-        console.log("commands[i]:", commands[i]);
-        if (commands[i]) {
-            if (commands[i].type === "message") { // is a message, not wait
-                if (!commands[i]["lang"] === lang) { // filter is false, remove
-                    console.log("commands[i]lang:", commands[i]);
-                    commands.splice(i, 1);
-                    if (commands[i-1]) {
-                        console.log("commands[i-1]?:", commands[i-1]);
-                        if (commands[i-1].type === "wait") {
-                          commands.splice(i-1, 1);
-                        }
-                    }
-                }
-            }
+  // filterOnLanguage(commands, lang) {
+  //   if (!lang) {
+  //     return;
+  //   }
+  //   if (commands.length > 0) {
+  //     for (let i = commands.length - 1; i >= 0; i--) {
+  //       console.log("commands[i]:", commands[i]);
+  //       if (commands[i]) {
+  //           if (commands[i].type === "message") { // is a message, not wait
+  //               if (!commands[i]["lang"] === lang) { // filter is false, remove
+  //                   console.log("commands[i]lang:", commands[i]);
+  //                   commands.splice(i, 1);
+  //                   if (commands[i-1]) {
+  //                       console.log("commands[i-1]?:", commands[i-1]);
+  //                       if (commands[i-1].type === "wait") {
+  //                         commands.splice(i-1, 1);
+  //                       }
+  //                   }
+  //               }
+  //           }
             
-        }
-    }
-      // for (let i = 0; i < commands.length; i++) {
-      //   if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-      //     if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
-      //   }
-      // }
-    }
-  }
+  //       }
+  //   }
+      
+  //   }
+  // }
 }
 
 module.exports = { DirReply };
