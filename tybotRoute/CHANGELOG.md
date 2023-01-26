@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.50
+- bug fixing
+- multilang prototype
+
 ### 0.1.49
 - anomaly detection
 - bug fix
