@@ -25,15 +25,15 @@ class DirIfOpenHours {
     //   departmentId: depId,
     //   log: false
     // }
-    this.intentDir = new DirIntent(
-      {
-        API_ENDPOINT: context.TILEDESK_APIURL,
-        TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-        supportRequest: context.supportRequest,
-        token: context.token,
-        log: context.log
-      }
-    );
+    this.intentDir = new DirIntent(context);
+    //   {
+    //     API_ENDPOINT: context.TILEDESK_APIURL,
+    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
+    //     supportRequest: context.supportRequest,
+    //     token: context.token,
+    //     log: context.log
+    //   }
+    // );
     this.log = context.log;
   }
 
