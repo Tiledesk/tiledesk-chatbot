@@ -1,6 +1,7 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Directives } = require('./Directives');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 
 class DirMoveToAgent {
 
@@ -30,7 +31,7 @@ class DirMoveToAgent {
     this.tdclient = context.tdclient;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.depId = context.departmentId;
+    // this.depId = context.departmentId;
     this.log = context.log;
   }
 
@@ -58,7 +59,7 @@ class DirMoveToAgent {
             if (this.tdcache) {
               depId = 
               await TiledeskChatbot.getParameterStatic(
-                this.tdcache, this.requestId, "tdDepartmentId"
+                this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
               );
               this.tdclient.agent(this.requestId, depId, (err) => {
                 if (err) {
@@ -84,7 +85,7 @@ class DirMoveToAgent {
       if (this.tdcache) {
         const depId = 
         await TiledeskChatbot.getParameterStatic(
-          this.tdcache, this.requestId, "tdDepartmentId"
+          this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
         );
         this.tdclient.agent(this.requestId, depId, (err) => {
           if (err) {
