@@ -200,29 +200,33 @@ router.post('/ext/:botid', async (req, res) => {
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context
   const messageId = message._id;
-  await chatbot.addParameter("_tdProjectId", projectId);
-  await chatbot.addParameter("_tdRequestId", requestId);
-  if (message.text) {
-    await chatbot.addParameter("_tdLastUserText", message.text);
+  await chatbot.addParameter("tdProjectId", projectId);
+  // TODO add projectName too
+  await chatbot.addParameter("tdRequestId", requestId);
+  if (chatbot.bot) {
+    await chatbot.addParameter("tdChatbotName", chatbot.bot.name);
   }
-  await chatbot.addParameter("_tdLastMessageId", messageId);
+  if (message.text) {
+    await chatbot.addParameter("tdLastUserText", message.text);
+  }
+  await chatbot.addParameter("tdLastMessageId", messageId);
   if (message.request && message.request.location && message.request.location.country) {
-    await chatbot.addParameter("_tdCountry", message.request.location.country);
+    await chatbot.addParameter("tdCountry", message.request.location.country);
   }
   if (message.request && message.request.location && message.request.location.city) {
-    await chatbot.addParameter("_tdCity", message.request.location.city);
+    await chatbot.addParameter("tdCity", message.request.location.city);
   }
   // console.log("message.request.language", message.request["language"])
   if (message.request) {
-    await chatbot.addParameter("_tdUserSourcePage", message.request.sourcePage);
-    await chatbot.addParameter("_tdUserLanguage", message.request["language"]);
-    await chatbot.addParameter("_tdUserAgent", message.request.userAgent);
+    await chatbot.addParameter("tdUserSourcePage", message.request.sourcePage);
+    await chatbot.addParameter("tdUserLanguage", message.request["language"]);
+    await chatbot.addParameter("tdUserAgent", message.request.userAgent);
   }
   if (message.attributes) {
-    await chatbot.addParameter("_tdRequestDepartmentId", message.attributes.departmentId);
-    await chatbot.addParameter("_tdRequestDepartmentName", message.attributes.departmentName);
-    await chatbot.addParameter("_tdRequestRequesterId", message.attributes.requester_id);
-    await chatbot.addParameter("_tdRequestIpAddress", message.attributes.ipAddress);
+    await chatbot.addParameter("tdDepartmentId", message.attributes.departmentId);
+    await chatbot.addParameter("tdDepartmentName", message.attributes.departmentName);
+    await chatbot.addParameter("tdEndUserId", message.attributes.requester_id);
+    await chatbot.addParameter("tdEndUserIpAddress", message.attributes.ipAddress);
     if (message.attributes.payload) {
       try {
         for (const [key, value] of Object.entries(message.attributes.payload)) {

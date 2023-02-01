@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.52
+- added tdChatbotName to request variables
+- removed _ from _td prefix in tiledeskVariables 
+
 ### 0.1.51
 - only debug on pre
 
