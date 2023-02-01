@@ -198,6 +198,26 @@ class TdCache {
         });
       });
     }
+
+    async hget(dict_key, key, callback) {
+      //console.log("hgetting dics", dict_key);
+      return new Promise( async (resolve, reject) => {
+        this.client.hget(dict_key, key, (err, value) => {
+          if (err) {
+            reject(err);
+            if (callback) {
+              callback(err, null);
+            }
+          }
+          else {
+            if (callback) {
+              callback(null, value);
+            }
+            resolve(value);
+          }
+        });
+      });
+    }
     
     async getJSON(key, callback) {
       const value = await this.get(key);

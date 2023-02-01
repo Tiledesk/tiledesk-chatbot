@@ -770,7 +770,7 @@ const bot = {
 		"enabled": true,
 		"actions": [],
 		"question": "***",
-		"answer": "you live in ${_tdCity} (${_tdCountry})",
+		"answer": "you live in ${tdCity} (${tdCountry})",
 		"language": "en",
 		"intent_display_name": "location"
 	}, {
@@ -778,7 +778,7 @@ const bot = {
 		"enabled": true,
 		"actions": [],
 		"question": "***",
-		"answer": "\\_tdcondition --condition \"$_tdCountry === \\\"IT\\\"\" --trueIntent \"live_in_italy\" --falseIntent \"live_outside_italy\"",
+		"answer": "\\_tdcondition --condition \"$tdCountry === \\\"IT\\\"\" --trueIntent \"live_in_italy\" --falseIntent \"live_outside_italy\"",
 		"language": "en",
 		"intent_display_name": "if_you_live_IT"
 	}, {

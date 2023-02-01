@@ -1,5 +1,6 @@
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Directives } = require('./Directives');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
 class DirMoveToAgent {
 
@@ -44,24 +45,34 @@ class DirMoveToAgent {
       callback();
     });
   }
-  go(action, callback) {
+
+  async go(action, callback) {
     if (action.whenOnlineOnly === true) {
-      this.tdclient.openNow((err, result) => {
+      this.tdclient.openNow( async (err, result) => {
         if (err) {
           console.error("Agent in DirOfflineHours Error:", err);
           callback();
         }
         else {
           if (result && result.isopen) {
-            this.tdclient.agent(this.requestId, this.depId, (err) => {
-              if (err) {
-                console.error("Error moving to agent during online hours:", err);
-              }
-              else {
-                //console.log("Successfully moved to agent during online hours");
-              }
+            if (this.tdcache) {
+              depId = 
+              await TiledeskChatbot.getParameterStatic(
+                this.tdcache, this.requestId, "tdDepartmentId"
+              );
+              this.tdclient.agent(this.requestId, depId, (err) => {
+                if (err) {
+                  console.error("Error moving to agent during online hours:", err);
+                }
+                else {
+                  //console.log("Successfully moved to agent during online hours");
+                }
+                callback();
+              });
+            }
+            else {
               callback();
-            });
+            }
           }
           else {
             callback();
@@ -70,15 +81,24 @@ class DirMoveToAgent {
       });
     }
     else {
-      this.tdclient.agent(this.requestId, this.depId, (err) => {
-        if (err) {
-          console.error("Error moving to agent:", err);
-        }
-        else {
-          //console.log("Successfully moved to agent");
-        }
+      if (this.tdcache) {
+        depId = 
+        await TiledeskChatbot.getParameterStatic(
+          this.tdcache, this.requestId, "tdDepartmentId"
+        );
+        this.tdclient.agent(this.requestId, depId, (err) => {
+          if (err) {
+            console.error("Error moving to agent:", err);
+          }
+          else {
+            //console.log("Successfully moved to agent");
+          }
+          callback();
+        });
+      }
+      else {
         callback();
-      });
+      }
     }
   }
 

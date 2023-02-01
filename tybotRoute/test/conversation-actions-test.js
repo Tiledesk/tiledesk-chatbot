@@ -83,8 +83,8 @@ describe('Conversation for actions test', async () => {
         else {
           // console.log("params /start:", params);
           assert(params);
-          assert(params["_tdLastMessageId"] === message_id);
-          assert(params["_tdProjectId"] === PROJECT_ID);
+          assert(params["tdLastMessageId"] === message_id);
+          assert(params["tdProjectId"] === PROJECT_ID);
           listener.close(() => {
             done();
           });

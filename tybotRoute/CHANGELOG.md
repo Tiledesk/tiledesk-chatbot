@@ -7,7 +7,9 @@ available on:
 
 ### 0.1.52
 - added tdChatbotName to request variables
-- removed _ from _td prefix in tiledeskVariables 
+- removed _ from _td prefix in tiledeskVariables (i.e. _tdDepartmentId => tdDepartmentId)
+- added tdcache.hget()
+- fixed bug on DirAgentHandoff. this.dirId missed on intent-to-intent crashed the application. Getting tdDepartmentId from Redis
 
 ### 0.1.51
 - only debug on pre

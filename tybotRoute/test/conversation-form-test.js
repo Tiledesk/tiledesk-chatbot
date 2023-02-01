@@ -105,8 +105,8 @@ describe('Conversation1 - Form filling', async () => {
         else {
           // console.log("params /start:", params);
           assert(params);
-          assert(params["_tdLastMessageId"] === message_id);
-          assert(params["_tdProjectId"] === PROJECT_ID);
+          assert(params["tdLastMessageId"] === message_id);
+          assert(params["tdProjectId"] === PROJECT_ID);
           listener.close(() => {
             done();
           });
@@ -231,8 +231,8 @@ describe('Conversation1 - Form filling', async () => {
           else {
             // console.log("params2:", params);
             assert(params);
-            assert(params["_tdLastMessageId"] === message_id);
-            assert(params["_tdProjectId"] === PROJECT_ID);
+            assert(params["tdLastMessageId"] === message_id);
+            assert(params["tdProjectId"] === PROJECT_ID);
             assert(params["your_fullname"] === reply_text);
             assert(params["_tdTypeOf:your_fullname"]);
             listener.close(() => {
@@ -799,15 +799,15 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-    // console.log("/if_you_live_IT (TRUE)...");
+    console.log("/if_you_live_IT (TRUE)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
+      console.log("req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
-      // console.log("message:", JSON.stringify(message));
+      console.log("message:", JSON.stringify(message));
       if (message.text.startsWith("myvar:")) {
         assert(message.text !== null);
         getChatbotParameters(REQUEST_ID, (err, params) => {
@@ -815,10 +815,10 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            // console.log("params /condition:", params);
+            console.log("params /condition:", params);
             assert(params);
             // assert(params["city"] === "Milan");
-            assert(params["_tdCountry"] === "IT");
+            assert(params["tdCountry"] === "IT");
             let request = {
               "payload": {
                 "_id": uuidv4(),
@@ -859,7 +859,7 @@ describe('Conversation1 - Form filling', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/assign_params{\"_tdCountry\": \"IT\"}",
+          "text": "/assign_params{\"tdCountry\": \"IT\"}",
           "id_project": PROJECT_ID,
           "request": {
             "request_id": REQUEST_ID,
@@ -894,7 +894,7 @@ describe('Conversation1 - Form filling', async () => {
             // console.log("params /if_you_live_IT:", params);
             assert(params);
             // assert(params["city"] === "Milan");
-            assert(params["_tdCountry"] === "US");
+            assert(params["tdCountry"] === "US");
             let request = {
               "payload": {
                 "_id": uuidv4(),
@@ -935,7 +935,7 @@ describe('Conversation1 - Form filling', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/assign_params{\"_tdCountry\": \"US\"}",
+          "text": "/assign_params{\"tdCountry\": \"US\"}",
           "id_project": PROJECT_ID,
           "request": {
             "request_id": REQUEST_ID,

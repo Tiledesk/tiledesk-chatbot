@@ -536,6 +536,12 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
   }
 
+  static async getParameterStatic(_tdcache, requestId, key) {
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hget(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
+  }
+  
   static async deleteParameterStatic(_tdcache, requestId, paramName) {
     return await _tdcache.hdel(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
