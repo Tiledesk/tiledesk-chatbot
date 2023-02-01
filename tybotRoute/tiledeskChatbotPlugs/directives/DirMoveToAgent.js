@@ -82,7 +82,7 @@ class DirMoveToAgent {
     }
     else {
       if (this.tdcache) {
-        depId = 
+        const depId = 
         await TiledeskChatbot.getParameterStatic(
           this.tdcache, this.requestId, "tdDepartmentId"
         );
