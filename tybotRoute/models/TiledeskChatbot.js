@@ -233,6 +233,9 @@ class TiledeskChatbot {
         else {
           // fallback
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
+          console.log("In mongodb botId:", this.botId);
+          console.log("getByIntentDisplayName(this.botId, 'defaultFallback'):", this.botId, "defaultFallback");
+          console.log("fallbackIntent found!", JSON.stringify(fallbackIntent));
           if (!fallbackIntent) {
             console.log("No defaultFallback found!");
             resolve(null);
@@ -541,7 +544,7 @@ class TiledeskChatbot {
     return await _tdcache.hget(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
   }
-  
+
   static async deleteParameterStatic(_tdcache, requestId, paramName) {
     return await _tdcache.hdel(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
