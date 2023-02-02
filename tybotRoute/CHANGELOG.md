@@ -10,6 +10,7 @@ available on:
 - removed _ from _td prefix in tiledeskVariables (i.e. _tdDepartmentId => tdDepartmentId)
 - added tdcache.hget()
 - fixed bug on DirAgentHandoff. this.dirId missed on intent-to-intent crashed the application. Getting tdDepartmentId from Redis
+- removed projectId from query getByIntentDisplayName(botId)
 
 ### 0.1.51
 - only debug on pre

@@ -250,6 +250,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.CONDITION) {
       // console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
+        console.log("stop on condition?", stop);
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", directive);}
           this.theend();
