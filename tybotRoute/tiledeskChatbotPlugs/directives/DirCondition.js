@@ -133,7 +133,7 @@ class DirCondition {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
           console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
-          callback(stopOnConditionMet);
+          callback(true);
         });
       }
       else {
