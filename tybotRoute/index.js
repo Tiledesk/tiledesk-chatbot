@@ -18,6 +18,7 @@ const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
 // const { MockActions } = require('./MockActions');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
+const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -200,33 +201,33 @@ router.post('/ext/:botid', async (req, res) => {
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context
   const messageId = message._id;
-  await chatbot.addParameter("tdProjectId", projectId);
+  await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
   // TODO add projectName too
-  await chatbot.addParameter("tdRequestId", requestId);
+  await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
   if (chatbot.bot) {
-    await chatbot.addParameter("tdChatbotName", chatbot.bot.name);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
   }
   if (message.text) {
-    await chatbot.addParameter("tdLastUserText", message.text);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
   }
-  await chatbot.addParameter("tdLastMessageId", messageId);
+  await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
   if (message.request && message.request.location && message.request.location.country) {
-    await chatbot.addParameter("tdCountry", message.request.location.country);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_COUNTRY_KEY, message.request.location.country);
   }
   if (message.request && message.request.location && message.request.location.city) {
-    await chatbot.addParameter("tdCity", message.request.location.city);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
   }
   // console.log("message.request.language", message.request["language"])
   if (message.request) {
-    await chatbot.addParameter("tdUserSourcePage", message.request.sourcePage);
-    await chatbot.addParameter("tdUserLanguage", message.request["language"]);
-    await chatbot.addParameter("tdUserAgent", message.request.userAgent);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, message.request["language"]);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
   }
   if (message.attributes) {
-    await chatbot.addParameter("tdDepartmentId", message.attributes.departmentId);
-    await chatbot.addParameter("tdDepartmentName", message.attributes.departmentName);
-    await chatbot.addParameter("tdEndUserId", message.attributes.requester_id);
-    await chatbot.addParameter("tdEndUserIpAddress", message.attributes.ipAddress);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
     if (message.attributes.payload) {
       try {
         for (const [key, value] of Object.entries(message.attributes.payload)) {

@@ -343,7 +343,7 @@ describe('filter commands()', function() {
     ];
 
     TiledeskChatbotUtil.filterOnLanguage(commands, "en");
-    console.log("commands after", commands);
+    // console.log("commands after", commands);
     // assert(commands.length == 6);
   });
 });

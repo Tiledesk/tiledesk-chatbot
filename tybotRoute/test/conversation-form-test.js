@@ -799,15 +799,15 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-    console.log("/if_you_live_IT (TRUE)...");
+    // console.log("/if_you_live_IT (TRUE)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("req.body:", JSON.stringify(req.body));
+      // console.log("req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
-      console.log("message:", JSON.stringify(message));
+      // console.log("message:", JSON.stringify(message));
       if (message.text.startsWith("myvar:")) {
         assert(message.text !== null);
         getChatbotParameters(REQUEST_ID, (err, params) => {
@@ -815,7 +815,7 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            console.log("params /condition:", params);
+            // console.log("params /condition:", params);
             assert(params);
             // assert(params["city"] === "Milan");
             assert(params["tdCountry"] === "IT");

@@ -65,73 +65,57 @@ class DirIntent {
   go(action, callback) {
     // console.log("action intent:", action);
     const intentName = action.intentName;
+    const intentId = action.intentId;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
+    let intent_command;
     if (intentName) {
-      let intent_command = "/" + intentName;
-      let intent_command_request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "_tdinternal",
-          "type": "text",
-          "sender": "_tdinternal",
-          "recipient": requestId,
-          "text": intent_command,
-          "id_project": projectId,
-          "request": {
-            "request_id": requestId,
-            "id_project": projectId
-          }
-        },
-        "token": this.token
-      }
-
-      // let intent_command_message = {
-      //   //sender: "_tdsender", // bot doesn't reply to "himself" and "system"
-      //   text: intent_command,
-      //   attributes: {
-      //     subtype: "info"
-      //   }
-      // };
-      // send message to /ext/botId
-      // const req_body = {
-      //   payload: message_to_bot,
-      //   token: token
-      // }
-      // let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
-      // if (this.TILEBOT_ENDPOINT) {
-      //   extEndpoint = `${this.TILEBOT_ENDPOINT}`;
-      // }
-      // const extapi = new ExtApi({
-      //   ENDPOINT: extEndpoint,
-      //   log: this.log
-      // });
-      if (this.log) {console.log("move to intent message:", intent_command_request);}
-      // extapi.sendSupportMessageExt(intent_command_message, projectId, requestId, token, () => {
-      //   if (this.log) {console.log("command " + intent_command + " sent.");}
-      //   callback();
-      // });
-      let TILEBOT_ENDPOINT;
-      // if (process.env.CHATBOT_ENDPOINT) {
-      //   CHATBOT_ENDPOINT = process.env.CHATBOT_ENDPOINT;
-      // }
-      // else 
-      if (this.TILEBOT_ENDPOINT) {
-        TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
-      }
-      else {
-        TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
-      }
-      
-      this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
-        // console.log("sendMessageToBot() req_body sent:", intent_command_request);
-        callback();
-      });
+      intent_command = "/" + intentName;
+    }
+    else if (intentId) {
+      intent_command = "/#" + intentId;
     }
     else {
+      console.error("Invalid intent");
       callback();
     }
+
+    // if (intentName) {
+    //   let intent_command = "/" + intentName;
+    let intent_command_request = {
+      "payload": {
+        "_id": uuidv4(),
+        "senderFullname": "_tdinternal",
+        "type": "text",
+        "sender": "_tdinternal",
+        "recipient": requestId,
+        "text": intent_command,
+        "id_project": projectId,
+        "request": {
+          "request_id": requestId,
+          "id_project": projectId
+        }
+      },
+      "token": this.token
+    }
+    if (this.log) {console.log("move to intent message:", intent_command_request);}
+    let TILEBOT_ENDPOINT;
+    if (this.TILEBOT_ENDPOINT) {
+      TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
+    }
+    else {
+      TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
+    }
+    this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
+      // console.log("sendMessageToBot() req_body sent:", intent_command_request);
+      callback();
+    });
+
+    // }
+    // else {
+    //   callback();
+    // }
   }
 
   static intentDirectiveFor(intent) {

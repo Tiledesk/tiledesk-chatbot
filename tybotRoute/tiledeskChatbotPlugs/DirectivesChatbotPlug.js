@@ -249,9 +249,17 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.CONDITION) {
       // console.log("...DirCondition");
-      new DirCondition(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+      new DirCondition(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", directive);}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+        // let next_dir = await this.nextDirective(this.directives);
+        // this.process(next_dir);
       });
     }
     else if (directive_name === Directives.ASSIGN) {

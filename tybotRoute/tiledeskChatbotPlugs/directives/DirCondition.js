@@ -75,6 +75,7 @@ class DirCondition {
     const condition = action.condition;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
+    let stopOnConditionMet = action.stopOnConditionMet;
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
     }
@@ -131,7 +132,7 @@ class DirCondition {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          callback(stopOnConditionMet);
         });
       }
       else {
@@ -143,7 +144,7 @@ class DirCondition {
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          callback(stopOnConditionMet);
         });
       }
       else {
