@@ -62,8 +62,8 @@ class DirCondition {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
     
   }
