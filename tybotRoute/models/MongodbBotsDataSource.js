@@ -50,7 +50,8 @@ class MongodbBotsDataSource {
    */
   async getByIntentDisplayName(botId, name) {
     return new Promise((resolve, reject) => {
-      var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
+      // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
+      var query = { "id_faq_kb": botId, "intent_display_name": name };
       if (this.log) {console.debug('query', query);}
       Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {

@@ -76,6 +76,7 @@ class DirCondition {
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let stopOnConditionMet = action.stopOnConditionMet;
+    console.log("executing action:", action);
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
     }
