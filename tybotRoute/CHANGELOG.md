@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.53
+- removed projectId from query MongodbBotsDataSource.getByExactMatch()
+- removed projectId from query MongodbIntentsMachine.decode()
+
 ### 0.1.52
 - added tdChatbotName to request variables
 - removed _ from _td prefix in tiledeskVariables (i.e. _tdDepartmentId => tdDepartmentId)

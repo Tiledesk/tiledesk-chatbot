@@ -26,7 +26,8 @@ class MongodbBotsDataSource {
   async getByExactMatch(botId, text) {
     // SEARCH INTENTS
     return new Promise( (resolve, reject) => {
-      let query = { "id_project": this.projectId, "id_faq_kb": botId, "question": text };
+      // let query = { "id_project": this.projectId, "id_faq_kb": botId, "question": text };
+      let query = { "id_faq_kb": botId, "question": text };
       Faq.find(query).lean().exec(async (err, faqs) => {
         if (err) {
           console.error("Error getting faq object.", err);

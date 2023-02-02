@@ -233,9 +233,9 @@ class TiledeskChatbot {
         else {
           // fallback
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
-          console.log("In mongodb botId:", this.botId);
-          console.log("getByIntentDisplayName(this.botId, 'defaultFallback'):", this.botId, "defaultFallback");
-          console.log("fallbackIntent found!", JSON.stringify(fallbackIntent));
+          // console.log("In mongodb botId:", this.botId);
+          // console.log("getByIntentDisplayName(this.botId, 'defaultFallback'):", this.botId, "defaultFallback");
+          // console.log("fallbackIntent found!", JSON.stringify(fallbackIntent));
           if (!fallbackIntent) {
             console.log("No defaultFallback found!");
             resolve(null);
