@@ -61,7 +61,7 @@ class MarkbotChatbotPlug {
           // if already present, do not modify metadata
           message.metadata = parsed_reply.message.metadata;
         }
-        if (this.log) {console.log("parsed_reply.message.attributes", parsed_reply.message.attributes);}
+        if (this.log) {console.log("parsed_reply.message.attributes", JSON.stringify(parsed_reply.message.attributes));}
         //this.mergeCurrentMessageButtons(message, parsed_reply);
         if (parsed_reply.message.attributes) {
           for(const [key, value] of Object.entries(parsed_reply.message.attributes)) {

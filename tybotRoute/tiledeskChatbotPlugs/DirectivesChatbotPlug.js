@@ -282,7 +282,7 @@ class DirectivesChatbotPlug {
       // DEPRECATED
       const whenOpenDir = new DirWhenOpen(
         {
-          tdclient: tdclient, // matches open hours
+          tdclient: this.context.tdclient, // matches open hours
           log: false
         });
       whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
@@ -294,7 +294,7 @@ class DirectivesChatbotPlug {
       // DEPRECATED
       const whenOpenDir = new DirWhenOpen(
         {
-          tdclient: tdclient,
+          tdclient: this.context.tdclient,
           checkOpen: false, // matches closed hours
           log: false
         });
@@ -307,7 +307,7 @@ class DirectivesChatbotPlug {
       // DEPRECATED
       const ifNoAgentsDir = new DirIfAvailableAgents(
         {
-          tdclient: tdclient,
+          tdclient: this.context.tdclient,
           checkAgents: true, // check available agents > 0
           log: false
         });
@@ -320,7 +320,7 @@ class DirectivesChatbotPlug {
       // DEPRECATED
       const ifNoAgentsDir = new DirIfAvailableAgents(
         {
-          tdclient: tdclient,
+          tdclient: this.context.tdclient,
           checkAgents: false, // check no available agents 
           log: false
         });
