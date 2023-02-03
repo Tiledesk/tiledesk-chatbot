@@ -98,7 +98,7 @@ class TiledeskChatbot {
           });
           // it only gets the locked_intent
           const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
-          if (this.log) {console.log("locked intent. got faqs", faq)}
+          if (this.log) {console.log("locked intent. got faqs", JSON.stringify(faq))}
           let reply;
           if (faq) {
             reply = await this.execIntent(faq, message, lead);//, bot);
