@@ -8,13 +8,14 @@ available on:
 ### 0.1.53
 - removed projectId from query MongodbBotsDataSource.getByExactMatch()
 - removed projectId from query MongodbIntentsMachine.decode()
+- added on DirCondition the stopOnConditionMet option
 
 ### 0.1.52
 - added tdChatbotName to request variables
 - removed _ from _td prefix in tiledeskVariables (i.e. _tdDepartmentId => tdDepartmentId)
 - added tdcache.hget()
 - fixed bug on DirAgentHandoff. this.dirId missed on intent-to-intent crashed the application. Getting tdDepartmentId from Redis
-- removed projectId from query getByIntentDisplayName(botId)
+- removed projectId from query MongodbBotsDataSource.getByIntentDisplayName()
 
 ### 0.1.51
 - only debug on pre

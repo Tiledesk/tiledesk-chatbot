@@ -24,10 +24,10 @@ class DirLockIntent {
     else if (directive.parameter && directive.parameter.trim() !== "") {
       const params = this.parseParams(directive.parameter);
       action = {
-        body: {
-          intentName: params.intentName // directive.parameter.trim()
+        // body: {
+        intentName: params.intentName // directive.parameter.trim()
           // variableName: params.variableName
-        }
+        // }
       }
     }
     else {
@@ -49,7 +49,8 @@ class DirLockIntent {
   }
 
   async go(action, callback) {
-    let intent_name = action.body.intentName;
+    // let intent_name = action.body.intentName;
+    let intent_name = action.intentName;
     // let variable_name = action.body.variableName;
     await DirLockIntent.lockIntent(this.tdcache, this.context.requestId, intent_name); //, variable_name);
     if (this.log) {console.log("Locked intent:", action.body.intentName);}

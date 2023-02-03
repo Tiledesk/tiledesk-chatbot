@@ -53,22 +53,35 @@ class DirIfOpenHours {
         return;
       }
       action = {
-        body: {
-          trueIntent: params.trueIntent,
-          falseIntent: params.falseIntent
-        }
+        trueIntent: params.trueIntent,
+        falseIntent: params.falseIntent
       }
     }
     else {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
   }
 
   go(action, callback) {
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    const stopOnConditionMet = action.stopOnConditionMet;
+    if (trueIntent && trueIntent.trim() === "") {
+      trueIntent = null;
+    }
+    if (falseIntent && falseIntent.trim() === "") {
+      falseIntent = null;
+    }
+    if (this.log) {console.log("condition action:", action);}
+    if (!trueIntent && !falseIntent) {
+      if (this.log) {console.log("Invalid condition, no intents specified");}
+      callback();
+      return;
+    }
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
@@ -76,11 +89,11 @@ class DirIfOpenHours {
         callback();
       }
       else if (result && result.isopen) {
-        if (action.body.trueIntent) {
-          let intentDirective = DirIntent.intentDirectiveFor(action.body.trueIntent);
+        if (trueIntent) {
+          let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
           if (this.log) {console.log("agents (openHours) => trueIntent");}
           this.intentDir.execute(intentDirective, () => {
-            callback();
+            callback(stopOnConditionMet);
           });
         }
         else {
@@ -88,11 +101,11 @@ class DirIfOpenHours {
           return;
         }
       }
-      else if (action.body.falseIntent) {
-        let intentDirective = DirIntent.intentDirectiveFor(action.body.falseIntent);
-        if (this.log) {console.log("!agents (openHours) => falseIntent", action.body.falseIntent);}
+      else if (falseIntent) {
+        let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+        if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
         this.intentDir.execute(intentDirective, () => {
-          callback();
+          callback(stopOnConditionMet);
         });
       }
       else {
@@ -100,17 +113,6 @@ class DirIfOpenHours {
       }
     });
   }
-
-  // intentDirectiveFor(intent) {
-  //   let intentDirective = {
-  //     action: {
-  //       body: {
-  //         intentName: intent
-  //       }
-  //     }
-  //   }
-  //   return intentDirective;
-  // }
 
   parseParams(directive_parameter) {
     let trueIntent = null;

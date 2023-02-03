@@ -65,7 +65,6 @@ class DirCondition {
     this.go(action, (stop) => {
       callback(stop);
     });
-    
   }
 
   async go(action, callback) {
@@ -133,7 +132,7 @@ class DirCondition {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
           console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
-          callback(true);
+          callback(stopOnConditionMet);
         });
       }
       else {
