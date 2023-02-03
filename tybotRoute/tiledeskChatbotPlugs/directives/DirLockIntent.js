@@ -53,7 +53,7 @@ class DirLockIntent {
     let intent_name = action.intentName;
     // let variable_name = action.body.variableName;
     await DirLockIntent.lockIntent(this.tdcache, this.context.requestId, intent_name); //, variable_name);
-    if (this.log) {console.log("Locked intent:", action.body.intentName);}
+    if (this.log) {console.log("Locked intent:", action.intentName);}
     if (callback) {
       callback();
     }
