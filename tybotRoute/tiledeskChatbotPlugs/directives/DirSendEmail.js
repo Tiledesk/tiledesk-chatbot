@@ -40,7 +40,6 @@ class DirSendEmail {
   execute(directive, callback) {
     let action;
     if (directive.action) {
-      console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
@@ -52,7 +51,7 @@ class DirSendEmail {
       }
     }
     else {
-      console.error("Incorrect directive:", directive);
+      console.error("Incorrect directive:", JSON.stringify(directive));
       callback();
       return;
     }
@@ -63,6 +62,7 @@ class DirSendEmail {
 
   async go(action, completion) {
       // let params = action.body;
+      if (this.log) {console.log("email action:", JSON.stringify(action));}
       if (action.subject && action.text && action.to) {
         try {
           let requestVariables = null;
@@ -73,11 +73,17 @@ class DirSendEmail {
             );
           }
           const filler = new Filler();
+          const filled_subject = filler.fill(action.subject, requestVariables);
+          const filled_text = filler.fill(action.text, requestVariables);
+          const filled_to = filler.fill(action.to, requestVariables);
           const message_echo = await this.tdclient.sendEmail({
-            subject: filler.fill(action.subject, requestVariables),
-            text: filler.fill(action.text, requestVariables),
-            to: filler.fill(action.to, requestVariables)
+            subject: filled_subject,
+            text: filled_text,
+            to: filled_to
           });
+          if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
+          if (this.log) {console.log("email sent. filled_text:", filled_text);}
+          if (this.log) {console.log("email sent. filled_to:", filled_to);}
           if (completion) {
             completion(null, message_echo);
           }
