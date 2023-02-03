@@ -19,7 +19,7 @@ class IntentForm {
       return null;
     }
     if (this.log) {
-      console.log("this.requestParameters:", this.requestParameters);
+      console.log("this.requestParameters:", JSON.stringify(this.requestParameters));
       console.log("this.requestParameters[" + paramKey + "]:", this.requestParameters[paramKey]);
     }
     return this.requestParameters[paramKey];
@@ -103,7 +103,7 @@ class IntentForm {
       // set the first field under the "await the response-value" state (=0)
       await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
       // now look for an already set value for this field in request parameters
-      if (this.log) {console.log("params", this.requestParameters);}
+      if (this.log) {console.log("IntentForm parameters", JSON.stringify(this.requestParameters));}
       if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
       const is_current_value = this.getParam(this.form.fields[current_field].name);
       if (is_current_value) {
@@ -187,7 +187,7 @@ class IntentForm {
         if (this.log) {console.log("Processing next field:", current_field)}
         await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
 
-        if (this.log) {console.log("params", this.requestParameters);}
+        // if (this.log) {console.log("params", this.requestParameters);}
         if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
         
         const is_current_value = this.getParam(this.form.fields[current_field].name);

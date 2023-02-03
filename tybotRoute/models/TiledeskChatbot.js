@@ -340,7 +340,7 @@ class TiledeskChatbot {
         if (this.log) {
           console.log("FORM end.", );
           console.log("unlocking intent for request:", this.requestId);
-          console.log("populate data on lead:", lead);
+          console.log("populate data on lead:", JSON.stringify(lead));
         }
         this.unlockIntent(this.requestId);
         if (lead) {
@@ -350,7 +350,7 @@ class TiledeskChatbot {
           if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
         }
         const all_parameters = await this.allParameters();
-        if (this.log) {console.log("We have all_parameters:", all_parameters)};
+        // if (this.log) {console.log("We have all_parameters:", all_parameters)};
         if (all_parameters && all_parameters["userFullname"]) {
           clientUpdateUserFullname = all_parameters["userFullname"];
         }

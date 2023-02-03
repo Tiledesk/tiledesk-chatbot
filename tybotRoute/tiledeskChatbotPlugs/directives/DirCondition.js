@@ -156,13 +156,14 @@ class DirCondition {
     }
   }
 
-  async evaluateCondition(_condition, variables) {
-    let condition = _condition.replace("$", "$data.");
+  async evaluateCondition(expression, variables) {
+    // let condition = _condition.replace("$", "$data.");
     if (this.log) {
-      console.log("Evaluating expression:", condition);
+      console.log("Evaluating expression:", expression);
       console.log("With variables:", variables);
     }
-    const result = new TiledeskExpression().evaluate(condition, variables)
+    // const result = new TiledeskExpression().evaluate(condition, variables)
+    const result = await new TiledeskExpression().evaluateExpression(expression, variables);
     if (this.log) {
       console.log("Expression result:", result);
     }

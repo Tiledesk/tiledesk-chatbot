@@ -91,7 +91,7 @@ class DirReply {
       }
     }
     // send!
-    if (this.log) {console.log("Message to extEndpoint:", message)};
+    if (this.log) {console.log("Reply:", JSON.stringify(message))};
     this.context.tdclient.sendSupportMessage(
       this.requestId,
       message,
@@ -99,7 +99,7 @@ class DirReply {
         if (err) {
           console.error("Error sending reply:", err.message);
         }
-        if (this.log) {console.log("Message sent.");}
+        if (this.log) {console.log("Reply message sent.");}
         callback();
     });
   }

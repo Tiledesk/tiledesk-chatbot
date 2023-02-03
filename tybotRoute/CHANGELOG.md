@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.54
+- bug fixing
+
 ### 0.1.53
 - removed projectId from query MongodbBotsDataSource.getByExactMatch()
 - removed projectId from query MongodbIntentsMachine.decode()
