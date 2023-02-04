@@ -203,7 +203,7 @@ async function botById(botId, projectId, tdcache) {
   let bot = null;
   let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
   try {
-    let _bot_as_string = tdcache.get(botCacheKey);
+    let _bot_as_string = await tdcache.get(botCacheKey);
     const value_type = typeof _bot_as_string;
     console.log("_bot_as_string found in chache:", _bot_as_string);
     console.log("value_type:", value_type);
@@ -215,8 +215,8 @@ async function botById(botId, projectId, tdcache) {
       console.log("bot not found, getting from datasource...");
       bot = await botsDS.getBotById(botId);
       console.log("bot found in datasource:", JSON.stringify(bot));
-      tdcache.set(botCacheKey, bot);
-      let bot_ = tdcache.get(botCacheKey);
+      await tdcache.set(botCacheKey, bot);
+      let bot_ = await tdcache.get(botCacheKey);
       console.log("_bot_as_string from cache debug:", bot_)
     }
   }
