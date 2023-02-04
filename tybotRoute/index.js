@@ -204,10 +204,12 @@ async function botById(botId, projectId, tdcache) {
   let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
   try {
     let _bot_as_string = tdcache.get(botCacheKey);
-
+    const value_type = typeof _bot_as_string;
     console.log("_bot_as_string found in chache:", bot);
+    console.log("value_type:", value_type);
     if (_bot_as_string) {
       bot = JSON.stringify(_bot_as_string);
+      console.log("got bot from cache:", bot);
     }
     else {
       console.log("bot not found, getting from datasource...");
