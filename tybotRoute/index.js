@@ -201,7 +201,8 @@ router.post('/ext/:botid', async (req, res) => {
 
 async function botById(botId, projectId, tdcache, botsDS) {
   let bot = null;
-  let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
+  // let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
+  let botCacheKey = "cacheman:cachegoose-cache:faq_kbs:id:" + botId;
   try {
     let _bot_as_string = await tdcache.get(botCacheKey);
     const value_type = typeof _bot_as_string;
@@ -215,7 +216,8 @@ async function botById(botId, projectId, tdcache, botsDS) {
       console.log("bot not found, getting from datasource...");
       bot = await botsDS.getBotById(botId);
       console.log("bot found in datasource:", JSON.stringify(bot));
-      await tdcache.set(botCacheKey, JSON.stringify(bot));
+      // await tdcache.set(botCacheKey, JSON.stringify(bot));
+      await tdcache.set(botCacheKey, bot);
       let bot_ = await tdcache.get(botCacheKey);
       console.log("_bot_as_string from cache debug:", bot_)
     }

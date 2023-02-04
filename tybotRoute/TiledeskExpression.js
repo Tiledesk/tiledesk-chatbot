@@ -6,29 +6,44 @@ class TiledeskExpression {
     // check valid variable names /^[_0-9a-zA-Z\.]$/
 
     static operators = {
+        "equalAsNumbers" : {
+            applyPattern: "Number($1) === Number($2)"
+        },
+        "equalAsStrings" : {
+            applyPattern: "String($1) === String($2)"
+        },
+        "notEqualAsNumbers" : {
+            applyPattern: "Number($1) !== Number($2)"
+        },
+        "notEqualAsStrings" : {
+            applyPattern: "String($1) !== String($2)"
+        },
         ">" : {
-            applyPattern: "Number(${1}) > Number(${2})"
+            applyPattern: "Number($1) > Number($2)"
         },
         ">=" : {
-            applyPattern: "Number(${1}) >= Number(${2})"
+            applyPattern: "Number($1) >= Number($2)"
         },
         "<" : {
-            applyPattern: "Number(${1}) < Number(${2})"
+            applyPattern: "Number($1) < Number($2)"
         },
         "&&": {
-            applyPattern: " && ${2}"
+            applyPattern: " && "
         },
         "||": {
-            applyPattern: " && ${2}"
+            applyPattern: " || "
         },
         "startsWith": {
-            applyPattern: "${1}.startsWith(${2})"
+            applyPattern: "$1.startsWith($2)"
         },
         "contains": {
             applyPattern: "?"
         },
         "endsWith": {
-            applyPattern: "?"
+            applyPattern: "$1.endsWith($2)"
+        },
+        "isEmpty": {
+            applyPattern: "$1 === \"\""
         },
         "matches": {
             applyPattern: "?"
