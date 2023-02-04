@@ -100,7 +100,7 @@ router.post('/ext/:botid', async (req, res) => {
   let bot = null;
   try {
     // bot = await botsDS.getBotById(botId);
-    bot = await botById(botId, projectId, tdcache);
+    bot = await botById(botId, projectId, tdcache, botsDS);
   }
   catch(error) {
     console.error("Error getting botId:", botId);
@@ -199,7 +199,7 @@ router.post('/ext/:botid', async (req, res) => {
   
 });
 
-async function botById(botId, projectId, tdcache) {
+async function botById(botId, projectId, tdcache, botsDS) {
   let bot = null;
   let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
   try {
