@@ -99,7 +99,8 @@ router.post('/ext/:botid', async (req, res) => {
   // get the bot metadata
   let bot = null;
   try {
-    bot = await botsDS.getBotById(botId);
+    // bot = await botsDS.getBotById(botId);
+    bot = await botById(botId, projectId, tdcache);
   }
   catch(error) {
     console.error("Error getting botId:", botId);
@@ -197,6 +198,29 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
 });
+
+async function botById(botId, projectId, tdcache) {
+  let bot = null;
+  let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
+  try {
+    let _bot_as_string = tdcache.get(botCacheKey);
+
+    console.log("b_bot_as_stringot found in chache:", bot);
+    if (_bot_as_string) {
+      bot = JSON.stringify(_bot_as_string);
+    }
+    else {
+      console.log("bot not found, getting from datasource...");
+      bot = await botsDS.getBotById(botId);
+      console.log("bot found in datasource:", JSON.stringify(bot));
+      tdcache.set(botCacheKey, bot);
+    }
+  }
+  catch(err) {
+    console.error("error getting bot by id:", err);
+  }
+  return bot;
+}
 
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context
