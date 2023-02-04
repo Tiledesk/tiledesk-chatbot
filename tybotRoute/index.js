@@ -216,8 +216,8 @@ async function botById(botId, projectId, tdcache, botsDS) {
       console.log("bot not found, getting from datasource...");
       bot = await botsDS.getBotById(botId);
       console.log("bot found in datasource:", JSON.stringify(bot));
-      // await tdcache.set(botCacheKey, JSON.stringify(bot));
-      await tdcache.set(botCacheKey, bot);
+      await tdcache.set(botCacheKey, JSON.stringify(bot));
+      // DEBUG CODE REMOVE
       let bot_ = await tdcache.get(botCacheKey);
       console.log("_bot_as_string from cache debug:", bot_)
     }
