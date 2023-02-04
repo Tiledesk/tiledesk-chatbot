@@ -209,8 +209,8 @@ async function botById(botId, projectId, tdcache, botsDS) {
     console.log("_bot_as_string found in chache:", _bot_as_string);
     console.log("value_type:", value_type);
     if (_bot_as_string) {
-      bot = JSON.stringify(_bot_as_string);
-      console.log("got bot from cache:", bot);
+      bot = JSON.parse(_bot_as_string);
+      console.log("got bot from cache:", JSON.stringify(bot));
     }
     else {
       console.log("bot not found, getting from datasource...");
