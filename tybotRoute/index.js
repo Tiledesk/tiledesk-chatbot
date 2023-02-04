@@ -205,7 +205,7 @@ async function botById(botId, projectId, tdcache) {
   try {
     let _bot_as_string = tdcache.get(botCacheKey);
 
-    console.log("b_bot_as_stringot found in chache:", bot);
+    console.log("_bot_as_string found in chache:", bot);
     if (_bot_as_string) {
       bot = JSON.stringify(_bot_as_string);
     }
@@ -214,6 +214,8 @@ async function botById(botId, projectId, tdcache) {
       bot = await botsDS.getBotById(botId);
       console.log("bot found in datasource:", JSON.stringify(bot));
       tdcache.set(botCacheKey, bot);
+      let bot_ = tdcache.get(botCacheKey);
+      console.log("_bot_as_string from cache debug:", bot_)
     }
   }
   catch(err) {
