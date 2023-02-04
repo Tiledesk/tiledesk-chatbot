@@ -205,7 +205,7 @@ async function botById(botId, projectId, tdcache) {
   try {
     let _bot_as_string = tdcache.get(botCacheKey);
     const value_type = typeof _bot_as_string;
-    console.log("_bot_as_string found in chache:", bot);
+    console.log("_bot_as_string found in chache:", _bot_as_string);
     console.log("value_type:", value_type);
     if (_bot_as_string) {
       bot = JSON.stringify(_bot_as_string);
