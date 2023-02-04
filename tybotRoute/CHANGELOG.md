@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.55
+- fixed bug on DirCondition $data. replace with regex
+
 ### 0.1.54
 - bug fixing
 

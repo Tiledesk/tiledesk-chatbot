@@ -80,6 +80,7 @@ router.get('/public/templates/:botid', (req, res) => {
           type: faq_kb.type,
           description: faq_kb.description,
           mainCategory: faq_kb.mainCategory,
+          attributes: faq_kb.attributes,
           intents: intents
         }
         return res.send(json);
