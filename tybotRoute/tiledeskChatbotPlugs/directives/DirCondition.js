@@ -68,10 +68,10 @@ class DirCondition {
   }
 
   async go(action, callback) {
-    // const condition = action.body.condition;
-    // const trueIntent = action.body.trueIntent;
-    // const falseIntent = action.body.falseIntent;
-    const condition = action.condition;
+    const scriptCondition = action.condition;
+    const jsonCondition = action.jsonCondition;
+    if (this.log) {console.log("scriptCondition:", scriptCondition);}
+    if (this.log) {console.log("jsonCondition:", JSON.stringify(jsonCondition));}
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let stopOnConditionMet = action.stopOnConditionMet;
@@ -87,32 +87,23 @@ class DirCondition {
       callback();
       return;
     }
-    if (condition === null || (condition !== null && condition.trim === "")) {
-      if (this.log) {console.log("Invalid condition, empty or null:", condition);}
+    if (scriptCondition === null || (scriptCondition !== null && scriptCondition.trim === "")) {
+      if (this.log) {console.log("Invalid scriptCondition, empty or null:", scriptCondition);}
+      callback();
+      return;
+    }
+    else if (jsonCondition === null || (jsonCondition !== null && jsonCondition.groups === null)) {
+      if (this.log) {console.log("Invalid jsonCondition, null or no groups:", JSON.stringify(jsonCondition));}
       callback();
       return;
     }
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent);
-      // trueIntentDirective = {
-      //   action: {
-      //     body: {
-      //       intentName: trueIntent
-      //     }
-      //   }
-      // }
     }
     let falseIntentDirective = null;
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent);
-      // falseIntentDirective = {
-      //   action: {
-      //     body: {
-      //       intentName: falseIntent
-      //     }
-      //   }
-      // }
     }
     let variables = null;
     if (this.context.tdcache) {
@@ -125,9 +116,17 @@ class DirCondition {
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
-    if (this.log) {console.log("condition:", condition);}
-    const result = await this.evaluateCondition(condition, variables);
-    if (this.log) {console.log("executed condition:", condition, "result:", result);}
+    let result;
+    if (scriptCondition) {
+      result = await this.evaluateCondition(scriptCondition, variables);
+    }
+    else if (jsonCondition) {
+      const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
+      console.log("full json condition expression:", expression);
+      result = new TiledeskExpression().evaluateStaticExpression(expression);
+    }
+    
+    if (this.log) {console.log("executed condition expression with result:", result);}
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
@@ -163,7 +162,7 @@ class DirCondition {
       console.log("With variables:", variables);
     }
     // const result = new TiledeskExpression().evaluate(condition, variables)
-    const result = await new TiledeskExpression().evaluateExpression(expression, variables);
+    const result = new TiledeskExpression().evaluateExpression(expression, variables);
     if (this.log) {
       console.log("Expression result:", result);
     }

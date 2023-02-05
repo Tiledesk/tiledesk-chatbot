@@ -185,31 +185,37 @@ class TiledeskExpression {
     static stringValueOperand(operand, variables) {
         // return operand;
         if (!operand) {
-            return "\"\"";
+            return TiledeskExpression.quotedString(""); //"\"\"";
         }
         else if (!variables) {
             console.log("NO VARS")
-            return "\"" + operand + "\"";
+            // return "\"" + JSON.stringify(operand) + "\"";
+            return TiledeskExpression.quotedString(operand);
         }
         else {
             console.log("vars!", variables)
             let _operand = operand.trim();
-            let operandAsString = "\"" + operand + "\"";
+            let operandAsString = TiledeskExpression.quotedString(operand); //"\"" + JSON.stringify(operand) + "\"";
             if (_operand.startsWith("$")) {
                 console.log("_operand with $", _operand);
                 let varName = _operand.replace(/\$/g, "");
                 console.log("varName:", varName);
                 let value = variables[varName];
                 if (value) {
-                    operandAsString = '"' + value + '"';
+                    operandAsString = TiledeskExpression.quotedString(value); //'"' + JSON.stringify(value) + '"';
                 }
                 return operandAsString;
             }
             else {
-                return "\"" + operand + "\"";
+                // return "\"" + JSON.stringify(operand) + "\"";
+                return TiledeskExpression.quotedString(operand);
             }
         }
         
+    }
+
+    static quotedString(s) {
+        return JSON.stringify(s);
     }
 
 }

@@ -43,10 +43,8 @@ class DirAssignFromFunction {
         params = this.parseParams(directive.parameter);
       }
       action = {
-        // body: {
           functionName: params.functionName,
           assignTo: params.assignTo
-        // }
       }
     }
     console.log("execute assign");
