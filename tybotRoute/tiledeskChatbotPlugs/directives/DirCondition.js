@@ -53,7 +53,7 @@ class DirCondition {
         return;
       }
       action = {
-        condition: params.condition,
+        scriptCondition: params.condition,
         trueIntent: params.trueIntent,
         falseIntent: params.falseIntent
       }
@@ -65,13 +65,15 @@ class DirCondition {
     this.go(action, (stop) => {
       callback(stop);
     });
+    
   }
 
   async go(action, callback) {
-    const scriptCondition = action.condition;
+    const scriptCondition = action.scriptCondition;
     const jsonCondition = action.jsonCondition;
     if (this.log) {console.log("scriptCondition:", scriptCondition);}
     if (this.log) {console.log("jsonCondition:", JSON.stringify(jsonCondition));}
+    // const condition = action.condition;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let stopOnConditionMet = action.stopOnConditionMet;
@@ -87,13 +89,18 @@ class DirCondition {
       callback();
       return;
     }
-    if (scriptCondition === null || (scriptCondition !== null && scriptCondition.trim === "")) {
-      if (this.log) {console.log("Invalid scriptCondition, empty or null:", scriptCondition);}
+    if (scriptCondition === null && jsonCondition === null) {
+      if (this.log) {console.log("Invalid condition, scriptCondition & jsonCondition null");}
       callback();
       return;
     }
-    else if (jsonCondition === null || (jsonCondition !== null && jsonCondition.groups === null)) {
-      if (this.log) {console.log("Invalid jsonCondition, null or no groups:", JSON.stringify(jsonCondition));}
+    if (scriptCondition !== null && scriptCondition.trim === "") {
+      if (this.log) {console.log("Invalid condition, scriptCondition is empty");}
+      callback();
+      return;
+    }
+    else if (jsonCondition && jsonCondition.groups === null) {
+      if (this.log) {console.log("Invalid jsonCondition, no groups:", JSON.stringify(jsonCondition));}
       callback();
       return;
     }
@@ -116,17 +123,19 @@ class DirCondition {
     else {
       console.error("(DirCondition) No this.context.tdcache");
     }
+    if (this.log) {console.log("condition:", scriptCondition);}
+    // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
     if (scriptCondition) {
-      result = await this.evaluateCondition(scriptCondition, variables);
+      // result = this.evaluateCondition(scriptCondition, variables);
+      result = new TiledeskExpression().evaluateExpression(scriptCondition, variables)
     }
     else if (jsonCondition) {
       const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
       console.log("full json condition expression:", expression);
       result = new TiledeskExpression().evaluateStaticExpression(expression);
     }
-    
-    if (this.log) {console.log("executed condition expression with result:", result);}
+    if (this.log) {console.log("executed condition:", scriptCondition, "result:", result);}
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
@@ -155,19 +164,18 @@ class DirCondition {
     }
   }
 
-  async evaluateCondition(expression, variables) {
-    // let condition = _condition.replace("$", "$data.");
-    if (this.log) {
-      console.log("Evaluating expression:", expression);
-      console.log("With variables:", variables);
-    }
-    // const result = new TiledeskExpression().evaluate(condition, variables)
-    const result = new TiledeskExpression().evaluateExpression(expression, variables);
-    if (this.log) {
-      console.log("Expression result:", result);
-    }
-    return result;
-  }
+  // async evaluateCondition(_condition, variables) {
+  //   let condition = _condition.replace("$", "$data.");
+  //   if (this.log) {
+  //     console.log("Evaluating expression:", condition);
+  //     console.log("With variables:", variables);
+  //   }
+  //   const result = new TiledeskExpression().evaluate(condition, variables)
+  //   if (this.log) {
+  //     console.log("Expression result:", result);
+  //   }
+  //   return result;
+  // }
 
   parseParams(directive_parameter) {
     let condition = null;
