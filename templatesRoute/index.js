@@ -97,6 +97,38 @@ router.get('/public/templates/:botid', (req, res) => {
   })
 });
 
+router.get('/public/templates/windows/:botid', (req, res) => {
+  let id_faq_kb = req.params.botid;
+  Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
+    console.log('FAQ-KB: ', faq_kb);
+    if (err) {
+      console.error('GET FAQ-KB ERROR ', err)
+      return res.status(500).send({ success: false, msg: 'Error getting bot.' });
+    }
+    else if (!faq_kb) {
+      return res.status(404).send({ success: false, msg: 'Not found.' });
+    }
+    else if (faq_kb["public"]) {
+      let json = {
+        language: faq_kb.language,
+        name: faq_kb.name,
+        type: faq_kb.type,
+        description: faq_kb.description,
+        tags: faq_kb.tags,
+        bigImage: faq_kb.bigImage,
+        mainCategory: faq_kb.mainCategory,
+        attributes: faq_kb.attributes,
+        templateFeatures: faq_kb.templateFeatures
+      }
+      return res.send(json);
+    }
+    else {
+      console.log("private chatbot");
+      res.status(403).send({success: false, message: "Forbidden"});
+    }
+  })
+});
+
 // function publicBotByCategory(bots, category) {
 //   if (!bots || bots.length == 0) {
 //     console.error("Error: Bots are empty. Can't find by category");
