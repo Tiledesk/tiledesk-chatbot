@@ -58,6 +58,10 @@ var Faq_kbSchema = new Schema({
     type: String,
     required: false
   },
+  tags: {
+    type: Array,
+    required: false
+  },
   attributes: {
     type: Object,
   },
