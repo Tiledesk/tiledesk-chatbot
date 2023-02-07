@@ -101,6 +101,7 @@ router.get('/public/templates/windows/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
     console.log('FAQ-KB: ', faq_kb);
+    console.log('faq_kb.tags: ', faq_kb.tags);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
