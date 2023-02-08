@@ -76,7 +76,13 @@ var Faq_kbSchema = new Schema({
   createdBy: {
     type: String,
     required: true
-  }
+  },
+  score: {
+    type: Number,
+    required: false,
+    index: true,
+    default: 0
+  },
 },{
   timestamps: true
 }
