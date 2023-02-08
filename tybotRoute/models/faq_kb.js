@@ -88,6 +88,9 @@ var Faq_kbSchema = new Schema({
 }
 );
 
+Faq_kbSchema.index({name: 'text', description: 'text', "tags": 'text'},  
+ {"name":"faqkb_fulltext","default_language": "none","language_override": "language"}); // schema level
+
 var faq_kb = mongoose.model('faq_kb', Faq_kbSchema);
 
 module.exports = faq_kb

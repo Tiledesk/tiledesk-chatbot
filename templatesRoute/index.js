@@ -9,9 +9,33 @@ router.get('/', (req, res) => {
   res.send('Hello Chatbot Templates!');
 });
 
-router.get('/public/community', async (req, res) => {
+// router.get('/public/community', async (req, res) => {
+//   let bots = [];
+//   let query = {public: true, certified: false};
+//   try {
+//     bots = await faqKbService.getAll(query);
+//     res.send(bots);
+//   }
+//   catch (err) {
+//     console.error('Get Bots Error ', err);
+//     return res.status(500).send({ success: false, msg: 'Error getting bots.' });
+//   }
+// });
+
+router.get('/public/community', async (req, res) => { // ?text=...
+  let text = req.query.text;
   let bots = [];
-  let query = {public: true, certified: false};
+  let query = {public: true, certified: false, "trashed": { $in: [null, false] }};
+  // var query = { "id_project": req.projectid, "trashed": { $in: [null, false] } };
+  let search_obj = {"$search": text};
+
+  if (text) {    
+    // if (req.query.language) {
+    //   search_obj["$language"] = req.query.language;
+    // }
+    query.$text = search_obj;    
+  }
+
   try {
     bots = await faqKbService.getAll(query);
     res.send(bots);
