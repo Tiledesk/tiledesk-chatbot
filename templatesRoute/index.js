@@ -33,11 +33,13 @@ router.get('/public/community', async (req, res) => { // ?text=...
     // if (req.query.language) {
     //   search_obj["$language"] = req.query.language;
     // }
-    query.$text = search_obj;    
+    query.$text = search_obj; 
+    console.log("Using query:", query)   
   }
 
   try {
     bots = await faqKbService.getAll(query);
+    console.log("bots found:", bots.length);
     res.send(bots);
   }
   catch (err) {
