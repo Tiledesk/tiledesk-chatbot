@@ -119,7 +119,8 @@ router.get('/public/templates/windows/:botid', (req, res) => {
         bigImage: faq_kb.bigImage,
         mainCategory: faq_kb.mainCategory,
         attributes: faq_kb.attributes,
-        templateFeatures: faq_kb.templateFeatures
+        templateFeatures: faq_kb.templateFeatures,
+        createdBy: faq_kb.createdBy
       }
       return res.send(json);
     }
