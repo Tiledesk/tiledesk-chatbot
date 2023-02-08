@@ -120,7 +120,9 @@ router.get('/public/templates/windows/:botid', (req, res) => {
         mainCategory: faq_kb.mainCategory,
         attributes: faq_kb.attributes,
         templateFeatures: faq_kb.templateFeatures,
-        createdBy: faq_kb.createdBy
+        createdBy: faq_kb.createdBy,
+        createdAt: faq_kb.createdAt,
+        updatedAt: faq_kb.updatedAt
       }
       return res.send(json);
     }
