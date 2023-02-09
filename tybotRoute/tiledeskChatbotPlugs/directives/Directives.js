@@ -30,6 +30,7 @@ class Directives {
   static IF_NOT_OPEN_HOURS = "ifnotopenhours"; // DEPRECATED
   static FUNCTION_VALUE = "functionvalue";
   static CONDITION = "condition";
+  static CONDITION = "jsonCondition";
   static ASSIGN = "assign";
   static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO

@@ -84,10 +84,18 @@ class MongodbBotsDataSource {
    * @param {String} intentName
    * @returns a single Intent
    */
-  async getByIntentDisplayName(botId, name) {
+  async getByIntentDisplayName(botId, key) {
     return new Promise((resolve, reject) => {
       // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
-      var query = { "id_faq_kb": botId, "intent_display_name": name };
+      let query = null;
+      if (key.startsWith("#")) {
+        let intent_id = key.substring(message.text.indexOf("#") + 1);
+        query = { "id_faq_kb": botId, "intent_id": intent_id };
+      }
+      else {
+        query = { "id_faq_kb": botId, "intent_display_name": key };
+      }
+      
       if (this.log) {console.debug('query', query);}
       Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {
