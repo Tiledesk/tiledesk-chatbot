@@ -118,6 +118,7 @@ class MongodbBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
+    tdcache = null;
     if (tdcache) {
       let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + "faq:id:" + key;
       console.log("Looking in cache for:", faqCacheKey);
