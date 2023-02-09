@@ -100,7 +100,8 @@ router.post('/ext/:botid', async (req, res) => {
   let bot = null;
   try {
     // bot = await botsDS.getBotById(botId);
-    bot = await botById(botId, projectId, tdcache, botsDS);
+    // bot = await botById(botId, projectId, tdcache, botsDS);
+    bot = botsDS.getBotByIdCache(botId, tdcache);
   }
   catch(error) {
     console.error("Error getting botId:", botId);
@@ -199,34 +200,34 @@ router.post('/ext/:botid', async (req, res) => {
   
 });
 
-async function botById(botId, projectId, tdcache, botsDS) {
-  let bot = null;
-  // let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
-  let botCacheKey = "cacheman:cachegoose-cache:faq_kbs:id:" + botId;
-  try {
-    let _bot_as_string = await tdcache.get(botCacheKey);
-    const value_type = typeof _bot_as_string;
-    console.log("_bot_as_string found in chache:", _bot_as_string);
-    console.log("value_type:", value_type);
-    if (_bot_as_string) {
-      bot = JSON.parse(_bot_as_string);
-      console.log("got bot from cache:", JSON.stringify(bot));
-    }
-    else {
-      console.log("bot not found, getting from datasource...");
-      bot = await botsDS.getBotById(botId);
-      console.log("bot found in datasource:", JSON.stringify(bot));
-      await tdcache.set(botCacheKey, JSON.stringify(bot));
-      // DEBUG CODE REMOVE
-      let bot_ = await tdcache.get(botCacheKey);
-      console.log("_bot_as_string from cache debug:", bot_)
-    }
-  }
-  catch(err) {
-    console.error("error getting bot by id:", err);
-  }
-  return bot;
-}
+// async function botById(botId, projectId, tdcache, botsDS) {
+//   let bot = null;
+//   // let botCacheKey = "cacheman:cachegoose-cache:" + projectId + ":faq_kbs:id:" + botId;
+//   let botCacheKey = "cacheman:cachegoose-cache:faq_kbs:id:" + botId;
+//   try {
+//     let _bot_as_string = await tdcache.get(botCacheKey);
+//     const value_type = typeof _bot_as_string;
+//     console.log("_bot_as_string found in chache:", _bot_as_string);
+//     console.log("value_type:", value_type);
+//     if (_bot_as_string) {
+//       bot = JSON.parse(_bot_as_string);
+//       console.log("got bot from cache:", JSON.stringify(bot));
+//     }
+//     else {
+//       console.log("bot not found, getting from datasource...");
+//       bot = await botsDS.getBotById(botId);
+//       console.log("bot found in datasource:", JSON.stringify(bot));
+//       await tdcache.set(botCacheKey, JSON.stringify(bot));
+//       // DEBUG CODE REMOVE
+//       let bot_ = await tdcache.get(botCacheKey);
+//       console.log("_bot_as_string from cache debug:", bot_)
+//     }
+//   }
+//   catch(err) {
+//     console.error("error getting bot by id:", err);
+//   }
+//   return bot;
+// }
 
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context

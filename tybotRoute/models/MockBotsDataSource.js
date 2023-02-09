@@ -22,6 +22,10 @@ class MockBotsDataSource {
     }
     return null;
   }
+  
+  async getBotByIdCache(botId, tdcache) {
+    return this.getBotById(botId);
+  }
 
   /**
    * 
