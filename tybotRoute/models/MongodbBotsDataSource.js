@@ -89,12 +89,12 @@ class MongodbBotsDataSource {
       // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
       let query = null;
       if (key.startsWith("#")) {
-        let intent_id = key.substring(message.text.indexOf("#") + 1);
-        console.log("Getting by intent_id:", intent_id );
+        let intent_id = key.substring(key.indexOf("#") + 1);
+        console.log("Query by intent_id:", intent_id );
         query = { "id_faq_kb": botId, "intent_id": intent_id };
       }
       else {
-        console.log("Getting by intent name:", key );
+        console.log("Query by intent name:", key );
         query = { "id_faq_kb": botId, "intent_display_name": key };
       }
       
