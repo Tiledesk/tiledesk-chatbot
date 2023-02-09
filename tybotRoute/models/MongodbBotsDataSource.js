@@ -120,6 +120,7 @@ class MongodbBotsDataSource {
     let faq = null;
     if (tdcache) {
       let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + "faq:id:" + key;
+      console.log("Looking in cache for:", faqCacheKey);
       try {
         let _faq_as_string = await tdcache.get(faqCacheKey);
         const value_type = typeof _faq_as_string;
