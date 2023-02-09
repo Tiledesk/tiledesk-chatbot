@@ -90,9 +90,11 @@ class MongodbBotsDataSource {
       let query = null;
       if (key.startsWith("#")) {
         let intent_id = key.substring(message.text.indexOf("#") + 1);
+        console.log("Getting by intent_id:", intent_id );
         query = { "id_faq_kb": botId, "intent_id": intent_id };
       }
       else {
+        console.log("Getting by intent name:", key );
         query = { "id_faq_kb": botId, "intent_display_name": key };
       }
       
@@ -101,7 +103,7 @@ class MongodbBotsDataSource {
         if (err) {
           return reject(err);
         }
-        if (this.log) {console.debug("getByIntentDisplayName faqs", faqs);}
+        if (this.log) {console.debug("getByIntentDisplayName faqs", JSON.stringify(faqs));}
         if (faqs && faqs.length > 0) {
           const intent = faqs[0];
           return resolve(intent);
