@@ -25,7 +25,7 @@ class MongodbBotsDataSource {
       try {
         let _bot_as_string = await tdcache.get(botCacheKey);
         const value_type = typeof _bot_as_string;
-        console.log("_bot_as_string found in chache:", _bot_as_string);
+        console.log("__bot_as_string found in chache:", _bot_as_string);
         console.log("value_type:", value_type);
         if (_bot_as_string) {
           bot = JSON.parse(_bot_as_string);
