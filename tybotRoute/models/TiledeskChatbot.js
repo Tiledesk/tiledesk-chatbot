@@ -97,7 +97,8 @@ class TiledeskChatbot {
             log: false
           });
           // it only gets the locked_intent
-          const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
+          // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
+          const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
           if (this.log) {console.log("locked intent. got faqs", JSON.stringify(faq))}
           let reply;
           if (faq) {
@@ -156,7 +157,8 @@ class TiledeskChatbot {
           }
         }
         else {
-          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent.name);
+          // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent.name);
+          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
           if (faq) {
             if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
@@ -217,7 +219,8 @@ class TiledeskChatbot {
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
         if (intents && intents.length > 0) {
-          let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
+          // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
+          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
           try {
             reply = await this.execIntent(faq, message, lead);//, bot);
@@ -232,10 +235,8 @@ class TiledeskChatbot {
         }
         else {
           // fallback
-          let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
-          // console.log("In mongodb botId:", this.botId);
-          // console.log("getByIntentDisplayName(this.botId, 'defaultFallback'):", this.botId, "defaultFallback");
-          // console.log("fallbackIntent found!", JSON.stringify(fallbackIntent));
+          // let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
+          let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
           if (!fallbackIntent) {
             console.log("No defaultFallback found!");
             resolve(null);

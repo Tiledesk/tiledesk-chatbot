@@ -47,7 +47,7 @@ class MongodbBotsDataSource {
     }
     else {
       console.log("no chache. getting bot from datasource...");
-      bot = await botsDS.getBotById(botId);
+      bot = await this.getBotById(botId);
       console.log("bot found in datasource:", JSON.stringify(bot));
     }
     return bot;
@@ -114,6 +114,41 @@ class MongodbBotsDataSource {
         }
       });
     });
+  }
+
+  async getByIntentDisplayNameCache(botId, key, tdcache) {
+    let faq = null;
+    if (tdcache) {
+      let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + "faq:id:" + key;
+      try {
+        let _faq_as_string = await tdcache.get(faqCacheKey);
+        const value_type = typeof _faq_as_string;
+        console.log("_faq_as_string found in chache:", _faq_as_string);
+        console.log("value_type:", value_type);
+        if (_faq_as_string) {
+          faq = JSON.parse(_faq_as_string);
+          console.log("got faq from cache:", JSON.stringify(faq));
+        }
+        else {
+          console.log("faq not found, getting from datasource...");
+          faq = await this.getByIntentDisplayName(botId, key);
+          console.log("faq found in datasource:", JSON.stringify(faq));
+          await tdcache.set(faqCacheKey, JSON.stringify(faq));
+          // DEBUG CODE REMOVE
+          let faq_ = await tdcache.get(faqCacheKey);
+          console.log("_faq_as_string from cache debug:", faq_)
+        }
+      }
+      catch(err) {
+        console.error("error getting faq by id:", err);
+      }
+    }
+    else {
+      console.log("no chache. getting faq from datasource...");
+      faq = await this.getByIntentDisplayName(botId, key);
+      console.log("faq found in datasource:", JSON.stringify(faq));
+    }
+    return faq;
   }
 
   // query = { "id_project": message.id_project, "id_faq_kb": faq_kb._id,  $or:[{"intent_id": action}, {"intent_display_name": action}]};
