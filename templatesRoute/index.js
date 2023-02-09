@@ -50,7 +50,7 @@ router.get('/public/community', async (req, res) => { // ?text=...
 
 router.get('/public/templates', async (req, res) => {
   let bots = [];
-  let query = {public: true, certified: true};
+  let query = {public: true, certified: true, "trashed": { $in: [null, false] }};
   try {
     bots = await faqKbService.getAll(query);
     res.send(bots);
