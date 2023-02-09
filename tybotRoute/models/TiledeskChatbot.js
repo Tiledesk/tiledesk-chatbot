@@ -176,7 +176,7 @@ class TiledeskChatbot {
           else {
             if (this.log) {console.log("Intent not found:", explicit_intent_name);}
             reply = {
-              "text": "Intent not found: *" + explicit_intent_name + "*"
+              "text": "Intent not found: " + explicit_intent_name
             }
           }
         }

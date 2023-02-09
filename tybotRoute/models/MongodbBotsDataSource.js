@@ -88,6 +88,7 @@ class MongodbBotsDataSource {
     return new Promise((resolve, reject) => {
       // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
       let query = null;
+      key = key.trim();
       if (key.startsWith("#")) {
         let intent_id = key.substring(key.indexOf("#") + 1);
         console.log("Query by intent_id:", intent_id );
