@@ -118,9 +118,11 @@ class MongodbBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
-    tdcache = null;
+    console.log("botID:", botId);
+    console.log("key:", key);
     if (tdcache) {
-      let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + "faq:id:" + key;
+      console.log("in tdchace");
+      let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + ":faq:id:" + key;
       console.log("Looking in cache for:", faqCacheKey);
       try {
         let _faq_as_string = await tdcache.get(faqCacheKey);
@@ -134,7 +136,7 @@ class MongodbBotsDataSource {
         else {
           console.log("faq not found, getting from datasource...");
           faq = await this.getByIntentDisplayName(botId, key);
-          console.log("faq found in datasource:", JSON.stringify(faq));
+          console.log(".faq found in datasource:", JSON.stringify(faq));
           await tdcache.set(faqCacheKey, JSON.stringify(faq));
           // DEBUG CODE REMOVE
           let faq_ = await tdcache.get(faqCacheKey);

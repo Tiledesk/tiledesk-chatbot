@@ -33,12 +33,12 @@ describe('Conversation for anomaly detection test', async () => {
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-          log: process.env.API_LOG
+          log: true
         }, () => {
           console.log("ACTIONS Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port ', port);
+            console.log('Tilebot connector listening on port... ', port);
             resolve();
           });
         });
@@ -52,13 +52,13 @@ describe('Conversation for anomaly detection test', async () => {
   });
 
   it('/anomaly', (done) => {
-    // console.log("/anomaly story...");
+    console.log("/anomaly story...");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.error !== null);
@@ -71,7 +71,7 @@ describe('Conversation for anomaly detection test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "_id": message_id,
@@ -89,7 +89,7 @@ describe('Conversation for anomaly detection test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        console.log("Message sent:\n", request);
       });
     });
 

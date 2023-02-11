@@ -41,6 +41,7 @@ class DirCondition {
   }
 
   execute(directive, callback) {
+    console.log("Condition...")
     let action;
     if (directive.action) {
       action = directive.action

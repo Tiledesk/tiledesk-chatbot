@@ -65,7 +65,7 @@ class DirIntent {
   go(action, callback) {
     // console.log("action intent:", action);
     const intentName = action.intentName;
-    const intentId = action.intentId;
+    // const intentId = action.intentId;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
@@ -73,9 +73,9 @@ class DirIntent {
     if (intentName) {
       intent_command = "/" + intentName;
     }
-    else if (intentId) {
-      intent_command = "/#" + intentId;
-    }
+    // else if (intentId) {
+    //   intent_command = "/#" + intentId;
+    // }
     else {
       console.error("Invalid intent");
       callback();
@@ -121,9 +121,7 @@ class DirIntent {
   static intentDirectiveFor(intent) {
     let intentDirective = {
       action: {
-        // body: {
-          intentName: intent
-        // }
+        intentName: intent
       }
     }
     return intentDirective;

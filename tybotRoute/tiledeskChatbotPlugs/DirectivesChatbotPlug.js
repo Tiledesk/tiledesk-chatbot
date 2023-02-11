@@ -177,15 +177,19 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    // console.log("process(directive):", JSON.stringify(directive));
+    console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     if (directive) {
-      // if (context.log) { console.log("process(directive):", JSON.stringify(directive));}
+      if (context.log) {
+        console.log("..process(directive):", JSON.stringify(directive));
+        console.log("directive['name']:", directive["name"]);
+      }
     }
     let directive_name = null;
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
     }
+    
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
       this.theend();
@@ -256,7 +260,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONDITION) {
-      // console.log("...DirCondition");
+      console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
         console.log("stop on condition?", stop);
         if (stop == true) {

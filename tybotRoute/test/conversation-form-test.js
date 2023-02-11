@@ -690,7 +690,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/assign_params{...}', (done) => {
-    // console.log("/assign_params...");
+    console.log("/assign_params...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -743,7 +743,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/assign_params{...} with multi-line JSON', (done) => {
-    // console.log("/assign_params...");
+    console.log("/assign_params{...} with multi-line JSON");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -799,7 +799,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-    // console.log("/if_you_live_IT (TRUE)...");
+    console.log("/if_you_live_IT (TRUE)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());

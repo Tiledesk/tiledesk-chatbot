@@ -43,9 +43,9 @@ class TiledeskChatbot {
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
       // get bot info
-      if (this.log) {
-        console.log("replyToMessage():", JSON.stringify(message));
-      }
+      // if (this.log) {
+      //   console.log("replyToMessage():", JSON.stringify(message));
+      // }
       let lead = null;
       if (message.request) {
         this.request = message.request;
@@ -157,10 +157,27 @@ class TiledeskChatbot {
           }
         }
         else {
+          if (this.log) {console.log("processing intent:", explicit_intent_name);}
           // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent.name);
+          if (this.log) {
+            console.log("intent this.botId:", this.botId);
+            console.log("intent intent.name:", intent.name);
+            if (this.tdcache) {
+              console.log("intent this.tdcache ok");
+            }
+            else {
+              console.log("no intent this.tdcache");
+            }
+          }
+          console.log("botsDataSource...")
+          console.log("botsDataSource:", this.botsDataSource)
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
+          console.log("botsDataSource..faq", faq)
           if (faq) {
-            if (this.log) {console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
+            console.log("botsDataSource..faq2", this.log)
+            if (this.log) {
+              console.log("botsDataSource..faq3")
+              console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
               if (intent.parameters) {
                 for (const [key, value] of Object.entries(intent.parameters)) {

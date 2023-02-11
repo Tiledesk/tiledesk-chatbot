@@ -111,7 +111,7 @@ class IntentForm {
         return await this.getMessage(is_current_value);
       }
       if (this.log) {console.log("Form asking fist value. No 'is_current_value' for first form field", is_current_value);}
-      if (this.log) {console.log("INTENT_FORM:", this.form);}
+      // if (this.log) {console.log("INTENT_FORM:", this.form);}
       if (this.log) {console.log("CURRENT FIELD:", current_field);}
       let message = {
         text: this.form.fields[current_field].label
