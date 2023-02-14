@@ -4,7 +4,7 @@ const { TiledeskVarSplitter } = require("../tiledeskChatbotPlugs/TiledeskVarSpli
 describe('split vars', function() {
   
   it('split multiple vars', async () => {
-    const str = 'Andrea ${nome} Sponziello ${city}';
+    const str = 'Nome ${nome} Citta: ${city}';
     const splits = new TiledeskVarSplitter().getSplits(str);
     // console.log("splits:", splits);
     assert(splits != null)
@@ -53,7 +53,7 @@ describe('split vars', function() {
   it('split multiple tags with the same name', async () => {
     const str3 = '${myname}${myname}${myname}';
     const splits3 = new TiledeskVarSplitter().getSplits(str3);
-    console.log("splits3:", splits3);
+    // console.log("splits3:", splits3);
     assert(splits3 != null)
     assert(splits3.length == 7);
     assert(splits3[0].type === "text");
