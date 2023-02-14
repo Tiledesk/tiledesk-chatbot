@@ -169,14 +169,9 @@ class TiledeskChatbot {
               console.log("no intent this.tdcache");
             }
           }
-          console.log("botsDataSource...")
-          console.log("botsDataSource:", this.botsDataSource)
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
-          console.log("botsDataSource..faq", faq)
           if (faq) {
-            console.log("botsDataSource..faq2", this.log)
             if (this.log) {
-              console.log("botsDataSource..faq3")
               console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
               if (intent.parameters) {
@@ -417,7 +412,7 @@ class TiledeskChatbot {
       };
     }
     else {
-      console.error("Invalid intent. No actions or answer.", JSON.stringify(answerObj) );
+      console.error("Intent with no actions or answer.", JSON.stringify(answerObj) );
       return null;
     }
     
