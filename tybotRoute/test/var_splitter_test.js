@@ -6,7 +6,7 @@ describe('split vars', function() {
   it('split multiple vars', async () => {
     const str = 'Nome ${nome} Citta: ${city}';
     const splits = new TiledeskVarSplitter().getSplits(str);
-    // console.log("splits:", splits);
+    console.log("splits:", splits);
     assert(splits != null)
     assert(splits.length == 5);
     assert(splits[0].type === "text");

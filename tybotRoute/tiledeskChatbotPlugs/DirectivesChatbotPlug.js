@@ -20,14 +20,16 @@ const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
 const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours } = require('./directives/DirIfOpenHours');
-// const { DirIfNotOpenHours } = require('./directives/DirIfNotOpenHours');
 const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
 const { DirAssign } = require('./directives/DirAssign');
+const { DirSetAttribute } = require('./directives/DirSetAttribute');
+const { DirWebRequest } = require('./directives/DirWebRequest');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
+const { DirSetAttribute } = require('./directives/DirSetAttribute');
 
 class DirectivesChatbotPlug {
 
@@ -282,6 +284,13 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.SET_ATTRIBUTE) {
+      console.log("...DirSetAttribute");
+      new DirSetAttribute(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.WHEN_OPEN) {
       // DEPRECATED
       const whenOpenDir = new DirWhenOpen(
@@ -416,6 +425,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.SEND_EMAIL) {
       console.log("...DirSendEmail");
       new DirSendEmail(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.WEB_REQUEST) {
+      console.log("...DirWebRequest");
+      new DirWebRequest(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

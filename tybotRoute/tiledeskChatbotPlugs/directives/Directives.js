@@ -24,6 +24,7 @@ class Directives {
   static UNLOCK_INTENT = "unlockintent";
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
   static SEND_EMAIL = "email";
+  static WEB_REQUEST = "webrequest";
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_ONLINE_AGENTS = "ifonlineagents";
@@ -32,6 +33,7 @@ class Directives {
   static CONDITION = "condition";
   static JSON_CONDITION = "jsonCondition";
   static ASSIGN = "assign";
+  static SET_ATTRIBUTE = "setattribute";
   static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
   static REPLY = 'reply';
