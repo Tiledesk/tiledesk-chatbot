@@ -161,4 +161,4 @@ class DirWebRequest {
   }
 }
 
-module.exports = { DirSendEmail };
+module.exports = { DirWebRequest };
