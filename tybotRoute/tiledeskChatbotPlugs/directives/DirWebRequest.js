@@ -32,7 +32,6 @@ class DirWebRequest {
 
   async go(action, callback) {
     if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
-
     let requestVariables = null;
     if (this.tdcache) {
       requestVariables = 
@@ -52,7 +51,7 @@ class DirWebRequest {
       jsonBody = filler.fill(action.jsonBody, requestVariables);
     }
     
-    if (this.log) {console.log("sendSupportMessageExt URL", url);}
+    if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
       url: url,
       headers: action.headers,
@@ -60,19 +59,36 @@ class DirWebRequest {
       method: action.method
     };
     this.myrequest(
-      HTTPREQUEST,
-      function(err, resbody) {
-        //console.log("sendSupportMessageExt resbody:", resbody);
+      HTTPREQUEST, async (err, resbody) => {
+        if (this.log) {console.log("webRequest resbody:", resbody);}
         if (err) {
-          //console.error("sendSupportMessageExt error:", err)
+          if (this.log) {console.error("webRequest error:", err);}
           if (callback) {
             callback();
           }
         }
-        else {
-          if (callback) {
-            callback();
+        else if (callback) {
+          if (action.assignTo && this.context.tdcache) {
+            if (this.log) {console.log("(webRequest) this.requestId:", this.context.requestId);}
+            let attributes =
+              await TiledeskChatbot.allParametersStatic(
+                this.context.tdcache, this.context.requestId);
+            // filling
+            let attributeValue;
+            const filler = new Filler();
+            attributeValue = filler.fill(expression, attributes);
+            if (this.log) {console.log("(webRequest) Attributes:", JSON.stringify(attributes));}
+            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignTo, attributeValue);
+            if (this.log) {
+              console.log("(webRequest) Assigned:", assignTo, "=", attributeValue);
+              const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+              for (const [key, value] of Object.entries(all_parameters)) {
+                const value_type = typeof value;
+                if (this.log) {console.log("(webRequest) request parameter:", key, "value:", value, "type:", value_type)}
+              }
+            }
           }
+          callback();
         }
       }, this.log
     );

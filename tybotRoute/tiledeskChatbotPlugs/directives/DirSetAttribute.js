@@ -50,7 +50,7 @@ class DirSetAttribute {
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         for (const [key, value] of Object.entries(all_parameters)) {
           const value_type = typeof value;
-          if (this.log) {console.log("(DirAssign) request parameter:", key, "value:", value, "type:", value_type)}
+          if (this.log) {console.log("(DirSetAttribute) request parameter:", key, "value:", value, "type:", value_type)}
         }
       }
       callback();
