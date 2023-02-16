@@ -90,50 +90,11 @@ class DirWebRequest {
           }
           callback();
         }
-      }, this.log
+      }
     );
-    // if (action.subject && action.text && action.to) {
-    //   try {
-    //     let requestVariables = null;
-    //     if (this.tdcache) {
-    //       requestVariables = 
-    //       await TiledeskChatbot.allParametersStatic(
-    //         this.tdcache, this.requestId
-    //       );
-    //     }
-    //     const filler = new Filler();
-    //     const filled_subject = filler.fill(action.subject, requestVariables);
-    //     const filled_text = filler.fill(action.text, requestVariables);
-    //     const filled_to = filler.fill(action.to, requestVariables);
-    //     const message_echo = await this.tdclient.sendEmail({
-    //       subject: filled_subject,
-    //       text: filled_text,
-    //       to: filled_to
-    //     });
-    //     if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
-    //     if (this.log) {console.log("email sent. filled_text:", filled_text);}
-    //     if (this.log) {console.log("email sent. filled_to:", filled_to);}
-    //     if (completion) {
-    //       completion(null, message_echo);
-    //     }
-    //     return message_echo;
-    //   }
-    //   catch(err) {
-    //     console.error("sendEmail error:", err);
-    //     if (completion) {
-    //       completion(err);
-    //     }
-    //   }
-    // }
-    // else {
-    //   const error = new Error("sendEmail missing mandatory parameters (to|subject|text)");
-    //   if (completion) {
-    //     completion(error);
-    //   }
-    // }
   }
 
-  myrequest(options, callback, log) {
+  myrequest(options, callback) {
     if (this.log) {
       console.log("API URL:", options.url);
       console.log("** Options:", JSON.stringify(options));
@@ -164,14 +125,14 @@ class DirWebRequest {
       }
       else {
         if (callback) {
-          callback(TiledeskClient.getErr({message: "Response status not 200"}, options, res), null, null);
+          callback(new Error("Response status is not 200"), null);
         }
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", error);
+      // console.error("An error occurred:", JSON.stringify(error));
       if (callback) {
-        callback(error, null, null);
+        callback(error, null);
       }
     });
   }
