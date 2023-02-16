@@ -22,6 +22,7 @@ const { DirDeleteVariable } = require('./directives/DirDeleteVariable');
 const { DirIfOpenHours } = require('./directives/DirIfOpenHours');
 const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
+const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirWebRequest } = require('./directives/DirWebRequest');
@@ -260,7 +261,7 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    else if (directive_name === Directives.CONDITION) {
+    else if (directive_name === Directives.CONDITION) { // DEPRECATED
       console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
         console.log("stop on condition?", stop);
@@ -272,8 +273,20 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
-        // let next_dir = await this.nextDirective(this.directives);
-        // this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.JSON_CONDITION) {
+      console.log("...DirJSONCondition");
+      new DirJSONCondition(context).execute(directive, async (stop) => {
+        console.log("stop on condition?", stop);
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", directive);}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     else if (directive_name === Directives.ASSIGN) {

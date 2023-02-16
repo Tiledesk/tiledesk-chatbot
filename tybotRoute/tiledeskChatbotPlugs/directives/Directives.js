@@ -1,18 +1,18 @@
 class Directives {
   static AGENT = 'agent';
-  static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent";
+  static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   static CLOSE = 'close';
   static DEPARTMENT = 'department';
-  static JSONMESSAGE = 'jsonmessage';
+  static JSONMESSAGE = 'jsonmessage'; // DEPRECATED?
   static MESSAGE = 'message';
   static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";
   static REPLACE_BOT = "replacebot";
-  static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents";
-  static WHEN_OFFLINE_HOURS = "whenofflinehours"; // adds a message on top of the original message when offline hours opts: --replace
+  static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents"; // DEPRECATED
+  static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
   //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
-  static DISABLE_INPUT_TEXT = "disableinputtext";
+  static DISABLE_INPUT_TEXT = "disableinputtext"; // DEPRECATED
   static WHEN_OPEN = "whenopen"; // DEPRECATED
   static WHEN_CLOSED = "whenclosed"; // DEPRECATED
   static IF_NO_AGENTS = "ifnoagents"; // DEPRECATED
@@ -34,8 +34,8 @@ class Directives {
   static JSON_CONDITION = "jsonCondition";
   static ASSIGN = "assign";
   static SET_ATTRIBUTE = "setattribute";
-  static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
-  static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
+  // static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
+  // static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
   static REPLY = 'reply';
 
   static actionToDirective(action) {

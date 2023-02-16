@@ -1,5 +1,4 @@
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskExpression } = require('../../TiledeskExpression');
 const { Filler } = require('../Filler');
 
 class DirSetAttribute {
@@ -31,12 +30,12 @@ class DirSetAttribute {
     const expression = action.expression;
     const assignTo = action.assignTo;
     if (assignTo === null || expression === null) {
-      if (this.log) {console.error("(DirSetVar) Invalid expression or assignTo parameters");}
+      if (this.log) {console.error("(DirSetAttribute) Invalid expression or assignTo parameters");}
       callback();
       return;
     }
     if (this.context.tdcache) {
-      if (this.log) {console.log("(DirSetVar) this.requestId:", this.context.requestId);}
+      if (this.log) {console.log("(DirSetAttribute) this.requestId:", this.context.requestId);}
       let attributes =
         await TiledeskChatbot.allParametersStatic(
           this.context.tdcache, this.context.requestId);
@@ -44,10 +43,10 @@ class DirSetAttribute {
       let attributeValue;
       const filler = new Filler();
       attributeValue = filler.fill(expression, attributes);
-      if (this.log) {console.log("(DirSetVar) Attributes:", JSON.stringify(attributes));}
+      if (this.log) {console.log("(DirSetAttribute) Attributes:", JSON.stringify(attributes));}
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignTo, attributeValue);
       if (this.log) {
-        console.log("(DirSetVar) Assigned:", assignTo, "=", attributeValue);
+        console.log("(DirSetAttribute) Assigned:", assignTo, "=", attributeValue);
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         for (const [key, value] of Object.entries(all_parameters)) {
           const value_type = typeof value;
@@ -57,7 +56,7 @@ class DirSetAttribute {
       callback();
     }
     else {
-      console.error("(DirSetVar) No cache! Skipping action.");
+      console.error("(DirSetAttribute) No cache! Skipping action.");
       callback();
     }
   }

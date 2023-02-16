@@ -471,6 +471,19 @@ router.get('/', (req, res) => {
   res.send('Hello Tilebot!');
 });
 
+router.get('/test/webrequest/get/plain', async (req, res) => {
+  res.send("Application var");
+});
+
+router.post('/test/webrequest/post/plain', async (req, res) => {
+  if (req && req.body && req.body.name) {
+    res.send("Your name is " + req.body.name);
+  }
+  else {
+    res.send("No HTTP POST provided");
+  }
+});
+
 async function startApp(settings, completionCallback) {
   // console.log("Starting Tilebot with Settings:", settings);
 
