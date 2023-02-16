@@ -476,6 +476,7 @@ router.get('/test/webrequest/get/plain', async (req, res) => {
 });
 
 router.post('/test/webrequest/post/plain', async (req, res) => {
+  console.log("/post/plain req.body:", req.body);
   if (req && req.body && req.body.name) {
     res.send("Your name is " + req.body.name);
   }
