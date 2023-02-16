@@ -78,9 +78,9 @@ class DirWebRequest {
             const filler = new Filler();
             attributeValue = filler.fill(resbody, attributes);
             if (this.log) {console.log("(webRequest) Attributes:", JSON.stringify(attributes));}
-            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignTo, attributeValue);
+            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignTo, attributeValue);
             if (this.log) {
-              console.log("(webRequest) Assigned:", assignTo, "=", attributeValue);
+              console.log("(webRequest) Assigned:", action.assignTo, "=", attributeValue);
               const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
               for (const [key, value] of Object.entries(all_parameters)) {
                 const value_type = typeof value;
