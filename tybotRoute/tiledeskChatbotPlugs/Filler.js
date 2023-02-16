@@ -2,8 +2,8 @@ class Filler {
 
   fill(text, parameters) {
     console.log("Tex;", text)
-    if (text == null || text == undefined) {
-      console.log("Skip filling. 'text' is null");
+    if (text == null || text == undefined || typeof text !== 'string') {
+      console.log("Skip filling. 'text' is null or not a string");
       return text;
     }
     if (parameters) {
