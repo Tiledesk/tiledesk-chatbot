@@ -1,6 +1,7 @@
 let axios = require('axios');
 let https = require("https");
 const { Filler } = require('../Filler');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
 class DirWebRequest {
   constructor(context) {
