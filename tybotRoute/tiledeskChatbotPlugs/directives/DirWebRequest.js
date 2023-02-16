@@ -30,7 +30,7 @@ class DirWebRequest {
     });
   }
 
-  async go(action, completion) {
+  async go(action, callback) {
     if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
 
     let requestVariables = null;
@@ -66,13 +66,12 @@ class DirWebRequest {
         if (err) {
           //console.error("sendSupportMessageExt error:", err)
           if (callback) {
-            completion();
+            callback();
           }
         }
         else {
           if (callback) {
-            completion();
-            // callback(null, resbody);
+            callback();
           }
         }
       }, this.log
