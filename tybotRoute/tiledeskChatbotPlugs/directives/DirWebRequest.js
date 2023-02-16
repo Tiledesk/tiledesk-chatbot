@@ -68,7 +68,7 @@ class DirWebRequest {
           }
         }
         else if (callback) {
-          if (action.assignTo && this.context.tdcache) {
+          if (action.assignTo && this.context.tdcache && resbody) {
             if (this.log) {console.log("(webRequest) this.requestId:", this.context.requestId);}
             let attributes =
               await TiledeskChatbot.allParametersStatic(
@@ -76,7 +76,7 @@ class DirWebRequest {
             // filling
             let attributeValue;
             const filler = new Filler();
-            attributeValue = filler.fill(expression, attributes);
+            attributeValue = filler.fill(resbody, attributes);
             if (this.log) {console.log("(webRequest) Attributes:", JSON.stringify(attributes));}
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignTo, attributeValue);
             if (this.log) {
