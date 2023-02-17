@@ -53,7 +53,7 @@ describe('Conversation for actions test', async () => {
   });
 
   it('/start', (done) => {
-    // console.log("/start...ing story...");
+    console.log("/start");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -119,6 +119,7 @@ describe('Conversation for actions test', async () => {
   });
 
   it('/MessageActions', (done) => {
+    console.log("/MessageActions");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -176,6 +177,7 @@ describe('Conversation for actions test', async () => {
   });
 
   it('/Intent', (done) => {
+    console.log("/Intent");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -189,28 +191,6 @@ describe('Conversation for actions test', async () => {
           done();
         });
       }
-      // assert(message.text === "Eureka!\nThis is the reply for **intentAction4**");
-      // assert(message.attributes.commands.length === 3);
-      // const command1 = message.attributes.commands[0];
-      // const command2 = message.attributes.commands[1];
-      // const command3 = message.attributes.commands[2];
-
-      // assert(command1.type === "message");
-      // assert(command1.message.text === "Hello by message directive!");
-
-      // assert(command2.type === "wait");
-      // assert(command2.time === 500);
-
-      // assert(command3.type === "message");
-      // assert(command3.message.text === "Ciao");
-      // assert(command3.message.attributes !== null);
-      // assert(command3.message.attributes.attachment !== null);
-      // assert(command3.message.attributes.attachment.buttons !== null);
-      // assert(command3.message.attributes.attachment.buttons[0].value === "/start");
-
-      // listener.close(() => {
-      //   done();
-      // });
 
     });
 
