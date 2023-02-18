@@ -61,9 +61,9 @@ class TiledeskChatbotUtil {
                 const jsonCondition = commands[i].message["_tdJSONCondition"];
                 console.log("jsonCondition:", jsonCondition);
                 if (jsonCondition) {
-                    const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
+                    const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
                     console.log("full json condition expression eval on command.message:", expression);
-                    const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression);
+                    const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
                     console.log("conditionResult:", conditionResult);
                     // FALSE
                     // console.log("commands[i]lang:", commands[i]);
