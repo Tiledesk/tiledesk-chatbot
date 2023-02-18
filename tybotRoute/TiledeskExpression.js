@@ -88,9 +88,27 @@ class TiledeskExpression {
     }
 
     // public
-    evaluateStaticExpression(expression) {
-        const result = new TiledeskExpression().evaluate(expression);
+    evaluateStaticExpression(expression, variables) {
+        const result = new TiledeskExpression().evaluateJavascriptExpression(expression, variables);
         return result;
+    }
+
+    evaluateJavascriptExpression(expression, context) {
+        console.log("evaluating:", expression)
+        console.log("context:", context)
+        let res;
+        try {
+            const vm = new VM({
+                timeout: 200,
+                allowAsync: false,
+                sandbox: context
+            });
+            res = vm.run(`let $data = this;${expression}`);
+        }
+        catch (err) {
+            console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+        }
+        return res;
     }
 
     // private
@@ -108,6 +126,7 @@ class TiledeskExpression {
     //     return res;
     // }
 
+    // DEPRECATED
     evaluate(expression, context) {
         // console.log("evaluating:", expression)
         // console.log("context:", context)
@@ -135,7 +154,7 @@ class TiledeskExpression {
         // console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
         // console.log("applyPattern:", applyPattern);
-        const operand1_s = TiledeskExpression.stringValueOperand(condition.operand1, variables);
+        const operand1_s = TiledeskExpression.variableOperand(condition.operand1);
         // console.log("operand1_s:", operand1_s);
         const operand2_s = TiledeskExpression.stringValueOperand(condition.operand2, variables);
         // console.log("operand2_s:", operand2_s);
@@ -181,6 +200,10 @@ class TiledeskExpression {
         return full_expression;
     }
 
+
+    static variableOperand(operand) {
+        return "$data." + operand;
+    }
 
     static stringValueOperand(operand, variables) {
         // return operand;
