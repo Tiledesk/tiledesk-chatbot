@@ -73,7 +73,7 @@ class DirReply {
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
       // const mylang = requestVariables["mylang"];
-      // console.log("mylang:", mylang);
+      console.log("filterOnVariables:", JSON.stringify(requestVariables));
       // if (message.attributes && message.attributes.commands) {
       //   TiledeskChatbotUtil.filterOnLanguage(message.attributes.commands, mylang);
       // }
