@@ -13,10 +13,8 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === "Number(\"" + condition.operand1 + "\") < Number(\"" + condition.operand2 + "\")");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
     assert(result === false);
   });
 
@@ -29,10 +27,10 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === "Number(\"" + condition.operand1 + "\") < Number(\"" + condition.operand2 + "\")");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -45,10 +43,9 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === "Number(\"" + condition.operand1 + "\") > Number(\"" + condition.operand2 + "\")");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -61,10 +58,9 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === "String(\"" + condition.operand1 + "\").startsWith(String(\"" + condition.operand2 + "\"))");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -94,10 +90,10 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONGroupToExpression(group);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === "(" + "Number(\"2\") > Number(\"1\") && String(\"Andrea\").startsWith(String(\"And\"))" + ")");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -126,10 +122,10 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONGroupToExpression(group);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === "(" + "Number(\"1\") > Number(\"2\") && String(\"Andrea\").startsWith(String(\"Ond\"))" + ")");
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === false);
   });
 
@@ -182,10 +178,10 @@ describe('JSON to expression', function() {
     }
     
     const expression = TiledeskExpression.JSONGroupToExpression(group);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === '(Number("2") > Number("1") && String("Andrea").startsWith(String("And")) || Number("3") === Number("03") && String("Andrea") === String("Andrea"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -246,10 +242,10 @@ describe('JSON to expression', function() {
     const groups = [group1, group_operator, group2];
     
     const expression = TiledeskExpression.JSONGroupsToExpression(groups);
-    console.log("full expression:", expression);
+    // console.log("full expression:", expression);
     assert(expression === '(Number("2") > Number("1") && String("Andrea").startsWith(String("And"))) || (Number("3") === Number("03") && String("Andrea") === String("Andrea"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -269,10 +265,10 @@ describe('JSON to expression', function() {
     const groups = [group1];
     
     const expression = TiledeskExpression.JSONGroupsToExpression(groups);
-    console.log("full expression:", expression);
+    // console.log("full expression:", expression);
     assert(expression === '(Number("2") > Number("1"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -292,10 +288,10 @@ describe('JSON to expression', function() {
     const groups = [group1];
     
     const expression = TiledeskExpression.JSONGroupsToExpression(groups);
-    console.log("full expression:", expression);
+    // console.log("full expression:", expression);
     assert(expression === '(Number("2") < Number("1"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === false);
   });
 
@@ -320,10 +316,10 @@ describe('JSON to expression', function() {
     const groups = [group1];
     
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    console.log("full expression:", expression);
+    // console.log("full expression:", expression);
     assert(expression === '(Number("1") < Number("2"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -348,10 +344,10 @@ describe('JSON to expression', function() {
     const groups = [group1];
     
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    console.log("full expression:", expression);
+    // console.log("full expression:", expression);
     assert(expression === '(Number("$a") < Number("2"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === false);
   });
 
