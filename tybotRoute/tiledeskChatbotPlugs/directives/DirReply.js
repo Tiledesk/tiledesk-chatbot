@@ -78,6 +78,7 @@ class DirReply {
       //   TiledeskChatbotUtil.filterOnLanguage(message.attributes.commands, mylang);
       // }
       if (message.attributes && message.attributes.commands) {
+        console.log("filterOnVariables...on commands", message.attributes.commands);
         TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestVariables);
       }
       

@@ -52,13 +52,14 @@ class TiledeskChatbotUtil {
         }
         if (commands.length > 0) {
           for (let i = commands.length - 1; i >= 0; i--) {
-            // console.log("...commands[" + i + "]");
+            console.log("...commands[" + i + "]");
             if (commands[i].type === "message") { // is a message, not wait
                 // console.log("commands[i]:", commands[i].message.lang);
                 // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
                 
                 // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                 const jsonCondition = commands[i].message["_tdJSONCondition"];
+                console.log("jsonCondition:", jsonCondition);
                 if (jsonCondition) {
                     const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
                     console.log("full json condition expression eval on command.message:", expression);
