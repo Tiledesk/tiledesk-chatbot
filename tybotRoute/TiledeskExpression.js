@@ -109,8 +109,8 @@ class TiledeskExpression {
     // }
 
     evaluate(expression, context) {
-        console.log("evaluating:", expression)
-        console.log("context:", context)
+        // console.log("evaluating:", expression)
+        // console.log("context:", context)
         let res;
         try {
             const vm = new VM({
@@ -127,18 +127,18 @@ class TiledeskExpression {
     }
 
     static JSONConditionToExpression(condition, variables) {
-        console.log("condition:", condition);
-        console.log("condition.operand1:", condition.operand1);
-        console.log("condition.operand2:", condition.operand2);
+        // console.log("condition:", condition);
+        // console.log("condition.operand1:", condition.operand1);
+        // console.log("condition.operand2:", condition.operand2);
         const operator_name = condition.operator;
         const operator = TiledeskExpression.OPERATORS[operator_name];
-        console.log("operator:", operator);
+        // console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
-        console.log("applyPattern:", applyPattern);
+        // console.log("applyPattern:", applyPattern);
         const operand1_s = TiledeskExpression.stringValueOperand(condition.operand1, variables);
-        console.log("operand1_s:", operand1_s);
+        // console.log("operand1_s:", operand1_s);
         const operand2_s = TiledeskExpression.stringValueOperand(condition.operand2, variables);
-        console.log("operand2_s:", operand2_s);
+        // console.log("operand2_s:", operand2_s);
         const expression = 
             applyPattern
                 .replace("#1", operand1_s)
@@ -149,7 +149,7 @@ class TiledeskExpression {
     static JSONGroupToExpression(group, variables) {
         let conditions = group.conditions;
         let group_expression = "";
-        console.log("conditions:", conditions)
+        // console.log("conditions:", conditions)
         for(let i = 0; i < conditions.length; i++) {
             let part = conditions[i];
             if (part.type === "condition") {
@@ -166,7 +166,7 @@ class TiledeskExpression {
 
     static JSONGroupsToExpression(groups, variables) {
         let full_expression = "";
-        console.log("groups:", groups)
+        // console.log("groups:", groups)
         for(let i = 0; i < groups.length; i++) {
             let g = groups[i];
             if (g.type === "expression") {
@@ -188,18 +188,17 @@ class TiledeskExpression {
             return TiledeskExpression.quotedString(""); //"\"\"";
         }
         else if (!variables) {
-            console.log("NO VARS")
             // return "\"" + JSON.stringify(operand) + "\"";
             return TiledeskExpression.quotedString(operand);
         }
         else {
-            console.log("vars!", variables)
+            // console.log("vars!", variables)
             let _operand = operand.trim();
             let operandAsString = TiledeskExpression.quotedString(operand); //"\"" + JSON.stringify(operand) + "\"";
             if (_operand.startsWith("$")) {
-                console.log("_operand with $", _operand);
+                // console.log("_operand with $", _operand);
                 let varName = _operand.replace(/\$/g, "");
-                console.log("varName:", varName);
+                // console.log("varName:", varName);
                 let value = variables[varName];
                 if (value) {
                     operandAsString = TiledeskExpression.quotedString(value); //'"' + JSON.stringify(value) + '"';

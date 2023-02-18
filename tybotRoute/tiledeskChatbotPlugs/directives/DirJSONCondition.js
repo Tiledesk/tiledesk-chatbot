@@ -112,7 +112,7 @@ class DirJSONCondition {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
+          // console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }
@@ -125,7 +125,7 @@ class DirJSONCondition {
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
+          // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }

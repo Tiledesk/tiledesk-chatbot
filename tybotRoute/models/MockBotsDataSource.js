@@ -54,17 +54,15 @@ class MockBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
-    console.log("botID...:", botId);
-    console.log("key:", key);
     if (tdcache) {
-      console.log("mock chache. anyway in mock getting faq from datasource...");
+      // console.log("mock chache. anyway in mock getting faq from datasource...");
       faq = await this.getByIntentDisplayName(botId, key);
-      console.log("faq found in datasource.:", JSON.stringify(faq));
+      // console.log("faq found in datasource.:", JSON.stringify(faq));
     }
     else {
-      console.log("mock no chache. getting faq from datasource...");
+      // console.log("mock no chache. getting faq from datasource...");
       faq = await this.getByIntentDisplayName(botId, key);
-      console.log("faq found in datasource..:", JSON.stringify(faq));
+      // console.log("faq found in datasource..:", JSON.stringify(faq));
     }
     return faq;
   }

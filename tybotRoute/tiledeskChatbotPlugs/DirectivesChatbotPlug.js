@@ -179,7 +179,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    console.log(".process(directive):", JSON.stringify(directive));
+    // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     if (directive) {
       if (context.log) {
@@ -262,9 +262,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONDITION) { // DEPRECATED
-      console.log("...DirCondition");
+      // console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
-        console.log("stop on condition?", stop);
+        if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", directive);}
           this.theend();

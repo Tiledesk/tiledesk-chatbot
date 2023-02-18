@@ -5,6 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.57
+- Added Filter on message.commands based on optiona _tdJSONCondition field
+
+### 0.1.56
+- DirWebRequest added
+- SetAttribute added
+- JsonCondition added
+
 ### 0.1.55
 - fixed bug on DirCondition $data. replace with regex
 

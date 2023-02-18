@@ -250,7 +250,7 @@ class TiledeskChatbot {
           // let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
           if (!fallbackIntent) {
-            console.log("No defaultFallback found!");
+            // console.log("No defaultFallback found!");
             resolve(null);
             return;
           }

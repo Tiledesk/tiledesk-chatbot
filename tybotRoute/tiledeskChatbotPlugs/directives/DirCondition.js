@@ -41,7 +41,7 @@ class DirCondition {
   }
 
   execute(directive, callback) {
-    console.log("Condition...")
+    // console.log("Condition...")
     let action;
     if (directive.action) {
       action = directive.action
@@ -140,7 +140,7 @@ class DirCondition {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
+          // console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }
@@ -153,7 +153,7 @@ class DirCondition {
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
+          // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }

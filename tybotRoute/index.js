@@ -141,7 +141,6 @@ router.post('/ext/:botid', async (req, res) => {
     projectId: projectId,
     log: log
   });
-  
   await updateRequestVariables(chatbot, message, projectId, requestId);
 
   let reply = await chatbot.replyToMessage(message);
@@ -487,7 +486,6 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
 
 async function startApp(settings, completionCallback) {
   // console.log("Starting Tilebot with Settings:", settings);
-
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
@@ -529,7 +527,6 @@ async function startApp(settings, completionCallback) {
     mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
       if (err) { 
         console.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
-        //process.exit(1); // add => exitOnFail: true
       }
       else {
         console.log("(Tilebot) mongodb connection ok.");
