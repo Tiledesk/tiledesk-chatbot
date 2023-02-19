@@ -94,7 +94,7 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        console.log("evaluating:", expression)
+        // console.log("evaluating:", expression)
         console.log("context:", context)
         let res;
         try {
@@ -156,7 +156,14 @@ class TiledeskExpression {
         // console.log("applyPattern:", applyPattern);
         const operand1_s = TiledeskExpression.variableOperand(condition.operand1);
         // console.log("operand1_s:", operand1_s);
-        const operand2_s = TiledeskExpression.stringValueOperand(condition.operand2, variables);
+        let operand2_s;
+        if (condition.operand2 && condition.operand2.type && condition.operand2.type === "const") {
+            operand2_s = TiledeskExpression.stringValueOperand(condition.operand2.value, variables);
+        }
+        else if (condition.operand2 && condition.operand2.type && condition.operand2.type === "var") {
+            operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
+        }
+        
         // console.log("operand2_s:", operand2_s);
         const expression = 
             applyPattern
