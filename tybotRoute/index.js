@@ -103,7 +103,7 @@ router.post('/ext/:botid', async (req, res) => {
   try {
     // bot = await botsDS.getBotById(botId);
     // bot = await botById(botId, projectId, tdcache, botsDS);
-    bot = botsDS.getBotByIdCache(botId, tdcache);
+    bot = await botsDS.getBotByIdCache(botId, tdcache);
   }
   catch(error) {
     console.error("Error getting botId:", botId);
