@@ -449,6 +449,7 @@ class TiledeskChatbot {
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
     // exec webhook
+    if (this.log) {console.log("exec webhook on bot:", JSON.stringify(this.bot));}
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
     if (this.log) {console.log("bot_answer ready:", JSON.stringify(bot_answer));}
     return bot_answer;
