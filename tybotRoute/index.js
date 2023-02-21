@@ -91,6 +91,7 @@ router.post('/ext/:botid', async (req, res) => {
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
+    if (log) {console.log("botsDS created with Mongo");}
   }
   else {
     botsDS = new MockBotsDataSource(staticBots);
@@ -109,6 +110,7 @@ router.post('/ext/:botid', async (req, res) => {
     console.error("Error getting bot was:", error);
     return;
   }
+  if (log) {console.log("bot found:", bot);}
   
   let intentsMachine;
   if (!staticBots) {
