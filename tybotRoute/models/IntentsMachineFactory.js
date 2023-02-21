@@ -1,3 +1,5 @@
+const { MongodbIntentsMachine } = require('./MongodbIntentsMachine.js');
+
 class IntentsMachineFactory {
 
     static getMachine(bot) {
