@@ -2,7 +2,7 @@ const { MongodbIntentsMachine } = require('./MongodbIntentsMachine.js');
 
 class IntentsMachineFactory {
 
-    static getMachine(bot) {
+    static getMachine(bot, botId, projectId, log) {
       let machine;
       if (bot.intentsEngine === "tiledesk-ai") {
         machine = new TiledeskIntentsMachine(

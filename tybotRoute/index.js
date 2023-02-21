@@ -112,12 +112,12 @@ router.post('/ext/:botid', async (req, res) => {
   
   let intentsMachine;
   if (!staticBots) {
-    intentsMachine = IntentsMachineFactory.getMachine(bot);
+    intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
   }
   else {
     intentsMachine = {}
   }
-  
+
   // let intentsMachine;
   // if (!staticBots) {
   //   if (log) {console.log("intentsMachine to MongoDB");}
