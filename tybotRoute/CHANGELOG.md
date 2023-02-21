@@ -10,6 +10,8 @@ available on:
 - TiledeskExpression: introduced "type" for operand2 (type: "const" and type: "var")
 - added addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url)
 - renamed all system attributes, "td" prefix removed
+- added class IntentsMachineFactory
+- added headersString in WebRequest
 
 ### 0.1.56
 - DirWebRequest added

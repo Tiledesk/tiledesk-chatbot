@@ -41,21 +41,36 @@ class DirWebRequest {
     }
     const filler = new Filler();
     const url = filler.fill(action.url, requestVariables);
-    if (action.headers) {
-      for (const [key, value] of Object.entries(action.headers)) {
-        action.headers[key] = filler.fill(value, requestVariables);
+
+    let headers = null;
+    if (action.headersString) {
+      let headersString = filler.fill(action.headersString, requestVariables);
+      try {
+        headers = JSON.parse(headersString);
       }
+      catch(err) {
+        console.error("Error parsing webRequest headersString:", headersString);
+      }
+      // for (const [key, value] of Object.entries(action.headers)) {
+      //   action.headers[key] = filler.fill(value, requestVariables);
+      // }
     }
-    let jsonBody = null;
+    let json = null;
     if (action.jsonBody) {
-      jsonBody = filler.fill(action.jsonBody, requestVariables);
+      let jsonBody = filler.fill(action.jsonBody, requestVariables);
+      try {
+        json = JSON.parse(jsonBody);
+      }
+      catch(err) {
+        console.error("Error parsing webRequest jsonBody:", jsonBody);
+      }
     }
     
     if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
       url: url,
-      headers: action.headers,
-      json: jsonBody,
+      headers: headers,
+      json: json,
       method: action.method
     };
     this.myrequest(

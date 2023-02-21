@@ -26,6 +26,7 @@ class MongodbIntentsMachine {
       var sort = undefined;
       var search_obj = { "$search": text };
   
+      if (this.log) {console.log("chatbot lang:", this.language);}
       if (this.language) {
           search_obj["$language"] = this.language;
       }
