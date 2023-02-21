@@ -6,7 +6,10 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.57
-- Added Filter on message.commands based on optiona _tdJSONCondition field
+- Added Filter on message.commands based on optional _tdJSONCondition field
+- TiledeskExpression: introduced "type" for operand2 (type: "const" and type: "var")
+- added addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url)
+- renamed all system attributes, "td" prefix removed
 
 ### 0.1.56
 - DirWebRequest added

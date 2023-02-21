@@ -231,6 +231,8 @@ router.post('/ext/:botid', async (req, res) => {
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context
   const messageId = message._id;
+  const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
+  await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
   await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
   // TODO add projectName too
   await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);

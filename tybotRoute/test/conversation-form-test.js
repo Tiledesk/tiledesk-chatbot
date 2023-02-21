@@ -104,8 +104,8 @@ describe('Conversation1 - Form filling', async () => {
         else {
           // console.log("params /start:", params);
           assert(params);
-          assert(params["tdLastMessageId"] === message_id);
-          assert(params["tdProjectId"] === PROJECT_ID);
+          assert(params["last_message_id"] === message_id);
+          assert(params["project_id"] === PROJECT_ID);
           listener.close(() => {
             done();
           });
@@ -230,8 +230,8 @@ describe('Conversation1 - Form filling', async () => {
           else {
             // console.log("params2:", params);
             assert(params);
-            assert(params["tdLastMessageId"] === message_id);
-            assert(params["tdProjectId"] === PROJECT_ID);
+            assert(params["last_message_id"] === message_id);
+          assert(params["project_id"] === PROJECT_ID);
             assert(params["your_fullname"] === reply_text);
             assert(params["_tdTypeOf:your_fullname"]);
             listener.close(() => {
