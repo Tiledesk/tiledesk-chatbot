@@ -6,14 +6,9 @@ app.use(cors());
 
 //const tybot = require("@tiledesk/tiledesk-tybot-connector");
 const tybot = require("./tybotRoute");
-const templates = require("./templatesRoute");
-const chooser_bot = require("./chooserChatbotRoute");
 const tybotRoute = tybot.router;
-const templatesRoute = templates.router;
-const chooserRoute = chooser_bot.router;
 app.use("/", tybotRoute); // /tybot
-app.use("/chatbots", templatesRoute);
-app.use("/langbot", chooserRoute);
+
 
 // TEMP
 // const bots_data = require('./tybotRoute/test/conversation-actions_bot.js').bots_data;
