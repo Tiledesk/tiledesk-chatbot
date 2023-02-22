@@ -49,7 +49,7 @@ class DirWebRequest {
         headers = JSON.parse(headersString);
       }
       catch(err) {
-        console.error("Error parsing webRequest headersString:", headersString);
+        console.error("Error parsing webRequest headersString as JSON:", headersString);
       }
       // for (const [key, value] of Object.entries(action.headers)) {
       //   action.headers[key] = filler.fill(value, requestVariables);

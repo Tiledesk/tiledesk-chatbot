@@ -12,6 +12,7 @@ available on:
 - renamed all system attributes, "td" prefix removed
 - added class IntentsMachineFactory
 - added headersString in WebRequest
+- fixed await bot bug. Full text search and webhook affected
 
 ### 0.1.56
 - DirWebRequest added
