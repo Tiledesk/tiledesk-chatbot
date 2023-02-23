@@ -101,7 +101,7 @@ class DirJSONCondition {
     let result;
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
     console.log("full json condition expression:", expression);
-    result = new TiledeskExpression().evaluateStaticExpression(expression);
+    result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
     if (this.log) {console.log("executed condition:", expression, "result:", result);}
     if (result === true) {
       if (trueIntentDirective) {
