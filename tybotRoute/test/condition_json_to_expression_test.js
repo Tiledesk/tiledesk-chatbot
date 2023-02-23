@@ -101,7 +101,7 @@ describe('JSON to expression', function() {
 
     const part2 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part3 = {
@@ -143,7 +143,7 @@ describe('JSON to expression', function() {
 
     const part2 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part3 = {
@@ -184,7 +184,7 @@ describe('JSON to expression', function() {
 
     const part2 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part3 = {
@@ -199,7 +199,7 @@ describe('JSON to expression', function() {
 
     const part4 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.OR.name
+      "operator": TiledeskExpression.OPERATORS.OR.name
     }
 
     const part5 = {
@@ -214,7 +214,7 @@ describe('JSON to expression', function() {
 
     const part6 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part7 = {
@@ -256,7 +256,7 @@ describe('JSON to expression', function() {
 
     const part2 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part3 = {
@@ -281,7 +281,7 @@ describe('JSON to expression', function() {
 
     const part6 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
 
     const part7 = {
@@ -301,7 +301,7 @@ describe('JSON to expression', function() {
 
     const group_operator = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.OR.name
+      "operator": TiledeskExpression.OPERATORS.OR.name
     }
 
     const group2 = {
@@ -445,8 +445,41 @@ describe('JSON to expression', function() {
     assert(is_valid === false);
   });
 
-  // TEST CONDITIONS WITH INVALID OPERANDS
+  // Struct
+    // const expression = {
+    //   groups: [
+    //     {
+    //       type: "expression",
+    //       conditions: [
+    //         {
+    //           type: "condition",
+    //           "operand1": "age",
+    //           "operator": TiledeskExpression.OPERATORS.lessThan,
+    //           "operand2": {
+    //             type: "const", // type: "var"
+    //             value: "10" // name: "b"
+    //           }
+    //         },
+    //         {
+    //           type: "operator",
+    //           operator: "OR"
+    //         },
+    //         { type: "condition", ...}
+    //       ]
+    //     },
+    //     {
+    //       type: "operator",
+    //       operator: "AND"
+    //     },
+    //     { type: "expression", ...}
+    //   ]
+    // };
 
+    
+});
+
+
+describe("Test conditions with invalid operands", () => {
   it('test condition with invalid variable operand', async () => {
     const condition = {
       "type": "condition",
@@ -489,7 +522,7 @@ describe('JSON to expression', function() {
     }
     const part2 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
     const part3 = {
       "type": "condition",
@@ -511,7 +544,7 @@ describe('JSON to expression', function() {
     }
     const part6 = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.AND.name
+      "operator": TiledeskExpression.OPERATORS.AND.name
     }
     const part7 = {
       "type": "condition",
@@ -528,7 +561,7 @@ describe('JSON to expression', function() {
     }
     const group_operator = {
       "type": "operator",
-      "operatorName": TiledeskExpression.OPERATORS.OR.name
+      "operator": TiledeskExpression.OPERATORS.OR.name
     }
     const group2 = {
       type: "expression",
@@ -539,39 +572,44 @@ describe('JSON to expression', function() {
     console.log("invalid group expression:", expression);
     assert(expression === null);
   });
+})
 
-  // Struct
-    // const expression = {
-    //   groups: [
-    //     {
-    //       type: "expression",
-    //       conditions: [
-    //         {
-    //           type: "condition",
-    //           "operand1": "age",
-    //           "operator": TiledeskExpression.OPERATORS.lessThan,
-    //           "operand2": {
-    //             type: "const", // type: "var"
-    //             value: "10" // name: "b"
-    //           }
-    //         },
-    //         {
-    //           type: "operator",
-    //           operator: "OR"
-    //         },
-    //         { type: "condition", ...}
-    //       ]
-    //     },
-    //     {
-    //       type: "operator",
-    //       operator: "AND"
-    //     },
-    //     { type: "expression", ...}
-    //   ]
-    // };
+describe('Bugs', function() {
+  
+  it('should have to be true', () => {
+    const group = {
+      "type": "expression",
+      "conditions": [{
+        "type": "condition",
+        "operand1": "score",
+        "operator": "notEqualAsNumbers",
+        "operand2": {
+          "type": "const",
+          "value": "5",
+          "name": ""
+        }
+      }, {
+        "type": "operator",
+        "operator": "AND"
+      }, {
+        "type": "condition",
+        "operand1": "score",
+        "operator": "notEqualAsNumbers",
+        "operand2": {
+          "type": "const",
+          "value": "10",
+          "name": ""
+        }
+      }]
+    }
 
-    
+    const expression = TiledeskExpression.JSONGroupToExpression(group);
+    console.log("expression:", expression);
+    // assert(expression === '(Number($data.height) > Number("1") && String($data.name).startsWith(String("And")))');
+    // const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    // console.log("result:", result);
+    // assert(result === true);
+
+  });
+
 });
-
-
-

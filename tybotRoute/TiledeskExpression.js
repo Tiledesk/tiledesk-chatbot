@@ -146,14 +146,14 @@ class TiledeskExpression {
     }
 
     static JSONConditionToExpression(condition, variables) {
-        // console.log("condition:", condition);
-        // console.log("condition.operand1:", condition.operand1);
-        // console.log("condition.operand2:", condition.operand2);
+        console.log("condition:", condition);
+        console.log("condition.operand1:", condition.operand1);
+        console.log("condition.operand2:", condition.operand2);
         const operator_name = condition.operator;
         const operator = TiledeskExpression.OPERATORS[operator_name];
-        // console.log("operator:", operator);
+        console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
-        // console.log("applyPattern:", applyPattern);
+        console.log("applyPattern:", applyPattern);
         let operand1_s;
         let is_valid_operand1 = TiledeskExpression.validateVariableName(condition.operand1);
         if (is_valid_operand1) {
@@ -207,7 +207,8 @@ class TiledeskExpression {
                 group_expression += expression;
             }
             else if (part.type === "operator") {
-                const operator = TiledeskExpression.OPERATORS[part.operatorName];
+                console.log("operator part:", part);
+                const operator = TiledeskExpression.OPERATORS[part.operator];
                 group_expression += operator.applyPattern;
             }
         }
@@ -228,7 +229,7 @@ class TiledeskExpression {
                 full_expression += group_expression;
             }
             else if (g.type === "operator") {
-                const operator = TiledeskExpression.OPERATORS[g.operatorName];
+                const operator = TiledeskExpression.OPERATORS[g.operator];
                 full_expression += operator.applyPattern;
             }
         }
