@@ -56,30 +56,25 @@ class DirJSONCondition {
   }
 
   async go(action, callback) {
-    const jsonCondition = action.jsonCondition;
+    const groups = action.jsonCondition.groups;
+    // const groups = action.groups; // NEXT
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let stopOnConditionMet = action.stopOnConditionMet;
-    if (this.log) {console.log("jsonCondition:", JSON.stringify(jsonCondition));}
+    if (this.log) {console.log("groups:", JSON.stringify(groups));}
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
     }
     if (falseIntent && falseIntent.trim() === "") {
       falseIntent = null;
     }
-    if (this.log) {console.log("condition action:", action);}
     if (!trueIntent && !falseIntent) {
-      if (this.log) {console.log("Invalid condition, no intents specified");}
+      if (this.log) {console.log("Invalid jsonCondition, no intents specified");}
       callback();
       return;
     }
-    if (!jsonCondition) {
-      if (this.log) {console.log("jsonCondition undefined error");}
-      callback();
-      return;
-    }
-    else if (jsonCondition.groups === null) {
-      if (this.log) {console.log("Invalid jsonCondition, no groups:", JSON.stringify(jsonCondition));}
+    else if (groups === null) {
+      if (this.log) {console.log("Invalid jsonCondition, no groups.");}
       callback();
       return;
     }
@@ -102,10 +97,9 @@ class DirJSONCondition {
     else {
       console.error("(DirJSONCondition) No this.context.tdcache");
     }
-    if (this.log) {console.log("condition:", scriptCondition);}
     // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
-    const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
+    const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
     console.log("full json condition expression:", expression);
     result = new TiledeskExpression().evaluateStaticExpression(expression);
     if (this.log) {console.log("executed condition:", expression, "result:", result);}
