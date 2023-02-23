@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.58
+- Introduced a regex to check variable names are correct
+
 ### 0.1.57
 - Added Filter on message.commands based on optional _tdJSONCondition field
 - TiledeskExpression: introduced "type" for operand2 (type: "const" and type: "var")

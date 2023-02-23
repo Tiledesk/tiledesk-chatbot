@@ -154,14 +154,34 @@ class TiledeskExpression {
         // console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
         // console.log("applyPattern:", applyPattern);
-        const operand1_s = TiledeskExpression.variableOperand(condition.operand1);
+        let operand1_s;
+        let is_valid_operand1 = TiledeskExpression.validateVariableName(condition.operand1);
+        if (is_valid_operand1) {
+            operand1_s = TiledeskExpression.variableOperand(condition.operand1);
+        }
+        else {
+            console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
+            return null;
+        }
+        
         // console.log("operand1_s:", operand1_s);
         let operand2_s;
         if (condition.operand2 && condition.operand2.type && condition.operand2.type === "const") {
             operand2_s = TiledeskExpression.stringValueOperand(condition.operand2.value, variables);
         }
-        else if (condition.operand2 && condition.operand2.type && condition.operand2.type === "var") {
-            operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
+        else if (condition.operand2 && condition.operand2.type && condition.operand2.name && condition.operand2.type === "var") {
+            let is_valid_operand2 = TiledeskExpression.validateVariableName(condition.operand2.name);
+            if (is_valid_operand2) {
+                operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
+            }
+            else {
+                console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
+                return null;
+            }
+        }
+        else {
+            console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
+            return null;
         }
         
         // console.log("operand2_s:", operand2_s);
@@ -180,6 +200,10 @@ class TiledeskExpression {
             let part = conditions[i];
             if (part.type === "condition") {
                 let expression = TiledeskExpression.JSONConditionToExpression(part, variables);
+                if (expression === null) {
+                    console.error("Invalid JSON expression", JSON.stringify(part));
+                    return null;
+                }
                 group_expression += expression;
             }
             else if (part.type === "operator") {
@@ -197,6 +221,10 @@ class TiledeskExpression {
             let g = groups[i];
             if (g.type === "expression") {
                 let group_expression = TiledeskExpression.JSONGroupToExpression(g, variables);
+                if (group_expression === null) {
+                    console.error("Invalid JSON Group expression", JSON.stringify(g));
+                    return null;
+                }
                 full_expression += group_expression;
             }
             else if (g.type === "operator") {
@@ -210,6 +238,19 @@ class TiledeskExpression {
 
     static variableOperand(operand) {
         return "$data." + operand;
+    }
+
+    static validateVariableName(variableName) {
+        console.log("variableName", variableName)
+        console.log("type of variableName:", typeof variableName);
+        let matches = variableName.match(/^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$/gm);
+        // console.log("matches:", matches)
+        if (matches !== null) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     static stringValueOperand(operand, variables) {
