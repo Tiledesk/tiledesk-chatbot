@@ -19,6 +19,8 @@ const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js')
 // const { MockActions } = require('./MockActions');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
+const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
+
 
 //router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
@@ -99,8 +101,6 @@ router.post('/ext/:botid', async (req, res) => {
   // get the bot metadata
   let bot = null;
   try {
-    // bot = await botsDS.getBotById(botId);
-    // bot = await botById(botId, projectId, tdcache, botsDS);
     bot = botsDS.getBotByIdCache(botId, tdcache);
   }
   catch(error) {
@@ -111,18 +111,7 @@ router.post('/ext/:botid', async (req, res) => {
   
   let intentsMachine;
   if (!staticBots) {
-    if (log) {console.log("intentsMachine to MongoDB");}
-    intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language, log});
-    if (bot.intentsEngine === "tiledesk-ai") {
-      if (log) {console.log("intentsMachine to tiledesk-ai");}
-      intentsMachine = new TiledeskIntentsMachine(
-        {
-          //projectId: projectId,
-          //language: bot.language,
-          botId: botId
-          //TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
-        });
-    }
+    intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
   }
   else {
     intentsMachine = {}
