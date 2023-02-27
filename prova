@@ -1,0 +1,1261 @@
+
+> tiledesk-bot-web-sandbox@1.0.0 start /home/runner/tiledesk-chatbot
+> node index.js
+
+(Tilebot) settings.API_ENDPOINT: https://tiledesk-server-pre.herokuapp.com
+(Tilebot) log: true
+(Tilebot) Starting Tilebot connector v0.1.55
+(Tilebot) Connecting to mongodb...
+(Tilebot) mongodb connection ok.
+(Tilebot) Connecting Redis...
+(Tilebot) Redis connected.
+Tilebot started.
+Tilebot route successfully started.
+Tilebot connector listening on port  3000
+REQUEST BODY: {"timestamp":1677514644132,"payload":{"senderFullname":"guest#ef00 ","type":"text","channel_type":"group","status":200,"_id":"63fcd793a207e5003cddc68b","sender":"ef00d50d-7608-4865-b387-2c28af8dd16b","recipient":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","text":"/start","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","metadata":"","attributes":{"client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","projectId":"63ef47edeceeab002c9bd8f9","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","userFullname":"guest#ef00 ","widgetVer":"v.5.0.53-rc.6"},"channel":{"name":"chat21"},"createdAt":"2023-02-27T16:17:23.964Z","updatedAt":"2023-02-27T16:17:23.964Z","__v":0,"request":{"_id":"63fcd022a207e5003cddc031","status":200,"preflight":false,"hasBot":true,"participants":["bot_63ef4ac4eceeab002c9bdcd7"],"priority":"medium","followers":[],"participantsAgents":[],"participantsBots":["63ef4ac4eceeab002c9bdcd7"],"smartAssignment":true,"request_id":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","requester":{"_id":"63f4da8500597b002c634a56","user_available":true,"number_assigned_requests":0,"last_login_at":"2023-02-20T16:47:56.967Z","status":"active","id_project":"63ef47edeceeab002c9bd8f9","uuid_user":"ef00d50d-7608-4865-b387-2c28af8dd16b","role":"guest","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","tags":[],"createdAt":"2023-02-21T14:51:49.025Z","updatedAt":"2023-02-27T15:45:34.119Z","__v":0,"presence":{"status":"online","changedAt":"2023-02-27T15:45:34.116Z"}},"lead":{"_id":"63f4da8800597b002c634a73","status":100,"lead_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullname":"guest#ef00 ","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/chatbot-panel.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&tiledesk_participants=bot_63ef4ac4eceeab002c9bdcd7&tiledesk_departmentID=63ef47eeeceeab002c9bd8fd&td_draft=true","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"system","tags":[],"createdAt":"2023-02-21T14:51:52.923Z","updatedAt":"2023-02-27T15:46:03.259Z","__v":0},"first_text":"next generation ue","department":{"_id":"63ef47eeeceeab002c9bd8fd","routing":"assigned","default":true,"status":1,"name":"Default Department","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"5e09d16d4d36110017506d7f","tags":[],"createdAt":"2023-02-17T09:25:02.008Z","updatedAt":"2023-02-17T09:37:14.250Z","__v":0,"id_bot":"63ef4ac4eceeab002c9bdcd7","bot":{"webhook_enabled":false,"type":"external","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"_id":"63ef4ac4eceeab002c9bdcd7","name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0}},"sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","language":"it","userAgent":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","channel":{"name":"chat21"},"tags":[],"notes":[],"channelOutbound":{"name":"chat21"},"createdAt":"2023-02-27T15:45:38.976Z","updatedAt":"2023-02-27T15:46:03.287Z","ticket_id":13,"__v":1,"location":{"geometry":{"type":"Point","coordinates":[40.3548,18.1724]},"country":"IT","region":"75","city":"Lecce","ipAddress":"193.204.74.66"},"assigned_at":"2023-02-27T15:45:42.047Z","participatingAgents":[],"participatingBots":[{"_id":"63ef4ac4eceeab002c9bdcd7","webhook_enabled":false,"type":"external","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0}]}},"hook":{"webhook_enabled":false,"type":"external","secret":"7be4ad88-1665-45a4-98b7-306646327e46","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"_id":"63ef4ac4eceeab002c9bdcd7","name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0},"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJob29rX2VuYWJsZWQiOmZhbHNlLCJ0eXBlIjoiZXh0ZXJuYWwiLCJzZWNyZXQiOiI3YmU0YWQ4OC0xNjY1LTQ1YTQtOThiNy0zMDY2NDYzMjdlNDYiLCJsYW5ndWFnZSI6ImVuIiwicHVibGljIjpmYWxzZSwiY2VydGlmaWVkIjpmYWxzZSwiaW50ZW50c0VuZ2luZSI6Im5vbmUiLCJ0YWdzIjpbXSwiX2lkIjoiNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwibmFtZSI6IkJvdCAtIGV4dCIsImRlc2NyaXB0aW9uIjoib24gUmVwbGl0IiwidXJsIjoiaHR0cHM6Ly90aWxlZGVzay1jaGF0Ym90LnRpbGVkZXNrLnJlcGwuY28vZXh0LzYzZWY0ODI2ZWNlZWFiMDAyYzliZDk5OCIsImlkX3Byb2plY3QiOiI2M2VmNDdlZGVjZWVhYjAwMmM5YmQ4ZjkiLCJ0cmFzaGVkIjpmYWxzZSwiY3JlYXRlZEJ5IjoiNWUwOWQxNmQ0ZDM2MTEwMDE3NTA2ZDdmIiwiY3JlYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTozNzowOC41MDNaIiwidXBkYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTo1MDoxNy4zNzNaIiwiX192IjowLCJpYXQiOjE2Nzc1MTQ2NDQsImF1ZCI6Imh0dHBzOi8vdGlsZWRlc2suY29tL2JvdHMvNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwiaXNzIjoiaHR0cHM6Ly90aWxlZGVzay5jb20iLCJzdWIiOiJib3QiLCJqdGkiOiIzZDFjYThlYS0zOGY4LTRiMjgtOGRhMi1mY2NmMjVkOGU5NzUifQ.51qyG5FGnEdVrNj2hVRgYe7mhkIOYCOsrYTN8M7mA7k"}
+query botId: 63ef4826eceeab002c9bd998
+message.id_project: 63ef47edeceeab002c9bd8f9
+=====================>[object Promise]
+Setting MongodbIntentsMachine with bot: {}
+__bot_as_string found in chache: {"templateFeatures":[],"score":0,"_id":"63ef4826eceeab002c9bd998","webhook_enabled":false,"type":"tilebot","secret":"759d492c-cd11-4778-b033-97ae9c3ff8ac","language":"en","public":false,"certified":false,"intentsEngine":"tiledesk-ai","tags":[],"name":"Bot AI Integration","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:25:58.173Z","updatedAt":"2023-02-24T09:49:36.189Z","__v":0,"url":"https://tiledesk-server-pre.herokuapp.com/modules/tilebot/ext/63ef4826eceeab002c9bd998"}
+value_type: string
+got bot from cache: {"templateFeatures":[],"score":0,"_id":"63ef4826eceeab002c9bd998","webhook_enabled":false,"type":"tilebot","secret":"759d492c-cd11-4778-b033-97ae9c3ff8ac","language":"en","public":false,"certified":false,"intentsEngine":"tiledesk-ai","tags":[],"name":"Bot AI Integration","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:25:58.173Z","updatedAt":"2023-02-24T09:49:36.189Z","__v":0,"url":"https://tiledesk-server-pre.herokuapp.com/modules/tilebot/ext/63ef4826eceeab002c9bd998"}
+request parameter: tdCity value: Lecce type: string
+request parameter: tdEndUserIpAddress value: 193.204.74.66 type: string
+request parameter: tdEndUserId value: ef00d50d-7608-4865-b387-2c28af8dd16b type: string
+request parameter: tdProjectId value: 63ef47edeceeab002c9bd8f9 type: string
+request parameter: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 value: userFullname type: string
+request parameter: tdDepartmentId value: 63ef47eeeceeab002c9bd8fd type: string
+request parameter: tdDepartmentName value: Default Department type: string
+request parameter: tdLastMessageId value: 63fcd793a207e5003cddc68b type: string
+request parameter: tdLastUserText value: /start type: string
+request parameter: tdUserSourcePage value: https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin type: string
+request parameter: tdRequestId value: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 type: string
+request parameter: tdUserLanguage value: it type: string
+request parameter: tdCountry value: IT type: string
+request parameter: tdUserAgent value: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0 type: string
+lead.fullname => params.userFullname: guest#ef00 
+replyToMessage() > lead found: {"_id":"63f4da8800597b002c634a73","status":100,"lead_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullname":"guest#ef00 ","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/chatbot-panel.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&tiledesk_participants=bot_63ef4ac4eceeab002c9bdcd7&tiledesk_departmentID=63ef47eeeceeab002c9bd8fd&td_draft=true","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"system","tags":[],"createdAt":"2023-02-21T14:51:52.923Z","updatedAt":"2023-02-27T15:46:03.259Z","__v":0}
+Resetting current step by request message: /start
+after reset currentStep: 0
+got locked intent null
+Intent was explicitly invoked: /start
+Invoked Intent: start
+Processing explicit intent: start
+parsed intent: { name: 'start' }
+processing intent: start
+intent this.botId: 63ef4826eceeab002c9bd998
+intent intent.name: start
+intent this.tdcache ok
+botID: 63ef4826eceeab002c9bd998
+key: start
+in tdchace
+Looking in cache for: cacheman:cachegoose-cache:faqs:botid:63ef4826eceeab002c9bd998:faq:id:start
+_faq_as_string found in chache: {"_id":"63ef4826eceeab002c9bd99a","webhook_enabled":false,"enabled":true,"topic":"internal","status":"live","actions":[{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null},{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}],"id_faq_kb":"63ef4826eceeab002c9bd998","question":"\\start","intent_display_name":"start","language":"en","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"5e09d16d4d36110017506d7f","intent_id":"27317866-628f-468a-b825-8aafe804df26","createdAt":"2023-02-17T09:25:58.210Z","updatedAt":"2023-02-24T09:48:11.066Z","__v":0}
+value_type: string
+got faq from cache: {"_id":"63ef4826eceeab002c9bd99a","webhook_enabled":false,"enabled":true,"topic":"internal","status":"live","actions":[{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null},{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}],"id_faq_kb":"63ef4826eceeab002c9bd998","question":"\\start","intent_display_name":"start","language":"en","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"5e09d16d4d36110017506d7f","intent_id":"27317866-628f-468a-b825-8aafe804df26","createdAt":"2023-02-17T09:25:58.210Z","updatedAt":"2023-02-24T09:48:11.066Z","__v":0}
+Got a reply (faq) by Intent name: {"_id":"63ef4826eceeab002c9bd99a","webhook_enabled":false,"enabled":true,"topic":"internal","status":"live","actions":[{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null},{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}],"id_faq_kb":"63ef4826eceeab002c9bd998","question":"\\start","intent_display_name":"start","language":"en","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"5e09d16d4d36110017506d7f","intent_id":"27317866-628f-468a-b825-8aafe804df26","createdAt":"2023-02-17T09:25:58.210Z","updatedAt":"2023-02-24T09:48:11.066Z","__v":0}
+requestId: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9
+token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJob29rX2VuYWJsZWQiOmZhbHNlLCJ0eXBlIjoiZXh0ZXJuYWwiLCJzZWNyZXQiOiI3YmU0YWQ4OC0xNjY1LTQ1YTQtOThiNy0zMDY2NDYzMjdlNDYiLCJsYW5ndWFnZSI6ImVuIiwicHVibGljIjpmYWxzZSwiY2VydGlmaWVkIjpmYWxzZSwiaW50ZW50c0VuZ2luZSI6Im5vbmUiLCJ0YWdzIjpbXSwiX2lkIjoiNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwibmFtZSI6IkJvdCAtIGV4dCIsImRlc2NyaXB0aW9uIjoib24gUmVwbGl0IiwidXJsIjoiaHR0cHM6Ly90aWxlZGVzay1jaGF0Ym90LnRpbGVkZXNrLnJlcGwuY28vZXh0LzYzZWY0ODI2ZWNlZWFiMDAyYzliZDk5OCIsImlkX3Byb2plY3QiOiI2M2VmNDdlZGVjZWVhYjAwMmM5YmQ4ZjkiLCJ0cmFzaGVkIjpmYWxzZSwiY3JlYXRlZEJ5IjoiNWUwOWQxNmQ0ZDM2MTEwMDE3NTA2ZDdmIiwiY3JlYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTozNzowOC41MDNaIiwidXBkYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTo1MDoxNy4zNzNaIiwiX192IjowLCJpYXQiOjE2Nzc1MTQ2NDQsImF1ZCI6Imh0dHBzOi8vdGlsZWRlc2suY29tL2JvdHMvNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwiaXNzIjoiaHR0cHM6Ly90aWxlZGVzay5jb20iLCJzdWIiOiJib3QiLCJqdGkiOiIzZDFjYThlYS0zOGY4LTRiMjgtOGRhMi1mY2NmMjVkOGU5NzUifQ.51qyG5FGnEdVrNj2hVRgYe7mhkIOYCOsrYTN8M7mA7k
+projectId: 63ef47edeceeab002c9bd8f9
+IntentForm.isValidForm(intent_form) false
+static_bot_answer.attributes.webhook: false
+WEBHOOK? false
+NO WEBHOOK!
+bot_answer ready: {"actions":[{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null},{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}],"attributes":{"clienttimestamp":1677514645041,"_answerid":"63ef4826eceeab002c9bd99a","intent_info":{"intent_name":"start","is_fallback":false,"question_payload":{"senderFullname":"guest#ef00 ","type":"text","channel_type":"group","status":200,"_id":"63fcd793a207e5003cddc68b","sender":"ef00d50d-7608-4865-b387-2c28af8dd16b","recipient":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","text":"/start","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","metadata":"","attributes":{"client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","projectId":"63ef47edeceeab002c9bd8f9","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","userFullname":"guest#ef00 ","widgetVer":"v.5.0.53-rc.6"},"channel":{"name":"chat21"},"createdAt":"2023-02-27T16:17:23.964Z","updatedAt":"2023-02-27T16:17:23.964Z","__v":0},"botId":"63ef4826eceeab002c9bd998","bot":{}},"webhook":false}}
+the actions: [{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null},{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}]
+the directives: [{"name":"reply","action":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}},{"name":"wait","action":{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}}]
+processing directives...
+next_dir: {"name":"reply","action":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}}
+.process(directive): {"name":"reply","action":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}}
+..process(directive): {"name":"reply","action":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}}
+directive['name']: reply
+...DirReply
+Reply directive: {"name":"reply","action":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}}
+got action: {"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}]},"_tdActionTitle":null}
+(DirReply) request parameter: tdCity value: Lecce type: string
+(DirReply) request parameter: tdEndUserIpAddress value: 193.204.74.66 type: string
+(DirReply) request parameter: tdEndUserId value: ef00d50d-7608-4865-b387-2c28af8dd16b type: string
+(DirReply) request parameter: tdProjectId value: 63ef47edeceeab002c9bd8f9 type: string
+(DirReply) request parameter: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 value: userFullname type: string
+(DirReply) request parameter: tdDepartmentId value: 63ef47eeeceeab002c9bd8fd type: string
+(DirReply) request parameter: tdDepartmentName value: Default Department type: string
+(DirReply) request parameter: tdLastMessageId value: 63fcd793a207e5003cddc68b type: string
+(DirReply) request parameter: tdLastUserText value: /start type: string
+(DirReply) request parameter: tdUserSourcePage value: https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin type: string
+(DirReply) request parameter: tdRequestId value: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 type: string
+(DirReply) request parameter: tdUserLanguage value: it type: string
+(DirReply) request parameter: tdCountry value: IT type: string
+(DirReply) request parameter: tdUserAgent value: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0 type: string
+Tex; Hi, my name is Bot, how can I help you?
+
+filling commands'. Message: {"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}],"fillParams":true},"_tdActionTitle":null}
+filling commands'. commands found.
+commands: [{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}] 2
+commands' found
+Tex; Hi, my name is Bot, how can I help you?
+command filled: Hi, my name is Bot, how can I help you?
+mylang: undefined
+Reply: {"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}],"fillParams":true},"_tdActionTitle":null}
+** API URL: https://tiledesk-server-pre.herokuapp.com/63ef47edeceeab002c9bd8f9/requests/support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9/messages
+** Options: {"url":"https://tiledesk-server-pre.herokuapp.com/63ef47edeceeab002c9bd8f9/requests/support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9/messages","headers":{"Content-Type":"application/json","Authorization":"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJob29rX2VuYWJsZWQiOmZhbHNlLCJ0eXBlIjoiZXh0ZXJuYWwiLCJzZWNyZXQiOiI3YmU0YWQ4OC0xNjY1LTQ1YTQtOThiNy0zMDY2NDYzMjdlNDYiLCJsYW5ndWFnZSI6ImVuIiwicHVibGljIjpmYWxzZSwiY2VydGlmaWVkIjpmYWxzZSwiaW50ZW50c0VuZ2luZSI6Im5vbmUiLCJ0YWdzIjpbXSwiX2lkIjoiNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwibmFtZSI6IkJvdCAtIGV4dCIsImRlc2NyaXB0aW9uIjoib24gUmVwbGl0IiwidXJsIjoiaHR0cHM6Ly90aWxlZGVzay1jaGF0Ym90LnRpbGVkZXNrLnJlcGwuY28vZXh0LzYzZWY0ODI2ZWNlZWFiMDAyYzliZDk5OCIsImlkX3Byb2plY3QiOiI2M2VmNDdlZGVjZWVhYjAwMmM5YmQ4ZjkiLCJ0cmFzaGVkIjpmYWxzZSwiY3JlYXRlZEJ5IjoiNWUwOWQxNmQ0ZDM2MTEwMDE3NTA2ZDdmIiwiY3JlYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTozNzowOC41MDNaIiwidXBkYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTo1MDoxNy4zNzNaIiwiX192IjowLCJpYXQiOjE2Nzc1MTQ2NDQsImF1ZCI6Imh0dHBzOi8vdGlsZWRlc2suY29tL2JvdHMvNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwiaXNzIjoiaHR0cHM6Ly90aWxlZGVzay5jb20iLCJzdWIiOiJib3QiLCJqdGkiOiIzZDFjYThlYS0zOGY4LTRiMjgtOGRhMi1mY2NmMjVkOGU5NzUifQ.51qyG5FGnEdVrNj2hVRgYe7mhkIOYCOsrYTN8M7mA7k"},"json":{"_tdActionType":"reply","text":"Hi, my name is Bot, how can I help you?\r\n","attributes":{"commands":[{"type":"wait","time":500},{"type":"message","message":{"type":"text","text":"Hi, my name is Bot, how can I help you?"}}],"fillParams":true},"_tdActionTitle":null},"method":"POST"}
+Response for url: https://tiledesk-server-pre.herokuapp.com/63ef47edeceeab002c9bd8f9/requests/support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9/messages
+Response headers:
+ {"server":"Cowboy","connection":"close","x-powered-by":"Express","access-control-allow-origin":"*","content-type":"application/json; charset=utf-8","content-length":"5388","etag":"W/\"150c-SR61doYlRkV3rApwnhKfb/F84Y4\"","date":"Mon, 27 Feb 2023 16:17:25 GMT","via":"1.1 vegur"}
+Reply message sent.
+.process(directive): {"name":"wait","action":{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}}
+..process(directive): {"name":"wait","action":{"_tdActionTitle":null,"millis":2000,"_tdActionType":"wait"}}
+directive['name']: wait
+........ DirWait
+____-----_ { _tdActionTitle: null, millis: 2000, _tdActionType: 'wait' }
+>>>>__ [Function (anonymous)]
+QUINO....__
+YES [AsyncFunction (anonymous)]
+.process(directive): null
+stop process(). directive is (null?): null
+Actions - Directives executed.
+REQUEST BODY: {"timestamp":1677514654560,"payload":{"senderFullname":"guest#ef00 ","type":"text","channel_type":"group","status":200,"_id":"63fcd79ea207e5003cddc6ab","sender":"ef00d50d-7608-4865-b387-2c28af8dd16b","recipient":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","text":"parla del pnrr","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","metadata":"","attributes":{"client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","projectId":"63ef47edeceeab002c9bd8f9","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","userFullname":"guest#ef00 ","widgetVer":"v.5.0.53-rc.6"},"channel":{"name":"chat21"},"createdAt":"2023-02-27T16:17:34.523Z","updatedAt":"2023-02-27T16:17:34.523Z","__v":0,"request":{"_id":"63fcd022a207e5003cddc031","status":200,"preflight":false,"hasBot":true,"participants":["bot_63ef4ac4eceeab002c9bdcd7"],"priority":"medium","followers":[],"participantsAgents":[],"participantsBots":["63ef4ac4eceeab002c9bdcd7"],"smartAssignment":true,"request_id":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","requester":{"_id":"63f4da8500597b002c634a56","user_available":true,"number_assigned_requests":0,"last_login_at":"2023-02-20T16:47:56.967Z","status":"active","id_project":"63ef47edeceeab002c9bd8f9","uuid_user":"ef00d50d-7608-4865-b387-2c28af8dd16b","role":"guest","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","tags":[],"createdAt":"2023-02-21T14:51:49.025Z","updatedAt":"2023-02-27T15:45:34.119Z","__v":0,"presence":{"status":"online","changedAt":"2023-02-27T15:45:34.116Z"}},"lead":{"_id":"63f4da8800597b002c634a73","status":100,"lead_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullname":"guest#ef00 ","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/chatbot-panel.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&tiledesk_participants=bot_63ef4ac4eceeab002c9bdcd7&tiledesk_departmentID=63ef47eeeceeab002c9bd8fd&td_draft=true","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"system","tags":[],"createdAt":"2023-02-21T14:51:52.923Z","updatedAt":"2023-02-27T15:46:03.259Z","__v":0},"first_text":"next generation ue","department":{"_id":"63ef47eeeceeab002c9bd8fd","routing":"assigned","default":true,"status":1,"name":"Default Department","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"5e09d16d4d36110017506d7f","tags":[],"createdAt":"2023-02-17T09:25:02.008Z","updatedAt":"2023-02-17T09:37:14.250Z","__v":0,"id_bot":"63ef4ac4eceeab002c9bdcd7","bot":{"webhook_enabled":false,"type":"external","secret":"7be4ad88-1665-45a4-98b7-306646327e46","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"_id":"63ef4ac4eceeab002c9bdcd7","name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0}},"sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","language":"it","userAgent":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","channel":{"name":"chat21"},"tags":[],"notes":[],"channelOutbound":{"name":"chat21"},"createdAt":"2023-02-27T15:45:38.976Z","updatedAt":"2023-02-27T15:46:03.287Z","ticket_id":13,"__v":1,"location":{"geometry":{"type":"Point","coordinates":[40.3548,18.1724]},"country":"IT","region":"75","city":"Lecce","ipAddress":"193.204.74.66"},"assigned_at":"2023-02-27T15:45:42.047Z","participatingAgents":[],"participatingBots":[{"_id":"63ef4ac4eceeab002c9bdcd7","webhook_enabled":false,"type":"external","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0}]}},"hook":{"webhook_enabled":false,"type":"external","secret":"7be4ad88-1665-45a4-98b7-306646327e46","language":"en","public":false,"certified":false,"intentsEngine":"none","tags":[],"_id":"63ef4ac4eceeab002c9bdcd7","name":"Bot - ext","description":"on Replit","url":"https://tiledesk-chatbot.tiledesk.repl.co/ext/63ef4826eceeab002c9bd998","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:37:08.503Z","updatedAt":"2023-02-17T09:50:17.373Z","__v":0},"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJob29rX2VuYWJsZWQiOmZhbHNlLCJ0eXBlIjoiZXh0ZXJuYWwiLCJzZWNyZXQiOiI3YmU0YWQ4OC0xNjY1LTQ1YTQtOThiNy0zMDY2NDYzMjdlNDYiLCJsYW5ndWFnZSI6ImVuIiwicHVibGljIjpmYWxzZSwiY2VydGlmaWVkIjpmYWxzZSwiaW50ZW50c0VuZ2luZSI6Im5vbmUiLCJ0YWdzIjpbXSwiX2lkIjoiNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwibmFtZSI6IkJvdCAtIGV4dCIsImRlc2NyaXB0aW9uIjoib24gUmVwbGl0IiwidXJsIjoiaHR0cHM6Ly90aWxlZGVzay1jaGF0Ym90LnRpbGVkZXNrLnJlcGwuY28vZXh0LzYzZWY0ODI2ZWNlZWFiMDAyYzliZDk5OCIsImlkX3Byb2plY3QiOiI2M2VmNDdlZGVjZWVhYjAwMmM5YmQ4ZjkiLCJ0cmFzaGVkIjpmYWxzZSwiY3JlYXRlZEJ5IjoiNWUwOWQxNmQ0ZDM2MTEwMDE3NTA2ZDdmIiwiY3JlYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTozNzowOC41MDNaIiwidXBkYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTo1MDoxNy4zNzNaIiwiX192IjowLCJpYXQiOjE2Nzc1MTQ2NTQsImF1ZCI6Imh0dHBzOi8vdGlsZWRlc2suY29tL2JvdHMvNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwiaXNzIjoiaHR0cHM6Ly90aWxlZGVzay5jb20iLCJzdWIiOiJib3QiLCJqdGkiOiJlYmZiZGNkMy02Mzc4LTRmYzYtYmRiZS1lZGI1YWY5ODRlMjAifQ.LsqADzqUqmZx7F7n31hc_r7wGQVJrF_17nJCWufts_I"}
+query botId: 63ef4826eceeab002c9bd998
+message.id_project: 63ef47edeceeab002c9bd8f9
+=====================>[object Promise]
+Setting MongodbIntentsMachine with bot: {}
+__bot_as_string found in chache: {"templateFeatures":[],"score":0,"_id":"63ef4826eceeab002c9bd998","webhook_enabled":false,"type":"tilebot","secret":"759d492c-cd11-4778-b033-97ae9c3ff8ac","language":"en","public":false,"certified":false,"intentsEngine":"tiledesk-ai","tags":[],"name":"Bot AI Integration","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:25:58.173Z","updatedAt":"2023-02-24T09:49:36.189Z","__v":0,"url":"https://tiledesk-server-pre.herokuapp.com/modules/tilebot/ext/63ef4826eceeab002c9bd998"}
+value_type: string
+got bot from cache: {"templateFeatures":[],"score":0,"_id":"63ef4826eceeab002c9bd998","webhook_enabled":false,"type":"tilebot","secret":"759d492c-cd11-4778-b033-97ae9c3ff8ac","language":"en","public":false,"certified":false,"intentsEngine":"tiledesk-ai","tags":[],"name":"Bot AI Integration","id_project":"63ef47edeceeab002c9bd8f9","trashed":false,"createdBy":"5e09d16d4d36110017506d7f","createdAt":"2023-02-17T09:25:58.173Z","updatedAt":"2023-02-24T09:49:36.189Z","__v":0,"url":"https://tiledesk-server-pre.herokuapp.com/modules/tilebot/ext/63ef4826eceeab002c9bd998"}
+request parameter: tdCity value: Lecce type: string
+request parameter: tdEndUserIpAddress value: 193.204.74.66 type: string
+request parameter: tdEndUserId value: ef00d50d-7608-4865-b387-2c28af8dd16b type: string
+request parameter: tdProjectId value: 63ef47edeceeab002c9bd8f9 type: string
+request parameter: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 value: userFullname type: string
+request parameter: tdDepartmentId value: 63ef47eeeceeab002c9bd8fd type: string
+request parameter: tdDepartmentName value: Default Department type: string
+request parameter: tdLastMessageId value: 63fcd79ea207e5003cddc6ab type: string
+request parameter: tdLastUserText value: parla del pnrr type: string
+request parameter: tdUserSourcePage value: https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin type: string
+request parameter: tdRequestId value: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9 type: string
+request parameter: tdUserLanguage value: it type: string
+request parameter: tdCountry value: IT type: string
+request parameter: tdUserAgent value: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0 type: string
+lead.fullname => params.userFullname: guest#ef00 
+replyToMessage() > lead found: {"_id":"63f4da8800597b002c634a73","status":100,"lead_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullname":"guest#ef00 ","attributes":{"departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/chatbot-panel.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&tiledesk_participants=bot_63ef4ac4eceeab002c9bdcd7&tiledesk_departmentID=63ef47eeeceeab002c9bd8fd&td_draft=true","sourceTitle":"Widget test page","projectId":"63ef47edeceeab002c9bd8f9","widgetVer":"v.5.0.53-rc.6","payload":[],"userFullname":"guest#ef00 ","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","subtype":"info","decoded_jwt":{"_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","firstname":"guest#ef00","id":"ef00d50d-7608-4865-b387-2c28af8dd16b","fullName":"guest#ef00 ","iat":1676991109,"aud":"https://tiledesk.com","iss":"https://tiledesk.com","sub":"guest","jti":"3773fd1a-3e2a-458f-a609-5c3022a0f553"}},"id_project":"63ef47edeceeab002c9bd8f9","createdBy":"system","tags":[],"createdAt":"2023-02-21T14:51:52.923Z","updatedAt":"2023-02-27T15:46:03.259Z","__v":0}
+Resetting current step by request message: parla del pnrr
+after reset currentStep: 0
+got locked intent null
+Chatbot NLP decode intent...
+Mongodb NLP decode intent...
+Found: [
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e8"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è la Rete dei referenti antifrode del PNRR?\n" +
+      'Cosa si intende per Rete dei referenti antifrode del PNRR?\n' +
+      'rete referenti antifrode?\n' +
+      'antifrode?',
+    answer: 'La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il\n' +
+      'PNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.\n' +
+      '* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'cba96c7b-6ded-4cf3-a12b-be2f0a2ec1d0',
+    intent_display_name: 'referenti antifrode',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 1.6363636363636362
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b665"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'In quale ambito la Direzione Generale Creatività Contemporanea del Ministero della Cultura partecipa all’attuazione del PNRR ?',
+    answer: '\n' +
+      'La Direzione Generale Creatività Contemporanea del Ministero della Cultura partecipa all’attuazione del PNRR nell’ambito del programma Next Generation EU e sovrintende, quale struttura attuatrice, all’intervento  Capacity building per gli operatori della cultura nella  gestione della transizione digitale e verde.\n' +
+      '* Approfondisci https://creativitacontemporanea.beniculturali.it/\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'c208429e-a5a2-4231-bdc7-c9d0ef903cc3',
+    intent_display_name: 'ambitominculturapnrr',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.3833333333333333
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b663"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali sono gli obiettivi del Fondo Rotativo Imprese Turistiche M1C3 del PNRR  investimento 4.2.5 ?',
+    answer: 'Gli obiettivi del Fondo Rotativo Imprese turistiche sono:\n' +
+      '- migliorare la qualità dei servizi di ospitalità italiana con il potenziamento delle strutture ricettive;\n' +
+      '- sostenere nuovi investimenti nel settore fieristico, secondo principi di sostenibilità ambientale e digitalizzazione, per attrarre nuovi flussi turistici su scala nazionale e internazionale;\n' +
+      '- sostenere investimenti di dimensioni medio-grandi (tra 500mila€ e 10mln€) anche al fine di agire in piena complementarità con lo strumento del tax credit.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'a350db74-45af-488c-bdab-1b15ad72f6a1',
+    intent_display_name: 'fondorotativo2',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b664"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Chi sono i soggetti beneficiari del Fondo Rotativo Imprese Turistiche, M1C3 del PNRR investimento 4.2.5 ?',
+    answer: 'I soggetti beneficiari del Fondo Rotativo Imprese Turistiche sono:\n' +
+      '\t- le imprese alberghiere, \n' +
+      '\t- le strutture che svolgono attività agrituristica, \n' +
+      '\t- le strutture ricettive all’aria aperta, \n' +
+      '\t- le imprese del comparto turistico, ricreativo, fieristico e congressuale, \n' +
+      '\t- gli stabilimenti balneari, i complessi termali, i porti turistici ed i parchi tematici.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '178d683a-91a7-47ef-bbb7-ed0d941358a8',
+    intent_display_name: 'beneficiarifondorotativo',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5ae"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Chi ha la  governance del PNRR? \n' +
+      'Chi gestisce i processi?\n' +
+      'Che stanzia i fondi?',
+    answer: '\n' +
+      "La struttura di governance del Piano è stata organizzata per assicurare speditezza ed un intenso monitoraggio delle attività di attuazione, mirando a rimuovere ostacoli e freni che possono presentarsi in corso d'opera. \n" +
+      "E' una struttura policentrica a più livelli che si articola in una Cabina di Regia a Palazzo Chigi, una sua Segreteria Tecnica con compiti estesi di monitoraggio e proposta, un Ufficio del Programma alla Presidenza del Consiglio insieme ad una Unità con il compito di superare gli intralci normativi, regolamentari e burocratici all'attuazione del Piano.\n" +
+      'Un ruolo chiave svolge il Servizio Centrale per il PNRR presso il MEF, alla Ragioneria Generale dello Stato (RGS), con funzioni di cardine ed interfaccia con la Commissione Europea ed i Ministeri per gestire, monitorare e rendicontare le risorse.\n' +
+      "Inoltre, è attivato un Tavolo permanente per il Partenariato con i rappresentati del territorio, dell'economia e del lavoro.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'df884fa7-5242-48d4-940d-9edf05440f7c',
+    intent_display_name: 'nAioAP',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 1.0833333333333333
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5f8"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "E' previsto un coordinamento tra Capacity Italy e le altre task force del PNRR?",
+    answer: 'Sì. I professionisti del network di “Capacity Italy” si coordineranno con le task force costituite per attuare il PNRR a livello locale.',
+    intent_id: '0e9b207d-9a84-4d8d-9305-be7d3a26bd78',
+    intent_display_name: 'Capcoord11',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.394Z,
+    updatedAt: 2023-02-24T10:15:45.394Z,
+    __v: 0,
+    score: 1.0714285714285714
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5ea"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Servizio centrale per il PNRR?\n" +
+      'Cosa si intende per Servizio centrale per il PNRR?\n' +
+      'servizio centrale per il PNRR\n',
+    answer: "Il Servizio centrale per il PNRR è la struttura dirigenziale di livello generale istituita presso il Ministero dell'Economia e delle Finanze - Dipartimento della Ragioneria Generale dello Stato, con compiti di coordinamento operativo, monitoraggio, rendicontazione e controllo del PNRR e punto di contatto nazionale per l’attuazione del Piano ai sensi dell’articolo 22 del Regolamento (UE) 2021/241.\n" +
+      '* OK tdIntent:OK \n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'fa1aa09e-78ea-4bba-b8ef-4ff501287c88',
+    intent_display_name: 'servizio centrale',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 1
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5aa"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Piano Nazionale di Ripresa e Resilienza?\n" +
+      'Cosa è il PNRR?\n' +
+      'In cosa consiste il PNRR?',
+    answer: 'Il Piano Nazionale di Ripresa e Resilienza è il documento che illustra le proposte di allocazione delle risorse derivanti dal Next Generation EU (NGEU), il piano europeo da 750 miliardi che i Paesi membri utilizzeranno per la ripresa delle economie nazionali, gravemente provate dagli effetti della pandemia di Covid-19.\n' +
+      '* OK tdAction:OK\n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'd8330479-d88d-4025-a532-73155a047693',
+    intent_display_name: '5SQr6-',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 0.84375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b678"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'L’investimento per la tutela del verde urbano ed extraurbano ha raggiunto il target del 2022?',
+    answer: 'L’investimento dedicato alla valorizzazione del verde urbano ed extraurbano nella 14 città metropolitane ha raggiunto l’obiettivo previsto per dicembre 2022 con la messa a dimora di oltre 1 milione e 800 mila alberi.\n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'f4b2772a-abd0-4fda-b0e1-2a7413842b97',
+    intent_display_name: 'tutelaverde1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.84375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5b2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Struttura PNRR\nArticolazione Piano\n',
+    answer: 'Il PNRR è articolato in 16 componenti (settori di intervento), raggruppati in 6 Missioni che riproducono i 6 pilastri del RRF. \n' +
+      'Tali Missioni sono così denominate:\n' +
+      'Missione 1: Digitalizzazione, innovazione, competitività, cultura e turismo;\n' +
+      'Missione 2: Rivoluzione verde e transizione ecologica;\n' +
+      'Missione 3: Infrastrutture per una mobilità sostenibile;\n' +
+      'Missione 4: Istruzione e ricerca;\n' +
+      'Missione 5: Coesione e inclusione;\n' +
+      'Missione 6: Salute.    \n' +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'a3d26aa4-e447-4e21-addb-b1fc0847df32',
+    intent_display_name: 'mskBPv',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 0.625
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5c2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Piano nazionale borghi?\nPiccoli comuni\nPNRR e piccoli comuni",
+    answer: 'Il "Piano nazionale borghi" è un programma di sostegno allo sviluppo economico-sociale delle zone svantaggiate basato sulla rigenerazione culturale dei piccoli centri e sul rilancio turistico. \n' +
+      "Le azioni sono strutturate intorno a progetti culturali integrati a livello locale. Le misure si concentreranno su: - ripristino del patrimonio storico, riqualificazione degli spazi pubblici aperti (es. abbattimento barriere architettoniche, miglioramento arredo urbano), realizzazione di piccoli servizi culturali, anche a fini turistici; - sarà incoraggiata la creazione e la promozione di nuovi percorsi storici, tematici e visite guidate; - l'introduzione di un sostegno finanziario ad attività culturali, creative, turistiche, commerciali, agroalimentari e artigianali, finalizzate a rivitalizzare le economie locali valorizzando i prodotti, le conoscenze e le tecniche locali\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '67b87689-030d-4847-9fba-0db299f789da',
+    intent_display_name: 'I0uoQZ',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5d1"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Qual è l' Obiettivo Complessivo della Missione 5?\nMercato del lavoro",
+    answer: "Facilitare la partecipazione al mercato del lavoro, anche attraverso la formazione, e rafforzare le politiche attive del lavoro; favorire l'inclusione sociale.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '7f7f75ec-e1bf-4a79-a479-19ce0e7a0ea3',
+    intent_display_name: 'MzM9OO',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5df"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Digitalizzazione della PA\n' +
+      'PNRR e trasformazione digitale\n' +
+      'Digitale\n' +
+      'Digitalizzazione nella PA',
+    answer: 'La digitalizzazione della PA rappresenta una delle principali sfide individuate dalle strategie di ripresa delineate dal Piano Nazionale di Ripresa e Resilienza (PNRR).\n' +
+      'In linea con quanto previsto dal Regolamento (UE) 2021/241 istitutivo del Recovery and Resilience Facility, che individua nella transizione digitale uno dei sei pilastri per le strategie di rilancio delle economie europee, il PNRR destina circa il 25% a investimenti in tecnologie, infrastrutture e processi digitali finalizzati a promuovere la competitività del sistema paese.\n' +
+      'Tra queste risorse, più di 6 miliardi di euro sono destinati in maniera specifica a interventi volti a trasformare la pubblica amministrazione in chiave digitale. Tali interventi sono condensati nella prima componente della Missione 1 dedicata a “Digitalizzazione, innovazione e sicurezza nella PA” (M1C1). Tale componente si articola a sua volta in tre ambiti di intervento, il primo dei quali è dedicato in maniera specifica a “Digitalizzazione PA”.\n' +
+      '* Approfondisci https://lineaamica.gov.it/risultati-di-ricerca?query=digitalizzazione\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'ed595688-88bb-443c-ae71-abea47a7d0af',
+    intent_display_name: 'DIGITAL',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b66c"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Cosa prevede il Decreto Mite n. 263 del 30 giugno 2022?',
+    answer: 'Il DM n. 263 del 2022 ripartisce le risorse finanziarie e definisce i criteri per la concessione dei benefici. In particolare: 50 mln per sistemi di piccole dimensioni e 150 mln di euro per sistemi di qualsiasi dimensione.\n' +
+      '\n' +
+      '* Approfondisci https://www.italiadomani.gov.it/it/Interventi/investimenti/sviluppo-di-sistemi-di-teleriscaldamento.html \n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: '5801fff7-f46a-4f32-87dd-37c2145aa5d5',
+    intent_display_name: 'mite2022',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e4"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il principio del “non arrecare un danno significativo” (DNSH)?\n" +
+      'danno significativo?\n' +
+      'DNSH?\n' +
+      'DNSH\n',
+    answer: 'Il principio “Do No Significant Harm” (DNSH) prevede che gli interventi del PNRR non arrechino alcun danno significativo all’ambiente, e questo principio deve essere rispettato lungo tutta la fase di attuazione.\n' +
+      '* Approfondisci https://lineaamica.gov.it/risultati-di-ricerca?query=dnsh\n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: '54336170-7499-4d68-a521-57cf9d49871b',
+    intent_display_name: 'DNSH',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali sono le Amministrazioni centrali titolari di interventi PNRR?\n' +
+      'Amministrazioni centrali?\n' +
+      'titolari di interventi?',
+    answer: "Le Amministrazioni centrali, titolari di interventi PNRR, sono Ministeri e strutture della Presidenza del Consiglio dei Ministri responsabili dell'attuazione delle riforme e degli investimenti (ossia delle Misure) previsti nel Piano. \n" +
+      '* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'e78e08b9-d83b-426d-9937-8bf449198bbe',
+    intent_display_name: 'titolari',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b679"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Per l’investimento dedicato alla tutela del verde quante specie differenti sono state piantate?',
+    answer: 'Il Mase ha segnalato che nell’ambito dell’investimento 3.1 della Missione 2 – Componente 4 sono state messe a dimora 110 varietà diverse, di cui 55 arbustive e 55 arboree.\n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'fe53f1d8-1e09-4e10-97df-a9cbca4790f3',
+    intent_display_name: 'tutelaverde3',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b671"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'E’ stato avviato l’investimento per il rafforzamento del sistema idrico e il riuso delle acque?',
+    answer: 'L’investimento è stato avviato con la pubblicazione del Decreto Mite n. 191 del 17 maggio 2022 – G.U. n.145 del 23 giugno 2022. La misura mira a favorire il riuso delle risorse idriche e l’adeguamento del sistema idrico.\n' +
+      '* Approfondisci https://www.italiadomani.gov.it/it/Interventi/investimenti/sviluppo-di-sistemi-di-teleriscaldamento.html \n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: 'e3130e98-f570-4815-a4f5-94d1b04877d0',
+    intent_display_name: 'avviotelerisc1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.53125
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b662"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali le finalità del Fondo Rotativo per sostenere le imprese turistiche e gli investimenti di sviluppo nel turismo?',
+    answer: 'Le finalità del Fondo Rotativo per sostenere le Imprese Turistiche sono quelle di agevolare l’accesso al credito e gli investimenti di media dimensione nel settore turistico per le piccole e medie imprese, con una riserva del 50% per gli investimenti green.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '344c44e2-285d-4a38-991e-d00f9c38b957',
+    intent_display_name: 'fondorotativoturismo',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5277777777777778
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b67a"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Per l’investimento rivolto alla tutela del verde, il Mase ha segnalato il numero delle varietà piantate per singola città?',
+    answer: 'Il Mase nel report sul Pnrr di dicembre 2022 ha reso noto per l’investimento 3.1 della Missione 2 – Componente 4 sia il numero di varietà che di piante messe a dimora in ogni città metropolitana. \n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '2402a702-42b7-4743-8585-1893c9b223b1',
+    intent_display_name: 'maseverde1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.525
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b666"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quale è la normativa di riferimento per cui la Direzione Generale Creatività Contemporanea del Ministero della Cultura attua parte della propria mission?',
+    answer: 'La Direzione Generale Creatività Contemporanea del Ministero della Cultura attua parte della propria mission applicando leggi e programmi su cui ha esclusiva competenza e in particolare la Legge 717/49 Norme per l’arte negli edifici pubblici, la Legge 633/41 Protezione del diritto d’autore e di altri diritti connessi al suo esercizio e la Legge 512/82 Regime fiscale dei beni di rilevante interesse culturale.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '76edc9c7-eec9-4f50-92be-6b8ad3b2f02c',
+    intent_display_name: 'normamincultura',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5227272727272727
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5f0"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali Amministrazioni pubbliche possono avvalersi del supporto di Capacity Italy?\n' +
+      'Quali PA possono usare capacity Italy\n' +
+      'Quali PA possono utilizzare capacity Italy',
+    answer: 'Tutte. In particolare, Regioni, Province, Città Metropolitane, Comuni ed Enti Locali.',
+    intent_id: '4a2803e4-ad6e-4713-8e32-98e6d57431ca',
+    intent_display_name: 'Capamm2',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.394Z,
+    updatedAt: 2023-02-24T10:15:45.394Z,
+    __v: 0,
+    score: 0.5227272727272727
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5cc"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Sarà finanziata la digitalizzazione del patrimonio culturale e artistico?\n' +
+      'cultura\n' +
+      'patrimonio culturale\n' +
+      'patrimonio artistico\n' +
+      'Cosa è previsto per la cultura?\n' +
+      'arte\n' +
+      'Intervernti per la cultura',
+    answer: `Nell'ambito della Missione 1 - Componente 3 è previsto l'investimento 1.1: "Strategia digitale e piattaforme per il patrimonio culturale". Il PNRR investe per digitalizzare il patrimonio culturale, favorendo la fruizione di queste informazioni e lo sviluppo di servizi da parte del settore culturale/creativo. Gli interventi sul patrimonio "fisico" saranno accompagnati da un importante sforzo per la digitalizzazione di quanto custodito in musei, archivi, biblioteche e luoghi della cultura, così da consentire  a cittadini e operatori di settore di esplorare nuove forme di fruizione del patrimonio culturale e di avere un più semplice ed efficace rapporto con la pubblica amministrazione.\n` +
+      "Una infrastruttura digitale nazionale raccoglierà, integrerà e conserverà le risorse digitali, rendendole disponibili per la fruizione pubblica attraverso piattaforme dedicate. Sarà inoltre sostenuta la creazione di nuovi contenuti culturali e lo sviluppo di servizi digitali ad alto valore aggiunto da parte di imprese culturali/creative e start-up innovative, con l'obiettivo finale di stimolare un'economia basata sulla circolazione della conoscenza.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '4760ad66-3024-44b0-87b0-46d05c9014bd',
+    intent_display_name: 'PBceD_',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.52
+  }
+]
+NLP decoded found: [
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e8"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è la Rete dei referenti antifrode del PNRR?\n" +
+      'Cosa si intende per Rete dei referenti antifrode del PNRR?\n' +
+      'rete referenti antifrode?\n' +
+      'antifrode?',
+    answer: 'La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il\n' +
+      'PNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.\n' +
+      '* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'cba96c7b-6ded-4cf3-a12b-be2f0a2ec1d0',
+    intent_display_name: 'referenti antifrode',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 1.6363636363636362
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b665"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'In quale ambito la Direzione Generale Creatività Contemporanea del Ministero della Cultura partecipa all’attuazione del PNRR ?',
+    answer: '\n' +
+      'La Direzione Generale Creatività Contemporanea del Ministero della Cultura partecipa all’attuazione del PNRR nell’ambito del programma Next Generation EU e sovrintende, quale struttura attuatrice, all’intervento  Capacity building per gli operatori della cultura nella  gestione della transizione digitale e verde.\n' +
+      '* Approfondisci https://creativitacontemporanea.beniculturali.it/\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'c208429e-a5a2-4231-bdc7-c9d0ef903cc3',
+    intent_display_name: 'ambitominculturapnrr',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.3833333333333333
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b663"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali sono gli obiettivi del Fondo Rotativo Imprese Turistiche M1C3 del PNRR  investimento 4.2.5 ?',
+    answer: 'Gli obiettivi del Fondo Rotativo Imprese turistiche sono:\n' +
+      '- migliorare la qualità dei servizi di ospitalità italiana con il potenziamento delle strutture ricettive;\n' +
+      '- sostenere nuovi investimenti nel settore fieristico, secondo principi di sostenibilità ambientale e digitalizzazione, per attrarre nuovi flussi turistici su scala nazionale e internazionale;\n' +
+      '- sostenere investimenti di dimensioni medio-grandi (tra 500mila€ e 10mln€) anche al fine di agire in piena complementarità con lo strumento del tax credit.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'a350db74-45af-488c-bdab-1b15ad72f6a1',
+    intent_display_name: 'fondorotativo2',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b664"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Chi sono i soggetti beneficiari del Fondo Rotativo Imprese Turistiche, M1C3 del PNRR investimento 4.2.5 ?',
+    answer: 'I soggetti beneficiari del Fondo Rotativo Imprese Turistiche sono:\n' +
+      '\t- le imprese alberghiere, \n' +
+      '\t- le strutture che svolgono attività agrituristica, \n' +
+      '\t- le strutture ricettive all’aria aperta, \n' +
+      '\t- le imprese del comparto turistico, ricreativo, fieristico e congressuale, \n' +
+      '\t- gli stabilimenti balneari, i complessi termali, i porti turistici ed i parchi tematici.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '178d683a-91a7-47ef-bbb7-ed0d941358a8',
+    intent_display_name: 'beneficiarifondorotativo',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 1.375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5ae"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Chi ha la  governance del PNRR? \n' +
+      'Chi gestisce i processi?\n' +
+      'Che stanzia i fondi?',
+    answer: '\n' +
+      "La struttura di governance del Piano è stata organizzata per assicurare speditezza ed un intenso monitoraggio delle attività di attuazione, mirando a rimuovere ostacoli e freni che possono presentarsi in corso d'opera. \n" +
+      "E' una struttura policentrica a più livelli che si articola in una Cabina di Regia a Palazzo Chigi, una sua Segreteria Tecnica con compiti estesi di monitoraggio e proposta, un Ufficio del Programma alla Presidenza del Consiglio insieme ad una Unità con il compito di superare gli intralci normativi, regolamentari e burocratici all'attuazione del Piano.\n" +
+      'Un ruolo chiave svolge il Servizio Centrale per il PNRR presso il MEF, alla Ragioneria Generale dello Stato (RGS), con funzioni di cardine ed interfaccia con la Commissione Europea ed i Ministeri per gestire, monitorare e rendicontare le risorse.\n' +
+      "Inoltre, è attivato un Tavolo permanente per il Partenariato con i rappresentati del territorio, dell'economia e del lavoro.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'df884fa7-5242-48d4-940d-9edf05440f7c',
+    intent_display_name: 'nAioAP',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 1.0833333333333333
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5f8"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "E' previsto un coordinamento tra Capacity Italy e le altre task force del PNRR?",
+    answer: 'Sì. I professionisti del network di “Capacity Italy” si coordineranno con le task force costituite per attuare il PNRR a livello locale.',
+    intent_id: '0e9b207d-9a84-4d8d-9305-be7d3a26bd78',
+    intent_display_name: 'Capcoord11',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.394Z,
+    updatedAt: 2023-02-24T10:15:45.394Z,
+    __v: 0,
+    score: 1.0714285714285714
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5ea"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Servizio centrale per il PNRR?\n" +
+      'Cosa si intende per Servizio centrale per il PNRR?\n' +
+      'servizio centrale per il PNRR\n',
+    answer: "Il Servizio centrale per il PNRR è la struttura dirigenziale di livello generale istituita presso il Ministero dell'Economia e delle Finanze - Dipartimento della Ragioneria Generale dello Stato, con compiti di coordinamento operativo, monitoraggio, rendicontazione e controllo del PNRR e punto di contatto nazionale per l’attuazione del Piano ai sensi dell’articolo 22 del Regolamento (UE) 2021/241.\n" +
+      '* OK tdIntent:OK \n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'fa1aa09e-78ea-4bba-b8ef-4ff501287c88',
+    intent_display_name: 'servizio centrale',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 1
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5aa"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Piano Nazionale di Ripresa e Resilienza?\n" +
+      'Cosa è il PNRR?\n' +
+      'In cosa consiste il PNRR?',
+    answer: 'Il Piano Nazionale di Ripresa e Resilienza è il documento che illustra le proposte di allocazione delle risorse derivanti dal Next Generation EU (NGEU), il piano europeo da 750 miliardi che i Paesi membri utilizzeranno per la ripresa delle economie nazionali, gravemente provate dagli effetti della pandemia di Covid-19.\n' +
+      '* OK tdAction:OK\n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'd8330479-d88d-4025-a532-73155a047693',
+    intent_display_name: '5SQr6-',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 0.84375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b678"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'L’investimento per la tutela del verde urbano ed extraurbano ha raggiunto il target del 2022?',
+    answer: 'L’investimento dedicato alla valorizzazione del verde urbano ed extraurbano nella 14 città metropolitane ha raggiunto l’obiettivo previsto per dicembre 2022 con la messa a dimora di oltre 1 milione e 800 mila alberi.\n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'f4b2772a-abd0-4fda-b0e1-2a7413842b97',
+    intent_display_name: 'tutelaverde1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.84375
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5b2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Struttura PNRR\nArticolazione Piano\n',
+    answer: 'Il PNRR è articolato in 16 componenti (settori di intervento), raggruppati in 6 Missioni che riproducono i 6 pilastri del RRF. \n' +
+      'Tali Missioni sono così denominate:\n' +
+      'Missione 1: Digitalizzazione, innovazione, competitività, cultura e turismo;\n' +
+      'Missione 2: Rivoluzione verde e transizione ecologica;\n' +
+      'Missione 3: Infrastrutture per una mobilità sostenibile;\n' +
+      'Missione 4: Istruzione e ricerca;\n' +
+      'Missione 5: Coesione e inclusione;\n' +
+      'Missione 6: Salute.    \n' +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: 'a3d26aa4-e447-4e21-addb-b1fc0847df32',
+    intent_display_name: 'mskBPv',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.390Z,
+    updatedAt: 2023-02-24T10:15:45.390Z,
+    __v: 0,
+    score: 0.625
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5c2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il Piano nazionale borghi?\nPiccoli comuni\nPNRR e piccoli comuni",
+    answer: 'Il "Piano nazionale borghi" è un programma di sostegno allo sviluppo economico-sociale delle zone svantaggiate basato sulla rigenerazione culturale dei piccoli centri e sul rilancio turistico. \n' +
+      "Le azioni sono strutturate intorno a progetti culturali integrati a livello locale. Le misure si concentreranno su: - ripristino del patrimonio storico, riqualificazione degli spazi pubblici aperti (es. abbattimento barriere architettoniche, miglioramento arredo urbano), realizzazione di piccoli servizi culturali, anche a fini turistici; - sarà incoraggiata la creazione e la promozione di nuovi percorsi storici, tematici e visite guidate; - l'introduzione di un sostegno finanziario ad attività culturali, creative, turistiche, commerciali, agroalimentari e artigianali, finalizzate a rivitalizzare le economie locali valorizzando i prodotti, le conoscenze e le tecniche locali\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '67b87689-030d-4847-9fba-0db299f789da',
+    intent_display_name: 'I0uoQZ',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5d1"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Qual è l' Obiettivo Complessivo della Missione 5?\nMercato del lavoro",
+    answer: "Facilitare la partecipazione al mercato del lavoro, anche attraverso la formazione, e rafforzare le politiche attive del lavoro; favorire l'inclusione sociale.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '7f7f75ec-e1bf-4a79-a479-19ce0e7a0ea3',
+    intent_display_name: 'MzM9OO',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5df"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Digitalizzazione della PA\n' +
+      'PNRR e trasformazione digitale\n' +
+      'Digitale\n' +
+      'Digitalizzazione nella PA',
+    answer: 'La digitalizzazione della PA rappresenta una delle principali sfide individuate dalle strategie di ripresa delineate dal Piano Nazionale di Ripresa e Resilienza (PNRR).\n' +
+      'In linea con quanto previsto dal Regolamento (UE) 2021/241 istitutivo del Recovery and Resilience Facility, che individua nella transizione digitale uno dei sei pilastri per le strategie di rilancio delle economie europee, il PNRR destina circa il 25% a investimenti in tecnologie, infrastrutture e processi digitali finalizzati a promuovere la competitività del sistema paese.\n' +
+      'Tra queste risorse, più di 6 miliardi di euro sono destinati in maniera specifica a interventi volti a trasformare la pubblica amministrazione in chiave digitale. Tali interventi sono condensati nella prima componente della Missione 1 dedicata a “Digitalizzazione, innovazione e sicurezza nella PA” (M1C1). Tale componente si articola a sua volta in tre ambiti di intervento, il primo dei quali è dedicato in maniera specifica a “Digitalizzazione PA”.\n' +
+      '* Approfondisci https://lineaamica.gov.it/risultati-di-ricerca?query=digitalizzazione\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'ed595688-88bb-443c-ae71-abea47a7d0af',
+    intent_display_name: 'DIGITAL',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b66c"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Cosa prevede il Decreto Mite n. 263 del 30 giugno 2022?',
+    answer: 'Il DM n. 263 del 2022 ripartisce le risorse finanziarie e definisce i criteri per la concessione dei benefici. In particolare: 50 mln per sistemi di piccole dimensioni e 150 mln di euro per sistemi di qualsiasi dimensione.\n' +
+      '\n' +
+      '* Approfondisci https://www.italiadomani.gov.it/it/Interventi/investimenti/sviluppo-di-sistemi-di-teleriscaldamento.html \n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: '5801fff7-f46a-4f32-87dd-37c2145aa5d5',
+    intent_display_name: 'mite2022',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5454545454545454
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e4"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: "Cos'è il principio del “non arrecare un danno significativo” (DNSH)?\n" +
+      'danno significativo?\n' +
+      'DNSH?\n' +
+      'DNSH\n',
+    answer: 'Il principio “Do No Significant Harm” (DNSH) prevede che gli interventi del PNRR non arrechino alcun danno significativo all’ambiente, e questo principio deve essere rispettato lungo tutta la fase di attuazione.\n' +
+      '* Approfondisci https://lineaamica.gov.it/risultati-di-ricerca?query=dnsh\n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: '54336170-7499-4d68-a521-57cf9d49871b',
+    intent_display_name: 'DNSH',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5e2"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali sono le Amministrazioni centrali titolari di interventi PNRR?\n' +
+      'Amministrazioni centrali?\n' +
+      'titolari di interventi?',
+    answer: "Le Amministrazioni centrali, titolari di interventi PNRR, sono Ministeri e strutture della Presidenza del Consiglio dei Ministri responsabili dell'attuazione delle riforme e degli investimenti (ossia delle Misure) previsti nel Piano. \n" +
+      '* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'e78e08b9-d83b-426d-9937-8bf449198bbe',
+    intent_display_name: 'titolari',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b679"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Per l’investimento dedicato alla tutela del verde quante specie differenti sono state piantate?',
+    answer: 'Il Mase ha segnalato che nell’ambito dell’investimento 3.1 della Missione 2 – Componente 4 sono state messe a dimora 110 varietà diverse, di cui 55 arbustive e 55 arboree.\n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: 'fe53f1d8-1e09-4e10-97df-a9cbca4790f3',
+    intent_display_name: 'tutelaverde3',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5357142857142857
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b671"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'E’ stato avviato l’investimento per il rafforzamento del sistema idrico e il riuso delle acque?',
+    answer: 'L’investimento è stato avviato con la pubblicazione del Decreto Mite n. 191 del 17 maggio 2022 – G.U. n.145 del 23 giugno 2022. La misura mira a favorire il riuso delle risorse idriche e l’adeguamento del sistema idrico.\n' +
+      '* Approfondisci https://www.italiadomani.gov.it/it/Interventi/investimenti/sviluppo-di-sistemi-di-teleriscaldamento.html \n' +
+      '* Non ho capito tdIntent:NO_CAPITO\n',
+    intent_id: 'e3130e98-f570-4815-a4f5-94d1b04877d0',
+    intent_display_name: 'avviotelerisc1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.53125
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b662"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali le finalità del Fondo Rotativo per sostenere le imprese turistiche e gli investimenti di sviluppo nel turismo?',
+    answer: 'Le finalità del Fondo Rotativo per sostenere le Imprese Turistiche sono quelle di agevolare l’accesso al credito e gli investimenti di media dimensione nel settore turistico per le piccole e medie imprese, con una riserva del 50% per gli investimenti green.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '344c44e2-285d-4a38-991e-d00f9c38b957',
+    intent_display_name: 'fondorotativoturismo',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5277777777777778
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b67a"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Per l’investimento rivolto alla tutela del verde, il Mase ha segnalato il numero delle varietà piantate per singola città?',
+    answer: 'Il Mase nel report sul Pnrr di dicembre 2022 ha reso noto per l’investimento 3.1 della Missione 2 – Componente 4 sia il numero di varietà che di piante messe a dimora in ogni città metropolitana. \n' +
+      '\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '2402a702-42b7-4743-8585-1893c9b223b1',
+    intent_display_name: 'maseverde1',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.525
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b666"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quale è la normativa di riferimento per cui la Direzione Generale Creatività Contemporanea del Ministero della Cultura attua parte della propria mission?',
+    answer: 'La Direzione Generale Creatività Contemporanea del Ministero della Cultura attua parte della propria mission applicando leggi e programmi su cui ha esclusiva competenza e in particolare la Legge 717/49 Norme per l’arte negli edifici pubblici, la Legge 633/41 Protezione del diritto d’autore e di altri diritti connessi al suo esercizio e la Legge 512/82 Regime fiscale dei beni di rilevante interesse culturale.\n' +
+      '* Non ho capito tdIntent:NO_CAPITO',
+    intent_id: '76edc9c7-eec9-4f50-92be-6b8ad3b2f02c',
+    intent_display_name: 'normamincultura',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.444Z,
+    updatedAt: 2023-02-24T10:15:45.444Z,
+    __v: 0,
+    score: 0.5227272727272727
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5f0"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Quali Amministrazioni pubbliche possono avvalersi del supporto di Capacity Italy?\n' +
+      'Quali PA possono usare capacity Italy\n' +
+      'Quali PA possono utilizzare capacity Italy',
+    answer: 'Tutte. In particolare, Regioni, Province, Città Metropolitane, Comuni ed Enti Locali.',
+    intent_id: '4a2803e4-ad6e-4713-8e32-98e6d57431ca',
+    intent_display_name: 'Capamm2',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.394Z,
+    updatedAt: 2023-02-24T10:15:45.394Z,
+    __v: 0,
+    score: 0.5227272727272727
+  },
+  {
+    _id: new ObjectId("63f88e51fd17b2002c77b5cc"),
+    webhook_enabled: false,
+    enabled: true,
+    topic: 'default',
+    status: 'live',
+    actions: [],
+    id_faq_kb: '63ef4826eceeab002c9bd998',
+    question: 'Sarà finanziata la digitalizzazione del patrimonio culturale e artistico?\n' +
+      'cultura\n' +
+      'patrimonio culturale\n' +
+      'patrimonio artistico\n' +
+      'Cosa è previsto per la cultura?\n' +
+      'arte\n' +
+      'Intervernti per la cultura',
+    answer: `Nell'ambito della Missione 1 - Componente 3 è previsto l'investimento 1.1: "Strategia digitale e piattaforme per il patrimonio culturale". Il PNRR investe per digitalizzare il patrimonio culturale, favorendo la fruizione di queste informazioni e lo sviluppo di servizi da parte del settore culturale/creativo. Gli interventi sul patrimonio "fisico" saranno accompagnati da un importante sforzo per la digitalizzazione di quanto custodito in musei, archivi, biblioteche e luoghi della cultura, così da consentire  a cittadini e operatori di settore di esplorare nuove forme di fruizione del patrimonio culturale e di avere un più semplice ed efficace rapporto con la pubblica amministrazione.\n` +
+      "Una infrastruttura digitale nazionale raccoglierà, integrerà e conserverà le risorse digitali, rendendole disponibili per la fruizione pubblica attraverso piattaforme dedicate. Sarà inoltre sostenuta la creazione di nuovi contenuti culturali e lo sviluppo di servizi digitali ad alto valore aggiunto da parte di imprese culturali/creative e start-up innovative, con l'obiettivo finale di stimolare un'economia basata sulla circolazione della conoscenza.\n" +
+      '* OK tdAction:OK \n' +
+      '* Non ho capito tdAction:NO_CAPITO',
+    intent_id: '4760ad66-3024-44b0-87b0-46d05c9014bd',
+    intent_display_name: 'PBceD_',
+    language: 'en',
+    id_project: '63ef47edeceeab002c9bd8f9',
+    createdBy: '63ef4be5eceeab002c9bddaf',
+    createdAt: 2023-02-24T10:15:45.393Z,
+    updatedAt: 2023-02-24T10:15:45.393Z,
+    __v: 0,
+    score: 0.52
+  }
+]
+botID: 63ef4826eceeab002c9bd998
+key: referenti antifrode
+in tdchace
+Looking in cache for: cacheman:cachegoose-cache:faqs:botid:63ef4826eceeab002c9bd998:faq:id:referenti antifrode
+_faq_as_string found in chache: {"_id":"63f88e51fd17b2002c77b5e8","webhook_enabled":false,"enabled":true,"topic":"default","status":"live","actions":[],"id_faq_kb":"63ef4826eceeab002c9bd998","question":"Cos'è la Rete dei referenti antifrode del PNRR?\nCosa si intende per Rete dei referenti antifrode del PNRR?\nrete referenti antifrode?\nantifrode?","answer":"La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il\nPNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.\n* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO","intent_id":"cba96c7b-6ded-4cf3-a12b-be2f0a2ec1d0","intent_display_name":"referenti antifrode","language":"en","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"63ef4be5eceeab002c9bddaf","createdAt":"2023-02-24T10:15:45.393Z","updatedAt":"2023-02-24T10:15:45.393Z","__v":0}
+value_type: string
+got faq from cache: {"_id":"63f88e51fd17b2002c77b5e8","webhook_enabled":false,"enabled":true,"topic":"default","status":"live","actions":[],"id_faq_kb":"63ef4826eceeab002c9bd998","question":"Cos'è la Rete dei referenti antifrode del PNRR?\nCosa si intende per Rete dei referenti antifrode del PNRR?\nrete referenti antifrode?\nantifrode?","answer":"La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il\nPNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.\n* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO","intent_id":"cba96c7b-6ded-4cf3-a12b-be2f0a2ec1d0","intent_display_name":"referenti antifrode","language":"en","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"63ef4be5eceeab002c9bddaf","createdAt":"2023-02-24T10:15:45.393Z","updatedAt":"2023-02-24T10:15:45.393Z","__v":0}
+requestId: support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9
+token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3ZWJob29rX2VuYWJsZWQiOmZhbHNlLCJ0eXBlIjoiZXh0ZXJuYWwiLCJzZWNyZXQiOiI3YmU0YWQ4OC0xNjY1LTQ1YTQtOThiNy0zMDY2NDYzMjdlNDYiLCJsYW5ndWFnZSI6ImVuIiwicHVibGljIjpmYWxzZSwiY2VydGlmaWVkIjpmYWxzZSwiaW50ZW50c0VuZ2luZSI6Im5vbmUiLCJ0YWdzIjpbXSwiX2lkIjoiNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwibmFtZSI6IkJvdCAtIGV4dCIsImRlc2NyaXB0aW9uIjoib24gUmVwbGl0IiwidXJsIjoiaHR0cHM6Ly90aWxlZGVzay1jaGF0Ym90LnRpbGVkZXNrLnJlcGwuY28vZXh0LzYzZWY0ODI2ZWNlZWFiMDAyYzliZDk5OCIsImlkX3Byb2plY3QiOiI2M2VmNDdlZGVjZWVhYjAwMmM5YmQ4ZjkiLCJ0cmFzaGVkIjpmYWxzZSwiY3JlYXRlZEJ5IjoiNWUwOWQxNmQ0ZDM2MTEwMDE3NTA2ZDdmIiwiY3JlYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTozNzowOC41MDNaIiwidXBkYXRlZEF0IjoiMjAyMy0wMi0xN1QwOTo1MDoxNy4zNzNaIiwiX192IjowLCJpYXQiOjE2Nzc1MTQ2NTQsImF1ZCI6Imh0dHBzOi8vdGlsZWRlc2suY29tL2JvdHMvNjNlZjRhYzRlY2VlYWIwMDJjOWJkY2Q3IiwiaXNzIjoiaHR0cHM6Ly90aWxlZGVzay5jb20iLCJzdWIiOiJib3QiLCJqdGkiOiJlYmZiZGNkMy02Mzc4LTRmYzYtYmRiZS1lZGI1YWY5ODRlMjAifQ.LsqADzqUqmZx7F7n31hc_r7wGQVJrF_17nJCWufts_I
+projectId: 63ef47edeceeab002c9bd8f9
+IntentForm.isValidForm(intent_form) false
+static_bot_answer.attributes.webhook: false
+WEBHOOK? false
+NO WEBHOOK!
+bot_answer ready: {"text":"La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il\nPNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.\n* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO","attributes":{"clienttimestamp":1677514655669,"_answerid":"63f88e51fd17b2002c77b5e8","intent_info":{"intent_name":"referenti antifrode","is_fallback":false,"question_payload":{"senderFullname":"guest#ef00 ","type":"text","channel_type":"group","status":200,"_id":"63fcd79ea207e5003cddc6ab","sender":"ef00d50d-7608-4865-b387-2c28af8dd16b","recipient":"support-group-63ef47edeceeab002c9bd8f9-e0690b93bcca47eba63a8c230674dfd9","text":"parla del pnrr","id_project":"63ef47edeceeab002c9bd8f9","createdBy":"ef00d50d-7608-4865-b387-2c28af8dd16b","metadata":"","attributes":{"client":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0","departmentId":"63ef47eeeceeab002c9bd8fd","departmentName":"Default Department","ipAddress":"193.204.74.66","projectId":"63ef47edeceeab002c9bd8f9","requester_id":"ef00d50d-7608-4865-b387-2c28af8dd16b","sourcePage":"https://widget-pre.tiledesk.com/v5/assets/twp/index.html?tiledesk_projectid=63ef47edeceeab002c9bd8f9&project_name=Gianluca&role=admin","sourceTitle":"Widget test page","userFullname":"guest#ef00 ","widgetVer":"v.5.0.53-rc.6"},"channel":{"name":"chat21"},"createdAt":"2023-02-27T16:17:34.523Z","updatedAt":"2023-02-27T16:17:34.523Z","__v":0},"botId":"63ef4826eceeab002c9bd998","bot":{}},"webhook":false}}
+an answer: La Rete dei referenti antifrode è un gruppo di lavoro costituito da un referente per ciascuna Amministrazione centrale titolare di interventi e dal referente antifrode del Servizio centrale per il
+PNRR che ha la funzione di articolare una rete di analisi, valutazione, monitoraggio e gestione del rischio frode del PNRR.
+* OK tdIntent:OK * Non ho capito tdIntent:NO_CAPITO

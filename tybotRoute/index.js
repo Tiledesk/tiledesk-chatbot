@@ -101,7 +101,10 @@ router.post('/ext/:botid', async (req, res) => {
   // get the bot metadata
   let bot = null;
   try {
-    bot = botsDS.getBotByIdCache(botId, tdcache);
+   
+       bot = await botsDS.getBotByIdCache(botId, tdcache);  
+    
+    
   }
   catch(error) {
     console.error("Error getting botId:", botId);

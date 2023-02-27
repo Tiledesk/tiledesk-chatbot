@@ -230,9 +230,13 @@ class TiledeskChatbot {
           console.error("An error occurred:", error);
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
-        if (intents && intents.length > 0) {
+        
+        if (intents) {
+          
           // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
-          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
+          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, //intents[0].intent_display_name, this.tdcache);
+              intents.intent.name, this.tdcache);
+          if (this.log) {console.log(intents.intent.name+" confidence: "+intents.intent.confidence );}
           let reply;
           try {
             reply = await this.execIntent(faq, message, lead);//, bot);

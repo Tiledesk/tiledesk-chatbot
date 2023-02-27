@@ -1,10 +1,10 @@
 const { MongodbIntentsMachine } = require('./MongodbIntentsMachine.js');
+const { TiledeskIntentsMachine } = require('./TiledeskIntentsMachine.js');
 
 class IntentsMachineFactory {
 
     static getMachine(bot, botId, projectId, log) {
       let machine;
-      console.log("=====================>"+bot.intentsEngine)
       if (bot.intentsEngine === "tiledesk-ai") {
         machine = new TiledeskIntentsMachine(
           {
