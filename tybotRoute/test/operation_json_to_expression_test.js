@@ -9,6 +9,23 @@ const { TiledeskMath } = require('../TiledeskMath');
 
 describe('JSON operation to expression without math function and without variables', function() {
 
+    describe('JSON math operation to expression single variable', function() {
+        it('should be Number("2")', function() {
+            const operators = [];
+            const operands = [
+                {
+                    value: "2",
+                    isVariable: false
+                }
+            ];
+    
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+
+            assert.equal(expression, '"2"');
+        });
+    });    
+
+
     describe('JSON math operation to expression', function() {
         it('should be Number("2") - Number("1")', function() {
             const operators = ["subtractAsNumber"];
