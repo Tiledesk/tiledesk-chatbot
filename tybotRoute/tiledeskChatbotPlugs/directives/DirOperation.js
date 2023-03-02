@@ -3,9 +3,9 @@
 {
     "type": "object",
     "properties": {
-        "directive": {
+        "_tdActionType": {
             "type": "string",
-            "enum": ["assingTo"]
+            "enum": ["setattribute"]
         },
 
         "destination": {
