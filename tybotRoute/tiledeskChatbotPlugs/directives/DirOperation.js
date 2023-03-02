@@ -34,7 +34,7 @@
                     },
                     "function": {
                         "type": "string",
-                        "enum": ["upperCaseAsString", "lowerCaseAsString", "cosAsNumber", "sinAsNumber", "tanAsNumber", "absAsNumber", "ceilAsNumber", "floorAsNumber", "roundAsNumber"]
+                        "enum": ["upperCaseAsString", "lowerCaseAsString", "-cosAsNumber", "-sinAsNumber", "-tanAsNumber", "absAsNumber", "ceilAsNumber", "floorAsNumber", "roundAsNumber"]
                     }
                 },
                 "required": ["value", "isVariable"],

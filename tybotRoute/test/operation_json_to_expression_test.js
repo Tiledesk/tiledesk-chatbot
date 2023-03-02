@@ -241,6 +241,44 @@ describe('JSON operation to expression without math function and without variabl
             console.log("result:", result);
             assert.equal(result, 'helloFRANCESCO!!!');
         });
+
+        it('should be Francesco Latino Tiledesk', function() {
+            const operator = ["addAsString", "addAsString", "addAsString", "addAsString"];
+
+            const operands = [
+                {
+                    value: "name",
+                    isVariable: true,
+                    function: ""
+                },
+                {
+                    value: " ",
+                    isVariable: false,
+                    function: ""
+                },
+                {
+                    value: "surname",
+                    isVariable: true,
+                    function: ""
+                },
+                {
+                    value: " ",
+                    isVariable: false,
+                    function: ""
+                },
+                {
+                    value: "company",
+                    isVariable: true,
+                    function: ""
+                }
+            ];
+
+            const expression = TiledeskExpression.JSONOperationToExpression(operator, operands);
+            console.log("expression:", expression);
+            const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {name: "Francesco", surname: "Latino", company: "Tiledesk"});
+            console.log("result:", result);
+            assert.equal(result, 'Francesco Latino Tiledesk');
+        })
     });
 
 
@@ -474,6 +512,48 @@ describe('JSON operation to expression without math function and without variabl
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {});
             console.log("result:", result);
             assert.equal(result, 0.5);
+        });
+
+        it('should be -1.875', function() {
+            const operators = ["addAsNumber", "divideAsNumber", "subtractAsNumber", "multiplyAsNumber", "addAsNumber", "divideAsNumber"];
+            const operands = [
+                {
+                    value: "-3",
+                    isVariable: false,
+                    function: "absAsNumber"
+                },
+                {
+                    value: "5",
+                    isVariable: false
+                },
+                {
+                    value: "6",
+                    isVariable: false
+                },
+                {
+                    value: "5",
+                    isVariable: false
+                },
+                {
+                    value: "6",
+                    isVariable: false
+                },
+                {
+                    value: "7",
+                    isVariable: false
+                },
+                {
+                    value: "8",
+                    isVariable: false
+                }
+            ];
+
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            console.log("expression:", expression);
+            assert.equal(expression, 'Number(Number(Number(Number(Number(Number(TiledeskMath.abs(Number("-3"))) + Number("5")) / Number("6")) - Number("5")) * Number("6")) + Number("7")) / Number("8")');
+            const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {'TiledeskMath': TiledeskMath});
+            console.log("result:", result);
+            assert.equal(result, -1.875);
         });
     });
 

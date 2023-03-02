@@ -234,11 +234,15 @@ class TiledeskExpression {
         }
     */
     static JSONOperationToExpression(operators, operands) {
+        if(!operands) {
+            return null;
+        }
+
         let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
             expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
 
         if (operands.lenght === 1) {        
-            return expression;
+            return operands;
         } else {
             for (let i = 0; i < operators.length; i++) {
                 const operator = TiledeskExpression.OPERATORS[operators[i]];
