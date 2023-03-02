@@ -73,6 +73,62 @@ class TiledeskExpression {
         "matches": {
             name: "matches",
             applyPattern: "#1.matches(/#2/)"
+        },
+        "addAsNumber": {
+            name: "addAsNumber",
+            applyPattern: "Number(#1) + Number(#2)"
+        },
+        "addAsString": {
+            name: "addAsString",
+            applyPattern: "String(#1) + String(#2)"
+        },
+        "subtractAsNumber": {
+            name: "subtractAsNumber",
+            applyPattern: "Number(#1) - Number(#2)"
+        },
+        "multiplyAsNumber": {
+            name: "multiplyAsNumber",
+            applyPattern: "Number(#1) * Number(#2)"
+        },
+        "divideAsNumber": {
+            name: "divideAsNumber",
+            applyPattern: "Number(#1) / Number(#2)"
+        },
+        "upperCaseAsString": {
+            name: "upperCaseAsString",
+            applyPattern: "String(#1).toUpperCase()"
+        },
+        "lowerCaseAsString": {
+            name: "lowerCaseAsString",
+            applyPattern: "String(#1).toLowerCase()"
+        },
+        "cosAsNumber": {
+            name: "cosAsNumber",
+            applyPattern: "TiledeskMath.cos(Number(#1))"
+        },
+        "sinAsNumber": {
+            name: "sinAsNumber",
+            applyPattern: "TiledeskMath.sin(Number(#1))"
+        },
+        "tanAsNumber": {
+            name: "tanAsNumber",
+            applyPattern: "TiledeskMath.tan(Number(#1))"
+        },
+        "absAsNumber": {
+            name: "absAsNumber",
+            applyPattern: "TiledeskMath.abs(Number(#1))"
+        },
+        "ceilAsNumber": {
+            name: "ceilAsNumber",
+            applyPattern: "TiledeskMath.ceil(Number(#1))"
+        },
+        "floorAsNumber": {
+            name: "floorAsNumber",
+            applyPattern: "TiledeskMath.floor(Number(#1))"
+        },
+        "roundAsNumber": {
+            name: "roundAsNumber",
+            applyPattern: "TiledeskMath.round(Number(#1))"
         }
     }
 
@@ -143,6 +199,65 @@ class TiledeskExpression {
             console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
         return res;
+    }
+
+    //This function converts the expression rappresented as a json object into a string
+    //The json object must have the following structure:
+    /*
+    "operators": {
+        "type": "array",
+        "items": {
+            "type": "string",
+            "enum": ["addAsNumber", "addAsString", "subtractAsNumber", "multiplyAsNumber", "divideAsNumber"]
+        }
+    },
+
+    "operands": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+            "type": "object",
+            properties: {
+                "value": {
+                    "type": "string"
+                },
+                "isVariable": {
+                    "type": "boolean"
+                },
+                "function": {
+                    "type": "string",
+                    "enum": ["upperCaseAsString", "lowerCaseAsString", "cosAsNumber", "sinAsNumber", "tanAsNumber", "absAsNumber", "ceilAsNumber", "floorAsNumber", "roundAsNumber"]
+                }
+            },
+            "required": ["value", "isVariable"],
+            "additionalProperties": false
+        }
+    */
+    static JSONOperationToExpression(operators, operands) {
+        let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
+            expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
+
+        if (operands.lenght === 1) {        
+            return expression;
+        } else {
+            for (let i = 0; i < operators.length; i++) {
+                const operator = TiledeskExpression.OPERATORS[operators[i]];
+                const applyPattern = operator.applyPattern;
+                let operand = operands[i + 1].isVariable ? TiledeskExpression.variableOperand(operands[i + 1].value) : TiledeskExpression.quotedString(operands[i + 1].value);
+                operand = operands[i + 1].function ? TiledeskExpression.applyFunctionToOperand(operand, operands[i + 1].function) : operand;
+                expression = applyPattern.replace("#1", expression).replace("#2", operand);
+            }
+            return expression;
+        }
+    }
+
+    //This function converts the math function rappresented as a json object into a string
+    static applyFunctionToOperand(operand, function_name) {
+        let expression = "";
+        const operator = TiledeskExpression.OPERATORS[function_name];
+        const applyPattern = operator.applyPattern;
+        expression += applyPattern.replace("#1", operand);
+        return expression;
     }
 
     static JSONConditionToExpression(condition, variables) {
