@@ -95,7 +95,7 @@ class TiledeskExpression {
 
     evaluateJavascriptExpression(expression, context) {
         // console.log("evaluating:", expression)
-        console.log("context:", context)
+        // console.log("context:", context)
         let res;
         try {
             const vm = new VM({
@@ -146,21 +146,21 @@ class TiledeskExpression {
     }
 
     static JSONConditionToExpression(condition, variables) {
-        console.log("condition:", condition);
-        console.log("condition.operand1:", condition.operand1);
-        console.log("condition.operand2:", condition.operand2);
+        // console.log("condition:", condition);
+        // console.log("condition.operand1:", condition.operand1);
+        // console.log("condition.operand2:", condition.operand2);
         const operator_name = condition.operator;
         const operator = TiledeskExpression.OPERATORS[operator_name];
-        console.log("operator:", operator);
+        // console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
-        console.log("applyPattern:", applyPattern);
+        // console.log("applyPattern:", applyPattern);
         let operand1_s;
         let is_valid_operand1 = TiledeskExpression.validateVariableName(condition.operand1);
         if (is_valid_operand1) {
             operand1_s = TiledeskExpression.variableOperand(condition.operand1);
         }
         else {
-            console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
+            // console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
             return null;
         }
         
@@ -175,12 +175,12 @@ class TiledeskExpression {
                 operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
             }
             else {
-                console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
+                // console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
                 return null;
             }
         }
         else {
-            console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
+            // console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
             return null;
         }
         
@@ -201,13 +201,13 @@ class TiledeskExpression {
             if (part.type === "condition") {
                 let expression = TiledeskExpression.JSONConditionToExpression(part, variables);
                 if (expression === null) {
-                    console.error("Invalid JSON expression", JSON.stringify(part));
+                    // console.error("Invalid JSON expression", JSON.stringify(part));
                     return null;
                 }
                 group_expression += expression;
             }
             else if (part.type === "operator") {
-                console.log("operator part:", part);
+                // console.log("operator part:", part);
                 const operator = TiledeskExpression.OPERATORS[part.operator];
                 group_expression += operator.applyPattern;
             }
@@ -242,8 +242,8 @@ class TiledeskExpression {
     }
 
     static validateVariableName(variableName) {
-        console.log("variableName", variableName)
-        console.log("type of variableName:", typeof variableName);
+        // console.log("variableName", variableName)
+        // console.log("type of variableName:", typeof variableName);
         let matches = variableName.match(/^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$/gm);
         // console.log("matches:", matches)
         if (matches !== null) {

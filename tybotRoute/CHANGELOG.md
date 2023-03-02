@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.59
+- Log clean
+
 ### 0.1.58
 - Introduced a regex to check variable names correctness
 

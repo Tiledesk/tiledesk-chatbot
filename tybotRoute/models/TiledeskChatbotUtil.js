@@ -52,23 +52,23 @@ class TiledeskChatbotUtil {
         }
         if (commands.length > 0) {
           for (let i = commands.length - 1; i >= 0; i--) {
-            console.log("...commands[" + i + "]");
+            // console.log("...commands[" + i + "]");
             if (commands[i].type === "message") { // is a message, not wait
                 // console.log("commands[i]:", commands[i].message.lang);
                 // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
                 
                 // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                 const jsonCondition = commands[i].message["_tdJSONCondition"];
-                console.log("jsonCondition:", jsonCondition);
+                // console.log("jsonCondition:", jsonCondition);
                 if (jsonCondition) {
                     const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
-                    console.log("full json condition expression eval on command.message:", expression);
+                    // console.log("full json condition expression eval on command.message:", expression);
                     const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
                     console.log("conditionResult:", conditionResult);
                     // FALSE
                     // console.log("commands[i]lang:", commands[i]);
                     if (conditionResult === false) {
-                        console.log("deleting command:", commands[i]);
+                        // console.log("deleting command:", commands[i]);
                         commands.splice(i, 1);
                         if (commands[i-1]) {
                             // console.log("commands[i-1]?:", commands[i-1]);

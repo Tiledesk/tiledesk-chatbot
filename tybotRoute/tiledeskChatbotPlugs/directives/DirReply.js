@@ -17,11 +17,11 @@ class DirReply {
   }
 
   execute(directive, callback) {
-    console.log("Reply directive:", JSON.stringify(directive));
+    // console.log("Reply directive:", JSON.stringify(directive));
     let action;
     if (directive.action) {
       action = directive.action;
-      console.log("got action:", JSON.stringify(action));
+      // console.log("got action:", JSON.stringify(action));
       if (!action.attributes) {
         action.attributes = {}
       }
@@ -73,7 +73,7 @@ class DirReply {
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
       // const mylang = requestVariables["mylang"];
-      console.log("filterOnVariables:", JSON.stringify(requestVariables));
+      // console.log("filterOnVariables:", JSON.stringify(requestVariables));
       // if (message.attributes && message.attributes.commands) {
       //   TiledeskChatbotUtil.filterOnLanguage(message.attributes.commands, mylang);
       // }

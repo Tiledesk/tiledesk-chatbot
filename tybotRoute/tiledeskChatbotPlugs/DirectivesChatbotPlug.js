@@ -228,7 +228,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
-      console.log("...DirReply");
+      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -276,9 +276,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.JSON_CONDITION) {
-      console.log("...DirJSONCondition");
+      // console.log("...DirJSONCondition");
       new DirJSONCondition(context).execute(directive, async (stop) => {
-        console.log("stop on condition?", stop);
+        // console.log("stop on condition?", stop);
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", directive);}
           this.theend();
@@ -297,7 +297,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.SET_ATTRIBUTE) {
-      console.log("...DirSetAttribute");
+      // console.log("...DirSetAttribute");
       new DirSetAttribute(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);

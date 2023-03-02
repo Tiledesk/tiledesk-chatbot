@@ -35,7 +35,7 @@ describe('Conversation for JSONCondition test', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.API_LOG
         }, () => {
-          console.log("ACTIONS Tilebot route successfully started.");
+          console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
             console.log('Tilebot connector listening on port ', port);
@@ -59,7 +59,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("...req.body:", JSON.stringify(req.body));
+      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -104,7 +104,7 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
   });
@@ -116,7 +116,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("...req.body:", JSON.stringify(req.body));
+      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -161,7 +161,7 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
   });
@@ -173,7 +173,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("...req.body:", JSON.stringify(req.body));
+      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -218,7 +218,7 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
   });

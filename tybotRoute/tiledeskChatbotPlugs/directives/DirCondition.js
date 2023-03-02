@@ -133,7 +133,7 @@ class DirCondition {
     }
     else if (jsonCondition) {
       const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
-      console.log("full json condition expression:", expression);
+      // console.log("full json condition expression:", expression);
       result = new TiledeskExpression().evaluateStaticExpression(expression);
     }
     if (this.log) {console.log("executed condition:", scriptCondition, "result:", result);}

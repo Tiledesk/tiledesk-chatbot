@@ -40,7 +40,7 @@ class DirJSONCondition {
   }
 
   execute(directive, callback) {
-    console.log("Condition...")
+    // console.log("Condition...")
     let action;
     if (directive.action) {
       action = directive.action
@@ -100,7 +100,7 @@ class DirJSONCondition {
     // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    console.log("full json condition expression:", expression);
+    // console.log("full json condition expression:", expression);
     result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
     if (this.log) {console.log("executed condition:", expression, "result:", result);}
     if (result === true) {

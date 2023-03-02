@@ -35,7 +35,7 @@ describe('Conversation for anomaly detection test', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.API_LOG
         }, () => {
-          console.log("ACTIONS Tilebot route successfully started.");
+          console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
             console.log('Tilebot connector listening on port... ', port);

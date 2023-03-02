@@ -33,10 +33,10 @@ const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
 // }
 // bots_data.bots[BOT_ID] = bot;
 // console.log("bot:", bot);
-console.log("Testing conversation setup:");
-console.log("PROJECT_ID:", PROJECT_ID);
-console.log("REQUEST_ID:", REQUEST_ID);
-console.log("BOT_ID:", BOT_ID);
+// console.log("Testing conversation setup:");
+// console.log("PROJECT_ID:", PROJECT_ID);
+// console.log("REQUEST_ID:", REQUEST_ID);
+// console.log("BOT_ID:", BOT_ID);
 
 let app_listener;
 
