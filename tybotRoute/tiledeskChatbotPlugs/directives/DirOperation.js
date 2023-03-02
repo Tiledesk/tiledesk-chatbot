@@ -5,7 +5,7 @@
     "properties": {
         "directive": {
             "type": "string",
-            "enum": ["operation"]
+            "enum": ["assingTo"]
         },
 
         "destination": {
