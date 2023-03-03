@@ -214,6 +214,69 @@ describe('Testing dir_set_attribute_test with a complex operation', function() {
     });
 });
 
+describe('Testing dir_set_attribute_test with a complex string operation', function() {
+    it('should print add to: total the value: Francesco Latino Tiledesk', async function() {
+        TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+            return {
+                "name": "Francesco",
+                "surname": "Latino",
+                "company": "Tiledesk"
+            };
+        }
+
+        TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+            console.log("addParameterStatic: " + key + " value: " + value);
+            assert.equal(key, "total");
+            assert.equal(value, "Francesco Latino Tiledesk");
+        }
+
+        const action = {
+            _tdActionTitle: "Set attribute",
+            _tdActionType: "setattribute",
+            destination: "total",
+            operation: {
+                operators: ["addAsString", "addAsString", "addAsString", "addAsString"],
+                operands: [
+                    {
+                        value: "name",
+                        isVariable: true
+                    },
+                    {
+                        value: " ",
+                        isVariable: false
+                    },
+                    {
+                        value: "surname",
+                        isVariable: true
+                    },
+                    {
+                        value: " ",
+                        isVariable: false
+                    },
+                    {
+                        value: "company",
+                        isVariable: true
+                    }
+                ]
+            }
+        };
+
+        const context = {
+            tdcache: {},
+            requestId: 'buh',
+            log: true
+        };
+
+        const dirSetAttribute = new DirSetAttribute(context);
+        cb = function() {
+            console.log("finished");
+        }
+
+        dirSetAttribute.execute({'action': action}, cb);
+    });
+});
+
+
 describe('Testing dir_set_attribute_test with wrong inputs, function() {}', function() {
     it('should immidiatly call the cb', async function() {
         TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
