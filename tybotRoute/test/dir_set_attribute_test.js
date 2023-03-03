@@ -535,7 +535,7 @@ describe('Testing dir_set_attribute_test', function() {
         });
     });
 
-    after(async function() {
+    after(function() {
         TiledeskChatbot.allParametersStatic = previousAllParametersStatic;
         TiledeskChatbot.addParameterStatic = previousAddParameterStatic;
     });
