@@ -64,7 +64,7 @@ const schema = {
             "additionalProperties": false
         }
     },
-    "required": ["_tdActionType", "_tdActionTitle", "destination", "operation"],
+    "required": ["_tdActionType", "destination", "operation"],
     "additionalProperties": false
 };
 
