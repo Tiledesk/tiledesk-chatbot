@@ -1,5 +1,7 @@
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
+const { TiledeskMath } = require('../../TiledeskMath');
+const { TiledeskString } = require('../../TiledeskString');
 const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 
@@ -44,11 +46,17 @@ const schema = {
                             },
                             "function": {
                                 "type": "string",
-                                "enum": ["upperCaseAsString", "lowerCaseAsString", "absAsNumber", "ceilAsNumber", "floorAsNumber", "roundAsNumber"]
+                                "enum": ["capitalizeAsString", "upperCaseAsString", "lowerCaseAsString", "absAsNumber", "ceilAsNumber", "floorAsNumber", "roundAsNumber"]
                             }
                         },
                         "required": ["value", "isVariable"],
-                        "additionalProperties": false
+                        "additionalProperties": false,
+                        "if": {
+                            "properties": { "isVariable": { "const": true } },
+                        },
+                        "then": {
+                            "properties": { "value": { "pattern": "^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$" } }
+                        }
                     }
                 }
             },
@@ -94,20 +102,26 @@ class DirSetAttribute {
             return;
         }
 
-        if (!action.operation.operators && action.operation.operands.length !== 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: if operators is not present, operands must have length 1")};
-            callback();
-            return;
-        } else if (action.operation.operators.length !== action.operation.operands.length - 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators and operands must have n - 1 length")};
+        if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
+            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
             callback();
             return;
         }
 
+        
+        if (action.operation.operators !== undefined && action.operation.operators.length !== action.operation.operands.length - 1) {
+            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
+            callback();
+            return;
+        }
+        
 
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        const result = TiledeskExpression.evaluateExpression(expression, attributes);
+        attributes.TiledeskMath = TiledeskMath;
+        attributes.TiledeskString = TiledeskString;
+
+        const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, result);
         callback();
     }

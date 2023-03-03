@@ -174,6 +174,10 @@ class TiledeskExpression {
             name: "lowerCaseAsString",
             applyPattern: "String(#1).toLowerCase()"
         },
+        "capitalizeAsString": {
+            name: "capitalizeAsString",
+            applyPattern: "TiledeskString.capitalize(String(#1))"
+        },
         "cosAsNumber": {
             name: "cosAsNumber",
             applyPattern: "TiledeskMath.cos(Number(#1))"
@@ -248,8 +252,8 @@ class TiledeskExpression {
         let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
             expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
 
-        if (operands.lenght === 1) {        
-            return operands;
+        if (operands.length === 1) {        
+            return expression;
         } else {
             for (let i = 0; i < operators.length; i++) {
                 const operator = TiledeskExpression.OPERATORS[operators[i]];

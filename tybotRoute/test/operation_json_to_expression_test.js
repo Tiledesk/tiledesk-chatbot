@@ -2,11 +2,10 @@ var assert = require('assert');
 const { TiledeskExpression } = require('../TiledeskExpression');
 
 
-//require TiledeskMath as TiledeskMathClass and alias it as TiledeskMathClass
 const { TiledeskMath } = require('../TiledeskMath');
+const { TiledeskString } = require('../TiledeskString');
 
-
-describe('JSON operation to expression without math function and without variables', function() {
+describe('JSON operation to expression', function() {
 
     describe('JSON math operation to expression single variable', function() {
         it('should be Number("2")', function() {
@@ -18,7 +17,7 @@ describe('JSON operation to expression without math function and without variabl
                 }
             ];
     
-            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            const expression = TiledeskExpression.JSONOperationToExpression(undefined, operands);
 
             assert.equal(expression, '"2"');
         });
@@ -204,6 +203,51 @@ describe('JSON operation to expression without math function and without variabl
             assert.equal(expression, 'String(String("hello") + String("world")) + String($data.special)');
         });
     });
+
+    describe('JSON string operation to expression with variables and strings function', function() {
+        it("should be TiledeskString.capitalize(String(#1))", function() {
+            const operators = [];
+            const operands = [
+                {
+                    value: "hello",
+                    isVariable: false,
+                    function: "capitalizeAsString"
+                }
+            ];
+    
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            console.log("expression:", expression);
+            assert.equal(expression, 'TiledeskString.capitalize(String("hello"))');
+        });
+
+        it("should be Hello World", function() {
+            const operators = ["addAsString", "addAsString"];
+            const operands = [
+                {
+                    value: "hello",
+                    isVariable: false,
+                    function: "capitalizeAsString"
+                },
+                {
+                    value: " ",
+                    isVariable: false,
+                },
+                {
+                    value: "world",
+                    isVariable: false,
+                    function: "capitalizeAsString"
+                }
+            ];
+
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            console.log("expression:", expression);
+            assert.equal(expression, 'String(String(TiledeskString.capitalize(String("hello"))) + String(" ")) + String(TiledeskString.capitalize(String("world")))');
+            const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {'TiledeskString': TiledeskString});
+            console.log("result:", result);
+            assert.equal(result, 'Hello World');
+        });
+    });
+
 
     describe('JSON string operation to expression with variables and function', function() {
         it('String(String(String("HELLO").toLowerCase()) + String(String($data.name).toUpperCase())) + String($data.special)', function() {
