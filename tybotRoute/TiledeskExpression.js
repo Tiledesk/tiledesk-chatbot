@@ -5,6 +5,77 @@ class TiledeskExpression {
     // check valid operators (only those in operators are allowed)
     // check valid variable names /^[_0-9a-zA-Z\.]$/
 
+    // static OPERATORS = {
+    //     "equalAsNumbers" : {
+    //         name: "equalAsNumbers",
+    //         applyPattern: "Number(#1) === Number(#2)"
+    //     },
+    //     "equalAsStrings" : {
+    //         name: "equalAsStrings",
+    //         applyPattern: "String(#1) === String(#2)"
+    //     },
+    //     "notEqualAsNumbers" : {
+    //         name: "notEqualAsNumbers",
+    //         applyPattern: "Number(#1) !== Number(#2)"
+    //     },
+    //     "notEqualAsStrings" : {
+    //         name: "notEqualAsStrings",
+    //         applyPattern: "String(#1) !== String(#2)"
+    //     },
+    //     "greaterThan" : {
+    //         name: "greaterThan",
+    //         applyPattern: "Number(#1) > Number(#2)"
+    //     },
+    //     "greaterThanOrEqual" : {
+    //         name: "greaterThanOrEqual",
+    //         applyPattern: "Number(#1) >= Number(#2)"
+    //     },
+    //     "lessThan" : {
+    //         name: "lessThan",
+    //         applyPattern: "Number(#1) < Number(#2)"
+    //     },
+    //     "lessThanOrEqual" : {
+    //         name: "lessThanOrEqual",
+    //         applyPattern: "Number(#1) <= Number(#2)"
+    //     },
+    //     "AND": {
+    //         name: "AND",
+    //         applyPattern: " && "
+    //     },
+    //     "OR": {
+    //         name: "OR",
+    //         applyPattern: " || "
+    //     },
+    //     "startsWith": {
+    //         name: "startsWith",
+    //         applyPattern: "String(#1).startsWith(String(#2))"
+    //     },
+    //     "startsWithIgnoreCase": {
+    //         name: "startsWithIgnoreCase",
+    //         applyPattern: "String(#1).toLowerCase().startsWith(String(#2).toLowerCase())"
+    //     },
+    //     "contains": {
+    //         name: "contains",
+    //         applyPattern: "#1.includes(#2)"
+    //     },
+    //     "containsIgnoreCase": {
+    //         name: "containsIgnoreCase",
+    //         applyPattern: "#1.toLowerCase().includes(#2.toLowerCase())"
+    //     },
+    //     "endsWith": {
+    //         name: "endsWith",
+    //         applyPattern: "#1.toLowerCase().endsWith(#2.toLowerCase())"
+    //     },
+    //     "isEmpty": {
+    //         name: "isEmpty",
+    //         applyPattern: "#1 === \"\""
+    //     },
+    //     "matches": {
+    //         name: "matches",
+    //         applyPattern: "#1.matches(/#2/)"
+    //     }
+    // }
+
     static OPERATORS = {
         "equalAsNumbers" : {
             name: "equalAsNumbers",
@@ -73,6 +144,63 @@ class TiledeskExpression {
         "matches": {
             name: "matches",
             applyPattern: "#1.matches(/#2/)"
+        },
+        // Francesco
+        "addAsNumber": {
+            name: "addAsNumber",
+            applyPattern: "Number(#1) + Number(#2)"
+        },
+        "addAsString": {
+            name: "addAsString",
+            applyPattern: "String(#1) + String(#2)"
+        },
+        "subtractAsNumber": {
+            name: "subtractAsNumber",
+            applyPattern: "Number(#1) - Number(#2)"
+        },
+        "multiplyAsNumber": {
+            name: "multiplyAsNumber",
+            applyPattern: "Number(#1) * Number(#2)"
+        },
+        "divideAsNumber": {
+            name: "divideAsNumber",
+            applyPattern: "Number(#1) / Number(#2)"
+        },
+        "upperCaseAsString": {
+            name: "upperCaseAsString",
+            applyPattern: "String(#1).toUpperCase()"
+        },
+        "lowerCaseAsString": {
+            name: "lowerCaseAsString",
+            applyPattern: "String(#1).toLowerCase()"
+        },
+        "cosAsNumber": {
+            name: "cosAsNumber",
+            applyPattern: "TiledeskMath.cos(Number(#1))"
+        },
+        "sinAsNumber": {
+            name: "sinAsNumber",
+            applyPattern: "TiledeskMath.sin(Number(#1))"
+        },
+        "tanAsNumber": {
+            name: "tanAsNumber",
+            applyPattern: "TiledeskMath.tan(Number(#1))"
+        },
+        "absAsNumber": {
+            name: "absAsNumber",
+            applyPattern: "TiledeskMath.abs(Number(#1))"
+        },
+        "ceilAsNumber": {
+            name: "ceilAsNumber",
+            applyPattern: "TiledeskMath.ceil(Number(#1))"
+        },
+        "floorAsNumber": {
+            name: "floorAsNumber",
+            applyPattern: "TiledeskMath.floor(Number(#1))"
+        },
+        "roundAsNumber": {
+            name: "roundAsNumber",
+            applyPattern: "TiledeskMath.round(Number(#1))"
         }
     }
 
@@ -109,6 +237,38 @@ class TiledeskExpression {
             console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
         return res;
+    }
+
+    // Francesco
+    static JSONOperationToExpression(operators, operands) {
+        if(!operands) {
+            return null;
+        }
+
+        let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
+            expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
+
+        if (operands.lenght === 1) {        
+            return operands;
+        } else {
+            for (let i = 0; i < operators.length; i++) {
+                const operator = TiledeskExpression.OPERATORS[operators[i]];
+                const applyPattern = operator.applyPattern;
+                let operand = operands[i + 1].isVariable ? TiledeskExpression.variableOperand(operands[i + 1].value) : TiledeskExpression.quotedString(operands[i + 1].value);
+                operand = operands[i + 1].function ? TiledeskExpression.applyFunctionToOperand(operand, operands[i + 1].function) : operand;
+                expression = applyPattern.replace("#1", expression).replace("#2", operand);
+            }
+            return expression;
+        }
+    }
+
+    //This function converts the math function rappresented as a json object into a string
+    static applyFunctionToOperand(operand, function_name) {
+        let expression = "";
+        const operator = TiledeskExpression.OPERATORS[function_name];
+        const applyPattern = operator.applyPattern;
+        expression += applyPattern.replace("#1", operand);
+        return expression;
     }
 
     // private
