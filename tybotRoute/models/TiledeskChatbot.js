@@ -485,9 +485,11 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    console.log('osdkaokdoaskd');
+    /*
     // const parameter_key = "tilebot:requests:" + requestId + ":parameters";
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
-    await _tdcache.hset(parameter_key, parameter_name, parameter_value);
+    await _tdcache.hset(parameter_key, parameter_name, parameter_value);*/
   }
 
   static async checkStep(_tdcache, requestId, max_steps) {
@@ -548,9 +550,13 @@ class TiledeskChatbot {
   }
 
   static async allParametersStatic(_tdcache, requestId) {
+    console.log('okokkokokokook');
+    
+    /*
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     return await _tdcache.hgetall(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+      */
   }
 
   async allParametersInstance(_tdcache, requestId) {
