@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.60
+- fixed: get department_id from message.request instead of message.attributes
+
 ### 0.1.59
 - Log clean
 
