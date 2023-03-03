@@ -76,7 +76,7 @@ class DirSetAttribute {
             throw new Error('context object is mandatory.');
         }
         this.context = context;
-        this.log = context.log;
+        this.log = true; //context.log;
     }
 
     execute(directive, callback) {
@@ -95,6 +95,7 @@ class DirSetAttribute {
     }
 
     async go(action, callback) {
+        console.log("******** ----- ACTION:", JSON.stringify(action));
         let res = validate(action, schema);
         if (!res.valid) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
@@ -117,12 +118,15 @@ class DirSetAttribute {
         
 
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
+        console.log("***** ***** EXPRESSION******", expression);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         attributes.TiledeskMath = TiledeskMath;
         attributes.TiledeskString = TiledeskString;
 
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
+        console.log("***** ***** EXPRESSION RESULT ******", result);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, result);
+
         callback();
     }
 }

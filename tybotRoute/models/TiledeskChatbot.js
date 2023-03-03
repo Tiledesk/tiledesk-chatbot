@@ -553,6 +553,12 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
   }
 
+  async allParametersInstance(_tdcache, requestId) {
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hgetall(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+  }
+
   static async getParameterStatic(_tdcache, requestId, key) {
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     return await _tdcache.hget(

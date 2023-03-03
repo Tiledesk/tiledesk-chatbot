@@ -153,8 +153,15 @@ const bot = {
 		"actions": [{
 			"_tdActionTitle": "score = 10",
 			"_tdActionType": "setattribute",
-			"expression": "10",
-			"assignTo": "score"
+			"operation": {
+				operands: [
+					{
+						value: "10",
+                    	isVariable: false
+					}
+				]
+			},
+			"destination": "score"
 		}, {
 			"_tdActionTitle": "eval_quiz",
 			"_tdActionType": "intent",
@@ -283,10 +290,17 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"actions": [{
-			"_tdActionTitle": null,
+			"_tdActionTitle": "nullooo",
 			"_tdActionType": "setattribute",
-			"expression": "5",
-			"assignTo": "score"
+			"operation": {
+				operands: [
+					{
+						value: "5",
+                    	isVariable: false
+					}
+				]
+			},
+			"destination": "score"
 		}, {
 			"_tdActionTitle": "eval_quiz",
 			"_tdActionType": "intent",
@@ -299,10 +313,17 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"actions": [{
-			"_tdActionTitle": null,
+			"_tdActionTitle": "nulliizzooo",
 			"_tdActionType": "setattribute",
-			"expression": "7",
-			"assignTo": "score"
+			"operation": {
+				operands: [
+					{
+						value: "7",
+                    	isVariable: false
+					}
+				]
+			},
+			"destination": "score"
 		}, {
 			"_tdActionTitle": "eval_quiz",
 			"_tdActionType": "intent",
