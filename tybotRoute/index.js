@@ -110,7 +110,7 @@ router.post('/ext/:botid', async (req, res) => {
     console.error("Error getting bot was:", error);
     return;
   }
-  if (log) {console.log("bot found:", bot);}
+  if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
   if (!staticBots) {
@@ -266,9 +266,15 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, message.request["language"]);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
   }
+  if (message.request && message.request.department) {
+    // It was an error getting this from widget message's attributes
+    // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
+    // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
+    // get from request.department instead
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
+  }
   if (message.attributes) {
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
     if (message.attributes.payload) {
