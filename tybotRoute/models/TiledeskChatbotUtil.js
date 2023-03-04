@@ -31,6 +31,107 @@ class TiledeskChatbotUtil {
 
     }
 
+    static chooseRandomReply(message) {
+
+        // {
+		// 	"_tdActionTitle": null,
+		// 	"_tdActionType": "randomreply",
+		// 	"attributes": {
+		// 		"disableInputMessage": false,
+		// 		"commands": [{
+		// 			"type": "wait",
+		// 			"time": 500
+		// 		}, {
+		// 			"type": "message",
+		// 			"message": {
+		// 				"type": "text",
+		// 				"text": "message1",
+		// 				"attributes": {
+		// 					"attachment": {
+		// 						"type": "template",
+		// 						"buttons": [{
+		// 							"value": "Button1",
+		// 							"type": "text",
+		// 							"target": "blank",
+		// 							"link": "",
+		// 							"action": "",
+		// 							"show_echo": true
+		// 						}]
+		// 					}
+		// 				}
+		// 			}
+		// 		}, {
+		// 			"type": "wait",
+		// 			"time": 500
+		// 		}, {
+		// 			"type": "message",
+		// 			"message": {
+		// 				"type": "text",
+		// 				"text": "message2"
+		// 			}
+		// 		}, {
+		// 			"type": "wait",
+		// 			"time": 500
+		// 		}, {
+		// 			"type": "message",
+		// 			"message": {
+		// 				"type": "image",
+		// 				"text": "message3 - image",
+		// 				"metadata": {
+		// 					"src": ""
+		// 				}
+		// 			}
+		// 		}, {
+		// 			"type": "wait",
+		// 			"time": 500
+		// 		}, {
+		// 			"type": "message",
+		// 			"message": {
+		// 				"type": "text",
+		// 				"text": "message4",
+		// 				"attributes": {
+		// 					"attachment": {
+		// 						"type": "template",
+		// 						"buttons": [{
+		// 							"value": "Button4",
+		// 							"type": "text",
+		// 							"target": "blank",
+		// 							"link": "",
+		// 							"action": "",
+		// 							"show_echo": true
+		// 						}]
+		// 					}
+		// 				}
+		// 			}
+		// 		}]
+		// 	},
+		// 	"text": "message1\r\nmessage2\r\nmessage3 - image\r\nmessage4\r\n"
+		// }
+
+        if (message && message.attributes && message.attributes.commands) {
+            let commands = message.attributes.commands;
+            if (commands.length %2 != 0) {
+                console.log("Error. commands.length cannot be an odd number");
+                return null;
+            }
+            const MAX_VALUE = commands.length - 1;
+            console.log("commands.lentgh:", commands.lentgh);
+            console.log("MAX_VALUE:", MAX_VALUE);
+            let random_even_index = Math.floor((Math.random() * MAX_VALUE)); 
+            if (random_even_index %2 == 0){//generated number is even
+                random_even_index  = random_even_index + 1;
+            }
+            let new_commands = [];
+            new_commands.push(commands[random_even_index - 1]); // pushed the wait
+            new_commands.push(commands[random_even_index]); // pushed the message
+            return new_commands;
+        }
+        else {
+            return null;
+        }
+
+    }
+
     // static errorMessage(message) {
     //     return {
     //         name: "message",

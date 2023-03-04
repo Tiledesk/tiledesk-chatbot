@@ -30,6 +30,7 @@ const { DirWebRequest } = require('./directives/DirWebRequest');
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
+const { DirRandomReply } = require('./directives/DirRandomReply');
 
 class DirectivesChatbotPlug {
 

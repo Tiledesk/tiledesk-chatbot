@@ -37,6 +37,7 @@ class Directives {
   // static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   // static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
   static REPLY = 'reply';
+  static RANDOM_REPLY = 'randomreply';
 
   static actionToDirective(action) {
     // console.log("actionToDirective:", action);
