@@ -235,6 +235,13 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.RANDOM_REPLY) {
+      // console.log("...DirRandomReply");
+      new DirRandomReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.IF_OPEN_HOURS) {
       new DirIfOpenHours(context).execute(directive, async (stop) => {
         if (stop) {
