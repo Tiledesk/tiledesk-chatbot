@@ -115,9 +115,7 @@ class TiledeskChatbotUtil {
                 return null;
             }
             const MAX_VALUE = commands.length - 1;
-            console.log("commands.lentgh:", commands.lentgh);
-            console.log("MAX_VALUE:", MAX_VALUE);
-            let random_even_index = Math.floor((Math.random() * MAX_VALUE)); 
+            let random_even_index = Math.round((Math.random() * MAX_VALUE)); 
             if (random_even_index %2 == 0){//generated number is even
                 random_even_index  = random_even_index + 1;
             }
