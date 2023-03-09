@@ -102,7 +102,7 @@ class DirSetAttribute {
             return;
         }
 
-        if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
+        if( (action.operation.operators === undefined || action.operation.operators.length === 0)  && action.operation.operands.length !== 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
             callback();
             return;
