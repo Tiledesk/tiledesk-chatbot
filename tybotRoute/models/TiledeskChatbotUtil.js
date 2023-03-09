@@ -1,4 +1,5 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
+const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 
 class TiledeskChatbotUtil {
 
@@ -187,6 +188,24 @@ class TiledeskChatbotUtil {
           //     if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
           //   }
           // }
+        }
+    }
+
+    static fillCommandAttachments(command, variables, log) {
+        if (log) {
+            console.log("filling command button:", JSON.stringify(command))
+        }
+        if (command.message && command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0){
+            let buttons = command.message.attributes.attachment.buttons;
+            const filler = new Filler();
+            buttons.forEach(button => {
+                if (button.link) {
+                    button.link = filler.fill(button.link, variables);
+                    if (log) {
+                        console.log("button.link filled:", button.link)
+                    }
+                }
+            });
         }
     }
 

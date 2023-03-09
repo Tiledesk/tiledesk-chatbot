@@ -63,9 +63,11 @@ class DirReply {
         if (commands.length > 0) {
           if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
-            if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-              commands[i].message.text = filler.fill(commands[i].message.text, requestVariables);
-              if (this.log) {console.log("command filled:", commands[i].message.text);}
+            let command = commands[i];
+            if (command.type === 'message' && command.message && command.message.text) {
+              command.message.text = filler.fill(command.message.text, requestVariables);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestVariables, this.log);
+              if (this.log) {console.log("command filled:", command.message.text);}
             }
           }
         }
@@ -107,6 +109,19 @@ class DirReply {
         callback();
     });
   }
+
+  // fillCommandTemplates(command, variables) {
+  //   if (command && command.attributes && command.attachment && command.attachment.buttons && command.attachment.buttons.length > 0){
+  //     let buttons = command.attachment.buttons.length;
+  //     const filler = new Filler();
+  //     buttons.forEach(button => {
+  //       if (button.link) {
+  //         button.link = filler.fill(button.link, variables);
+  //       }
+  //     });
+  //   }
+  // }
+
 }
 
 module.exports = { DirReply };
