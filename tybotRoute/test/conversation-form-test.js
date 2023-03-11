@@ -138,55 +138,55 @@ describe('Conversation1 - Form filling', async () => {
     });
   });
 
-  it('/disable_input', (done) => {
-    // console.log("/disable_input...");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body....:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
+  // it('/disable_input', (done) => {
+  //   // console.log("/disable_input...");
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     // console.log("req.body....:", JSON.stringify(req.body));
+  //     res.send({ success: true });
+  //     const message = req.body;
 
-      assert(message["text"] !== "");
-      assert(message["attributes"] !== "");
-      assert(message["attributes"]["disableInputMessage"] === true);
+  //     assert(message["text"] !== "");
+  //     assert(message["attributes"] !== "");
+  //     assert(message["attributes"]["disableInputMessage"] === true);
 
-      listener.close(() => {
-        // console.log('closed.');
-        done();
-      });
+  //     listener.close(() => {
+  //       // console.log('closed.');
+  //       done();
+  //     });
 
-    });
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // const botId = process.env.TEST_BOT_ID;
-      // const PROJECT_ID = process.env.TEST_PROJECT_ID;
-      // console.log("botId:", botId);
-      // console.log("REQUEST_ID:", REQUEST_ID);
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/disable_input",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
+  //     // console.log('endpointServer started', listener.address());
+  //     // const botId = process.env.TEST_BOT_ID;
+  //     // const PROJECT_ID = process.env.TEST_PROJECT_ID;
+  //     // console.log("botId:", botId);
+  //     // console.log("REQUEST_ID:", REQUEST_ID);
+  //     let request = {
+  //       "payload": {
+  //         "_id": uuidv4(),
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": "/disable_input",
+  //         "id_project": PROJECT_ID,
+  //         "metadata": "",
+  //         "request": {
+  //           "request_id": REQUEST_ID,
+  //           "id_project": PROJECT_ID
+  //         }
+  //       },
+  //       "token": CHATBOT_TOKEN
+  //     }
+  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //       // console.log("Message sent.");
+  //     });
+  //   });
+  // });
 
   it('/good_form', (done) => {
     // console.log("/good_form...");

@@ -1,7 +1,7 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
-const { DirOfflineHours } = require('./directives/DirOfflineHours'); // DEPRECATED
+// const { DirOfflineHours } = require('./directives/DirOfflineHours'); // DEPRECATED
 const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
 const { DirWait } = require('./directives/DirWait');
@@ -11,10 +11,10 @@ const { DirLockIntent } = require('./directives/DirLockIntent');
 const { DirUnlockIntent } = require('./directives/DirUnlockIntent');
 const { DirDepartment } = require('./directives/DirDepartment');
 const { DirIntent } = require('./directives/DirIntent');
-const { DirWhenOpen } = require('./directives/DirWhenOpen'); // DEPRECATED
+// const { DirWhenOpen } = require('./directives/DirWhenOpen'); // DEPRECATED
 const { DirDisableInputText } = require('./directives/DirDisableInputText');
 const { DirClose } = require('./directives/DirClose');
-const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents'); // DEPRECATED
+// const { DirIfAvailableAgents } = require('./directives/DirIfAvailableAgents'); // DEPRECATED
 const { DirFireTiledeskEvent } = require('./directives/DirFireTiledeskEvent');
 const { DirSendEmail } = require('./directives/DirSendEmail');
 const { Directives } = require('./directives/Directives');
@@ -257,9 +257,18 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.IF_ONLINE_AGENTS) {
+      // console.log("...DirIfOnlineAgents")
       new DirIfOnlineAgents(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", directive);}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+        // let next_dir = await this.nextDirective(this.directives);
+        // this.process(next_dir);
       });
     }
     else if (directive_name === Directives.FUNCTION_VALUE) {
@@ -311,57 +320,57 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    else if (directive_name === Directives.WHEN_OPEN) {
-      // DEPRECATED
-      const whenOpenDir = new DirWhenOpen(
-        {
-          tdclient: this.context.tdclient, // matches open hours
-          log: false
-        });
-      whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      });
-    }
-    else if (directive_name === Directives.WHEN_CLOSED) {
-      // DEPRECATED
-      const whenOpenDir = new DirWhenOpen(
-        {
-          tdclient: this.context.tdclient,
-          checkOpen: false, // matches closed hours
-          log: false
-        });
-      whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      });
-    }
-    else if (directive_name === Directives.IF_AGENTS) {
-      // DEPRECATED
-      const ifNoAgentsDir = new DirIfAvailableAgents(
-        {
-          tdclient: this.context.tdclient,
-          checkAgents: true, // check available agents > 0
-          log: false
-        });
-      ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      });
-    }
-    else if (directive_name === Directives.IF_NO_AGENTS) {
-      // DEPRECATED
-      const ifNoAgentsDir = new DirIfAvailableAgents(
-        {
-          tdclient: this.context.tdclient,
-          checkAgents: false, // check no available agents 
-          log: false
-        });
-      ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      });
-    }
+    // else if (directive_name === Directives.WHEN_OPEN) {
+    //   // DEPRECATED
+    //   const whenOpenDir = new DirWhenOpen(
+    //     {
+    //       tdclient: this.context.tdclient, // matches open hours
+    //       log: false
+    //     });
+    //   whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
+    //     let next_dir = await this.nextDirective(this.directives);
+    //     this.process(next_dir);
+    //   });
+    // }
+    // else if (directive_name === Directives.WHEN_CLOSED) {
+    //   // DEPRECATED
+    //   const whenOpenDir = new DirWhenOpen(
+    //     {
+    //       tdclient: this.context.tdclient,
+    //       checkOpen: false, // matches closed hours
+    //       log: false
+    //     });
+    //   whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
+    //     let next_dir = await this.nextDirective(this.directives);
+    //     this.process(next_dir);
+    //   });
+    // }
+    // else if (directive_name === Directives.IF_AGENTS) {
+    //   // DEPRECATED
+    //   const ifNoAgentsDir = new DirIfAvailableAgents(
+    //     {
+    //       tdclient: this.context.tdclient,
+    //       checkAgents: true, // check available agents > 0
+    //       log: false
+    //     });
+    //   ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
+    //     let next_dir = await this.nextDirective(this.directives);
+    //     this.process(next_dir);
+    //   });
+    // }
+    // else if (directive_name === Directives.IF_NO_AGENTS) {
+    //   // DEPRECATED
+    //   const ifNoAgentsDir = new DirIfAvailableAgents(
+    //     {
+    //       tdclient: this.context.tdclient,
+    //       checkAgents: false, // check no available agents 
+    //       log: false
+    //     });
+    //   ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
+    //     let next_dir = await this.nextDirective(this.directives);
+    //     this.process(next_dir);
+    //   });
+    // }
     else if (directive_name === Directives.AGENT) {
       console.log("...DirMoveToAgent");
       new DirMoveToAgent(context).execute(directive, async () => {
@@ -369,35 +378,35 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
-      // let depId;
-      // if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
-        // depId = context.supportRequest.department._id;
-        // console.log("context.supportRequest", JSON.stringify(context.supportRequest));
-        // const agentDir = new DirMoveToAgent(
-        //   {
-        //     tdclient: context.tdclient,
-        //     requestId: context.requestId,
-        //     depId: depId
-        //   }
-        // );
-        // if (!directive.action) {
-        //   directive.action = {}
-        //   directive.action = {
-        //     whenOnlineOnly: true
-        //   }
-        // }
-        new DirMoveToAgent(context).execute(directive, async () => {
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-        });
-      // }
-      // else {
-      //   console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
-      //   let next_dir = await this.nextDirective(this.directives);
-      //   this.process(next_dir);
-      // }
-    }
+    // else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
+    //   // let depId;
+    //   // if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
+    //     // depId = context.supportRequest.department._id;
+    //     // console.log("context.supportRequest", JSON.stringify(context.supportRequest));
+    //     // const agentDir = new DirMoveToAgent(
+    //     //   {
+    //     //     tdclient: context.tdclient,
+    //     //     requestId: context.requestId,
+    //     //     depId: depId
+    //     //   }
+    //     // );
+    //     // if (!directive.action) {
+    //     //   directive.action = {}
+    //     //   directive.action = {
+    //     //     whenOnlineOnly: true
+    //     //   }
+    //     // }
+    //     new DirMoveToAgent(context).execute(directive, async () => {
+    //       let next_dir = await this.nextDirective(this.directives);
+    //       this.process(next_dir);
+    //     });
+    //   // }
+    //   // else {
+    //   //   console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
+    //   //   let next_dir = await this.nextDirective(this.directives);
+    //   //   this.process(next_dir);
+    //   // }
+    // }
     else if (directive_name === Directives.CLOSE) {
       // console.log("Exec close()")
       new DirClose(context).execute(directive, async () => {
@@ -505,18 +514,18 @@ class DirectivesChatbotPlug {
       if (directive == null) {
         theend();
       }
-      else if (directive_name === Directives.WHEN_OFFLINE_HOURS) { // DEPRECATED
-        const offlineHoursDir = new DirOfflineHours(tdclient);
-        offlineHoursDir.execute(directive, pipeline, () => {
-          process(nextDirective());
-        });
-      }
-      else if (directive_name === Directives.DISABLE_INPUT_TEXT) { // DEPRECATED => will change in a "message-option" --disableInput
-        const disableInputTextDir = new DirDisableInputText();
-        disableInputTextDir.execute(directive, pipeline, () => {
-          process(nextDirective());
-        });
-      }
+      // else if (directive_name === Directives.WHEN_OFFLINE_HOURS) { // DEPRECATED
+      //   const offlineHoursDir = new DirOfflineHours(tdclient);
+      //   offlineHoursDir.execute(directive, pipeline, () => {
+      //     process(nextDirective());
+      //   });
+      // }
+      // else if (directive_name === Directives.DISABLE_INPUT_TEXT) { // DEPRECATED => will change in a "message-option" --disableInput
+      //   const disableInputTextDir = new DirDisableInputText();
+      //   disableInputTextDir.execute(directive, pipeline, () => {
+      //     process(nextDirective());
+      //   });
+      // }
       else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
         const helpDir = new DirDeflectToHelpCenter({HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId});
         helpDir.execute(directive, pipeline, 3, () => {

@@ -61,8 +61,8 @@ class DirIfOnlineAgents {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
   }
 
@@ -76,6 +76,7 @@ class DirIfOnlineAgents {
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
+    let stopOnConditionMet = action.stopOnConditionMet;
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
@@ -98,7 +99,7 @@ class DirIfOnlineAgents {
                   let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
                   if (this.log) {console.log("agents (openHours) => trueIntent");}
                   this.intentDir.execute(intentDirective, () => {
-                    callback();
+                    callback(stopOnConditionMet);
                   });
                 }
                 else {
@@ -110,7 +111,7 @@ class DirIfOnlineAgents {
                 let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
                 if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
                 this.intentDir.execute(intentDirective, () => {
-                  callback();
+                  callback(stopOnConditionMet);
                 });
               }
               else {

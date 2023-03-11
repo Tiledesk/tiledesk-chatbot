@@ -5,6 +5,15 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.63
+- Added stopOnConditionMet to DirIfOnlineAgents
+- Removed deprecated Directive Directives.WHEN_OFFLINE_HOURS
+- Removed deprecated Directive Directives.DISABLE_INPUT_TEXT
+- Removed deprecated Directive Directives.WHEN_OPEN
+- Removed deprecated Directive Directives.WHEN_CLOSED
+- Removed deprecated Directive Directives.IF_AGENTS
+- Removed deprecated Directive Directives.IF_NO_AGENTS
+
 ### 0.1.62
 - Added TiledeskChatbotUtil.fillCommandAttachments() replacing vars in commands.button.link
 
