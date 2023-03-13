@@ -58,8 +58,10 @@ class DirJSONCondition {
   async go(action, callback) {
     const groups = action.jsonCondition.groups;
     // const groups = action.groups; // NEXT
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
+    const trueIntent = action.trueIntent;
+    const falseIntent = action.falseIntent;
+    const trueIntentAttributes = action.trueIntentAttributes;
+    const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
     if (this.log) {console.log("groups:", JSON.stringify(groups));}
     if (trueIntent && trueIntent.trim() === "") {
@@ -80,11 +82,11 @@ class DirJSONCondition {
     }
     let trueIntentDirective = null;
     if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent);
+      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
     }
     let falseIntentDirective = null;
     if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent);
+      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
     let variables = null;
     if (this.context.tdcache) {

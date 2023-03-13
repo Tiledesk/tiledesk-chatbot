@@ -76,6 +76,8 @@ class DirIfOnlineAgents {
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
+    const trueIntentAttributes = action.trueIntentAttributes;
+    const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
@@ -96,7 +98,7 @@ class DirIfOnlineAgents {
               if (this.log) {console.log("Agents count:", agents.length);}
               if (agents.length > 0) {
                 if (trueIntent) {
-                  let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
+                  let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
                   if (this.log) {console.log("agents (openHours) => trueIntent");}
                   this.intentDir.execute(intentDirective, () => {
                     callback(stopOnConditionMet);
@@ -108,7 +110,7 @@ class DirIfOnlineAgents {
                 }
               }
               else if (falseIntent) {
-                let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+                let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
                 if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
                 this.intentDir.execute(intentDirective, () => {
                   callback(stopOnConditionMet);
@@ -122,7 +124,7 @@ class DirIfOnlineAgents {
         }
         else if (result && !result.isopen) {
           if (falseIntent) {
-            let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+            let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
             if (this.log) {console.log("!agents (!openHours) => falseIntent");}
             this.intentDir.execute(intentDirective, () => {
               callback();
@@ -139,17 +141,6 @@ class DirIfOnlineAgents {
       }
     });
   }
-
-  // intentDirectiveFor(intent) {
-  //   let intentDirective = {
-  //     action: {
-  //       body: {
-  //         intentName: intent
-  //       }
-  //     }
-  //   }
-  //   return intentDirective;
-  // }
 
   parseParams(directive_parameter) {
     let trueIntent = null;

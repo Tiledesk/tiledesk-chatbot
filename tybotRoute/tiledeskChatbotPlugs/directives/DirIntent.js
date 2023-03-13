@@ -118,7 +118,29 @@ class DirIntent {
     // }
   }
 
-  static intentDirectiveFor(intent) {
+  static intentDirectiveFor(intent, json_params) {
+    let string_params = null;
+    if (json_params) {
+      try {
+        string_params = JSON.stringify(json_params);
+      }
+      catch (error) {
+        console.error("Error stringigying JSON PARAMS", json_params);
+      }
+    }
+    if (string_params != null) {
+      intent += string_params
+    }
+    let intentDirective = {
+      action: {
+        intentName: intent
+      }
+    }
+    return intentDirective;
+  }
+
+  static fullIntentDirectiveFor(intent, json_params) {
+    let string_params = JSON.stringify(params);
     let intentDirective = {
       action: {
         intentName: intent

@@ -67,8 +67,10 @@ class DirIfOpenHours {
   }
 
   go(action, callback) {
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
+    const trueIntent = action.trueIntent;
+    const falseIntent = action.falseIntent;
+    const trueIntentAttributes = action.trueIntentAttributes;
+    const falseIntentAttributes = action.falseIntentAttributes;
     const stopOnConditionMet = action.stopOnConditionMet;
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
