@@ -56,8 +56,8 @@ class DirJSONCondition {
   }
 
   async go(action, callback) {
-    const groups = action.jsonCondition.groups;
-    // const groups = action.groups; // NEXT
+    // const groups = action.jsonCondition.groups;
+    const groups = action.groups; // NEXT
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
     const trueIntentAttributes = action.trueIntentAttributes;
