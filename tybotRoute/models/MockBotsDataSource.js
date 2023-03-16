@@ -64,7 +64,16 @@ class MockBotsDataSource {
       faq = await this.getByIntentDisplayName(botId, key);
       // console.log("faq found in datasource..:", JSON.stringify(faq));
     }
-    return faq;
+    // clones the faq to avoid modifying original object
+    // console.log("faq is:", faq)
+    let json_faq;
+    if (faq !== null && faq !== undefined) {
+      let string_faq = JSON.stringify(faq)
+      // console.log("string faq is:", string_faq)
+      json_faq = JSON.parse(string_faq);
+      // console.log("json faq is:", json_faq)
+    }
+    return json_faq;
   }
 
   /**

@@ -13,6 +13,8 @@ available on:
 - Removed deprecated Directive Directives.WHEN_CLOSED
 - Removed deprecated Directive Directives.IF_AGENTS
 - Removed deprecated Directive Directives.IF_NO_AGENTS
+- Added support for intent parameters in DirJSONCondition DirIfOnlineAgents DirIfOpeningHours
+- Added JSONCondition with intent parameters test
 
 ### 0.1.62
 - Added TiledeskChatbotUtil.fillCommandAttachments() replacing vars in commands.button.link

@@ -21,9 +21,9 @@ class WebhookChatbotPlug {
     if (this.log) {console.log("WEBHOOK?", answer.attributes.webhook);}
     if (answer.attributes && answer.attributes.webhook && answer.attributes.webhook === true) {
       if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
-      if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", context);}
+      if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", JSON.stringify(context));}
       this.execWebhook(answer, context, this.webhookurl, (err, message_from_webhook) => {
-        if (this.log) {console.log("message", message_from_webhook);}
+        if (this.log) {console.log("message_from_webhook:", message_from_webhook);}
         if (err) {
           console.error("Error calling webhook:", this.webhookurl)
           pipeline.nextplug();
@@ -31,7 +31,7 @@ class WebhookChatbotPlug {
         else {
           if (this.log) {console.log("Webhook successfully end:", message_from_webhook);}
           const pipeline_original_message = pipeline.message
-          if (this.log) {console.log("pipeline.message before webhook", pipeline.message);}
+          if (this.log) {console.log("pipeline.message before webhook", JSON.stringify(pipeline.message));}
 
           // **** setting message from webhook,
           // **** MERGING with original not overwritten data, manually
@@ -69,8 +69,8 @@ class WebhookChatbotPlug {
   
   execWebhook(reply_message, context, webhookurl, callback) {
     if (this.log) {
-      console.log("WEBHOOK. on context", context)
-      console.log("WEBHOOK. on message", reply_message)
+      console.log("WEBHOOK. on context", JSON.stringify(context));
+      console.log("WEBHOOK. on message", JSON.stringify(reply_message));
     }
     const HTTPREQUEST = {
       url: webhookurl,
@@ -186,8 +186,8 @@ class WebhookChatbotPlug {
       if (log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
-        console.log("******** Response for url:", res);
-        console.log("Response body:\n", res.data);
+        console.log("******** Response for url:", JSON.stringify(res));
+        console.log("Response body:\n", JSON.stringify(res.data));
       }
       if (callback) {
         callback(null, res);

@@ -34,7 +34,7 @@ class SplitsChatbotPlug {
     // to the original json message with split commands
     let commands = TiledeskChatbotUtil.splitPars(message.text);
     if (this.log) {
-      console.log("commands", commands)
+      console.log("commands", JSON.stringify(commands))
     }
     if (commands && commands.length > 1) {
       if (!message.attributes) {

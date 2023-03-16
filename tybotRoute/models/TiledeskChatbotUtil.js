@@ -207,6 +207,9 @@ class TiledeskChatbotUtil {
                 }
             });
         }
+        else if (log) {
+            console.log("No attachments to fill in command")
+        }
     }
 
 }

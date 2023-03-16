@@ -132,12 +132,13 @@ describe('Conversation for JSONCondition with intent params test', async () => {
           assert.ok(false);
         }
         else {
+          console.log("params:", params)
           assert(params);
         //   assert(params["last_message_id"] === message_id);
           assert(params["project_id"] === PROJECT_ID);
-          assert(params["star_type"] === "supernova");
+          assert(params["star_type"] === "nebula");
           assert(params["my_name"] === "nebula");
-          assert(params["size"] === "500kk");
+          assert(params["size"] === "500k");
           listener.close(() => {
             done();
           });

@@ -580,7 +580,7 @@ class TiledeskChatbot {
     if (static_bot_answer.attributes && static_bot_answer.attributes.webhook && static_bot_answer.attributes.webhook === true) {
       const variables = await this.allParameters();
       context.variables = variables;
-      if (this.log) {console.log("adding variables to webhook context:", context.variables);}
+      if (this.log) {console.log("adding variables to webhook context:", JSON.stringify(context.variables));}
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
@@ -625,7 +625,7 @@ class TiledeskChatbot {
     });
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.allParameters();//this.tdcache.hgetall(parameters_key);
-    if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", all_parameters);}
+    if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", JSON.stringify(all_parameters));}
     if (all_parameters) {
       if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
       if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}

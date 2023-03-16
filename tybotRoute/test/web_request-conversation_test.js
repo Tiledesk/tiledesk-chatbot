@@ -83,7 +83,7 @@ describe('Conversation for JSONCondition test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "var1: Application var");
       assert(command3.type === "message");
-      console.log("command3.message.text", command3.message.text)
+      // console.log("command3.message.text", command3.message.text)
       assert(command3.message.text === "service_reply: Your name is Andrea");
       getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
