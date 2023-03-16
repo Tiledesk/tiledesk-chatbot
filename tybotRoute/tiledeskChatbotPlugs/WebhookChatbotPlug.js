@@ -186,7 +186,7 @@ class WebhookChatbotPlug {
       if (log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
-        console.log("******** Response for url:", JSON.stringify(res));
+        // console.log("******** Response for url:", JSON.stringify(res));
         console.log("Response body:\n", JSON.stringify(res.data));
       }
       if (callback) {
