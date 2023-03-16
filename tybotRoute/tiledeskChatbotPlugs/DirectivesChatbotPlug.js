@@ -49,6 +49,7 @@ class DirectivesChatbotPlug {
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
     this.directives = config.directives;
+    console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 
   exec(pipeline) {
@@ -96,6 +97,8 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
+    console.log("supportRequest is:", JSON.stringify(supportRequest))
+    
     const token = this.token;
     const API_URL = this.API_URL;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
@@ -103,7 +106,9 @@ class DirectivesChatbotPlug {
     // const requestId = supportRequest.request_id
     let depId;
     if (supportRequest.department && supportRequest.department._id) {
+      if (this.log) {console.log("setting depId:", supportRequest.department._id);}      
       depId = supportRequest.department._id;
+      if (this.log) {console.log("depId is:", depId);}
     }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
@@ -127,6 +132,7 @@ class DirectivesChatbotPlug {
       tdclient: tdclient,
       log: this.log
     }
+    if (this.log) {console.log("this.context.departmentId is:", this.context.departmentId);}
     
     this.curr_directive_index = -1;
     if (this.log) { console.log("processing directives...");}

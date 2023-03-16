@@ -48,6 +48,20 @@ class DirMoveToAgent {
   }
 
   async go(action, callback) {
+    let depId = null;
+    if (this.log) {console.log("DirMoveToAgent this.context.departmentId:", this.context.departmentId);}
+    if (this.context.departmentId) {
+      depId = this.context.departmentId
+      if (this.log) {console.log("DirMoveToAgent depId:", depId);}
+    }
+    else if (this.tdcache) {
+      depId = 
+      await TiledeskChatbot.getParameterStatic(
+        this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
+      );
+      if (this.log) {console.log("DirMoveToAgent depId (cache):", depId);}
+    }
+    if (this.log) {console.log("DirMoveToAgent anyway depId is:", depId);}
     if (action.whenOnlineOnly === true) {
       this.tdclient.openNow( async (err, result) => {
         if (err) {
@@ -56,11 +70,7 @@ class DirMoveToAgent {
         }
         else {
           if (result && result.isopen) {
-            if (this.tdcache) {
-              depId = 
-              await TiledeskChatbot.getParameterStatic(
-                this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
-              );
+            if (depId) {
               this.tdclient.agent(this.requestId, depId, (err) => {
                 if (err) {
                   console.error("Error moving to agent during online hours:", err);
@@ -82,24 +92,29 @@ class DirMoveToAgent {
       });
     }
     else {
-      if (this.tdcache) {
-        const depId = 
-        await TiledeskChatbot.getParameterStatic(
-          this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
-        );
-        this.tdclient.agent(this.requestId, depId, (err) => {
-          if (err) {
-            console.error("Error moving to agent:", err);
-          }
-          else {
-            //console.log("Successfully moved to agent");
-          }
+      // if (this.tdcache) {
+        // const depId = 
+        // await TiledeskChatbot.getParameterStatic(
+        //   this.tdcache, this.requestId, TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY
+        // );
+        if (depId) {
+          this.tdclient.agent(this.requestId, depId, (err) => {
+            if (err) {
+              console.error("Error moving to agent:", err);
+            }
+            else {
+              //console.log("Successfully moved to agent");
+            }
+            callback();
+          });
+        }
+        else {
           callback();
-        });
-      }
-      else {
-        callback();
-      }
+        }
+      // }
+      // else {
+      //   callback();
+      // }
     }
   }
 
