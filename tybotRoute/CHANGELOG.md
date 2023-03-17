@@ -16,6 +16,9 @@ available on:
 - Added support for intent parameters in DirJSONCondition DirIfOnlineAgents DirIfOpeningHours
 - Added JSONCondition with intent parameters test
 
+### 0.1.63 - online
+- Added support for depId-from-supportRequest in DirMoveToAgent. This fixes no-handoff in test-it-out and from Dialogflow connector
+
 ### 0.1.62
 - Added TiledeskChatbotUtil.fillCommandAttachments() replacing vars in commands.button.link
 

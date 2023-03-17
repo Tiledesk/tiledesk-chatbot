@@ -49,7 +49,7 @@ class DirDepartment {
 
   moveToDepartment(requestId, depName, callback) {
     this.tdclient.getAllDepartments((err, deps) => {
-      if (this.log) {console.log("deps:", deps, err);}
+      if (this.log) {console.log("deps:", deps);}
       if (err) {
         console.error("getAllDepartments() error:", err);
         callback();
