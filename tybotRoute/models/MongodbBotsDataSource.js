@@ -85,31 +85,34 @@ class MongodbBotsDataSource {
    * @returns a single Intent
    */
   async getByIntentDisplayName(botId, key) {
+    if (this.log) {console.log("Quering intent by botId:", botId, "key:", key );}
     return new Promise((resolve, reject) => {
       // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
       let query = null;
       key = key.trim();
       if (key.startsWith("#")) {
         let intent_id = key.substring(key.indexOf("#") + 1);
-        // console.log("Query by intent_id:", intent_id );
+        if (this.log) {console.log("Query by intent_id:", intent_id );}
         query = { "id_faq_kb": botId, "intent_id": intent_id };
       }
       else {
-        // console.log("Query by intent name:", key );
+        if (this.log) {console.log("Query by intent name:", key);}
         query = { "id_faq_kb": botId, "intent_display_name": key };
-      }
-      
+      }      
       if (this.log) {console.debug('query', query);}
       Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {
+          console.error("error getting faqs", err);
           return reject(err);
         }
         if (this.log) {console.debug("getByIntentDisplayName faqs", JSON.stringify(faqs));}
         if (faqs && faqs.length > 0) {
           const intent = faqs[0];
+          if (this.log) {console.debug("intent found:", JSON.stringify(intent));}
           return resolve(intent);
         }
         else {
+          if (this.log) {console.debug("No intent found");}
           return resolve(null);
         }
       });
