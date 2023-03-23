@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.66
+- Replaced tdClient.agent() with tdCLient.moveToAgent() in DirMoveToAgent
+
 ### 0.1.65 - online
 - Added more logs for bug wa-wh test
 

@@ -49,7 +49,7 @@ class DirectivesChatbotPlug {
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
     this.directives = config.directives;
-    console.log("We have the support request:", JSON.stringify(this.supportRequest))
+    // console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 
   exec(pipeline) {
@@ -97,7 +97,7 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
-    console.log("supportRequest is:", JSON.stringify(supportRequest))
+    // console.log("supportRequest is:", JSON.stringify(supportRequest))
     
     const token = this.token;
     const API_URL = this.API_URL;
