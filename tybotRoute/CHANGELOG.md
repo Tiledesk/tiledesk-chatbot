@@ -5,7 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-### 0.1.63
+### 0.1.65 - online
+- Added more logs for bug wa-wh test
+
+### 0.1.64 - online
+- Added logs for bug wa-wh test
+
+### 0.1.63 - online
 - Added stopOnConditionMet to DirIfOnlineAgents
 - Removed deprecated Directive Directives.WHEN_OFFLINE_HOURS
 - Removed deprecated Directive Directives.DISABLE_INPUT_TEXT
