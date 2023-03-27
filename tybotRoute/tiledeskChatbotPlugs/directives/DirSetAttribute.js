@@ -12,15 +12,15 @@ const schema = {
             "type": "string",
             "enum": ["setattribute"]
         },
-
+        "_tdActionId": {
+            "type": ["string", "null"]
+        },
         "_tdActionTitle": {
             "type": ["string", "null"]
         },
-
         "destination": {
             "type": "string",
         },
-
         "operation": {
             "type": "object",
             "properties": {
