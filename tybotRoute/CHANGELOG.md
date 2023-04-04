@@ -5,6 +5,26 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.72
+- Removed error-prone request  caching.
+- Added botId cache per request with key "request_botId_key"
+
+### 0.1.71 - online
+- Log clean up
+
+### 0.1.70
+- Removed system attributes from request /parameters service
+
+### 0.1.69
+- Removed tdclient.updateRequestAttributes(requestId, preChatForm: all_parameters)
+
+### 0.1.68
+- Log clean
+
+### 0.1.67
+- adds tdActionId to Schema for SetAttribute
+- removes hidden vars from attributes
+
 ### 0.1.66
 - Replaced tdClient.agent() with tdCLient.moveToAgent() in DirMoveToAgent
 

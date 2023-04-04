@@ -8,6 +8,7 @@ class MongodbBotsDataSource {
       throw new Error("config.projectId is mandatory");
     }
     this.projectId = config.projectId;
+    this.log = config.log;
   }
   
   async getBotById(botId) {
@@ -25,19 +26,27 @@ class MongodbBotsDataSource {
       try {
         let _bot_as_string = await tdcache.get(botCacheKey);
         const value_type = typeof _bot_as_string;
-        // console.log("__bot_as_string found in chache:", _bot_as_string);
-        // console.log("value_type:", value_type);
+        if (this.log) {
+          console.log("__bot_as_string found in chache:", _bot_as_string);
+          console.log("value_type:", value_type);
+        }
         if (_bot_as_string) {
           bot = JSON.parse(_bot_as_string);
-          // console.log("got bot from cache:", JSON.stringify(bot));
+          if (this.log) {
+            console.log("got bot from cache:", JSON.stringify(bot));
+          }
         }
         else {
-          // console.log("bot not found, getting from datasource...");
+          if (this.log) {
+            console.log("bot not found, getting from datasource...");
+          }
           bot = await this.getBotById(botId);
-          // console.log("bot found in datasource:", JSON.stringify(bot));
+          if (this.log) {
+            console.log("bot found in datasource:", JSON.stringify(bot));
+          }
           await tdcache.set(botCacheKey, JSON.stringify(bot));
           // DEBUG CODE REMOVE
-          let bot_ = await tdcache.get(botCacheKey);
+          // let bot_ = await tdcache.get(botCacheKey);
           // console.log("_bot_as_string from cache debug:", bot_)
         }
       }
@@ -46,9 +55,13 @@ class MongodbBotsDataSource {
       }
     }
     else {
-      // console.log("no chache. getting bot from datasource...");
+      if (this.log) {
+        console.log("no chache. getting bot from datasource...");
+      }
       bot = await this.getBotById(botId);
-      // console.log("bot found in datasource:", JSON.stringify(bot));
+      if (this.log) {
+        console.log("bot found in datasource:", JSON.stringify(bot));
+      }
     }
     return bot;
   }
@@ -121,25 +134,27 @@ class MongodbBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
-    console.log("botID:", botId);
-    console.log("key:", key);
+    // console.log("botID:", botId);
+    // console.log("key:", key);
     if (tdcache) {
-      console.log("in tdcache");
+      if (this.log) {console.log("in tdcache");}
       let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + ":faq:id:" + key;
-      console.log("Looking in cache for:", faqCacheKey);
+      if (this.log) {console.log("Looking in cache for:", faqCacheKey);}
       try {
         let _faq_as_string = await tdcache.get(faqCacheKey);
         const value_type = typeof _faq_as_string;
-        console.log("_faq_as_string found in chache:", _faq_as_string);
-        console.log("value_type:", value_type);
+        if (this.log) {
+          console.log("_faq_as_string found in chache:", _faq_as_string);
+          console.log("value_type:", value_type);
+        }
         if (_faq_as_string) {
           faq = JSON.parse(_faq_as_string);
-          console.log("got faq from cache:", JSON.stringify(faq));
+          if (this.log) {console.log("got faq from cache:", JSON.stringify(faq));}
         }
         else {
           console.log("faq not found, getting from datasource...");
           faq = await this.getByIntentDisplayName(botId, key);
-          console.log(".faq found in datasource:", JSON.stringify(faq));
+          if (this.log) {console.log(".faq found in datasource:", JSON.stringify(faq));}
           await tdcache.set(faqCacheKey, JSON.stringify(faq));
           // DEBUG CODE REMOVE
           // let faq_ = await tdcache.get(faqCacheKey);
@@ -151,9 +166,9 @@ class MongodbBotsDataSource {
       }
     }
     else {
-      console.log("no chache. getting faq from datasource...");
+      if (this.log) {console.log("no chache. getting faq from datasource...");}
       faq = await this.getByIntentDisplayName(botId, key);
-      console.log("faq found in datasource (no-cache):", JSON.stringify(faq));
+      if (this.log) {console.log("faq found in datasource (no-cache):", JSON.stringify(faq));}
     }
     return faq;
   }

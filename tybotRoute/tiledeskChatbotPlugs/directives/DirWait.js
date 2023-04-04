@@ -31,17 +31,17 @@ class DirWait {
         millis: 500
       }
     }
-    console.log("____-----_", action)
+    // console.log("____-----_", action)
     this.go(action, () => {
-      console.log("YES", callback)
+      // console.log("YES", callback)
       callback();
     })
   }
 
   go(action, callback) {
-    console.log(">>>>__", callback)
+    // console.log(">>>>__", callback)
     setTimeout(() => {
-      console.log("QUINO....__")
+      // console.log("QUINO....__")
       callback();
     }, action.millis);
   }

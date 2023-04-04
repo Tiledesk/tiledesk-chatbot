@@ -72,6 +72,13 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
   
+  const request_botId_key = "tilebot:botId_requests:" + requestId;
+  await tdcache.set(
+    request_botId_key,
+    botId,
+    {EX: 604800} // 7 days
+  );
+
   // NEXTTTTTTT
   // const message_context = {
   //   projectId: projectId,
@@ -90,7 +97,7 @@ router.post('/ext/:botid', async (req, res) => {
 
   let botsDS;
   if (!staticBots) {
-    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
+    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId, log: log});
     if (log) {console.log("botsDS created with Mongo");}
   }
   else {
@@ -356,38 +363,42 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     log: false
   });
   let request;
-  const request_key = "tilebot:" + requestId;
-  if (log) {console.log("request_key:", request_key);}
-  if (tdcache) {
-    request = await tdcache.getJSON(request_key)
-    if (log) {console.log("Request from cache:", JSON.stringify(request));}
-    if (!request) {
-      if (log) {console.log("!Request from cache", requestId);}
-      try {
-        request = await tdclient.getRequestById(requestId);
-      }
-      catch(err) {
-        console.error("Error getting the request:", err)
-      }
-      if (log) {console.log("Got request with APIs (after no cache hit)");}
-    }
+  // const request_key = "tilebot:" + requestId;
+  // if (log) {console.log("request_key:", request_key);}
+  // if (tdcache) {
+  //   request = await tdcache.getJSON(request_key)
+  //   if (log) {console.log("Request from cache:", JSON.stringify(request));}
+  //   if (!request) {
+  //     if (log) {console.log("!Request from cache", requestId);}
+  //     try {
+  //       request = await tdclient.getRequestById(requestId);
+  //     }
+  //     catch(err) {
+  //       console.error("Error getting the request:", err)
+  //     }
+  //     if (log) {console.log("Got request with APIs (after no cache hit)");}
+  //   }
+  // }
+  // else {
+    // if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
+  try {
+    request = await tdclient.getRequestById(requestId);
+    // console.log("Cache request found.");
   }
-  else {
-    if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
-    try {
-      request = await tdclient.getRequestById(requestId);
-      console.log("Cache request found.");
-    }
-    catch(err) {
-      console.log("Request not found.");
-    }
-    if (log) {console.log("(No tdcache) Got request with APIs");}
+  catch(err) {
+    console.error("Request not found:", requestId);
   }
+    // if (log) {console.log("(No tdcache) Got request with APIs");}
+  // }
   if (!request) {
     if (log) {console.log("chatbot-pure directives still work. Tiledesk specific directives don't");}
+    const request_botId_key = "tilebot:botId_requests:" + requestId;
+    const botId = await tdcache.get(request_botId_key);
+    console.log("got botId [" + request_botId_key + "]:", botId);
     request = {
       request_id: requestId,
-      id_project: projectId
+      id_project: projectId,
+      bot_id: botId
     }
   }
   if (log) {
@@ -474,11 +485,29 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
     res.send(parameters);
   }
   else {
+    const RESERVED = [
+      TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
+      TiledeskChatbotConst.REQ_CHAT_URL,
+      TiledeskChatbotConst.REQ_CITY_KEY,
+      TiledeskChatbotConst.REQ_COUNTRY_KEY,
+      TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY,
+      TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY,
+      TiledeskChatbotConst.REQ_END_USER_ID_KEY,
+      TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY,
+      TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY,
+      TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY,
+      TiledeskChatbotConst.REQ_PROJECT_ID_KEY,
+      TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
+      TiledeskChatbotConst.REQ_USER_AGENT_KEY,
+      TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
+      TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY
+    ]
     let userParams = {};
     if (parameters) {
       for (const [key, value] of Object.entries(parameters)) {
         // console.log(key, value);
-        if (!key.startsWith("_")) {
+        // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
+        if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
           userParams[key] = value;
         }
       }

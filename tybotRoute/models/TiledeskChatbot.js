@@ -631,12 +631,12 @@ class TiledeskChatbot {
       if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}
       tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
         if (this.log) {console.log("Lead updated.")}
-        tdclient.updateRequestAttributes(requestId, {
-          preChatForm: all_parameters,
-          updated: Date.now
-        }, () => {
-          if (this.log) {console.log("Prechat updated.");}
-        });
+        // tdclient.updateRequestAttributes(requestId, {
+        //   preChatForm: all_parameters,
+        //   updated: Date.now
+        // }, () => {
+        //   if (this.log) {console.log("Prechat updated.");}
+        // });
       });
     };
   }

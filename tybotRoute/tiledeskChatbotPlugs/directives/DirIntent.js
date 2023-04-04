@@ -66,6 +66,7 @@ class DirIntent {
     // console.log("action intent:", action);
     const intentName = action.intentName;
     // const intentId = action.intentId;
+    //console.log("new_supportRequest", JSON.stringify(this.supportRequest));
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
@@ -95,6 +96,7 @@ class DirIntent {
         "request": {
           "request_id": requestId,
           "id_project": projectId
+          // "bot_id": botId
         }
       },
       "token": this.token
