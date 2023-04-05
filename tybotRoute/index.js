@@ -394,7 +394,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     if (log) {console.log("chatbot-pure directives still work. Tiledesk specific directives don't");}
     const request_botId_key = "tilebot:botId_requests:" + requestId;
     const botId = await tdcache.get(request_botId_key);
-    console.log("got botId [" + request_botId_key + "]:", botId);
+    if (log) {console.log("current botId [" + request_botId_key + "]:", botId);}
     request = {
       request_id: requestId,
       id_project: projectId,
@@ -412,31 +412,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
   // console.log("bot_answer", bot_answer)
-  //const bot_answer = answer;
-  // console.log("bot_answer to send:", bot_answer);
-  // empty answer
-  // let b = {
-  //      text: '',
-  //      attributes: {
-  //        clienttimestamp: 1670571497092,
-  //        _answerid: '638c7b0c1db44900351104b1',
-  //        intent_info: {
-  //          intent_name: 'wantagent',
-  //          is_fallback: false,
-  //          question_payload: [Object],
-  //          botId: '638c78d71db44900351101c2',
-  //          bot: [Object]
-  //        },
-  //        directives: true,
-  //        splits: true,
-  //        markbot: true,
-  //        fillParams: true,
-  //        webhook: false
-  //      },
-  //      triggeredByMessageId: '6392e5e8408e0000437aa383'
-  //    }
   if (bot_answer) {
-    
     if (log) {console.log("adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};

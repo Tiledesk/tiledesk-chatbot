@@ -6,8 +6,8 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.72
-- Removed error-prone request  caching.
-- Added botId cache per request with key "request_botId_key"
+- Removed error-prone request caching.
+- Added botId caching on requestId with key: request_botId_key
 
 ### 0.1.71 - online
 - Log clean up

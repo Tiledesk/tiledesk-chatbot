@@ -42,15 +42,20 @@ class DirWebRequest {
     const filler = new Filler();
     const url = filler.fill(action.url, requestVariables);
 
-    let headers = null;
+    let headers = {};
     if (action.headersString) {
-      let headersString = filler.fill(action.headersString, requestVariables);
-      try {
-        headers = JSON.parse(headersString);
+      let headersDict = action.headersString
+      for (const [key, value] of Object.entries(headersDict)) {
+        if (this.log) {console.log("header:", key, "value:", value)}
+        let filled_value = filler.fill(value, requestVariables);
+        headers[key] = filled_value;
       }
-      catch(err) {
-        console.error("Error parsing webRequest headersString as JSON:", headersString);
-      }
+      // try {
+      //   headers = JSON.parse(headersString);
+      // }
+      // catch(err) {
+      //   console.error("Error parsing webRequest headersString as JSON:", headersString);
+      // }
       // for (const [key, value] of Object.entries(action.headers)) {
       //   action.headers[key] = filler.fill(value, requestVariables);
       // }
