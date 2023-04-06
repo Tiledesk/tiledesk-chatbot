@@ -59,11 +59,18 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/plain', async (req, res) => {
-      // console.log("******/get/plain");
+      console.log("/webrequest GET req.headers:", req.headers);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
       res.send("Application var");
     });
     endpointServer.post('/test/webrequest/post/plain', async (req, res) => {
-      // console.log("******/post/plain req.body:", req.body);
+      console.log("/webrequest POST req.headers:", req.headers);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.headers["accept"] === "*/*");
       if (req && req.body && req.body.name) {
         res.send("Your name is " + req.body.name);
       }

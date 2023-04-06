@@ -606,10 +606,6 @@ async function connectRedis() {
     console.log("(Tilebot) Redis connected.");
   }
   return;
-  // console.info("Tilebot started.");
-  // if (completionCallback) {
-  //   completionCallback();
-  // }
 }
 
 module.exports = { router: router, startApp: startApp};

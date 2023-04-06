@@ -66,7 +66,11 @@ const bot = {
 		"actions": [{
 			"_tdActionTitle": "var1",
 			"url": "http://localhost:10002/test/webrequest/get/plain",
-			"headersString": "{\"Content-Type\":\"application/json\",\"Cache-Control\":\"no-cache\",\"User-Agent\":\"TiledeskBotRuntime\"}",
+			"headersString": {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime"
+			},
 			"jsonBody": "{}",
 			"assignTo": "var1",
 			"method": "GET",
@@ -74,7 +78,12 @@ const bot = {
 		}, {
 			"_tdActionTitle": "service_reply",
 			"url": "http://localhost:10002/test/webrequest/post/plain",
-			"headersString": "{\"Content-Type\":\"application/json\",\"Cache-Control\":\"no-cache\",\"User-Agent\":\"TiledeskBotRuntime\",\"Accept\":\"*/*\"}",
+			"headersString": {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime",
+				"Accept": "*/*"
+			},
 			"jsonBody": "{\n\t\"name\": \"Andrea\"\n}",
 			"assignTo": "service_reply",
 			"method": "POST",
