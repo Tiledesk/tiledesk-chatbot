@@ -353,8 +353,13 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const projectId = req.params.projectId;
   const requestId = req.params.requestId;
   const token = req.headers["authorization"];
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => projectId:", projectId);}
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => requestId:", requestId);}
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => req.headers:", req.headers);}
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => token:", token);}
+  
   let answer = req.body;
-  // if (log) {console.log("answer on sendSupportMessageExt:", JSON.stringify(answer));}
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => answer on sendSupportMessageExt:", JSON.stringify(answer));}
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -386,34 +391,35 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     // console.log("Cache request found.");
   }
   catch(err) {
-    console.error("Request not found:", requestId);
+    console.error("64218dfecdb804001380b9ba => Request not found:", requestId);
   }
     // if (log) {console.log("(No tdcache) Got request with APIs");}
   // }
   if (!request) {
-    if (log) {console.log("chatbot-pure directives still work. Tiledesk specific directives don't");}
+    if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => Creating new Request. Chatbot-pure directives still work. Tiledesk specific directives don't");}
     const request_botId_key = "tilebot:botId_requests:" + requestId;
     const botId = await tdcache.get(request_botId_key);
-    if (log) {console.log("current botId [" + request_botId_key + "]:", botId);}
+    if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => current botId [" + request_botId_key + "]:", botId);}
     request = {
       request_id: requestId,
       id_project: projectId,
       bot_id: botId
     }
   }
-  if (log) {
-    console.log("/ext request....", JSON.stringify(request));
-    console.log("/ext APIURL....", APIURL);
-    console.log("/ext process.env.TYBOT_ENDPOINT....", process.env.TYBOT_ENDPOINT);
+  if (log || projectId === "64218dfecdb804001380b9ba") {
+    console.log("64218dfecdb804001380b9ba => /ext request....", JSON.stringify(request));
+    console.log("64218dfecdb804001380b9ba => /ext APIURL....", APIURL);
+    console.log("64218dfecdb804001380b9ba => /ext process.env.TYBOT_ENDPOINT....", process.env.TYBOT_ENDPOINT);
   }
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  // let directivesPlug = null;
   // PIPELINE-EXT
   // if (log) {console.log("answer to process:", JSON.stringify(answer));}
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
-  // console.log("bot_answer", bot_answer)
+  if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => bot_answer", JSON.stringify(bot_answer))}
   if (bot_answer) {
-    if (log) {console.log("adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
+    if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};
     }
@@ -423,8 +429,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     bot_answer.attributes["_raw_message"] = original_answer_text;
     // if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+      if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => bot_answer sent:", JSON.stringify(bot_answer));}
       if (err) {
-        console.error("Error sending message", err);
+        console.error("64218dfecdb804001380b9ba => Error sending message", err);
       }
       directivesPlug.processDirectives( () => {
         if (log) {console.log("After message - Directives executed.");}
@@ -432,6 +439,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     });
   }
   else {
+    if (log || projectId === "64218dfecdb804001380b9ba") {console.log("64218dfecdb804001380b9ba => !bot_answer");}
     directivesPlug.processDirectives( () => {
       if (log) {console.log("Directives executed.");}
     });
@@ -498,8 +506,8 @@ router.get('/', (req, res) => {
   res.send('Hello Tilebot!');
 });
 
-router.get('/test/webrequest/get/plain', async (req, res) => {
-  res.send("Application var");
+router.get('/test/webrequest/get/plain/:username', async (req, res) => {
+  res.send(`Application var ${req.params['username']}`);
 });
 
 router.post('/test/webrequest/post/plain', async (req, res) => {

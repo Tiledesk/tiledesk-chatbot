@@ -5,6 +5,16 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.75
+- removed debug logs
+
+### 0.1.74
+- DEBUG VERSION
+- Added if (log || projectId === "64218dfecdb804001380b9ba")
+
+### 0.1.73
+- Bug fixing: WebRequest headersString now is a JSON
+
 ### 0.1.72
 - Removed error-prone request caching.
 - Added botId caching on requestId with key: request_botId_key

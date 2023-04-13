@@ -1,7 +1,8 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "0.1.72",
+  "version": "0.1.74",
   "description": "Tiledesk Tybot connector",
+
   "main": "index.js",
   "scripts": {
     "test": "mocha --timeout 60000 --exit",
