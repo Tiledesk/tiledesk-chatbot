@@ -120,6 +120,72 @@ const bot = {
 		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 		"form": {},
 		"question": ""
+	}, {
+		"intent_display_name": "webrequest_with_assignments",
+		"intent_id": "12345678-0000-0000-0000-000000000001",
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionTitle": "json call",
+			"url": "http://localhost:10002/test/webrequest/get/json",
+			"headersString": {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime"
+			},
+			"jsonBody": "{}",
+			"assignments": {
+				"name": "name",
+				"time": "time",
+				"owner_name": "owner.name",
+				"html": "html",
+				"kid_0_name": "kids.[0].name",
+				"kids_1_name": "kids.[1].name",
+				"kids_3_name": "kids.[3].name",
+				"last_kid": "last kids",
+				"first_name": "first names",
+				"last_name": "last names",
+				"last_element_with_handlebars_syntax": "{{#each kids}}{{#if @last}}{{this.name}}{{/if}}{{/each}}"
+			},
+			"method": "GET",
+			"_tdActionType": "webrequest"
+		}, {
+			"_tdActionTitle": "plain call",
+			"url": "http://localhost:10002/test/webrequest/get/plain",
+			"headersString": {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime",
+				"Accept": "*/*"
+			},
+			"jsonBody": "{}",
+			"assignments": {
+				"message": "body"
+			},
+			"method": "GET",
+			"_tdActionType": "webrequest"
+		}, {
+			"_tdActionTitle": "message check",
+			"_tdActionType": "reply",
+			"attributes": {
+				"disableInputMessage": false,
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "message check: ${name} ${time} ${owner_name} ${html} ${kid_0_name} ${kids_1_name} ${kids_3_name} ${last_kid} ${first_name} ${last_name} ${last_element_with_handlebars_syntax} ${message}"
+					}
+				}]
+			},
+			"text": "..."
+		}]
+		
 	}]
 }
 

@@ -2,6 +2,7 @@ let axios = require('axios');
 let https = require("https");
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
 
 class DirWebRequest {
   constructor(context) {
@@ -88,7 +89,7 @@ class DirWebRequest {
           }
         }
         else if (callback) {
-          if (action.assignTo && this.context.tdcache && resbody) {
+          if (action.assignTo && this.context.tdcache && resbody) { // DEPRECATED
             if (this.log) {console.log("(webRequest) this.requestId:", this.context.requestId);}
             let attributes =
               await TiledeskChatbot.allParametersStatic(
@@ -105,6 +106,37 @@ class DirWebRequest {
               for (const [key, value] of Object.entries(all_parameters)) {
                 const value_type = typeof value;
                 if (this.log) {console.log("(webRequest) request parameter:", key, "value:", value, "type:", value_type)}
+              }
+            }
+          } else if (action.assignments && this.context.tdcache && resbody) {
+            if (this.log) {console.log("(webRequest) action.assignments for request:", this.context.requestId);}
+            let json_body;
+            if (typeof resbody === "string") {
+              json_body = {
+                body: resbody
+              }
+            }
+            else {
+              json_body = resbody
+            }
+            if (this.log) {console.log("(webRequest) action.assignments json_body:", json_body);}
+            let attributes =
+              await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+              if (this.log) {console.log("(webRequest) action.assignments attributes:", attributes);}
+            const assignments = action.assignments;
+            if (this.log) {console.log("(webRequest) assignments:", assignments);}
+            for (const [attr_name, attr_eval_expression] of Object.entries(assignments)) {
+              if (this.log) {console.log("", attr_name, attr_eval_expression);}
+              const attributeValue = TiledeskJSONEval.eval(json_body, attr_eval_expression);
+              if (this.log) {console.log("(webRequest) Assigning to:", attr_name, "value:", attributeValue);}
+              await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, attr_name, attributeValue);
+            }
+            if (this.log) {
+              console.log("(webRequest) All attributes:");
+              const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+              for (const [key, value] of Object.entries(all_parameters)) {
+                const value_type = typeof value;
+                if (this.log) {console.log("(webRequest) request attribute:", key, "value:", value, "type:", value_type)}
               }
             }
           }

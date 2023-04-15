@@ -2,7 +2,6 @@
   "name": "@tiledesk/tiledesk-tybot-connector",
   "version": "0.1.74",
   "description": "Tiledesk Tybot connector",
-
   "main": "index.js",
   "scripts": {
     "test": "mocha --timeout 60000 --exit",
@@ -21,6 +20,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
+    "handlebars": "^4.7.7",
+    "jsonschema": "^1.4.1",
     "jsonwebtoken": "^8.5.1",
     "minimist-string": "^1.0.2",
     "mocha": "^10.2.0",
@@ -28,7 +29,6 @@
     "nanoid": "^3.1.25",
     "redis": "^3.1.2",
     "uuid": "^3.3.3",
-    "vm2": "^3.9.13",
-    "jsonschema": "^1.4.1"
+    "vm2": "^3.9.13"
   }
 }

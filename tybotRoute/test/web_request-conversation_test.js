@@ -59,14 +59,14 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/plain', async (req, res) => {
-      console.log("/webrequest GET req.headers:", req.headers);
+      // console.log("/webrequest GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
       res.send("Application var");
     });
     endpointServer.post('/test/webrequest/post/plain', async (req, res) => {
-      console.log("/webrequest POST req.headers:", req.headers);
+      // console.log("/webrequest POST req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -118,6 +118,115 @@ describe('Conversation for JSONCondition test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": "/webrequest",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequest_with_assignments', (done) => {
+    console.log("/webrequest_with_assignments");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      // console.log("/webrequest_with_assignments GET req.headers:", req.headers);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      const data = { 
+        "name": "Alan",
+        "hometown": "Somewhere, TX",
+        "time": 123,
+        "owner": {
+            "name": "Andrea",
+            "CF": "SPN"
+        },
+        "html": "<div>HTML Content!</div>",
+        "kids": [
+            {
+                "name": "Jimmy",
+                "age": "12"
+            }, 
+            {
+                "name": "Sally",
+                "age": "4"
+            }
+        ],
+        "names": [
+            "Andrea",
+            "Marco",
+            "Mery",
+            "Nico",
+            "Antonio",
+            "Stefania",
+            "Luca"
+        ]
+      };
+      res.send(data);
+    });
+    endpointServer.get('/test/webrequest/get/plain', async (req, res) => {
+      // console.log("/webrequest_with_assignments /test/webrequest/get/plain req.headers:", req.headers);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.headers["accept"] === "*/*");
+      res.send("Hi from Tiledesk WebRequest");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+    
+      assert(command1.type === "message");
+      assert(command1.message.text === "message check: Alan 123 Andrea <div>HTML Content!</div> Jimmy Sally  [object Object] Andrea Luca Sally Hi from Tiledesk WebRequest");
+      
+      getChatbotParameters(REQUEST_ID, (err, params) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(params);
+          assert(params["name"] === "Alan");
+          assert(params["time"] === "123");
+          assert(params["owner_name"] === "Andrea");
+          assert(params["html"] === "<div>HTML Content!</div>");
+          assert(params["kid_0_name"] === "Jimmy");
+          assert(params["kids_1_name"] === "Sally");
+          assert(params["kids_3_name"] === "");
+          assert(params["last_kid"] === "[object Object]");
+          assert(params["first_name"] === "Andrea");
+          assert(params["last_name"] === "Luca");
+          assert(params["last_element_with_handlebars_syntax"] === "Sally");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequest_with_assignments",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
