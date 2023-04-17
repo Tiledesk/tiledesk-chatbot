@@ -248,6 +248,8 @@ router.post('/ext/:botid', async (req, res) => {
 
 async function updateRequestVariables(chatbot, message, projectId, requestId) {
   // update request context
+  console.log("Updating request variables. Message:", JSON.stringify(message))
+  console.log("chatbot.log", chatbot.log);
   const messageId = message._id;
   const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
   await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
@@ -267,14 +269,15 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
   }
-  // console.log("message.request.language", message.request["language"])
+  console.log("message.request.language", message.request["language"])
   if (message.request) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, message.request["language"]);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
   }
+  console.log("message.request.language", message.request["language"])
   if (message.request && message.request.department) {
-    // It was an error getting this from widget message's attributes
+    // It was an error when getting this from widget message's attributes
     // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
     // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
     // get from request.department instead
@@ -289,7 +292,8 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
         for (const [key, value] of Object.entries(message.attributes.payload)) {
           // const value = all_parameters[key];
           const value_type = typeof value;
-          if (chatbot.log) {console.log("importing payload parameter:", key, "value:", value, "type:", value_type)}
+          console.log("chatbot.log", chatbot.log);
+          console.log("importing payload parameter:", key, "value:", value, "type:", value_type)
           await chatbot.addParameter(key, String(value));
         }
       }
