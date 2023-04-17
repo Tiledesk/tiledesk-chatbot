@@ -285,7 +285,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
 
   // for BUG
-  if (chatbot.log) {console.log("message.request.attributes.payload", JSON.stringify(message.request.attributes.payload))}
+  // if (chatbot.log) {console.log("message.request.attributes.payload", JSON.stringify(message.request.attributes.payload))}
   if (message && message.request && message.request.attributes && message.request.attributes.payload) {
     if (!message.attributes) {
       message.attributes = {}
@@ -295,6 +295,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
 
   if (message.attributes) {
+    if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
     await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
     if (message.attributes.payload) {
