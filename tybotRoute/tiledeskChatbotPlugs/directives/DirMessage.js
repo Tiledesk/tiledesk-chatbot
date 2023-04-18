@@ -69,6 +69,9 @@ class DirMessage {
       if (directive.name === Directives.HMESSAGE) {
         action.attributes.subtype = "info";
       }
+      // if (directive.name === Directives.HMESSAGE) {
+      //   action.sender = "tiledesk";
+      // }
     }
     else {
       console.error("Incorrect directive:", directive);
@@ -113,33 +116,33 @@ class DirMessage {
     });
   }
 
-  static firstMessageInfoFromCommands(commands) {
-    let type = "text";
-    let text = "New message";
-    for (let i = 0; i < commands.length; i++) {
-      const command = commands[i];
-      console.log("cheking command", command)
-      if (command.type === "message") {
-        console.log("command.type: message!")
-        console.log("command.message.type!", command.message.type)
-        console.log("command.message.text!", command.message.text)
+  // static firstMessageInfoFromCommands(commands) {
+  //   let type = "text";
+  //   let text = "New message";
+  //   for (let i = 0; i < commands.length; i++) {
+  //     const command = commands[i];
+  //     console.log("cheking command", command)
+  //     if (command.type === "message") {
+  //       console.log("command.type: message!")
+  //       console.log("command.message.type!", command.message.type)
+  //       console.log("command.message.text!", command.message.text)
         
-        if (command.message.type) {
-          type = command.message.type;
-        }
-        if (command.message.text) {
-          text = command.message.text;
-        }
-        break;
-      }
-    }
-    const message_info = {
-      type: type,
-      text: text
-    }
-    // console.log("message_info:", message_info);
-    return message_info;
-  }
+  //       if (command.message.type) {
+  //         type = command.message.type;
+  //       }
+  //       if (command.message.text) {
+  //         text = command.message.text;
+  //       }
+  //       break;
+  //     }
+  //   }
+  //   const message_info = {
+  //     type: type,
+  //     text: text
+  //   }
+  //   // console.log("message_info:", message_info);
+  //   return message_info;
+  // }
 
 }
 

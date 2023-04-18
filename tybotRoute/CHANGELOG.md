@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.76
+- added projectId debug log for production
+
 ### 0.1.75
 - introduced WebRequest action.assignments
 - created TiledeskJSONEval class supported by handlebars
