@@ -45,6 +45,10 @@ class DirDeflectToHelpCenter {
     if (action.maxresults) {
       maxresults = action.maxresults;
     }
+    let url_target = "blank";
+    if (action.urlTarget) {
+      url_target = action.urlTarget;
+    }
     // let message = pipeline.message;
     //console.log("help center message", JSON.stringify(message));
     const last_user_text = await TiledeskChatbot.getParameterStatic(
@@ -93,7 +97,7 @@ class DirDeflectToHelpCenter {
 							"type": "url",
 							"value": content.title,
 							"link": content.url,
-							"target": "blank"
+							"target": url_target
 						}
             buttons.push(button);
             // if (content.url.charAt(content.url.length -1) != "/") {

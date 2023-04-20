@@ -481,7 +481,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_HELP_CENTER) {
       new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop?", stop);}
+        if (context.log) { console.log("DeflectToHelpCenter stop?", stop);}
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
