@@ -5,15 +5,12 @@ const ms = require('minimist-string');
 
 class DirDeflectToHelpCenter {
 
-  constructor(config) {
-    if (!config.projectId) {
-      throw new Error('projectId is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
     }
-    if (config.HELP_CENTER_API_ENDPOINT) {
-      this.helpcenter_api_endpoint = config.HELP_CENTER_API_ENDPOINT;
-    }
-    //console.log("Using helpcenter_api_endpoint:", this.helpcenter_api_endpoint)
-    this.projectId = config.projectId;
+    this.context = context;
+    this.log = context.log;
   }
 
   async execute(directive, callback) {
@@ -40,7 +37,7 @@ class DirDeflectToHelpCenter {
       hc_reply = action.hcReply;
     }
     let workspace_id = action.workspaceId;
-    let project_id = this.projectId;
+    let project_id = this.context.projectId;
     if (action.projectId) {
       project_id = action.projectId;
     }
@@ -132,7 +129,7 @@ class DirDeflectToHelpCenter {
 
           if (this.log) {console.log("HC reply:", JSON.stringify(message))};
           this.context.tdclient.sendSupportMessage(
-            this.requestId,
+            this.context.requestId,
             message,
             (err) => {
               if (err) {
