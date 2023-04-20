@@ -84,8 +84,8 @@ class DirDeflectToHelpCenter {
       try {
         const results = await helpcenter.search(workspace_id, last_user_text, maxresults);
         if (results && results.length > 0) {
-          // console.log("Successfully got results", results);
-          // console.log("Sending REPL", hc_reply);
+          if (this.log) {console.log("Successfully got results", results);}
+          if (this.log) {console.log("Sending hcReply", hc_reply);}
           // pipeline.message.text = hc_reply;
           let buttons = [];
           results.forEach(content => {
@@ -95,7 +95,7 @@ class DirDeflectToHelpCenter {
 							"link": content.url,
 							"target": "blank"
 						}
-            buttons.add(button);
+            buttons.push(button);
             // if (content.url.charAt(content.url.length -1) != "/") {
             //     content.url = content.url + "/"
             // }
@@ -141,6 +141,7 @@ class DirDeflectToHelpCenter {
           });
         }
         else {
+          if (this.log) {console.log("Nothing found in Help Center. projectId:", project_id, "workspaceId:", workspace_id);}
           callback(false);
         }
       }
