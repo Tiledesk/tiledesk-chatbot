@@ -1,4 +1,6 @@
 const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot.js');
+const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 const ms = require('minimist-string');
 
 class DirDeflectToHelpCenter {
@@ -42,11 +44,18 @@ class DirDeflectToHelpCenter {
     if (action.projectId) {
       project_id = action.projectId;
     }
+    let maxresults = 3;
+    if (action.maxresults) {
+      maxresults = action.maxresults;
+    }
     // let message = pipeline.message;
     //console.log("help center message", JSON.stringify(message));
-    const original_text = message.attributes.intent_info.question_payload.text;
-    if (this.log) {console.log("original_text", original_text);}
-    if (original_text && original_text.trim() != '') {
+    const last_user_text = await TiledeskChatbot.getParameterStatic(
+      this.context.tdcache,
+      this.context.requestId,
+      TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY);
+    if (this.log) {console.log("last_user_text", last_user_text);}
+    if (last_user_text && last_user_text.trim() !== '') {
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
         projectId: project_id,
@@ -56,6 +65,7 @@ class DirDeflectToHelpCenter {
         helpcenter.APIURL = this.helpcenter_api_endpoint
       }
       if (!workspace_id) {
+        if (this.log) {console.log("No workspaces_id. Listing all workspaces to eventually select the first");}
         try {
           // find/select the first workspace
           const workspaces = await helpcenter.allWorkspaces();
@@ -75,7 +85,7 @@ class DirDeflectToHelpCenter {
       }
       if (this.log) {console.log("searching on workspace_id:", workspace_id);}
       try {
-        const results = await helpcenter.search(workspace_id, original_text, maxresults);
+        const results = await helpcenter.search(workspace_id, last_user_text, maxresults);
         if (results && results.length > 0) {
           // console.log("Successfully got results", results);
           // console.log("Sending REPL", hc_reply);
