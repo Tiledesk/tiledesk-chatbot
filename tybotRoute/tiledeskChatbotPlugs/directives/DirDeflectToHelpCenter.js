@@ -38,6 +38,10 @@ class DirDeflectToHelpCenter {
       hc_reply = action.hcReply;
     }
     let workspace_id = action.workspaceId;
+    let project_id = this.projectId;
+    if (action.projectId) {
+      project_id = action.projectId;
+    }
     // let message = pipeline.message;
     //console.log("help center message", JSON.stringify(message));
     const original_text = message.attributes.intent_info.question_payload.text;
@@ -45,7 +49,7 @@ class DirDeflectToHelpCenter {
     if (original_text && original_text.trim() != '') {
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
-        projectId: this.projectId,
+        projectId: project_id,
         log: false
       });
       if (this.helpcenter_api_endpoint) {

@@ -18,7 +18,7 @@ class Directives {
   static IF_NO_AGENTS = "ifnoagents"; // DEPRECATED
   static IF_AGENTS = "ifagents"; // DEPRECATED
 
-  static DEFLECT_TO_HELP_CENTER = "deflecttohelpcenter";
+  static ASK_HELP_CENTER = "askhelpcenter";
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";
   static UNLOCK_INTENT = "unlockintent";
@@ -30,9 +30,9 @@ class Directives {
   static IF_ONLINE_AGENTS = "ifonlineagents";
   static IF_NOT_OPEN_HOURS = "ifnotopenhours"; // DEPRECATED
   static FUNCTION_VALUE = "functionvalue";
-  static CONDITION = "condition";
+  static CONDITION = "condition"; // DEPRECATED
   static JSON_CONDITION = "jsoncondition";
-  static ASSIGN = "assign";
+  static ASSIGN = "assign"; // DEPRECATED
   static SET_ATTRIBUTE = "setattribute";
   // static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
   // static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO

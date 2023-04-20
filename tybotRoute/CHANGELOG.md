@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.77
-- Refactored DirDeflectToHelpcenter
+- Refactored DirDeflectToHelpcenter. Added projectId option (to allow search from workspaces in different projects)
 
 ### 0.1.76
 - added projectId debug log for production
