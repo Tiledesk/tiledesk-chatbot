@@ -1,4 +1,3 @@
-const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');

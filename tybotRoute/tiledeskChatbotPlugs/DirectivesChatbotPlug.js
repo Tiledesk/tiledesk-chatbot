@@ -130,6 +130,7 @@ class DirectivesChatbotPlug {
       departmentId: depId,
       tdcache: tdcache,
       tdclient: tdclient,
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }
     if (this.log) {console.log("this.context.departmentId is:", this.context.departmentId);}
@@ -478,6 +479,19 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
+      new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", directive);}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
@@ -485,6 +499,7 @@ class DirectivesChatbotPlug {
     }
   }
 
+  // DEPRECATED
   processInlineDirectives(pipeline, theend) {
     const directives = this.directives;
     if (!directives || directives.length === 0) {
