@@ -479,7 +479,7 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
+    else if (directive_name === Directives.ASK_HELP_CENTER) {
       new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
         if (context.log) { console.log("stop?", stop);}
         if (stop == true) {
