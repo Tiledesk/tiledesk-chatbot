@@ -226,7 +226,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.MESSAGE) {
       new DirMessage(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
@@ -252,7 +252,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.IF_OPEN_HOURS) {
       new DirIfOpenHours(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
@@ -267,7 +267,7 @@ class DirectivesChatbotPlug {
       // console.log("...DirIfOnlineAgents")
       new DirIfOnlineAgents(context).execute(directive, async () => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
@@ -290,7 +290,7 @@ class DirectivesChatbotPlug {
       new DirCondition(context).execute(directive, async (stop) => {
         if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
@@ -304,7 +304,7 @@ class DirectivesChatbotPlug {
       new DirJSONCondition(context).execute(directive, async (stop) => {
         // console.log("stop on condition?", stop);
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
@@ -483,7 +483,7 @@ class DirectivesChatbotPlug {
       new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
         if (context.log) { console.log("stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", directive);}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {

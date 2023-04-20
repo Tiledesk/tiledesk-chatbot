@@ -84,7 +84,7 @@ class DirDeflectToHelpCenter {
       try {
         const results = await helpcenter.search(workspace_id, last_user_text, maxresults);
         if (results && results.length > 0) {
-          if (this.log) {console.log("Successfully got results", results);}
+          if (this.log) {console.log("Successfully got results", JSON.stringify(results));}
           if (this.log) {console.log("Sending hcReply", hc_reply);}
           // pipeline.message.text = hc_reply;
           let buttons = [];
