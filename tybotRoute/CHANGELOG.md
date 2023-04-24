@@ -7,6 +7,7 @@ available on:
 
 ### 0.1.77
 - Refactored DirDeflectToHelpcenter. Added projectId option (to allow search from workspaces in different projects)
+- increased MAX_STEPS for MAX ACTIONS EXEEDED error, from 20 to 200
 
 ### 0.1.76
 - added projectId debug log for production

@@ -12,7 +12,7 @@ const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnloc
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 20;
+  static MAX_STEPS = 200;
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -490,11 +490,11 @@ class TiledeskChatbot {
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
   }
 
-  static async checkStep(_tdcache, requestId, max_steps) {
-    // console.log("CHECKING ON MAX_STEPS:", max_steps);
+  static async checkStep(_tdcache, requestId, max_steps, log) {
+    if (log) {console.log("CHECKING ON MAX_STEPS:", max_steps);}
     let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    // console.log("__parameter_key:", parameter_key);
+    if (log) {console.log("__parameter_key:", parameter_key);}
     await _tdcache.incr(parameter_key);
     // console.log("incr-ed");
     let _current_step = await _tdcache.get(parameter_key);
@@ -505,8 +505,9 @@ class TiledeskChatbot {
     // current_step += 1;
     // await _tdcache.set(parameter_key, current_step); // increment step
     // console.log("CURRENT-STEP:", current_step);
-    if (current_step > max_steps) { // max_steps limit just violated
-      // console.log("CURRENT-STEP > MAX_STEPS!", current_step);
+    if (current_step > max_steps) {
+      if (log) {console.log("max_steps limit just violated");}
+      if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
       // await TiledeskChatbot.resetStep(_tdcache, requestId);
       // go_on = 1; // stop execution, send error message
       go_on = false

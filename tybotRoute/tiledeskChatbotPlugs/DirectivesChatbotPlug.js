@@ -144,14 +144,14 @@ class DirectivesChatbotPlug {
   }
 
   async nextDirective(directives) {
-    // console.log("....nextDirective() checkStep():");
+    if (this.log) {console.log("....nextDirective() checkStep():");}
     const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS
+      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
-    // console.log("........nextDirective() currentStep:", current_step);
+    if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
     if (go_on == false) {
-      // console.log("..nextDirective() Stopped!");
+      if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
       return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
     // else if (go_on == 2) {
