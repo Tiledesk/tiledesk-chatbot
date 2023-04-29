@@ -149,7 +149,7 @@ class DirectivesChatbotPlug {
       this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
-    if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
+    // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
     if (go_on == false) {
       if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
       return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
