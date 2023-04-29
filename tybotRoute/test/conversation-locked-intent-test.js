@@ -77,7 +77,7 @@ describe('Conversation1 - Form filling', async () => {
             "id_project": PROJECT_ID,
             "request": {
               "request_id": REQUEST_ID,
-              "id_project": PROJECT_ID
+              // "id_project": PROJECT_ID
             }
           },
           "token": CHATBOT_TOKEN
@@ -99,7 +99,7 @@ describe('Conversation1 - Form filling', async () => {
             "id_project": PROJECT_ID,
             "request": {
               "request_id": REQUEST_ID,
-              "id_project": PROJECT_ID
+              // "id_project": PROJECT_ID
             }
           },
           "token": CHATBOT_TOKEN
@@ -121,7 +121,7 @@ describe('Conversation1 - Form filling', async () => {
             "id_project": PROJECT_ID,
             "request": {
               "request_id": REQUEST_ID,
-              "id_project": PROJECT_ID
+              // "id_project": PROJECT_ID
             }
           },
           "token": CHATBOT_TOKEN
@@ -153,7 +153,7 @@ describe('Conversation1 - Form filling', async () => {
           "id_project": PROJECT_ID,
           "request": {
             "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
+            // "id_project": PROJECT_ID
           }
         },
         "token": CHATBOT_TOKEN

@@ -165,7 +165,7 @@ describe('Conversation for actions test', async () => {
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
+            // "id_project": PROJECT_ID
           }
         },
         "token": CHATBOT_TOKEN
@@ -207,7 +207,7 @@ describe('Conversation for actions test', async () => {
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID,
-            "id_project": PROJECT_ID
+            // "id_project": PROJECT_ID
           }
         },
         "token": CHATBOT_TOKEN
