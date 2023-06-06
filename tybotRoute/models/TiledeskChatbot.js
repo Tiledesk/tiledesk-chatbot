@@ -87,15 +87,15 @@ class TiledeskChatbot {
       // internal intents always "skip" the locked intent
       // if (message.text.startsWith("/") && message.sender != "_tdinternal") {
         const locked_intent = await this.currentLockedIntent(this.requestId);
-        if (this.log) {console.log("got locked intent", locked_intent)}
+        if (this.log) {console.log("got locked intent: -" + locked_intent + "-")}
         if (locked_intent) {
-          const tdclient = new TiledeskClient({
-            projectId: this.projectId,
-            token: this.token,
-            APIURL: this.APIURL,
-            APIKEY: this.APIKEY,
-            log: false
-          });
+          // const tdclient = new TiledeskClient({
+          //   projectId: this.projectId,
+          //   token: this.token,
+          //   APIURL: this.APIURL,
+          //   APIKEY: this.APIKEY,
+          //   log: false
+          // });
           // it only gets the locked_intent
           // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
           const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
@@ -106,7 +106,7 @@ class TiledeskChatbot {
           }
           else {
             reply = {
-              "text": "An error occurred while getting locked intent:'" + locked_intent
+              "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
             }
           }
           resolve(reply);
