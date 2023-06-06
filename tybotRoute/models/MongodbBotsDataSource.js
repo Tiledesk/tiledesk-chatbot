@@ -134,12 +134,14 @@ class MongodbBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
-    // console.log("botID:", botId);
-    // console.log("key:", key);
+    if (this.log) {
+      console.log("botID: -" + botId + "-");
+      console.log("key: -" + key + "-");
+    }
     if (tdcache) {
       if (this.log) {console.log("in tdcache");}
       let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + ":faq:id:" + key;
-      if (this.log) {console.log("Looking in cache for:", faqCacheKey);}
+      if (this.log) {console.log("Looking in cache for: -" + faqCacheKey + "-");}
       try {
         let _faq_as_string = await tdcache.get(faqCacheKey);
         const value_type = typeof _faq_as_string;
