@@ -152,10 +152,14 @@ class MongodbBotsDataSource {
           if (this.log) {console.log("got faq from cache:", JSON.stringify(faq));}
         }
         else {
-          console.log("faq not found, getting from datasource...");
+          //console.log("faq not found, getting from datasource...");
           faq = await this.getByIntentDisplayName(botId, key);
           if (this.log) {console.log(".faq found in datasource:", JSON.stringify(faq));}
-          await tdcache.set(faqCacheKey, JSON.stringify(faq));
+          await tdcache.set(
+            faqCacheKey,
+            JSON.stringify(faq),
+            {EX: 86400} // 1 day
+          );
           // DEBUG CODE REMOVE
           // let faq_ = await tdcache.get(faqCacheKey);
           // console.log("_faq_as_string from cache debug:", faq_)

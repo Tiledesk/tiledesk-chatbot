@@ -170,6 +170,28 @@ describe('Conversation for JSONCondition test', async () => {
             "Antonio",
             "Stefania",
             "Luca"
+        ],
+        "fields": [
+          {
+            "name": "CONSENT",
+            "value": "false",
+            "predefined": true,
+            "private": false,
+            "readonly": false,
+            "type": "consent"
+          },
+          {
+            "name": "FIRSTNAME",
+            "value": "Antony"
+          },
+          {
+            "name": "LASTNAME",
+            "value": "Larson"
+          },
+          {
+            "name": "DNI",
+            "value": "42061884"
+          }
         ]
       };
       res.send(data);
@@ -210,6 +232,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert(params["first_name"] === "Andrea");
           assert(params["last_name"] === "Luca");
           assert(params["last_element_with_handlebars_syntax"] === "Sally");
+          assert(params["element_array_by_name"] === "42061884");
           listener.close(() => {
             done();
           });

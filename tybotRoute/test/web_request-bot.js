@@ -148,7 +148,8 @@ const bot = {
 				"last_kid": "last kids",
 				"first_name": "first names",
 				"last_name": "last names",
-				"last_element_with_handlebars_syntax": "{{#each kids}}{{#if @last}}{{this.name}}{{/if}}{{/each}}"
+				"last_element_with_handlebars_syntax": "{{#each kids}}{{#if @last}}{{this.name}}{{/if}}{{/each}}",
+				"element_array_by_name": "{{#each fields}}{{#ifeq this.name \"DNI\"}}{{this.value}}{{/ifeq}}{{/each}}"
 			},
 			"method": "GET",
 			"_tdActionType": "webrequest"

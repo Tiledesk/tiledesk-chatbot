@@ -265,7 +265,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.IF_ONLINE_AGENTS) {
       // console.log("...DirIfOnlineAgents")
-      new DirIfOnlineAgents(context).execute(directive, async () => {
+      new DirIfOnlineAgents(context).execute(directive, async (stop) => {
         if (stop) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();

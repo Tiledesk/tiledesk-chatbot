@@ -5,6 +5,20 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.81
+- added expire to intent (faq) cache: await tdcache.set(faqCacheKey, JSON.stringify(faq), {EX: 86400})
+
+### 0.1.80
+- removed log "faq not found, getting from datasource..."
+- added in Directive IF_ONLINE_AGENTS "stop" in async (stop)
+
+### 0.1.79
+- added Handlebars.registerHelper('ifeq'... helper
+
+### 0.1.78
+- web request assign-to fix
+- fix filter on messages: groups removed
+
 ### 0.1.77
 - Refactored DirDeflectToHelpcenter. Added projectId option (to allow search from workspaces in different projects)
 - increased MAX_STEPS for MAX ACTIONS EXEEDED error, from 20 to 200
