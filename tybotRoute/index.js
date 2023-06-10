@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 //let fs = require('fs');
 // const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { TiledeskClientTest } = require('./TiledeskClientTest');
+//const { TiledeskClientTest } = require('./TiledeskClientTest');
 //const jwt = require('jsonwebtoken');
 //const { v4: uuidv4 } = require('uuid');
 const { ExtApi } = require('./ExtApi.js');
@@ -551,7 +551,7 @@ router.post('/echobot', (req, res) => {
   console.log("/echobot requestId:", requestId);
   console.log("/echobot token:", token);
   
-  const tdclient = new TiledeskClientTest({
+  const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
     APIURL: APIURL,
