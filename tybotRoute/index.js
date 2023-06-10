@@ -560,15 +560,13 @@ router.post('/echobot', (req, res) => {
 
   // instantly reply "success" to TILEDESK
   res.status(200).send({"success":true});
-  // Replies are asynchronous.
-  // You can reply when your data is ready
-  // i.e. send asynch messages whenever an event occurs.
+  // Replies are asynchronous
   let msg = {
-    text: 'Cheers! You asked: '
+    text: message.text
   }
   tdclient.sendSupportMessage(requestId, msg, (err, response) => {
     if (err) {
-      console.error("Error sending message");
+      console.error("Error sending message:", err);
     }
     else {
       console.log("message sent.");
