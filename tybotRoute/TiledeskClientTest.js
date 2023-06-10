@@ -6,6 +6,7 @@ let axios = require('axios');
 const { request } = require('express');
 const { v4: uuidv4 } = require('uuid');
 let https = require("https");
+const { Console } = require('console');
 
 /**
  * This class is a NodeJS stub for Tiledesk's REST APIs
@@ -2073,13 +2074,16 @@ class TiledeskClientTest {
       TiledeskClientTest.myrequest(
         HTTPREQUEST,
         function(err, resbody) {
+            console.log("myrequest REPL");
           if (err) {
+            console.log("ERRRRRRRRRR");
             reject(err);
             if (callback) {
               callback(err);
             }
           }
           else {
+            console.log("REEEEEESOL");
             resolve(resbody);
             if (callback) {
               callback(null, resbody);
@@ -2460,17 +2464,18 @@ class TiledeskClientTest {
     //   })
     axios(axios_settings)
     .then(function (res) {
-      if (log) {
+    //   if (log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
         //console.log("******** Response for url:", res);
-      }
+    //   }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
         }
       }
       else {
+        console.log("PROBLEMIIIII")
         if (callback) {
           callback(TiledeskClientTest.getErr({message: "Response status not 200"}, options, res), null, null);
         }
