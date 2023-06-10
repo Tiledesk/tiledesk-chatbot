@@ -539,7 +539,7 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
   }
 });
 
-app.post('/echobot', (req, res) => {
+router.post('/echobot', (req, res) => {
   console.log('echobot message body: ', req.body);
   const message = req.body.payload;
   const token = req.body.token;
