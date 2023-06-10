@@ -2077,9 +2077,11 @@ class TiledeskClientTest {
             console.log("myrequest REPL");
           if (err) {
             console.log("ERRRRRRRRRR");
-            reject(err);
             if (callback) {
               callback(err);
+            }
+            else {
+              reject(err);
             }
           }
           else {
