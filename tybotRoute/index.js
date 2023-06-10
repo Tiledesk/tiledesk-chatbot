@@ -541,15 +541,15 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
 });
 
 router.post('/echobot', (req, res) => {
-  console.log('echobot message body.payload: ', req.body.payload);
+  //console.log('echobot message body.payload: ', JSON.stringify(req.body.payload));
   const message = req.body.payload;
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
 
-  console.log("/echobot projectId:", projectId);
-  console.log("/echobot requestId:", requestId);
-  console.log("/echobot token:", token);
+  // console.log("/echobot projectId:", projectId);
+  // console.log("/echobot requestId:", requestId);
+  // console.log("/echobot token:", token);
   
   const tdclient = new TiledeskClient({
     projectId: projectId,
@@ -570,7 +570,7 @@ router.post('/echobot', (req, res) => {
       console.error("Error sending message:"); //, err);
     }
     else {
-      console.log("message sent.");
+      //console.log("message sent.");
     }
   });
 });
