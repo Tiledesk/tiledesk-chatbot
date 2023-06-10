@@ -539,6 +539,43 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
   }
 });
 
+app.post('/echobot', (req, res) => {
+  console.log('echobot message body: ', req.body);
+  const message = req.body.payload;
+  const token = req.body.token;
+  const requestId = message.request.request_id;
+  const projectId = message.id_project;
+
+  console.log("/echobot projectId:", projectId);
+  console.log("/echobot requestId:", requestId);
+  console.log("/echobot token:", token);
+  
+  const tdclient = new TiledeskClient({
+    projectId: projectId,
+    token: token,
+    APIURL: APIURL,
+    APIKEY: "___",
+    log: false
+  });
+
+  // instantly reply "success" to TILEDESK
+  res.status(200).send({"success":true});
+  // Replies are asynchronous.
+  // You can reply when your data is ready
+  // i.e. send asynch messages whenever an event occurs.
+  let msg = {
+    text: 'Cheers! You asked: '
+  }
+  tdclient.sendSupportMessage(requestId, msg, (err, response) => {
+    if (err) {
+      console.error("Error sending message");
+    }
+    else {
+      console.log("message sent.");
+    }
+  });
+});
+
 async function startApp(settings, completionCallback) {
   // console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
