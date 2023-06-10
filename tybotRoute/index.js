@@ -566,7 +566,7 @@ router.post('/echobot', (req, res) => {
   }
   tdclient.sendSupportMessage(requestId, msg, (err, response) => {
     if (err) {
-      console.error("Error sending message:", err);
+      console.error("Error sending message:"); //, err);
     }
     else {
       console.log("message sent.");
