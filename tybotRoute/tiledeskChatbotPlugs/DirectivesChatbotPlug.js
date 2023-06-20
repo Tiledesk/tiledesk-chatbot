@@ -26,6 +26,7 @@ const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirWebRequest } = require('./directives/DirWebRequest');
+const { DirCode } = require('./directives/DirCode');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
@@ -49,6 +50,7 @@ class DirectivesChatbotPlug {
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
     this.directives = config.directives;
+    this.reply = config.reply;
     // console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 
@@ -88,7 +90,6 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    // console.log("Directives to process:", JSON.stringify(this.directives));
     this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
@@ -106,7 +107,7 @@ class DirectivesChatbotPlug {
     // const requestId = supportRequest.request_id
     let depId;
     if (supportRequest.department && supportRequest.department._id) {
-      if (this.log) {console.log("setting depId:", supportRequest.department._id);}      
+      if (this.log) {console.log("setting depId:", supportRequest.department._id);}
       depId = supportRequest.department._id;
       if (this.log) {console.log("depId is:", depId);}
     }
@@ -124,6 +125,7 @@ class DirectivesChatbotPlug {
       projectId: projectId,
       token: token,
       supportRequest: supportRequest,
+      reply: this.reply,
       requestId: supportRequest.request_id,
       TILEDESK_APIURL: API_URL,
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
@@ -189,6 +191,7 @@ class DirectivesChatbotPlug {
   async process(directive) {
     // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
+    // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
       if (context.log) {
         console.log("..process(directive):", JSON.stringify(directive));
@@ -199,7 +202,6 @@ class DirectivesChatbotPlug {
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
     }
-    
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
       this.theend();
@@ -379,7 +381,7 @@ class DirectivesChatbotPlug {
     //   });
     // }
     else if (directive_name === Directives.AGENT) {
-      console.log("...DirMoveToAgent");
+      // console.log("...DirMoveToAgent");
       new DirMoveToAgent(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -468,6 +470,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.WEB_REQUEST) {
       // console.log("...DirWebRequest");
       new DirWebRequest(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CODE) {
+      console.log("...DirCode", directive);
+      new DirCode(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

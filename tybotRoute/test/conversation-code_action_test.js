@@ -11,14 +11,14 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./json_condition-with-intent-params_bot.js').bots_data;
+const bots_data = require('./conversation-code_action_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 
-describe('Conversation for JSONCondition with intent params test', async () => {
+describe('Conversation for JSONCondition test', async () => {
 
   let app_listener;
 
@@ -52,95 +52,33 @@ describe('Conversation for JSONCondition with intent params test', async () => {
     });
   });
 
-  it('/condition with params{"star_type":"supernova"}', (done) => {
-    console.log('/condition with params{"star_type":"supernova"}');
+  it('/coding{"name", "Andrea"}', (done) => {
+    console.log("/coding");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      console.log("/coding ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-    
-      assert(command2.type === "message");
-      assert(command2.message.text === "My name is supernova and I'm 2B km large");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["project_id"] === PROJECT_ID);
-          assert(params["star_type"] === "supernova");
-          assert(params["my_name"] === "supernova");
-          assert(params["size"] === "2B");
-          listener.close(() => {
-            done();
-          });
-        }
-      });
-
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-        //   "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/condition with params{"star_type":"supernova"}',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
-      });
-    });
-  });
-
-  it('/condition with params{"star_type":"nebula"}', (done) => {
-    console.log('/condition with params{"star_type":"nebula"}');
-    // let message_id = uuidv4();
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/condition ...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.intentName !== null);
-      assert(message.attributes.intentName === "result");
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       
       assert(command2.type === "message");
-      assert(command2.message.text === "My name is nebula and I'm 500k km large");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      assert(command2.message.text === "myvar: 1");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          // console.log("params:", params)
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["project_id"] === PROJECT_ID);
-          assert(params["star_type"] === "nebula");
-          assert(params["my_name"] === "nebula");
-          assert(params["size"] === "500k");
+          console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["name"] === "Andrea");
+          assert(attributes["lastname"] === "Sponziello");
+          assert(attributes["myvar"] === "1");
+          // assert(attributes["jsondata2"]["a"] === "1");
           listener.close(() => {
             done();
           });
@@ -158,11 +96,20 @@ describe('Conversation for JSONCondition with intent params test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/condition with params{"star_type":"nebula"}',
+          "text": '/coding{"name": "Andrea"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
           }
         },
         "token": CHATBOT_TOKEN

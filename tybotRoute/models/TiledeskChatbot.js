@@ -103,6 +103,12 @@ class TiledeskChatbot {
           let reply;
           if (faq) {
             reply = await this.execIntent(faq, message, lead);//, bot);
+            // if (!reply.attributes) {
+            //   reply.attributes = {}
+            // }
+            // // used by the Clients to get some info about the intent that generated this reply
+            // reply.attributes.intent_display_name = faq.intent_display_name;
+            // reply.attributes.intent_id = faq.intent_id;
           }
           else {
             reply = {
@@ -209,8 +215,15 @@ class TiledeskChatbot {
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
         let reply;
+        const faq = faqs[0];
         try {
-          reply = await this.execIntent(faqs[0], message, lead);//, bot);
+          reply = await this.execIntent(faq, message, lead);//, bot);
+          // if (!reply.attributes) {
+          //   reply.attributes = {}
+          // }
+          // // used by the Clients to get some info about the intent that generated this reply
+          // reply.attributes.intent_display_name = faq.intent_display_name;
+          // reply.attributes.intent_id = faq.intent_id;
         }
         catch(error) {
           console.error("error during exact match execIntent():", error);
@@ -236,6 +249,12 @@ class TiledeskChatbot {
           let reply;
           try {
             reply = await this.execIntent(faq, message, lead);//, bot);
+            // if (!reply.attributes) {
+            //   reply.attributes = {}
+            // }
+            // // used by the Clients to get some info about the intent that generated this reply
+            // reply.attributes.intent_display_name = faq.intent_display_name;
+            // reply.attributes.intent_id = faq.intent_id;
           }
           catch(error) {
             console.error("error during NLP decoding:", error);
@@ -258,6 +277,12 @@ class TiledeskChatbot {
             let reply;
             try {
               reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
+              // if (!reply.attributes) {
+              //   reply.attributes = {}
+              // }
+              // // used by the Clients to get some info about the intent that generated this reply
+              // reply.attributes.intent_display_name = fallbackIntent.intent_display_name;
+              // reply.attributes.intent_id = fallbackIntent.intent_id;
             }
             catch(error) {
               console.error("error during defaultFallback:", error);
@@ -380,6 +405,9 @@ class TiledeskChatbot {
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
         form_reply.message.attributes.directives = true;
+        // // used by the Clients to get some info about the intent that generated this reply
+        // form_reply.message.attributes.intent_display_name = faq.intent_display_name;
+        // form_reply.message.attributes.intent_id = faq.intent_id;
         return form_reply.message
       }
     }
@@ -438,6 +466,7 @@ class TiledeskChatbot {
       bot: this.bot
     }
     static_bot_answer.attributes.intent_info = intent_info;
+    // console.log("static_bot_answer.attributes.intent_info",)
     // static_bot_answer.attributes.directives = true;
     // static_bot_answer.attributes.splits = true;
     // static_bot_answer.attributes.markbot = true;

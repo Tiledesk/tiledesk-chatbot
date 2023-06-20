@@ -21,9 +21,12 @@ const bot = {
         "enabled": true,
         "question": "***",
         "actions": [{
-            "_tdActionType": "message",
+            "_tdActionType": "reply",
             "attributes": {
                 "commands": [{
+                    "type": "wait",
+                    "time": 500
+                }, {
                     "type": "message",
                     "message": {
                         "text": "Hello by message directive!",

@@ -5,6 +5,16 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.84
+- removed debug logs
+
+### 0.1.83
+- added "attributes.intentName" in chatbot replies, showing the last block involved in generating the reply
+
+### 0.1.82
+- added /echobot endpoint (only used for performance test)
+- @tiledesk/tiledesk-client update => 0.10.2
+
 ### 0.1.81
 - added expire to intent (faq) cache: await tdcache.set(faqCacheKey, JSON.stringify(faq), {EX: 86400})
 

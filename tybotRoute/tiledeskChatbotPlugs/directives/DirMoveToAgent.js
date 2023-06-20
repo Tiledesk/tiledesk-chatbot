@@ -100,7 +100,7 @@ class DirMoveToAgent {
               console.error("Error moving to agent:", err);
             }
             else {
-              console.log("Successfully moved to agent");
+              // console.log("Successfully moved to agent");
             }
             callback();
           });

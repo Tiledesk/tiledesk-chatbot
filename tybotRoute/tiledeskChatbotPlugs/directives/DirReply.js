@@ -17,11 +17,9 @@ class DirReply {
   }
 
   execute(directive, callback) {
-    // console.log("Reply directive:", JSON.stringify(directive));
     let action;
     if (directive.action) {
       action = directive.action;
-      // console.log("got action:", JSON.stringify(action));
       if (!action.attributes) {
         action.attributes = {}
       }
@@ -83,7 +81,6 @@ class DirReply {
         if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
         TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestVariables);
       }
-      
       // temporary send back of reserved attributes
       if (!message.attributes) {
         message.attributes = {}
@@ -94,6 +91,10 @@ class DirReply {
       }
       if (requestVariables['userFullname']) {
         message.attributes.updateUserFullname = requestVariables['userFullname'];
+      }
+      // intent_info
+      if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
+        message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
       }
     }
     // send!

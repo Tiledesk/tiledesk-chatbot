@@ -169,13 +169,14 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
   
-  // console.log("reply.actions:", reply.actions);
+  // console.log("reply is:", reply);
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
     let directives = actionsToDirectives(reply.actions);
     if (log) {console.log("the directives:", JSON.stringify(directives));}
     let directivesPlug = new DirectivesChatbotPlug(
       {
+        reply: reply,
         directives: directives,
         supportRequest: message.request,
         TILEDESK_API_ENDPOINT: APIURL,
@@ -208,10 +209,9 @@ router.post('/ext/:botid', async (req, res) => {
       ENDPOINT: extEndpoint,
       log: false
     });
-    
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       if (log) {
-        // console.log("SupportMessageExt() reply sent:", JSON.stringify(reply));
+        //console.log("SupportMessageExt() reply sent:", JSON.stringify(reply));
       }
     });
   }
@@ -309,7 +309,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
         for (const [key, value] of Object.entries(message.attributes.payload)) {
           // const value = all_parameters[key];
           const value_type = typeof value;
-          if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
+          //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
           await chatbot.addParameter(key, String(value));
         }
       }

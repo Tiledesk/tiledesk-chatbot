@@ -59,7 +59,7 @@ describe('Conversation for actions test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      //console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -112,7 +112,7 @@ describe('Conversation for actions test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        //console.log("Message sent:\n", request);
       });
     });
 
@@ -124,27 +124,32 @@ describe('Conversation for actions test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
+      // console.log("/MessageActions req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
+      assert(message.attributes.intentName !== null);
+      assert(message.attributes.intentName === "MessageActions");
       assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 3);
+      assert(message.attributes.commands.length === 4);
       const command1 = message.attributes.commands[0];
       const command2 = message.attributes.commands[1];
       const command3 = message.attributes.commands[2];
+      const command4 = message.attributes.commands[3];
+      assert(command1.type === "wait");
+      assert(command1.time === 500);
 
-      assert(command1.type === "message");
-      assert(command1.message.text === "Hello by message directive!");
+      assert(command2.type === "message");
+      assert(command2.message.text === "Hello by message directive!");
 
-      assert(command2.type === "wait");
-      assert(command2.time === 500);
+      assert(command3.type === "wait");
+      assert(command3.time === 500);
 
-      assert(command3.type === "message");
-      assert(command3.message.text === "Ciao");
-      assert(command3.message.attributes !== null);
-      assert(command3.message.attributes.attachment !== null);
-      assert(command3.message.attributes.attachment.buttons !== null);
-      assert(command3.message.attributes.attachment.buttons[0].value === "/start");
+      assert(command4.type === "message");
+      assert(command4.message.text === "Ciao");
+      assert(command4.message.attributes !== null);
+      assert(command4.message.attributes.attachment !== null);
+      assert(command4.message.attributes.attachment.buttons !== null);
+      assert(command4.message.attributes.attachment.buttons[0].value === "/start");
 
       listener.close(() => {
         done();

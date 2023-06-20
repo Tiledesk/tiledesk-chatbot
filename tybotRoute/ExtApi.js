@@ -27,7 +27,7 @@ class ExtApi {
   }
 
   /**
-   * A stub to send message to the "ext" endpoint, hosted by tilebot on:
+   * A stub to send messages to the "ext" endpoint, hosted by tilebot on:
    * /${TILEBOT_ROUTE}/ext/${projectId}/requests/${requestId}/messages
    *
    * @param {Object} message. The message to send

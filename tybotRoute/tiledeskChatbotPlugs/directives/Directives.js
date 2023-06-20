@@ -1,23 +1,13 @@
 class Directives {
   static AGENT = 'agent';
-  static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   static CLOSE = 'close';
   static DEPARTMENT = 'department';
-  static JSONMESSAGE = 'jsonmessage'; // DEPRECATED?
   static MESSAGE = 'message';
   static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";
   static REPLACE_BOT = "replacebot";
-  static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents"; // DEPRECATED
-  static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
-  //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
-  static DISABLE_INPUT_TEXT = "disableinputtext"; // DEPRECATED
-  static WHEN_OPEN = "whenopen"; // DEPRECATED
-  static WHEN_CLOSED = "whenclosed"; // DEPRECATED
-  static IF_NO_AGENTS = "ifnoagents"; // DEPRECATED
-  static IF_AGENTS = "ifagents"; // DEPRECATED
-
+  static ASSIGN = "assign"; // DEPRECATED
   static ASK_HELP_CENTER = "askhelpcenter";
   static WAIT = "wait";
   static LOCK_INTENT = "lockintent";
@@ -28,16 +18,25 @@ class Directives {
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_ONLINE_AGENTS = "ifonlineagents";
-  static IF_NOT_OPEN_HOURS = "ifnotopenhours"; // DEPRECATED
   static FUNCTION_VALUE = "functionvalue";
-  static CONDITION = "condition"; // DEPRECATED
   static JSON_CONDITION = "jsoncondition";
-  static ASSIGN = "assign"; // DEPRECATED
   static SET_ATTRIBUTE = "setattribute";
-  // static IF_AVAILABLE_AGENTS = "ifavailableagents"; // TODO
-  // static IF_NO_AVAILABLE_AGENTS = "ifnotavailableagents"; // TODO
   static REPLY = 'reply';
   static RANDOM_REPLY = 'randomreply';
+  static CODE = 'code';
+
+  // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
+  // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
+  //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE
+  // static DISABLE_INPUT_TEXT = "disableinputtext"; // DEPRECATED
+  // static WHEN_OPEN = "whenopen"; // DEPRECATED
+  // static WHEN_CLOSED = "whenclosed"; // DEPRECATED
+  // static IF_NO_AGENTS = "ifnoagents"; // DEPRECATED
+  // static IF_AGENTS = "ifagents"; // DEPRECATED
+  // static WHEN_NO_AVAILABLE_AGENTS = "whennoavailableagents"; // DEPRECATED
+  // static JSONMESSAGE = 'jsonmessage'; // DEPRECATED?
+  // static IF_NOT_OPEN_HOURS = "ifnotopenhours"; // DEPRECATED
+  // static CONDITION = "condition"; // DEPRECATED
 
   static actionToDirective(action) {
     // console.log("actionToDirective:", action);

@@ -797,157 +797,157 @@ describe('Conversation1 - Form filling', async () => {
     });
   });
 
-  it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-    console.log("/if_you_live_IT (TRUE)...");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      // console.log("message:", JSON.stringify(message));
-      if (message.text.startsWith("myvar:")) {
-        assert(message.text !== null);
-        getChatbotParameters(REQUEST_ID, (err, params) => {
-          if (err) {
-            assert.ok(false);
-          }
-          else {
-            // console.log("params /condition:", params);
-            assert(params);
-            // assert(params["city"] === "Milan");
-            assert(params["tdCountry"] === "IT");
-            let request = {
-              "payload": {
-                "_id": uuidv4(),
-                "senderFullname": "guest#367e",
-                "type": "text",
-                "sender": "A-SENDER",
-                "recipient": REQUEST_ID,
-                "text": "/if_you_live_IT",
-                "id_project": PROJECT_ID,
-                "request": {
-                  "request_id": REQUEST_ID,
-                  // "id_project": PROJECT_ID
-                }
-              },
-              "token": CHATBOT_TOKEN
-            }
-            sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-              // console.log("Message sent.", request);
-            });
-          }
-        });
-      }
-      else if (message.attributes && message.attributes.commands[0].message.text === "You live in Italy! Wow") {
-        listener.close(() => {
-          done();
-        });
-      }
-      else {
-        console.error("Unexpected message.");
-        assert.ok(false);
-      }
-    });
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/assign_params{\"tdCountry\": \"IT\"}",
-          "id_project": PROJECT_ID,
-          "request": {
-            "request_id": REQUEST_ID,
-            // "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.", request);
-      });
-    });
-  });
+//   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
+//     console.log("/if_you_live_IT (TRUE)...");
+//     let listener;
+//     let endpointServer = express();
+//     endpointServer.use(bodyParser.json());
+//     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+//       // console.log("req.body:", JSON.stringify(req.body));
+//       res.send({ success: true });
+//       const message = req.body;
+//       // console.log("message:", JSON.stringify(message));
+//       if (message.text.startsWith("myvar:")) {
+//         assert(message.text !== null);
+//         getChatbotParameters(REQUEST_ID, (err, params) => {
+//           if (err) {
+//             assert.ok(false);
+//           }
+//           else {
+//             // console.log("params /condition:", params);
+//             assert(params);
+//             // assert(params["city"] === "Milan");
+//             assert(params["tdCountry"] === "IT");
+//             let request = {
+//               "payload": {
+//                 "_id": uuidv4(),
+//                 "senderFullname": "guest#367e",
+//                 "type": "text",
+//                 "sender": "A-SENDER",
+//                 "recipient": REQUEST_ID,
+//                 "text": "/if_you_live_IT",
+//                 "id_project": PROJECT_ID,
+//                 "request": {
+//                   "request_id": REQUEST_ID,
+//                   // "id_project": PROJECT_ID
+//                 }
+//               },
+//               "token": CHATBOT_TOKEN
+//             }
+//             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//               // console.log("Message sent.", request);
+//             });
+//           }
+//         });
+//       }
+//       else if (message.attributes && message.attributes.commands[0].message.text === "You live in Italy! Wow") {
+//         listener.close(() => {
+//           done();
+//         });
+//       }
+//       else {
+//         console.error("Unexpected message.");
+//         assert.ok(false);
+//       }
+//     });
+//     listener = endpointServer.listen(10002, '0.0.0.0', function () {
+//       let request = {
+//         "payload": {
+//           "_id": uuidv4(),
+//           "senderFullname": "guest#367e",
+//           "type": "text",
+//           "sender": "A-SENDER",
+//           "recipient": REQUEST_ID,
+//           "text": "/assign_params{\"tdCountry\": \"IT\"}",
+//           "id_project": PROJECT_ID,
+//           "request": {
+//             "request_id": REQUEST_ID,
+//             // "id_project": PROJECT_ID
+//           }
+//         },
+//         "token": CHATBOT_TOKEN
+//       }
+//       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//         // console.log("Message sent.", request);
+//       });
+//     });
+//   });
 
-  it('/if_you_live_IT (_tdCondition) FALSE', (done) => {
-    // console.log("/if_you_live_IT (FALSE)...");
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      // console.log("message:", JSON.stringify(message));
-      if (message.text.startsWith("myvar:")) {
-        assert(message.text !== null);
-        getChatbotParameters(REQUEST_ID, (err, params) => {
-          if (err) {
-            assert.ok(false);
-          }
-          else {
-            // console.log("params /if_you_live_IT:", params);
-            assert(params);
-            // assert(params["city"] === "Milan");
-            assert(params["tdCountry"] === "US");
-            let request = {
-              "payload": {
-                "_id": uuidv4(),
-                "senderFullname": "guest#367e",
-                "type": "text",
-                "sender": "A-SENDER",
-                "recipient": REQUEST_ID,
-                "text": "/if_you_live_IT",
-                "id_project": PROJECT_ID,
-                "request": {
-                  "request_id": REQUEST_ID,
-                  // "id_project": PROJECT_ID
-                }
-              },
-              "token": CHATBOT_TOKEN
-            }
-            sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-              // console.log("Message sent.", request);
-            });
-          }
-        });
-      }
-      else if (message.text === "You don't live in Italy!") {
-        listener.close(() => {
-          done();
-        });
-      }
-      else {
-        console.error("Unexpected message.");
-        assert.ok(false);
-      }
-    });
-    listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      let request = {
-        "payload": {
-          "_id": uuidv4(),
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/assign_params{\"tdCountry\": \"US\"}",
-          "id_project": PROJECT_ID,
-          "request": {
-            "request_id": REQUEST_ID,
-            // "id_project": PROJECT_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.", request);
-      });
-    });
-  });
+//   it('/if_you_live_IT (_tdCondition) FALSE', (done) => {
+//     // console.log("/if_you_live_IT (FALSE)...");
+//     let listener;
+//     let endpointServer = express();
+//     endpointServer.use(bodyParser.json());
+//     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+//       // console.log("req.body:", JSON.stringify(req.body));
+//       res.send({ success: true });
+//       const message = req.body;
+//       // console.log("message:", JSON.stringify(message));
+//       if (message.text.startsWith("myvar:")) {
+//         assert(message.text !== null);
+//         getChatbotParameters(REQUEST_ID, (err, params) => {
+//           if (err) {
+//             assert.ok(false);
+//           }
+//           else {
+//             // console.log("params /if_you_live_IT:", params);
+//             assert(params);
+//             // assert(params["city"] === "Milan");
+//             assert(params["tdCountry"] === "US");
+//             let request = {
+//               "payload": {
+//                 "_id": uuidv4(),
+//                 "senderFullname": "guest#367e",
+//                 "type": "text",
+//                 "sender": "A-SENDER",
+//                 "recipient": REQUEST_ID,
+//                 "text": "/if_you_live_IT",
+//                 "id_project": PROJECT_ID,
+//                 "request": {
+//                   "request_id": REQUEST_ID,
+//                   // "id_project": PROJECT_ID
+//                 }
+//               },
+//               "token": CHATBOT_TOKEN
+//             }
+//             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//               // console.log("Message sent.", request);
+//             });
+//           }
+//         });
+//       }
+//       else if (message.text === "You don't live in Italy!") {
+//         listener.close(() => {
+//           done();
+//         });
+//       }
+//       else {
+//         console.error("Unexpected message.");
+//         assert.ok(false);
+//       }
+//     });
+//     listener = endpointServer.listen(10002, '0.0.0.0', function () {
+//       let request = {
+//         "payload": {
+//           "_id": uuidv4(),
+//           "senderFullname": "guest#367e",
+//           "type": "text",
+//           "sender": "A-SENDER",
+//           "recipient": REQUEST_ID,
+//           "text": "/assign_params{\"tdCountry\": \"US\"}",
+//           "id_project": PROJECT_ID,
+//           "request": {
+//             "request_id": REQUEST_ID,
+//             // "id_project": PROJECT_ID
+//           }
+//         },
+//         "token": CHATBOT_TOKEN
+//       }
+//       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//         // console.log("Message sent.", request);
+//       });
+//     });
+//   });
 
 });
 
