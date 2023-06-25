@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.85
+- Match operator fix
+
 ### 0.1.84
 - removed debug logs
 

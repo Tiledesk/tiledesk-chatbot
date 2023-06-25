@@ -38,21 +38,21 @@ class DirReply {
   async go(action, callback) {
     const message = action;
     // fill
-    let requestVariables = null;
+    let requestAttributes = null;
     if (this.tdcache) {
-      requestVariables = 
+      requestAttributes = 
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
       if (this.log) {
-        for (const [key, value] of Object.entries(requestVariables)) {
+        for (const [key, value] of Object.entries(requestAttributes)) {
           const value_type = typeof value;
           if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
         }
       }
       const filler = new Filler();
       // fill text attribute
-      message.text = filler.fill(message.text, requestVariables);
+      message.text = filler.fill(message.text, requestAttributes);
       if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
       if (message.attributes && message.attributes.commands) {
         if (this.log) {console.log("filling commands'. commands found.");}
@@ -63,8 +63,8 @@ class DirReply {
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
-              command.message.text = filler.fill(command.message.text, requestVariables);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestVariables, this.log);
+              command.message.text = filler.fill(command.message.text, requestAttributes);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
               if (this.log) {console.log("command filled:", command.message.text);}
             }
           }
@@ -72,25 +72,21 @@ class DirReply {
       }
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
-      // const mylang = requestVariables["mylang"];
-      // console.log("filterOnVariables:", JSON.stringify(requestVariables));
-      // if (message.attributes && message.attributes.commands) {
-      //   TiledeskChatbotUtil.filterOnLanguage(message.attributes.commands, mylang);
-      // }
       if (message.attributes && message.attributes.commands) {
         if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
-        TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestVariables);
+        // TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestAttributes);
+        TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }
       // temporary send back of reserved attributes
       if (!message.attributes) {
         message.attributes = {}
       }
       // Reserved names: userEmail, userFullname
-      if (requestVariables['userEmail']) {
-          message.attributes.updateUserEmail = requestVariables['userEmail'];
+      if (requestAttributes['userEmail']) {
+          message.attributes.updateUserEmail = requestAttributes['userEmail'];
       }
-      if (requestVariables['userFullname']) {
-        message.attributes.updateUserFullname = requestVariables['userFullname'];
+      if (requestAttributes['userFullname']) {
+        message.attributes.updateUserFullname = requestAttributes['userFullname'];
       }
       // intent_info
       if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {

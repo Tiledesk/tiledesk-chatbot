@@ -143,7 +143,7 @@ class TiledeskExpression {
         },
         "matches": {
             name: "matches",
-            applyPattern: "#1.matches(/#2/)"
+            applyPattern: "#1.match(String(#2)) ? true : false"
         },
         // Francesco
         "addAsNumber": {

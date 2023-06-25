@@ -1,28 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-//var cors = require('cors');
-//let path = require("path");
-//let fs = require('fs');
-// const { TiledeskChatbotClient } = require('@tiledesk/tiledesk-chatbot-client');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-//const { TiledeskClientTest } = require('./TiledeskClientTest');
-//const jwt = require('jsonwebtoken');
-//const { v4: uuidv4 } = require('uuid');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
-//const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
-// const { MockActions } = require('./MockActions');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
 
-//router.use(cors());
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
@@ -32,20 +22,9 @@ let tdcache = null;
 // DEV
 // const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
 const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-// const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-// const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
-// const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
-
-// PROD
-// const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');
-// const { DirectivesChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/DirectivesChatbotPlug');
-// const { SplitsChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/SplitsChatbotPlug');
-// const { MarkbotChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/MarkbotChatbotPlug');
-// const { WebhookChatbotPlug } = require('@tiledesk/tiledesk-chatbot-plugs/WebhookChatbotPlug');
 
 // THE IMPORT
 let mongoose = require('mongoose');
-// const { DirSendEmail } = require('./tiledeskChatbotPlugs/directives/DirSendEmail.js');
 const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 let APIURL = null;
 let staticBots;
@@ -269,7 +248,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request && message.request.location && message.request.location.city) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
   }
-  // console.log("message.request.language", message.request["language"])
+  // console.log("message.request.language", message.request["language"]);
   if (message.request) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, message.request["language"]);
@@ -296,7 +275,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     }
     message.attributes.payload = message.request.attributes.payload
     if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-    if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+    // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
   }
 
   if (message.attributes) {

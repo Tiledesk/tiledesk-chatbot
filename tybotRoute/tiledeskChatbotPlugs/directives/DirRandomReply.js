@@ -73,12 +73,6 @@ class DirRandomReply {
         }
       }
 
-      // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
-    //   if (message.attributes && message.attributes.commands) {
-    //     if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
-    //     TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestVariables);
-    //   }
-      
       // temporary send back of reserved attributes
       if (!message.attributes) {
         message.attributes = {}
