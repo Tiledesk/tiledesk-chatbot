@@ -6,7 +6,8 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### 0.1.85
-- Match operator fix
+- "Match (tegex) operator" fix
+- Text in multiple message commands is now merged in main message.text attribute based on filtered commands
 
 ### 0.1.84
 - removed debug logs
