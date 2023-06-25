@@ -226,7 +226,7 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        console.log("evaluating:", expression)
+        // console.log("evaluating:", expression)
         // console.log("context:", context)
         let res;
         try {

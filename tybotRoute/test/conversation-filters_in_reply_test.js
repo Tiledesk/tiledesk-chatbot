@@ -12,7 +12,7 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const bots_data = require('./conversation-filters_in_reply_bot.js').bots_data;
-console.log("bots_data", bots_data)
+// console.log("bots_data", bots_data)
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
@@ -52,274 +52,274 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  // it('/start{"user_language", "it"}', (done) => {
-  //   console.log('/start{"user_language", "it"}');
-  //   // let message_id = uuidv4();
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-      
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === "Italian");
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         console.log("final attributes:", JSON.stringify(attributes));
-  //         assert(attributes);
-  //         assert(attributes["user_language"] === "it");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //       //   "_id": message_id,
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/start{"user_language": "it"}',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         },
-  //         "attributes": {
-  //           "payload": {
-  //             "lastname": "Sponziello",
-  //             "jsondata2": {
-  //               "a": "1",
-  //               "b": 2
-  //             }
-  //           }
-  //         }
-  //       },
-  //       "token": CHATBOT_TOKEN
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
-
-  // it('/start{"user_language": "en"}', (done) => {
-  //   console.log('/start{"user_language": "en"}');
-  //   // let message_id = uuidv4();
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     console.log("/start 'en' ...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-      
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === "English");
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         console.log("final attributes:", JSON.stringify(attributes));
-  //         assert(attributes);
-  //         assert(attributes["user_language"] === "en");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //       //   "_id": message_id,
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/start{"user_language": "en"}',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         },
-  //         "attributes": {
-  //           "payload": {
-  //             "lastname": "Sponziello",
-  //             "jsondata2": {
-  //               "a": "1",
-  //               "b": 2
-  //             }
-  //           }
-  //         }
-  //       },
-  //       "token": CHATBOT_TOKEN
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
-
-  // it('/jovana{"user_language": "en"}', (done) => {
-  //   console.log('/jovana{"user_language": "en"}');
-  //   // let message_id = uuidv4();
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     console.log("/jovana 'en'...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 6);
-  //     const command2 = message.attributes.commands[1];
-      
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === "Hey this is Jovana!");
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         console.log("final attributes:", JSON.stringify(attributes));
-  //         assert(attributes);
-  //         assert(attributes["user_language"] === "en");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //       //   "_id": message_id,
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/jovana{"user_language": "en"}',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         },
-  //         "attributes": {
-  //           "payload": {
-  //             "lastname": "Sponziello",
-  //             "jsondata2": {
-  //               "a": "1",
-  //               "b": 2
-  //             }
-  //           }
-  //         }
-  //       },
-  //       "token": CHATBOT_TOKEN
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
-
-  // it('/jovana{"user_language": "it"}', (done) => {
-  //   console.log('/jovana{"user_language": "it"}');
-  //   // let message_id = uuidv4();
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     console.log("/jovana 'it'...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 6);
-  //     const command2 = message.attributes.commands[1];
-      
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === "Ciao Jovana qui!");
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         console.log("final attributes:", JSON.stringify(attributes));
-  //         assert(attributes);
-  //         assert(attributes["user_language"] === "it");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //       //   "_id": message_id,
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/jovana{"user_language": "it"}',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         },
-  //         "attributes": {
-  //           "payload": {
-  //             "lastname": "Sponziello",
-  //             "jsondata2": {
-  //               "a": "1",
-  //               "b": 2
-  //             }
-  //           }
-  //         }
-  //       },
-  //       "token": CHATBOT_TOKEN
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
-
-  it('/fallback{"user_language": "en,it;q=0.9"} - uses match operator - reply found (en)', (done) => {
-    console.log('/fallback{"user_language": "en,it;q=0.9"}');
+  it('/start{"user_language", "it"}', (done) => {
+    // console.log('/start{"user_language", "it"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/fallback ...req.body:", JSON.stringify(req.body));
+      // console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "Italian");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "it");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/start{"user_language": "it"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/start{"user_language": "en"}', (done) => {
+    // console.log('/start{"user_language": "en"}');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/start 'en' ...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "English");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "en");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/start{"user_language": "en"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/jovana{"user_language": "en"}', (done) => {
+    // console.log('/jovana{"user_language": "en"}');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/jovana 'en'...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 6);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "Hey this is Jovana!");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "en");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/jovana{"user_language": "en"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/jovana{"user_language": "it"}', (done) => {
+    // console.log('/jovana{"user_language": "it"}');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/jovana 'it'...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 6);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "Ciao Jovana qui!");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "it");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/jovana{"user_language": "it"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/fallback{"user_language": "en,it;q=0.9"} - uses match operator - reply found (en)', (done) => {
+    // console.log('/fallback{"user_language": "en,it;q=0.9"}');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/fallback ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -337,7 +337,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           listener.close(() => {
             done();
@@ -381,13 +381,13 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/fallback{"user_language": "it,en;q=0.9"} - uses match operator - reply found (it)', (done) => {
-    console.log('/fallback{"user_language": "it,en;q=0.9"}');
+    // console.log('/fallback{"user_language": "it,en;q=0.9"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/fallback ...req.body:", JSON.stringify(req.body));
+      // console.log("/fallback ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -404,7 +404,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           listener.close(() => {
             done();
@@ -447,16 +447,17 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  it('/fallback{"user_language": "fr,it,en;q=0.9"} - uses match operator - reply uses pivot (en) for unknown lang (fr)', (done) => {
-    console.log('/fallback{"user_language": "frit,en;q=0.9"}');
+  it('/fallback{"user_language": "fr,it,en;q=0.9"} - uses match operator - reply uses pivot (en) for unknown lang (fr) => message.text merged from the matched commands', (done) => {
+    // console.log('/fallback{"user_language": "frit,en;q=0.9"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/fallback ...req.body:", JSON.stringify(req.body));
+      // console.log("/fallback ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
+      assert(message.text === "I didn't understand. Can you rephrase your question?\n\nOr pick accordingly below");
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 4);
       const command2 = message.attributes.commands[1];
@@ -471,7 +472,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           listener.close(() => {
             done();

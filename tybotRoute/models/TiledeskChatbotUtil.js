@@ -153,11 +153,11 @@ class TiledeskChatbotUtil {
         }
         if (message.attributes.commands.length > 0) {
             let commands = message.attributes.commands;
+            message.text = "";
             for (let i = commands.length - 1; i >= 0; i--) {
-                console.log("...commands[" + i + "]");
-                message.text = "";
+                // console.log("...commands[" + i + "]");
                 if (commands[i].type === "message") { // is a message, not wait
-                    console.log("commands[i]:", commands[i].message.text);
+                    // console.log("commands[i]:", commands[i].message.text);
                     // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
                     
                     // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
@@ -166,9 +166,9 @@ class TiledeskChatbotUtil {
                     if (jsonCondition) {
                         // const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
                         const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
-                        console.log("full json condition expression eval on command.message:", expression);
+                        // console.log("full json condition expression eval on command.message:", expression);
                         const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
-                        console.log("conditionResult:", conditionResult);
+                        // console.log("conditionResult:", conditionResult);
                         // FALSE
                         // console.log("commands[i]lang:", commands[i]);
                         if (conditionResult === false) {
@@ -183,12 +183,19 @@ class TiledeskChatbotUtil {
                             }
                         }
                         else {
-                            if (commands[i] && commands[i].text) {
-                                message.text += commands[i].text;
-                                console.log("new text:", message.text)
+                            // console.log("comands[i]:", commands[i], commands[i].message, commands[i].message.text)
+                            if (commands[i] && commands[i].message && commands[i].message.text) {
+                                // console.log("curr text:", message.text)
+                                if (message.text === "") {
+                                    message.text = commands[i].message.text;    
+                                }
+                                else {
+                                    message.text = commands[i].message.text + "\n\n" + message.text;
+                                }
+                                // console.log("new text:", message.text)
                             }
                             else {
-                                console.log("commands@", commands[i])
+                                // console.log("commands@", commands[i])
                             }
                         }
                     }
