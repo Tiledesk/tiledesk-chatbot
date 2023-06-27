@@ -88,6 +88,48 @@ describe('JSON to expression', function() {
     assert(result === true);
   });
 
+  it('test condition operand notStartsWith (true)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.notStartsWith.name,
+      "operand2": {
+        type: "const",
+        value: "And"
+      }
+    }
+    const vars = {
+      name: "Marco"
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("expression:", expression);
+    assert(expression === '!String($data.name).startsWith(String("And"))');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    console.log("result:", result);
+    assert(result === true);
+  });
+
+  it('test condition operand notStartsWith (false)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.notStartsWith.name,
+      "operand2": {
+        type: "const",
+        value: "And"
+      }
+    }
+    const vars = {
+      name: "Andrea"
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("expression:", expression);
+    assert(expression === '!String($data.name).startsWith(String("And"))');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    console.log("result:", result);
+    assert(result === false);
+  });
+
   it('test condition group in "and" (true)', async () => {
     const part1 = {
       "type": "condition",

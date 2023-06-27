@@ -121,6 +121,10 @@ class TiledeskExpression {
             name: "startsWith",
             applyPattern: "String(#1).startsWith(String(#2))"
         },
+        "notStartsWith": {
+            name: "notStartsWith",
+            applyPattern: "!String(#1).startsWith(String(#2))"
+        },
         "startsWithIgnoreCase": {
             name: "startsWithIgnoreCase",
             applyPattern: "String(#1).toLowerCase().startsWith(String(#2).toLowerCase())"

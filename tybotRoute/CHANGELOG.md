@@ -5,9 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.86
+- Added OPERATOR "notStartsWith"
+
 ### 0.1.85
-- "Match (tegex) operator" fix
-- Text in multiple message commands is now merged in main message.text attribute based on filtered commands
+- "Match (regex) operator" fix
+- Text in multiple message commands is now merged in main "message.text" property based on filtered commands
 
 ### 0.1.84
 - removed debug logs
