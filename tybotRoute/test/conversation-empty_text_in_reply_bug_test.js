@@ -11,14 +11,14 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./json_condition-actions_bot.js').bots_data;
-
+const bots_data = require('./conversation-empty_text_in_reply_bug_bot.js').bots_data;
+// console.log("bots_data", bots_data)
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 
-describe('Conversation for JSONCondition test', async () => {
+describe('Conversation for test text empty bug', async () => {
 
   let app_listener;
 
@@ -52,31 +52,31 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  it('/winning_path', (done) => {
-    console.log("/winning_path");
+  it('/start', (done) => {
+    // console.log('/start{"user_language", "it"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      console.log("/start (text is empty bug) ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
+      assert(message.text == "Hi, how can I help you?");
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-    
+      
       assert(command2.type === "message");
-      assert(command2.message.text === "You won!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      assert(command2.message.text === "Hi, how can I help you?");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["project_id"] === PROJECT_ID);
-          assert(params["score"] === "10");
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "it");
           listener.close(() => {
             done();
           });
@@ -94,125 +94,20 @@ describe('Conversation for JSONCondition test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/winning_path",
+          "text": '/start{"user_language": "it"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
-      });
-    });
-  });
-
-  it('/losing_path', (done) => {
-    console.log("/losing_path");
-    // let message_id = uuidv4();
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-    
-      assert(command2.type === "message");
-      assert(command2.message.text === "You lost!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["project_id"] === PROJECT_ID);
-          assert(params["score"] === "5");
-          listener.close(() => {
-            done();
-          });
-        }
-      });
-
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-        //   "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/losing_path",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
-      });
-    });
-  });
-
-  it('/unknown_path', (done) => {
-    console.log("/unknown_path");
-    // let message_id = uuidv4();
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-    
-      assert(command2.type === "message");
-      assert(command2.message.text === "I don't know!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["project_id"] === PROJECT_ID);
-          assert(params["score"] === "7");
-          listener.close(() => {
-            done();
-          });
-        }
-      });
-
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-        //   "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": "/unknown_path",
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
           }
         },
         "token": CHATBOT_TOKEN

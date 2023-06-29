@@ -199,6 +199,9 @@ class TiledeskChatbotUtil {
                             }
                         }
                     }
+                    else {
+                        message.text = (commands[i].message.text + "\n\n" + message.text).trim();
+                    }
                 }
             }
           // for (let i = 0; i < commands.length; i++) {

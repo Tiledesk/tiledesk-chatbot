@@ -27,7 +27,7 @@ tybot.startApp(
     REDIS_PORT: process.env.REDIS_PORT,
     REDIS_PASSWORD: process.env.REDIS_PASSWORD,
     // CACHE_ENABLED: process.env.CACHE_ENABLED,
-    log: process.env.API_LOG
+    log: process.env.TILEBOT_LOG
   }, () => {
     console.log("Tilebot route successfully started.");
     var port = process.env.PORT || 3000;

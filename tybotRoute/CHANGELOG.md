@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.87
+- Fixed commands-merged text in replies (text was empty for non messages with no filters)
+
 ### 0.1.86
 - Added OPERATOR "notStartsWith"
 
