@@ -140,20 +140,40 @@ const bot = {
 	}]
 }
 
+// // normalize the bot structure for the static intent search
+// let intents = bot.intents;
+// delete bot.intents;
+// // console.log ("bot still is", JSON.stringify(bot));
+// // console.log ("bintents still are", intents[0]);
+// intent_dict = {};
+// for (let i = 0; i < intents.length; i++) {
+//   intent_dict[intents[i].intent_display_name] = intents[i];
+//   intent_dict["#" + intents[i].intent_id] = intents[i];
+// }
+// bot.intents = intent_dict;
+// const bots_data = {
+//   "bots": {}
+// }
+// bots_data.bots["botID"] = bot;
+// module.exports = { bots_data: bots_data };
+
 // normalize the bot structure for the static intent search
 let intents = bot.intents;
 delete bot.intents;
 // console.log ("bot still is", JSON.stringify(bot));
 // console.log ("bintents still are", intents[0]);
-intent_dict = {};
+let intents_dict_by_display_name = {};
 for (let i = 0; i < intents.length; i++) {
-  intent_dict[intents[i].intent_display_name] = intents[i];
-  intent_dict["#" + intents[i].intent_id] = intents[i];
+	intents_dict_by_display_name[intents[i].intent_display_name] = intents[i];
 }
-bot.intents = intent_dict;
+let intents_dict_by_intent_id = {};
+for (let i = 0; i < intents.length; i++) {
+	intents_dict_by_intent_id[intents[i].intent_id] = intents[i];
+}
+bot.intents = intents_dict_by_display_name;
+bot.intents_by_intent_id = intents_dict_by_intent_id
 const bots_data = {
   "bots": {}
 }
 bots_data.bots["botID"] = bot;
-
 module.exports = { bots_data: bots_data };

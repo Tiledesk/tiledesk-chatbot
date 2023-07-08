@@ -6,7 +6,9 @@ const bot = {
 	"attributes": {
 		"variables": {
 			"qapla_track_num": "qapla_track_num",
-			"track_status": "track_status"
+			"track_status": "track_status",
+			"track_error": "track_error",
+			"track_result": "track_result"
 		}
 	},
 	"intents": [{
@@ -15,7 +17,7 @@ const bot = {
 		"actions": [{
 			"_tdActionTitle": "",
 			"_tdActionId": "4c04c334-b87d-4931-9d0e-57a7378936bd",
-			"url": "https://api.qapla.it/1.2/getShipment/?apiKey=3b9839c954168e861f2b63d79920ec3a3ff92aab674de9f3930df60b8a40c495&trackingNumber=NL588228465BR",
+			"url": "http://localhost:10002/test/webrequest/get/json",
 			"headersString": {
 				"Content-Type": "application/json",
 				"Cache-Control": "no-cache",
@@ -25,13 +27,43 @@ const bot = {
 			"jsonBody": "{}",
 			"assignTo": "",
 			"assignments": {
-				"track_status": "getShipment.shipments.[0].status.qaplaStatus.status"
+				"track_status": "getShipment.shipments.[0].status.qaplaStatus.status",
+				"track_error": "getShipment.error",
+				"track_result": "getShipment.result"
 			},
 			"method": "GET",
 			"_tdActionType": "webrequest"
 		}, {
+			"_tdActionTitle": "shipment error?",
+			"_tdActionId": "83542f83-f67b-47d7-9736-f38ed6242ff2",
+			"_tdActionType": "jsoncondition",
+			"groups": [{
+				"type": "expression",
+				"conditions": [{
+					"type": "condition",
+					"operand1": "track_result",
+					"operator": "equalAsStrings",
+					"operand2": {
+						"type": "const",
+						"value": "KO",
+						"name": ""
+					}
+				}]
+			}],
+			"stopOnConditionMet": true,
+			"trueIntent": "#862507d0-f91a-4962-8cfd-05950a7a17ba",
+			"falseIntent": "#a96aa945-689c-4985-b228-aa8809410ca2"
+		}],
+		"intent_display_name": "start",
+		"intent_id": "270fcec7-3b8f-465b-bcce-830c936a8584",
+		"question": "\\start",
+		"language": "en"
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
 			"_tdActionTitle": "",
-			"_tdActionId": "e34cf93d-2c14-44b8-b45a-8250a34dd7c1",
+			"_tdActionId": "c0dd762f-2eb4-4adf-acb4-bf4f00845dcb",
 			"_tdActionType": "reply",
 			"attributes": {
 				"disableInputMessage": false,
@@ -42,16 +74,40 @@ const bot = {
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "Il tuo stato: ${track_status}"
+						"text": "Il tuo stato non è valido: ${track_error}"
 					}
 				}]
 			},
-			"text": "Il tuo stato: ${track_status}\r\n"
+			"text": "Il tuo stato non è valido: ${track_error}\r\n"
 		}],
-		"question": "\\start",
-		"intent_display_name": "start",
 		"language": "en",
-		"intent_id": "270fcec7-3b8f-465b-bcce-830c936a8584"
+		"intent_display_name": "invalid_status",
+		"intent_id": "862507d0-f91a-4962-8cfd-05950a7a17ba"
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionTitle": "",
+			"_tdActionId": "f72a1859-a396-415c-90c8-938bd2207cc2",
+			"_tdActionType": "reply",
+			"attributes": {
+				"disableInputMessage": false,
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "Lo stato del tuo ordine è ${track_status}"
+					}
+				}]
+			},
+			"text": "Lo stato del tuo ordine è ${track_status}\r\n"
+		}],
+		"language": "en",
+		"intent_display_name": "order_status",
+		"intent_id": "a96aa945-689c-4985-b228-aa8809410ca2"
 	}]
 }
 
@@ -60,11 +116,16 @@ let intents = bot.intents;
 delete bot.intents;
 // console.log ("bot still is", JSON.stringify(bot));
 // console.log ("bintents still are", intents[0]);
-intent_dict = {};
+let intents_dict_by_display_name = {};
 for (let i = 0; i < intents.length; i++) {
-  intent_dict[intents[i].intent_display_name] = intents[i];
+	intents_dict_by_display_name[intents[i].intent_display_name] = intents[i];
 }
-bot.intents = intent_dict;
+let intents_dict_by_intent_id = {};
+for (let i = 0; i < intents.length; i++) {
+	intents_dict_by_intent_id[intents[i].intent_id] = intents[i];
+}
+bot.intents = intents_dict_by_display_name;
+bot.intents_by_intent_id = intents_dict_by_intent_id
 const bots_data = {
   "bots": {}
 }

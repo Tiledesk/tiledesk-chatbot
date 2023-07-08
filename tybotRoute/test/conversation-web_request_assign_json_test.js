@@ -52,7 +52,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  it('/start', (done) => {
+  it('get traking order status from remote JSON - track number found', (done) => {
     // console.log('/start{"user_language", "it"}');
     // let message_id = uuidv4();
     let listener;
@@ -140,7 +140,7 @@ describe('Conversation for JSONCondition test', async () => {
       res.send(data);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
+      console.log("get traking order status from remote JSON ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -148,13 +148,91 @@ describe('Conversation for JSONCondition test', async () => {
       const command2 = message.attributes.commands[1];
       
       assert(command2.type === "message");
-      assert(command2.message.text === "Il tuo stato: ATTESA ELABORAZIONE");
+      assert(command2.message.text === "Lo stato del tuo ordine è ATTESA ELABORAZIONE");
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
           // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["qapla_track_num"] === "1234");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/start{"qapla_track_num": "1234"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('get traking order status from remote JSON - track number NOT found', (done) => {
+    // console.log('/start{"user_language", "it"}');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      console.log("/webrequest_with_assignments GET req.headers:", req.headers);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      const data = {
+        "getShipment": {
+          "result": "KO",
+          "error": "shipment not found"
+        }
+      };
+      res.send(data);
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("get traking order status from remote JSON - track number NOT found ...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "Il tuo stato non è valido: shipment not found");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["qapla_track_num"] === "1234");
           listener.close(() => {

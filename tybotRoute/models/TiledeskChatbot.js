@@ -515,14 +515,6 @@ class TiledeskChatbot {
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
     // const parameter_key = "tilebot:requests:" + requestId + ":parameters";
-    console.log("(addParameterStatic)...");
-    try {
-      console.log("(addParameterStatic)----", requestId, parameter_name, parameter_value);
-    }
-    catch(error) {
-      console.error("Error:", error);
-    }
-    
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     await _tdcache.hset(parameter_key, parameter_name, parameter_value);
   }

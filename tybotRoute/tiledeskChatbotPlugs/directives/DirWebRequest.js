@@ -136,15 +136,12 @@ class DirWebRequest {
               catch(err) {
                 console.error("Error:", err);
               }
-              console.log("(webRequest)----");
               try {
                 await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, attr_name, attributeValue);
               }
               catch(err) {
                 console.error("Error:", err);
               }
-              
-              console.log("(did)----");
             }
             if (this.log) {
               console.log("(webRequest) All attributes:");
@@ -176,7 +173,7 @@ class DirWebRequest {
       axios_options.data = options.json
     }
     if (this.log) {
-      console.log("axios_options:", axios_options);
+      console.log("axios_options:", JSON.stringify(axios_options));
     }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
@@ -202,7 +199,7 @@ class DirWebRequest {
       }
     })
     .catch( (error) => {
-      // console.error("An error occurred:", JSON.stringify(error));
+      console.error("An error occurred:", JSON.stringify(error));
       if (callback) {
         callback(error, null);
       }

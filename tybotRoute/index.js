@@ -253,9 +253,9 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.request) {
     let user_language = message.request["language"];
     if (message.request["language"]) {
-      console.log("HTTP language:", message.request["language"]);
+      // console.log("HTTP language:", message.request["language"]);
       var languages = parser.parse(message.request["language"]);
-      console.log("languages:", languages);
+      // console.log("languages:", languages);
       if (languages && languages.length > 0 && languages[0].code) {
         user_language = languages[0].code;
       }

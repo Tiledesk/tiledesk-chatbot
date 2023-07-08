@@ -7,6 +7,8 @@ available on:
 
 ### 0.1.89
 - DirWebRequest: fixed sending data: 'null'
+- Improved MockBotsDataSource.js to support search also by intent_id
+- Added test for qapla WebRequest
 
 ### 0.1.88
 - Added language parse with accept-language-parser. Now user_language has just the first language ISO code

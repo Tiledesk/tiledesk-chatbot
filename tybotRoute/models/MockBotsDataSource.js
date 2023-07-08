@@ -47,8 +47,26 @@ class MockBotsDataSource {
    */
   async getByIntentDisplayName(botId, intentName) {
     // console.log("this.data_", JSON.stringify(this.data.bots[botId]))
-    const intent = this.data.bots[botId].intents[intentName];
+    // const intent = this.data.bots[botId].intents[intentName];
     // console.log("got intent:", intent);
+    let intent;
+    try {
+      let key = intentName.trim();
+      // console.log("key is:", key);
+      if (key.startsWith("#")) {
+        let intent_id = key.substring(key.indexOf("#") + 1);
+        intent = this.data.bots[botId].intents_by_intent_id[intent_id];
+      }
+      else {
+        // console.log("key is intent name:", key);
+        let intent_id = key;
+        intent = this.data.bots[botId].intents[intent_id];
+        // console.log("Intent found", intent);
+      }
+    }
+    catch(err) {
+      console.error("Error is:", err);
+    }
     return intent;
   }
 
