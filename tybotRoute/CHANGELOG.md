@@ -5,8 +5,15 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.89
+- DirWebRequest: fixed sending data: 'null'
+
+### 0.1.88
+- Added language parse with accept-language-parser. Now user_language has just the first language ISO code
+
 ### 0.1.87
 - Fixed commands-merged text in replies (text was empty for non messages with no filters)
+- Renamed env LOG var from API_LOG to TILEBOT_LOG
 
 ### 0.1.86
 - Added OPERATOR "notStartsWith"

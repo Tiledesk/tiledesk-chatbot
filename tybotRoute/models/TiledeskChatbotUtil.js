@@ -190,7 +190,7 @@ class TiledeskChatbotUtil {
                                     message.text = commands[i].message.text;    
                                 }
                                 else {
-                                    message.text = commands[i].message.text + "\n\n" + message.text;
+                                    message.text = (commands[i].message.text + "\n\n" + message.text).trim();
                                 }
                                 // console.log("new text:", message.text)
                             }

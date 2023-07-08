@@ -66,6 +66,63 @@ const bot = {
 		"enabled": true,
 		"actions": [{
 			"_tdActionType": "reply",
+			"text": "Italian\r\nEnglish\r\n",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "Italian",
+						"_tdJSONCondition": {
+							"type": "expression",
+							"conditions": [{
+								"type": "condition",
+								"operand1": "user_language",
+								"operator": "equalAsStrings",
+								"operand2": {
+									"type": "const",
+									"value": "it",
+									"name": ""
+								}
+							}]
+						}
+					}
+				}, {
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "English",
+						"_tdJSONCondition": {
+							"type": "expression",
+							"conditions": [{
+								"type": "condition",
+								"operand1": "user_language",
+								"operator": "equalAsStrings",
+								"operand2": {
+									"type": "const",
+									"value": "en",
+									"name": ""
+								}
+							}]
+						}
+					}
+				}]
+			}
+		}],
+		"intent_display_name": "http_lang",
+		"language": "en",
+		"intent_id": "72d059bc-bccc-4629-9ce0-36f602a22470"
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "reply",
 			"text": "Hey this is Jovana!!\r\nDon't mean to intrude, but I got a fun fact query for you!\r\nProactive chatbots on your website help you **increase your conversion rate** massively.\r\nCiao 👋 Jovana qui!\r\nHo un mini quiz per te!\r\nI chatbot proattivi sul tuo sito aiutano a aumentare notevolmente **il tuo tasso di conversione**\r\n",
 			"attributes": {
 				"commands": [{

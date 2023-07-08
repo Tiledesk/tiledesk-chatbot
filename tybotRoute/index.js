@@ -12,6 +12,7 @@ const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js')
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
+let parser = require('accept-language-parser');
 
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
@@ -250,8 +251,17 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
   // console.log("message.request.language", message.request["language"]);
   if (message.request) {
+    let user_language = message.request["language"];
+    if (message.request["language"]) {
+      console.log("HTTP language:", message.request["language"]);
+      var languages = parser.parse(message.request["language"]);
+      console.log("languages:", languages);
+      if (languages && languages.length > 0 && languages[0].code) {
+        user_language = languages[0].code;
+      }
+    }
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, message.request["language"]);
+    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, user_language);
     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
   }
   // console.log("message.request.language", message.request["language"])

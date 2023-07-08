@@ -182,6 +182,138 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
+  it('/http_lang (request[language]): it', (done) => {
+    console.log('/http_lang (request[language])');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "Italian");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "it");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/http_lang',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID,
+            "language": "it,en-GB,en;q=0.8"
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/http_lang (request[language]): en', (done) => {
+    console.log('/http_lang (request[language])');
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "English");
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["user_language"] === "en");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/http_lang',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID,
+            "language": "en-GB,en,fr,it;q=0.8"
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
   it('/jovana{"user_language": "en"}', (done) => {
     // console.log('/jovana{"user_language": "en"}');
     // let message_id = uuidv4();

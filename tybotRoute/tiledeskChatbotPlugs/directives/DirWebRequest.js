@@ -62,7 +62,7 @@ class DirWebRequest {
       // }
     }
     let json = null;
-    if (action.jsonBody) {
+    if (action.jsonBody && action.jsonBody !== "{}") {
       let jsonBody = filler.fill(action.jsonBody, requestVariables);
       try {
         json = JSON.parse(jsonBody);
@@ -79,6 +79,7 @@ class DirWebRequest {
       json: json,
       method: action.method
     };
+    if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
     this.myrequest(
       HTTPREQUEST, async (err, resbody) => {
         if (this.log) {console.log("webRequest resbody:", resbody);}
@@ -127,9 +128,23 @@ class DirWebRequest {
             if (this.log) {console.log("(webRequest) assignments:", assignments);}
             for (const [attr_name, attr_eval_expression] of Object.entries(assignments)) {
               if (this.log) {console.log("", attr_name, attr_eval_expression);}
-              const attributeValue = TiledeskJSONEval.eval(json_body, attr_eval_expression);
-              if (this.log) {console.log("(webRequest) Assigning to:", attr_name, "value:", attributeValue);}
-              await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, attr_name, attributeValue);
+              let attributeValue;
+              try {
+                attributeValue = TiledeskJSONEval.eval(json_body, attr_eval_expression);
+                if (this.log) {console.log("(webRequest) Assigning to:", attr_name, "value:", attributeValue);}
+              }
+              catch(err) {
+                console.error("Error:", err);
+              }
+              console.log("(webRequest)----");
+              try {
+                await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, attr_name, attributeValue);
+              }
+              catch(err) {
+                console.error("Error:", err);
+              }
+              
+              console.log("(did)----");
             }
             if (this.log) {
               console.log("(webRequest) All attributes:");
@@ -154,9 +169,14 @@ class DirWebRequest {
     let axios_options = {
       url: options.url,
       method: options.method,
-      data: options.json,
       params: options.params,
       headers: options.headers
+    }
+    if (options.json !== null) {
+      axios_options.data = options.json
+    }
+    if (this.log) {
+      console.log("axios_options:", axios_options);
     }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
