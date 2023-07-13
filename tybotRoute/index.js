@@ -299,7 +299,8 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
           // const value = all_parameters[key];
           const value_type = typeof value;
           //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
-          await chatbot.addParameter(key, String(value));
+          //await chatbot.addParameter(key, String(value));
+          await chatbot.addParameter(key, value);
         }
       }
       catch(err) {

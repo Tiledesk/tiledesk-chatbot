@@ -5,10 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.90
+- Added support for JSON/Number/string parameters in /intent[] invocation
+- Added support for JSON/Number/string parameters in attributes.payload invocation
+
 ### 0.1.89
 - DirWebRequest: fixed sending data: 'null'
 - Improved MockBotsDataSource.js to support search also by intent_id
-- Added test for qapla WebRequest
+- Added test for Qapla WebRequest
 
 ### 0.1.88
 - Added language parse with accept-language-parser. Now user_language has just the first language ISO code

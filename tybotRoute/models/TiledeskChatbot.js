@@ -181,9 +181,25 @@ class TiledeskChatbot {
               console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
             try {
               if (intent.parameters) {
+                if (this.log) {
+                  for (const [key, value] of Object.entries(intent.parameters)) {
+                    console.log(`* Attribute from intent: '${key}' => ${value}`);             
+                  }
+                }
                 for (const [key, value] of Object.entries(intent.parameters)) {
-                  if (this.log) {console.log(`Adding parameter from intent => ${key}: ${value}`);}
-                  this.addParameter(key, value);
+                  if (this.log) {console.log(`Adding attribute from intent invocation /intentName{} => ${key}: ${value}`);}
+                  // const parameter_typeof_key = "_tdTypeOf:" + key;
+                  // console.log("intent[parameter_typeof_key]",parameter_typeof_key, intent.parameters[parameter_typeof_key]);
+                  // if (intent.parameters[parameter_typeof_key] === "object") {
+                    // const parameter_value_string = JSON.stringify(value)
+                    // console.log("Adding parameter as string:", parameter_value_string)
+                    this.addParameter(key, value);
+                    //this.addParameter(parameter_typeof_key, intent[parameter_typeof_key]);
+                  // }
+                  // else { // TODO: support the other data types
+                  //   this.addParameter(key, value);
+                  // }
+                  
                 }
               }
               reply = await this.execIntent(faq, message, lead);
@@ -504,19 +520,51 @@ class TiledeskChatbot {
   }
 
   async addParameter(parameter_name, parameter_value) {
-    //await this.tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
     await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, parameter_name, parameter_value);
   }
 
   async deleteParameter(parameter_name) {
-    //await this.tdcache.hset("tilebot:requests:" + requestId + ":parameters", parameter_name, parameter_value);
     await TiledeskChatbot.deleteParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
-    // const parameter_key = "tilebot:requests:" + requestId + ":parameters";
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
-    await _tdcache.hset(parameter_key, parameter_name, parameter_value);
+    const parameter_value_s = JSON.stringify(parameter_value);
+    await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
+  }
+
+  async allParameters() {
+    return await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+  }
+
+  static async allParametersStatic(_tdcache, requestId) {
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hgetall(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+  }
+
+  async allParametersInstance(_tdcache, requestId) {
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    return await _tdcache.hgetall(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+  }
+
+  static async getParameterStatic(_tdcache, requestId, key) {
+    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    let value = await _tdcache.hget(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
+    try {
+      value = JSON.parse(value);
+    }
+    catch(error) {
+      console.log("Error parsing to JSON an Attribute:", error);
+    }
+    return value;
+  }
+
+  static async deleteParameterStatic(_tdcache, requestId, paramName) {
+    return await _tdcache.hdel(
+      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
   static async checkStep(_tdcache, requestId, max_steps, log) {
@@ -571,33 +619,6 @@ class TiledeskChatbot {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     // console.log("currentStep() parameter_key:", parameter_key);
     return await _tdcache.get(parameter_key);
-  }
-
-  async allParameters() {
-    return await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
-  }
-
-  static async allParametersStatic(_tdcache, requestId) {
-    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    return await _tdcache.hgetall(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
-  }
-
-  async allParametersInstance(_tdcache, requestId) {
-    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    return await _tdcache.hgetall(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
-  }
-
-  static async getParameterStatic(_tdcache, requestId, key) {
-    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    return await _tdcache.hget(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
-  }
-
-  static async deleteParameterStatic(_tdcache, requestId, paramName) {
-    return await _tdcache.hdel(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
   static requestCacheKey(requestId) {

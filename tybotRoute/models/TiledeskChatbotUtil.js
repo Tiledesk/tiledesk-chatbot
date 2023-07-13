@@ -23,13 +23,34 @@ class TiledeskChatbotUtil {
             // console.log("json_string (params)", json_string);
             try {
                 intent.parameters = JSON.parse(json_string);
+                // if (intent.parameters) {
+                    // for (const [key, value] of Object.entries(intent.parameters)) {
+                        // console.log("Checking type of:", key, value);
+                    //   if (typeof value === "object") {
+                    //     console.log("Checking type of is object:", key);
+                    //     intent.parameters["_tdTypeOf:" + key] = "object";
+                    //   }
+                    //   else if (typeof value === "string") {
+                    //     console.log("Checking type of is string:", key);
+                    //     intent.parameters["_tdTypeOf:" + key] = "string";
+                    //   }
+                    //   else if (typeof value === "number") {
+                    //     console.log("Checking type of is number:", key);
+                    //     intent.parameters["_tdTypeOf:" + key] = "number";
+                    //   }
+                    //   else if (typeof value === "boolean") {
+                    //     console.log("Checking type of is boolean:", key);
+                    //     intent.parameters["_tdTypeOf:" + key] = "boolean";
+                    //   }
+                    // }
+                //   }
+                
             }
             catch (err) {
                 console.log("error on intent.parameters = JSON.parse(json_string)", err);
-            }            
+            }
         }
         return intent;
-
     }
 
     static chooseRandomReply(message) {
