@@ -27,6 +27,7 @@ const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirWebRequest } = require('./directives/DirWebRequest');
 const { DirCode } = require('./directives/DirCode');
+const { DirWhatsappByAttribute } = require('./directives/DirWhatsappByAttribute');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
@@ -499,6 +500,12 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.WHATSAPP_ATTRIBUTE) {
+      new DirWhatsappByAttribute(context).execute(directive, async (stop) => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else {

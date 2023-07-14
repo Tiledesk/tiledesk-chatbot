@@ -24,6 +24,7 @@ class Directives {
   static REPLY = 'reply';
   static RANDOM_REPLY = 'randomreply';
   static CODE = 'code';
+  static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
