@@ -35,12 +35,12 @@ class DirWhatsappByAttribute {
     }
     console.log("whatsapp by attributes action: ", JSON.stringify(action))
     if (action.attributeName) {
+        console.log("attributeName:", attributeName);
+        let attribute_value = null;
+        if (this.context.tdcache) {
 
-      let attribute_value = null;
-      if (this.context.tdcache) {
-
-        const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, requestId, action.attributeName)
-
+            const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, requestId, action.attributeName)
+            console.log("attribute_value:", attribute_value);
         // attribute_value = {
         //   id_project: "62c3f10152dc7400352bab0d",
         //   phone_number_id: "109639215462567",
