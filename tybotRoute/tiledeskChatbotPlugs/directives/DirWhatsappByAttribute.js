@@ -35,7 +35,7 @@ class DirWhatsappByAttribute {
     }
     console.log("whatsapp by attributes action: ", JSON.stringify(action))
     if (action.attributeName) {
-        console.log("attributeName:", attributeName);
+        console.log("attributeName:", action.attributeName);
         let attribute_value = null;
         if (this.context.tdcache) {
 
