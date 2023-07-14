@@ -39,7 +39,7 @@ class DirWhatsappByAttribute {
         let attribute_value = null;
         if (this.context.tdcache) {
 
-            const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, requestId, action.attributeName)
+            const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
             console.log("attribute_value:", attribute_value);
         // attribute_value = {
         //   id_project: "62c3f10152dc7400352bab0d",
