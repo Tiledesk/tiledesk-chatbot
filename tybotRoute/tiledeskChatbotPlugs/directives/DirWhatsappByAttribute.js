@@ -9,7 +9,6 @@ class DirWhatsappByAttribute {
     if (!context) {
       throw new Error('context object is mandatory');
     }
-    console.log("\n\nwhatsapp attributes context: ", context);
     this.context = context;
     this.log = context.log;
   }
@@ -32,15 +31,15 @@ class DirWhatsappByAttribute {
 
   async go(action, callback) {
     if (this.log) {
+      console.log("whatsapp by attributes action: ", JSON.stringify(action))
     }
-    console.log("whatsapp by attributes action: ", JSON.stringify(action))
     if (action.attributeName) {
-        console.log("attributeName:", action.attributeName);
+      if (this.log) {console.log("whatsapp attributeName:", action.attributeName);}
         let attribute_value = null;
         if (this.context.tdcache) {
 
             const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
-            console.log("attribute_value:", attribute_value);
+            if (this.log) {console.log("attribute_value:", JSON.stringify(attribute_value));}
         // attribute_value = {
         //   id_project: "62c3f10152dc7400352bab0d",
         //   phone_number_id: "109639215462567",
