@@ -75,6 +75,7 @@ class DirReply {
       if (this.log) {console.log("message before filters:", JSON.stringify(message));}
       if (message.attributes && message.attributes.commands) {
         if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
+        if (this.log) {console.log("filterOnVariables...on attributes", requestAttributes);}
         // TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestAttributes);
         TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }

@@ -66,10 +66,11 @@ class DirCode {
       // console.log("script_context.tiledeskVars:", script_context.tiledeskVars);
       for (const [key, value] of Object.entries(script_context.tiledeskVars.ops.set)) {
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
-        await variablesManager.set(key, value);
+        // await variablesManager.set(key, value);
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
       }
       // if (this.log) {
-        let newvars_set = await variablesManager.all();
+        // let newvars_set = await variablesManager.all();
         // console.log("newvars_set:", newvars_set);
       // }
       for (const [key, value] of Object.entries(script_context.tiledeskVars.ops.del)) {

@@ -539,8 +539,13 @@ class TiledeskChatbot {
 
   static async allParametersStatic(_tdcache, requestId) {
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
-    return await _tdcache.hgetall(
+    const attributes__as_string_map = await _tdcache.hgetall(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
+    let attributes_native_values = {};
+    for (const [key, value] of Object.entries(attributes__as_string_map)) {
+      attributes_native_values[key] = JSON.parse(value);
+    }
+    return attributes_native_values;
   }
 
   async allParametersInstance(_tdcache, requestId) {

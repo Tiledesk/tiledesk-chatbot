@@ -75,16 +75,15 @@ describe('Conversation for Intent JSON Attributes test', async () => {
         else {
           console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
-          assert(attributes["contact"] === "{\"name\":\"Andrea\",\"id\":\"UID90\"}");
-          assert(JSON.parse(attributes["contact"]).name === "Andrea");
-          assert(JSON.parse(attributes["contact"]).id === "UID90");
-          assert(attributes["payload_json"] === "{\"a\":\"1\",\"b\":2}")
-          assert(JSON.parse(attributes["payload_json"]).a === "1");
-          assert(JSON.parse(attributes["payload_json"]).b === 2);
-          assert(attributes["payload_string"] === "\"My lastname\"")
-          assert(JSON.parse(attributes["payload_string"]) === "My lastname");
-          assert(attributes["payload_number"] === "50")
-          assert(JSON.parse(attributes["payload_number"]) === 50);
+          assert(typeof attributes["contact"] === "object"); //"{\"name\":\"Andrea\",\"id\":\"UID90\"}");
+          assert(attributes["contact"].name === "Andrea");
+          assert(attributes["contact"].id === "UID90");
+          assert(typeof attributes["payload_json"] === "object"); // "{\"a\":\"1\",\"b\":2}")
+          assert(attributes["payload_json"].a === "1");
+          assert(attributes["payload_json"].b === 2);
+          assert(attributes["payload_string"] === "My lastname");
+          assert(attributes["payload_string"] === "My lastname");
+          assert(attributes["payload_number"] === 50);
           listener.close(() => {
             done();
           });
