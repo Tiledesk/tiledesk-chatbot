@@ -1,7 +1,8 @@
 const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
-const whatsapp_api_url = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
+// const whatsapp_api_url = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
+let whatsapp_api_url;
 
 class DirWhatsappByAttribute {
 
@@ -33,39 +34,23 @@ class DirWhatsappByAttribute {
     if (this.log) {
       console.log("whatsapp by attributes action: ", JSON.stringify(action))
     }
+
+    if (process.env.API_URL) {
+      whatsapp_api_url = process.env.API_URL + "/modules/whatsapp";
+      console.log("(Tilebot) DirWhatsappByAttribute whatsapp_api_url: ", whatsapp_api_url);
+    } else {
+      console.error("(Tilebot) Missing whatsapp_api_url. Unable to use action WhatsApp By Attributes");
+      callback();
+      return;
+    }
+
     if (action.attributeName) {
       if (this.log) {console.log("whatsapp attributeName:", action.attributeName);}
         let attribute_value = null;
         if (this.context.tdcache) {
 
-            const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
-            if (this.log) {console.log("attribute_value:", JSON.stringify(attribute_value));}
-        // attribute_value = {
-        //   id_project: "62c3f10152dc7400352bab0d",
-        //   phone_number_id: "109639215462567",
-        //   template: {
-        //     language: "it",
-        //     name: "promo_mensile"
-        //   },
-        //   receiver_list: [
-        //     {
-        //       phone_number: "393484506627",
-        //       header_params: [
-        //         "https://www.eurofoodservice.it/8803-medium_default/jalapenos-cheddar-5pzx1kgcgm.jpg"
-        //       ],
-        //       body_params: [
-        //         "Giovanni",
-        //         "Maggio",
-        //         "JALAPENOS CHEDDAR 5PZX1KG(CGM)",
-        //         "24,99",
-        //         "29,99"
-        //       ],
-        //       buttons_params: [
-        //         "?user=giovanni123456"
-        //       ]
-        //     }
-        //   ]
-        // }
+        const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
+        if (this.log) {console.log("attribute_value:", JSON.stringify(attribute_value));}
 
         const URL = whatsapp_api_url + '/tiledesk/broadcast';
         const HTTPREQUEST = {
