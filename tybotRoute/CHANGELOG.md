@@ -5,11 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.91
+- Added control for attribute_value null in DirWhatsappByAttribute
+
 ### 0.1.90
 - Added support for JSON/Number/string parameters in /intent[] invocation
 - Added support for JSON/Number/string parameters in attributes.payload invocation
 - Added DirWhatsappByAttribute
-- Test external process.env
+- Test external process.env (PASSED)
 
 ### 0.1.89
 - DirWebRequest: fixed sending data: 'null'
