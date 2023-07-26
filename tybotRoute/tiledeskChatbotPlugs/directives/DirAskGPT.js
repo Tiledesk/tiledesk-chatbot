@@ -1,74 +1,67 @@
-let axios = require('axios');
-let https = require("https");
-const { Filler } = require('../Filler');
+const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
 
-class DirWebRequest {
+const GPT_URL = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
+
+class DirAskGPT {
+
   constructor(context) {
     if (!context) {
-      throw new Error('context object is mandatory.');
+      throw new Error('context object is mandatory');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
     this.log = context.log;
   }
 
   execute(directive, callback) {
+    console.log("AskGPT directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      console.error("Incorrect directive: ", JSON.stringify(directive));
       callback();
       return;
     }
     this.go(action, () => {
       callback();
-    });
+    })
   }
 
   async go(action, callback) {
     if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
     let requestVariables = null;
-    if (this.tdcache) {
-      requestVariables = 
-      await TiledeskChatbot.allParametersStatic(
-        this.tdcache, this.requestId
-      );
+    if (!this.tdcache) {
+      console.error("DirAskGPT tdcache is mandatory");
+      callback();
+      return;
     }
-    const filler = new Filler();
-    const url = filler.fill(action.url, requestVariables);
 
-    let headers = {};
-    if (action.headersString) {
-      let headersDict = action.headersString
-      for (const [key, value] of Object.entries(headersDict)) {
-        if (this.log) {console.log("header:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestVariables);
-        headers[key] = filled_value;
-      }
+    if (!action.questionAttribute) {
+      console.error("DirAskGPT questionAttribute is mandatory");
+      callback();
+      return;
     }
-    let json = null;
-    if (action.jsonBody && action.jsonBody !== "{}") {
-      let jsonBody = filler.fill(action.jsonBody, requestVariables);
-      try {
-        json = JSON.parse(jsonBody);
-      }
-      catch(err) {
-        console.error("Error parsing webRequest jsonBody:", jsonBody);
-      }
+
+    if (!action.assignToAttribute) {
+      console.error("DirAskGPT assignToAttribute is mandatory");
+      callback();
+      return;
     }
+   
+    const question = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, action.questionAttribute);
     
-    if (this.log) {console.log("webRequest URL", url);}
+    let json = {
+      "question": question
+    };
+    
+    const url = "https://tiledesk-playground.azurewebsites.net/api/qa";
+    if (this.log) {console.log("DirAskGPT URL", url);}
     const HTTPREQUEST = {
       url: url,
-      headers: headers,
       json: json,
-      method: action.method
+      method: "POST"
     };
     if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
     this.myrequest(
@@ -81,15 +74,18 @@ class DirWebRequest {
           }
         }
         else if (callback) {
-          if (action.assignTo && this.context.tdcache && resbody) { // DEPRECATED
+          if (action.assignTo && this.context.tdcache && resbody) {
+            // {
+            //   "answer": "I don't know.",
+            //   "source_url": null
+            // }
             if (this.log) {console.log("(webRequest) this.requestId:", this.context.requestId);}
             let attributes =
               await TiledeskChatbot.allParametersStatic(
                 this.context.tdcache, this.context.requestId);
             // filling
             let attributeValue;
-            const filler = new Filler();
-            attributeValue = filler.fill(resbody, attributes);
+            
             if (this.log) {console.log("(webRequest) Attributes:", JSON.stringify(attributes));}
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignTo, attributeValue);
             if (this.log) {
@@ -196,6 +192,7 @@ class DirWebRequest {
       }
     });
   }
+
 }
 
-module.exports = { DirWebRequest };
+module.exports = { DirAskGPT }
