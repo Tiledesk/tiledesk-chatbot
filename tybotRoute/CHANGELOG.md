@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.92
+- Added AskGPT action
+
 ### 0.1.91
 - Added control for attribute_value null in DirWhatsappByAttribute
 
