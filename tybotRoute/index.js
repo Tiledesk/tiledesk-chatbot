@@ -127,6 +127,7 @@ router.post('/ext/:botid', async (req, res) => {
   //   intentsMachine = {}
   // }
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
+  console.log("the bot is:", bot)
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     intentsFinder: intentsMachine,

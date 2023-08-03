@@ -14,6 +14,7 @@ class MockBotsDataSource {
   async getBotById(botId) {
     const bot = {
       webhook_enabled: this.data.bots[botId].webhook_enabled,
+      webhook_url: this.data.bots[botId].webhook_url,
       language: this.data.bots[botId].language,
       name: this.data.bots[botId].name
     }

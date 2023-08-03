@@ -641,9 +641,6 @@ class TiledeskChatbot {
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
     messagePipeline.addPlug(new WebhookChatbotPlug(userMessage.request, webhookurl, this.token, this.log));
-    //messagePipeline.addPlug(directivesPlug);
-    //messagePipeline.addPlug(new SplitsChatbotPlug(log));
-    //messagePipeline.addPlug(new MarkbotChatbotPlug(log));
     const bot_answer = await messagePipeline.exec();
     //if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
