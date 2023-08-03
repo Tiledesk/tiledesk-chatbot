@@ -567,7 +567,8 @@ router.post('/echobot', (req, res) => {
 });
 
 async function startApp(settings, completionCallback) {
-  console.log("Starting Tilebot with Settings:", settings);
+  console.log("Starting Tilebot...");
+  //console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
