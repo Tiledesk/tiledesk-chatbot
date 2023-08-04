@@ -7,7 +7,7 @@ available on:
 
 ### 0.1.92 (in progress)
 - Added AskGPT action
-- Fix: added webhook_url to bot removed some bad console.log added test for webhooks
+- fix: added webhook_url to bot removed some bad console.log added test for webhooks
 
 ### 0.1.91
 - Added control for attribute_value null in DirWhatsappByAttribute

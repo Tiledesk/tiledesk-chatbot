@@ -2,6 +2,7 @@ const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
+require('dotenv').config();
 
 const GPT_URL = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
 
