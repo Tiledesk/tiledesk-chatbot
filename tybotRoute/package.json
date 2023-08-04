@@ -15,6 +15,7 @@
     "@tiledesk/tiledesk-chatbot-client": "^0.5.30",
     "@tiledesk/tiledesk-chatbot-util": "^0.8.39",
     "@tiledesk/tiledesk-client": "^0.10.2",
+    "accept-language-parser": "^1.5.0",
     "axios": "^0.27.2",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -28,8 +29,7 @@
     "nanoid": "^3.1.25",
     "redis": "^3.1.2",
     "uuid": "^3.3.3",
-    "vm2": "^3.9.13",
-    "accept-language-parser": "^1.5.0"
+    "vm2": "^3.9.13"
   },
   "devDependencies": {
     "mocha": "^8.4.0"
