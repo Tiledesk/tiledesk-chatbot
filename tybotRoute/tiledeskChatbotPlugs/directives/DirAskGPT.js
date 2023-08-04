@@ -97,8 +97,8 @@ class DirAskGPT {
           console.log("assignReplyTo", action.assignReplyTo);
           console.log("assignSourceTo", action.assignSourceTo);
           console.log("assignSuccessTo", action.assignSuccessTo);
-          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, resbody.reply);
-          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, resbody.source);
+          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, resbody.answer);
+          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, resbody.source_url);
           if (resbody && resbody.success != undefined) {
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSuccessTo, resbody.success.toString());
           }
