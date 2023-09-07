@@ -85,7 +85,6 @@ describe('Conversation for JSONCondition test', async () => {
           console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
-          assert(attributes["gpt_success"] === "true");
           listener.close(() => {
             done();
           });
@@ -112,9 +111,9 @@ describe('Conversation for JSONCondition test', async () => {
       }
       else {
         reply = {
-          reply: "this is mock gpt reply",
+          answer: "this is mock gpt reply",
           success: true,
-          source: "http://test"
+          source_url: "http://test"
         }
       }
 
@@ -169,7 +168,6 @@ describe('Conversation for JSONCondition test', async () => {
           console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
-          assert(attributes["gpt_success"] === "false");
           listener.close(() => {
             done();
           });
@@ -196,7 +194,7 @@ describe('Conversation for JSONCondition test', async () => {
       }
       else {
         reply = {
-          reply: "No answers",
+          answer: "No answers",
           success: false
         }
       }

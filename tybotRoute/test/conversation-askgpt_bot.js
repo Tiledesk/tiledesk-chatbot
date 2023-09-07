@@ -7,14 +7,17 @@ const bot = {
 	{
 		"webhook_enabled": false,
 		"enabled": true,
+		"language": "en",
+		"intent_display_name": "gpt success",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": "",
 		"actions": [{
 			"_tdActionType": "askgpt",
 			"_tdActionTitle": "gpt action",
 			"assignReplyTo": "gpt_reply",
 			"assignSourceTo": "gpt_source",
-			"assignSuccessTo": "gpt_success",
-			"gptkey": "${gpt_key}",
-			"kbid": "${gpt_key}",
+			"kbid": "XXX",
 			"question": "this is the question: ${last_user_message}"
 		}, {
 			"_tdActionType": "reply",
@@ -31,12 +34,7 @@ const bot = {
 					}
 				}]
 			}
-		}],
-		"language": "en",
-		"intent_display_name": "gpt success",
-		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-		"form": {},
-		"question": ""
+		}]
 	},
 	{
 		"webhook_enabled": false,

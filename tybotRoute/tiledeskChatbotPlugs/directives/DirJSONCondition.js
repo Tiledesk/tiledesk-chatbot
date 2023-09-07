@@ -122,7 +122,7 @@ class DirJSONCondition {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
           // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
-          callback(stopOnConditionMet);
+          callback(stopOnConditionMet); // TODO should be always be false!
         });
       }
       else {

@@ -15,6 +15,7 @@ class Directives {
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
   static SEND_EMAIL = "email";
   static WEB_REQUEST = "webrequest";
+  static WEB_REQUEST_V2 = "webrequestv2";
   static DELETE = "delete";
   static IF_OPEN_HOURS = "ifopenhours";
   static IF_ONLINE_AGENTS = "ifonlineagents";

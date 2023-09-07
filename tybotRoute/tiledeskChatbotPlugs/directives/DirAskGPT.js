@@ -54,12 +54,6 @@ class DirAskGPT {
       return;
     }
 
-    if (!action.gptkey) {
-      console.error("Error: DirAskGPT gptkey is mandatory");
-      callback();
-      return;
-    }
-
     let requestVariables = null;
     requestVariables = 
       await TiledeskChatbot.allParametersStatic(
@@ -69,12 +63,14 @@ class DirAskGPT {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     
+    // get gptkey con servizio (token chatbot) con un servizio la myrequest...
+
     let json = {
       "question": filled_question,
       "kbid": action.kbid,
-      "gptkey": action.gptkey
+      "gptkey": "ABCD"
     };
-    console.log("question_gpt:", json);
+    if (this.log) {console.log("question_gpt:", json);}
     
     const url = process.env.GPT_ENDPOINT; //"https://tiledesk-playground.azurewebsites.net/api/qa"; // TODO INSERIRE IN ENV
     if (this.log) {console.log("DirAskGPT URL", url);}
@@ -94,13 +90,18 @@ class DirAskGPT {
           }
         }
         else if (callback) {
-          console.log("assignReplyTo", action.assignReplyTo);
-          console.log("assignSourceTo", action.assignSourceTo);
-          console.log("assignSuccessTo", action.assignSuccessTo);
-          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, resbody.answer);
-          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, resbody.source_url);
-          if (resbody && resbody.success != undefined) {
-            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSuccessTo, resbody.success.toString());
+          if (this.log) {
+            console.log("resbody", resbody);
+            console.log("this.context.requestId", this.context.requestId);
+            console.log("callback", callback);
+            console.log("assignReplyTo", action.assignReplyTo);
+            console.log("assignSourceTo", action.assignSourceTo);
+          }
+          if (action.assignReplyTo) {
+            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, resbody.answer);
+          }
+          if (action.assignSourceTo) {
+            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, resbody.source_url);
           }
           if (this.log) {
             console.log("All AskGPT new paramenters:", await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId));

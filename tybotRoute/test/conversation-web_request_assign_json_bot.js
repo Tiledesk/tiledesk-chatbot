@@ -114,8 +114,6 @@ const bot = {
 // normalize the bot structure for the static intent search
 let intents = bot.intents;
 delete bot.intents;
-// console.log ("bot still is", JSON.stringify(bot));
-// console.log ("bintents still are", intents[0]);
 let intents_dict_by_display_name = {};
 for (let i = 0; i < intents.length; i++) {
 	intents_dict_by_display_name[intents[i].intent_display_name] = intents[i];
