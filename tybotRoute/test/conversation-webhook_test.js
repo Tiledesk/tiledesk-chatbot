@@ -64,15 +64,15 @@ describe('Conversation for Webhook test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start got reply ...req.body:", JSON.stringify(req.body));
+      // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
-      console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-      console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
+      // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
+      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      console.log("command2", command2);
+      // console.log("command2", command2);
       assert(command2.type === "message");
       assert(command2.message.type === "frame");
       listener.close(() => {
@@ -82,7 +82,7 @@ describe('Conversation for Webhook test', async () => {
     });
 
     endpointServer.post('/bot', function (req, res) {
-      console.log("/bot req.body:", JSON.stringify(req.body));
+      // console.log("/bot req.body:", JSON.stringify(req.body));
       // const reply = {
       //   type: "image",
       //   metadata: {

@@ -53,13 +53,13 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/coding{"name", "Andrea"}', (done) => {
-    console.log("/coding");
+    // console.log("/coding");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/coding ...req.body:", JSON.stringify(req.body));
+      // console.log("/coding ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -73,7 +73,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["name"] === "Andrea");
           assert(attributes["lastname"] === "Sponziello");

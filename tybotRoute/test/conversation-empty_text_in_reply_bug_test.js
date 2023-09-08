@@ -59,7 +59,7 @@ describe('Conversation for test text empty bug', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start (text is empty bug) ...req.body:", JSON.stringify(req.body));
+      // console.log("/start (text is empty bug) ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.text == "Hi, how can I help you?");

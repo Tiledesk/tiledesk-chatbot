@@ -65,15 +65,15 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start got reply ...req.body:", JSON.stringify(req.body));
+      // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
-      console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-      console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
+      // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
+      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      console.log("command2", command2);
+      // console.log("command2", command2);
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is mock gpt reply");
 
@@ -82,7 +82,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -94,7 +94,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
 
     endpointServer.post('/api/qa', function (req, res) {
-      console.log("/api/qa req.body:", JSON.stringify(req.body));
+      // console.log("/api/qa req.body:", JSON.stringify(req.body));
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {
@@ -148,15 +148,15 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start got reply ...req.body:", JSON.stringify(req.body));
+      // console.log("/gpt fail ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
-      console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-      console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
+      // console.log("/gpt fail ...message.attributes:", JSON.stringify(message.attributes));
+      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      console.log("command2", command2);
+      // console.log("command2", command2);
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
 
@@ -177,7 +177,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
 
     endpointServer.post('/api/qa', function (req, res) {
-      console.log("/api/qa req.body:", JSON.stringify(req.body));
+      // console.log("/api/qa req.body:", JSON.stringify(req.body));
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {

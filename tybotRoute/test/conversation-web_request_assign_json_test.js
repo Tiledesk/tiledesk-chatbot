@@ -59,7 +59,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      console.log("/webrequest_with_assignments GET req.headers:", req.headers);
+      // console.log("/webrequest_with_assignments GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -140,7 +140,7 @@ describe('Conversation for JSONCondition test', async () => {
       res.send(data);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("get traking order status from remote JSON ...req.body:", JSON.stringify(req.body));
+      // console.log("get traking order status from remote JSON ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -205,7 +205,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      console.log("/webrequest_with_assignments GET req.headers:", req.headers);
+      // console.log("/webrequest_with_assignments GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -218,7 +218,7 @@ describe('Conversation for JSONCondition test', async () => {
       res.send(data);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("get traking order status from remote JSON - track number NOT found ...req.body:", JSON.stringify(req.body));
+      // console.log("get traking order status from remote JSON - track number NOT found ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -232,7 +232,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["qapla_track_num"] === "1234");
           listener.close(() => {

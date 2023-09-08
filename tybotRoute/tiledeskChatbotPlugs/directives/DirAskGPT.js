@@ -19,7 +19,7 @@ class DirAskGPT {
   }
 
   execute(directive, callback) {
-    console.log("AskGPT directive: ", directive);
+    if (this.log) {console.log("AskGPT directive: ", directive);}
     let action;
     if (directive.action) {
       action = directive.action;

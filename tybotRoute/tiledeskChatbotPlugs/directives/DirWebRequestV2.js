@@ -91,9 +91,7 @@ class DirWebRequestV2 {
         if (this.log && err) {
           console.log("webRequest error:", err);
         }
-        if (this.log) {
-          console.log("got res:", res);
-        }
+        if (this.log) {console.log("got res:", res);}
         let resbody = res.data;
         let status = res.status;
         let error = res.error;
@@ -108,13 +106,11 @@ class DirWebRequestV2 {
           }
         }
         else if(res.status >= 200 && res.status <= 299) {
-          console.log("success...")
           await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
             callback(stopOnConditionMet); // stop the flow
           });
         }
         else {
-          console.log("failure...")
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
             callback(false); // continue the flow
           });

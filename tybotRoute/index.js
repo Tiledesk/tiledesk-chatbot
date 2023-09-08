@@ -127,7 +127,7 @@ router.post('/ext/:botid', async (req, res) => {
   //   intentsMachine = {}
   // }
   //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
-  console.log("the bot is:", bot)
+  // console.log("the bot is:", bot)
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     intentsFinder: intentsMachine,
@@ -474,8 +474,6 @@ router.get('/message/context/:messageid', async (req, res) => {
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
-  // console.log("parameters:", parameters);
-  // console.log("req.query.all:", req.query.all);
   if (req.query.all != null) {
     res.send(parameters);
   }

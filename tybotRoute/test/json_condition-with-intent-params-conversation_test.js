@@ -53,7 +53,7 @@ describe('Conversation for JSONCondition with intent params test', async () => {
   });
 
   it('/condition with params{"star_type":"supernova"}', (done) => {
-    console.log('/condition with params{"star_type":"supernova"}');
+    // console.log('/condition with params{"star_type":"supernova"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -112,13 +112,13 @@ describe('Conversation for JSONCondition with intent params test', async () => {
   });
 
   it('/condition with params{"star_type":"nebula"}', (done) => {
-    console.log('/condition with params{"star_type":"nebula"}');
+    // console.log('/condition with params{"star_type":"nebula"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/condition ...req.body:", JSON.stringify(req.body));
+      // console.log("/condition ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.intentName !== null);

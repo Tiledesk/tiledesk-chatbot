@@ -59,7 +59,7 @@ describe('Conversation for Intent JSON Attributes test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
+      // console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -73,7 +73,7 @@ describe('Conversation for Intent JSON Attributes test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(typeof attributes["contact"] === "object"); //"{\"name\":\"Andrea\",\"id\":\"UID90\"}");
           assert(attributes["contact"].name === "Andrea");

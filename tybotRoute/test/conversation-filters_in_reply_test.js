@@ -59,7 +59,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
+      // console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -73,7 +73,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["user_language"] === "it");
           listener.close(() => {
@@ -124,7 +124,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/start 'en' ...req.body:", JSON.stringify(req.body));
+      // console.log("/start 'en' ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -138,7 +138,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["user_language"] === "en");
           listener.close(() => {
@@ -183,13 +183,13 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/http_lang (request[language]): it', (done) => {
-    console.log('/http_lang (request[language])');
+    // console.log('/http_lang (request[language])');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
+      // console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -203,7 +203,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["user_language"] === "it");
           listener.close(() => {
@@ -249,13 +249,13 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/http_lang (request[language]): en', (done) => {
-    console.log('/http_lang (request[language])');
+    // console.log('/http_lang (request[language])');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
+      // console.log("/http_lang (request[language]) ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -321,7 +321,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/jovana 'en'...req.body:", JSON.stringify(req.body));
+      // console.log("/jovana 'en'...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -335,7 +335,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["user_language"] === "en");
           listener.close(() => {
@@ -386,7 +386,7 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/jovana 'it'...req.body:", JSON.stringify(req.body));
+      // console.log("/jovana 'it'...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -400,7 +400,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["user_language"] === "it");
           listener.close(() => {
