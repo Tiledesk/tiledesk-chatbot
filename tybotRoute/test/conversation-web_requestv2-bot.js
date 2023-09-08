@@ -35,11 +35,11 @@ const bot = {
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "result assigned to: ${var1} status assigned to: ${status1}"
+						"text": "result assigned to: {{var1}} status assigned to: {{status1}}"
 					}
 				}]
 			},
-			"text": "result assigned to: ${var1} status assigned to: ${status1}"
+			"text": "..."
 		}]
 	}, {
 		"webhook_enabled": false,
@@ -178,7 +178,7 @@ const bot = {
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "HTTP GET Failure with status ${status} error ${error}"
+						"text": "HTTP GET Failure with status {{status}} error {{error}}"
 					}
 				}]
 			},
