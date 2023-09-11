@@ -243,7 +243,7 @@ class DirAskGPT {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", JSON.stringify(error));
+      console.error("An error occurred:", JSON.stringify(error.data));
       if (callback) {
         callback(error, null);
       }
