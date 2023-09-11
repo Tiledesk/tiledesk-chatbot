@@ -72,7 +72,7 @@ class DirAskGPT {
       url: kb_url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': this.context.token
+        'Authorization': 'JWT ' + this.context.token
       },
       method: "GET"
     }
