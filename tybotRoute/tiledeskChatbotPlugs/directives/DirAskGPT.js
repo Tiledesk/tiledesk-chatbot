@@ -63,11 +63,17 @@ class DirAskGPT {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
+    console.log("context: ", this.context);
+
     // get gptkey con servizio (token chatbot) con un servizio la myrequest...
     const kb_url = process.env.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings";
     if (this.log) {console.log("ApiEndpoint URL: ", kb_url);}
     const KB_HTTPREQUEST = {
       url: kb_url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': this.context.token
+      },
       method: "GET"
     }
     if (this.log) {console.log("AskGPT KB_HTTPREQUEST", KB_HTTPREQUEST);}
