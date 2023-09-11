@@ -19,7 +19,7 @@ class DirAskGPT {
   }
 
   execute(directive, callback) {
-    if (this.log) {console.log("AskGPT directive: ", directive);}
+    if (this.log) { console.log("AskGPT directive: ", directive); }
     let action;
     if (directive.action) {
       action = directive.action;
@@ -35,7 +35,7 @@ class DirAskGPT {
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("AskGPT action:", JSON.stringify(action));}
+    if (this.log) { console.log("AskGPT action:", JSON.stringify(action)); }
     if (!this.tdcache) {
       console.error("Error: DirAskGPT tdcache is mandatory");
       callback();
@@ -55,19 +55,28 @@ class DirAskGPT {
     }
 
     let requestVariables = null;
-    requestVariables = 
+    requestVariables =
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-    
+
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    console.log("context: ", this.context);
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    let trueIntentAttributes = action.trueIntentAttributes;
+    let falseIntentAttributes = action.falseIntentAttributes;
 
-    // get gptkey con servizio (token chatbot) con un servizio la myrequest...
+    if (this.log) {
+      console.log("trueIntent",trueIntent )
+      console.log("falseIntent",falseIntent )
+      console.log("trueIntentAttributes",trueIntentAttributes )
+      console.log("falseIntentAttributes",falseIntentAttributes )
+    }
+
     const kb_url = process.env.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings";
-    if (this.log) {console.log("ApiEndpoint URL: ", kb_url);}
+    if (this.log) { console.log("ApiEndpoint URL: ", kb_url); }
     const KB_HTTPREQUEST = {
       url: kb_url,
       headers: {
@@ -76,21 +85,35 @@ class DirAskGPT {
       },
       method: "GET"
     }
-    if (this.log) {console.log("AskGPT KB_HTTPREQUEST", KB_HTTPREQUEST);}
+    if (this.log) { console.log("AskGPT KB_HTTPREQUEST", KB_HTTPREQUEST); }
 
     this.myrequest(
       KB_HTTPREQUEST, async (err, resbody) => {
-        if (this.log) {console.log("AskGPT resbody:", resbody);}
+        if (this.log) { console.log("AskGPT resbody:", resbody); }
         if (err) {
-          if (this.log) {console.error("AskGPT error:", err);}
+          if (this.log) { console.error("AskGPT error:", err); }
           if (callback) {
-            callback();
+            let answer = "No answers";
+            let source = null;
+            await this.#assignAttributes(action, answer, source);
+            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(false); // continue the flow
+            });
           }
         } else if (callback) {
-            if (this.log) {
-              console.log("resbody", resbody);
-              console.log("gptkey", resbody.gptkey);
-            }
+          if (this.log) {
+            console.log("resbody", resbody);
+            console.log("gptkey", resbody.gptkey);
+          }
+
+          if (!resbody.gptkey) {
+            let answer = "No answers";
+            let source = "no source";
+            await this.#assignAttributes(action, answer, source);
+            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(false); // continue the flow
+            });
+          } else {
             let json = {
               "question": filled_question,
               "kbid": action.kbid,
@@ -116,18 +139,6 @@ class DirAskGPT {
                 let source = resbody.source_url;
                 await this.#assignAttributes(action, answer, source);
 
-                let trueIntent = action.trueIntent;
-                let falseIntent = action.falseIntent;
-                let trueIntentAttributes = action.trueIntentAttributes;
-                let falseIntentAttributes = action.falseIntentAttributes;
-
-                if (this.log) {
-                  console.log("trueIntent",trueIntent )
-                  console.log("falseIntent",falseIntent )
-                  console.log("trueIntentAttributes",trueIntentAttributes )
-                  console.log("falseIntentAttributes",falseIntentAttributes )
-                }
-
                 if (err) {
                   if (callback) {
                     this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
@@ -148,6 +159,7 @@ class DirAskGPT {
               }
             )
           }
+        }
       }
     )
   }
@@ -166,9 +178,9 @@ class DirAskGPT {
         this.intentDir.execute(trueIntentDirective, () => {
           callback();
         })
-      } 
+      }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        if (this.log) { console.log("No trueIntentDirective specified"); }
         callback();
       }
     }
@@ -179,7 +191,7 @@ class DirAskGPT {
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        if (this.log) { console.log("No falseIntentDirective specified"); }
         callback();
       }
     }
@@ -195,14 +207,17 @@ class DirAskGPT {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
-      if (action.assignSourceTo) {
+      console.log("--> action.assignSourceTo: ", action.assignSourceTo)
+      console.log("--> source: ", source)
+      if (action.assignSourceTo && source) {
+        console.log("--> source: ", source)
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       }
       // Debug log
       if (this.log) {
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) {console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value)}
+          if (this.log) { console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value) }
         }
       }
     }
@@ -232,28 +247,28 @@ class DirAskGPT {
       axios_options.httpsAgent = httpsAgent;
     }
     axios(axios_options)
-    .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
+      .then((res) => {
+        if (this.log) {
+          console.log("Response for url:", options.url);
+          console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-      }
-      else {
-        if (callback) {
-          callback(new Error("Response status is not 200"), null);
+        if (res && res.status == 200 && res.data) {
+          if (callback) {
+            callback(null, res.data);
+          }
         }
-      }
-    })
-    .catch( (error) => {
-      console.error("An error occurred:", JSON.stringify(error.data));
-      if (callback) {
-        callback(error, null);
-      }
-    });
+        else {
+          if (callback) {
+            callback(new Error("Response status is not 200"), null);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("An error occurred:", JSON.stringify(error.data));
+        if (callback) {
+          callback(error, null);
+        }
+      });
   }
 
 }
