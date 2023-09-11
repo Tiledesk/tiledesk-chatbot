@@ -2,9 +2,8 @@ const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
+const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
-
-const GPT_URL = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
 
 class DirAskGPT {
 
@@ -15,6 +14,7 @@ class DirAskGPT {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.intentDir = new DirIntent(context);
     this.log = context.log;
   }
 
@@ -35,7 +35,7 @@ class DirAskGPT {
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
+    if (this.log) {console.log("AskGPT action:", JSON.stringify(action));}
     if (!this.tdcache) {
       console.error("Error: DirAskGPT tdcache is mandatory");
       callback();
@@ -62,54 +62,144 @@ class DirAskGPT {
     
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
-    
-    // get gptkey con servizio (token chatbot) con un servizio la myrequest...
 
-    let json = {
-      "question": filled_question,
-      "kbid": action.kbid,
-      "gptkey": "ABCD"
-    };
-    if (this.log) {console.log("question_gpt:", json);}
-    
-    const url = process.env.GPT_ENDPOINT; //"https://tiledesk-playground.azurewebsites.net/api/qa"; // TODO INSERIRE IN ENV
-    if (this.log) {console.log("DirAskGPT URL", url);}
-    const HTTPREQUEST = {
-      url: url,
-      json: json,
-      method: "POST"
-    };
-    if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
+    // get gptkey con servizio (token chatbot) con un servizio la myrequest...
+    const kb_url = process.env.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings";
+    if (this.log) {console.log("ApiEndpoint URL: ", kb_url);}
+    const KB_HTTPREQUEST = {
+      url: kb_url,
+      method: "GET"
+    }
+    if (this.log) {console.log("AskGPT KB_HTTPREQUEST", KB_HTTPREQUEST);}
+
     this.myrequest(
-      HTTPREQUEST, async (err, resbody) => {
-        if (this.log) {console.log("webRequest resbody:", resbody);}
+      KB_HTTPREQUEST, async (err, resbody) => {
+        if (this.log) {console.log("AskGPT resbody:", resbody);}
         if (err) {
-          if (this.log) {console.error("webRequest error:", err);}
+          if (this.log) {console.error("AskGPT error:", err);}
           if (callback) {
             callback();
           }
-        }
-        else if (callback) {
-          if (this.log) {
-            console.log("resbody", resbody);
-            console.log("this.context.requestId", this.context.requestId);
-            console.log("callback", callback);
-            console.log("assignReplyTo", action.assignReplyTo);
-            console.log("assignSourceTo", action.assignSourceTo);
+        } else if (callback) {
+            if (this.log) {
+              console.log("resbody", resbody);
+              console.log("gptkey", resbody.gptkey);
+            }
+            let json = {
+              "question": filled_question,
+              "kbid": action.kbid,
+              "gptkey": resbody.gptkey
+            };
+            if (this.log) {console.log("question_gpt:", json);}
+
+            const url = process.env.GPT_ENDPOINT; //"https://tiledesk-playground.azurewebsites.net/api/qa"; // TODO INSERIRE IN ENV
+            if (this.log) {console.log("DirAskGPT URL", url);}
+            const HTTPREQUEST = {
+              url: url,
+              json: json,
+              method: "POST"
+            }
+            if (this.log) {console.log("AskGPT HTTPREQUEST", HTTPREQUEST);}
+            this.myrequest(
+              HTTPREQUEST, async (err, resbody) => {
+                if (this.log && err) {
+                  console.log("AskGPT error: ", err);
+                }
+                if (this.log) {console.log("AskGPT resbody:", resbody);}
+                let answer = resbody.answer;
+                let source = resbody.source_url;
+                await this.#assignAttributes(action, answer, source);
+
+                let trueIntent = action.trueIntent;
+                let falseIntent = action.falseIntent;
+                let trueIntentAttributes = action.trueIntentAttributes;
+                let falseIntentAttributes = action.falseIntentAttributes;
+
+                if (this.log) {
+                  console.log("trueIntent",trueIntent )
+                  console.log("falseIntent",falseIntent )
+                  console.log("trueIntentAttributes",trueIntentAttributes )
+                  console.log("falseIntentAttributes",falseIntentAttributes )
+                }
+
+                if (err) {
+                  if (callback) {
+                    this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                      callback(false); // continue the flow
+                    });
+                  }
+                } 
+                else if (resbody.success === true) {
+                  
+                  await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                    callback(); // stop the flow
+                  })
+                } else { //resbody.success === false
+                  await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                    callback(false); // stop the flow
+                  })
+                }
+              }
+            )
           }
-          if (action.assignReplyTo) {
-            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, resbody.answer);
-          }
-          if (action.assignSourceTo) {
-            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, resbody.source_url);
-          }
-          if (this.log) {
-            console.log("All AskGPT new paramenters:", await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId));
-          }
+      }
+    )
+  }
+
+  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    let trueIntentDirective = null;
+    if (trueIntent) {
+      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+    }
+    let falseIntentDirective = null;
+    if (falseIntent) {
+      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+    }
+    if (result === true) {
+      if (trueIntentDirective) {
+        this.intentDir.execute(trueIntentDirective, () => {
           callback();
+        })
+      } 
+      else {
+        if (this.log) {console.log("No trueIntentDirective specified");}
+        callback();
+      }
+    }
+    else {
+      if (falseIntentDirective) {
+        this.intentDir.execute(falseIntentDirective, () => {
+          callback();
+        });
+      }
+      else {
+        if (this.log) {console.log("No falseIntentDirective specified");}
+        callback();
+      }
+    }
+  }
+
+  async #assignAttributes(action, answer, source) {
+    if (this.log) {
+      console.log("assignAttributes action:", action)
+      console.log("assignAttributes answer:", answer)
+      console.log("assignAttributes source:", source)
+    }
+    if (this.context.tdcache) {
+      if (action.assignReplyTo && answer) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
+      }
+      if (action.assignSourceTo) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
+      }
+      // Debug log
+      if (this.log) {
+        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+        for (const [key, value] of Object.entries(all_parameters)) {
+          if (this.log) {console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value)}
         }
       }
-    );
+    }
   }
 
   myrequest(options, callback) {

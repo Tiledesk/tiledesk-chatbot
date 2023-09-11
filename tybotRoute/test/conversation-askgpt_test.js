@@ -12,7 +12,6 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const bots_data = require('./conversation-askgpt_bot.js').bots_data;
-// console.log("bots_data", bots_data)
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
@@ -65,12 +64,9 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
-      // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       // console.log("command2", command2);
@@ -120,6 +116,14 @@ describe('Conversation for JSONCondition test', async () => {
       res.status(http_code).send(reply);
     });
 
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
       let request = {
@@ -148,12 +152,9 @@ describe('Conversation for JSONCondition test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/gpt fail ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
-      // console.log("/gpt fail ...message.attributes:", JSON.stringify(message.attributes));
-      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       // console.log("command2", command2);
@@ -165,7 +166,7 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
+          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -201,6 +202,15 @@ describe('Conversation for JSONCondition test', async () => {
 
       res.status(http_code).send(reply);
     });
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());

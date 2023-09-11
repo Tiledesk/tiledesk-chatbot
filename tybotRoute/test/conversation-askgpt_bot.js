@@ -18,22 +18,9 @@ const bot = {
 			"assignReplyTo": "gpt_reply",
 			"assignSourceTo": "gpt_source",
 			"kbid": "XXX",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
 			"question": "this is the question: ${last_user_message}"
-		}, {
-			"_tdActionType": "reply",
-			"text": "xxx",
-			"attributes": {
-				"commands": [{
-					"type": "wait",
-					"time": 500
-				}, {
-					"type": "message",
-					"message": {
-						"type": "text",
-						"text": "gpt replied: ${gpt_reply}"
-					}
-				}]
-			}
 		}]
 	},
 	{
@@ -44,11 +31,22 @@ const bot = {
 			"_tdActionTitle": "gpt action failed",
 			"assignReplyTo": "gpt_reply",
 			"assignSourceTo": "gpt_source",
-			"assignSuccessTo": "gpt_success",
-			"gptkey": "xxx",
 			"kbid": "kb1",
-			"question": "this is the question: ${last_user_message}"
-		}, {
+			"question": "this is the question: ${last_user_message}",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
+		}],
+		"language": "en",
+		"intent_display_name": "gpt fail",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": ""
+	}, 
+	{
+		// TRUE INTENT
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
 			"_tdActionType": "reply",
 			"text": "xxx",
 			"attributes": {
@@ -65,24 +63,51 @@ const bot = {
 			}
 		}],
 		"language": "en",
-		"intent_display_name": "gpt fail",
-		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-		"form": {},
-		"question": ""
-	}]
+		"intent_display_name": "gpt intent true",
+		"intent_id": "SUCCESS",
+
+	},
+	{
+		// FALSE INTENT
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "reply",
+			"text": "xxx",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "gpt replied: {{gpt_reply}}"
+					}
+				}]
+			}
+		}],
+		"language": "en",
+		"intent_display_name": "gpt intent false",
+		"intent_id": "FAILURE", 
+
+	},
+]
 }
 
 // normalize the bot structure for the static intent search
 let intents = bot.intents;
 delete bot.intents;
-// console.log ("bot still is", JSON.stringify(bot));
-// console.log ("bintents still are", intents[0]);
-intent_dict = {};
+let intents_dict_by_display_name = {};
 for (let i = 0; i < intents.length; i++) {
-  intent_dict[intents[i].intent_display_name] = intents[i];
-  intent_dict["#" + intents[i].intent_id] = intents[i];
+	intents_dict_by_display_name[intents[i].intent_display_name] = intents[i];
 }
-bot.intents = intent_dict;
+let intents_dict_by_intent_id = {};
+for (let i = 0; i < intents.length; i++) {
+	intents_dict_by_intent_id[intents[i].intent_id] = intents[i];
+}
+bot.intents = intents_dict_by_display_name;
+bot.intents_by_intent_id = intents_dict_by_intent_id
 const bots_data = {
   "bots": {}
 }
