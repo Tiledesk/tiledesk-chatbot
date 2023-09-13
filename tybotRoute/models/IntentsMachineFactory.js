@@ -1,5 +1,5 @@
 const { MongodbIntentsMachine } = require('./MongodbIntentsMachine.js');
-const { TiledeskIntentsMachine } = require("./TiledeskIntensMachine.js");
+const { TiledeskIntentsMachine } = require("./TiledeskIntentsMachine.js");
 
 class IntentsMachineFactory {
 
