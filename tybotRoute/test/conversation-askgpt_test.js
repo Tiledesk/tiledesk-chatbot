@@ -329,6 +329,7 @@ describe('Conversation for JSONCondition test', async () => {
 
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
 
+      let reply = {};
       reply.error = "no knowledge base settings found"
       http_code = 404;
 
