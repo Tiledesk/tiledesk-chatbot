@@ -121,7 +121,7 @@ class DirGptTask {
             if (this.log) { console.log("OpenAi endpoint URL: ", openai_url); }
             const HTTPREQUEST = {
               url: openai_url,
-              header: {
+              headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + gptkey
               },
