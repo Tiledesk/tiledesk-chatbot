@@ -108,7 +108,7 @@ class DirAskGPT {
 
           if (!resbody.gptkey) {
             let answer = "No answers";
-            let source = "no source"; //// /change it
+            let source = null;
             await this.#assignAttributes(action, answer, source);
             this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
               callback(false); // continue the flow
