@@ -132,7 +132,7 @@ class DirGptTask {
             this.#myrequest(
               HTTPREQUEST, async (err, resbody) => {
                 if (this.log && err) {
-                  console.error("(httprequest) GptTask openai err:", JSON.stringify(err));
+                  console.error("(httprequest) GptTask openai err:", err.data);
                   callback();
                 }
                 if (this.log) { console.log("GptTask resbody: ", JSON.stringify(resbody)); }
