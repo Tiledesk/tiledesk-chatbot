@@ -5,7 +5,8 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-### 0.1.92 (in progress)
+### 0.1.92
+- Added new WebRequest 2.0
 - Added AskGPT action
 - fix: added webhook_url to bot removed some bad console.log added test for webhooks
 
