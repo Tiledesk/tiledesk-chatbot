@@ -35,6 +35,7 @@ const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
 const { DirRandomReply } = require('./directives/DirRandomReply');
+const { DirGptTask } = require('./directives/DirGptTask');
 
 class DirectivesChatbotPlug {
 
@@ -520,6 +521,12 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_GPT) {
       new DirAskGPT(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.GPT_TASK) {
+      new DirGptTask(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
