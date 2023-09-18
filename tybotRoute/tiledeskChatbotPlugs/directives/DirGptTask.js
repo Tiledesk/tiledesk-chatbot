@@ -101,7 +101,7 @@ class DirGptTask {
               "messages": [
                 {
                   "role": "user",
-                  "content": action.question
+                  "content": filled_question
                 }
               ],
               "max_tokens": action.max_tokens,
