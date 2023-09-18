@@ -53,8 +53,8 @@ class DirGptTask {
       )
 
     // not necessary ?
-    // const filler = new Filler();
-    // const filled_question = filler.fill(action.question, requestVariables);
+    const filler = new Filler();
+    const filled_question = filler.fill(action.question, requestVariables);
 
     let max_tokens = action.max_tokens;
     let temperature = action.temperature;
