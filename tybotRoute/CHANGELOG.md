@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.93
+- Added GptTask Action
+
 ### 0.1.92
 - Added new WebRequest 2.0
 - Added AskGPT action
