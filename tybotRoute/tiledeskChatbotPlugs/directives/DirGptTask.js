@@ -128,19 +128,26 @@ class DirGptTask {
               json: json,
               method: 'POST'
             }
-            if (this.log) { console.log("GptTask HTTPREQUEST: ", HTTPREQUEST); }
+            if (this.log) { console.log(" ### GptTask HTTPREQUEST: ", HTTPREQUEST); }
             this.#myrequest(
               HTTPREQUEST, async (err, resbody) => {
-                if (this.log && err) {
-                  console.error("(httprequest) GptTask openai err:", err.data);
+                if (err) {
+                  if (this.log) {
+                    console.error(" ###  (httprequest) GptTask openai err:", err);
+                    console.error(" ### (httprequest) GptTask openai err:", err.response.data); 
+                  }
+                  let answer = "No answer.";
+                  if (this.log) { console.log("answer: ", answer);}
+                  await this.#assignAttributes(action, answer);
+                  callback();
+                } else {
+                  if (this.log) { console.log(" ### GptTask resbody: ", JSON.stringify(resbody)); }
+                  let answer = resbody.choices[0].message.content;
+                  if (this.log) { console.log("answer: ", answer);}
+                  await this.#assignAttributes(action, answer);
                   callback();
                 }
-                if (this.log) { console.log("GptTask resbody: ", JSON.stringify(resbody)); }
-                let answer = resbody.choices[0].message.content;
-                if (this.log) { console.log("answer: ", answer);}
-                await this.#assignAttributes(action, answer);
 
-                callback();
               }
             )
 
