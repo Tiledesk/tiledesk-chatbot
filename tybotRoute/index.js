@@ -240,7 +240,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (chatbot.bot) {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
   }
-  if (message.text) {
+  if (message.text && message.sender !== "_tdinternal") {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
   }
   await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
