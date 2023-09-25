@@ -7,6 +7,9 @@ available on:
 
 ### 0.1.95
 - added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
+- added "message: message" to DirectivesChatbotPlug instance created in index.js
+- added default EX:86400 to exprire time to tdcache.set()
+
 
 ### 0.1.94
 - Fix: last_user_message on _tdInternal sender

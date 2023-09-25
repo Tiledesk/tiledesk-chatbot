@@ -36,6 +36,8 @@ const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
 const { DirRandomReply } = require('./directives/DirRandomReply');
 const { DirGptTask } = require('./directives/DirGptTask');
+const { DirForm } = require('./directives/DirForm');
+const { DirCaptureUserReply } = require('./directives/DirCaptureUserReply');
 
 class DirectivesChatbotPlug {
 
@@ -56,6 +58,7 @@ class DirectivesChatbotPlug {
     this.directives = config.directives;
     this.reply = config.reply;
     this.chatbot = config.chatbot;
+    this.message = config.message;
     // console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 
@@ -103,7 +106,7 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
-    // console.log("supportRequest is:", JSON.stringify(supportRequest))
+    console.log("supportRequest is:", JSON.stringify(supportRequest))
     
     const token = this.token;
     const API_URL = this.API_URL;
@@ -128,6 +131,8 @@ class DirectivesChatbotPlug {
 
     this.context =  {
       projectId: projectId,
+      chatbot: this.chatbot,
+      message: this.message,
       token: token,
       supportRequest: supportRequest,
       reply: this.reply,
@@ -194,7 +199,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    // console.log(".process(directive):", JSON.stringify(directive));
+    console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
@@ -206,6 +211,16 @@ class DirectivesChatbotPlug {
     let directive_name = null;
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
+    }
+    if (directive) {
+      // this.supportRequest.request_id
+      // this.reply.attributes.intent_info.intent_id
+      // directive.action["_tdActionId"]
+
+      // const locked_action_id = await lockedAction(this.supportRequest.request_id);
+      // if (locked_action_id && !(locked_action_id === directive.action["_tdActionId"]) ) {
+        // this.process(next_dir);
+      // }
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
@@ -491,6 +506,27 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.FORM) {
+      console.log("...DirForm");
+      new DirForm(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("stop on form?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.CAPTURE_USER_REPLY) {
+      console.log("...DirCaptureUserReply");
+      new DirCaptureUserReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else if (directive_name === Directives.CODE) {

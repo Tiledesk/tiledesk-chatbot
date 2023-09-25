@@ -39,6 +39,9 @@ class TdCache {
 
     async set(key, value, options) {
       //console.log("setting key value", key, value)
+      if (!options) {
+        options = {EX: 86400}
+      }
       return new Promise( async (resolve, reject) => {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
