@@ -55,6 +55,7 @@ class DirectivesChatbotPlug {
     this.tdcache = config.cache;
     this.directives = config.directives;
     this.reply = config.reply;
+    this.chatbot = config.chatbot;
     // console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 

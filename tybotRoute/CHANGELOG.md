@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.95
+- added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
+
 ### 0.1.94
 - Fix: last_user_message on _tdInternal sender
 - Fix: missing filled question on GptTask Action

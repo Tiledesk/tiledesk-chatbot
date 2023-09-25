@@ -159,6 +159,7 @@ router.post('/ext/:botid', async (req, res) => {
       {
         reply: reply,
         directives: directives,
+        chatbot: chatbot,
         supportRequest: message.request,
         TILEDESK_API_ENDPOINT: APIURL,
         TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
