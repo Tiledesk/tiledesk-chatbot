@@ -52,6 +52,14 @@ class DirGptTask {
         this.tdcache, this.requestId
       )
 
+      if (this.log) {
+        console.log("*** GPT PARTITA ***")
+        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+        for (const [key, value] of Object.entries(all_parameters)) {
+          if (this.log) { console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value) }
+        }
+      }
+
     // not necessary ?
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
