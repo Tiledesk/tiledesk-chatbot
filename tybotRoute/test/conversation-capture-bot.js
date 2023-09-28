@@ -6,9 +6,13 @@ const bot = {
 	"intents": [{
 		"webhook_enabled": false,
 		"enabled": true,
+		"language": "en",
+		"intent_display_name": "capture1",
+		"intent_id": "capture1_intent",
 		"actions": [{
 			"_tdActionType": "reply",
-			"text": "xxx",
+			"_tdActionId": "0001",
+			"text": "your name?",
 			"attributes": {
 				"commands": [{
 					"type": "wait",
@@ -24,13 +28,33 @@ const bot = {
 		},
 		{
 			"_tdActionType": "capture",
-			"_tdActionId": "0001",
-			"goToIntent": "xxp"
-		}],
+			"_tdActionId": "0002",
+			"goToIntent": "capture_end",
+			"assignResultTo": "username"
+		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
 		"language": "en",
-		"intent_display_name": "capture1",
-		"intent_id": "capture1_intent",
-
+		"intent_display_name": "capture_end",
+		"intent_id": "capture_end",
+		"actions": [{
+			"_tdActionType": "reply",
+			"_tdActionId": "0003",
+			"text": "It's a good form...",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "It's a good form {{username}}"
+					}
+				}]
+			}
+		}]
 	}]
 }
 

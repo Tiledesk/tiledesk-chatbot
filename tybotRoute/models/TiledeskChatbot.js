@@ -63,6 +63,29 @@ class TiledeskChatbot {
         console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
       
+      // reset lockedIntent on direct user invocation ( /intent or action )
+      if (message.sender != "_tdinternal") {
+        try {
+          if (this.log) {console.log("Checking locked intent reset on explicit intent invokation.");}
+          if (message.text.startsWith("/")) {
+            if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with / command...", message.text);}
+            await this.unlockIntent(this.requestId);
+            await this.unlockAction(this.requestId);
+            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with / command:", message.text);}
+          }
+          if (message.attributes && message.attributes.action) {
+            if (this.log) {console.log("Message has action:", message.attributes.action)}
+            if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+            await this.unlockIntent(this.requestId);
+            await this.unlockAction(this.requestId);
+            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+          }
+        }
+        catch(error) {
+          console.error("Error resetting locked intent:", error);
+        }
+      }
+
       // any external invocation restarts the steps counter
       if (message.sender != "_tdinternal") {
         if (this.log) {
@@ -520,8 +543,9 @@ class TiledeskChatbot {
   }
 
   async lockAction(requestId, action_id) {
-    if (tdcache != null && requestId != null && action_id != null) {
-      await tdcache.set("tilebot:requests:"  + requestId + ":action:locked", action_id);
+    if (this.tdcache != null && requestId != null && action_id != null) {
+      await this.tdcache.set("tilebot:requests:"  + requestId + ":action:locked", action_id);
+
     }
     else {
       console.error("lockAction recoverable error, one of requestId:", requestId, "action_id:", action_id, "is null");
@@ -538,7 +562,7 @@ class TiledeskChatbot {
   }
   
   async unlockAction(requestId) {
-    await tdcache.del("tilebot:requests:"  + requestId + ":action:locked");
+    await this.tdcache.del("tilebot:requests:"  + requestId + ":action:locked");
   }
 
   async addParameter(parameter_name, parameter_value) {

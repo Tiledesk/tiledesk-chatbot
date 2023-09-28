@@ -70,25 +70,64 @@ describe('Conversation for capture test', async () => {
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      // console.log("command2", command2);
       assert(command2.type === "message");
-      assert(command2.message.text === "your name?");
+      const message_text = command2.message.text
+      
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
-        if (err) {
-          assert.ok(false);
+      
+        if (message_text === "your name?") {
+          let request = {
+            "payload": {
+              "_id": null,
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": "Andrea",
+              "id_project": PROJECT_ID,
+              "request": {
+                "request_id": REQUEST_ID,
+              }
+            },
+            "token": CHATBOT_TOKEN
+          }
+          console.log("capturex1. Got reply before locked action.", message_text)
+          setTimeout(() => {
+            sendMessageToBot(request, BOT_ID, () => {
+              console.log("Message sent.", request);
+            });
+          }, 1000);
+        }
+        else if (message_text === "It's a good form Andrea") {
+          // verify parameters
+          console.log("capturex2. Got reply after locked action.", message_text)
+          getChatbotParameters(REQUEST_ID, (err, params) => {
+            if (err) {
+              assert.ok(false);
+            }
+            else {
+              // console.log("params2:", params);
+              assert(params);
+              assert(params["username"] === "Andrea");
+              listener.close(() => {
+                console.log("done2");
+                done();
+              });
+            }
+          });
+  
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
-          assert(attributes);
-          // assert(attributes["gpt_reply"] === "this is mock gpt reply");
-          listener.close(() => {
-            done();
-          });
+          console.error("Unexpected message2.");
+          assert.ok(false);
         }
-      });
-    });
+      
+      
 
+
+
+
+    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());

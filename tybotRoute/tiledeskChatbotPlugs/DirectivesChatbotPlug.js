@@ -204,7 +204,6 @@ class DirectivesChatbotPlug {
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
       if (context.log) {
-        console.log("..process(directive):", JSON.stringify(directive));
         console.log("directive['name']:", directive["name"]);
       }
     }
@@ -216,11 +215,20 @@ class DirectivesChatbotPlug {
       // this.supportRequest.request_id
       // this.reply.attributes.intent_info.intent_id
       // directive.action["_tdActionId"]
-
-      // const locked_action_id = await lockedAction(this.supportRequest.request_id);
-      // if (locked_action_id && !(locked_action_id === directive.action["_tdActionId"]) ) {
-        // this.process(next_dir);
-      // }
+      const action_id = directive.action["_tdActionId"];
+      console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      console.log("locked_action_id:", locked_action_id);
+      if ( locked_action_id && (locked_action_id !== action_id) ) {
+        console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }
+      else {
+        // go on
+        console.log("Going on to next directive...");
+      }
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
@@ -258,7 +266,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
-      // console.log("...DirReply");
+      console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);

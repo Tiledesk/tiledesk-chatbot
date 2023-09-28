@@ -55,48 +55,61 @@ class DirCaptureUserReply {
       callback();
       return;
     }
-    this.go(action, (stop) => {
-      if (this.log) {console.log("(DirForm, stop?", stop); }
-      callback(stop);
+    this.go(action, () => {
+      callback();
     });
   }
 
   async go(action, callback) {
     const goToIntent = action.goToIntent;
-    console.log("goToIntent:", goToIntent);
+    console.log("(DirCaptureUserReply) goToIntent:", goToIntent);
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-    console.log("lockedAction:", lockedAction);
+    console.log("(DirCaptureUserReply) lockedAction:", lockedAction);
     if (!lockedAction) {
-      console.log("!lockedAction");
+      console.log("(DirCaptureUserReply) !lockedAction");
       const intent_name = this.reply.attributes.intent_info.intent_name
       const actionId = action["_tdActionId"];
-      console.log("intent_name:", intent_name);
-      console.log("actionId:", actionId);
+      console.log("(DirCaptureUserReply) intent_name:", intent_name);
+      console.log("(DirCaptureUserReply) actionId:", actionId);
       await this.chatbot.lockIntent(this.requestId, intent_name);
+      console.log("(DirCaptureUserReply) lockIntent");
       await this.chatbot.lockAction(this.requestId, actionId);
+      console.log("(DirCaptureUserReply) lockAction");
       let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
       let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
-      console.log("_lockedAction", _lockedAction)
-      console.log("_lockedIntent", _lockedIntent)
+      console.log("(DirCaptureUserReply) _lockedAction", _lockedAction)
+      console.log("(DirCaptureUserReply) _lockedIntent", _lockedIntent)
       callback();
       return;
     } else {
-      await this.chatbot.unlockIntent(this.requestId);
-      await this.chatbot.unlockAction(this.requestId);
+      try {
+        await this.chatbot.unlockIntent(this.requestId);
+        await this.chatbot.unlockAction(this.requestId);
+        console.log("unlo")
+      }
+      catch(e) {
+        console.error("Erro", e)
+      }
+      
     }
-    
-    const user_reply = this.message.text;
-    if (this.context.tdcache) {
-      if (action.assignResultTo) {
-        if (this.log) {console.log("assign assignResultTo:", resbody);}
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, user_reply);
+    try {
+      const user_reply = this.message.text;
+      if (this.context.tdcache) {
+        if (action.assignResultTo) {
+          if (this.log) {console.log("assign assignResultTo:", action.assignResultTo);}
+          await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, user_reply);
+        }
+      }
+  
+      if (callback) {
+        console.log("(DirCaptureUserReply) #executeGoTo(goToIntent)", goToIntent)
+        this.#executeGoTo(goToIntent, () => {
+          callback(); // continue the flow
+        });
       }
     }
-
-    if (callback) {
-      this.#executeGoTo(goToIntent, () => {
-        callback(); // continue the flow
-      });
+    catch(error) {
+      console.error("error is", error);
     }
   }
 
