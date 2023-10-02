@@ -5,8 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.96 - online
+
 ### 0.1.95
 - added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
+- Fix: missing key API_ENDPOINT in production
 
 ### 0.1.94
 - Fix: last_user_message on _tdInternal sender
