@@ -75,7 +75,8 @@ class DirAskGPT {
       console.log("falseIntentAttributes",falseIntentAttributes )
     }
 
-    const kb_url = process.env.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings";
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
+    const kb_url = server_base_url + "/" + this.context.projectId + "/kbsettings";
     if (this.log) { console.log("ApiEndpoint URL: ", kb_url); }
     const KB_HTTPREQUEST = {
       url: kb_url,
