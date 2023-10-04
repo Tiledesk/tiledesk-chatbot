@@ -237,7 +237,8 @@ class DirWebRequestV2 {
       }
       if (callback) {
         let status = 1000;
-        let error = JSON.parse( JSON.stringify(err)) // "status" disappears without this trick
+        //let error = JSON.parse( JSON.stringify(err)) // "status" disappears without this trick
+        let error = err;
         let errorMessage = JSON.stringify(error);
         if (error.status) {
           status = error.status;
