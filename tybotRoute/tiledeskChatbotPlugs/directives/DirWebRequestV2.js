@@ -233,12 +233,34 @@ class DirWebRequestV2 {
     })
     .catch( (err) => {
       if (this.log) {
-        console.error("An error occurred:", err);
+        // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
+        let cache = [];
+        let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
+          if (typeof value === 'object' && value != null) {
+            if (cache.indexOf(value) !== -1) {
+              return;
+            }
+            cache.push(value);
+          }
+          return value;
+        });
+        console.error("An error occurred: ", error_log);
+        // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
+        // console.error("An error occurred:", JSON.stringify(err));
       }
       if (callback) {
         let status = 1000;
-        //let error = JSON.parse( JSON.stringify(err)) // "status" disappears without this trick
-        let error = err;
+        let cache = [];
+        let str_error = JSON.stringify(err, function(key, value) { // try to use a separate function
+          if (typeof value === 'object' && value != null) {
+            if (cache.indexOf(value) !== -1) {
+              return;
+            }
+            cache.push(value);
+          }
+          return value;
+        });
+        let error = JSON.parse(str_error) // "status" disappears without this trick
         let errorMessage = JSON.stringify(error);
         if (error.status) {
           status = error.status;
@@ -256,6 +278,7 @@ class DirWebRequestV2 {
       }
     });
   }
+
 }
 
 module.exports = { DirWebRequestV2 };
