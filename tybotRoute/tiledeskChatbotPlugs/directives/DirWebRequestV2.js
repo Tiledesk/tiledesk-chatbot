@@ -233,7 +233,7 @@ class DirWebRequestV2 {
     })
     .catch( (err) => {
       if (this.log) {
-        console.error("An error occurred:", JSON.stringify(err));
+        console.error("An error occurred:", err);
       }
       if (callback) {
         let status = 1000;
