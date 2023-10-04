@@ -211,24 +211,28 @@ class DirectivesChatbotPlug {
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
     }
-    if (directive) {
-      // this.supportRequest.request_id
-      // this.reply.attributes.intent_info.intent_id
-      // directive.action["_tdActionId"]
-      const action_id = directive.action["_tdActionId"];
-      console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
-      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-      console.log("locked_action_id:", locked_action_id);
-      if ( locked_action_id && (locked_action_id !== action_id) ) {
-        console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-        return;
-      }
-      else {
-        // go on
-        console.log("Going on to next directive...");
-      }
+    if (directive && directive.action) {
+      console.log("Checking locks", directive);
+      // try {
+        const action_id = directive.action["_tdActionId"];
+        console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
+        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+        console.log("locked_action_id:", locked_action_id);
+        if ( locked_action_id && (locked_action_id !== action_id) ) {
+          console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+          return;
+        }
+        else {
+          // go on
+          console.log("Going on to next directive...");
+        }
+      // }
+      // catch(error) {
+      //   console.error("Error on locks:", error);
+      // }
+      
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
