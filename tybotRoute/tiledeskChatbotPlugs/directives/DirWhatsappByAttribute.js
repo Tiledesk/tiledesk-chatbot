@@ -36,7 +36,8 @@ class DirWhatsappByAttribute {
     }
 
     if (process.env.API_URL) {
-      whatsapp_api_url = process.env.API_URL + "/modules/whatsapp";
+      whatsapp_api_url = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/api";
+      // whatsapp_api_url = process.env.API_URL + "/modules/whatsapp";
       console.log("(Tilebot) DirWhatsappByAttribute whatsapp_api_url: ", whatsapp_api_url);
     } else {
       console.error("(Tilebot) ERROR Missing whatsapp_api_url. Unable to use action WhatsApp By Attributes");
