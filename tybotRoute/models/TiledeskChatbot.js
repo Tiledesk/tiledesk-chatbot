@@ -63,16 +63,17 @@ class TiledeskChatbot {
         console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
       
-      // reset lockedIntent on direct user invocation ( /intent or action )
+      // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
         try {
-          if (this.log) {console.log("Checking locked intent reset on explicit intent invokation.");}
-          if (message.text.startsWith("/")) {
-            if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with / command...", message.text);}
-            await this.unlockIntent(this.requestId);
-            await this.unlockAction(this.requestId);
-            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with / command:", message.text);}
-          }
+          // if (this.log) {console.log("Checking locked intent reset on explicit intent invokation.");}
+          // if (message.text.startsWith("/")) {
+          //   if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with / command...", message.text);}
+          //   await this.unlockIntent(this.requestId);
+          //   await this.unlockAction(this.requestId);
+          //   if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with / command:", message.text);}
+          // }
+          if (this.log) {console.log("Checking locked intent reset on action invocation.");}
           if (message.attributes && message.attributes.action) {
             if (this.log) {console.log("Message has action:", message.attributes.action)}
             if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
