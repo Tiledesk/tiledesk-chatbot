@@ -55,6 +55,11 @@ class DirDepartment {
     if (this.log) {console.log("Switching to department:", action.depName);}
     const depName = action.depName;
     this.moveToDepartment(this.requestId, depName, (deps) => {
+      if (!deps) {
+        if (this.log) {console.log("Dep not found");}
+        callback();
+        return
+      }
       if (this.log) {console.log("Switched to dept:", depName, "action:", JSON.stringify(action));}
       if (action.triggerBot) {
         let dep = null;
@@ -118,7 +123,7 @@ class DirDepartment {
           }
           else {
             console.log("DirDepartment response:",JSON.stringify(res));
-            callback();
+            callback(deps);
           }
         });
       }
