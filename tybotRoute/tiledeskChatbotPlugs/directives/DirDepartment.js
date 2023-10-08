@@ -67,6 +67,7 @@ class DirDepartment {
           }
         }
         if (dep && dep.hasBot === true && dep.id_bot) {
+          if (this.log) {console.log("Sending hidden /start message to bot in dept");}
           const message = {
             type: "text",
             text: "/start",
@@ -86,6 +87,7 @@ class DirDepartment {
         }
       }
       else {
+        if (this.log) {console.log("No action.triggerBot");}
         callback();
       }
     });
