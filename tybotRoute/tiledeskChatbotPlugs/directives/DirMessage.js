@@ -24,12 +24,13 @@ class DirMessage {
     this.projectId = context.projectId;
     this.requestId = context.requestId;
     this.token = context.token;
+    this.log = this.context.log;
   }
 
   execute(directive, callback) {
     let action;
     if (directive.action) {
-      // console.log("got action:", JSON.stringify(action));
+      if (this.log) {console.log("got action:", JSON.stringify(action));}
       action = directive.action;
       if (!action.attributes) {
         action.attributes = {}
