@@ -5,7 +5,6 @@ class TiledeskChatbotConst {
     static REQ_REQUEST_ID_KEY = "conversation_id";
     static REQ_CHATBOT_NAME_KEY = "chatbot_name";
     static REQ_LAST_USER_TEXT_KEY = "last_user_text";
-    static REQ_USER_REPLY_KEY = "userReply";
     static REQ_LAST_MESSAGE_ID_KEY = "last_message_id";
     static REQ_COUNTRY_KEY = "user_country";
     static REQ_CITY_KEY = "user_city";

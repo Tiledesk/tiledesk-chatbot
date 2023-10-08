@@ -212,7 +212,7 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-      console.log("Checking locks", directive);
+      console.log("Checking locks", JSON.stringify(directive));
       // try {
         const action_id = directive.action["_tdActionId"];
         console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
