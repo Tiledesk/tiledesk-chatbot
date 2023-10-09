@@ -5,14 +5,17 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.98 - online
+- added default EX:86400 to exprire time to tdcache.set()
+- added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
+- added Capture user Reply
+- added triggerBot to DirDepartment
+
 ### 0.1.96 - online
 
 ### 0.1.95
-- added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
 - Fix: missing key API_ENDPOINT in production
 - added "message: message" to DirectivesChatbotPlug instance created in index.js
-- added default EX:86400 to exprire time to tdcache.set()
-
 
 ### 0.1.94
 - Fix: last_user_message on _tdInternal sender
