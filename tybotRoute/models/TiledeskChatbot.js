@@ -63,6 +63,30 @@ class TiledeskChatbot {
         console.log("replyToMessage() > lead found:", JSON.stringify(lead));
       }
       
+      // reset lockedIntent on direct user invocation ( /intent or action => this only?)
+      if (message.sender != "_tdinternal") {
+        try {
+          // if (this.log) {console.log("Checking locked intent reset on explicit intent invokation.");}
+          // if (message.text.startsWith("/")) {
+          //   if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with / command...", message.text);}
+          //   await this.unlockIntent(this.requestId);
+          //   await this.unlockAction(this.requestId);
+          //   if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with / command:", message.text);}
+          // }
+          if (this.log) {console.log("Checking locked intent reset on action invocation.");}
+          if (message.attributes && message.attributes.action) {
+            if (this.log) {console.log("Message has action:", message.attributes.action)}
+            if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+            await this.unlockIntent(this.requestId);
+            await this.unlockAction(this.requestId);
+            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+          }
+        }
+        catch(error) {
+          console.error("Error resetting locked intent:", error);
+        }
+      }
+
       // any external invocation restarts the steps counter
       if (message.sender != "_tdinternal") {
         if (this.log) {
@@ -475,6 +499,7 @@ class TiledeskChatbot {
     delete question_payload.request;
     const intent_info = {
       intent_name: answerObj.intent_display_name,
+      intent_id: answerObj.intent_id,
       is_fallback: false,
       confidence: answerObj.score,
       question_payload: question_payload,
@@ -500,8 +525,8 @@ class TiledeskChatbot {
     return bot_answer;
   }
 
+  
   async lockIntent(requestId, intent_name) {
-    // await this.tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
     await DirLockIntent.lockIntent(this.tdcache, requestId, intent_name);
   }
   
@@ -516,7 +541,29 @@ class TiledeskChatbot {
   
   async unlockIntent(requestId) {
     await DirUnlockIntent.unlockIntent(this.tdcache, requestId);
-    // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+  }
+
+  async lockAction(requestId, action_id) {
+    if (this.tdcache != null && requestId != null && action_id != null) {
+      await this.tdcache.set("tilebot:requests:"  + requestId + ":action:locked", action_id);
+
+    }
+    else {
+      console.error("lockAction recoverable error, one of requestId:", requestId, "action_id:", action_id, "is null");
+    }
+  }
+  
+  async currentLockedAction(requestId) {
+    if (this.tdcache) {
+      return await this.tdcache.get("tilebot:requests:"  + requestId + ":action:locked");
+    }
+    else {
+      return null;
+    }
+  }
+  
+  async unlockAction(requestId) {
+    await this.tdcache.del("tilebot:requests:"  + requestId + ":action:locked");
   }
 
   async addParameter(parameter_name, parameter_value) {

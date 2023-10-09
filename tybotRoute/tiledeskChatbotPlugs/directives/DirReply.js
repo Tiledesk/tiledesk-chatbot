@@ -47,7 +47,7 @@ class DirReply {
       if (this.log) {
         for (const [key, value] of Object.entries(requestAttributes)) {
           const value_type = typeof value;
-          if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
+          // if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
         }
       }
       const filler = new Filler();

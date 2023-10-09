@@ -151,27 +151,38 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // console.log("reply is:", reply);
+  // if (reply.attributes.intent_info.intent_id) {
+  //   process.exit(1)
+  // }
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
     let directives = actionsToDirectives(reply.actions);
     if (log) {console.log("the directives:", JSON.stringify(directives));}
-    let directivesPlug = new DirectivesChatbotPlug(
-      {
-        reply: reply,
-        directives: directives,
-        chatbot: chatbot,
-        supportRequest: message.request,
-        TILEDESK_API_ENDPOINT: APIURL,
-        TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
-        token: token,
-        log: log,
-        HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-        cache: tdcache
-      }
-    );
-    directivesPlug.processDirectives( () => {
-      if (log) {console.log("Actions - Directives executed.");}
-    });
+    try {
+
+    
+      let directivesPlug = new DirectivesChatbotPlug(
+        {
+          message: message,
+          reply: reply,
+          directives: directives,
+          chatbot: chatbot,
+          supportRequest: message.request,
+          TILEDESK_API_ENDPOINT: APIURL,
+          TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
+          token: token,
+          log: log,
+          HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
+          cache: tdcache
+        }
+      );
+      directivesPlug.processDirectives( () => {
+        if (log) {console.log("Actions - Directives executed.");}
+      });
+    }
+    catch (error) {
+      console.error("an error:", error);
+    }
   }
   else { // text answer (parse text directives to get actions)
     if (log) {console.log("an answer:", reply.text);}
