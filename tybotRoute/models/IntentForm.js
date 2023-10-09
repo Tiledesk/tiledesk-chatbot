@@ -62,7 +62,14 @@ class IntentForm {
   */
   async getMessage(user_text) {
     //console.log("get message:", user_text)
+    let current_form = null;
+    const _current_form = await this.getValue(this.CURRENT_FORM_KEY);
+    if (_current_form) {
+      current_form = JSON.parse(_current_form);
+    }
+    //console.log("CURRENT FORM IS", current_form);
     if (
+    current_form &&
     this.form &&
     this.form.cancelCommands &&
     this.form.cancelCommands.includes(user_text.toLowerCase())) {
@@ -81,12 +88,7 @@ class IntentForm {
     if (_current_field) {
       current_field = Number(_current_field);
     }
-    let current_form = null;
-    const _current_form = await this.getValue(this.CURRENT_FORM_KEY);
-    if (_current_form) {
-      current_form = JSON.parse(_current_form);
-    }
-    //console.log("CURRENT FORM IS", current_form);
+    
     if (current_field == null) {
       if (this.log) {console.log("current_field is undefined")}
       current_field = 0;

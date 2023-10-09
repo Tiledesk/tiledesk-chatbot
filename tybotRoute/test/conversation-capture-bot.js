@@ -27,7 +27,7 @@ const bot = {
 			}
 		},
 		{
-			"_tdActionType": "capture",
+			"_tdActionType": "capture_user_reply",
 			"_tdActionId": "0002",
 			"goToIntent": "capture_end",
 			"assignResultTo": "username"
