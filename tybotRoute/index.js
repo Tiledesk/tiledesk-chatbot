@@ -39,7 +39,7 @@ router.post('/ext/:botid', async (req, res) => {
   res.status(200).send({"success":true});
   
   const botId = req.params.botid;
-  if (log) {console.log("query botId:", botId);}
+  if (log) {console.log(" :", botId);}
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
@@ -92,6 +92,7 @@ router.post('/ext/:botid', async (req, res) => {
     // bot = await botsDS.getBotById(botId);
     // bot = await botById(botId, projectId, tdcache, botsDS);
     bot = await botsDS.getBotByIdCache(botId, tdcache);
+    console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
   }
   catch(error) {
     console.error("Error getting botId:", botId);
