@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.2.00
+- bug fix
+
 ### 0.1.99
 - webrequest json fix (jsonBody renamed to "body")
 - webrequest added bodyType attribute (none | json)
