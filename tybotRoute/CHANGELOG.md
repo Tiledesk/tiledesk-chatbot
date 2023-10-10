@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.1.99
+- webrequest json fix (jsonBody renamed to "body")
+- webrequest added bodyType attribute (none | json)
+
 ### 0.1.98 - online
 - added default EX:86400 to exprire time to tdcache.set()
 - added "chatbot" instance to DirectivesChatbotPlug instance created in index.js
