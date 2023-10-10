@@ -261,7 +261,7 @@ describe('Conversation for JSONCondition test', async () => {
       res.sendStatus(300);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
+      console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -296,6 +296,72 @@ describe('Conversation for JSONCondition test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": "/webrequestv2 - failure 300 status condition",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a json body, get result, assign status', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/json', async (req, res) => {
+      console.log("/webrequestv2 POST req.headers:", req.headers);
+      console.log("/webrequestv2 POST req.body:", req.body);
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      res.send({
+        "replyname": req.body.name,
+        "replyemail": req.body.email
+      });
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+    
+      assert(command1.type === "message");
+      assert(command1.message.text === "HTTP POST Success with status 200. From reply, name: myname, email: myemail");
+      assert(command1.type === "message");
+      getChatbotParameters(REQUEST_ID, (err, params) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(params);
+          assert(params["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2 - post",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {

@@ -55,13 +55,15 @@ class DirWebRequestV2 {
       }
     }
     let json = null;
-    if (action.jsonBody) {
-      let jsonBody = filler.fill(action.jsonBody, requestVariables);
+    if (action.body && action.bodyType == "json") {
+      if (this.log) {console.log("action.body is:", action.body);}
+      let body = filler.fill(action.body, requestVariables);
       try {
-        json = JSON.parse(jsonBody);
+        json = JSON.parse(body);
+        if (this.log) {console.log("json is:", json);}
       }
       catch(err) {
-        console.error("Error parsing webRequest jsonBody:", jsonBody);
+        console.error("Error parsing webRequest jsonBody:", body);
       }
     }
     
