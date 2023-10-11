@@ -130,7 +130,7 @@ class DirReply {
       url: url,
       headers: {
         'Content-Type' : 'application/json',
-        'Authorization': this.token
+        'Authorization': "JWT " + this.token
       },
       json: message,
       method: 'POST'
