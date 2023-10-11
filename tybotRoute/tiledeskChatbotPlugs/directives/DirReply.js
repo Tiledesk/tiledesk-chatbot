@@ -97,29 +97,96 @@ class DirReply {
     }
     // send!
     if (this.log) {console.log("Reply:", JSON.stringify(message))};
-    this.context.tdclient.sendSupportMessage(
+    // this.context.tdclient.sendSupportMessage(
+    //   this.requestId,
+    //   message,
+    //   (err) => {
+    //     if (err) {
+    //       console.error("Error sending reply:", err.message);
+    //     }
+    //     if (this.log) {console.log("Reply message sent.");}
+    //     callback();
+    // });
+
+    this.sendSupportMessage(
       this.requestId,
       message,
       (err) => {
         if (err) {
           console.error("Error sending reply:", err.message);
         }
-        if (this.log) {console.log("Reply message sent.");}
+        // if (this.log) {console.log("Reply message sent.");}
+        console.log("Reply message sent.");
         callback();
-    });
+      });
   }
 
-  // fillCommandTemplates(command, variables) {
-  //   if (command && command.attributes && command.attachment && command.attachment.buttons && command.attachment.buttons.length > 0){
-  //     let buttons = command.attachment.buttons.length;
-  //     const filler = new Filler();
-  //     buttons.forEach(button => {
-  //       if (button.link) {
-  //         button.link = filler.fill(button.link, variables);
-  //       }
-  //     });
-  //   }
-  // }
+  sendSupportMessage(requestId, message, callback) {
+    // const jwt_token = TiledeskClient.fixToken(this.token);
+    //const url = `${this.APIURL}/${this.projectId}/requests/${requestId}/messages`;
+    const url = `${this.context.tdclient.APIURL}/${this.projectId}/requests/${requestId}/messages`
+    const HTTPREQUEST = {
+      url: url,
+      headers: {
+        'Content-Type' : 'application/json',
+        'Authorization': this.token
+      },
+      json: message,
+      method: 'POST'
+    };
+    this.myrequest(
+      HTTPREQUEST,
+      function(err, response, resbody) {
+        if (response.status === 200) {
+          if (callback) {
+            callback(null, resbody)
+          }
+        }
+        else if (callback) {
+          callback(err);
+        }
+      }, this.log
+    );
+  }
+
+ myrequest(options, callback, log) {
+  if (log) {
+    console.log("API URL:", options.url);
+    console.log("** Options:", JSON.stringify(options));
+  }
+  axios(
+    {
+      url: options.url,
+      method: options.method,
+      data: options.json,
+      params: options.params,
+      headers: options.headers
+    })
+    .then((res) => {
+      // if (log) {
+        console.log("Reply: Response for url:", options.url);
+        console.log("Reply: Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
+      // }
+      if (res && res.status == 200 && res.data) {
+        if (callback) {
+          callback(null, res.data);
+        }
+      }
+      else {
+        if (callback) {
+          console.error("Status ! 200");
+          callback({ message: "Response status not 200" });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("An error occurred:", error);
+      if (callback) {
+        callback(error, null, null);
+      }
+    });
+  } 
 
 }
 
