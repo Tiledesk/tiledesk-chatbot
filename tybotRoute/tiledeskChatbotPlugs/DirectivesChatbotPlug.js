@@ -614,7 +614,7 @@ class DirectivesChatbotPlug {
       token: token,
       APIURL: API_URL,
       APIKEY: "___",
-      log: false
+      log: true
     });
     let i = -1;
     if (this.log) { console.log("processing Inline directives:", directives); }
