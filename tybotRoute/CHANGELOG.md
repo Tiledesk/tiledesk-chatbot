@@ -5,11 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-### 0.2.01
+### 0.2.1 - online
 - bug fix:  /ext/parameters/requests/:requestid replies with res.send([]);
 - bug fix: allParameterStatic() => check for attributes not null before iterating Object.entries()
 
-### 0.2.00
+### 0.2.0
 - bug fix
 
 ### 0.1.99
