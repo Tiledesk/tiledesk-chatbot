@@ -486,42 +486,45 @@ router.get('/message/context/:messageid', async (req, res) => {
 });
 
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
-  res.send([]);
-  // const requestId = req.params.requestid;
-  // const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
-  // if (req.query.all != null) {
-  //   res.send(parameters);
-  // }
-  // else {
-  //   const RESERVED = [
-  //     TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
-  //     TiledeskChatbotConst.REQ_CHAT_URL,
-  //     TiledeskChatbotConst.REQ_CITY_KEY,
-  //     TiledeskChatbotConst.REQ_COUNTRY_KEY,
-  //     TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY,
-  //     TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY,
-  //     TiledeskChatbotConst.REQ_END_USER_ID_KEY,
-  //     TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY,
-  //     TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY,
-  //     TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY,
-  //     TiledeskChatbotConst.REQ_PROJECT_ID_KEY,
-  //     TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
-  //     TiledeskChatbotConst.REQ_USER_AGENT_KEY,
-  //     TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
-  //     TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY
-  //   ]
-  //   let userParams = {};
-  //   if (parameters) {
-  //     for (const [key, value] of Object.entries(parameters)) {
-  //       // console.log(key, value);
-  //       // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
-  //       if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
-  //         userParams[key] = value;
-  //       }
-  //     }
-  //   }
-  //   res.send(userParams);
-  // }
+  const requestId = req.params.requestid;
+  const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
+  if (parameters === null) {
+    res.send([]);
+    return;
+  }
+  if (req.query.all != null) {
+    res.send(parameters);
+  }
+  else {
+    const RESERVED = [
+      TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
+      TiledeskChatbotConst.REQ_CHAT_URL,
+      TiledeskChatbotConst.REQ_CITY_KEY,
+      TiledeskChatbotConst.REQ_COUNTRY_KEY,
+      TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY,
+      TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY,
+      TiledeskChatbotConst.REQ_END_USER_ID_KEY,
+      TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY,
+      TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY,
+      TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY,
+      TiledeskChatbotConst.REQ_PROJECT_ID_KEY,
+      TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
+      TiledeskChatbotConst.REQ_USER_AGENT_KEY,
+      TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
+      TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY
+    ]
+    let userParams = {};
+    if (parameters) {
+      for (const [key, value] of Object.entries(parameters)) {
+        // console.log(key, value);
+        // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
+        if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
+          userParams[key] = value;
+        }
+      }
+    }
+    res.send(userParams);
+  }
 });
 
 router.get('/', (req, res) => {
