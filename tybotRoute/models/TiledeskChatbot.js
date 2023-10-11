@@ -596,7 +596,7 @@ class TiledeskChatbot {
       }
     }
     else {
-      console.error("An error occurred. 'attributes__as_string_map' is null! I tried:", Object.entries(attributes__as_string_map));
+      console.error("An error occurred. 'attributes__as_string_map' is null!");
     }
     return attributes_native_values;
   }

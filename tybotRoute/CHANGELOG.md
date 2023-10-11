@@ -9,7 +9,7 @@ available on:
 - bug fix:  /ext/parameters/requests/:requestid replies with res.send([]);
 - bug fix: allParameterStatic() => check for attributes not null before iterating Object.entries()
 
-### 0.2.0
+### 0.2.0 - online, unused
 - bug fix
 
 ### 0.1.99
