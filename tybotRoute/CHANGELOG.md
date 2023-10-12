@@ -5,7 +5,8 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-### 0.2.5 - prod debug
+### 0.2.9 - online
+- restored logs
 
 ### 0.2.1 - online
 - bug fix:  /ext/parameters/requests/:requestid replies with res.send([]);
