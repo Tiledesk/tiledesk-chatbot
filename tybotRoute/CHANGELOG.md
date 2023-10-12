@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.2.10 - online pre
+- WebRequest: "body" renamed in "jsonBody"
+
 ### 0.2.9 - online
 - restored logs
 
