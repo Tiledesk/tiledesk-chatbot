@@ -114,10 +114,10 @@ class DirReply {
       message,
       (err) => {
         if (err) {
-          console.error("Error sending reply:", err.message);
+          console.error("Error sending reply:", err);
         }
         // if (this.log) {console.log("Reply message sent.");}
-        console.log("Reply message sent.");
+        console.log("Reply message sent.", JSON.parse(message));
         callback();
       });
   }
@@ -137,14 +137,16 @@ class DirReply {
     };
     this.myrequest(
       HTTPREQUEST,
-      function(err, response, resbody) {
-        if (response.status === 200) {
+      function(err, resbody) {
+        if (err) {
           if (callback) {
-            callback(null, resbody)
+            callback(err);
           }
         }
-        else if (callback) {
-          callback(err);
+        else {
+          if (callback) {
+            callback(null, resbody);
+          }
         }
       }, this.log
     );
@@ -154,6 +156,7 @@ class DirReply {
   // if (log) {
     console.log("API URL:", options.url);
     console.log("** Options:", JSON.stringify(options));
+    console.log("** Sending reply json:", JSON.stringify(options.json));
   // }
   axios(
     {
@@ -173,22 +176,22 @@ class DirReply {
         //console.log("******** Response for url:", res);
       // }
       if (res && res.status == 200 && res.data) {
-        console.error("Status 200 OK");
+        console.log("Status 200 OK");
         if (callback) {
           callback(null, res.data);
         }
       }
       else {
+        console.error("Status ! 200");
         if (callback) {
-          console.error("Status ! 200");
-          callback({ message: "Response status not 200" });
+          callback({ message: "Response status not 200" }, null);
         }
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
+      console.error("Reply error:", error);
       if (callback) {
-        callback(error, null, null);
+        callback(error, null);
       }
     });
   } 
