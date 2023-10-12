@@ -200,7 +200,7 @@ const bot = {
 				"Cache-Control": "no-cache",
 				"User-Agent": "TiledeskBotRuntime"
 			},
-			"body": "{\"name\":\"myname\",\"email\":\"myemail\"}",
+			"jsonBody": "{\"name\":\"myname\",\"email\":\"myemail\"}",
 			"bodyType": "json",
 			"assignErrorTo": "error",
 			"assignResultTo": "result",
