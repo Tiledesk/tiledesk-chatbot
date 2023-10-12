@@ -117,7 +117,7 @@ class DirReply {
           console.error("Error sending reply:", err);
         }
         // if (this.log) {console.log("Reply message sent.");}
-        console.log("Reply message sent.", JSON.parse(message));
+        console.log("Reply message sent.", JSON.stringify(message));
         callback();
       });
   }
@@ -171,7 +171,7 @@ class DirReply {
         console.log("Reply: Response for url:", options.url);
         console.log("Reply: Response headers:\n", JSON.stringify(res.headers));
         console.log("Reply: Status:", res.status);
-        console.log("Reply: Data:", res.data);
+        console.log("Reply: Data:", JSON.stringify(res.data));
         
         //console.log("******** Response for url:", res);
       // }
