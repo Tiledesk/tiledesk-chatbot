@@ -735,7 +735,14 @@ class TiledeskChatbot {
     if (all_parameters) {
       if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
       if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}
-      tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
+      if (this.log) {console.log("(populatePrechatFormAndLead) userPhone:", all_parameters['userPhone']);}
+      let nativeAttributes = {
+        email: all_parameters['userEmail'],
+        fullname: all_parameters['userFullname'],
+        phone: all_parameters['userPhone']
+      }
+      // tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
+        tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
         if (this.log) {console.log("Lead updated.")}
         // tdclient.updateRequestAttributes(requestId, {
         //   preChatForm: all_parameters,

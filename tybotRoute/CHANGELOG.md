@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.2.11
+- TiledeskClient update to 0.10.3
+- updateLead() replaces the deprecated updateLeadData()
+- added support to automatically update userPhone as well as the already supported userEmail and UserFullname
+
 ### 0.2.10 - online pre
 - WebRequest: "body" renamed in "jsonBody"
 
