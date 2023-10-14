@@ -1,5 +1,6 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
+const { Filler } = require('./Filler');
 
 class FillParamsChatbotPlug {
 
@@ -34,7 +35,10 @@ class FillParamsChatbotPlug {
         pipeline.nextplug();
         return;
       }
-      const filled_message_text = this.fillWithRequestParams(message.text, all_parameters);
+      
+      const filler = new Filler();
+      const filled_message_text = filler.fill(message.text, all_parameters);
+      // const filled_message_text = this.fillWithRequestParams(message.text, all_parameters);
       message.text = filled_message_text;
       //console.log("message filled_message_text:", message)
       if (!message.attributes) {

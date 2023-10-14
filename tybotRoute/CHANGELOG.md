@@ -9,6 +9,7 @@ available on:
 - TiledeskClient update to 0.10.3
 - updateLead() replaces the deprecated updateLeadData()
 - added support to automatically update userPhone as well as the already supported userEmail and UserFullname
+- fixed form messages: missing replace of {{...}} attributes
 
 ### 0.2.10 - online pre
 - WebRequest: "body" renamed in "jsonBody"
