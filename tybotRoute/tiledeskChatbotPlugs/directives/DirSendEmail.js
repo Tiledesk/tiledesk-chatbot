@@ -75,14 +75,17 @@ class DirSendEmail {
           const filled_subject = filler.fill(action.subject, requestVariables);
           const filled_text = filler.fill(action.text, requestVariables);
           const filled_to = filler.fill(action.to, requestVariables);
+          const reply_to = filler.fill(action.reply_to, requestVariables);
           const message_echo = await this.tdclient.sendEmail({
             subject: filled_subject,
             text: filled_text,
-            to: filled_to
+            to: filled_to,
+            replyto: "andreasponziello@tiledesk.com"
           });
           if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
           if (this.log) {console.log("email sent. filled_text:", filled_text);}
           if (this.log) {console.log("email sent. filled_to:", filled_to);}
+          if (this.log) {console.log("email sent. reply_to:", reply_to);}
           if (completion) {
             completion(null, message_echo);
           }
