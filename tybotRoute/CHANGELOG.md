@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.14
+- pre-release
+
 ### v0.2.13 - test
 - replyto send email test
 

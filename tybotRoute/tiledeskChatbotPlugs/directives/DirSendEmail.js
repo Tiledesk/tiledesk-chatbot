@@ -80,7 +80,7 @@ class DirSendEmail {
             subject: filled_subject,
             text: filled_text,
             to: filled_to,
-            replyto: "andreasponziello@tiledesk.com"
+            replyto: reply_to
           });
           if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
           if (this.log) {console.log("email sent. filled_text:", filled_text);}
