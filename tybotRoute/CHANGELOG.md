@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.13 - test
+- replyto send email test
+
 ### 0.2.12
 - Updated @tiledesk/tiledesk-client => 0.10.4 to support the new email endpoint
 
