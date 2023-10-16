@@ -58,7 +58,8 @@ class FillParamsChatbotPlug {
         if (commands.length > 1) {
           for (let i = 0; i < commands.length; i++) {
             if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-              let filled_reply = this.fillWithRequestParams(commands[i].message.text, all_parameters);
+              // let filled_reply = this.fillWithRequestParams(commands[i].message.text, all_parameters);
+              let filled_reply = filler.fill(commands[i].message.text, all_parameters);
               commands[i].message.text = filled_reply;
             }
           }
@@ -73,23 +74,23 @@ class FillParamsChatbotPlug {
     
   }
 
-  fillWithRequestParams(message_text, all_parameters) {
-    if (this.log) {console.log("collected parameters:", JSON.stringify(all_parameters));}
-    if (!message_text) {
-      if (this.log) {console.log("fillWithRequestParams() Can't fill. message_text is null");}
-      return;
-    }
-    if (all_parameters) {
-      for (const [key, value] of Object.entries(all_parameters)) {
-        // const value = all_parameters[key];
-        const value_type = typeof value;
-        if (this.log) {console.log("checking parameter:", key, "value:", value, "type:", value_type)}
-        message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), value);
-      }
-      if (this.log) {console.log("final:", message_text);}
-    }
-    return message_text;
-  }
+  // fillWithRequestParams(message_text, all_parameters) {
+  //   if (this.log) {console.log("collected parameters:", JSON.stringify(all_parameters));}
+  //   if (!message_text) {
+  //     if (this.log) {console.log("fillWithRequestParams() Can't fill. message_text is null");}
+  //     return;
+  //   }
+  //   if (all_parameters) {
+  //     for (const [key, value] of Object.entries(all_parameters)) {
+  //       // const value = all_parameters[key];
+  //       const value_type = typeof value;
+  //       if (this.log) {console.log("checking parameter:", key, "value:", value, "type:", value_type)}
+  //       message_text = message_text.replace(new RegExp("(\\$\\{" + key + "\\})", 'i'), value);
+  //     }
+  //     if (this.log) {console.log("final:", message_text);}
+  //   }
+  //   return message_text;
+  // }
   
 }
 

@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### 0.2.12
+- Updated @tiledesk/tiledesk-client => 0.10.4 to support the new email endpoint
+
 ### 0.2.11
 - TiledeskClient update to 0.10.3
 - updateLead() replaces the deprecated updateLeadData()
