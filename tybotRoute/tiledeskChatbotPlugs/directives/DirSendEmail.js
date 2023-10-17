@@ -75,7 +75,7 @@ class DirSendEmail {
           const filled_subject = filler.fill(action.subject, requestVariables);
           const filled_text = filler.fill(action.text, requestVariables);
           const filled_to = filler.fill(action.to, requestVariables);
-          const reply_to = filler.fill(action.reply_to, requestVariables);
+          const reply_to = filler.fill(action.replyto, requestVariables);
           const message = {
             subject: filled_subject,
             text: filled_text,
