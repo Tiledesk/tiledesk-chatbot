@@ -248,6 +248,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
   // await chatbot.addParameter("chatbot", chatbot);
   await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
+  console.log("Adding proj_", projectId);
   await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
   // TODO add projectName too
   await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
