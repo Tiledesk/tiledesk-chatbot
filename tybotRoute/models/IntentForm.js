@@ -216,8 +216,15 @@ class IntentForm {
       _regex = regex.substring(1, regex.length-1);
     }
     if (this.log) {console.log("Validating using regex:", _regex);}
-    const rg = new RegExp(_regex, "g");
-    return rg.test(text);
+    try {
+      const rg = new RegExp(_regex, "g");
+      return rg.test(text);
+    }
+    catch(error) {
+      console.error("Error, invalid regex:", _regex);
+      return true;
+    }
+    
   }
 
   static isValidForm(form) {

@@ -57,8 +57,8 @@ class DirIntent {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
   }
 
@@ -111,7 +111,7 @@ class DirIntent {
     }
     this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
       // console.log("sendMessageToBot() req_body sent:", intent_command_request);
-      callback();
+      callback(true);
     });
 
     // }
