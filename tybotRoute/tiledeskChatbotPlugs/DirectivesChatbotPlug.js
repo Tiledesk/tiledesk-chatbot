@@ -252,7 +252,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.INTENT) {
       // console.log(".....DirIntent")
-      new DirIntent(context).execute(directive, async () => {
+      new DirIntent(context).execute(directive, async (stop) => {
         if (stop) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
