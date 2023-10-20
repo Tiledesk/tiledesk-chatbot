@@ -248,6 +248,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
   // await chatbot.addParameter("chatbot", chatbot);
   await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
+  console.log("Adding proj_", projectId);
   await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
   // TODO add projectName too
   await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
@@ -324,6 +325,11 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     }
   }
   if (chatbot.log) {
+    console.log("tdcache:", chatbot.tdcache);
+    console.log("requestId:", requestId);
+    console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
+    let proj_ = await TiledeskChatbot.getParameterStatic(chatbot.tdcache, requestId, TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
+    console.log("request parameter proj_:", proj_);
     const all_parameters = await TiledeskChatbot.allParametersStatic(chatbot.tdcache, requestId);
     for (const [key, value] of Object.entries(all_parameters)) {
       // const value = all_parameters[key];
