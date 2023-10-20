@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.16
+- update whatsapp api url for pre environment
+
 ### v0.2.15
 - replyto in send email fix
 
