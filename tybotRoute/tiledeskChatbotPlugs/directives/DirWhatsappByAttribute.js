@@ -1,7 +1,6 @@
 const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
-// const whatsapp_api_url = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/ext"
 let whatsapp_api_url;
 
 class DirWhatsappByAttribute {
@@ -36,7 +35,7 @@ class DirWhatsappByAttribute {
     }
 
     if (process.env.API_URL) {
-      whatsapp_api_url = "https://tiledesk-whatsapp-app-pre.giovannitroisi3.repl.co/api";
+      whatsapp_api_url = "https://tiledesk-whatsapp-connector.giovannitroisi3.repl.co/api";
       // whatsapp_api_url = process.env.API_URL + "/modules/whatsapp";
       console.log("(Tilebot) DirWhatsappByAttribute whatsapp_api_url: ", whatsapp_api_url);
     } else {
