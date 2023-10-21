@@ -257,6 +257,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
   if (message.text && message.sender !== "_tdinternal") {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
+    await chatbot.addParameter("lastUserMessage", message); // JSON TYPE *NEW
   }
   await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
   if (message.request && message.request.location && message.request.location.country) {

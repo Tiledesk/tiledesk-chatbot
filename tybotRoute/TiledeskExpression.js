@@ -361,6 +361,7 @@ class TiledeskExpression {
     }
 
     static JSONGroupToExpression(group, variables) {
+        // console.log("attributes:", variables);
         let conditions = group.conditions;
         let group_expression = "";
         // console.log("conditions:", conditions)
@@ -412,7 +413,8 @@ class TiledeskExpression {
     static validateVariableName(variableName) {
         // console.log("variableName", variableName)
         // console.log("type of variableName:", typeof variableName);
-        let matches = variableName.match(/^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$/gm);
+        // let matches = variableName.match(/^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$/gm);
+        let matches = variableName.match(/^[a-zA-Z_]+.*$/gm);
         // console.log("matches:", matches)
         if (matches !== null) {
             return true;

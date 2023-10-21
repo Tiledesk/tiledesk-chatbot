@@ -525,7 +525,7 @@ describe("Test conditions with invalid operands", () => {
   it('test condition with invalid variable operand', async () => {
     const condition = {
       "type": "condition",
-      "operand1": "age()", // invalid chars ()
+      "operand1": "age()",
       "operator": TiledeskExpression.OPERATORS.lessThan.name,
       "operand2": {
         type: "const",
@@ -534,7 +534,7 @@ describe("Test conditions with invalid operands", () => {
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
     // console.log("expression:", expression);
-    assert(expression === null);
+    assert(expression !== null);
   });
 
   it('test condition with invalid variable operand', async () => {
