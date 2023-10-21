@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.17
+- Added lastUserMessage JSON native attribute
+- Added support for JSON attributes in conditions
+
 ### v0.2.16
 - update whatsapp api url for pre environment
 
