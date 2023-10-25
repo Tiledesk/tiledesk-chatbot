@@ -281,7 +281,6 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
       await chatbot.addParameter("lastUserImageName", message.metadata.name);
       await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
       await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-      await chatbot.addParameter("lastUserImageSize", message.metadata.size);
       await chatbot.addParameter("lastUserImageType", message.metadata.type);
     }
   }
@@ -290,7 +289,6 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
       await chatbot.addParameter("lastUserImageName", null);
       await chatbot.addParameter("lastUserImageWidth", null);
       await chatbot.addParameter("lastUserImageHeight", null);
-      await chatbot.addParameter("lastUserImageSize", null);
       await chatbot.addParameter("lastUserImageType", null);
   }
   // get document
