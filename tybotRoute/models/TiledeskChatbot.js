@@ -280,7 +280,11 @@ class TiledeskChatbot {
           intents = await this.intentsFinder.decode(this.botId, message.text);
         }
         catch(error) {
-          console.error("An error occurred on Intents Finder.decode():", error);
+          console.error("An error occurred on IntentsFinder.decode() (/model/parse error):", error);
+          // recover on fulltext
+          if (this.backupIntentsFinder) {
+            intents = await this.backupIntentsFinder.decode(this.botId, message.text);
+          }
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
         if (intents && intents.length > 0) {

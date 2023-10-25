@@ -102,8 +102,11 @@ router.post('/ext/:botid', async (req, res) => {
   if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
+  let backupMachine;
   if (!staticBots) {
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
+    backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId, log);
+    console.log("Created backupMachine:", backupMachine);
   }
   else {
     intentsMachine = {}
@@ -132,6 +135,7 @@ router.post('/ext/:botid', async (req, res) => {
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     intentsFinder: intentsMachine,
+    backupIntentsFinder: backupMachine,
     botId: botId,
     bot: bot,
     token: token,
