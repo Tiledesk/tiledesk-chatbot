@@ -326,7 +326,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
     }
   }
   if (chatbot.log) {
-    console.log("tdcache:", chatbot.tdcache);
+    // console.log("tdcache:", chatbot.tdcache);
     console.log("requestId:", requestId);
     console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
     let proj_ = await TiledeskChatbot.getParameterStatic(chatbot.tdcache, requestId, TiledeskChatbotConst.REQ_PROJECT_ID_KEY);

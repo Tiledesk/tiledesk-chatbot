@@ -3,7 +3,7 @@ const exp = require('constants');
 const { TiledeskExpression } = require('../TiledeskExpression');
 
 describe('JSON to expression', function() {
-  
+
   it('test condition operand lessThan (false)', async () => {
     const condition = {
       "type": "condition",
@@ -522,10 +522,11 @@ describe('JSON to expression', function() {
 
 
 describe("Test conditions with invalid operands", () => {
-  it('test condition with invalid variable operand', async () => {
+
+  it('test condition with INVALID VARIABLE operand', async () => {
     const condition = {
       "type": "condition",
-      "operand1": "age()",
+      "operand1": "age()...[",
       "operator": TiledeskExpression.OPERATORS.lessThan.name,
       "operand2": {
         type: "const",
@@ -533,8 +534,11 @@ describe("Test conditions with invalid operands", () => {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    // console.log("expression:", expression);
+    // console.log("expression in test:", expression);
     assert(expression !== null);
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, null);
+    // console.log("result of invalid expression:", result);
+    assert(result === null);
   });
 
   it('test condition with invalid variable operand', async () => {
@@ -646,11 +650,6 @@ describe('Bugs', function() {
     }
 
     const expression = TiledeskExpression.JSONGroupToExpression(group);
-    // console.log("expression:", expression);
-    // assert(expression === '(Number($data.height) > Number("1") && String($data.name).startsWith(String("And")))');
-    // const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
-    // console.log("result:", result);
-    // assert(result === true);
 
   });
 

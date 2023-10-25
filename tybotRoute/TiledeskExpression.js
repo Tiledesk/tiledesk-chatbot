@@ -230,9 +230,9 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        // console.log("evaluating:", expression)
+        // console.log("(evaluateJavascriptExpression) evaluating:", expression)
         // console.log("context:", context)
-        let res;
+        let res = null;
         try {
             const vm = new VM({
                 timeout: 200,
@@ -240,9 +240,10 @@ class TiledeskExpression {
                 sandbox: context
             });
             res = vm.run(`let $data = this;${expression}`);
+            // console.log("res=", res)
         }
         catch (err) {
-            console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
         return res;
     }
@@ -324,11 +325,13 @@ class TiledeskExpression {
         // console.log("applyPattern:", applyPattern);
         let operand1_s;
         let is_valid_operand1 = TiledeskExpression.validateVariableName(condition.operand1);
+        // console.log("is_valid_operand1:", condition.operand1, is_valid_operand1);
         if (is_valid_operand1) {
             operand1_s = TiledeskExpression.variableOperand(condition.operand1);
+            // console.log("operand1_s:", operand1_s);
         }
         else {
-            // console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
+            console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
             return null;
         }
         
@@ -343,20 +346,21 @@ class TiledeskExpression {
                 operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
             }
             else {
-                // console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
+                console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
                 return null;
             }
         }
         else {
-            // console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
+            console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
             return null;
         }
         
-        // console.log("operand2_s:", operand2_s);
+        // console.log("operand1_s, operand2_s:",operand1_s, operand2_s);
         const expression = 
             applyPattern
                 .replace("#1", operand1_s)
                 .replace("#2", operand2_s);
+        // console.log("expression is:", expression);
         return expression;
     }
 
@@ -369,6 +373,7 @@ class TiledeskExpression {
             let part = conditions[i];
             if (part.type === "condition") {
                 let expression = TiledeskExpression.JSONConditionToExpression(part, variables);
+                // console.log("returned expression:", expression);
                 if (expression === null) {
                     // console.error("Invalid JSON expression", JSON.stringify(part));
                     return null;
