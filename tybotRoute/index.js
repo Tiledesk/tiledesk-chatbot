@@ -262,56 +262,57 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   if (message.text && message.sender !== "_tdinternal") {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
     await chatbot.addParameter("lastUserMessage", lastUserMessageFrom(message)); // JSON TYPE *NEW
-  }
-  // get image
-  if (message.type && message.type === "image" && message.metadata) {
-    // "text": "\nimage text",
-    // "id_project": "65203e12f8c0cf002cf4110b",
-    // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
-    // "metadata": {
-    //     "height": 905,
-    //     "name": "tiledesk_Open graph_general.png",
-    //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
-    //     "type": "image/png",
-    //     "uid": "lo68iyq5",
-    //     "width": 1724
-    // }
-    if (message.metadata.src) {
-      await chatbot.addParameter("lastUserImageURL", message.metadata.src);
-      await chatbot.addParameter("lastUserImageName", message.metadata.name);
-      await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
-      await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-      await chatbot.addParameter("lastUserImageType", message.metadata.type);
+    // get image
+    if (message.type && message.type === "image" && message.metadata) {
+      // "text": "\nimage text",
+      // "id_project": "65203e12f8c0cf002cf4110b",
+      // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
+      // "metadata": {
+      //     "height": 905,
+      //     "name": "tiledesk_Open graph_general.png",
+      //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
+      //     "type": "image/png",
+      //     "uid": "lo68iyq5",
+      //     "width": 1724
+      // }
+      if (message.metadata.src) {
+        await chatbot.addParameter("lastUserImageURL", message.metadata.src);
+        await chatbot.addParameter("lastUserImageName", message.metadata.name);
+        await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
+        await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
+        await chatbot.addParameter("lastUserImageType", message.metadata.type);
+      }
+    }
+    else {
+      await chatbot.addParameter("lastUserImageURL", null);
+        await chatbot.addParameter("lastUserImageName", null);
+        await chatbot.addParameter("lastUserImageWidth", null);
+        await chatbot.addParameter("lastUserImageHeight", null);
+        await chatbot.addParameter("lastUserImageType", null);
+    }
+    // get document
+    if (message.type && message.type === "file" && message.metadata) {
+      // "type": "file",
+      // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
+      // "metadata": {
+      //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
+      //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
+      //     "type": "application/pdf",
+      //     "uid": "lo68oz8i"
+      // }
+      if (message.metadata.src) {
+        await chatbot.addParameter("lastUserDocumentURL", message.metadata.src);
+        await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
+        await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
+      }
+    }
+    else {
+      await chatbot.addParameter("lastUserDocumentURL", null);
+        await chatbot.addParameter("lastUserDocumentName", null);
+        await chatbot.addParameter("lastUserDocumentType", null);
     }
   }
-  else {
-    await chatbot.addParameter("lastUserImageURL", null);
-      await chatbot.addParameter("lastUserImageName", null);
-      await chatbot.addParameter("lastUserImageWidth", null);
-      await chatbot.addParameter("lastUserImageHeight", null);
-      await chatbot.addParameter("lastUserImageType", null);
-  }
-  // get document
-  if (message.type && message.type === "file" && message.metadata) {
-    // "type": "file",
-    // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
-    // "metadata": {
-    //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
-    //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
-    //     "type": "application/pdf",
-    //     "uid": "lo68oz8i"
-    // }
-    if (message.metadata.src) {
-      await chatbot.addParameter("lastUserDocumentURL", message.metadata.src);
-      await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
-      await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
-    }
-  }
-  else {
-    await chatbot.addParameter("lastUserDocumentURL", null);
-      await chatbot.addParameter("lastUserDocumentName", null);
-      await chatbot.addParameter("lastUserDocumentType", null);
-  }
+  
 
   await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
   if (message.request && message.request.location && message.request.location.country) {
