@@ -80,6 +80,7 @@ class DirIntent {
     else {
       console.error("Invalid intent");
       callback();
+      return;
     }
 
     // if (intentName) {
