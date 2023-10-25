@@ -280,7 +280,7 @@ class TiledeskChatbot {
           intents = await this.intentsFinder.decode(this.botId, message.text);
         }
         catch(error) {
-          console.error("An error occurred:", error);
+          console.error("An error occurred on Intents Finder.decode():", error);
         }
         if (this.log) {console.log("NLP decoded found:", intents);}
         if (intents && intents.length > 0) {

@@ -39,7 +39,7 @@ class TiledeskIntentsMachine {
         HTTPREQUEST,
         function(err, resbody) {
           if (err) {
-            console.error("error:", err)
+            console.error("An error occurred on /model/parse:", err)
             reject(err);
           }
           else {
