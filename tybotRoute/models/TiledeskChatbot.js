@@ -80,7 +80,7 @@ class TiledeskChatbot {
             if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
             await this.unlockIntent(this.requestId);
             await this.unlockAction(this.requestId);
-            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly  invoked with an action:", message.attributes.action);}
           }
         }
         catch(error) {
