@@ -29,6 +29,7 @@ class TiledeskChatbot {
     }
     this.botsDataSource = config.botsDataSource;
     this.intentsFinder = config.intentsFinder;
+    this.backupIntentsFinder = config.backupIntentsFinder;
     this.botId = config.botId;
     this.bot = config.bot;
     this.token = config.token;
