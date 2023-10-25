@@ -152,7 +152,7 @@ class TiledeskChatbot {
 
       let explicit_intent_name = null;
       // Explicit intent invocation
-      if (message.text.startsWith("/")) {
+      if (message.text && message.text.startsWith("/")) {
         if (this.log) {console.log("Intent was explicitly invoked:", message.text);}
         let intent_name = message.text.substring(message.text.indexOf("/") + 1);
         if (this.log) {console.log("Invoked Intent:", intent_name);}
