@@ -261,6 +261,7 @@ async function updateRequestVariables(chatbot, message, projectId, requestId) {
   }
   if (message.text && message.sender !== "_tdinternal") {
     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
+    await chatbot.addParameter("lastUserMessageType", message.type);
     await chatbot.addParameter("lastUserMessage", lastUserMessageFrom(message)); // JSON TYPE *NEW
     // get image
     if (message.type && message.type === "image" && message.metadata) {
