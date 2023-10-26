@@ -7,7 +7,9 @@ available on:
 
 ### v0.2.17
 - Added lastUserMessage JSON native attribute
+- Added attributes to access image and file properties from incoming messages
 - Added support for JSON attributes in conditions
+- Added backupIntentsFinder based on Fulltext in TiledeskChatbot
 
 ### v0.2.16
 - update whatsapp api url for pre environment
