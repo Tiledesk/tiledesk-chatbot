@@ -237,14 +237,18 @@ class TiledeskChatbotUtil {
         if (!message) {
           return;
         }
+        console.log("compute delay...", message)
         if (message.attributes.commands.length > 0) {
+            console.log("going on delay")
             let commands = message.attributes.commands;
+            console.log("got commands", commands)
             let totalWaitTime = 0;
             for (let i = commands.length - 1; i >= 0; i--) {
                 if (commands[i].type === "wait") { // is a wait
                     totalWaitTime += commands[i].time;
                 }
             }
+            return totalWaitTime;
         }
     }
 
