@@ -233,6 +233,21 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static totalMessageWait(message) {
+        if (!message) {
+          return;
+        }
+        if (message.attributes.commands.length > 0) {
+            let commands = message.attributes.commands;
+            let totalWaitTime = 0;
+            for (let i = commands.length - 1; i >= 0; i--) {
+                if (commands[i].type === "wait") { // is a wait
+                    totalWaitTime += commands[i].time;
+                }
+            }
+        }
+    }
+
     static fillCommandAttachments(command, variables, log) {
         if (log) {
             console.log("filling command button:", JSON.stringify(command))

@@ -106,7 +106,10 @@ class DirReply {
           console.error("Error sending reply:", err);
         }
         if (this.log) {console.log("Reply message sent");}
-        callback();
+        const delay = TiledeskChatbotUtil.totalMessageWait(message);
+        setTimeout(() => {
+          callback();
+        }, delay);
     });
 
     // this.sendSupportMessage(

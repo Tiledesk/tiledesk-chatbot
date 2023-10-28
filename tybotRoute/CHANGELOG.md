@@ -7,6 +7,8 @@ available on:
 
 ### v0.2.18
 - Added native attribute lastUserMessageType
+- Added integration with external intents decode engine
+- Added support for automatic wait time on each reply
 
 ### v0.2.17
 - Added lastUserMessage JSON native attribute
