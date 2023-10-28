@@ -107,9 +107,14 @@ class DirReply {
         }
         if (this.log) {console.log("Reply message sent");}
         const delay = TiledeskChatbotUtil.totalMessageWait(message);
-        setTimeout(() => {
+        if (delay > 0 && delay <= 30000) { // prevent long delays
+          setTimeout(() => {
+            callback();
+          }, delay);
+        }
+        else {
           callback();
-        }, delay);
+        }
     });
 
     // this.sendSupportMessage(
