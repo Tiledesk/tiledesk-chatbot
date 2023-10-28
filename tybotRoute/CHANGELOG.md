@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.18
+- Added native attribute lastUserMessageType
+
 ### v0.2.17
 - Added lastUserMessage JSON native attribute
 - Added attributes to access image and file properties from incoming messages

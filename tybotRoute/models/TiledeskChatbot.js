@@ -289,8 +289,9 @@ class TiledeskChatbot {
             if (this.log) {console.log("Got intents from backup finder:", intents);}
           }
         }
-        if (this.log) {console.log("NLP decoded found:", intents);}
+        if (this.log) {console.log("NLP intents found:", intents);}
         if (intents && intents.length > 0) {
+          console.log("Matching intents found.");
           // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
