@@ -43,7 +43,7 @@ class TiledeskIntentsMachine {
             reject(err);
           }
           else {
-            resolve(translateForTiledesk(resbody));
+            resolve(this.translateForTiledesk(resbody));
           }
         }, false
       );
