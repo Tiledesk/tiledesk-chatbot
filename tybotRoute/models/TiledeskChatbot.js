@@ -275,10 +275,11 @@ class TiledeskChatbot {
         return;
       }
       else { // NLP
-        if (this.log) {console.log("Chatbot NLP decode intent...");}
+        if (this.log) {console.log("Chatbot NLP decoding intent...");}
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
+          if (this.log) {console.log("Tiledesk AI intents found:", intents);}
         }
         catch(error) {
           console.error("An error occurred on IntentsFinder.decode() (/model/parse error):", error.message);
