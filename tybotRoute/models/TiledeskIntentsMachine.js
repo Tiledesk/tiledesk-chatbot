@@ -83,7 +83,7 @@ class TiledeskIntentsMachine {
     // }
     let intents_array = intents.intent_ranking;
     let tiledesk_intents = [];
-    for (i = 0; i < intents_array.length; i++) {
+    for (let i = 0; i < intents_array.length; i++) {
       let td_intent = {
         "intent_display_name": intents_array[i].name
       }
