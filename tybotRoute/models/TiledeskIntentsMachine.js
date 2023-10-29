@@ -43,6 +43,7 @@ class TiledeskIntentsMachine {
             reject(err);
           }
           else {
+            console.log("Tiledesk AI replied:", resbody)
             resolve(this.translateForTiledesk(resbody));
           }
         }, false
