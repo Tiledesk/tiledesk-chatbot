@@ -580,11 +580,11 @@ class TiledeskChatbot {
   }
 
   async getParameter(parameter_name) {
-    console.log("this.tdcache::", this.tdcache)
-    console.log("this.requestId::", this.requestId)
-    console.log("parameter_name::", parameter_name)
+    // console.log("this.tdcache::", this.tdcache)
+    // console.log("this.requestId::", this.requestId)
+    // console.log("parameter_name::", parameter_name)
     
-    await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, parameter_name);
+    return await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
 
   async deleteParameter(parameter_name) {
