@@ -279,7 +279,7 @@ class TiledeskChatbotUtil {
             let transcript = await chatbot.getParameter("transcript");
             transcript = "[" + message.sender + "] says: " + message.text;
             console.log("transcript update:", transcript)
-            await chatbot.setParameter("transcript", transcript);
+            await chatbot.addParameter("transcript", transcript);
             let transcript2 = await chatbot.getParameter("transcript");
             console.log("transcript updated:", transcript2)
         }
