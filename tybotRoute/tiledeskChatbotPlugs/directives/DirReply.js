@@ -98,6 +98,7 @@ class DirReply {
     }
     // send!
     if (this.log) {console.log("Reply:", JSON.stringify(message))};
+    await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, message);
     this.context.tdclient.sendSupportMessage(
       this.requestId,
       message,

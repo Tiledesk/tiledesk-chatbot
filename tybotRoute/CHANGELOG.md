@@ -5,7 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-### v0.2.18
+### v0.2.20
+- updateRequestVariables renamed in updateRequestAttributes
+- Added TildeskChatbot instance method async getParameter(parameter_name)
+- Added "transcript" attribute
+
+### v0.2.19
 - Added native attribute lastUserMessageType
 - Added integration with external intents decode engine
 - Added support for automatic wait time on each reply

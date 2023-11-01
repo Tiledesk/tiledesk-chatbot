@@ -579,6 +579,10 @@ class TiledeskChatbot {
     await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, parameter_name, parameter_value);
   }
 
+  async getParameter(parameter_name) {
+    await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, parameter_name, parameter_value);
+  }
+
   async deleteParameter(parameter_name) {
     await TiledeskChatbot.deleteParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
