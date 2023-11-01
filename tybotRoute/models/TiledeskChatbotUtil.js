@@ -277,11 +277,11 @@ class TiledeskChatbotUtil {
         console.log("transcript updating with:", message)
         if (message && message.type === "text" && message.text && message.text.trim() !== "") {
             let transcript = await chatbot.getParameter("transcript");
-            transcript = "[" + message.sender + "] says: " + message.text;
-            console.log("transcript update:", transcript)
+            transcript = (transcript + "\n[" + message.senderFullname + "] says: " + message.text).trim();
+            console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
             let transcript2 = await chatbot.getParameter("transcript");
-            console.log("transcript updated:", transcript2)
+            console.log("transcript updated:", transcript2);
         }
     }
 
