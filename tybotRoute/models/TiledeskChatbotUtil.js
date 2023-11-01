@@ -280,7 +280,7 @@ class TiledeskChatbotUtil {
         console.log("message.text.trim() !== :", message.text.trim() !== "")
         console.log("message.sender !== _tdinternal:", message.sender !== "_tdinternal")
         
-        if (message && message.type === "text" && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal") {
+        if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal") {
             let transcript = await chatbot.getParameter("transcript");
             console.log("transcript got:", transcript);
             if (transcript) {
