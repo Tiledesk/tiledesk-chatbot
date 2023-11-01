@@ -275,12 +275,7 @@ class TiledeskChatbotUtil {
 
     static async updateConversationTranscript(chatbot, message) {
         console.log("transcript updating with:", message)
-        console.log("message.type:", message.type)
-        console.log("message.text:", message.text)
-        console.log("message.text.trim() !== :", message.text.trim() !== "")
-        console.log("message.sender !== _tdinternal:", message.sender !== "_tdinternal")
-        
-        if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal") {
+        if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             console.log("transcript got:", transcript);
             if (transcript) {
@@ -294,6 +289,13 @@ class TiledeskChatbotUtil {
             let transcript2 = await chatbot.getParameter("transcript");
             console.log("transcript updated:", transcript2);
         }
+    }
+
+    static isHiddenMessage(message) {
+        if (message && message.attributes && message.attributes.subtype === "info") {
+            return true;
+        }
+        return false;
     }
 
 }
