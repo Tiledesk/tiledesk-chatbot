@@ -27,7 +27,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 // THE IMPORT
 let mongoose = require('mongoose');
 const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
-const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
+const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
 let APIURL = null;
 let staticBots;
 
