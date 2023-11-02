@@ -212,21 +212,21 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-      console.log("Checking locks", JSON.stringify(directive));
+      // console.log("Checking locks", JSON.stringify(directive));
       // try {
         const action_id = directive.action["_tdActionId"];
-        console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
+        // console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
         const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        console.log("locked_action_id:", locked_action_id);
+        // console.log("locked_action_id:", locked_action_id);
         if ( locked_action_id && (locked_action_id !== action_id) ) {
-          console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
+          // console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
           return;
         }
         else {
           // go on
-          console.log("Going on to next directive...");
+          // console.log("Going on to next directive...");
         }
       // }
       // catch(error) {

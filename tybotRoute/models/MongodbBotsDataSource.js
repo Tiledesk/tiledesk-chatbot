@@ -22,33 +22,33 @@ class MongodbBotsDataSource {
   async getBotByIdCache(botId, tdcache) {
     let bot = null;
     if (tdcache) {
-      console.log("getBotByIdCache cache ok");
+      // console.log("getBotByIdCache cache ok");
       let botCacheKey = "cacheman:cachegoose-cache:faq_kbs:id:" + botId;
       try {
         let _bot_as_string = await tdcache.get(botCacheKey);
         const value_type = typeof _bot_as_string;
-        console.log("__bot_as_string found in chache:", _bot_as_string);
-        // if (this.log) {
-        //   console.log("__bot_as_string found in chache:", _bot_as_string);
-        //   console.log("value_type:", value_type);
-        // }
+        // console.log("__bot_as_string found in chache:", _bot_as_string);
+        if (this.log) {
+          console.log("__bot_as_string found in chache:", _bot_as_string);
+          console.log("value_type:", value_type);
+        }
         if (_bot_as_string) {
           bot = JSON.parse(_bot_as_string);
-          console.log("got bot from cache:", JSON.stringify(bot));
-          // if (this.log) {
-          //   console.log("got bot from cache:", JSON.stringify(bot));
-          // }
+          // console.log("got bot from cache:", JSON.stringify(bot));
+          if (this.log) {
+            console.log("got bot from cache:", JSON.stringify(bot));
+          }
         }
         else {
-          console.log("bot not found, getting from datasource...");
-          // if (this.log) {
-          //   console.log("bot not found, getting from datasource...");
-          // }
+          // console.log("bot not found, getting from datasource...");
+          if (this.log) {
+            console.log("bot not found, getting from datasource...");
+          }
           bot = await this.getBotById(botId);
-          console.log("bot found in datasource:", JSON.stringify(bot));
-          // if (this.log) {
-          //   console.log("bot found in datasource:", JSON.stringify(bot));
-          // }
+          // console.log("bot found in datasource:", JSON.stringify(bot));
+          if (this.log) {
+            console.log("bot found in datasource:", JSON.stringify(bot));
+          }
           await tdcache.set(botCacheKey, JSON.stringify(bot));
           // DEBUG CODE REMOVE
           // let bot_ = await tdcache.get(botCacheKey);

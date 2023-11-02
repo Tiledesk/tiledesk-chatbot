@@ -7,12 +7,12 @@ const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
 const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
-const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
-const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
+// const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
+// const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
-const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
+// const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
-let parser = require('accept-language-parser');
+// let parser = require('accept-language-parser');
 
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
@@ -26,7 +26,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 
 // THE IMPORT
 let mongoose = require('mongoose');
-const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
+// const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
 let APIURL = null;
 let staticBots;
@@ -93,7 +93,7 @@ router.post('/ext/:botid', async (req, res) => {
     // bot = await botsDS.getBotById(botId);
     // bot = await botById(botId, projectId, tdcache, botsDS);
     bot = await botsDS.getBotByIdCache(botId, tdcache);
-    console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
+    // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
   }
   catch(error) {
     console.error("Error getting botId:", botId);
@@ -147,7 +147,7 @@ router.post('/ext/:botid', async (req, res) => {
     projectId: projectId,
     log: log
   });
-  await updateRequestAttributes(chatbot, message, projectId, requestId);
+  await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
 
   let reply = await chatbot.replyToMessage(message);
@@ -162,12 +162,10 @@ router.post('/ext/:botid', async (req, res) => {
   //   process.exit(1)
   // }
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
-    if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
-    let directives = actionsToDirectives(reply.actions);
-    if (log) {console.log("the directives:", JSON.stringify(directives));}
     try {
-
-    
+      if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
+      let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
+      if (log) {console.log("the directives:", JSON.stringify(directives));}
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -188,7 +186,7 @@ router.post('/ext/:botid', async (req, res) => {
       });
     }
     catch (error) {
-      console.error("an error:", error);
+      console.error("Error while processing actions:", error);
     }
   }
   else { // text answer (parse text directives to get actions)
@@ -217,214 +215,6 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
 });
-
-async function updateRequestAttributes(chatbot, message, projectId, requestId) {
-  // update request context
-  if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
-  const messageId = message._id;
-  const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
-  // await chatbot.addParameter("chatbot", chatbot);
-  await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
-  console.log("Adding proj_", projectId);
-  await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
-  // TODO add projectName too
-  await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
-  if (chatbot.bot) {
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
-  }
-  if (message.text && message.sender !== "_tdinternal") {
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text);
-    await chatbot.addParameter("lastUserMessageType", message.type);
-    await chatbot.addParameter("lastUserMessage", lastUserMessageFrom(message)); // JSON TYPE *NEW
-    // get image
-    if (message.type && message.type === "image" && message.metadata) {
-      // "text": "\nimage text",
-      // "id_project": "65203e12f8c0cf002cf4110b",
-      // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
-      // "metadata": {
-      //     "height": 905,
-      //     "name": "tiledesk_Open graph_general.png",
-      //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
-      //     "type": "image/png",
-      //     "uid": "lo68iyq5",
-      //     "width": 1724
-      // }
-      if (message.metadata.src) {
-        await chatbot.addParameter("lastUserImageURL", message.metadata.src);
-        await chatbot.addParameter("lastUserImageName", message.metadata.name);
-        await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
-        await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-        await chatbot.addParameter("lastUserImageType", message.metadata.type);
-      }
-    }
-    else {
-      await chatbot.addParameter("lastUserImageURL", null);
-        await chatbot.addParameter("lastUserImageName", null);
-        await chatbot.addParameter("lastUserImageWidth", null);
-        await chatbot.addParameter("lastUserImageHeight", null);
-        await chatbot.addParameter("lastUserImageType", null);
-    }
-    // get document
-    if (message.type && message.type === "file" && message.metadata) {
-      // "type": "file",
-      // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
-      // "metadata": {
-      //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
-      //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
-      //     "type": "application/pdf",
-      //     "uid": "lo68oz8i"
-      // }
-      if (message.metadata.src) {
-        await chatbot.addParameter("lastUserDocumentURL", message.metadata.src);
-        await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
-        await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
-      }
-    }
-    else {
-      await chatbot.addParameter("lastUserDocumentURL", null);
-        await chatbot.addParameter("lastUserDocumentName", null);
-        await chatbot.addParameter("lastUserDocumentType", null);
-    }
-  }
-  
-
-  await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
-  if (message.request && message.request.location && message.request.location.country) {
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_COUNTRY_KEY, message.request.location.country);
-  }
-  if (message.request && message.request.location && message.request.location.city) {
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
-  }
-  // console.log("message.request.language", message.request["language"]);
-  if (message.request) {
-    let user_language = message.request["language"];
-    if (message.request["language"]) {
-      // console.log("HTTP language:", message.request["language"]);
-      var languages = parser.parse(message.request["language"]);
-      // console.log("languages:", languages);
-      if (languages && languages.length > 0 && languages[0].code) {
-        user_language = languages[0].code;
-      }
-    }
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, user_language);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
-  }
-  // console.log("message.request.language", message.request["language"])
-  if (message.request && message.request.department) {
-    // It was an error when getting this from widget message's attributes
-    // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
-    // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
-    // get from request.department instead
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
-  }
-
-  if (projectId === "641864da99c1fb00131ba495") {
-    console.log("641864da99c1fb00131ba495 > for projectId:", JSON.stringify(message))
-  }
-  // for BUG
-  // if (chatbot.log) {console.log("message.request.attributes.payload", JSON.stringify(message.request.attributes.payload))}
-  if (message && message.request && message.request.attributes && message.request.attributes.payload) {
-    if (!message.attributes) {
-      message.attributes = {}
-    }
-    message.attributes.payload = message.request.attributes.payload
-    if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-    // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-  }
-
-  if (message.attributes) {
-    if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
-    if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
-    await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
-    if (message.attributes.payload) {
-      try {
-        for (const [key, value] of Object.entries(message.attributes.payload)) {
-          // const value = all_parameters[key];
-          const value_type = typeof value;
-          //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
-          //await chatbot.addParameter(key, String(value));
-          await chatbot.addParameter(key, value);
-        }
-      }
-      catch(err) {
-        console.error("Error importing message payload in request variables:", err);
-      }
-    }
-  }
-  if (chatbot.log) {
-    // console.log("tdcache:", chatbot.tdcache);
-    console.log("requestId:", requestId);
-    console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-    let proj_ = await TiledeskChatbot.getParameterStatic(chatbot.tdcache, requestId, TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-    console.log("request parameter proj_:", proj_);
-    const all_parameters = await TiledeskChatbot.allParametersStatic(chatbot.tdcache, requestId);
-    for (const [key, value] of Object.entries(all_parameters)) {
-      // const value = all_parameters[key];
-      const value_type = typeof value;
-      if (chatbot.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
-    }
-  }
-  // message["attributes"]: {
-  //   "departmentId": "63c980054f857c00350535bc",
-  //   "departmentName": "Default Department",
-  //   "client": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-  //   "sourcePage": "https://tiledesk-html-site.tiledesk.repl.co/custom-attributes.html",
-  //   "projectId": "63c980054f857c00350535b8",
-  //   "payload": {
-  //     "user_country": "Italy",
-  //     "user_code": "E001"
-  //   },
-  //   "userFullname": "guest#7216 ",
-  //   "requester_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-  //   "ipAddress": "79.8.190.172",
-  //   "sourceTitle": "Custom attributes",
-  //   "widgetVer": "v.5.0.53-rc.4",
-  //   "subtype": "info",
-  //   "decoded_jwt": {
-  //     "_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-  //     "firstname": "guest#7216",
-  //     "id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-  //     "fullName": "guest#7216 ",
-  //     "iat": 1674201892,
-  //     "aud": "https://tiledesk.com",
-  //     "iss": "https://tiledesk.com",
-  //     "sub": "guest",
-  //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
-  //   }
-}
-
-function lastUserMessageFrom(msg) {
-  let message = {};
-  message["senderFullname"] = msg["senderFullname"]; // ex. "Bot"
-  message["type"] = msg["type"]; // ex. "text",
-  message["channel_type"] = msg["channel_type"]; // ex. "group",
-  message["status"] = msg["status"]; // ex. 0,
-  message["id"] = msg["_id"]; // ex. "6538cda46cb4d8002cf2317a",
-  message["sender"] = msg["sender"]; // ex. "system",
-  message["recipient"] = msg["recipient"]; // ex. "support-group-65203e12f8c0cf002cf4110b-4066a69c8b464646a3ff25f9f41575bb",
-  message["text"] = msg["text"]; // ex. "\\start",
-  message["createdBy"] = msg["createdBy"]; // ex. "system",
-  message["attributes"] = msg["attributes"]; // ex. { "subtype": "info" }
-  message["metadata"] = msg["metadata"];
-  message["channel"] = msg["channel"]; // ex. { "name": "chat21" }
-  return message;
-}
-
-function actionsToDirectives(actions) {
-  let directives = [];
-  if (actions && actions.length > 0) {
-    actions.forEach(action => {
-      let directive = Directives.actionToDirective(action);
-      if (directive) {
-        directives.push(directive);
-      }
-    });
-  }
-  return directives;
-}
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   res.json({success:true});

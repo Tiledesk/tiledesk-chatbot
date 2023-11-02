@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.21
+- log clean
+- added log for production in IfOnlineAgent
+- Deprecated IfAvailableAgents
+- index.js refactored. Moved static utility methods in TiledeskChatbotUtil.js
+
 ### v0.2.20
 - updateRequestVariables renamed in updateRequestAttributes
 - Added TildeskChatbot instance method async getParameter(parameter_name)
