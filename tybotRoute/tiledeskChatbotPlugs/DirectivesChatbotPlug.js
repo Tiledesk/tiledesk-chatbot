@@ -106,7 +106,7 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
-    console.log("supportRequest is:", JSON.stringify(supportRequest))
+    // console.log("supportRequest is:", JSON.stringify(supportRequest))
     
     const token = this.token;
     const API_URL = this.API_URL;
@@ -199,7 +199,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    console.log(".process(directive):", JSON.stringify(directive));
+    // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
@@ -278,7 +278,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
-      console.log("...DirReply");
+      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -543,7 +543,7 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CAPTURE_USER_REPLY) {
-      console.log("...DirCaptureUserReply");
+      // console.log("...DirCaptureUserReply");
       new DirCaptureUserReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);

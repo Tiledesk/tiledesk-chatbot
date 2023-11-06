@@ -261,7 +261,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       res.sendStatus(300);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
+      // console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -317,8 +317,8 @@ describe('Conversation for WebRequestV2 test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/test/webrequest/post/json', async (req, res) => {
-      console.log("/webrequestv2 POST req.headers:", req.headers);
-      console.log("/webrequestv2 POST req.body:", req.body);
+      // console.log("/webrequestv2 POST req.headers:", req.headers);
+      // console.log("/webrequestv2 POST req.body:", req.body);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -328,7 +328,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);

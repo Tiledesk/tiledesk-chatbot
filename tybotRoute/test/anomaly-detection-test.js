@@ -52,7 +52,7 @@ describe('Conversation for anomaly detection test', async () => {
   });
 
   it('/anomaly', (done) => {
-    console.log("/anomaly story...");
+    // console.log("/anomaly story...");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();

@@ -53,7 +53,7 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/winning_path', (done) => {
-    console.log("/winning_path");
+    // console.log("/winning_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -110,7 +110,7 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/losing_path', (done) => {
-    console.log("/losing_path");
+    // console.log("/losing_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -167,7 +167,7 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/unknown_path', (done) => {
-    console.log("/unknown_path");
+    // console.log("/unknown_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();

@@ -80,27 +80,31 @@ class TiledeskChatbot {
             if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
             await this.unlockIntent(this.requestId);
             await this.unlockAction(this.requestId);
+            console.log("RESET LOCKED INTENT.");
             if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly  invoked with an action:", message.attributes.action);}
           }
-        }
-        catch(error) {
+        } catch(error) {
           console.error("Error resetting locked intent:", error);
         }
       }
 
       // any external invocation restarts the steps counter
-      if (message.sender != "_tdinternal") {
-        if (this.log) {
-          console.log("Resetting current step by request message:", message.text);
-        }
-        await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
-        if (this.log) {
-          if (this.tdcache) {
-            let currentStep = 
-            await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
-            if (this.log) {console.log("after reset currentStep:", currentStep)}
+      try {
+        if (message.sender != "_tdinternal") {
+          if (this.log) {
+            console.log("Resetting current step by request message:", message.text);
+          }
+          await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
+          if (this.log) {
+            if (this.tdcache) {
+              let currentStep = 
+              await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
+              if (this.log) {console.log("after reset currentStep:", currentStep)}
+            }
           }
         }
+      } catch(error) {
+        console.error("Error resetting locked intent:", error);
       }
       // Emergency stop :)
       // if (message.text === "/anomaly") {
@@ -111,38 +115,38 @@ class TiledeskChatbot {
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       // if (message.text.startsWith("/") && message.sender != "_tdinternal") {
-        const locked_intent = await this.currentLockedIntent(this.requestId);
-        if (this.log) {console.log("got locked intent: -" + locked_intent + "-")}
-        if (locked_intent) {
-          // const tdclient = new TiledeskClient({
-          //   projectId: this.projectId,
-          //   token: this.token,
-          //   APIURL: this.APIURL,
-          //   APIKEY: this.APIKEY,
-          //   log: false
-          // });
-          // it only gets the locked_intent
-          // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
-          const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
-          if (this.log) {console.log("locked intent. got faqs", JSON.stringify(faq))}
-          let reply;
-          if (faq) {
-            reply = await this.execIntent(faq, message, lead);//, bot);
-            // if (!reply.attributes) {
-            //   reply.attributes = {}
-            // }
-            // // used by the Clients to get some info about the intent that generated this reply
-            // reply.attributes.intent_display_name = faq.intent_display_name;
-            // reply.attributes.intent_id = faq.intent_id;
-          }
-          else {
-            reply = {
-              "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
-            }
-          }
-          resolve(reply);
-          return;
+      const locked_intent = await this.currentLockedIntent(this.requestId);
+      if (this.log) {console.log("got locked intent: -" + locked_intent + "-")}
+      if (locked_intent) {
+        // const tdclient = new TiledeskClient({
+        //   projectId: this.projectId,
+        //   token: this.token,
+        //   APIURL: this.APIURL,
+        //   APIKEY: this.APIKEY,
+        //   log: false
+        // });
+        // it only gets the locked_intent
+        // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
+        const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
+        if (this.log) {console.log("locked intent. got faqs", JSON.stringify(faq))}
+        let reply;
+        if (faq) {
+          reply = await this.execIntent(faq, message, lead);//, bot);
+          // if (!reply.attributes) {
+          //   reply.attributes = {}
+          // }
+          // // used by the Clients to get some info about the intent that generated this reply
+          // reply.attributes.intent_display_name = faq.intent_display_name;
+          // reply.attributes.intent_id = faq.intent_id;
         }
+        else {
+          reply = {
+            "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
+          }
+        }
+        resolve(reply);
+        return;
+      }
       // }
       // else if (message.text.startsWith("/")) {
       //   if (this.log) {
@@ -555,7 +559,6 @@ class TiledeskChatbot {
   async lockAction(requestId, action_id) {
     if (this.tdcache != null && requestId != null && action_id != null) {
       await this.tdcache.set("tilebot:requests:"  + requestId + ":action:locked", action_id);
-
     }
     else {
       console.error("lockAction recoverable error, one of requestId:", requestId, "action_id:", action_id, "is null");

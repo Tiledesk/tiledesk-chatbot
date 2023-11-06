@@ -10,7 +10,7 @@ const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 // const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
 // const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
-// const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
+const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
 // let parser = require('accept-language-parser');
 

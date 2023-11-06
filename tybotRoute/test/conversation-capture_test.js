@@ -64,7 +64,7 @@ describe('Conversation for capture test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/capture1 req.body: ", req.body)
+      // console.log("/capture1 req.body: ", req.body)
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -91,16 +91,16 @@ describe('Conversation for capture test', async () => {
             },
             "token": CHATBOT_TOKEN
           }
-          console.log("capturex1. Got reply before locked action.", message_text)
+          // console.log("capturex1. Got reply before locked action.", message_text)
           setTimeout(() => {
             sendMessageToBot(request, BOT_ID, () => {
-              console.log("Message sent.", request);
+              // console.log("Message sent.", request);
             });
           }, 1000);
         }
         else if (message_text === "It's a good form Andrea") {
           // verify parameters
-          console.log("capturex2. Got reply after locked action.", message_text)
+          // console.log("capturex2. Got reply after locked action.", message_text)
           getChatbotParameters(REQUEST_ID, (err, params) => {
             if (err) {
               assert.ok(false);
@@ -110,7 +110,7 @@ describe('Conversation for capture test', async () => {
               assert(params);
               assert(params["username"] === "Andrea");
               listener.close(() => {
-                console.log("done2");
+                // console.log("done2");
                 done();
               });
             }

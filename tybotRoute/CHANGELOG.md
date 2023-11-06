@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.22
+- Fixed "TildeskChatConst.js is not defined" in index.js
+
 ### v0.2.21
 - log clean
 - added log for production in IfOnlineAgent

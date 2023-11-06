@@ -241,11 +241,11 @@ class TiledeskChatbotUtil {
         if (!message) {
           return;
         }
-        console.log("compute delay...", message)
+        // console.log("compute delay...", message)
         if (message.attributes.commands.length > 0) {
-            console.log("going on delay")
+            // console.log("going on delay")
             let commands = message.attributes.commands;
-            console.log("got commands", commands)
+            // console.log("got commands", commands)
             let totalWaitTime = 0;
             for (let i = commands.length - 1; i >= 0; i--) {
                 if (commands[i].type === "wait") { // is a wait
@@ -327,7 +327,7 @@ class TiledeskChatbotUtil {
         const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
         // await chatbot.addParameter("chatbot", chatbot);
         await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
-        console.log("Adding proj_", projectId);
+        // console.log("Adding proj_", projectId);
         await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
         // TODO add projectName too
         await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);

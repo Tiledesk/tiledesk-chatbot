@@ -62,33 +62,33 @@ class DirCaptureUserReply {
 
   async go(action, callback) {
     const goToIntent = action.goToIntent;
-    console.log("(DirCaptureUserReply) goToIntent:", goToIntent);
+    // console.log("(DirCaptureUserReply) goToIntent:", goToIntent);
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-    console.log("(DirCaptureUserReply) lockedAction:", lockedAction);
+    // console.log("(DirCaptureUserReply) lockedAction:", lockedAction);
     if (!lockedAction) {
-      console.log("(DirCaptureUserReply) !lockedAction");
+      // console.log("(DirCaptureUserReply) !lockedAction");
       const intent_name = this.reply.attributes.intent_info.intent_name
       const actionId = action["_tdActionId"];
-      console.log("(DirCaptureUserReply) intent_name:", intent_name);
-      console.log("(DirCaptureUserReply) actionId:", actionId);
+      // console.log("(DirCaptureUserReply) intent_name:", intent_name);
+      // console.log("(DirCaptureUserReply) actionId:", actionId);
       await this.chatbot.lockIntent(this.requestId, intent_name);
-      console.log("(DirCaptureUserReply) lockIntent");
+      // console.log("(DirCaptureUserReply) lockIntent");
       await this.chatbot.lockAction(this.requestId, actionId);
-      console.log("(DirCaptureUserReply) lockAction");
+      // console.log("(DirCaptureUserReply) lockAction");
       let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
       let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
-      console.log("(DirCaptureUserReply) _lockedAction", _lockedAction)
-      console.log("(DirCaptureUserReply) _lockedIntent", _lockedIntent)
+      // console.log("(DirCaptureUserReply) _lockedAction", _lockedAction)
+      // console.log("(DirCaptureUserReply) _lockedIntent", _lockedIntent)
       callback();
       return;
     } else {
       try {
         await this.chatbot.unlockIntent(this.requestId);
         await this.chatbot.unlockAction(this.requestId);
-        console.log("unlo")
+        // console.log("unlo")
       }
       catch(e) {
-        console.error("Erro", e)
+        console.error("Error", e)
       }
       
     }
@@ -102,7 +102,7 @@ class DirCaptureUserReply {
       }
   
       if (callback) {
-        console.log("(DirCaptureUserReply) #executeGoTo(goToIntent)", goToIntent)
+        // console.log("(DirCaptureUserReply) #executeGoTo(goToIntent)", goToIntent)
         this.#executeGoTo(goToIntent, () => {
           callback(); // continue the flow
         });

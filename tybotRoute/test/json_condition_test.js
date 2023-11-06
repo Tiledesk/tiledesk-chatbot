@@ -102,10 +102,10 @@ describe('JSON to expression', function() {
       name: "Marco"
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === '!String($data.name).startsWith(String("And"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === true);
   });
 
@@ -123,10 +123,10 @@ describe('JSON to expression', function() {
       name: "Andrea"
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
+    // console.log("expression:", expression);
     assert(expression === '!String($data.name).startsWith(String("And"))');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
-    console.log("result:", result);
+    // console.log("result:", result);
     assert(result === false);
   });
 

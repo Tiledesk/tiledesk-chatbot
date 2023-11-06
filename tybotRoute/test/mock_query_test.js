@@ -3,6 +3,7 @@ var assert = require('assert');
 const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
 const { MockBotsDataSource } = require('../models/MockBotsDataSource.js');
 const { MockIntentsMachine } = require('../models/MockIntentsMachine.js');
+const { MockTdCache } = require('../models/MockTdCache');
 
 const testBots = {
   "bots": {
@@ -90,7 +91,7 @@ describe('Basic Tilebot', function() {
       token: "token",
       APIURL: "APIURL",
       APIKEY: "___",
-      tdcache: null,
+      tdcache: new MockTdCache(),
       requestId: "requestId",
       projectId: "projectId",
       log: false

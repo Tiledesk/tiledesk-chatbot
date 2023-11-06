@@ -463,7 +463,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
+      // console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

@@ -157,7 +157,7 @@ describe('Conversation for GptTask test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
   });
@@ -174,7 +174,7 @@ describe('Conversation for GptTask test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      console.log(" ### reply text: ", command2.message.text)
+      // console.log(" ### reply text: ", command2.message.text)
       assert(command2.message.text === "gpt replied: No answer.");
 
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
@@ -339,7 +339,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
+      // console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

@@ -76,13 +76,15 @@ class DirIfOnlineAgents {
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
+    console.log("IfOnlineAgents:trueIntent:", trueIntent);
+    console.log("IfOnlineAgents:falseIntent:", falseIntent);
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
     this.tdclient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
-        console.error("tdclient.openNow Error:", err);
+        console.error("IfOnlineAgents:tdclient.openNow Error:", err);
         callback();
         return;
       }
@@ -90,8 +92,9 @@ class DirIfOnlineAgents {
         if (result && result.isopen) {
           this.tdclient.getProjectAvailableAgents((err, agents) => {
             if (this.log) {console.log("Agents", agents);}
+            console.log("IfOnlineAgents:Agents", agents); // PROD
             if (err) {
-              console.error("Error getting available agents:", err);
+              console.error("IfOnlineAgents:Error getting available agents:", err);
               callback();
             }
             else {
@@ -100,18 +103,21 @@ class DirIfOnlineAgents {
                 if (trueIntent) {
                   let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
                   if (this.log) {console.log("agents (openHours) => trueIntent");}
+                  console.log("IfOnlineAgents:agents (openHours) => trueIntent", intentDirective) // prod
                   this.intentDir.execute(intentDirective, () => {
                     callback(stopOnConditionMet);
                   });
                 }
                 else {
+                  console.log("NO IfOnlineAgents trueIntent defined. callback()") // prod
                   callback();
                   return;
                 }
               }
               else if (falseIntent) {
                 let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-                if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
+                if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
+                console.log("IfOnlineAgents:agents (openHours) => falseIntent", intentDirective) // prod
                 this.intentDir.execute(intentDirective, () => {
                   callback(stopOnConditionMet);
                 });
@@ -126,6 +132,7 @@ class DirIfOnlineAgents {
           if (falseIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
             if (this.log) {console.log("!agents (!openHours) => falseIntent");}
+            console.log("!agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
             this.intentDir.execute(intentDirective, () => {
               callback();
             });
@@ -136,6 +143,7 @@ class DirIfOnlineAgents {
         }
         else {
           if (this.log) {console.log("undeterminate result.");}
+          console.log("undeterminate result.");
           callback();
         }
       }

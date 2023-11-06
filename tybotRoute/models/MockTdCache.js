@@ -51,6 +51,15 @@ class MockTdCache {
         resolve();
     });
   }
+
+  async setJSON(key, value, options) {
+    return new Promise( (resolve, reject) => {
+      const _string = JSON.stringify(value);
+      this.set(key, _string);
+      resolve();
+    });
+  }
+
 }
 
 module.exports = { MockTdCache };

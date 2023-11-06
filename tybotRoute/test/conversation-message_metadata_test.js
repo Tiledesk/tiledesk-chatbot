@@ -129,7 +129,7 @@ describe('Conversation for message.metadata test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
       
       res.send({ success: true });
       
