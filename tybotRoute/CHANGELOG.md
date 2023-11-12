@@ -5,8 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.23
+- Fixed CaptureUserReply. Added Check for missing goToIntent
+- if channelName "chat21" it will be renamed in "web"
+
 ### v0.2.22
 - Fixed "TildeskChatConst.js is not defined" in index.js
+- added System attribute "channelName"
 
 ### v0.2.21
 - log clean

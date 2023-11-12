@@ -103,9 +103,15 @@ class DirCaptureUserReply {
   
       if (callback) {
         // console.log("(DirCaptureUserReply) #executeGoTo(goToIntent)", goToIntent)
-        this.#executeGoTo(goToIntent, () => {
+        if (goToIntent) {
+          this.#executeGoTo(goToIntent, () => {
+            callback(); // continue the flow
+          });
+        }
+        else {
           callback(); // continue the flow
-        });
+        }
+        
       }
     }
     catch(error) {

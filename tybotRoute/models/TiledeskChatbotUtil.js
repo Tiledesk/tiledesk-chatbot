@@ -338,7 +338,14 @@ class TiledeskChatbotUtil {
         if (message.text && message.sender !== "_tdinternal") {
             await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
             await chatbot.addParameter("lastUserText", message.text);
-            
+            if (message.channel) {
+                if (message.channel.name === "chat21") {
+                    await chatbot.addParameter("chatChannel", "web"); // renames the channel in chat21
+                }
+                else {
+                    await chatbot.addParameter("chatChannel", message.channel.name);
+                }
+            }
             await chatbot.addParameter("lastUserMessageType", message.type);
             await chatbot.addParameter("lastUserMessage", TiledeskChatbotUtil.lastUserMessageFrom(message)); // JSON TYPE *NEW
             // get image
