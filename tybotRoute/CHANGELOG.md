@@ -7,7 +7,7 @@ available on:
 
 ### v0.2.23
 - Fixed CaptureUserReply. Added Check for missing goToIntent
-- if channelName "chat21" it will be renamed in "web"
+- When channelName == "chat21" it will be renamed in "web"
 
 ### v0.2.22
 - Fixed "TildeskChatConst.js is not defined" in index.js
