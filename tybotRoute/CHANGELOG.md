@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.24
+- patch for the misleading \\start training phrase. Added: if (message.text === "\\start") { message.text = "/start" } 
+
 ### v0.2.23
 - Fixed CaptureUserReply. Added Check for missing goToIntent
 - When channelName == "chat21" it will be renamed in "web"

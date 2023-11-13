@@ -147,6 +147,9 @@ router.post('/ext/:botid', async (req, res) => {
     projectId: projectId,
     log: log
   });
+  if (message.text === "\\start") { // patch for the misleading \\start training phrase
+    message.text = "/start";
+  }
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
 
