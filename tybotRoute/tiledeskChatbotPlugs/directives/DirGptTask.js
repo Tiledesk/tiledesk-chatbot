@@ -21,6 +21,7 @@ class DirGptTask {
     let action;
     if (directive.action) {
       action = directive.action;
+      console.log("-----> GPT TASK ACTION: \n", action);
     }
     else {
       console.error("Incorrect directive: ", JSON.stringify(directive));
@@ -94,7 +95,7 @@ class DirGptTask {
           }
         } else if (callback) {
           if (this.log) {
-            console.log("Get KnowledgeBase resbody:", resbody);
+            console.log("Get KnowledgeBase settings resbody:", resbody);
             console.log("gptkey: ", resbody.gptkey);
           }
 
