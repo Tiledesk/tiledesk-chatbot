@@ -147,6 +147,7 @@ router.post('/ext/:botid', async (req, res) => {
     projectId: projectId,
     log: log
   });
+  if (log) {console.log("MESSAGE CONTAINS:", message.text);}
   if (message.text === "\\\\start") { // patch for the misleading \\start training phrase
     if (log) {console.log("forced conversion of \\\\start /start");}
     message.text = "/start";
