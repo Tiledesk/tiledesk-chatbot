@@ -35,6 +35,8 @@ class DirGptTask {
 
   async go(action, callback) {
     if (this.log) { console.log("GptTask action:", JSON.stringify(action)); }
+    console.log("GptTask action:", JSON.stringify(action));
+    console.log("GptTask action model:", action.model);
     if (!this.tdcache) {
       console.error("Error: DirGptTask tdcache is mandatory");
       callback();
