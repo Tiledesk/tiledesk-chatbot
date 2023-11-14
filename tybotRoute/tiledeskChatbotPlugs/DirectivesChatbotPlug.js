@@ -30,6 +30,7 @@ const { DirWebRequestV2 } = require('./directives/DirWebRequestV2');
 const { DirCode } = require('./directives/DirCode');
 const { DirWhatsappByAttribute } = require('./directives/DirWhatsappByAttribute');
 const { DirAskGPT } = require('./directives/DirAskGPT');
+const { DirQapla } = require('./directives/DirQapla');
 
 const { TiledeskChatbot } = require('../models/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
@@ -593,6 +594,12 @@ class DirectivesChatbotPlug {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
+    }
+    else if (directive_name === Directives.QAPLA) {
+      new DirQapla(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      })
     }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);

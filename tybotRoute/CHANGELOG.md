@@ -6,7 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### v0.2.24
-- patch for the misleading \\start training phrase. Added: if (message.text === "\\start") { message.text = "/start" } 
+- Patch for the misleading \\start training phrase. Added: if (message.text === "\\start") { message.text = "/start" }
+- Added Qapla action
+ 
 
 ### v0.2.23
 - Fixed CaptureUserReply. Added Check for missing goToIntent
