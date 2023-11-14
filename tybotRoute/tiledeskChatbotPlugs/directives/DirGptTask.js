@@ -109,7 +109,7 @@ class DirGptTask {
           } else {
 
             let json = {
-              "model": "gpt-3.5-turbo",
+              "model": action.model,
               "messages": [
                 {
                   "role": "user",
