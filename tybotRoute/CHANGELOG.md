@@ -5,11 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.25
+- added support for native connect to block
+- added TiledeskChatbotUtil.addConnectAction()
+
 ### v0.2.24
 - Added Qapla action
 - Fixed bug: the 3.5 turbo model was always used in GptTask action
-- added support for native connect to block
-- added TiledeskChatbotUtil.addConnectAction()
 
 ### v0.2.23
 - Fixed CaptureUserReply. Added Check for missing goToIntent
