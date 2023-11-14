@@ -6,9 +6,10 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### v0.2.24
-- Patch for the misleading \\start training phrase. Added: if (message.text === "\\start") { message.text = "/start" }
 - Added Qapla action
-- Fixed bug: the 3.5 turbo model was always used in GptTask action 
+- Fixed bug: the 3.5 turbo model was always used in GptTask action
+- added support for native connect to block
+- added TiledeskChatbotUtil.addConnectAction()
 
 ### v0.2.23
 - Fixed CaptureUserReply. Added Check for missing goToIntent

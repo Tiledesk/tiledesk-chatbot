@@ -148,10 +148,10 @@ router.post('/ext/:botid', async (req, res) => {
     log: log
   });
   if (log) {console.log("MESSAGE CONTAINS:", message.text);}
-  if (message.text === "\\\\start") { // patch for the misleading \\start training phrase
-    if (log) {console.log("forced conversion of \\\\start /start");}
-    message.text = "/start";
-  }
+  // if (message.text === "\\\\start") { // patch for the misleading \\start training phrase
+  //   if (log) {console.log("forced conversion of \\\\start /start");}
+  //   message.text = "/start";
+  // }
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
 

@@ -527,7 +527,17 @@ class TiledeskChatbotUtil {
           });
         }
         return directives;
-      }
+    }
+
+    static addConnectAction(reply) {
+        // console.log("reply foraddConnectAction:", reply);
+        if (reply && reply.attributes && reply.attributes.nextBlockAction) {
+            if (reply.actions) {
+                reply.actions.push(reply.attributes.nextBlockAction);
+                // console.log("actions are:", reply.actions)
+            }
+        }
+    }
 
 }
 

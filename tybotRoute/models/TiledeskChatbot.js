@@ -477,6 +477,17 @@ class TiledeskChatbot {
     };
     
     let static_bot_answer;
+    if (answerObj.actions) {
+      const actions_length = answerObj.actions.length;
+      TiledeskChatbotUtil.addConnectAction(answerObj);
+      if (this.log) {
+        const new_actions_length = answerObj.actions.length;
+        if (new_actions_length > actions_length) {
+          console.log("Added connect to block action. All actions now:", JSON.stringify(answerObj.actions));
+        }
+      }
+    }
+
     if (answerObj.actions && answerObj.actions.length > 0) {
       static_bot_answer = { // actions workflow will be executed
         actions: answerObj.actions
