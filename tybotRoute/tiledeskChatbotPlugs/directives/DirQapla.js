@@ -53,16 +53,17 @@ class DirQapla {
       }
     }
 
-    let tracking_number = await this.context.chatbot.getParameter(action.trackingNumber);
+    const filler = new Filler();
+    const tracking_number = filler.fill(action.trackingNumber, requestVariables);
+    // let tracking_number = await this.context.chatbot.getParameter(action.trackingNumber);
     if (this.log) {console.log("DirQapla tracking number: ", tracking_number); }
 
-    if (!tracking_number) {
-      console.error("DirQapla ERROR - tracking number is undefined or null");
+    if (!tracking_number || tracking_number === '') {
+      console.error("DirQapla ERROR - tracking number is undefined or null or empty string");
       callback();
     }
 
     const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    // https://api.qapla.it/1.2/getShipment/?apiKey=3b9839c954168e861f2b63d79920ec3a3ff92aab674de9f3930df60b8a40c495&trackingNumber=123456
     if (this.log) { console.log("DirQapla QaplaEndpoint URL: ", qapla_base_url); }
     const QAPLA_HTTPREQUEST = {
       url: qapla_base_url + "/getShipment/",
