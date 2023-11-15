@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.26
+- Updated Qapla Action (tracking number from filler)
+
 ### v0.2.25
 - added support for native connect to block
 - added TiledeskChatbotUtil.addConnectAction()
