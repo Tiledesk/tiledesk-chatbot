@@ -237,6 +237,57 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static removeEmptyReplyCommands(message) {
+        try {
+            if (message && message.attributes && message.attributes.commands && message.attributes.commands.length > 0) {
+                let commands = message.attributes.commands;
+                
+                for (let i = commands.length - 1; i >= 0; i--) {
+                    // console.log("...commands[" + i + "]");
+                    if (commands[i].type === "message") { // is a message, not a "wait"
+                        // console.log("commands[i]:", commands[i].message.text);
+                        // let textEmpty = false;
+                        if (commands[i].message) {
+                            if (commands[i].message.type === "text") { // check text commands
+                                if (( commands[i].message.text && commands[i].message.text.trim() === "") || !commands[i].message.text) {
+                                    console.log("deleting command:", commands[i]);
+                                    commands.splice(i, 1);
+                                    if (commands[i-1]) {
+                                        if (commands[i-1].type === "wait") {
+                                            commands.splice(i-1, 1);
+                                            i--;
+                                            console.log("deleted wait");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            // for (let i = 0; i < commands.length; i++) {
+            //   if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
+            //     if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
+            //   }
+            // }
+            }
+        }
+        catch(error) {
+            log.error("error while checking", error)
+        }
+        return message;
+    }
+
+    /*
+    returns true if a valid message for a reply (i.e. at least one valid - non empty - message command)
+    */
+    static isValidReply(message) {
+        if (message && message.attributes && message.attributes.commands && message.attributes.commands.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     static totalMessageWait(message) {
         if (!message) {
           return;
@@ -337,17 +388,17 @@ class TiledeskChatbotUtil {
         
         if (message.text && message.sender !== "_tdinternal") {
             await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
-            await chatbot.addParameter("lastUserText", message.text);
+            await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
             if (message.channel) {
                 if (message.channel.name === "chat21") {
-                    await chatbot.addParameter("chatChannel", "web"); // renames the channel in chat21
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_CHANNEL, "web"); // renames the channel in chat21
                 }
                 else {
-                    await chatbot.addParameter("chatChannel", message.channel.name);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_CHANNEL, message.channel.name);
                 }
             }
-            await chatbot.addParameter("lastUserMessageType", message.type);
-            await chatbot.addParameter("lastUserMessage", TiledeskChatbotUtil.lastUserMessageFrom(message)); // JSON TYPE *NEW
+            await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_TYPE_KEY, message.type);
+            await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY, TiledeskChatbotUtil.lastUserMessageFrom(message)); // JSON TYPE *NEW
             // get image
             if (message.type && message.type === "image" && message.metadata) {
                 // "text": "\nimage text",

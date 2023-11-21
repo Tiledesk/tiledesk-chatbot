@@ -221,6 +221,11 @@ router.post('/ext/:botid', async (req, res) => {
   
 });
 
+router.post('/hooks/:hookid', async (req, res) => {
+  // chatbot_id + intend_id
+
+});
+
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   res.json({success:true});
   const projectId = req.params.projectId;
@@ -359,7 +364,18 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
       TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
       TiledeskChatbotConst.REQ_USER_AGENT_KEY,
       TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
-      TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY
+      TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY,
+      TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_TYPE_KEY,
+      TiledeskChatbotConst.REQ_TRANSCRIPT_KEY,
+      TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY,
+      "lastUserImageURL", // image
+      "lastUserImageName", // image
+      "lastUserImageWidth", // image
+      "lastUserImageHeight", // image
+      "lastUserImageType", // image
+      "lastUserDocumentURL", // file
+      "lastUserDocumentName", // file
+      "lastUserDocumentType" // file
     ]
     let userParams = {};
     if (parameters) {

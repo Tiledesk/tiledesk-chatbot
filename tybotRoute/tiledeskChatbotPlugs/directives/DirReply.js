@@ -97,18 +97,24 @@ class DirReply {
       }
     }
     // send!
-    message.senderFullname = this.context.chatbot.bot.name;
-    if (this.log) {console.log("Reply:", JSON.stringify(message))};
-    await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, message);
+    const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
+    if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
+      console.log("invalid message", cleanMessage);
+      callback(); // cancel reply operation
+    }
+    // console.log("valid message!", cleanMessage);
+    cleanMessage.senderFullname = this.context.chatbot.bot.name;
+    if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
+    await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.context.tdclient.sendSupportMessage(
       this.requestId,
-      message,
+      cleanMessage,
       (err) => {
         if (err) {
           console.error("Error sending reply:", err);
         }
         if (this.log) {console.log("Reply message sent");}
-        const delay = TiledeskChatbotUtil.totalMessageWait(message);
+        const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {

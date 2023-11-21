@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.27
+- Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
+- Removed non-user-defined attributes from /ext/parameters method
+
 ### v0.2.26
 - Updated Qapla Action (tracking number from filler)
 
