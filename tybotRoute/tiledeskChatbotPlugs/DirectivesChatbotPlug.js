@@ -601,6 +601,12 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       })
     }
+    else if (directive_name === Directives.MAKE) {
+      new DirQapla(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      })
+    }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
