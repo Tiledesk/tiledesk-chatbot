@@ -4,7 +4,6 @@ var engine = new Liquid();
 class Filler {
 
   fill(text, parameters) {
-    console.log("parameters are:", parameters);
     // legacy parser first
     if (text == null || text == undefined || typeof text !== 'string') {
       // console.log("Skip filling. 'text' is null or not a string");
@@ -25,7 +24,6 @@ class Filler {
     catch(e) {
         console.error(e)
     }
-    console.log("result is:", result)
     return result;
   }
   
