@@ -76,6 +76,7 @@ class DirSetAttribute {
             throw new Error('context object is mandatory.');
         }
         this.context = context;
+        this.tdcache = context.tdcache;
         this.log = context.log;
     }
 
@@ -107,15 +108,13 @@ class DirSetAttribute {
             callback();
             return;
         }
-
         
         if (action.operation.operators !== undefined && action.operation.operators.length !== action.operation.operands.length - 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
             callback();
             return;
         }
-        
-
+        await this.fillValues(action.operation.operands);
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         attributes.TiledeskMath = TiledeskMath;
@@ -125,6 +124,50 @@ class DirSetAttribute {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, result);
 
         callback();
+    }
+
+    async fillValues(operands) {
+        // operation: {
+        //     operators: ["addAsNumber", "subtractAsNumber", "divideAsNumber", "multiplyAsNumber"],
+        //     operands: [
+        //         {
+        //             value: "previous",
+        //             isVariable: true
+        //         },
+        //         {
+        //             value: "temp",
+        //             isVariable: true,
+        //             function: "floorAsNumber"
+        //         },
+        //         {
+        //             value: "real",
+        //             isVariable: true,
+        //             function: "absAsNumber"
+        //         },
+        //         {
+        //             value: "input",
+        //             isVariable: true
+        //         },
+        //         {
+        //             value: "2",
+        //             isVariable: false
+        //         }
+        //     ]
+        try {
+            if (this.tdcache) {
+                const requestAttributes = 
+                    await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+                const filler = new Filler();
+                operands.forEach(operand => {
+                    if (!operand.isVariable) {
+                        operand.value = filler.fill(operand.value, requestAttributes);
+                    }
+                });
+            }
+        }
+        catch(error) {
+            console.error("Error while filling operands:", error);
+        }
     }
 }
 

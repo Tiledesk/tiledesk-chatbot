@@ -621,14 +621,14 @@ class TiledeskChatbot {
     // console.log("** getting parameters for requestId:", requestId);
     // console.log("** for key:", parameters_key, "parameters:", JSON.stringify(attributes__as_string_map));
     let attributes_native_values = {};
-    if (attributes__as_string_map !== null) {
+    // if (attributes__as_string_map !== null) {
       for (const [key, value] of Object.entries(attributes__as_string_map)) {
         attributes_native_values[key] = JSON.parse(value);
       }
-    }
-    else {
-      console.error("An error occurred. 'attributes__as_string_map' is null!");
-    }
+    // }
+    // else {
+    //   console.error("Warning: 'attributes__as_string_map' is null!");
+    // }
     return attributes_native_values;
   }
 

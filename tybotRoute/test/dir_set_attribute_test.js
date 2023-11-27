@@ -292,6 +292,44 @@ describe('Testing dir_set_attribute_test', function() {
             assert.equal(keyTest, "total");
             assert.equal(valueTest, "Francesco Latino Tiledesk");
         });
+        it('should print a filled (LiquindJS) attribute', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {
+                    "name": "andrea",
+                    "lastname": "sponziello",
+                    "company": "tiledesk"
+                };
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattribute",
+                destination: "summary",
+                operation: {
+                    operators: [],
+                    operands: [
+                        {
+                            value: "{{name}} {{lastname}} {{company}}",
+                            isVariable: false
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            };
+            const dirSetAttribute = new DirSetAttribute(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            await executeAsync({'action': action});
+            assert.equal(keyTest, "summary");
+            assert.equal(valueTest, "andrea sponziello tiledesk");
+        });
     });
     describe('Testing dir_set_attribute_test with wrong inputs', function() {
         it('should immidiatly call the cb', async function() {
