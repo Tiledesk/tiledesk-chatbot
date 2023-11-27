@@ -158,7 +158,7 @@ class DirSetAttribute {
             if (this.tdcache) {
                 console.log("tdcache in setattribute...", this.tdcache);
                 const requestAttributes = 
-                    await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+                    await TiledeskChatbot.allParametersStatic(this.tdcache, this.context.requestId);
                 console.log("requestAttributes in setattribute...", requestAttributes);
                 const filler = new Filler();
                 operands.forEach(operand => {
