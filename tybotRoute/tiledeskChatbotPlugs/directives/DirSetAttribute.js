@@ -159,11 +159,13 @@ class DirSetAttribute {
                 console.log("tdcache in setattribute...");
                 const requestAttributes = 
                     await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+                    console.log("requestAttributes in setattribute...", requestAttributes);
                 const filler = new Filler();
                 operands.forEach(operand => {
                     if (!operand.isVariable) {
+                        console.log("setattribute, liquid operand:", operand);
                         operand.value = filler.fill(operand.value, requestAttributes);
-                        console.log("setattribute, operand:", operand);
+                        console.log("setattribute, final operand:", operand);
                     }
                 });
             }
