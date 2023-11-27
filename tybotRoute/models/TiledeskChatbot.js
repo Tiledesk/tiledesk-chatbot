@@ -618,8 +618,8 @@ class TiledeskChatbot {
   static async allParametersStatic(_tdcache, requestId) {
     const parameters_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const attributes__as_string_map = await _tdcache.hgetall(parameters_key);
-    // console.log("** getting parameters for requestId:", requestId);
-    // console.log("** for key:", parameters_key, "parameters:", JSON.stringify(attributes__as_string_map));
+    console.log("** getting parameters for requestId:", requestId);
+    console.log("** for key:", parameters_key, "parameters:", JSON.stringify(attributes__as_string_map));
     let attributes_native_values = {};
     if (attributes__as_string_map !== null) {
       for (const [key, value] of Object.entries(attributes__as_string_map)) {
