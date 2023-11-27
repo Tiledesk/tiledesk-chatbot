@@ -114,15 +114,16 @@ class DirSetAttribute {
             callback();
             return;
         }
+        console.log("filling in setattribute...");
         await this.fillValues(action.operation.operands);
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         attributes.TiledeskMath = TiledeskMath;
         attributes.TiledeskString = TiledeskString;
-
+        
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
+        console.log("filling in setattribute, result:", result);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, result);
-
         callback();
     }
 
@@ -155,12 +156,14 @@ class DirSetAttribute {
         //     ]
         try {
             if (this.tdcache) {
+                console.log("tdcache in setattribute...");
                 const requestAttributes = 
                     await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
                 const filler = new Filler();
                 operands.forEach(operand => {
                     if (!operand.isVariable) {
                         operand.value = filler.fill(operand.value, requestAttributes);
+                        console.log("setattribute, operand:", operand);
                     }
                 });
             }
