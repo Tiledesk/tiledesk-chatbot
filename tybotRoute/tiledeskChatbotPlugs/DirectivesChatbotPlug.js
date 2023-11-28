@@ -39,6 +39,7 @@ const { DirRandomReply } = require('./directives/DirRandomReply');
 const { DirGptTask } = require('./directives/DirGptTask');
 const { DirForm } = require('./directives/DirForm');
 const { DirCaptureUserReply } = require('./directives/DirCaptureUserReply');
+const { DirMake } = require('./directives/DirMake');
 
 class DirectivesChatbotPlug {
 
