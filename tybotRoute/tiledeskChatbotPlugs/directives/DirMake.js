@@ -39,7 +39,7 @@ class DirMake {
       callback();
       return;
     }
-    console.log('DirMake work!');
+    console.log('CIAO DirMake work!');
     callback();
     return;
 
@@ -192,4 +192,4 @@ class DirMake {
   }
 }
 
-module.exports = { DirQapla }
+module.exports = { DirMake }
