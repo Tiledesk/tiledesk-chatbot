@@ -602,7 +602,7 @@ class DirectivesChatbotPlug {
       })
     }
     else if (directive_name === Directives.MAKE) {
-      new DirQapla(context).execute(directive, async () => {
+      new DirMake(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       })
