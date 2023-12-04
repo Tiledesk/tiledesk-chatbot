@@ -55,7 +55,7 @@ const schema = {
                             "properties": { "isVariable": { "const": true } },
                         },
                         "then": {
-                            "properties": { "value": { "pattern": "^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$" } }
+                            "properties": { "value": { "pattern": "^[a-zA-Z_]*[.]*[a-zA-Z_]+[a-zA-Z0-9_]*$" } }
                         }
                     }
                 }
@@ -156,10 +156,10 @@ class DirSetAttribute {
         //     ]
         try {
             if (this.tdcache) {
-                console.log("tdcache in setattribute...", this.tdcache);
+                // console.log("tdcache in setattribute...", this.tdcache);
                 const requestAttributes = 
                     await TiledeskChatbot.allParametersStatic(this.tdcache, this.context.requestId);
-                console.log("requestAttributes in setattribute...", requestAttributes);
+                // console.log("requestAttributes in setattribute...", requestAttributes);
                 const filler = new Filler();
                 operands.forEach(operand => {
                     if (!operand.isVariable) {
