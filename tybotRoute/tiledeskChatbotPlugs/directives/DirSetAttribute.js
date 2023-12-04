@@ -97,17 +97,17 @@ class DirSetAttribute {
 
     async go(action, callback) {
         console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));
-        if (action && action.operation && action.operation.operands) {
-            console.log("filling in setattribute...");
-            await this.fillValues(action.operation.operands);
-        }
-        console.log("(DirSetAttribute) action after filling:", JSON.stringify(action));
         let res = validate(action, schema);
+        if (res.errors) {
+            console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
+            console.log("DirSetAttribute validation errors:", res.errors);
+        }
         if (!res.valid) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
             callback();
             return;
         }
+        console.log("filling in setattribute... 3");
         if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
             callback();
@@ -117,6 +117,10 @@ class DirSetAttribute {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
             callback();
             return;
+        }
+        if (action && action.operation && action.operation.operands) {
+            console.log("filling in setattribute...");
+            await this.fillValues(action.operation.operands);
         }
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);

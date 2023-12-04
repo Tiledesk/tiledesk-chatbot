@@ -426,6 +426,7 @@ describe('Testing dir_set_attribute_test', function() {
             const dirSetAttribute = new DirSetAttribute(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
+            console.log("failed is", failed)
             assert.ok(!failed);
         });
         it('should immidiatly call the cb, wrong number of operands', async function() {
