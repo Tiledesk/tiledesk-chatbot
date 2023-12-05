@@ -97,6 +97,11 @@ class DirSetAttribute {
 
     async go(action, callback) {
         console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));
+        if (action && action.operation && action.operation.operands) {
+            console.log("filling in setattribute...");
+            await this.fillValues(action.operation.operands);
+        }
+        console.log("filled in setattribute:", action.operation);
         let res = validate(action, schema);
         if (res.errors) {
             console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
@@ -118,10 +123,10 @@ class DirSetAttribute {
             callback();
             return;
         }
-        if (action && action.operation && action.operation.operands) {
-            console.log("filling in setattribute...");
-            await this.fillValues(action.operation.operands);
-        }
+        // if (action && action.operation && action.operation.operands) {
+        //     console.log("filling in setattribute...");
+        //     await this.fillValues(action.operation.operands);
+        // }
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         attributes.TiledeskMath = TiledeskMath;
