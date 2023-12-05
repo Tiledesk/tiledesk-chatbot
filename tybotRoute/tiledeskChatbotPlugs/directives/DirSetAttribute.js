@@ -102,16 +102,16 @@ class DirSetAttribute {
             await this.fillValues(action.operation.operands);
         }
         console.log("filled in setattribute:", action.operation);
-        let res = validate(action, schema);
-        if (res.errors) {
-            console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
-            console.log("DirSetAttribute validation errors:", res.errors);
-        }
-        if (!res.valid) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
-            callback();
-            return;
-        }
+        // let res = validate(action, schema);
+        // if (res.errors) {
+        //     console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
+        //     console.log("DirSetAttribute validation errors:", res.errors);
+        // }
+        // if (!res.valid) {
+        //     if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
+        //     callback();
+        //     return;
+        // }
         console.log("filling in setattribute... 3");
         if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
