@@ -1,5 +1,6 @@
  var assert = require('assert');
  const { DirSetAttribute } = require('../tiledeskChatbotPlugs/directives/DirSetAttribute.js');
+ const { DirSetAttributeV2 } = require('../tiledeskChatbotPlugs/directives/DirSetAttributeV2.js');
  const { TiledeskChatbot } = require('../models/TiledeskChatbot');
  const { promisify } = require('util');
  // just a schema remainder
@@ -324,7 +325,7 @@ describe('Testing dir_set_attribute_test', function() {
                 tdcache: {},
                 requestId: 'buh'
             };
-            const dirSetAttribute = new DirSetAttribute(context);
+            const dirSetAttribute = new DirSetAttributeV2(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
             assert.equal(keyTest, "summary");
