@@ -524,10 +524,10 @@ class TiledeskChatbotUtil {
         
         if (chatbot.attributes && chatbot.attributes.globals) {
             if (chatbot.log) {console.log("Got Globals:", JSON.stringify(chatbot.attributes.globals));}
-            for (const [key, value] of Object.entries(chatbot.attributes.globals)) {
-                if (chatbot.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
-                await chatbot.addParameter(key, value);
-            }
+            chatbot.attributes.globals.forEach(async (global) => {
+                if (chatbot.log) {console.log("Adding global:", global.key, "value:", global.value);}
+                await chatbot.addParameter(global.key, global.value);
+            });
         }
         
         if (chatbot.log) {
