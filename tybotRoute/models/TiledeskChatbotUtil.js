@@ -518,15 +518,16 @@ class TiledeskChatbotUtil {
           }
         }
         
+        const _bot = chatbot.bot; // aka FaqKB
         if (chatbot.log) {
-            console.log("Adding Globals to context..., chatbot.attributes?", chatbot);
+            console.log("Adding Globals to context..., chatbot.attributes?", JSON.stringify(_bot));
         }
         
-        if (chatbot.attributes && chatbot.attributes.globals) {
-            if (chatbot.log) {console.log("Got Globals:", JSON.stringify(chatbot.attributes.globals));}
-            chatbot.attributes.globals.forEach(async (global) => {
-                if (chatbot.log) {console.log("Adding global:", global.key, "value:", global.value);}
-                await chatbot.addParameter(global.key, global.value);
+        if (_bot.attributes && _bot.attributes.globals) {
+            if (chatbot.log) {console.log("Got Globals:", JSON.stringify(_bot.attributes.globals));}
+            _bot.attributes.globals.forEach(async (global_var) => {
+                if (chatbot.log) {console.log("Adding global:", global_var.key, "value:", global_var.value);}
+                await chatbot.addParameter(global_var.key, global_var.value);
             });
         }
         
