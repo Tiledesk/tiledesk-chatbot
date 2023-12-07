@@ -518,9 +518,13 @@ class TiledeskChatbotUtil {
           }
         }
         
-        // Add Secrets (Globals) to context
+        if (chatbot.log) {
+            console.log("Adding Secrets (Globals) to context...");
+        }
+        
         if (chatbot.attributes && chatbot.attributes.secrets) {
-            for (const [key, value] of Object.entries(all_parameters)) {
+            if (chatbot.log) {console.log("Got Secrets:", JSON.stringify(chatbot.attributes.secrets));}   
+            for (const [key, value] of Object.entries(chatbot.attributes.secrets)) {
                 if (chatbot.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
                 await chatbot.addParameter(key, value);
             }
