@@ -22,7 +22,7 @@ class Directives {
   static FUNCTION_VALUE = "functionvalue";
   static JSON_CONDITION = "jsoncondition";
   static SET_ATTRIBUTE = "setattribute";
-  static SET_ATTRIBUTE_V2 = "setattributev2";
+  static SET_ATTRIBUTE_V2 = "setattribute-v2";
   static REPLY = 'reply';
   static RANDOM_REPLY = 'randomreply';
   static CODE = 'code';
