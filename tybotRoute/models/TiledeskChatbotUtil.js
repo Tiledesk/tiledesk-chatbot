@@ -530,6 +530,14 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(global_var.key, global_var.value);
             });
         }
+        await chatbot.addParameter("testVar",
+            {
+                name: "Andrea",
+                coords: {
+                    x: 2, y: 1
+                }
+            }
+        );
         
         if (chatbot.log) {
           // console.log("tdcache:", chatbot.tdcache);
