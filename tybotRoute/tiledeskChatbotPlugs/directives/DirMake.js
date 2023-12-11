@@ -60,7 +60,7 @@ class DirMake {
     let bodyParameters = action.bodyParameters;
     if (this.log) {
       console.log("DirMake webhook_url: ", webhook_url);
-      console.log("DirMakeuUuuuuuu bodyParameters: ", bodyParameters);
+      console.log("DirMake bodyParameters: ", bodyParameters);
     }
     if (!bodyParameters || bodyParameters === '') {
       console.error("DirMake ERROR - bodyParameters is undefined or null or empty string");

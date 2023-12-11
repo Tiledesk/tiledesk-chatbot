@@ -120,127 +120,61 @@ describe('Conversation for make test', async () => {
     });
   });
 
-  // it('/make failure - return code 404', (done) => {
+  it('/make failure - return code 404', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     console.log("/make failure message: ", JSON.stringify(message, null, 2));
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["make_status"] === 404);
-  //         assert(attributes["make_error"] === "Not found");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      console.log("/make failure message: ", JSON.stringify(message, null, 2));
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["make_status"] === 404);
+          assert(attributes["make_error"] === "Not found");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-     //});
+     });
 
-  //   endpointServer.post('/1.3/make/', function (req, res) {
+    endpointServer.post('/1.3/make/', function (req, res) {
 
-  //     let http_code = 404;
-  //     // let reply = {
-  //     //   getShipment: {
-  //     //     result: "KO",
-  //     //     error: "shipment not found"
-  //     //   }
-  //     // }
-  //     //res.status(http_code).send(reply);
-  //     res.status(http_code).send('Not found');
-  //   });
+      let http_code = 404;
+      res.status(http_code).send('Not found');
+    });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/make#FAILURE',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/make#FAILURE',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
-  // it('/make failure - bodyParameters not found', (done) => {
-
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     console.log("/make failure message: ", JSON.stringify(message, null, 2));
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["make_status"] === 404);
-  //         assert(attributes["make_error"] === "Not found");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-
-  //   });
-
-  //   endpointServer.post('/1.3/make/', function (req, res) {
-
-  //     let http_code = 404;
-  //     // let reply = {
-  //     //   getShipment: {
-  //     //     result: "KO",
-  //     //     error: "shipment not found"
-  //     //   }
-  //     // }
-  //     //res.status(http_code).send(reply);
-  //     res.status(http_code).send('Not found');
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/make#FAILURE',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+  
 });
 
 /**
