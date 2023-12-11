@@ -8,6 +8,7 @@ available on:
 ### v0.2.28
 - DirSetAttribute, added support for attribute-filling in constants
 - DirSetAttribute, added function JSONparse
+- Added support for Globals (aka Secrets)
 
 ### v0.2.27
 - Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
