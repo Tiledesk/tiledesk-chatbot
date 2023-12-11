@@ -55,6 +55,7 @@ class DirMake {
         if (this.log) { console.log("DirMake request parameter:", key, "value:", value, "type:", typeof value) }
       }
     }
+
     let webhook_url = action.url;
     let bodyParameters = action.bodyParameters;
     if (this.log) {
@@ -69,6 +70,23 @@ class DirMake {
       console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
       callback();
     }
+
+    
+    const filler = new Filler();
+    const url = filler.fill(action.url, requestVariables);
+
+    try {
+      for (const [key, value] of Object.entries(bodyParameters)) {
+        if (this.log) {console.log("bodyParam:", key, "value:", value)}
+        let filled_value = filler.fill(value, requestVariables);
+        bodyParameters[key] = filled_value;
+      }
+    } catch(e) {
+      console.error('error: ', e)
+    }
+      
+    
+
 
     const make_base_url = process.env.MAKE_ENDPOINT;
     if (make_base_url) {
