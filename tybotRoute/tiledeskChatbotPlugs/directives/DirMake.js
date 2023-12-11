@@ -4,6 +4,7 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
+let url;
 
 class DirMake {
 
@@ -70,14 +71,19 @@ class DirMake {
     }
 
     const make_base_url = process.env.MAKE_ENDPOINT;
-
+    if (make_base_url) {
+      url = make_base_url + "/make/";
+    } else {
+      url = action.url;
+    }
+    console.log('Make url: ', url);
     // Condition branches
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     console.log('trueIntent',trueIntent)
     if (this.log) { console.log("DirMake MakeEndpoint URL: ", make_base_url); }
     const MAKE_HTTPREQUEST = {
-      url: make_base_url + "/make/",
+      url: url,
       headers: {
         'Content-Type': 'application/json'
       },
