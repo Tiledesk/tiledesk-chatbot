@@ -4,7 +4,7 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
-let url;
+
 
 class DirMake {
 
@@ -72,35 +72,35 @@ class DirMake {
       callback();
       return;
     }
-
-    console.log('CIAOkkkk',bodyParameters)
-    const filler = new Filler();
-    const url = filler.fill(action.url, requestVariables);
-
+    let url;
     try {
-      for (const [key, value] of Object.entries(bodyParameters)) {
-        if (this.log) {console.log("bodyParam:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestVariables);
-        bodyParameters[key] = filled_value;
-      }
-    } catch(e) {
-      console.error('error: ', e)
-    }
-      console.log('CIAO',bodyParameters)
-    
-
-
-    const make_base_url = process.env.MAKE_ENDPOINT;
+    console.log('CIAOkkkk',bodyParameters)
+    let make_base_url = process.env.MAKE_ENDPOINT;
     if (make_base_url) {
       url = make_base_url + "/make/";
     } else {
       url = action.url;
     }
     console.log('Make url: ', url);
+    const filler = new Filler();
+
+    
+      for (const [key, value] of Object.entries(bodyParameters)) {
+        if (this.log) {console.log("bodyParam:", key, "value:", value)}
+        let filled_value = filler.fill(value, requestVariables);
+        bodyParameters[key] = filled_value;
+      }
+    
+      console.log('CIAO',bodyParameters)
+    
+
+
+    
     // Condition branches
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     console.log('trueIntent',trueIntent)
+ 
     if (this.log) { console.log("DirMake MakeEndpoint URL: ", make_base_url); }
     const MAKE_HTTPREQUEST = {
       url: url,
@@ -110,6 +110,7 @@ class DirMake {
       json: bodyParameters,
       method: "POST"
     }
+  
     if (this.log) { console.log("myrequest/DirMake MAKE_HTTPREQUEST", MAKE_HTTPREQUEST); }
     this.#myrequest(
       MAKE_HTTPREQUEST, async (err, resbody) => {
@@ -137,6 +138,9 @@ class DirMake {
         }
       }
     );
+  } catch(e) {
+    console.error('error: ', e)
+  }
   }
 
   async #assignAttributes(action, status, error) {
