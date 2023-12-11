@@ -209,6 +209,10 @@ class TiledeskExpression {
         "roundAsNumber": {
             name: "roundAsNumber",
             applyPattern: "TiledeskMath.round(Number(#1))"
+        },
+        "JSONparse": {
+            name: "JSONparse",
+            applyPattern: "JSON.parse(String(#1))"
         }
     }
 
@@ -230,8 +234,8 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        // console.log("(evaluateJavascriptExpression) evaluating:", expression)
-        // console.log("context:", context)
+        console.log("(evaluateJavascriptExpression) evaluating:", expression)
+        console.log("context:", context)
         let res = null;
         try {
             const vm = new VM({

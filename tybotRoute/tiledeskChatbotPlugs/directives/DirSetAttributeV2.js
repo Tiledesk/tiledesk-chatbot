@@ -112,8 +112,7 @@ class DirSetAttributeV2 {
         //     callback();
         //     return;
         // }
-        console.log("filling in setattribute... 3");
-        if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
+        if (action.operation.operators === undefined && action.operation.operands.length !== 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
             callback();
             return;
@@ -127,8 +126,10 @@ class DirSetAttributeV2 {
         //     console.log("filling in setattribute...");
         //     await this.fillValues(action.operation.operands);
         // }
+        console.log("dirsetattribute, action.operation.operands:", action.operation.operands);
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+        console.log("dirsetattribute, attributes:", attributes);
         attributes.TiledeskMath = TiledeskMath;
         attributes.TiledeskString = TiledeskString;
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);

@@ -6,7 +6,8 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 ### v0.2.28
-- DirSetAttribute, added support for fller
+- DirSetAttribute, added support for attribute-filling in constants
+- DirSetAttribute, added function JSONparse
 
 ### v0.2.27
 - Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
