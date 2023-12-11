@@ -1,6 +1,7 @@
 const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
 const { Filler } = require("../Filler");
+const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 
@@ -14,6 +15,7 @@ class DirMake {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.log = context.log;
+    this.intentDir = new DirIntent(context);
   }
 
   execute(directive, callback) {
@@ -39,10 +41,7 @@ class DirMake {
       callback();
       return;
     }
-    console.log('CIAO DirMake work!');
-    callback();
-    return;
-
+    //console.log('DirMake work!');
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
@@ -55,79 +54,74 @@ class DirMake {
         if (this.log) { console.log("DirMake request parameter:", key, "value:", value, "type:", typeof value) }
       }
     }
-
-    const filler = new Filler();
-    const tracking_number = filler.fill(action.trackingNumber, requestVariables);
-    // let tracking_number = await this.context.chatbot.getParameter(action.trackingNumber);
-    if (this.log) {console.log("DirMake tracking number: ", tracking_number); }
-
-    if (!tracking_number || tracking_number === '') {
-      console.error("DirMake ERROR - tracking number is undefined or null or empty string");
+    let webhook_url = action.url;
+    let bodyParameters = action.bodyParameters;
+    if (this.log) {
+      console.log("DirMake webhook_url: ", webhook_url);
+      console.log("DirMake bodyParameters: ", bodyParameters);
+    }
+    if (!bodyParameters || bodyParameters === '') {
+      console.error("DirMake ERROR - bodyParameters is undefined or null or empty string");
+      callback();
+    }
+    if (!webhook_url || webhook_url === '') {
+      console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
       callback();
     }
 
-    const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    if (this.log) { console.log("DirMake QaplaEndpoint URL: ", qapla_base_url); }
-    const QAPLA_HTTPREQUEST = {
-      url: qapla_base_url + "/getShipment/",
+    const make_base_url = process.env.MAKE_ENDPOINT;
+
+    // Condition branches
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    console.log('trueIntent',trueIntent)
+    if (this.log) { console.log("DirMake MakeEndpoint URL: ", make_base_url); }
+    const MAKE_HTTPREQUEST = {
+      url: make_base_url + "/make/",
       headers: {
         'Content-Type': 'application/json'
       },
-      params: {
-        apiKey: action.apiKey,
-        trackingNumber: tracking_number
-      },
-      method: "GET"
+      json: bodyParameters,
+      method: "POST"
     }
-    if (this.log) { console.log("DirMake QAPLA_HTTPREQUEST", QAPLA_HTTPREQUEST); }
-
+    if (this.log) { console.log("myrequest/DirMake MAKE_HTTPREQUEST", MAKE_HTTPREQUEST); }
     this.#myrequest(
-      QAPLA_HTTPREQUEST, async (err, resbody) => {
+      MAKE_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            console.error("(httprequest) DirMake getShipment err:", err);
+            console.error("myrequest/(httprequest) DirMake make err:", err);
+            let status = 404;   
+            let error = 'Not found';
+            await this.#assignAttributes(action, status, error);
+            this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
+              callback(false); // continue the flow
+            });
             callback();
           }
         } else if (callback) {
-          if (this.log) { console.log("DirMake getShipment resbody: ", resbody); }
-
-          let status = null;;
-          let result;
-          let error;
-
-          if (resbody.getShipment &&
-              resbody.getShipment.shipments &&
-              resbody.getShipment.shipments[0] &&
-              resbody.getShipment.shipments[0].status &&
-              resbody.getShipment.shipments[0].status.qaplaStatus &&
-              resbody.getShipment.shipments[0].status.qaplaStatus.status) {
-                status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
-              }
-          
-          result = resbody.getShipment.result;
-          error = resbody.getShipment.error;
-          await this.#assignAttributes(action, status, result, error);
+          if (this.log) { console.log("myrequest/DirMake Make resbody: ", resbody); }
+          let status = 200;   
+          let error = null;
+          await this.#assignAttributes(action, status, error); 
+          await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
+            callback(); // stop the flow
+          });
+          console.log('myrequest/status: ',status)
           callback();
         }
       }
-    )
-
+    );
   }
 
-
-  async #assignAttributes(action, status, result, error) {
+  async #assignAttributes(action, status, error) {
     if (this.log) {
       console.log("DirMake assignAttributes action:", action)
       console.log("DirMake assignAttributes status:", status)
-      console.log("DirMake assignAttributes result:", result)
       console.log("DirMake assignAttributes error:", error)
     }
     if (this.context.tdcache) {
       if (action.assignStatusTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      if (action.assignResultTo && result) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, result);
       }
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
@@ -170,6 +164,7 @@ class DirMake {
       .then((res) => {
         if (this.log) {
           console.log("Response for url:", options.url);
+          console.log("Response status:", res.status);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }
         if (res && res.status == 200 && res.data) {
@@ -189,6 +184,43 @@ class DirMake {
           callback(error, null);
         }
       });
+  }
+  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    let trueIntentDirective = null;
+   
+    if (trueIntent) {
+      //console.log('executeCondition/trueIntent',trueIntent)
+      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+      //console.log('executeCondition/trueIntentDirective',trueIntentDirective)
+      //console.log('executeCondition/trueIntentAttributes',trueIntentAttributes)
+    }
+    let falseIntentDirective = null;
+    if (falseIntent) {
+      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+    }
+    if (this.log) {console.log('DirMake executeCondition/result',result)}
+    if (result === true) {
+      if (trueIntentDirective) {
+        this.intentDir.execute(trueIntentDirective, () => {
+          callback();
+        });
+      }
+      else {
+        if (this.log) {console.log("No trueIntentDirective specified");}
+        callback();
+      }
+    }
+    else {
+      if (falseIntentDirective) {
+        this.intentDir.execute(falseIntentDirective, () => {
+          callback();
+        });
+      }
+      else {
+        if (this.log) {console.log("No falseIntentDirective specified");}
+        callback();
+      }
+    }
   }
 }
 
