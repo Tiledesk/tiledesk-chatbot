@@ -74,18 +74,18 @@ class DirMake {
     }
 
     console.log('CIAOkkkk',bodyParameters)
-    // const filler = new Filler();
-    // const url = filler.fill(action.url, requestVariables);
+    const filler = new Filler();
+    const url = filler.fill(action.url, requestVariables);
 
-    // try {
-    //   for (const [key, value] of Object.entries(bodyParameters)) {
-    //     if (this.log) {console.log("bodyParam:", key, "value:", value)}
-    //     let filled_value = filler.fill(value, requestVariables);
-    //     bodyParameters[key] = filled_value;
-    //   }
-    // } catch(e) {
-    //   console.error('error: ', e)
-    // }
+    try {
+      for (const [key, value] of Object.entries(bodyParameters)) {
+        if (this.log) {console.log("bodyParam:", key, "value:", value)}
+        let filled_value = filler.fill(value, requestVariables);
+        bodyParameters[key] = filled_value;
+      }
+    } catch(e) {
+      console.error('error: ', e)
+    }
       console.log('CIAO',bodyParameters)
     
 
