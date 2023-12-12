@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.29
+- Added Make action 
+
 ### v0.2.28
 - DirSetAttribute, added support for attribute-filling in constants
 - DirSetAttribute, added function JSONparse
