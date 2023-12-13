@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+### v0.2.30
+- Updated WhatsappByAttribute action
+- Fixed bug: WhatsappByAttribute action pointed to whatsapp pre
+
 ### v0.2.29
 - Added Make action 
 
