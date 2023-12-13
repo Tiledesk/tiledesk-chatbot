@@ -134,10 +134,23 @@ class DirSetAttributeV2 {
         attributes.TiledeskString = TiledeskString;
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
         console.log("filling in setattribute, result:", result);
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, result);
+        let destination = await this.fillDestination(action.destination);
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, destination, result);
         callback();
     }
 
+    async fillDestination(destination) {
+        if (this.tdcache) {
+            // console.log("tdcache in setattribute...", this.tdcache);
+            const requestAttributes = 
+                await TiledeskChatbot.allParametersStatic(this.tdcache, this.context.requestId);
+            // console.log("requestAttributes in setattribute...", requestAttributes);
+            const filler = new Filler();
+            destination = filler.fill(destination, requestAttributes);
+            console.log("setattribute, final destination:", destination);
+        }
+        return destination
+    }
     async fillValues(operands) {
         // operation: {
         //     operators: ["addAsNumber", "subtractAsNumber", "divideAsNumber", "multiplyAsNumber"],
