@@ -186,11 +186,11 @@ class DirSetAttributeV2 {
                 // console.log("requestAttributes in setattribute...", requestAttributes);
                 const filler = new Filler();
                 operands.forEach(operand => {
-                    if (!operand.isVariable) {
+                    // if (!operand.isVariable) {
                         console.log("setattribute, liquid operand:", operand);
                         operand.value = filler.fill(operand.value, requestAttributes);
                         console.log("setattribute, final operand:", operand);
-                    }
+                    // }
                 });
             }
         }
