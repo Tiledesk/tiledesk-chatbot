@@ -74,34 +74,30 @@ class DirMake {
     }
     let url;
     try {
-    console.log('CIAOkkkk',bodyParameters)
+    //console.log('CIAOkkkk',bodyParameters)
     let make_base_url = process.env.MAKE_ENDPOINT;
     if (make_base_url) {
       url = make_base_url + "/make/";
     } else {
       url = action.url;
     }
-    console.log('Make url: ', url);
+    //console.log('Make url: ', url);
     const filler = new Filler();
-
-    
       for (const [key, value] of Object.entries(bodyParameters)) {
-        if (this.log) {console.log("bodyParam:", key, "value:", value)}
+        //if (this.log) {console.log("bodyParam:", key, "value:", value)}
         let filled_value = filler.fill(value, requestVariables);
         bodyParameters[key] = filled_value;
       }
+      console.log('DirMake bodyParameters filler: ',bodyParameters)
     
-      console.log('CIAO',bodyParameters)
-    
-
 
     
     // Condition branches
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
-    console.log('trueIntent',trueIntent)
+    console.log('DirMake trueIntent',trueIntent)
  
-    if (this.log) { console.log("DirMake MakeEndpoint URL: ", make_base_url); }
+    if (this.log) { console.log("DirMake MakeEndpoint URL: ", url); }
     const MAKE_HTTPREQUEST = {
       url: url,
       headers: {

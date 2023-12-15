@@ -93,7 +93,7 @@ describe('Conversation for make test', async () => {
 
     endpointServer.post('/1.3/make/', function (req, res) {
       let http_code = 200;
-      console.log("endpointServer.post/1.3/make/ ", req)
+      console.log("endpointServer.post/1.3/make/ ")
       res.status(http_code).send('Accepted');
     });
 

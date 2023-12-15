@@ -16,7 +16,7 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "make",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"url": "https://hook.eu2.make.com/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
+				"url": "http://localhost:10002/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
 				"bodyParameters": {
 					"name": "userFullname",
 					"email": "userEmail"
@@ -40,7 +40,7 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "make",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"url": "https://hook.eu2.make.com/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
+				"url": "http://localhost:10002/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
 				"bodyParameters": {
 					"name": "userFullname",
 					"email": "userEmail"
