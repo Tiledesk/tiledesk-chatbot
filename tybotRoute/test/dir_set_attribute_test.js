@@ -243,9 +243,9 @@ describe('Testing dir_set_attribute_test', function() {
             };
             const dirSetAttribute = new DirSetAttributeV2(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
-            console.log("going with jsonparse...");
+            // console.log("going with jsonparse...");
             await executeAsync({'action': action});
-            console.log("value is:", keyTest);
+            // console.log("value is:", keyTest);
             assert.equal(keyTest, "value");
             assert.equal(valueTest.size, 12);
         });
@@ -280,9 +280,9 @@ describe('Testing dir_set_attribute_test', function() {
             };
             const dirSetAttribute = new DirSetAttributeV2(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
-            console.log("going with jsonparse (const)...");
+            // console.log("going with jsonparse (const)...");
             await executeAsync({'action': action});
-            console.log("value is:", keyTest);
+            // console.log("value is:", keyTest);
             assert.equal(keyTest, "value");
             assert.equal(valueTest.size, 12);
         });

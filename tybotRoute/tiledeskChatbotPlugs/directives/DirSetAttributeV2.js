@@ -96,12 +96,12 @@ class DirSetAttributeV2 {
     }
 
     async go(action, callback) {
-        console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));
+        if (this.log) {console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));}
         if (action && action.operation && action.operation.operands) {
-            console.log("filling in setattribute...");
+            if (this.log) {console.log("filling in setattribute...");}
             await this.fillValues(action.operation.operands);
         }
-        console.log("filled in setattribute:", action.operation);
+        if (this.log) {console.log("filled in setattribute:", action.operation);}
         // let res = validate(action, schema);
         // if (res.errors) {
         //     console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
@@ -126,14 +126,14 @@ class DirSetAttributeV2 {
         //     console.log("filling in setattribute...");
         //     await this.fillValues(action.operation.operands);
         // }
-        console.log("dirsetattribute, action.operation.operands:", action.operation.operands);
+        // console.log("dirsetattribute, action.operation.operands:", action.operation.operands);
         const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
         const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        console.log("dirsetattribute, attributes:", attributes);
+        // console.log("dirsetattribute, attributes:", attributes);
         attributes.TiledeskMath = TiledeskMath;
         attributes.TiledeskString = TiledeskString;
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
-        console.log("filling in setattribute, result:", result);
+        // console.log("filling in setattribute, result:", result);
         // THE GOAL OF ATTRIBUTE-FILLING THE "DESTINATION" FIELD IS TO SUPPORT DYNAMIC ATTRIBUTES
         // (ATTRS WHOSE NAME IS UNKNOWN AD DESIGN-TIME)
         // STILL UNSUPPORTED IN UI
@@ -150,7 +150,7 @@ class DirSetAttributeV2 {
             // console.log("requestAttributes in setattribute...", requestAttributes);
             const filler = new Filler();
             destination = filler.fill(destination, requestAttributes);
-            console.log("setattribute, final destination:", destination);
+            // console.log("setattribute, final destination:", destination);
         }
         return destination
     }
@@ -190,9 +190,9 @@ class DirSetAttributeV2 {
                 const filler = new Filler();
                 operands.forEach(operand => {
                     // if (!operand.isVariable) {
-                        console.log("setattribute, liquid operand:", operand);
+                        // console.log("setattribute, liquid operand:", operand);
                         operand.value = filler.fill(operand.value, requestAttributes);
-                        console.log("setattribute, final operand:", operand);
+                        // console.log("setattribute, final operand:", operand);
                     // }
                 });
             }
