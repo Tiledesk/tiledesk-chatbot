@@ -32,6 +32,8 @@ console.log('a var...chatbot_name!', chatbot_name);
 tiledeskVars.setVar('myvar', '1');
 tiledeskVars.delVar('chatbot_name');
 tiledeskVars.delVar('conversation_id');
+jsondata2.c = 7;
+tiledeskVars.setVar('jsondata2', jsondata2);
 console.log("all vars:", tiledeskVars.allVars());
 `
 		}, {

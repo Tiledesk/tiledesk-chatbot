@@ -134,6 +134,9 @@ class DirSetAttributeV2 {
         attributes.TiledeskString = TiledeskString;
         const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
         console.log("filling in setattribute, result:", result);
+        // THE GOAL OF ATTRIBUTE-FILLING THE "DESTINATION" FIELD IS TO SUPPORT DYNAMIC ATTRIBUTES
+        // (ATTRS WHOSE NAME IS UNKNOWN AD DESIGN-TIME)
+        // STILL UNSUPPORTED IN UI
         let destination = await this.fillDestination(action.destination);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, destination, result);
         callback();

@@ -234,8 +234,8 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        console.log("(evaluateJavascriptExpression) evaluating:", expression)
-        console.log("context:", context)
+        // console.log("(evaluateJavascriptExpression) evaluating:", expression)
+        // console.log("context:", context)
         let res = null;
         try {
             const vm = new VM({

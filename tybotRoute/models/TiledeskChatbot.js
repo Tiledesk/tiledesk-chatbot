@@ -80,7 +80,7 @@ class TiledeskChatbot {
             if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
             await this.unlockIntent(this.requestId);
             await this.unlockAction(this.requestId);
-            console.log("RESET LOCKED INTENT.");
+            // console.log("RESET LOCKED INTENT.");
             if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly  invoked with an action:", message.attributes.action);}
           }
         } catch(error) {
@@ -296,7 +296,7 @@ class TiledeskChatbot {
         }
         if (this.log) {console.log("NLP intents found:", intents);}
         if (intents && intents.length > 0) {
-          console.log("Matching intents found.");
+          // console.log("Matching intents found.");
           // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
