@@ -120,7 +120,7 @@ class DirMake {
           if (callback) {
             console.error("myrequest/(httprequest) DirMake make err:", err);
             let status = 404;   
-            let error = 'Not found';
+            let error = 'Make url not found';
             await this.#assignAttributes(action, status, error);
             this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
               callback(false); // continue the flow

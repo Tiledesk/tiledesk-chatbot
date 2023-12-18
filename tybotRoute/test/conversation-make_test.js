@@ -137,7 +137,7 @@ describe('Conversation for make test', async () => {
         else {
           assert(attributes);
           assert(attributes["make_status"] === 404);
-          assert(attributes["make_error"] === "Not found");
+          assert(attributes["make_error"] === "Make url not found");
           listener.close(() => {
             done();
           });
