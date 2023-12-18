@@ -37,6 +37,9 @@ class DirMake {
 
   async go(action, callback) {
     if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    console.log('DirMake trueIntent',trueIntent)
     if (!this.tdcache) {
       console.error("Error: DirMake tdcache is mandatory");
       callback();
@@ -55,7 +58,7 @@ class DirMake {
         if (this.log) { console.log("DirMake request parameter:", key, "value:", value, "type:", typeof value) }
       }
     }
-
+    
     let webhook_url = action.url;
     let bodyParameters = action.bodyParameters;
     if (this.log) {
@@ -69,18 +72,23 @@ class DirMake {
     }
     if (!webhook_url || webhook_url === '') {
       console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
-      callback();
+      let status = 422;   
+      let error = 'Missing url';
+      await this.#assignAttributes(action, status, error);
+      this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
+        callback(); // stop the flow
+      });
       return;
     }
     let url;
     try {
     let make_base_url = process.env.MAKE_ENDPOINT;
-    if (make_base_url) {
-      url = make_base_url + "/make/";
-    } else {
-      url = action.url;
-    }
-    const filler = new Filler();
+      if (make_base_url) {
+        url = make_base_url + "/make/";
+      } else {
+        url = action.url;
+      }
+      const filler = new Filler();
       for (const [key, value] of Object.entries(bodyParameters)) {
         //if (this.log) {console.log("bodyParam:", key, "value:", value)}
         let filled_value = filler.fill(value, requestVariables);
@@ -91,9 +99,9 @@ class DirMake {
 
     
     // Condition branches
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    console.log('DirMake trueIntent',trueIntent)
+    //let trueIntent = action.trueIntent;
+    //let falseIntent = action.falseIntent;
+    //console.log('DirMake trueIntent',trueIntent)
  
     if (this.log) { console.log("DirMake MakeEndpoint URL: ", url); }
     const MAKE_HTTPREQUEST = {
@@ -128,7 +136,7 @@ class DirMake {
             callback(); // stop the flow
           });
           console.log('myrequest/status: ',status)
-          callback();
+          //callback();
         }
       }
     );

@@ -59,6 +59,7 @@ describe('Conversation for make test', async () => {
     });
   });
 // TEST MAKE
+//TEST SUCCESS
   it('/make success', (done) => {
 
     let listener;
@@ -119,7 +120,7 @@ describe('Conversation for make test', async () => {
       });
     });
   });
-
+//TEST FAIL CODE 404
   it('/make failure - return code 404', (done) => {
 
     let listener;
@@ -173,7 +174,59 @@ describe('Conversation for make test', async () => {
       });
     });
   });
+//TEST FAIL 422
+it('/make failure - return code 422', (done) => {
 
+  let listener;
+  let endpointServer = express();
+  endpointServer.use(bodyParser.json());
+  endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+    res.send({ success: true });
+    const message = req.body;
+    console.log("/make failure message: ", JSON.stringify(message, null, 2));
+    getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      if (err) {
+        assert.ok(false);
+      }
+      else {
+        assert(attributes);
+        assert(attributes["make_status"] === 422);
+        assert(attributes["make_error"] === "Missing url");
+        listener.close(() => {
+          done();
+        });
+      }
+    });
+
+   });
+
+  endpointServer.post('/1.3/make/', function (req, res) {
+    let http_code = 422;
+    res.status(http_code).send('Missing url');
+  });
+
+  listener = endpointServer.listen(10002, '0.0.0.0', () => {
+    console.log('endpointServer started', listener.address());
+    let request = {
+      "payload": {
+        "senderFullname": "guest#367e",
+        "type": "text",
+        "sender": "A-SENDER",
+        "recipient": REQUEST_ID,
+        "text": '/make#FAILUREURL',
+        "id_project": PROJECT_ID,
+        "metadata": "",
+        "request": {
+          "request_id": REQUEST_ID
+        }
+      },
+      "token": "XXX"
+    }
+    sendMessageToBot(request, BOT_ID, () => {
+      console.log("Message sent:\n", request);
+    });
+  });
+});
   
 });
 

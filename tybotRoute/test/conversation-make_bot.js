@@ -54,6 +54,31 @@ const bot = {
 			]
 		},
 		{
+			// 422 MISSING URL
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "make#FAILUREURL",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "make",
+				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
+				"url": "",
+				"bodyParameters": {
+					"name": "userFullname",
+					"email": "userEmail"
+				},
+				"assignStatusTo": "make_status",
+				"assignErrorTo": "make_error",
+				"_tdActionType": "make",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			},
+			]
+		},
+		{
 			// TRUE INTENT - MAKE SUCCESS
 			"webhook_enabled": false,
 			"enabled": true,
