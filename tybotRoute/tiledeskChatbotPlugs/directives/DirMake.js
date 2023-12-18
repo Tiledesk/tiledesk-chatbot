@@ -9,6 +9,7 @@ require('dotenv').config();
 class DirMake {
 
   constructor(context) {
+    console.log('context object LOG: ', context.log)
     if (!context) {
       throw new Error('context object is mandatory');
     }
@@ -39,7 +40,7 @@ class DirMake {
     if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
-    console.log('DirMake trueIntent',trueIntent)
+    //console.log('DirMake trueIntent',trueIntent)
     if (!this.tdcache) {
       console.error("Error: DirMake tdcache is mandatory");
       callback();
@@ -73,7 +74,7 @@ class DirMake {
     if (!webhook_url || webhook_url === '') {
       console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
       let status = 422;   
-      let error = 'Missing url';
+      let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
       this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
         callback(); // stop the flow
@@ -94,7 +95,7 @@ class DirMake {
         let filled_value = filler.fill(value, requestVariables);
         bodyParameters[key] = filled_value;
       }
-      console.log('DirMake bodyParameters filler: ',bodyParameters)
+      if (this.log) {console.log('DirMake bodyParameters filler: ',bodyParameters)}
     
 
     
@@ -135,7 +136,7 @@ class DirMake {
           await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
             callback(); // stop the flow
           });
-          console.log('myrequest/status: ',status)
+          if (this.log) {console.log('myrequest/status: ',status)}
           //callback();
         }
       }
