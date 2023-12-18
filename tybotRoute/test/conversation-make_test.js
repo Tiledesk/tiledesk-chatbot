@@ -191,7 +191,7 @@ it('/make failure - return code 422', (done) => {
       else {
         assert(attributes);
         assert(attributes["make_status"] === 422);
-        assert(attributes["make_error"] === "Missing url");
+        assert(attributes["make_error"] === "Missing make webhook url");
         listener.close(() => {
           done();
         });
@@ -202,7 +202,7 @@ it('/make failure - return code 422', (done) => {
 
   endpointServer.post('/1.3/make/', function (req, res) {
     let http_code = 422;
-    res.status(http_code).send('Missing url');
+    res.status(http_code).send('Missing make webhook url');
   });
 
   listener = endpointServer.listen(10002, '0.0.0.0', () => {

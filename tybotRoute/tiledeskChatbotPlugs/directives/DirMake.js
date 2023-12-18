@@ -73,7 +73,7 @@ class DirMake {
     if (!webhook_url || webhook_url === '') {
       console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
       let status = 422;   
-      let error = 'Missing url';
+      let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
       this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
         callback(); // stop the flow
