@@ -5,6 +5,21 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.31
+- Removed patch: Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
+
+### v0.2.30
+- Updated WhatsappByAttribute action
+- Fixed bug: WhatsappByAttribute action pointed to whatsapp pre
+
+### v0.2.29
+- Added Make action 
+
+### v0.2.28
+- DirSetAttribute, added support for attribute-filling in constants
+- DirSetAttribute, added function JSONparse
+- Added support for Globals (aka Secrets)
+
 ### v0.2.27
 - Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
 - Removed non-user-defined attributes from /ext/parameters method

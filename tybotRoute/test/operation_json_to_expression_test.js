@@ -220,6 +220,36 @@ describe('JSON operation to expression', function() {
             assert.equal(expression, 'TiledeskString.capitalize(String("hello"))');
         });
 
+        it("should parse a constant string containing a JSON", function() {
+            const operators = [];
+            const operands = [
+                {
+                    value: "{\"name\":\"Andrea\"}",
+                    isVariable: false,
+                    function: "JSONparse"
+                }
+            ];
+            console.log("JSONparse value:", operands[0].value);
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            console.log("JSONparse expression:", expression);
+            assert.equal(expression, 'JSON.parse(String("{\\"name\\":\\"Andrea\\"}"))');
+        });
+
+        it("should parse a string variable containing a JSON", function() {
+            const operators = [];
+            const operands = [
+                {
+                    value: "json_var",
+                    isVariable: true,
+                    function: "JSONparse"
+                }
+            ];
+            console.log("JSONparse value:", operands[0].value);
+            const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
+            console.log("JSONparse expression:", expression);
+            assert.equal(expression, 'JSON.parse(String($data.json_var))');
+        });
+
         it("should be Hello World", function() {
             const operators = ["addAsString", "addAsString"];
             const operands = [

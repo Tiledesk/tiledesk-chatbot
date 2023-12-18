@@ -25,6 +25,7 @@ const { DirCondition } = require('./directives/DirCondition');
 const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
+const { DirSetAttributeV2 } = require('./directives/DirSetAttributeV2');
 const { DirWebRequest } = require('./directives/DirWebRequest');
 const { DirWebRequestV2 } = require('./directives/DirWebRequestV2');
 const { DirCode } = require('./directives/DirCode');
@@ -367,6 +368,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.SET_ATTRIBUTE) {
       // console.log("...DirSetAttribute");
       new DirSetAttribute(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.SET_ATTRIBUTE_V2) {
+      // console.log("...DirSetAttribute");
+      new DirSetAttributeV2(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

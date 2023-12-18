@@ -73,12 +73,12 @@ describe('Conversation for JSONCondition test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
+          console.log("final attributes (dirCode):", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["name"] === "Andrea");
           assert(attributes["lastname"] === "Sponziello");
           assert(attributes["myvar"] === "1");
-          // assert(attributes["jsondata2"]["a"] === "1");
+          assert(attributes["jsondata2"]["a"] === "1");
           listener.close(() => {
             done();
           });
