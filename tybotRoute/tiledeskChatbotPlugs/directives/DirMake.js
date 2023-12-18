@@ -74,14 +74,12 @@ class DirMake {
     }
     let url;
     try {
-    console.log('CIAOkkkk',bodyParameters)
     let make_base_url = process.env.MAKE_ENDPOINT;
     if (make_base_url) {
       url = make_base_url + "/make/";
     } else {
       url = action.url;
     }
-    console.log('Make url: ', url);
     const filler = new Filler();
 
     
