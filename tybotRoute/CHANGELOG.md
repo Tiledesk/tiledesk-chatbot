@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.32
+- Added attributes filling to message.metadata.src
+- Added attributes filling to message.metadata.name
+
 # v0.2.31
 - Removed patch: Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
 
