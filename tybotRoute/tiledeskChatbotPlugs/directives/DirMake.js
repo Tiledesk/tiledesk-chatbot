@@ -17,6 +17,7 @@ class DirMake {
     this.requestId = this.context.requestId;
     this.log = context.log;
     this.intentDir = new DirIntent(context);
+    console.log('LOG: ', this.log);
   }
 
   execute(directive, callback) {
@@ -39,7 +40,7 @@ class DirMake {
     if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
-    console.log('DirMake trueIntent',trueIntent)
+    if (this.log) {console.log('DirMake trueIntent',trueIntent)}
     if (!this.tdcache) {
       console.error("Error: DirMake tdcache is mandatory");
       callback();
@@ -71,7 +72,7 @@ class DirMake {
       return;
     }
     if (!webhook_url || webhook_url === '') {
-      console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
+      console.error("DirMake ERROR - webhook_url is undefined or null or empty string:", webhook_url);
       let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
@@ -94,7 +95,7 @@ class DirMake {
         let filled_value = filler.fill(value, requestVariables);
         bodyParameters[key] = filled_value;
       }
-      console.log('DirMake bodyParameters filler: ',bodyParameters)
+      if (this.log) {console.log('DirMake bodyParameters filler: ',bodyParameters)}
     
 
     
@@ -118,7 +119,7 @@ class DirMake {
       MAKE_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            console.error("myrequest/(httprequest) DirMake make err:", err);
+            if (this.log) {console.error("myrequest/(httprequest) DirMake make err:", err)};
             let status = 404;   
             let error = 'Make url not found';
             await this.#assignAttributes(action, status, error);
@@ -135,7 +136,7 @@ class DirMake {
           await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
             callback(); // stop the flow
           });
-          console.log('myrequest/status: ',status)
+          if (this.log) { console.log('myrequest/status: ',status)}
           //callback();
         }
       }
@@ -211,7 +212,7 @@ class DirMake {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("An error occurred:", JSON.stringify(error.message));
         if (callback) {
           callback(error, null);
         }
