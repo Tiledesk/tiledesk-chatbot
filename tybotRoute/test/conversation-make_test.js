@@ -68,7 +68,7 @@ describe('Conversation for make test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      if (this.log) {console.log('/make success message: ', JSON.stringify(message, null,2))}
+      //console.log('/make success message: ', JSON.stringify(message, null,2))
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'make status is: 200');
@@ -94,12 +94,12 @@ describe('Conversation for make test', async () => {
 
     endpointServer.post('/1.3/make/', function (req, res) {
       let http_code = 200;
-      if (this.log) {console.log("endpointServer.post/1.3/make/ ")}
+      //console.log("endpointServer.post/1.3/make/ ")
       res.status(http_code).send('Accepted');
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      //console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -129,7 +129,7 @@ describe('Conversation for make test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      if (this.log) {console.log("/make failure message: ", JSON.stringify(message, null, 2))};
+      //console.log("/make failure message: ", JSON.stringify(message, null, 2));
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -137,7 +137,7 @@ describe('Conversation for make test', async () => {
         else {
           assert(attributes);
           assert(attributes["make_status"] === 404);
-          assert(attributes["make_error"] === "Not found");
+          assert(attributes["make_error"] === "Make url not found");
           listener.close(() => {
             done();
           });
@@ -153,7 +153,7 @@ describe('Conversation for make test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      //console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -183,7 +183,7 @@ it('/make failure - return code 422', (done) => {
   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
     res.send({ success: true });
     const message = req.body;
-    if (this.log) {console.log("/make failure message: ", JSON.stringify(message, null, 2))};
+    //console.log("/make failure message: ", JSON.stringify(message, null, 2));
     getChatbotParameters(REQUEST_ID, (err, attributes) => {
       if (err) {
         assert.ok(false);
@@ -206,7 +206,7 @@ it('/make failure - return code 422', (done) => {
   });
 
   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-    console.log('endpointServer started', listener.address());
+    //console.log('endpointServer started', listener.address());
     let request = {
       "payload": {
         "senderFullname": "guest#367e",
@@ -223,7 +223,7 @@ it('/make failure - return code 422', (done) => {
       "token": "XXX"
     }
     sendMessageToBot(request, BOT_ID, () => {
-      //console.log("Message sent:\n", request);
+       //console.log("Message sent:\n", request);
     });
   });
 });

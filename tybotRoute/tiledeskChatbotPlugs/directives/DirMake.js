@@ -40,7 +40,7 @@ class DirMake {
     if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
-    //console.log('DirMake trueIntent',trueIntent)
+    if (this.log) {console.log('DirMake trueIntent',trueIntent)}
     if (!this.tdcache) {
       console.error("Error: DirMake tdcache is mandatory");
       callback();
@@ -72,7 +72,7 @@ class DirMake {
       return;
     }
     if (!webhook_url || webhook_url === '') {
-      console.error("DirMake ERROR - webhook_url is undefined or null or empty string");
+      console.error("DirMake ERROR - webhook_url is undefined or null or empty string:");
       let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
@@ -119,9 +119,9 @@ class DirMake {
       MAKE_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            console.error("myrequest/(httprequest) DirMake make err:", err);
+            if (this.log) {console.error("myrequest/(httprequest) DirMake make err:", err)};
             let status = 404;   
-            let error = 'Not found';
+            let error = 'Make url not found';
             await this.#assignAttributes(action, status, error);
             this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
               callback(false); // continue the flow
@@ -212,7 +212,7 @@ class DirMake {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("An error occurred:", JSON.stringify(error.message));
         if (callback) {
           callback(error, null);
         }
