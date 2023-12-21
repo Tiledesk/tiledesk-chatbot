@@ -578,9 +578,18 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.ASK_GPT) {
-      new DirAskGPT(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+      new DirAskGPT(context).execute(directive, async (stop) => {;
+        if (context.log) { console.log("AskGPT stop?", stop);}
+        
+        console.log("AskGPT stop?", stop);
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     else if (directive_name === Directives.GPT_TASK) {

@@ -43,6 +43,44 @@ const bot = {
 		"question": ""
 	}, 
 	{
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "askgpt",
+			"_tdActionTitle": "gpt action failed",
+			"assignReplyTo": "gpt_reply",
+			"assignSourceTo": "gpt_source",
+			"kbid": "kb1",
+			"question": "",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
+		}],
+		"language": "en",
+		"intent_display_name": "gpt_fail_noquestion",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": ""
+	}, 
+	{
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "askgpt",
+			"_tdActionTitle": "gpt action failed",
+			"assignReplyTo": "gpt_reply",
+			"assignSourceTo": "gpt_source",
+			"kbid": "",
+			"question": "this is the question: ${last_user_message}",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
+		}],
+		"language": "en",
+		"intent_display_name": "gpt_fail_nokbid",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": ""
+	}, 
+	{
 		// TRUE INTENT
 		"webhook_enabled": false,
 		"enabled": true,

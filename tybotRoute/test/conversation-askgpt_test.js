@@ -235,7 +235,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  it('/gpt fail - move to false intent if gptkey does not exists', (done) => {
+  it('/gpt fail - move to false intent if gptkey does not exists (key undefined)', (done) => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -297,7 +297,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
   });
 
-  it('/gpt fail - move to false intent if gptkey does not exists', (done) => {
+  it('/gpt fail - move to false intent if gptkey does not exists (missing key)', (done) => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -359,6 +359,141 @@ describe('Conversation for JSONCondition test', async () => {
       });
     });
   });
+
+  it('/gpt fail - action question is undefined', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      // console.log("command2", command2);
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: No answers");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "No answers");
+
+          setTimeout(() => {
+            listener.close(() => {
+              done();
+            });
+          }, 2000);
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = {};
+      reply.error = "no knowledge base settings found"
+      http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_fail_noquestion',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/gpt fail - action kbid is undefined', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      // console.log("command2", command2);
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: No answers");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "No answers");
+
+          setTimeout(() => {
+            listener.close(() => {
+              done();
+            });
+          }, 2000);
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = {};
+      reply.error = "no knowledge base settings found"
+      http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_fail_nokbid',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
 
 });
 
