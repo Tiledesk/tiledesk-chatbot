@@ -17,7 +17,7 @@ class DirMake {
     this.requestId = this.context.requestId;
     this.log = context.log;
     this.intentDir = new DirIntent(context);
-    console.log('LOG: ', this.log);
+    if (this.log) {console.log('LOG: ', this.log)};
   }
 
   execute(directive, callback) {
@@ -67,12 +67,12 @@ class DirMake {
       console.log("DirMake bodyParameters: ", bodyParameters);
     }
     if (!bodyParameters || bodyParameters === '') {
-      console.error("DirMake ERROR - bodyParameters is undefined or null or empty string");
+      if (this.log) {console.error("DirMake ERROR - bodyParameters is undefined or null or empty string")};
       callback();
       return;
     }
     if (!webhook_url || webhook_url === '') {
-      console.error("DirMake ERROR - webhook_url is undefined or null or empty string:", webhook_url);
+      if (this.log) {console.error("DirMake ERROR - webhook_url is undefined or null or empty string:", webhook_url)};
       let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
@@ -212,7 +212,7 @@ class DirMake {
         }
       })
       .catch((error) => {
-        console.error("An error occurred:", JSON.stringify(error.message));
+        if (this.log) {console.error("An error occurred:", JSON.stringify(error.message))};
         if (callback) {
           callback(error, null);
         }
