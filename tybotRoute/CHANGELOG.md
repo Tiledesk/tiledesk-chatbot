@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.33
+- Added lead attributes (userEmail, userPhone, userFullname, userLeadId, userCompany)
+
 # v0.2.32
 - Added attributes filling to message.metadata.src
 - Added attributes filling to message.metadata.name
