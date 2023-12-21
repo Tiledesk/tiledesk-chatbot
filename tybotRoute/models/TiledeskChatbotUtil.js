@@ -448,6 +448,23 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter("lastUserDocumentName", null);
                 await chatbot.addParameter("lastUserDocumentType", null);
             }
+            if (message && message.request && message.request.lead) {
+                if (message.request.lead.email) {
+                    await chatbot.addParameter("userEmail", message.request.lead.email);
+                }
+                if (message.request.lead.fullname) {
+                    await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                }
+                if (message.request.lead.phone) {
+                    await chatbot.addParameter("userPhone", message.request.lead.phone);
+                }
+                if (message.request.lead.lead_id) {
+                    await chatbot.addParameter("userLeadId", message.request.lead.lead_id);
+                }
+                if (message.request.lead.company) {
+                    await chatbot.addParameter("userCompany", message.request.lead.company);
+                }
+            }
         }
         
       
