@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.34
+- stopOnConditionMet is always true in DirJSONCondition
+- Fixes the WebRequestV2 branching
+
 # v0.2.33
 - Added lead attributes (userEmail, userPhone, userFullname, userLeadId, userCompany)
 

@@ -62,7 +62,7 @@ class DirJSONCondition {
     const falseIntent = action.falseIntent;
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
-    let stopOnConditionMet = action.stopOnConditionMet;
+    let stopOnConditionMet = true; //action.stopOnConditionMet;
     if (this.log) {console.log("groups:", JSON.stringify(groups));}
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
