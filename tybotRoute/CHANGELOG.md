@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.35
+- added validation check for requests ids (support-group- && automation-request-)
+
 # v0.2.34
 - stopOnConditionMet is always true in DirJSONCondition
 - Fixes the WebRequestV2 branching

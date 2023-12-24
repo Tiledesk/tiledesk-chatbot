@@ -626,6 +626,34 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static validateRequestId(requestId, projectId) {
+        // console.log("checking requestId:", requestId, projectId)
+        let isValid = false;
+        if (requestId.startsWith("support-group-")) {
+            const parts = requestId.split("-");
+            // console.log("parts support request:", parts);
+            if (parts.length === 4) {
+                isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
+            }
+            else {
+                isValid = false;
+            }
+        } else if (requestId.startsWith("automation-request-")) {
+            const parts = requestId.split("-");
+            // console.log("parts automation request:", parts);
+            if (parts.length === 4) {
+                isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
+            }
+            else {
+                isValid = false;
+            }
+        }
+        else {
+            isValid = false;
+        }
+        return isValid;
+    }
+
 }
 
 module.exports = { TiledeskChatbotUtil };

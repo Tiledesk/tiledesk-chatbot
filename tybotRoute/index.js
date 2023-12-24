@@ -47,6 +47,7 @@ router.post('/ext/:botid', async (req, res) => {
   const requestId = message.request.request_id;
   const projectId = message.id_project;
   if (log) {console.log("message.id_project:", message.id_project);}
+
   // adding info for internal context workflow
   message.request.bot_id = botId;
   if (message.request.id_project === null || message.request.id_project === undefined) {
@@ -59,8 +60,19 @@ router.post('/ext/:botid', async (req, res) => {
   // } else {
   //   return res.status(400).send({ "success": false, "message": "Invalid request_id"})
   // }
-  res.status(200).send({"success":true});
-  
+  // res.status(200).send({"success":true});
+
+  // validate reuqestId
+  let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
+  if (isValid) {
+    res.status(200).send({"success":true});
+  }
+  else {
+    res.status(400).send({"success": false, error: "Request id is invalid"});
+    // console.log("request id, projectId:", requestId, projectId)
+    // process.exit(0)
+  }
+
   const request_botId_key = "tilebot:botId_requests:" + requestId;
   await tdcache.set(
     request_botId_key,
