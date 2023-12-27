@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.37
+- improved GptTask action
+- improved AskGPT action 
+
 # v0.2.36
 - Fixes json conversion in GptTask issue
 
