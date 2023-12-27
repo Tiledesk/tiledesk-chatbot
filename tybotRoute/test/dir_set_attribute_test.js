@@ -1,5 +1,6 @@
  var assert = require('assert');
  const { DirSetAttribute } = require('../tiledeskChatbotPlugs/directives/DirSetAttribute.js');
+ const { DirSetAttributeV2 } = require('../tiledeskChatbotPlugs/directives/DirSetAttributeV2.js');
  const { TiledeskChatbot } = require('../models/TiledeskChatbot');
  const { promisify } = require('util');
  // just a schema remainder
@@ -72,7 +73,7 @@ describe('Testing dir_set_attribute_test', function() {
                 return {};
             }
             TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
-                console.log("Redis: " + key + "; value: " + value);
+                // console.log("Redis: " + key + "; value: " + value);
                 keyTest = key;
                 valueTest = value;
             }
@@ -138,6 +139,155 @@ describe('Testing dir_set_attribute_test', function() {
             assert.equal(valueTest, "1");
         });
     })
+
+    describe('Testing dir_set_attribute_test with functions applied', function() {
+        it('should capitalize the attribute (aka isVariable = true)', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {
+                    "name": "andrea"
+                };
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattribute",
+                destination: "value",
+                operation: {
+                    operands: [
+                        {
+                            value: "name",
+                            isVariable: true,
+                            function: "capitalizeAsString"
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            };
+            const dirSetAttribute = new DirSetAttributeV2(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            await executeAsync({'action': action});
+            assert.equal(keyTest, "value");
+            assert.equal(valueTest, "Andrea");
+        });
+        it('should capitalize a constant', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {};
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattribute",
+                destination: "value",
+                operation: {
+                    operands: [
+                        {
+                            value: "luis",
+                            isVariable: false,
+                            function: "capitalizeAsString"
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            };
+            const dirSetAttribute = new DirSetAttributeV2(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            await executeAsync({'action': action});
+            assert.equal(keyTest, "value");
+            assert.equal(valueTest, "Luis");
+        });
+        it('should convert an attribute (string) to JOSON with JSONpase', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {
+                    "property": "{\"size\": 12, \"coords\": {\"x\": 2, \"y\": 4}}"
+                };
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattribute",
+                destination: "value",
+                operation: {
+                    operands: [
+                        {
+                            value: "property",
+                            isVariable: true,
+                            function: "JSONparse"
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            };
+            const dirSetAttribute = new DirSetAttributeV2(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            // console.log("going with jsonparse...");
+            await executeAsync({'action': action});
+            // console.log("value is:", keyTest);
+            assert.equal(keyTest, "value");
+            assert.equal(valueTest.size, 12);
+        });
+
+        it('should convert a constant to JOSON with JSONpase', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {};
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattribute",
+                destination: "value",
+                operation: {
+                    operands: [
+                        {
+                            value: "{\"size\": 12, \"coords\": {\"x\": 2, \"y\": 4}}",
+                            isVariable: false,
+                            function: "JSONparse"
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            };
+            const dirSetAttribute = new DirSetAttributeV2(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            // console.log("going with jsonparse (const)...");
+            await executeAsync({'action': action});
+            // console.log("value is:", keyTest);
+            assert.equal(keyTest, "value");
+            assert.equal(valueTest.size, 12);
+        });
+    });
+
     describe('Testing dir_set_attribute_test with a simple operation', async function() {
         it('should print add to: total the value: 4', async function() {
             TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
@@ -324,13 +474,14 @@ describe('Testing dir_set_attribute_test', function() {
                 tdcache: {},
                 requestId: 'buh'
             };
-            const dirSetAttribute = new DirSetAttribute(context);
+            const dirSetAttribute = new DirSetAttributeV2(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
             assert.equal(keyTest, "summary");
             assert.equal(valueTest, "andrea sponziello tiledesk");
         });
     });
+
     describe('Testing dir_set_attribute_test with wrong inputs', function() {
         it('should immidiatly call the cb', async function() {
             let failed = false;
@@ -426,9 +577,10 @@ describe('Testing dir_set_attribute_test', function() {
             const dirSetAttribute = new DirSetAttribute(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
+            // console.log("failed is", failed)
             assert.ok(!failed);
         });
-        it('should immidiatly call the cb, wrong number of operands', async function() {
+        it('should immidiately call the cb, wrong number of operands', async function() {
             let failed = false;
             TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
                 console.log("i should not be called");

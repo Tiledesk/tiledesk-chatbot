@@ -252,8 +252,7 @@ describe('Conversation for Qapla test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-
-      console.log("---> Message: ", JSON.stringify(message));
+      
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);

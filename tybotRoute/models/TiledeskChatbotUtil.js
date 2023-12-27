@@ -448,6 +448,23 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter("lastUserDocumentName", null);
                 await chatbot.addParameter("lastUserDocumentType", null);
             }
+            if (message && message.request && message.request.lead) {
+                if (message.request.lead.email) {
+                    await chatbot.addParameter("userEmail", message.request.lead.email);
+                }
+                if (message.request.lead.fullname) {
+                    await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                }
+                if (message.request.lead.phone) {
+                    await chatbot.addParameter("userPhone", message.request.lead.phone);
+                }
+                if (message.request.lead.lead_id) {
+                    await chatbot.addParameter("userLeadId", message.request.lead.lead_id);
+                }
+                if (message.request.lead.company) {
+                    await chatbot.addParameter("userCompany", message.request.lead.company);
+                }
+            }
         }
         
       
@@ -518,20 +535,39 @@ class TiledeskChatbotUtil {
           }
         }
         
-
+        const _bot = chatbot.bot; // aka FaqKB
+        if (chatbot.log) {
+            console.log("Adding Globals to context..., chatbot.attributes?", JSON.stringify(_bot));
+        }
+        
+        if (_bot.attributes && _bot.attributes.globals) {
+            if (chatbot.log) {console.log("Got Globals:", JSON.stringify(_bot.attributes.globals));}
+            _bot.attributes.globals.forEach(async (global_var) => {
+                if (chatbot.log) {console.log("Adding global:", global_var.key, "value:", global_var.value);}
+                await chatbot.addParameter(global_var.key, global_var.value);
+            });
+        }
+        // await chatbot.addParameter("testVar",
+        //     {
+        //         name: "Andrea",
+        //         coords: {
+        //             x: 2, y: 1
+        //         }
+        //     }
+        // );
         
         if (chatbot.log) {
           // console.log("tdcache:", chatbot.tdcache);
           console.log("requestId:", requestId);
           console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-          console.log("TiledeskChatbot:", TiledeskChatbot);
+        //   console.log("TiledeskChatbot:", TiledeskChatbot);
           let proj_ = await chatbot.getParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
           console.log("request parameter proj_:", proj_);
           const all_parameters = await chatbot.allParameters();
           for (const [key, value] of Object.entries(all_parameters)) {
             // const value = all_parameters[key];
             const value_type = typeof value;
-            if (chatbot.log) {console.log("request parameter:", key, "value:", value, "type:", value_type)}
+            if (chatbot.log) {console.log("REQUEST ATTRIBUTE:", key, "VALUE:", value, "TYPE:", value_type)}
           }
         }
     } catch(error) {
@@ -588,6 +624,34 @@ class TiledeskChatbotUtil {
                 // console.log("actions are:", reply.actions)
             }
         }
+    }
+
+    static validateRequestId(requestId, projectId) {
+        // console.log("checking requestId:", requestId, projectId)
+        let isValid = false;
+        if (requestId.startsWith("support-group-")) {
+            const parts = requestId.split("-");
+            // console.log("parts support request:", parts);
+            if (parts.length === 4) {
+                isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
+            }
+            else {
+                isValid = false;
+            }
+        } else if (requestId.startsWith("automation-request-")) {
+            const parts = requestId.split("-");
+            // console.log("parts automation request:", parts);
+            if (parts.length === 4) {
+                isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
+            }
+            else {
+                isValid = false;
+            }
+        }
+        else {
+            isValid = false;
+        }
+        return isValid;
     }
 
 }

@@ -37,7 +37,6 @@ router.post('/ext/:botid', async (req, res) => {
     console.log("Removed req.body.payload.request.snapshot field");
   }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
-  res.status(200).send({"success":true});
   
   const botId = req.params.botid;
   if (log) {console.log(" :", botId);}
@@ -48,12 +47,32 @@ router.post('/ext/:botid', async (req, res) => {
   const requestId = message.request.request_id;
   const projectId = message.id_project;
   if (log) {console.log("message.id_project:", message.id_project);}
+
   // adding info for internal context workflow
   message.request.bot_id = botId;
   if (message.request.id_project === null || message.request.id_project === undefined) {
     message.request.id_project = projectId;
   }
-  
+
+  // let request_check = checkRequest(message.request.request_id, message.id_project);
+  // if (request_check === true) {
+  //   res.status(200).send({ "successs": true });
+  // } else {
+  //   return res.status(400).send({ "success": false, "message": "Invalid request_id"})
+  // }
+  // res.status(200).send({"success":true});
+
+  // validate reuqestId
+  let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
+  if (isValid) {
+    res.status(200).send({"success":true});
+  }
+  else {
+    res.status(400).send({"success": false, error: "Request id is invalid"});
+    // console.log("request id, projectId:", requestId, projectId)
+    // process.exit(0)
+  }
+
   const request_botId_key = "tilebot:botId_requests:" + requestId;
   await tdcache.set(
     request_botId_key,
@@ -539,6 +558,25 @@ async function connectRedis() {
     console.log("(Tilebot) Redis connected.");
   }
   return;
+}
+
+async function checkRequest(request_id, id_project) {
+  // TO DO CHECK
+
+  // if (request_id startsWith "support-request-{$project_id}")
+  //    if (project_id is equal to the id_project)
+  //        return true;
+  //    else 
+  //        return (false, motivation)
+  // else if (request_id startsWith "automation-request-{$project_id}")
+  //    if (project_id is equal to the id_project)
+  //        return true;
+  //    else 
+  //        return (false, motivation)
+  // else
+  //    return (false, motivation);
+  
+  // WARNING! Move this function in models/TiledeskChatbotUtil.js
 }
 
 module.exports = { router: router, startApp: startApp};

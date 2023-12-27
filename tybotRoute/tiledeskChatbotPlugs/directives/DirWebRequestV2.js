@@ -102,20 +102,35 @@ class DirWebRequestV2 {
         if (err) {
           if (this.log) {console.error("webRequest error:", err);}
           if (callback) {
-            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+            if (falseIntent) {
+              this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                callback(true); // stop the flow
+              });
+            }
+            else {
               callback(false); // continue the flow
-            });
+            }
           }
         }
         else if(res.status >= 200 && res.status <= 299) {
-          await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-            callback(stopOnConditionMet); // stop the flow
-          });
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(true); // stop the flow
+            });
+          }
+          else {
+            callback(false); // continue the flow
+          }
         }
         else {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+          if (falseIntent) {
+            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(true); // stop the flow
+            });
+          }
+          else {
             callback(false); // continue the flow
-          });
+          }
         }
       }
     );

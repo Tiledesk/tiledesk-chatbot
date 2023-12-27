@@ -5,8 +5,34 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.35
+- added validation check for requests ids (support-group- && automation-request-)
+
+# v0.2.34
+- stopOnConditionMet is always true in DirJSONCondition
+- Fixes the WebRequestV2 branching
+
+# v0.2.33
+- Added lead attributes (userEmail, userPhone, userFullname, userLeadId, userCompany)
+
+# v0.2.32
+- Added attributes filling to message.metadata.src
+- Added attributes filling to message.metadata.name
+
+# v0.2.31
+- Removed patch: Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
+
+### v0.2.30
+- Updated WhatsappByAttribute action
+- Fixed bug: WhatsappByAttribute action pointed to whatsapp pre
+
+### v0.2.29
+- Added Make action 
+
 ### v0.2.28
-- DirSetAttribute, added support for fller
+- DirSetAttribute, added support for attribute-filling in constants
+- DirSetAttribute, added function JSONparse
+- Added support for Globals (aka Secrets)
 
 ### v0.2.27
 - Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
