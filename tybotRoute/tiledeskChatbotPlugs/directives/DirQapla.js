@@ -55,60 +55,99 @@ class DirQapla {
 
     const filler = new Filler();
     const tracking_number = filler.fill(action.trackingNumber, requestVariables);
-    // let tracking_number = await this.context.chatbot.getParameter(action.trackingNumber);
-    if (this.log) {console.log("DirQapla tracking number: ", tracking_number); }
+    if (this.log) { console.log("DirQapla tracking number: ", tracking_number); }
 
     if (!tracking_number || tracking_number === '') {
       console.error("DirQapla ERROR - tracking number is undefined or null or empty string");
       callback();
     }
 
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    if (this.log) { console.log("DirQapla QaplaEndpoint URL: ", qapla_base_url); }
-    const QAPLA_HTTPREQUEST = {
-      url: qapla_base_url + "/getShipment/",
+
+    const INTEGRATIONS_HTTPREQUEST = {
+      url: server_base_url + "/" + this.context.projectId + "/integration/name/qapla",
       headers: {
-        'Content-Type': 'application/json'
-      },
-      params: {
-        apiKey: action.apiKey,
-        trackingNumber: tracking_number
+        'Content-Type': 'application/json',
+        'Authorization': 'JWT ' + this.context.token
       },
       method: "GET"
     }
-    if (this.log) { console.log("DirQapla QAPLA_HTTPREQUEST", QAPLA_HTTPREQUEST); }
+    if (this.log) { console.log("DirQapla INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
 
     this.#myrequest(
-      QAPLA_HTTPREQUEST, async (err, resbody) => {
+      INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
         if (err) {
           if (callback) {
-            console.error("(httprequest) DirQapla getShipment err:", err);
+            console.error("(httprequest) DirQapla get integrations err:", err);
             callback();
           }
         } else if (callback) {
-          if (this.log) { console.log("DirQapla getShipment resbody: ", resbody); }
+          if (this.log) { console.log("DirQapla get integration resbody: ", integration); }
 
-          let status = null;;
-          let result;
-          let error;
-
-          if (resbody.getShipment &&
-              resbody.getShipment.shipments &&
-              resbody.getShipment.shipments[0] &&
-              resbody.getShipment.shipments[0].status &&
-              resbody.getShipment.shipments[0].status.qaplaStatus &&
-              resbody.getShipment.shipments[0].status.qaplaStatus.status) {
-                status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
+          let key;
+          if (integration &&
+              integration.value) {
+                key = integration.value.apikey;
               }
-          
-          result = resbody.getShipment.result;
-          error = resbody.getShipment.error;
-          await this.#assignAttributes(action, status, result, error);
-          callback();
-        }
-      }
-    )
 
+          if (!key) {
+            if (action.apiKey) {
+              console.log("DirQapla key retrieved from the action (deprecated)");
+              key = action.apiKey;
+            } else {
+              console.log("DirQapla invalid or empty key");
+              callback();
+              return;
+            }
+          }
+
+          if (this.log) { console.log("DirQapla QaplaEndpoint URL: ", qapla_base_url); }
+          const QAPLA_HTTPREQUEST = {
+            url: qapla_base_url + "/getShipment/",
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            params: {
+              apiKey: key,
+              trackingNumber: tracking_number
+            },
+            method: "GET"
+          }
+          if (this.log) { console.log("DirQapla QAPLA_HTTPREQUEST", QAPLA_HTTPREQUEST); }
+
+          this.#myrequest(
+            QAPLA_HTTPREQUEST, async (err, resbody) => {
+              if (err) {
+                if (callback) {
+                  console.error("(httprequest) DirQapla getShipment err:", err);
+                  callback();
+                }
+              } else if (callback) {
+                if (this.log) { console.log("DirQapla getShipment resbody: ", resbody); }
+
+                let status = null;;
+                let result;
+                let error;
+
+                if (resbody.getShipment &&
+                  resbody.getShipment.shipments &&
+                  resbody.getShipment.shipments[0] &&
+                  resbody.getShipment.shipments[0].status &&
+                  resbody.getShipment.shipments[0].status.qaplaStatus &&
+                  resbody.getShipment.shipments[0].status.qaplaStatus.status) {
+                  status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
+                }
+
+                result = resbody.getShipment.result;
+                error = resbody.getShipment.error;
+                await this.#assignAttributes(action, status, result, error);
+                callback();
+              }
+            }
+          )
+        }
+      })
   }
 
 
