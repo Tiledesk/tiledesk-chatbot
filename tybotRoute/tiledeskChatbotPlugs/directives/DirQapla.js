@@ -55,23 +55,34 @@ class DirQapla {
 
     const filler = new Filler();
     const tracking_number = filler.fill(action.trackingNumber, requestVariables);
-    // let tracking_number = await this.context.chatbot.getParameter(action.trackingNumber);
-    if (this.log) {console.log("DirQapla tracking number: ", tracking_number); }
+    if (this.log) { console.log("DirQapla tracking number: ", tracking_number); }
 
     if (!tracking_number || tracking_number === '') {
       console.error("DirQapla ERROR - tracking number is undefined or null or empty string");
       callback();
     }
 
+    const key = action.apiKey;
+    console.log("action.key: ", action.apiKey)
+
+    if (!key) {
+      console.error("DirQapla ERROR - key is undefined");
+      callback();
+    }
+
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    if (this.log) { console.log("DirQapla QaplaEndpoint URL: ", qapla_base_url); }
+    if (this.log) { 
+      console.log("DirQapla server_base_url: ", qapla_base_url); 
+      console.log("DirQapla qapla_base_url: ", qapla_base_url); 
+    }
     const QAPLA_HTTPREQUEST = {
       url: qapla_base_url + "/getShipment/",
       headers: {
         'Content-Type': 'application/json'
       },
       params: {
-        apiKey: action.apiKey,
+        apiKey: key,
         trackingNumber: tracking_number
       },
       method: "GET"
@@ -93,14 +104,14 @@ class DirQapla {
           let error;
 
           if (resbody.getShipment &&
-              resbody.getShipment.shipments &&
-              resbody.getShipment.shipments[0] &&
-              resbody.getShipment.shipments[0].status &&
-              resbody.getShipment.shipments[0].status.qaplaStatus &&
-              resbody.getShipment.shipments[0].status.qaplaStatus.status) {
-                status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
-              }
-          
+            resbody.getShipment.shipments &&
+            resbody.getShipment.shipments[0] &&
+            resbody.getShipment.shipments[0].status &&
+            resbody.getShipment.shipments[0].status.qaplaStatus &&
+            resbody.getShipment.shipments[0].status.qaplaStatus.status) {
+            status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
+          }
+
           result = resbody.getShipment.result;
           error = resbody.getShipment.error;
           await this.#assignAttributes(action, status, result, error);
@@ -108,7 +119,6 @@ class DirQapla {
         }
       }
     )
-
   }
 
 
