@@ -217,9 +217,7 @@ class DirGptTask {
                         } else {
                           if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
                           answer = resbody.choices[0].message.content;
-                          console.log("answer: ", answer)
                           let answer_json = await this.convertToJson(answer);
-                          console.log("answer_json: ", answer_json)
                           await this.#assignAttributes(action, answer_json);
                           if (trueIntent) {
                             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -287,10 +285,8 @@ class DirGptTask {
                 } else {
                   if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
                   answer = resbody.choices[0].message.content;
-                  console.log("answer: ", answer)
                   // check if answer is a json
                   let answer_json = await this.convertToJson(answer);
-                  console.log("answer_json: ", answer_json)
                   await this.#assignAttributes(action, answer_json);
                   if (trueIntent) {
                     await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -315,10 +311,8 @@ class DirGptTask {
       let json = null;
       try {
         json = JSON.parse(data);
-        console.log("is a json!!!")
         resolve(json)
       } catch(err) {
-        console.log("is not a json!!!")
         resolve(data)
       }
     })

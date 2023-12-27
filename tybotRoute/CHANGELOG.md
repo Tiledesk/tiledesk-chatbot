@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.36
+- Fixes json conversion in GptTask issue
+
 # v0.2.35
 - added validation check for requests ids (support-group- && automation-request-)
 - refactorized GptTask, AskGPT and Qapla actions in order to support integrations
