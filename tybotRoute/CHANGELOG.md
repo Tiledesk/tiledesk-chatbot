@@ -7,6 +7,9 @@ available on:
 
 # v0.2.35
 - added validation check for requests ids (support-group- && automation-request-)
+- refactorized GptTask, AskGPT and Qapla actions in order to support integrations
+- added integrated condition in GptTask 
+- added automatic JSON conversion in GptTask
 
 # v0.2.34
 - stopOnConditionMet is always true in DirJSONCondition
