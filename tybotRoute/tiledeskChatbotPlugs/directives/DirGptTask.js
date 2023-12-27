@@ -92,217 +92,88 @@ class DirGptTask {
       console.log("DirGptTask openai_url ", openai_url);
     }
 
-    const INTEGRATIONS_HTTPREQUEST = {
-      url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+    let key = await this.getKeyFromIntegrations(server_base_url);
+
+    if (!key) {
+      if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
+      key = await this.getKeyFromKbSettings(server_base_url);
+    }
+
+    if (!key) {
+      console.error("DirGptTask gptkey is mandatory");
+      await this.#assignAttributes(action, answer);
+
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    let json = {
+      model: action.model,
+      messages: [
+        {
+          role: "user",
+          content: filled_question
+        }
+      ],
+      max_tokens: action.max_tokens,
+      temperature: action.temperature
+    }
+
+    let message = { role: "", content: "" };
+    if (action.context) {
+      message.role = "system";
+      message.content = action.context;
+      json.messages.unshift(message);
+    }
+    if (this.log) { console.log("DirGptTask json: ", json) }
+
+    const HTTPREQUEST = {
+      url: openai_url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
+        'Authorization': 'Bearer ' + key
       },
-      method: "GET"
+      json: json,
+      method: 'POST'
     }
-    if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
+    if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
     this.#myrequest(
-      INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+      HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          if (callback) {
-            console.error("(httprequest) DirGptTask get integrations err:", err);
-            // Don't stop the flow here. Try aniway to retrieve the key from KBs
-            // callback();
-            // return;
+          if (this.log) {
+            console.error("(httprequest) DirGptTask openai err:", err);
+            console.error("(httprequest) DirGptTask openai err:", err.response.data);
           }
-        } else if (callback) {
-          if (this.log) { console.log("DirGptTask get integration resbody: ", integration); }
-
-          let key;
-          if (integration &&
-            integration.value) {
-            key = integration.value.apikey;
+          await this.#assignAttributes(action, answer);
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
           }
-
-          // key not present in integrations - for retro compatibility search in kbsettings
-          if (!key) {
-
-            // if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings...")}
-            if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
-
-            const KB_HTTPREQUEST = {
-              url: server_base_url + "/" + this.context.projectId + "/kbsettings",
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'JWT ' + this.context.token
-              },
-              method: "GET"
-            }
-            if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
-
-            this.#myrequest(
-              KB_HTTPREQUEST, async (err, resbody) => {
-                if (err) {
-                  if (callback) {
-                    console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err);
-                    await this.#assignAttributes(action, answer);
-                    if (falseIntent) {
-                      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                      callback(true);
-                      return;
-                    }
-                    callback();
-                    return;
-                  }
-                } else if (callback) {
-                  if (this.log) { console.log("DirGptTask Get KnowledgeBase settings resbody:", resbody); }
-
-                  if (!resbody.gptkey) {
-                    await this.#assignAttributes(action, answer);
-                    if (falseIntent) {
-                      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                      callback(true);
-                      return;
-                    }
-                    callback();
-                    return;
-
-                  } else {
-
-                    if (this.log) { console.log("DirGptTask - Key found in KbSettings") };
-
-                    key = resbody.gptkey;
-
-                    let json = {
-                      "model": action.model,
-                      "messages": [
-                        {
-                          "role": "user",
-                          "content": filled_question
-                        }
-                      ],
-                      "max_tokens": action.max_tokens,
-                      "temperature": action.temperature
-                    }
-
-                    let message = { role: "", content: "" };
-                    if (action.context) {
-                      message.role = "system";
-                      message.content = action.context;
-                      json.messages.unshift(message);
-                    }
-                    if (this.log) { console.log("DirGptTask json: ", json) }
-
-                    const HTTPREQUEST = {
-                      url: openai_url,
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + key
-                      },
-                      json: json,
-                      method: 'POST'
-                    }
-                    if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
-                    this.#myrequest(
-                      HTTPREQUEST, async (err, resbody) => {
-                        if (err) {
-                          if (this.log) {
-                            console.error("(httprequest) DirGptTask openai err:", err);
-                            console.error("(httprequest) DirGptTask openai err:", err.response.data);
-                          }
-                          await this.#assignAttributes(action, answer);
-                          if (falseIntent) {
-                            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                            callback(true);
-                            return;
-                          }
-                          callback();
-                          return;
-                        } else {
-                          if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
-                          answer = resbody.choices[0].message.content;
-                          let answer_json = await this.convertToJson(answer);
-                          await this.#assignAttributes(action, answer_json);
-                          if (trueIntent) {
-                            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                            callback(true);
-                            return;
-                          }
-                          callback();
-                          return;
-                        }
-                      }
-                    )
-                  }
-                }
-              }
-            )
-          } else {
-
-            if (this.log) { console.log("DirGptTask - Key found in Integrations") };
-
-            let json = {
-              "model": action.model,
-              "messages": [
-                {
-                  "role": "user",
-                  "content": filled_question
-                }
-              ],
-              "max_tokens": action.max_tokens,
-              "temperature": action.temperature
-            }
-
-            let message = { role: "", content: "" };
-            if (action.context) {
-              message.role = "system";
-              message.content = action.context;
-              json.messages.unshift(message);
-            }
-            if (this.log) { console.log("DirGptTask json: ", json) }
-
-            const HTTPREQUEST = {
-              url: openai_url,
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + key
-              },
-              json: json,
-              method: 'POST'
-            }
-            if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
-            this.#myrequest(
-              HTTPREQUEST, async (err, resbody) => {
-                if (err) {
-                  if (this.log) {
-                    console.error("(httprequest) DirGptTask openai err:", err);
-                    console.error("(httprequest) DirGptTask openai err:", err.response.data);
-                  }
-                  await this.#assignAttributes(action, answer);
-                  if (falseIntent) {
-                    await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                    callback(true);
-                    return;
-                  }
-                  callback();
-                  return;
-                } else {
-                  if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
-                  answer = resbody.choices[0].message.content;
-                  // check if answer is a json
-                  let answer_json = await this.convertToJson(answer);
-                  await this.#assignAttributes(action, answer_json);
-                  if (trueIntent) {
-                    await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                    callback(true);
-                    return;
-                  }
-                  callback();
-                  return;
-                }
-              }
-            )
-
+          callback();
+          return;
+        } else {
+          if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
+          answer = resbody.choices[0].message.content;
+          // check if answer is a json
+          let answer_json = await this.convertToJson(answer);
+          await this.#assignAttributes(action, answer_json);
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
           }
+          callback();
+          return;
         }
       }
     )
+
   }
 
   async convertToJson(data) {
@@ -312,7 +183,7 @@ class DirGptTask {
       try {
         json = JSON.parse(data);
         resolve(json)
-      } catch(err) {
+      } catch (err) {
         resolve(data)
       }
     })
@@ -423,12 +294,73 @@ class DirGptTask {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
         if (callback) {
           callback(error, null);
         }
       });
   }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
+  async getKeyFromKbSettings(server_base_url) {
+    return new Promise((resolve) => {
+
+      const KB_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
+
+      this.#myrequest(
+        KB_HTTPREQUEST, async (err, resbody) => {
+          if (err) {
+            console.error("(httprequest) DirGptTask Get KnowledgeBase err ", err);
+            resolve(null);
+          } else {
+            if (!resbody.gptkey) {
+              resolve(null);
+            } else {
+              resolve(resbody.gptkey);
+            }
+          }
+        }
+      )
+    })
+  }
+
 }
 
 module.exports = { DirGptTask }

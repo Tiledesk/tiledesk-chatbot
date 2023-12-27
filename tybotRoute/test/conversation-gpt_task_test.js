@@ -284,7 +284,7 @@ describe('Conversation for GptTask test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -301,7 +301,7 @@ describe('Conversation for GptTask test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        console.log("Message sent:\n", request);
       });
     });
   });
@@ -630,18 +630,19 @@ describe('Conversation for GptTask test', async () => {
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
 
       let reply = { gptkey: "sk-123456" };
+      // let reply = { gptkey: null };
       let http_code = 200;
 
       res.status(http_code).send(reply);
     });
 
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    // endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-      let http_code = 200;
-      let reply = "Integration not found";
+    //   let http_code = 200;
+    //   let reply = "Integration not found";
 
-      res.status(http_code).send(reply);
-    })
+    //   res.status(http_code).send(reply);
+    // })
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
