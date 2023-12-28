@@ -34,7 +34,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: ${gpt_reply}"
+							"text": "gpt replied: {{gpt_reply}}"
 						}
 					}]
 				}
@@ -149,7 +149,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: ${gpt_reply}"
+							"text": "gpt replied: {{gpt_reply}}"
 						}
 					}]
 				}

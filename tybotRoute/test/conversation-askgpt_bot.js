@@ -20,7 +20,7 @@ const bot = {
 				"kbid": "XXX",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
-				"question": "this is the question: ${last_user_message}"
+				"question": "this is the question: {{last_user_message}}"
 			}]
 		},
 		{
@@ -32,7 +32,7 @@ const bot = {
 				"assignReplyTo": "gpt_reply",
 				"assignSourceTo": "gpt_source",
 				"kbid": "kb1",
-				"question": "this is the question: ${last_user_message}",
+				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
 			}],
@@ -70,7 +70,7 @@ const bot = {
 				"assignReplyTo": "gpt_reply",
 				"assignSourceTo": "gpt_source",
 				"kbid": "",
-				"question": "this is the question: ${last_user_message}",
+				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
 			}],
@@ -95,7 +95,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: ${gpt_reply}"
+							"text": "gpt replied: {{gpt_reply}}"
 						}
 					}]
 				}

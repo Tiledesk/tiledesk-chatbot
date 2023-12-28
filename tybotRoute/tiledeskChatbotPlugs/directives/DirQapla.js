@@ -2,6 +2,7 @@ const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
+const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
 
 class DirQapla {
@@ -13,6 +14,7 @@ class DirQapla {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.intentDir = new DirIntent(context);
     this.log = context.log;
   }
 
@@ -27,8 +29,8 @@ class DirQapla {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
@@ -40,34 +42,44 @@ class DirQapla {
       return;
     }
 
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    let trueIntentAttributes = action.trueIntentAttributes;
+    let falseIntentAttributes = action.falseIntentAttributes;
+
+    if (this.log) {
+      console.log("DirAskGPT trueIntent", trueIntent)
+      console.log("DirAskGPT falseIntent", falseIntent)
+      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
+      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+    }
+
+    // let default values??
+    let status = null;
+    let result = null;
+    let error;
+
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       )
 
-    if (this.log) {
-      const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-      for (const [key, value] of Object.entries(all_parameters)) {
-        if (this.log) { console.log("DirQapla request parameter:", key, "value:", value, "type:", typeof value) }
-      }
-    }
-
     const filler = new Filler();
     const tracking_number = filler.fill(action.trackingNumber, requestVariables);
     if (this.log) { console.log("DirQapla tracking number: ", tracking_number); }
 
     if (!tracking_number || tracking_number === '') {
-      console.error("DirQapla ERROR - tracking number is undefined or null or empty string");
+      console.error("Error: DirQapla tracking number is undefined or null or empty string");
+      error = "Tracking number is not defined";
+      await this.#assignAttributes(action, status, result, error);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
       callback();
-    }
-
-    const key = action.apiKey;
-    console.log("action.key: ", action.apiKey)
-
-    if (!key) {
-      console.error("DirQapla ERROR - key is undefined");
-      callback();
+      return;
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
@@ -76,6 +88,27 @@ class DirQapla {
       console.log("DirQapla server_base_url: ", qapla_base_url); 
       console.log("DirQapla qapla_base_url: ", qapla_base_url); 
     }
+
+    let key = action.apiKey;
+
+    if (!key) {
+      if (this.log) { console.log("DirQapla - Key not found into action. Searching in integrations..."); }
+      key = await this.getKeyFromIntegrations(server_base_url);
+    }
+
+    if (!key) {
+      console.error("Error: DirQapla api key is mandatory");
+      error = "Invalid or empty ApiKey";
+      await this.#assignAttributes(action, status, result, error);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
     const QAPLA_HTTPREQUEST = {
       url: qapla_base_url + "/getShipment/",
       headers: {
@@ -94,14 +127,18 @@ class DirQapla {
         if (err) {
           if (callback) {
             console.error("(httprequest) DirQapla getShipment err:", err);
+            error = "Unable to get shipment";
+            await this.#assignAttributes(action, status, result, error);
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
+            }
             callback();
+            return;
           }
         } else if (callback) {
-          if (this.log) { console.log("DirQapla getShipment resbody: ", resbody); }
-
-          let status = null;;
-          let result;
-          let error;
+          if (this.log) { console.log("DirQapla getShipment resbody: ", JSON.stringify(resbody, null, 2)); }
 
           if (resbody.getShipment &&
             resbody.getShipment.shipments &&
@@ -111,16 +148,66 @@ class DirQapla {
             resbody.getShipment.shipments[0].status.qaplaStatus.status) {
             status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
           }
+          // status = resbody.getShipment?.shipments[0]?.status?.qaplaStatus?.status; // doesn't works
+          
+          if (resbody.getShipment && 
+              resbody.getShipment.result)
+          result = resbody.getShipment?.result;
+          error = resbody.getShipment?.error;
 
-          result = resbody.getShipment.result;
-          error = resbody.getShipment.error;
           await this.#assignAttributes(action, status, result, error);
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
           callback();
+          return;
         }
       }
     )
   }
 
+  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    let trueIntentDirective = null;
+    if (trueIntent) {
+      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+    }
+    let falseIntentDirective = null;
+    if (falseIntent) {
+      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+    }
+    if (result === true) {
+      if (trueIntentDirective) {
+        this.intentDir.execute(trueIntentDirective, () => {
+          if (callback) {
+            callback();
+          }
+        })
+      }
+      else {
+        if (this.log) { console.log("No trueIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
+      }
+    }
+    else {
+      if (falseIntentDirective) {
+        this.intentDir.execute(falseIntentDirective, () => {
+          if (callback) {
+            callback();
+          }
+        });
+      }
+      else {
+        if (this.log) { console.log("No falseIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
+      }
+    }
+  }
 
   async #assignAttributes(action, status, result, error) {
     if (this.log) {
@@ -197,6 +284,38 @@ class DirQapla {
         }
       });
   }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
 }
 
 module.exports = { DirQapla }

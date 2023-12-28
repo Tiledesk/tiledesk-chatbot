@@ -59,101 +59,101 @@ describe('Conversation for Qapla test', async () => {
     });
   });
 
-  // it('/qapla success (key from integrations)', (done) => {
+  it('/qapla success (key from integrations)', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
 
-  //     const command1 = message.attributes.commands[1];
-  //     assert(command1.type === "message");
-  //     assert(command1.message.text === 'qapla status is: IN TRANSIT');
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'qapla status is: IN TRANSIT');
 
-  //     const command2 = message.attributes.commands[2];
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === 'qapla result is: OK');
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'qapla result is: OK');
 
-  //     const command3 = message.attributes.commands[3];
-  //     assert(command3.type === "message");
-  //     assert(command3.message.text === "qapla error is: null");
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "message");
+      assert(command3.message.text === "qapla error is: ");
 
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["qapla_status"] === "IN TRANSIT");
-  //         assert(attributes["qapla_result"] === "OK");
-  //         assert(attributes["qapla_error"] === null);
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-  //   });
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["qapla_status"] === "IN TRANSIT");
+          assert(attributes["qapla_result"] === "OK");
+          assert(attributes["qapla_error"] === null);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
 
-  //   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-  //     let http_code = 200;
-  //     let reply = {
-  //       _id: "656728224b45965b69111111",
-  //       id_project: "62c3f10152dc740035000000",
-  //       name: "qapla",
-  //       value: {
-  //         apikey: "example_api_key"
-  //       }
-  //     }
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "qapla",
+        value: {
+          apikey: "example_api_key"
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   })
+      res.status(http_code).send(reply);
+    })
 
-  //   endpointServer.get('/1.2/getShipment/', function (req, res) {
+    endpointServer.get('/1.2/getShipment/', function (req, res) {
 
-  //     let http_code = 200;
-  //     let reply = {
-  //       getShipment: {
-  //         result: "OK",
-  //         error: null,
-  //         shipments: [
-  //           {
-  //             status: {
-  //               qaplaStatus: {
-  //                 status: "IN TRANSIT",
-  //               }
-  //             }
-  //           }
-  //         ]
-  //       }
-  //     }
+      let http_code = 200;
+      let reply = {
+        getShipment: {
+          result: "OK",
+          error: null,
+          shipments: [
+            {
+              status: {
+                qaplaStatus: {
+                  status: "IN TRANSIT",
+                }
+              }
+            }
+          ]
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   });
+      res.status(http_code).send(reply);
+    });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/qapla#SUCCESS',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/qapla#SUCCESS',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
   it('/qapla success (key from action)', (done) => {
 
@@ -174,7 +174,7 @@ describe('Conversation for Qapla test', async () => {
 
       const command3 = message.attributes.commands[3];
       assert(command3.type === "message");
-      assert(command3.message.text === "qapla error is: null");
+      assert(command3.message.text === "qapla error is: ");
 
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -191,13 +191,6 @@ describe('Conversation for Qapla test', async () => {
         }
       });
     });
-
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-      let http_code = 200;
-      let reply = "Integration not found"
-
-      res.status(http_code).send(reply);
-    })
 
     endpointServer.get('/1.2/getShipment/', function (req, res) {
 
@@ -244,6 +237,102 @@ describe('Conversation for Qapla test', async () => {
     });
   });
 
+  it('/qapla success (key from integrations) (condition true)', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'qapla status is: IN TRANSIT');
+
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'qapla result is: OK');
+
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "message");
+      assert(command3.message.text === "qapla error is: ");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["qapla_status"] === "IN TRANSIT");
+          assert(attributes["qapla_result"] === "OK");
+          assert(attributes["qapla_error"] === null);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "qapla",
+        value: {
+          apikey: "example_api_key"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/1.2/getShipment/', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        getShipment: {
+          result: "OK",
+          error: null,
+          shipments: [
+            {
+              status: {
+                qaplaStatus: {
+                  status: "IN TRANSIT",
+                }
+              }
+            }
+          ]
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/qapla#COND',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
   it('/qapla failure - tracking not found', (done) => {
 
     let listener;
@@ -252,7 +341,7 @@ describe('Conversation for Qapla test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      
+
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -295,6 +384,82 @@ describe('Conversation for Qapla test', async () => {
         }
       }
 
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/qapla#FAILURE',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/qapla request failure', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "qapla error is: Unable to get shipment");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["qapla_error"] === "Unable to get shipment");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "qapla",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/1.2/getShipment/', function (req, res) {
+
+      let reply = {}
+      let http_code = 404;
 
       res.status(http_code).send(reply);
     });
@@ -322,81 +487,152 @@ describe('Conversation for Qapla test', async () => {
     });
   });
 
-  // it('/qapla request failure', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     console.log("---> Message: ", JSON.stringify(message));
-  //     // assert(message.attributes.commands !== null);
-  //     // assert(message.attributes.commands.length === 2);
-  //     // const command2 = message.attributes.commands[1];
-  //     // assert(command2.type === "message");
-  //     // assert(command2.message.text === "gpt replied: this is the answer");
+  it('/qapla request failure (condition false)', (done) => {
 
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["gpt_reply"] === "this is the answer");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
 
-  //   });
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
 
-  //   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-  //     let http_code = 200;
-  //     let reply = {
-  //       _id: "656728224b45965b69111111",
-  //       id_project: "62c3f10152dc740035000000",
-  //       name: "qapla",
-  //       value: {
-  //         apikey: "example_api_key",
-  //         organization: "TIledesk"
-  //       }
-  //     }
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "qapla error is: Unable to get shipment");
 
-  //     res.status(http_code).send(reply);
-  //   })
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["qapla_error"] === "Unable to get shipment");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-  //   endpointServer.get('/1.2/getShipment/', function (req, res) {
+    });
 
-  //     let reply = {}
-  //     let http_code = 404;
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "qapla",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   });
+      res.status(http_code).send(reply);
+    })
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/qapla#FAILURE',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    endpointServer.get('/1.2/getShipment/', function (req, res) {
+
+      let reply = {}
+      let http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/qapla#COND',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/qapla failure (missing api key) (condition false)', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "qapla error is: Invalid or empty ApiKey");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["qapla_error"] === "Invalid or empty ApiKey");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      
+      let http_code = 404;
+      res.status(http_code).send();
+
+    })
+
+    endpointServer.get('/1.2/getShipment/', function (req, res) {
+
+      let reply = {}
+      let http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/qapla#COND2',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
 });
 
