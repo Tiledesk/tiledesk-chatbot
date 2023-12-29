@@ -89,7 +89,7 @@ class DirHubspot {
         url = hubspot_base_url + "/hubspot/";
         console.log('DirHubspot hubspot_base_url: ',url);
       } else {
-        url = action.url;
+        url = "https://api.hubapi.com/crm/v3/objects/contacts/batch/create";
         console.log('DirHubspot url: ',url);
       }
       // HUBSPOT ACCESS TOKEN
