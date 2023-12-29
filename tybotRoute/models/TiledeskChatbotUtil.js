@@ -461,9 +461,10 @@ class TiledeskChatbotUtil {
                                 console.log("current_userFullname && current_userFullname.startsWith('guest#')");
                                 await chatbot.addParameter("userFullname", message.request.lead.fullname);
                             }
-                            else {
-                                console.log("no current or not starts with guest#");
+                            else if (!current_userFullname) {
+                                console.log("no current_userFullname");
                                 await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                                console.log("it was null, set to the incoming one");
                             }
                         }
                         catch(error) {
