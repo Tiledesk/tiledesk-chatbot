@@ -93,7 +93,7 @@ class DirHubspot {
       // HUBSPOT ACCESS TOKEN
       let token = action.token;
       if (this.log) {
-        console.log('DirHubspot hubspot_base_url: ',hubspot_base_url)
+        console.log('DirHubspot hubspot_base_url: ',url)
         console.log('DirHubspot access token: ',token)
       }
 
