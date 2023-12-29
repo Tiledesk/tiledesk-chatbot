@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.39
+- fixed bug: wrong update of userFullname based on lead.fullname
+
 # v0.2.38
 - improved Qapla' action with condition
 
