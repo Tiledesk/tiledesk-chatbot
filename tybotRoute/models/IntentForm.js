@@ -170,7 +170,12 @@ class IntentForm {
       const parameter_name = current_form.fields[current_field].name;
       const parameter_value = user_text;
       if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
-      await this.chatbot.addParameter(parameter_name, parameter_value);
+      await this.chatbot.addParameter(parameter_name, parameter_value);ù
+      console.log("check parameters:")
+      for (const [key, value] of Object.entries(this.chatbot.allParameters())) {
+        const value_type = typeof value;
+        console.log("(IN FORM) REQUEST ATTRIBUTE:", key, "VALUE:", value, "TYPE:", value_type);
+      }
       if (current_form.fields[current_field].type) { // adding type
         await this.chatbot.addParameter("_tdTypeOf:" + parameter_name, current_form.fields[current_field].type);
       }
