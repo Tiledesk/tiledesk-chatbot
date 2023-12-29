@@ -87,14 +87,16 @@ class DirHubspot {
       let hubspot_base_url = process.env.HUBSPOT_ENDPONT;
       if (hubspot_base_url) {
         url = hubspot_base_url + "/hubspot/";
+        console.log('DirHubspot hubspot_base_url: ',url);
       } else {
         url = action.url;
+        console.log('DirHubspot url: ',url);
       }
       // HUBSPOT ACCESS TOKEN
       let token = action.token;
       if (this.log) {
-        console.log('DirHubspot hubspot_base_url: ',url)
-        console.log('DirHubspot access token: ',token)
+        console.log('DirHubspot url: ',url);
+        console.log('DirHubspot access token: ',token);
       }
 
       const filler = new Filler();
