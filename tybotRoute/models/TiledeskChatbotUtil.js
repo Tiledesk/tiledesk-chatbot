@@ -455,7 +455,7 @@ class TiledeskChatbotUtil {
                     if (message.request.lead.fullname) {
                         console.log("got lead.fullname:", message.request.lead.fullname);
                         try {
-                            const current_userFullname = chatbot.getParameter("userFullname");
+                            const current_userFullname = await chatbot.getParameter("userFullname");
                             console.log("current_userFullname:", current_userFullname);
                             if (current_userFullname && current_userFullname.startsWith("guest#")) {
                                 console.log("current_userFullname && current_userFullname.startsWith('guest#')");
