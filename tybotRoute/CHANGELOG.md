@@ -5,9 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.38
+- improved Qapla' action with condition
+
 # v0.2.37
-- improved GptTask action
-- improved AskGPT action 
+- improved GptTask action with condition
+- improved AskGPT action with condition
 
 # v0.2.36
 - Fixes json conversion in GptTask issue
