@@ -100,6 +100,11 @@ class DirGptTask {
     }
 
     if (!key) {
+      if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
+      key = process.env.GPTKEY;
+    }
+
+    if (!key) {
       console.error("DirGptTask gptkey is mandatory");
       await this.#assignAttributes(action, answer);
 

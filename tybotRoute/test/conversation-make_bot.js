@@ -93,14 +93,14 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make status is: ${make_status}"
+							"text": "make status is: {{make_status}}"
 						}
 					},
 					{
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make error is: ${make_error}"
+							"text": "make error is: {{make_error}}"
 						}
 					}]
 				}
@@ -124,14 +124,14 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make status is: ${make_status}"
+							"text": "make status is: {{make_status}}"
 						}
 					},
 					{
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "Make error is: ${make_error}"
+							"text": "make error is: {{make_error}}"
 						}
 					}]
 				}

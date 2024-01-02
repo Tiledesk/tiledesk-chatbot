@@ -54,7 +54,7 @@ class DirQapla {
       console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
     }
 
-    // let default values??
+    // Set default values
     let status = null;
     let result = null;
     let error;

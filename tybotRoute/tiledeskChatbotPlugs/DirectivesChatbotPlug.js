@@ -632,9 +632,16 @@ class DirectivesChatbotPlug {
       })
     }
     else if (directive_name === Directives.MAKE) {
-      new DirMake(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+      new DirMake(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("DirMake stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       })
     }
     else {
