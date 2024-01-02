@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.40 
+- refactorized Make action
+- added support for public gptkey for GptTask and AskGPT actions
+- ...
+
 # v0.2.39
 - fixed bug: wrong update of userFullname based on lead.fullname
 
