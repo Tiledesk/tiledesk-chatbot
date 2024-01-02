@@ -121,7 +121,14 @@ class DirHubspot {
         'authorization': 'Bearer ' + token,
         'Content-Type': 'application/json'
       },
-      json: bodyParameters,
+      json: {
+        "inputs": [
+          {
+            "properties": bodyParameters,
+            "associations": []
+          }
+        ]
+      },
       method: "POST"
     }
   
