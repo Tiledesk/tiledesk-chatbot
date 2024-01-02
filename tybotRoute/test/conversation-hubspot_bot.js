@@ -22,9 +22,9 @@ const bot = {
 					"inputs": [
 					  {
 						"properties": {
-						  "email": "minchia10@biglytics.net",
-						  "lastname": "Minchietta",
-						  "firstname": "Ninella"
+						  "email": "email",
+						  "lastname": "lastname",
+						  "firstname": "firstname"
 						},
 						"associations": []
 					  }
@@ -56,9 +56,9 @@ const bot = {
 					"inputs": [
 					  {
 						"properties": {
-						  "email": "minchia9@biglytics.net",
-						  "lastname": "Minchietta",
-						  "firstname": "Ninella"
+							"email": "email",
+							"lastname": "lastname",
+							"firstname": "firstname"
 						},
 						"associations": []
 					  }
@@ -87,9 +87,9 @@ const bot = {
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
 				"token": "12345678910",
 				"bodyParameters": {
-					"firstname": "custom_firstname",
-					"lastname": "custom_lastname",
-					"email": "custom_email"
+					"email": "email",
+					"lastname": "lastname",
+					"firstname": "firstname"
 				},
 				"assignResultTo": "hubspot_result",
 				"assignStatusTo": "hubspot_status",
@@ -114,9 +114,9 @@ const bot = {
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
 				"token": "123456789",
 				"bodyParameters": {
-					"firstname": "custom_firstname",
-					"lastname": "custom_lastname",
-					"email": "custom_email"
+					"email": "email",
+					"lastname": "lastname",
+					"firstname": "firstname"
 				},
 				"assignResultTo": "hubspot_result",
 				"assignStatusTo": "hubspot_status",
