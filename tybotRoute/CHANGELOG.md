@@ -8,7 +8,7 @@ available on:
 # v0.2.40 
 - refactorized Make action
 - added support for public gptkey for GptTask and AskGPT actions
-- ...
+- fixes bug: AskGPT action not working
 
 # v0.2.39
 - fixed bug: wrong update of userFullname based on lead.fullname

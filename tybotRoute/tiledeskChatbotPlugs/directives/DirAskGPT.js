@@ -304,7 +304,7 @@ class DirAskGPT {
       this.#myrequest(
         INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
           if (err) {
-            console.error("DirAskGPT Get integrations error ", JSON.stringify(err));
+            if (this.log) { console.error("DirAskGPT Get integrations error ", err); }
             resolve(null);
           } else {
 
@@ -336,7 +336,7 @@ class DirAskGPT {
       this.#myrequest(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("DirGptTask Get kb settings error ", JSON.stringify(err));
+            if (this.log) { console.error("DirGptTask Get kb settings error ", err); }
             resolve(null);
           } else {
             if (!resbody.gptkey) {
