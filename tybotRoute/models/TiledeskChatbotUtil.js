@@ -476,7 +476,7 @@ class TiledeskChatbotUtil {
                     if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
                         const splits = message.request.lead.lead_id.split("-");
                         if (splits && splits.length > 1) {
-                            await chatbot.addParameter("currentPhone",splits[1]);
+                            await chatbot.addParameter("currentPhoneNumber",splits[1]);
                         }
                     }
                     if (message.request.lead.lead_id) {

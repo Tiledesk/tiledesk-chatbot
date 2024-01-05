@@ -5,7 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.40 
+# v0.2.41
+- added attribute currentPhoneNumber
+- added attribute tickeId
+
+# v0.2.40
 - refactorized Make action
 - added support for public gptkey for GptTask and AskGPT actions
 - fixes bug: AskGPT action not working
