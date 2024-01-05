@@ -251,7 +251,9 @@ class DirWebRequestV2 {
     })
     .catch( (err) => {
       if (this.log) {
-        console.log("Error Response:", err.response.data);
+        if (err.response) {
+          console.log("Error Response data:", err.response.data);
+        }
         // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
         let cache = [];
         let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
