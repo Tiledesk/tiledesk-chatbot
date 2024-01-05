@@ -287,10 +287,14 @@ class DirWebRequestV2 {
         if (error.message) {
           errorMessage = error.message;
         }
+        let data = null;
+        if (err.response) {
+          data =  err.response.data;
+        }
         callback(
           null, {
             status: status,
-            data: null,
+            data: data,
             error: errorMessage
           }
         );
