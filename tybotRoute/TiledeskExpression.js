@@ -213,6 +213,10 @@ class TiledeskExpression {
         "JSONparse": {
             name: "JSONparse",
             applyPattern: "JSON.parse(String(#1))"
+        },
+        "JSONstringify": {
+            name: "JSONstringify",
+            applyPattern: "JSON.stringify(String(#1))"
         }
     }
 

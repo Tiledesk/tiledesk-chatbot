@@ -226,6 +226,7 @@ class DirWebRequestV2 {
     axios(axios_options)
     .then((res) => {
       if (this.log) {
+        console.log("Success Response:", res);
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
       }
@@ -250,6 +251,7 @@ class DirWebRequestV2 {
     })
     .catch( (err) => {
       if (this.log) {
+        console.log("Error Response:", err);
         // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
         let cache = [];
         let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
