@@ -474,15 +474,25 @@ class TiledeskChatbotUtil {
                     else {
                         console.log("!lead.fullname");
                     }
-                    console.log("Getting userPhone:", JSON.stringify(message.request));
+                    // console.log("Getting userPhone:", JSON.stringify(message.request));
                     if (message.request.lead.phone) {
                         await chatbot.addParameter("userPhone", message.request.lead.phone);
+                    }
+                    // The user current whatsapp phone used in the current conversation
+                    if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
+                        const splits = message.request.lead.lead_id.split("-");
+                        if (splits && splits.length > 1) {
+                            await chatbot.addParameter("whatsappPhone",splits[1]);
+                        }
                     }
                     if (message.request.lead.lead_id) {
                         await chatbot.addParameter("userLeadId", message.request.lead.lead_id);
                     }
                     if (message.request.lead.company) {
                         await chatbot.addParameter("userCompany", message.request.lead.company);
+                    }
+                    if (message.request.ticket_id) {
+                        await chatbot.addParameter("ticketId", message.request.ticket_id);
                     }
                 }
             }
