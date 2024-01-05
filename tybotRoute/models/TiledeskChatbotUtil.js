@@ -474,7 +474,7 @@ class TiledeskChatbotUtil {
                     else {
                         console.log("!lead.fullname");
                     }
-                    console.log("Getting userPhone:", message.request);
+                    console.log("Getting userPhone:", JSON.stringify(message.request));
                     if (message.request.lead.phone) {
                         await chatbot.addParameter("userPhone", message.request.lead.phone);
                     }
