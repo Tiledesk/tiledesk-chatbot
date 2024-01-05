@@ -472,10 +472,11 @@ class TiledeskChatbotUtil {
                     // console.log("Getting userPhone:", JSON.stringify(message.request));
                     if (message.request.lead.phone) {
                         await chatbot.addParameter("userPhone", message.request.lead.phone);
-                    } else if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
+                    }
+                    if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
                         const splits = message.request.lead.lead_id.split("-");
                         if (splits && splits.length > 1) {
-                            await chatbot.addParameter("userPhone",splits[1]);
+                            await chatbot.addParameter("whatsappPhone",splits[1]);
                         }
                     }
                     if (message.request.lead.lead_id) {
