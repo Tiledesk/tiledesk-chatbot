@@ -145,6 +145,14 @@ class TiledeskExpression {
             name: "isEmpty",
             applyPattern: "#1 === \"\""
         },
+        "isNull": {
+            name: "isNull",
+            applyPattern: "#1 === null"
+        },
+        "isUndefined": {
+            name: "isUndefined",
+            applyPattern: "#1 === undefined"
+        },
         "matches": {
             name: "matches",
             applyPattern: "#1.match(String(#2)) ? true : false"
