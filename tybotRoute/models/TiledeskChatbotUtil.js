@@ -453,18 +453,13 @@ class TiledeskChatbotUtil {
                         await chatbot.addParameter("userEmail", message.request.lead.email);
                     }
                     if (message.request.lead.fullname) {
-                        console.log("got lead.fullname:", message.request.lead.fullname);
                         try {
                             const current_userFullname = await chatbot.getParameter("userFullname");
-                            console.log("current_userFullname:", current_userFullname);
                             if (current_userFullname && current_userFullname.startsWith("guest#")) {
-                                console.log("current_userFullname && current_userFullname.startsWith('guest#')");
                                 await chatbot.addParameter("userFullname", message.request.lead.fullname);
                             }
                             else if (!current_userFullname) {
-                                console.log("no current_userFullname");
                                 await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                                console.log("it was null, set to the incoming one");
                             }
                         }
                         catch(error) {
@@ -477,12 +472,10 @@ class TiledeskChatbotUtil {
                     // console.log("Getting userPhone:", JSON.stringify(message.request));
                     if (message.request.lead.phone) {
                         await chatbot.addParameter("userPhone", message.request.lead.phone);
-                    }
-                    // The user current whatsapp phone used in the current conversation
-                    if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
+                    } else if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
                         const splits = message.request.lead.lead_id.split("-");
                         if (splits && splits.length > 1) {
-                            await chatbot.addParameter("whatsappPhone",splits[1]);
+                            await chatbot.addParameter("userPhone",splits[1]);
                         }
                     }
                     if (message.request.lead.lead_id) {
