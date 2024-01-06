@@ -73,7 +73,7 @@ class DirCode {
         // let newvars_set = await variablesManager.all();
         // console.log("newvars_set:", newvars_set);
       // }
-      for (const [key, value] of Object.entries(script_context.contextAttributes.ops.del)) {
+      for (const [key, value] of Object.entries(script_context.context.ops.del)) {
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         await variablesManager.delete(key);
       }
