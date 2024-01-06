@@ -251,7 +251,7 @@ class TiledeskExpression {
             // console.log("res=", res)
         }
         catch (err) {
-            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
         }
         return res;
     }

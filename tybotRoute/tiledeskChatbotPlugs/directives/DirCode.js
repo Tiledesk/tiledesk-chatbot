@@ -38,13 +38,13 @@ class DirCode {
     let script_context = {
       console: console
     }
-    let variables = null;
+    let attributes = null;
     if (this.context.tdcache) {
-      variables = 
+      attributes = 
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      if (this.log) {console.log("Variables:", JSON.stringify(variables))}
+      if (this.log) {console.log("Attributes:", JSON.stringify(attributes))}
     }
     else {
       console.error("(DirCode) No this.context.tdcache");
@@ -52,19 +52,19 @@ class DirCode {
       return;
     }
     // console.log("before variables:", variables);
-    for (const [key, value] of Object.entries(variables)) {
-      script_context[key] = value;
-    }
-    let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, variables)
-    script_context.contextAttributes = variablesManager;
-    //console.log("script_context:", script_context);
+    // for (const [key, value] of Object.entries(attributes)) {
+    //   script_context[key] = value;
+    // }
+    let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, attributes);
+    script_context.context = variablesManager;
+    console.log("script_context:", script_context);
     const tdExpression = new TiledeskExpression();
     //console.log("tdExpression:", tdExpression.evaluateJavascriptExpression);
     try {
       const result = new TiledeskExpression().evaluateJavascriptExpression(source_code, script_context);
       // console.log("result:", result);
       // console.log("script_context.tiledeskVars:", script_context.tiledeskVars);
-      for (const [key, value] of Object.entries(script_context.contextAttributes.ops.set)) {
+      for (const [key, value] of Object.entries(script_context.context.ops.set)) {
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         // await variablesManager.set(key, value);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);

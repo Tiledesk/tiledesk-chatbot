@@ -28,13 +28,13 @@ const bot = {
 			"_tdActionId": "ca7835b8-319a-4272-8f94-f75c7bcf6f62",
 			"_tdActionType": "code",
 			"source": `
-console.log('a var...chatbot_name!', chatbot_name);
-contextAttributes.setAttribute('myvar', '1');
-contextAttributes.deleteAttribute('chatbot_name');
-contextAttributes.deleteAttribute('conversation_id');
-jsondata2.c = 7;
-contextAttributes.setAttribute('jsondata2', jsondata2);
-console.log("all vars:", contextAttributes.allVars());
+console.log('a var...chatbot_name!', context.attributes.chatbot_name);
+context.setAttribute('myvar', '1');
+context.deleteAttribute('chatbot_name');
+context.deleteAttribute('conversation_id');
+context.attributes.jsondata2.c = 7;
+context.setAttribute('jsondata2', jsondata2);
+console.log("all vars:", context.allVars());
 `
 		}, {
 			"_tdActionTitle": "",

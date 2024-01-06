@@ -18,7 +18,7 @@ const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, 
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 
-describe('Conversation for JSONCondition test', async () => {
+describe('Conversation for Code Action test', async () => {
 
   let app_listener;
 
@@ -53,13 +53,13 @@ describe('Conversation for JSONCondition test', async () => {
   });
 
   it('/coding{"name", "Andrea"}', (done) => {
-    // console.log("/coding");
+    console.log("/coding");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/coding ...req.body:", JSON.stringify(req.body));
+      console.log("/coding ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);

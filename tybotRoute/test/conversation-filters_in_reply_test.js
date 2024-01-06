@@ -18,7 +18,7 @@ const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, 
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 
-describe('Conversation for JSONCondition test', async () => {
+describe('Conversation for Filters in reply test', async () => {
 
   let app_listener;
 
