@@ -49,15 +49,15 @@ class TiledeskRequestVariables {
         }
     }
 
-    setVar(key, value) {
+    setAttribute(key, value) {
         this.ops.set[key] = value;
     }
 
-    delVar(key) {
+    deleteAttribute(key) {
         this.ops.del[key] = true;
     }
 
-    allVars() {
+    allAttributes() {
         return this.vars;
     }
 }

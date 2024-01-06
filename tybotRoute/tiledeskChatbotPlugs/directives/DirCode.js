@@ -56,7 +56,7 @@ class DirCode {
       script_context[key] = value;
     }
     let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, variables)
-    script_context.tiledeskVars = variablesManager;
+    script_context.contextAttributes = variablesManager;
     //console.log("script_context:", script_context);
     const tdExpression = new TiledeskExpression();
     //console.log("tdExpression:", tdExpression.evaluateJavascriptExpression);
@@ -64,7 +64,7 @@ class DirCode {
       const result = new TiledeskExpression().evaluateJavascriptExpression(source_code, script_context);
       // console.log("result:", result);
       // console.log("script_context.tiledeskVars:", script_context.tiledeskVars);
-      for (const [key, value] of Object.entries(script_context.tiledeskVars.ops.set)) {
+      for (const [key, value] of Object.entries(script_context.contextAttributes.ops.set)) {
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         // await variablesManager.set(key, value);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
@@ -73,7 +73,7 @@ class DirCode {
         // let newvars_set = await variablesManager.all();
         // console.log("newvars_set:", newvars_set);
       // }
-      for (const [key, value] of Object.entries(script_context.tiledeskVars.ops.del)) {
+      for (const [key, value] of Object.entries(script_context.contextAttributes.ops.del)) {
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         await variablesManager.delete(key);
       }

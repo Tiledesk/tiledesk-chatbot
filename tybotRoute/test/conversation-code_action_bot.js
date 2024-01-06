@@ -29,12 +29,12 @@ const bot = {
 			"_tdActionType": "code",
 			"source": `
 console.log('a var...chatbot_name!', chatbot_name);
-tiledeskVars.setVar('myvar', '1');
-tiledeskVars.delVar('chatbot_name');
-tiledeskVars.delVar('conversation_id');
+contextAttributes.setAttribute('myvar', '1');
+contextAttributes.deleteAttribute('chatbot_name');
+contextAttributes.deleteAttribute('conversation_id');
 jsondata2.c = 7;
-tiledeskVars.setVar('jsondata2', jsondata2);
-console.log("all vars:", tiledeskVars.allVars());
+contextAttributes.setAttribute('jsondata2', jsondata2);
+console.log("all vars:", contextAttributes.allVars());
 `
 		}, {
 			"_tdActionTitle": "",

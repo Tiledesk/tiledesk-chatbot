@@ -5,6 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.43
+- DirCode: tiledeskVars renamed in contextAttributes
+- DirCode: tiledeskVars.setVar renamed in contextAttributes.setAttribute()
+- DirCode: tiledeskVars.contextAttributes renamed in contextAttributes.deleteAttribute()
+
+# v0.2.42 (online)
+- WebRequestV2 fix. Now you'll get the response payload (in the result) also on errors
+
 # v0.2.41
 - added attribute currentPhoneNumber
 - added attribute tickeId
