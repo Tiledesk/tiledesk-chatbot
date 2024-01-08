@@ -6,9 +6,10 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # v0.2.43
-- DirCode: tiledeskVars renamed in contextAttributes
-- DirCode: tiledeskVars.setVar renamed in contextAttributes.setAttribute()
-- DirCode: tiledeskVars.contextAttributes renamed in contextAttributes.deleteAttribute()
+- DirCode: tiledeskVars renamed in "context"
+- DirCode: tiledeskVars.setVar renamed in context.setAttribute()
+- DirCode: tiledeskVars.delVar renamed in context.deleteAttribute()
+- DirCode: added context.attributes property to access flow's attributes
 
 # v0.2.42 (online)
 - WebRequestV2 fix. Now you'll get the response payload (in the result) also on errors
