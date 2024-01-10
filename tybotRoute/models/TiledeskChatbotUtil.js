@@ -321,6 +321,12 @@ class TiledeskChatbotUtil {
                         console.log("button.link filled:", button.link)
                     }
                 }
+                if (button.value) {
+                    button.value = filler.fill(button.value, variables);
+                    if (log) {
+                        console.log("button.value filled:", button.value)
+                    }
+                }
             });
         }
         else if (log) {
