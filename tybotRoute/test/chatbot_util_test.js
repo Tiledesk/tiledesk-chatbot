@@ -48,6 +48,58 @@ describe('Intent name parsing', function() {
         assert(intent.parameters.age === 20);
     });
     
+});
+
+describe('General features', function() {
+
+    it("valid support-group", async () => {
+        const project_id = "projectId1";
+        const requestId = "support-group-" + project_id + "-UUID1";
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === true);
+    });
+
+    it("not valid support-group: wrongProjectId", async () => {
+        const project_id = "projectId1";
+        const requestId = "support-group-wrongProjectId-UUID1";
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === false);
+    });
+
+    it("not valid support-group: no UUID", async () => {
+        const project_id = "projectId1";
+        const requestId = "support-group-" + project_id;
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === false);
+    });
+
+    it("not valid support-group: no UUID, no -", async () => {
+        const project_id = "projectId1";
+        const requestId = "support-group" + project_id;
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === false);
+    });
+
+    it("not valid support-group: wrong prefix", async () => {
+        const project_id = "projectId1";
+        const requestId = "port-group" + project_id;
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === false);
+    });
+
+    it("valid automation-request", async () => {
+        const project_id = "projectId1";
+        const requestId = "automation-request-" + project_id + "-UUID1";
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === true);
+    });
+
+    it("not valid automation-request: wrongProjectId", async () => {
+        const project_id = "projectId1";
+        const requestId = "automation-request-wrongProjectId-UUID1";
+        let isValid = TiledeskChatbotUtil.validateRequestId(requestId, project_id);
+        assert(isValid === false);
+    });
     
 });
 

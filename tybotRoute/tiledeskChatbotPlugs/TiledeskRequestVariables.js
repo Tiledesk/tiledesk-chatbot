@@ -5,7 +5,7 @@ class TiledeskRequestVariables {
     constructor(requestId, tdcache, vars) {
         this.requestId = requestId;
         this.tdcache = tdcache;
-        this.vars = vars;
+        this.attributes = vars;
         this.ops = {
             set: {
             },
@@ -49,16 +49,16 @@ class TiledeskRequestVariables {
         }
     }
 
-    setVar(key, value) {
+    setAttribute(key, value) {
         this.ops.set[key] = value;
     }
 
-    delVar(key) {
+    deleteAttribute(key) {
         this.ops.del[key] = true;
     }
 
-    allVars() {
-        return this.vars;
+    allAttributes() {
+        return this.attributes;
     }
 }
 

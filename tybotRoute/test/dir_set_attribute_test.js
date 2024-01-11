@@ -73,7 +73,7 @@ describe('Testing dir_set_attribute_test', function() {
                 return {};
             }
             TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
-                console.log("Redis: " + key + "; value: " + value);
+                // console.log("Redis: " + key + "; value: " + value);
                 keyTest = key;
                 valueTest = value;
             }
@@ -577,7 +577,7 @@ describe('Testing dir_set_attribute_test', function() {
             const dirSetAttribute = new DirSetAttribute(context);
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
-            console.log("failed is", failed)
+            // console.log("failed is", failed)
             assert.ok(!failed);
         });
         it('should immidiately call the cb, wrong number of operands', async function() {

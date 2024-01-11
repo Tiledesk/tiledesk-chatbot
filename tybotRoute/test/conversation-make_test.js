@@ -37,7 +37,7 @@ describe('Conversation for make test', async () => {
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
             log: process.env.TILEBOT_LOG
           }, () => {
-            console.log("Tilebot route successfully started.", );
+            console.log("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
               console.log('Tilebot connector listening on port ', port);
@@ -58,8 +58,7 @@ describe('Conversation for make test', async () => {
       done();
     });
   });
-// TEST MAKE
-//TEST SUCCESS
+
   it('/make success', (done) => {
 
     let listener;
@@ -68,14 +67,14 @@ describe('Conversation for make test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      //console.log('/make success message: ', JSON.stringify(message, null,2))
+
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'make status is: 200');
 
       const command2 = message.attributes.commands[2];
       assert(command2.type === "message");
-      assert(command2.message.text === 'make error is: null');
+      assert(command2.message.text === 'make error is: ');
 
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -120,7 +119,7 @@ describe('Conversation for make test', async () => {
       });
     });
   });
-//TEST FAIL CODE 404
+  
   it('/make failure - return code 404', (done) => {
 
     let listener;
@@ -129,7 +128,15 @@ describe('Conversation for make test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      //console.log("/make failure message: ", JSON.stringify(message, null, 2));
+      
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'make status is: 404');
+
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'make error is: Request failed with status code 404');
+
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -137,14 +144,14 @@ describe('Conversation for make test', async () => {
         else {
           assert(attributes);
           assert(attributes["make_status"] === 404);
-          assert(attributes["make_error"] === "Make url not found");
+          assert(attributes["make_error"] === "Request failed with status code 404");
           listener.close(() => {
             done();
           });
         }
       });
 
-     });
+    });
 
     endpointServer.post('/1.3/make/', function (req, res) {
 
@@ -174,60 +181,68 @@ describe('Conversation for make test', async () => {
       });
     });
   });
-//TEST FAIL 422
-it('/make failure - return code 422', (done) => {
-
-  let listener;
-  let endpointServer = express();
-  endpointServer.use(bodyParser.json());
-  endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-    res.send({ success: true });
-    const message = req.body;
-    //console.log("/make failure message: ", JSON.stringify(message, null, 2));
-    getChatbotParameters(REQUEST_ID, (err, attributes) => {
-      if (err) {
-        assert.ok(false);
-      }
-      else {
-        assert(attributes);
-        assert(attributes["make_status"] === 422);
-        assert(attributes["make_error"] === "Missing make webhook url");
-        listener.close(() => {
-          done();
-        });
-      }
-    });
-
-   });
-
-  endpointServer.post('/1.3/make/', function (req, res) {
-    let http_code = 422;
-    res.status(http_code).send('Missing make webhook url');
-  });
-
-  listener = endpointServer.listen(10002, '0.0.0.0', () => {
-    //console.log('endpointServer started', listener.address());
-    let request = {
-      "payload": {
-        "senderFullname": "guest#367e",
-        "type": "text",
-        "sender": "A-SENDER",
-        "recipient": REQUEST_ID,
-        "text": '/make#FAILUREURL',
-        "id_project": PROJECT_ID,
-        "metadata": "",
-        "request": {
-          "request_id": REQUEST_ID
-        }
-      },
-      "token": "XXX"
-    }
-    sendMessageToBot(request, BOT_ID, () => {
-       //console.log("Message sent:\n", request);
-    });
-  });
-});
   
+  it('/make failure - return code 422', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'make status is: 422');
+
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'make error is: Missing make webhook url');
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["make_status"] === 422);
+          assert(attributes["make_error"] === "Missing make webhook url");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/1.3/make/', function (req, res) {
+      let http_code = 422;
+      res.status(http_code).send('Missing make webhook url');
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      //console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/make#FAILUREURL',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        //console.log("Message sent:\n", request);
+      });
+    });
+  });
+
 });
 
 /**

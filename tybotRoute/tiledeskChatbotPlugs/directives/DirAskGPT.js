@@ -29,28 +29,52 @@ class DirAskGPT {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("AskGPT action:", JSON.stringify(action)); }
+    if (this.log) { console.log("DirAskGPT action:", JSON.stringify(action)); }
     if (!this.tdcache) {
       console.error("Error: DirAskGPT tdcache is mandatory");
       callback();
       return;
     }
 
-    if (!action.question) {
-      console.error("Error: DirAskGPT questionAttribute is mandatory");
-      callback();
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    let trueIntentAttributes = action.trueIntentAttributes;
+    let falseIntentAttributes = action.falseIntentAttributes;
+
+    if (this.log) {
+      console.log("DirAskGPT trueIntent", trueIntent)
+      console.log("DirAskGPT falseIntent", falseIntent)
+      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
+      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+    }
+
+    // default values
+    let answer = "No answers";
+    let source = null;
+
+    if (!action.question || action.question === '') {
+      console.error("Error: DirAskGPT question attribute is mandatory. Executing condition false...");
+      await this.#assignAttributes(action, answer, source);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      }
+      callback(true);
       return;
     }
 
     if (!action.kbid) {
-      console.error("Error: DirAskGPT kbid is mandatory");
-      callback();
+      console.error("Error: DirAskGPT kbid attribute is mandatory. Executing condition false...");
+      await this.#assignAttributes(action, answer, source);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+      }
+      callback(true);
       return;
     }
 
@@ -63,103 +87,87 @@ class DirAskGPT {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    let trueIntentAttributes = action.trueIntentAttributes;
-    let falseIntentAttributes = action.falseIntentAttributes;
-
-    if (this.log) {
-      console.log("trueIntent",trueIntent )
-      console.log("falseIntent",falseIntent )
-      console.log("trueIntentAttributes",trueIntentAttributes )
-      console.log("falseIntentAttributes",falseIntentAttributes )
-    }
-
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const kb_url = server_base_url + "/" + this.context.projectId + "/kbsettings";
-    if (this.log) { console.log("ApiEndpoint URL: ", kb_url); }
-    const KB_HTTPREQUEST = {
-      url: kb_url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
-      },
-      method: "GET"
+    const pai_url = process.env.PAI_ENDPOINT || process.env.GPT_ENDPOINT;
+    if (this.log) {
+      console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
+      console.log("DirAskGPT ApiEndpoint URL: ", pai_url);
     }
-    if (this.log) { console.log("AskGPT KB_HTTPREQUEST", KB_HTTPREQUEST); }
 
-    this.myrequest(
-      KB_HTTPREQUEST, async (err, resbody) => {
-        if (this.log) { console.log("AskGPT resbody:", resbody); }
+    let key = await this.getKeyFromIntegrations(server_base_url);
+    if (!key) {
+      if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
+      key = await this.getKeyFromKbSettings(server_base_url);
+    }
+
+    if (!key) {
+      if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
+      key = process.env.GPTKEY;
+    }
+
+    if (!key) {
+      console.error("Error: DirAskGPT gptkey is mandatory");
+      await this.#assignAttributes(action, answer);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    let json = {
+      question: filled_question,
+      kbid: action.kbid,
+      gptkey: key
+    };
+    if (this.log) { console.log("DirAskGPT json:", json); }
+
+    const HTTPREQUEST = {
+      url: pai_url,
+      json: json,
+      method: "POST"
+    }
+    if (this.log) { console.log("DirAskGPT HTTPREQUEST", HTTPREQUEST); }
+
+    this.#myrequest(
+      HTTPREQUEST, async (err, resbody) => {
+        if (this.log && err) {
+          console.log("DirAskGPT error: ", err);
+        }
+        if (this.log) { console.log("DirAskGPT resbody:", resbody); }
+        let answer = resbody.answer;
+        let source = resbody.source_url;
+        await this.#assignAttributes(action, answer, source);
+
         if (err) {
-          if (this.log) { console.error("AskGPT error:", err); }
           if (callback) {
-            let answer = "No answers";
-            let source = null;
-            await this.#assignAttributes(action, answer, source);
-            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-              callback(false); // continue the flow
-            });
-          }
-        } else if (callback) {
-          if (this.log) {
-            console.log("resbody", resbody);
-            console.log("gptkey", resbody.gptkey);
-          }
-
-          if (!resbody.gptkey) {
-            let answer = "No answers";
-            let source = null;
-            await this.#assignAttributes(action, answer, source);
-            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-              callback(false); // continue the flow
-            });
-          } else {
-            let json = {
-              "question": filled_question,
-              "kbid": action.kbid,
-              "gptkey": resbody.gptkey
-            };
-            if (this.log) {console.log("question_gpt:", json);}
-
-            const url = process.env.GPT_ENDPOINT; //"https://tiledesk-playground.azurewebsites.net/api/qa"; // TODO INSERIRE IN ENV
-            if (this.log) {console.log("DirAskGPT URL", url);}
-            const HTTPREQUEST = {
-              url: url,
-              json: json,
-              method: "POST"
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
             }
-            if (this.log) {console.log("AskGPT HTTPREQUEST", HTTPREQUEST);}
-            this.myrequest(
-              HTTPREQUEST, async (err, resbody) => {
-                if (this.log && err) {
-                  console.log("AskGPT error: ", err);
-                }
-                if (this.log) {console.log("AskGPT resbody:", resbody);}
-                let answer = resbody.answer;
-                let source = resbody.source_url;
-                await this.#assignAttributes(action, answer, source);
-
-                if (err) {
-                  if (callback) {
-                    this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-                      callback(false); // continue the flow
-                    });
-                  }
-                } 
-                else if (resbody.success === true) {
-                  
-                  await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-                    callback(); // stop the flow
-                  })
-                } else { //resbody.success === false
-                  await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-                    callback(false); // stop the flow
-                  })
-                }
-              }
-            )
+            callback();
+            return;
           }
+        }
+        else if (resbody.success === true) {
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        } else {
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
         }
       }
     )
@@ -177,23 +185,31 @@ class DirAskGPT {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         })
       }
       else {
         if (this.log) { console.log("No trueIntentDirective specified"); }
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
         if (this.log) { console.log("No falseIntentDirective specified"); }
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
   }
@@ -224,7 +240,7 @@ class DirAskGPT {
     }
   }
 
-  myrequest(options, callback) {
+  #myrequest(options, callback) {
     if (this.log) {
       console.log("API URL:", options.url);
       console.log("** Options:", JSON.stringify(options));
@@ -270,6 +286,68 @@ class DirAskGPT {
           callback(error, null);
         }
       });
+  }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            if (this.log) { console.error("DirAskGPT Get integrations error ", err); }
+            resolve(null);
+          } else {
+
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
+  async getKeyFromKbSettings(server_base_url) {
+    return new Promise((resolve) => {
+
+      const KB_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
+
+      this.#myrequest(
+        KB_HTTPREQUEST, async (err, resbody) => {
+          if (err) {
+            if (this.log) { console.error("DirGptTask Get kb settings error ", err); }
+            resolve(null);
+          } else {
+            if (!resbody.gptkey) {
+              resolve(null);
+            } else {
+              resolve(resbody.gptkey);
+            }
+          }
+        }
+      )
+    })
   }
 
 }

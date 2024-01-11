@@ -32,21 +32,21 @@ const bot = {
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "qapla status is: ${qapla_status}"
+						"text": "qapla status is: {{qapla_status}}"
 					}
 				},
 				{
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "qapla result is: ${qapla_result}"
+						"text": "qapla result is: {{qapla_result}}"
 					}
 				},
 				{
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "qapla error is: ${qapla_error}"
+						"text": "qapla error is: {{qapla_error}}"
 					}
 				}]
 			}
@@ -81,18 +81,115 @@ const bot = {
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "qapla result is: ${qapla_result}"
+						"text": "qapla error is: {{qapla_error}}"
+					}
+				}]
+			}
+		}]
+	},
+	// block with conditions
+	{
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "qapla#COND",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionType": "qapla",
+			"_tdActionTitle": "qapla action",
+			"trackingNumber": "abcd1234",
+			"apiKey": "my_qapla_api_key",
+			"assignStatusTo": "qapla_status",
+			"assignErrorTo": "qapla_error",
+			"assignResultTo": "qapla_result",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
+		}]
+	},
+	{
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "qapla#COND2",
+		"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionType": "qapla",
+			"_tdActionTitle": "qapla action",
+			"trackingNumber": "abcd1234",
+			"apiKey": "",
+			"assignStatusTo": "qapla_status",
+			"assignErrorTo": "qapla_error",
+			"assignResultTo": "qapla_result",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE",
+		}]
+	},
+	{
+		// TRUE INTENT
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "reply",
+			"text": "xxx",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "qapla status is: {{qapla_status}}"
 					}
 				},
 				{
 					"type": "message",
 					"message": {
 						"type": "text",
-						"text": "qapla error is: ${qapla_error}"
+						"text": "qapla result is: {{qapla_result}}"
+					}
+				},
+				{
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "qapla error is: {{qapla_error}}"
 					}
 				}]
 			}
-		}]
+		}],
+		"language": "en",
+		"intent_display_name": "gpt intent true",
+		"intent_id": "SUCCESS"
+	},
+	{
+		// FALSE INTENT
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "reply",
+			"text": "xxx",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				},
+				{
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "qapla error is: {{qapla_error}}"
+					}
+				}]
+			}
+		}],
+		"language": "en",
+		"intent_display_name": "gpt intent false",
+		"intent_id": "FAILURE"
 	}
 	
 ]

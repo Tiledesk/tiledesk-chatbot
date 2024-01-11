@@ -102,20 +102,35 @@ class DirWebRequestV2 {
         if (err) {
           if (this.log) {console.error("webRequest error:", err);}
           if (callback) {
-            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+            if (falseIntent) {
+              this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                callback(true); // stop the flow
+              });
+            }
+            else {
               callback(false); // continue the flow
-            });
+            }
           }
         }
         else if(res.status >= 200 && res.status <= 299) {
-          await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-            callback(stopOnConditionMet); // stop the flow
-          });
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(true); // stop the flow
+            });
+          }
+          else {
+            callback(false); // continue the flow
+          }
         }
         else {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+          if (falseIntent) {
+            this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+              callback(true); // stop the flow
+            });
+          }
+          else {
             callback(false); // continue the flow
-          });
+          }
         }
       }
     );
@@ -211,6 +226,7 @@ class DirWebRequestV2 {
     axios(axios_options)
     .then((res) => {
       if (this.log) {
+        console.log("Success Response:", res);
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
       }
@@ -235,6 +251,9 @@ class DirWebRequestV2 {
     })
     .catch( (err) => {
       if (this.log) {
+        if (err.response) {
+          console.log("Error Response data:", err.response.data);
+        }
         // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
         let cache = [];
         let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
@@ -270,10 +289,14 @@ class DirWebRequestV2 {
         if (error.message) {
           errorMessage = error.message;
         }
+        let data = null;
+        if (err.response) {
+          data =  err.response.data;
+        }
         callback(
           null, {
             status: status,
-            data: null,
+            data: data,
             error: errorMessage
           }
         );

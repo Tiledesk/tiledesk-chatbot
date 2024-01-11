@@ -5,7 +5,6 @@ const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 
-
 class DirMake {
 
   constructor(context) {
@@ -15,9 +14,8 @@ class DirMake {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
-    this.log = context.log;
     this.intentDir = new DirIntent(context);
-    if (this.log) {console.log('LOG: ', this.log)};
+    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -31,80 +29,97 @@ class DirMake {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
   async go(action, callback) {
     if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    if (this.log) {console.log('DirMake trueIntent',trueIntent)}
     if (!this.tdcache) {
       console.error("Error: DirMake tdcache is mandatory");
       callback();
       return;
     }
-    //console.log('DirMake work!');
+
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    let trueIntentAttributes = action.trueIntentAttributes;
+    let falseIntentAttributes = action.falseIntentAttributes;
+
+    if (this.log) {
+      console.log("DirAskGPT trueIntent", trueIntent)
+      console.log("DirAskGPT falseIntent", falseIntent)
+      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
+      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+    }
+
+    // default values?
+    let status = null;
+    let error = null;
+
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       )
 
-    if (this.log) {
-      const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-      for (const [key, value] of Object.entries(all_parameters)) {
-        if (this.log) { console.log("DirMake request parameter:", key, "value:", value, "type:", typeof value) }
-      }
-    }
-    
     let webhook_url = action.url;
     let bodyParameters = action.bodyParameters;
+
     if (this.log) {
       console.log("DirMake webhook_url: ", webhook_url);
-      console.log("DirMake bodyParameters: ", bodyParameters);
+      console.log("DirMake bodyParameters: ", JSON.stringify(bodyParameters));
     }
-    if (!bodyParameters || bodyParameters === '') {
-      if (this.log) {console.error("DirMake ERROR - bodyParameters is undefined or null or empty string")};
+
+    if (!bodyParameters) {
+      console.error("Error: DirMake bodyParameters is undefined");
+      error = "Missing body parameters";
+      await this.#assignAttributes(action, status, error);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
       callback();
       return;
     }
+
     if (!webhook_url || webhook_url === '') {
       if (this.log) {console.error("DirMake ERROR - webhook_url is undefined or null or empty string:")};
       let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
-      this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-        callback(); // stop the flow
-      });
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
       return;
     }
-    let url;
-    try {
-    let make_base_url = process.env.MAKE_ENDPOINT;
-      if (make_base_url) {
-        url = make_base_url + "/make/";
-      } else {
-        url = action.url;
-      }
-      const filler = new Filler();
-      for (const [key, value] of Object.entries(bodyParameters)) {
-        //if (this.log) {console.log("bodyParam:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestVariables);
-        bodyParameters[key] = filled_value;
-      }
-      if (this.log) {console.log('DirMake bodyParameters filler: ',bodyParameters)}
-    
 
-    
-    // Condition branches
-    //let trueIntent = action.trueIntent;
-    //let falseIntent = action.falseIntent;
-    //console.log('DirMake trueIntent',trueIntent)
- 
+    /**
+     * process.env.MAKE_ENDPOINT is used for testing purposes only.
+     * This variable must be not defined in Production Env.
+    */
+    let make_base_url = process.env.MAKE_ENDPOINT;
+    let url;
+
+    if (make_base_url) {
+      url = make_base_url + "/make/";
+    } else {
+      url = action.url;
+    }
     if (this.log) { console.log("DirMake MakeEndpoint URL: ", url); }
+
+    const filler = new Filler();
+    for (const [key, value] of Object.entries(bodyParameters)) {
+      let filled_value = filler.fill(value, requestVariables);
+      bodyParameters[key] = filled_value;
+    }
+    if (this.log) { console.log('DirMake bodyParameters filler: ', bodyParameters) }
+
     const MAKE_HTTPREQUEST = {
       url: url,
       headers: {
@@ -113,37 +128,46 @@ class DirMake {
       json: bodyParameters,
       method: "POST"
     }
-  
-    if (this.log) { console.log("myrequest/DirMake MAKE_HTTPREQUEST", MAKE_HTTPREQUEST); }
+    if (this.log) { console.log("DirMake MAKE_HTTPREQUEST", MAKE_HTTPREQUEST); }
     this.#myrequest(
-      MAKE_HTTPREQUEST, async (err, resbody) => {
+      MAKE_HTTPREQUEST, async (err, res) => {
         if (err) {
           if (callback) {
-            if (this.log) {console.error("myrequest/(httprequest) DirMake make err:", err)};
-            let status = 404;   
-            let error = 'Make url not found';
+            console.error("(httprequest) DirMake err:", err);
+            // let status = 404;
+            // let error = 'Make url not found';
+            status = res.status;
+            error = res.error;
             await this.#assignAttributes(action, status, error);
-            this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-              callback(false); // continue the flow
-            });
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
+            }
             callback();
+            return;
           }
         } else if (callback) {
-          if (this.log) { console.log("myrequest/DirMake Make resbody: ", resbody); }
-          let status = 200;   
-          let error = null;
-          await this.#assignAttributes(action, status, error); 
-          await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
-            callback(); // stop the flow
-          });
-          if (this.log) { console.log('myrequest/status: ',status)}
-          //callback();
+          if (this.log) { console.log("(httprequest) DirMake resbody ", res); }
+          // let status = 200;
+          // let error = null;
+          status = res.status;
+          error = null;
+          if (res.error) {
+            error = res.error
+          }
+          await this.#assignAttributes(action, status, error);
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
+          }
+          callback();
+          return;
         }
       }
     );
-  } catch(e) {
-    console.error('error: ', e)
-  }
+
   }
 
   async #assignAttributes(action, status, error) {
@@ -170,6 +194,7 @@ class DirMake {
     }
   }
 
+  // Advanced #myrequest function
   #myrequest(options, callback) {
     if (this.log) {
       console.log("API URL:", options.url);
@@ -179,7 +204,8 @@ class DirMake {
       url: options.url,
       method: options.method,
       params: options.params,
-      headers: options.headers
+      headers: options.headers,
+      timeout: 20000
     }
     if (options.json !== null) {
       axios_options.data = options.json
@@ -197,61 +223,146 @@ class DirMake {
       .then((res) => {
         if (this.log) {
           console.log("Response for url:", options.url);
-          console.log("Response status:", res.status);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        if (this.log) {console.error("An error occurred:", JSON.stringify(error.message))};
         if (callback) {
-          callback(error, null);
+          callback(null, res);
+        }
+
+      })
+      .catch((err) => {
+        if (this.log) {
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
+          let cache = [];
+          let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
+            if (typeof value === 'object' && value != null) {
+              if (cache.indexOf(value) !== -1) {
+                return;
+              }
+              cache.push(value);
+            }
+            return value;
+          });
+          console.error("An error occurred: ", error_log);
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
+          // console.error("An error occurred:", JSON.stringify(err));
+        }
+        if (callback) {
+          let status = 1000;
+          let cache = [];
+          let str_error = JSON.stringify(err, function (key, value) { // try to use a separate function
+            if (typeof value === 'object' && value != null) {
+              if (cache.indexOf(value) !== -1) {
+                return;
+              }
+              cache.push(value);
+            }
+            return value;
+          });
+          let error = JSON.parse(str_error) // "status" disappears without this trick
+          let errorMessage = JSON.stringify(error);
+          if (error.status) {
+            status = error.status;
+          }
+          if (error.message) {
+            errorMessage = error.message;
+          }
+          callback(
+            null, {
+            status: status,
+            data: null,
+            error: errorMessage
+          }
+          );
         }
       });
   }
+
+  // #myrequest(options, callback) {
+  //   if (this.log) {
+  //     console.log("API URL:", options.url);
+  //     console.log("** Options:", JSON.stringify(options));
+  //   }
+  //   let axios_options = {
+  //     url: options.url,
+  //     method: options.method,
+  //     params: options.params,
+  //     headers: options.headers
+  //   }
+  //   if (options.json !== null) {
+  //     axios_options.data = options.json
+  //   }
+  //   if (this.log) {
+  //     console.log("axios_options:", JSON.stringify(axios_options));
+  //   }
+  //   if (options.url.startsWith("https:")) {
+  //     const httpsAgent = new https.Agent({
+  //       rejectUnauthorized: false,
+  //     });
+  //     axios_options.httpsAgent = httpsAgent;
+  //   }
+  //   axios(axios_options)
+  //     .then((res) => {
+  //       if (this.log) {
+  //         console.log("Response for url:", options.url);
+  //         console.log("Response headers:\n", JSON.stringify(res.headers));
+  //       }
+  //       if (res && res.status == 200 && res.data) {
+  //         if (callback) {
+  //           callback(null, res.data);
+  //         }
+  //       }
+  //       else {
+  //         if (callback) {
+  //           callback(new Error("Response status is not 200"), null);
+  //         }
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       if (this.log) { console.error("An error occurred:", JSON.stringify(error.message)) };
+  //       if (callback) {
+  //         callback(error, null);
+  //       }
+  //     });
+  // }
+
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;
-   
     if (trueIntent) {
-      //console.log('executeCondition/trueIntent',trueIntent)
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-      //console.log('executeCondition/trueIntentDirective',trueIntentDirective)
-      //console.log('executeCondition/trueIntentAttributes',trueIntentAttributes)
     }
     let falseIntentDirective = null;
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
-    if (this.log) {console.log('DirMake executeCondition/result',result)}
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
-        callback();
+        if (this.log) { console.log("No trueIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
       }
     }
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
-        callback();
+        if (this.log) { console.log("No falseIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
       }
     }
   }

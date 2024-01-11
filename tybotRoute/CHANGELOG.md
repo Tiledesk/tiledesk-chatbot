@@ -5,6 +5,57 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.44
+- Fix attributes not showing in button.value
+
+# v0.2.43
+- DirCode: tiledeskVars renamed in "context"
+- DirCode: tiledeskVars.setVar renamed in context.setAttribute()
+- DirCode: tiledeskVars.delVar renamed in context.deleteAttribute()
+- DirCode: added context.attributes property to access flow's attributes
+
+# v0.2.42 (online)
+- WebRequestV2 fix. Now you'll get the response payload (in the result) also on errors
+
+# v0.2.41
+- added attribute currentPhoneNumber
+- added attribute tickeId
+
+# v0.2.40
+- refactorized Make action
+- added support for public gptkey for GptTask and AskGPT actions
+- fixes bug: AskGPT action not working
+
+# v0.2.39
+- fixed bug: wrong update of userFullname based on lead.fullname
+
+# v0.2.38
+- improved Qapla' action with condition
+
+# v0.2.37
+- improved GptTask action with condition
+- improved AskGPT action with condition
+
+# v0.2.36
+- Fixes json conversion in GptTask issue
+
+# v0.2.35
+- added validation check for requests ids (support-group- && automation-request-)
+- refactorized GptTask, AskGPT and Qapla actions in order to support integrations
+- added integrated condition in GptTask 
+- added automatic JSON conversion in GptTask
+
+# v0.2.34
+- stopOnConditionMet is always true in DirJSONCondition
+- Fixes the WebRequestV2 branching
+
+# v0.2.33
+- Added lead attributes (userEmail, userPhone, userFullname, userLeadId, userCompany)
+
+# v0.2.32
+- Added attributes filling to message.metadata.src
+- Added attributes filling to message.metadata.name
+
 # v0.2.31
 - Removed patch: Added support for removing empty text from replies: TiledeskChatbotUtil.removeEmptyReplyCommands()
 

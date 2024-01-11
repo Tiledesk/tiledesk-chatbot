@@ -213,6 +213,10 @@ class TiledeskExpression {
         "JSONparse": {
             name: "JSONparse",
             applyPattern: "JSON.parse(String(#1))"
+        },
+        "JSONstringify": {
+            name: "JSONstringify",
+            applyPattern: "JSON.stringify(#1)"
         }
     }
 
@@ -247,7 +251,7 @@ class TiledeskExpression {
             // console.log("res=", res)
         }
         catch (err) {
-            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
         }
         return res;
     }

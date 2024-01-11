@@ -54,6 +54,15 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+      if (message.metadata) {
+        if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
+        if (message.metadata.src) {
+          message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+        }
+        if (message.metadata.name) {
+          message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+        }
+      }
       if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
       if (message.attributes && message.attributes.commands) {
         if (this.log) {console.log("filling commands'. commands found.");}
