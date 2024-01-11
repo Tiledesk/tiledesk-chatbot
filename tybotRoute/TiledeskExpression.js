@@ -290,6 +290,8 @@ class TiledeskExpression {
         const operator = TiledeskExpression.OPERATORS[function_name];
         const applyPattern = operator.applyPattern;
         expression += applyPattern.replace("#1", operand);
+        console.log("operand is:", operand);
+        console.log("expression is:", expression);
         return expression;
     }
 
@@ -370,9 +372,9 @@ class TiledeskExpression {
         
         // console.log("operand1_s, operand2_s:",operand1_s, operand2_s);
         const expression = applyPattern.replace("#1", operand1_s).replace("#2", operand2_s);
-        console.log("operand1_s is:", operand1_s);
-        console.log("operand2_s is:", operand2_s);
-        console.log("expression is:", expression);
+        // console.log("operand1_s is:", operand1_s);
+        // console.log("operand2_s is:", operand2_s);
+        // console.log("expression is:", expression);
         return expression;
     }
 
