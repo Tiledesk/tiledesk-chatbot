@@ -216,7 +216,7 @@ class TiledeskExpression {
         },
         "JSONstringify": {
             name: "JSONstringify",
-            applyPattern: "JSON.stringify(String(#1))"
+            applyPattern: "JSON.stringify(#1)"
         }
     }
 
