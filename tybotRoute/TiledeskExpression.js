@@ -273,7 +273,12 @@ class TiledeskExpression {
                 const applyPattern = operator.applyPattern;
                 let operand = operands[i + 1].isVariable ? TiledeskExpression.variableOperand(operands[i + 1].value) : TiledeskExpression.quotedString(operands[i + 1].value);
                 operand = operands[i + 1].function ? TiledeskExpression.applyFunctionToOperand(operand, operands[i + 1].function) : operand;
+                console.log("1. expression is:", expression)
+                console.log("operand is:", operand)
+                
                 expression = applyPattern.replace("#1", expression).replace("#2", operand);
+                console.log("2. expression is:", expression)
+                
             }
             return expression;
         }
