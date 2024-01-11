@@ -5,8 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.45
+- Fix: JSON.stringify. Removed String(#1) convertion
+
 # v0.2.44
-- Fix attributes not showing in button.value
+- Fix: attributes not showing in button.value
 
 # v0.2.43
 - DirCode: tiledeskVars renamed in "context"
