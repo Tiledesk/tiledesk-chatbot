@@ -261,10 +261,11 @@ class TiledeskExpression {
         if(!operands) {
             return null;
         }
-
+        console.log("operands are:", JSON.stringify(operands))
         let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
             expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
-
+        console.log("expression is:", expression)
+        
         if (operands.length === 1) {        
             return expression;
         } else {
