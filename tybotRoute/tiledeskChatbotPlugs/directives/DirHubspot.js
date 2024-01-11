@@ -87,7 +87,7 @@ class DirHubspot {
       let hubspot_base_url = process.env.HUBSPOT_ENDPONT;
       if (hubspot_base_url) {
         url = hubspot_base_url + "/hubspot/";
-        console.log('DirHubspot hubspot_base_url: ',url);
+        if (this.log) {console.log('DirHubspot hubspot_base_url: ',url)};
       } else {
         url = "https://api.hubapi.com/crm/v3/objects/contacts/batch/create";
         console.log('DirHubspot url: ',url);

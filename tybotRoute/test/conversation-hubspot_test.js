@@ -68,7 +68,7 @@ describe('Conversation for hubspot test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log('/hubspot success message: ', JSON.stringify(message, null,2));
+      //console.log('/hubspot success message: ', JSON.stringify(message, null,2));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'hubspot status is: 201');
@@ -160,7 +160,7 @@ it('/hubspot failure - return code 409', (done) => {
   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
     res.send({ success: true });
     const message = req.body;
-    console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+    //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
     getChatbotParameters(REQUEST_ID, (err, attributes) => {
       if (err) {
         assert.ok(false);
@@ -221,7 +221,7 @@ it('/hubspot failure - return code 409', (done) => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+      //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -280,7 +280,7 @@ it('/hubspot failure - return code 400', (done) => {
   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
     res.send({ success: true });
     const message = req.body;
-    console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+    //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
     getChatbotParameters(REQUEST_ID, (err, attributes) => {
       if (err) {
         assert.ok(false);
