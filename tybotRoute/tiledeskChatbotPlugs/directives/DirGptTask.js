@@ -94,7 +94,6 @@ class DirGptTask {
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
-
     if (!key) {
       if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
       key = await this.getKeyFromKbSettings(server_base_url);
@@ -109,7 +108,6 @@ class DirGptTask {
     if (!key) {
       console.error("DirGptTask gptkey is mandatory");
       await this.#assignAttributes(action, answer);
-
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
