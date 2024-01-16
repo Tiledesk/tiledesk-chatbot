@@ -67,6 +67,125 @@ describe('JSON to expression', function() {
     assert(result === true);
   });
 
+  it('test condition operand isEmpty (true)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isEmpty.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+      name: ""
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isEmpty expression:", expression);
+    assert(expression === '$data.name === ""');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === true);
+  });
+
+  it('test condition operand isEmpty (false)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isEmpty.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+      name: "my name"
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isEmpty expression:", expression);
+    assert(expression === '$data.name === ""');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === false);
+  });
+
+  it('test condition operand isNull (true)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isNull.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+      name: null
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isNull expression:", expression);
+    assert(expression === '$data.name === null');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === true);
+  });
+
+  it('test condition operand isNull (false)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isNull.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+      name: ""
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isNull expression:", expression);
+    assert(expression === '$data.name === null');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === false);
+  });
+
+  it('test condition operand isUndefined (true)', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isUndefined.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isUndefined expression:", expression);
+    assert(expression === '$data.name === undefined');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === true);
+  });
+
+  it('test condition operand isUndefined (false) -> it is null but not undefined', async () => {
+    const condition = {
+      "type": "condition",
+      "operand1": "name",
+      "operator": TiledeskExpression.OPERATORS.isUndefined.name,
+      "operand2": {
+        type: "const",
+        value: null
+      }
+    }
+    const vars = {
+      name: null
+    }
+    const expression = TiledeskExpression.JSONConditionToExpression(condition);
+    console.log("isUndefined expression:", expression);
+    assert(expression === '$data.name === undefined');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    assert(result === false);
+  });
+
   it('test condition operand startsWith (true)', async () => {
     const condition = {
       "type": "condition",
