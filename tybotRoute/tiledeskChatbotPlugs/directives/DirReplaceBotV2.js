@@ -48,7 +48,7 @@ class DirReplaceBotV2 {
         if (this.log) {console.log("Sending hidden /start message to bot in dept");}
         const message = {
           type: "text",
-          text: "/" + blockName,
+          text: blockName,
           attributes : {
             subtype: "info"
           }
