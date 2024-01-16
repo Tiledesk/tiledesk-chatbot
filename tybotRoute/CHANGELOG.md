@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.47
+- added isNull isUndefined conditions
+
 # v0.2.45
 - Fix: JSON.stringify. Removed String(#1) convertion
 
