@@ -41,6 +41,7 @@ const { DirGptTask } = require('./directives/DirGptTask');
 const { DirForm } = require('./directives/DirForm');
 const { DirCaptureUserReply } = require('./directives/DirCaptureUserReply');
 const { DirMake } = require('./directives/DirMake');
+const { DirReplaceBotV2 } = require('./directives/DirReplaceBotV2');
 
 class DirectivesChatbotPlug {
 
@@ -481,6 +482,12 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.REPLACE_BOT) {
       new DirReplaceBot(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.REPLACE_BOT_V2) {
+      new DirReplaceBotV2(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

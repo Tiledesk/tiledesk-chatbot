@@ -33,6 +33,7 @@ class Directives {
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static QAPLA = 'qapla';
   static MAKE = 'make';
+  static REPLACE_BOT_V2 = "replacebotv2";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
