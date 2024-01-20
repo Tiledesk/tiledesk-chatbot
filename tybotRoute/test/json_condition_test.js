@@ -332,6 +332,130 @@ describe('JSON to expression', function() {
     assert(result === false);
   });
 
+  it('test condition group in "OR" (true)', async () => {
+    const part1 = {
+      "type": "condition",
+      "operand1": "product_name",
+      "operator": TiledeskExpression.OPERATORS.contains.name,
+      "operand2": {
+        type: "const",
+        value: "other"
+      }
+    }
+
+    const part2 = {
+      "type": "operator",
+      "operator": TiledeskExpression.OPERATORS.OR.name
+    }
+
+    const part3 = {
+      "type": "condition",
+      "operand1": "product_name",
+      "operator": TiledeskExpression.OPERATORS.isUndefined.name,
+      "operand2": {
+        type: "const",
+        value: ""
+      }
+    }
+
+    const group = {
+      conditions: [ part1, part2, part3 ]
+    }
+    
+    const vars = {
+    }
+    const expression = TiledeskExpression.JSONGroupToExpression(group);
+    // console.log("expression:", expression);
+    assert(expression === '($data.product_name?.includes("other") || $data.product_name === undefined)');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    // console.log("result:", result);
+    assert(result === true);
+  });
+
+  it('test condition group in "OR" (true) (not undefined)', async () => {
+    const part1 = {
+      "type": "condition",
+      "operand1": "product_name",
+      "operator": TiledeskExpression.OPERATORS.contains.name,
+      "operand2": {
+        type: "const",
+        value: "other"
+      }
+    }
+
+    const part2 = {
+      "type": "operator",
+      "operator": TiledeskExpression.OPERATORS.OR.name
+    }
+
+    const part3 = {
+      "type": "condition",
+      "operand1": "product_size",
+      "operator": TiledeskExpression.OPERATORS.equalAsNumbers.name,
+      "operand2": {
+        type: "const",
+        value: "12"
+      }
+    }
+
+    const group = {
+      conditions: [ part1, part2, part3 ]
+    }
+    
+    const vars = {
+      product_size: 12
+    }
+
+    const expression = TiledeskExpression.JSONGroupToExpression(group);
+    console.log("expression:", expression);
+    // assert(expression === '($data.product_name?.includes("other") || $data.product_name === undefined)');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    console.log("result:", result);
+    assert(result === true);
+  });
+
+  it('test condition group in "OR" (true) (not undefined)', async () => {
+    const part1 = {
+      "type": "condition",
+      "operand1": "product_name",
+      "operator": TiledeskExpression.OPERATORS.contains.name,
+      "operand2": {
+        type: "const",
+        value: "other"
+      }
+    }
+
+    const part2 = {
+      "type": "operator",
+      "operator": TiledeskExpression.OPERATORS.OR.name
+    }
+
+    const part3 = {
+      "type": "condition",
+      "operand1": "product_size",
+      "operator": TiledeskExpression.OPERATORS.equalAsNumbers.name,
+      "operand2": {
+        type: "const",
+        value: "12"
+      }
+    }
+
+    const group = {
+      conditions: [ part1, part2, part3 ]
+    }
+    
+    const vars = {
+      product_size: 13
+    }
+
+    const expression = TiledeskExpression.JSONGroupToExpression(group);
+    console.log("expression:", expression);
+    // assert(expression === '($data.product_name?.includes("other") || $data.product_name === undefined)');
+    const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
+    console.log("result:", result);
+    assert(result === false);
+  });
+
   it('test multiple conditions group (true)', async () => {
     const part1 = {
       "type": "condition",

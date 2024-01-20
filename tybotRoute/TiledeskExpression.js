@@ -131,15 +131,15 @@ class TiledeskExpression {
         },
         "contains": {
             name: "contains",
-            applyPattern: "#1.includes(#2)"
+            applyPattern: "#1?.includes(#2)"
         },
         "containsIgnoreCase": {
             name: "containsIgnoreCase",
-            applyPattern: "#1.toLowerCase().includes(#2.toLowerCase())"
+            applyPattern: "#1?.toLowerCase().includes(#2.toLowerCase())"
         },
         "endsWith": {
             name: "endsWith",
-            applyPattern: "#1.toLowerCase().endsWith(#2.toLowerCase())"
+            applyPattern: "#1?.toLowerCase().endsWith(#2.toLowerCase())"
         },
         "isEmpty": {
             name: "isEmpty",
@@ -155,7 +155,7 @@ class TiledeskExpression {
         },
         "matches": {
             name: "matches",
-            applyPattern: "#1.match(String(#2)) ? true : false"
+            applyPattern: "#1?.match(String(#2)) ? true : false"
         },
         // Francesco
         "addAsNumber": {

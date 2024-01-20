@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.48
+- resplacebotv2
+- fixed jsoncondition expression. added ? in some "static OPERATORS" (i.e. contains) to correctly evaluate undefined operands
+
 # v0.2.47
 - added isNull isUndefined conditions
 
