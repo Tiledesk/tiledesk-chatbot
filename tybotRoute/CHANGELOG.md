@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.49
+- resplacebotv2, added "/" + blockName (so the blockname will be implicitly executed), removing the need to specify the "/" in the body of the replacebot editor
+- Never add "guest#" as lead userFullname
+
 # v0.2.48
 - resplacebotv2
 - fixed jsoncondition expression. added ? in some "static OPERATORS" (i.e. contains) to correctly evaluate undefined operands

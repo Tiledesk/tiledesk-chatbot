@@ -458,22 +458,23 @@ class TiledeskChatbotUtil {
                     if (message.request.lead.email) {
                         await chatbot.addParameter("userEmail", message.request.lead.email);
                     }
-                    if (message.request.lead.fullname) {
+                    if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                        // worth saving
                         try {
-                            const current_userFullname = await chatbot.getParameter("userFullname");
-                            if (current_userFullname && current_userFullname.startsWith("guest#")) {
+                            // const current_userFullname = await chatbot.getParameter("userFullname");
+                            // if (current_userFullname && current_userFullname.startsWith("guest#")) { // replace if exists as guest#
+                            //     await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                            // }
+                            // else if (!current_userFullname) {
                                 await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                            }
-                            else if (!current_userFullname) {
-                                await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                            }
+                            // }
                         }
                         catch(error) {
                             console.error("Error on setting userFullname:", error);
                         }
                     }
                     else {
-                        console.log("!lead.fullname");
+                        // console.log("!lead.fullname");
                     }
                     // console.log("Getting userPhone:", JSON.stringify(message.request));
                     if (message.request.lead.phone) {
