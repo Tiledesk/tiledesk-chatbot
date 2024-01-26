@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 0.2.50-rc2
+- Added DirAskGPTV2
+
 # 0.2.50-rc1
 - Added quotes for GPT actions
 
