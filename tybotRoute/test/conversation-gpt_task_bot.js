@@ -40,6 +40,42 @@ const bot = {
 				}
 			}]
 		},
+		// block without condition - stop the flow due to quote exceeded
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "gpt_task_quote_exceeded",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "gpt_task",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "gpt_reply",
+				"question": "this is the question",
+				"context": "you are an awesome assistant",
+				"max_tokens": 100,
+				"temperature": 0,
+				"model": "gpt-3.5-turbo"
+			},
+			{
+				"_tdActionType": "reply",
+				"text": "xxx",
+				"attributes": {
+					"commands": [{
+						"type": "wait",
+						"time": 500
+					}, {
+						"type": "message",
+						"message": {
+							"type": "text",
+							"text": "Quota exceeded"
+						}
+					}]
+				}
+			}]
+		},
 		// block without condition - json answer
 		{
 			"webhook_enabled": false,

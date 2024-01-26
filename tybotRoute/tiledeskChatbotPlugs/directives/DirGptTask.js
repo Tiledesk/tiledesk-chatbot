@@ -42,6 +42,7 @@ class DirGptTask {
       return;
     }
 
+    let publicKey = false;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
@@ -93,7 +94,6 @@ class DirGptTask {
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
-
     if (!key) {
       if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
       key = await this.getKeyFromKbSettings(server_base_url);
@@ -102,12 +102,12 @@ class DirGptTask {
     if (!key) {
       if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
       key = process.env.GPTKEY;
+      publicKey = true;
     }
 
     if (!key) {
       console.error("DirGptTask gptkey is mandatory");
       await this.#assignAttributes(action, answer);
-
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -115,6 +115,15 @@ class DirGptTask {
       }
       callback();
       return;
+    }
+
+    if (publicKey === true) {
+      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      if (keep_going === false) {
+        if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+        callback();
+        return;
+      }
     }
 
     let json = {
@@ -168,6 +177,12 @@ class DirGptTask {
           // check if answer is a json
           let answer_json = await this.convertToJson(answer);
           await this.#assignAttributes(action, answer_json);
+
+          if (publicKey === true) {
+            let token_usage = resbody.usage.total_tokens;
+            this.updateQuote(server_base_url, token_usage);
+          }
+
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -245,9 +260,6 @@ class DirGptTask {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
-      // if (action.assignSourceTo && source) {
-      //   await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
-      // }
       // Debug log
       if (this.log) {
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
@@ -360,6 +372,64 @@ class DirGptTask {
             } else {
               resolve(resbody.gptkey);
             }
+          }
+        }
+      )
+    })
+  }
+
+  async checkQuoteAvailability(server_base_url) {
+    return new Promise((resolve) => {
+
+      const HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/quotes/tokens",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+
+      this.#myrequest(
+        HTTPREQUEST, async (err, resbody) => {
+          if (err) {
+            console.error("(httprequest) DirGptTask Check quote availability err: ", err);
+            resolve(true)
+          } else {
+            if (resbody.isAvailable === true) {
+              resolve(true)
+            } else {
+              resolve(false)
+            }
+          }
+        }
+      )
+    })
+  }
+
+  async updateQuote(server_base_url, tokens) {
+    return new Promise((resolve) => {
+
+      const HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/quotes/incr/tokens",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        json: { tokens: tokens },
+        method: "POST"
+      }
+      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+
+      this.#myrequest(
+        HTTPREQUEST, async (err, resbody) => {
+          if (err) {
+            console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
+            rejects(false)
+          } else {
+            console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody);
+            resolve(true);
           }
         }
       )
