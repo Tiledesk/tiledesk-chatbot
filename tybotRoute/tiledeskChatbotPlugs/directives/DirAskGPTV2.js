@@ -70,15 +70,15 @@ class DirAskGPT {
       return;
     }
 
-    if (!action.kbid) {
-      console.error("Error: DirAskGPT kbid attribute is mandatory. Executing condition false...");
-      await this.#assignAttributes(action, answer, source);
-      if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
-      }
-      callback(true);
-      return;
-    }
+    // if (!action.kbid) {
+    //   console.error("Error: DirAskGPT kbid attribute is mandatory. Executing condition false...");
+    //   await this.#assignAttributes(action, answer, source);
+    //   if (falseIntent) {
+    //     await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+    //   }
+    //   callback(true);
+    //   return;
+    // }
 
     if (action.model) {
       model = action.model;
