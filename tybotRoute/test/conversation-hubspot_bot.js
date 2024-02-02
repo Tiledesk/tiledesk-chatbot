@@ -1,4 +1,4 @@
-// BOT TEST CASE MAKE
+// BOT TEST CASE HUBSPOT
 const bot = {
 	"webhook_enabled": false,
 	"language": "en",
@@ -6,82 +6,129 @@ const bot = {
 	"type": "tilebot",
 	"intents": [
 		{
-			// 200 SUCCESS
+			// 201 SUCCESS
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "make#SUCCESS",
+			"intent_display_name": "hubspot#SUCCESS",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionTitle": "make",
-				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"url": "http://localhost:10002/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
+				"_tdActionTitle": "hubspot",
+				"_tdActionId": "123456789",
+				"token": "pat-eu1-67fdd84b-5558-4883-a795-e83e43248963",
 				"bodyParameters": {
-					"name": "userFullname",
-					"email": "userEmail"
-				},
-				"assignStatusTo": "make_status",
-				"assignErrorTo": "make_error",
-				"_tdActionType": "make",
+					"inputs": [
+					  {
+						"properties": {
+						  "email": "email",
+						  "lastname": "lastname",
+						  "firstname": "firstname"
+						},
+						"associations": []
+					  }
+					]
+				  },
+				"assignResultTo": "hubspot_result",
+				"assignStatusTo": "hubspot_status",
+				"assignErrorTo": "hubspot_error",
+				"_tdActionType": "hubspot",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE"
 			},
 			]
 		},
 		{
-			// 404 wrong URL
+			// 409 CONTACT ALREADY EXIST
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "make#FAILURE",
+			"intent_display_name": "hubspot#FAILURE409",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionTitle": "make",
+				"_tdActionTitle": "hubspot",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"url": "http://localhost:10002/1ag9ub5cm8gaiyrlosuxcfv5bv4gupg1",
+				"token": "123456789",
 				"bodyParameters": {
-					"name": "userFullname",
-					"email": "userEmail"
-				},
-				"assignStatusTo": "make_status",
-				"assignErrorTo": "make_error",
-				"_tdActionType": "make",
+					"inputs": [
+					  {
+						"properties": {
+							"email": "email",
+							"lastname": "lastname",
+							"firstname": "firstname"
+						},
+						"associations": []
+					  }
+					]
+				  },
+				"assignResultTo": "hubspot_result",
+				"assignStatusTo": "hubspot_status",
+				"assignErrorTo": "hubspot_error",
+				"_tdActionType": "hubspot",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE"
 			},
 			]
 		},
 		{
-			// 422 MISSING URL
+			// 401 wrong Access token
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "make#FAILUREURL",
+			"intent_display_name": "hubspot#FAILUREACCESSTOKEN",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionTitle": "make",
+				"_tdActionTitle": "hubspot",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"url": "",
+				"token": "12345678910",
 				"bodyParameters": {
-					"name": "userFullname",
-					"email": "userEmail"
+					"email": "email",
+					"lastname": "lastname",
+					"firstname": "firstname"
 				},
-				"assignStatusTo": "make_status",
-				"assignErrorTo": "make_error",
-				"_tdActionType": "make",
+				"assignResultTo": "hubspot_result",
+				"assignStatusTo": "hubspot_status",
+				"assignErrorTo": "hubspot_error",
+				"_tdActionType": "hubspot",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE"
 			},
 			]
 		},
 		{
-			// TRUE INTENT - MAKE SUCCESS
+			// 400 EMAIL IS INVALID
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "hubspot#FAILUREEMAIL",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "hubspot",
+				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
+				"token": "123456789",
+				"bodyParameters": {
+					"email": "email",
+					"lastname": "lastname",
+					"firstname": "firstname"
+				},
+				"assignResultTo": "hubspot_result",
+				"assignStatusTo": "hubspot_status",
+				"assignErrorTo": "hubspot_error",
+				"_tdActionType": "hubspot",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			},
+			]
+		},
+		{
+			// TRUE INTENT - HUBSPOT SUCCESS
 			"webhook_enabled": false,
 			"enabled": true,
 			"actions": [{
@@ -95,24 +142,24 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make status is: {{make_status}}"
+							"text": "hubspot status is: ${hubspot_status}"
 						}
 					},
 					{
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make error is: {{make_error}}"
+							"text": "hubspot error is: ${hubspot_error}"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "make intent true",
+			"intent_display_name": "hubspot intent true",
 			"intent_id": "SUCCESS",
 		},
 		{
-			// FALSE INTENT - MAKE FAIL
+			// FALSE INTENT - HUBSPOT FAIL
 			"webhook_enabled": false,
 			"enabled": true,
 			"actions": [{
@@ -126,20 +173,20 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make status is: {{make_status}}"
+							"text": "hubspot status is: ${hubspot_status}"
 						}
 					},
 					{
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "make error is: {{make_error}}"
+							"text": "Hubspot error is: ${hubspot_error}"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "make intent false",
+			"intent_display_name": "hubspot intent false",
 			"intent_id": "FAILURE",
 
 		},
