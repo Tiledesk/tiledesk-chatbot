@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 0.2.50-rc3
+- Added DirHubspot
+
 # 0.2.50-rc2
 - Added DirAskGPTV2
 
