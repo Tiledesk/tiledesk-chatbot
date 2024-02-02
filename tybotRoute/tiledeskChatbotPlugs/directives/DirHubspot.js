@@ -15,9 +15,8 @@ class DirHubspot {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
-    this.log = context.log;
     this.intentDir = new DirIntent(context);
-    if (this.log) {console.log('LOG: ', this.log)};
+    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -31,158 +30,142 @@ class DirHubspot {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
   async go(action, callback) {
     if (this.log) { console.log("DirHubspot action:", JSON.stringify(action)); }
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    if (this.log) {console.log('DirHubspot trueIntent',trueIntent)}
     if (!this.tdcache) {
       console.error("Error: DirHubspot tdcache is mandatory");
       callback();
       return;
     }
-    //console.log('DirHubspot work!');
+
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    let trueIntentAttributes = action.trueIntentAttributes;
+    let falseIntentAttributes = action.falseIntentAttributes;
+
+    if (this.log) {
+      console.log("DirAskGPT trueIntent", trueIntent)
+      console.log("DirAskGPT falseIntent", falseIntent)
+      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
+      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+    }
+
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       )
 
-    if (this.log) {
-      const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-      for (const [key, value] of Object.entries(all_parameters)) {
-        if (this.log) { console.log("DirHubspot request parameter:", key, "value:", value, "type:", typeof value) }
-      }
-    }
-    
-    let token = action.token;
+    //let token = action.token;
     let bodyParameters = action.bodyParameters;
-    if (this.log) {
-      console.log("DirHubspot token: ", token);
-      console.log("DirHubspot bodyParameters: ", bodyParameters);
-    }
+    if (this.log) { console.log("DirHubspot bodyParameters: ", bodyParameters); }
+
     if (!bodyParameters || bodyParameters === '') {
-      if (this.log) {console.error("DirHubspot ERROR - bodyParameters is undefined or null or empty string")};
+      if (this.log) { console.error("DirHubspot ERROR - bodyParameters is undefined or null or empty string") };
       callback();
       return;
     }
-    if (!token || token === '') {
-      if (this.log) {console.error("DirHubspot ERROR - token is undefined or null or empty string:")};
-      let status = 422;   
-      let error = 'Missing hubspot access token';
-      await this.#assignAttributes(action, status, error);
-      this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-        callback(); // stop the flow
-      });
-      return;
+
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
+    const hubspot_base_url = process.env.HUBSPOT_ENDPOINT;
+    if (this.log) {
+      console.log("DirHubspot server_base_url ", server_base_url);
+      console.log("DirHubspot hubspot_base_url ", hubspot_base_url);
     }
-    let url;
-    try {
-      // HUBSPOT_ENDPONT
-      let hubspot_base_url = process.env.HUBSPOT_ENDPONT;
-      if (hubspot_base_url) {
-        url = hubspot_base_url + "/hubspot/";
-        if (this.log) {console.log('DirHubspot hubspot_base_url: ',url)};
-      } else {
-        url = "https://api.hubapi.com/crm/v3/objects/contacts/batch/create";
-        console.log('DirHubspot url: ',url);
-      }
-      // HUBSPOT ACCESS TOKEN
-      let token = action.token;
-      if (this.log) {
-        console.log('DirHubspot url: ',url);
-        console.log('DirHubspot access token: ',token);
-      }
 
-      const filler = new Filler();
-      for (const [key, value] of Object.entries(bodyParameters)) {
-        if (this.log) {console.log("bodyParam:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestVariables);
-        bodyParameters[key] = filled_value;
+    let key = await this.getKeyFromIntegrations(server_base_url);
+    if (!key) {
+      if (this.log) { console.log("DirGptTask - Key not found in Integrations."); }
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
       }
-      if (this.log) {console.log('DirHubspot bodyParameters filler: ',bodyParameters)}
-    
+    }
 
-    
-    // Condition branches
-    //let trueIntent = action.trueIntent;
-    //let falseIntent = action.falseIntent;
-    //console.log('DirHubspot trueIntent',trueIntent)
- 
-    if (this.log) { console.log("DirHubspot Hubspot access token: ", token); }
-    const MAKE_HTTPREQUEST = {
-      url: url,
+    const filler = new Filler();
+    for (const [key, value] of Object.entries(bodyParameters)) {
+      if (this.log) { console.log("bodyParam:", key, "value:", value) }
+      let filled_value = filler.fill(value, requestVariables);
+      bodyParameters[key] = filled_value;
+    }
+    if (this.log) { console.log('DirHubspot bodyParameters filler: ', bodyParameters) }
+
+    let json = {
+      inputs: [
+        { properties: bodyParameters, associations: [] }
+      ]
+    }
+    const HUBSPOT_HTTPREQUEST = {
+      url: hubspot_base_url + 'objects/contacts/batch/create',
       headers: {
-        'authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
       },
-      json: {
-        "inputs": [
-          {
-            "properties": bodyParameters,
-            "associations": []
-          }
-        ]
-      },
+      json: json,
       method: "POST"
     }
-  
-    if (this.log) { console.log("myrequest/DirHubspot MAKE_HTTPREQUEST", JSON.stringify(MAKE_HTTPREQUEST)); }
+    if (this.log) { console.log("DirHubspot MAKE_HTTPREQUEST", JSON.stringify(HUBSPOT_HTTPREQUEST)); }
+
     this.#myrequest(
-      MAKE_HTTPREQUEST, async (err, resbody) => {
+      HUBSPOT_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
             if (this.log) {
-              console.error("respose/(httprequest) DirHubspot err response:", err.response)
-              console.error("respose/(httprequest) DirHubspot err data:", err.response.data)
+              console.error("(httprequest) DirHubspot err response:", err.response)
+              console.error("(httprequest) DirHubspot err data:", err.response.data)
             };
-            let status = null;   
+
+            let status = null;
             let error;
-            //-------------------------------------------------------
+
             if (err.response &&
-              err.response.status) {
+                err.response.status) {
                   status = err.response.status;
             }
+
             if (err.response &&
-              err.response.data &&
-              err.response.data.message) {
-                error = err.response.data.message;
+                err.response.data &&
+                err.response.data.message) {
+                  error = err.response.data.message;
             }
-            
-            //-------------------------------------------------------
+
             if (this.log) {
-            console.log("FALSE");
-            console.error("respose/(httprequest) DirHubspot err data status:", status);
-            console.error("respose/(httprequest) DirHubspot err data error:", error);
-            console.error("respose/(httprequest) DirHubspot err action:", action);}
+              console.error("(httprequest) DirHubspot err data status:", status);
+              console.error("(httprequest) DirHubspot err data error:", error);
+            }
+
             await this.#assignAttributes(action, status, error);
-            this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-              callback(false); // continue the flow
-            });
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
+            }
             callback();
+            return;
           }
         } else if (callback) {
-          if (this.log) { console.log("respose/DirHubspot Hubspot resbody: ", JSON.stringify(resbody, null, 2)); }
-          console.log("TRUE");
-          let status = 201;   
+          if (this.log) { console.log("DirHubspot resbody: ", JSON.stringify(resbody, null, 2)); }
+
+          let status = 201;
           let error = null;
-          await this.#assignAttributes(action, status, error); 
-          await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
-            callback(); // stop the flow
-          });
-          if (this.log) { console.log('respose/status: ',status)}
-          //callback();
+          await this.#assignAttributes(action, status, error);
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+            callback(true);
+            return;
+          }
+          callback();
+          return;
         }
       }
     );
-  } catch(e) {
-    console.error('error: ', e)
-  }
+
   }
 
   async #assignAttributes(action, status, error) {
@@ -236,66 +219,92 @@ class DirHubspot {
       .then((res) => {
         if (this.log) {
           console.log("Response for url:", options.url);
-          console.log("Response status:", res.status);
-          console.log("Response headers11:\n", JSON.stringify(res.headers));
+          console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-        if (res && res.status == 201 && res.data) {
+        if (res && (res.status == 200 || res.status == 201) && res.data) {
           if (callback) {
             callback(null, res.data);
           }
         }
         else {
           if (callback) {
-            callback(new Error("Response status is not 201"), null);
+            callback(new Error("Response status is not 200"), null);
           }
         }
       })
       .catch((error) => {
-        if (this.log) {console.error("An error occurred:", JSON.stringify(error.message))};
         if (callback) {
           callback(error, null);
         }
       });
   }
+
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;
-   
+
     if (trueIntent) {
-      //console.log('executeCondition/trueIntent',trueIntent)
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-      //console.log('executeCondition/trueIntentDirective',trueIntentDirective)
-      //console.log('executeCondition/trueIntentAttributes',trueIntentAttributes)
     }
     let falseIntentDirective = null;
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
-    if (this.log) {console.log('DirHubspot executeCondition/result',result)}
+    if (this.log) { console.log('DirHubspot executeCondition/result', result) }
     if (result === true) {
       if (trueIntentDirective) {
-        console.log("--> TRUE")
         this.intentDir.execute(trueIntentDirective, () => {
           callback();
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        if (this.log) { console.log("No trueIntentDirective specified"); }
         callback();
       }
     }
     else {
       if (falseIntentDirective) {
-        console.log("--> FALSE");
         this.intentDir.execute(falseIntentDirective, () => {
           callback();
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        if (this.log) { console.log("No falseIntentDirective specified"); }
         callback();
       }
     }
   }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/hubspot",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
 }
 
 module.exports = { DirHubspot }
