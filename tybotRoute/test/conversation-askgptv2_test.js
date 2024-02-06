@@ -89,8 +89,8 @@ describe('Conversation for AskGPTV2 test', async () => {
 
     });
 
-    endpointServer.post('/:project_id/kb/ask', function (req, res) {
-      console.log("\n\n\n\n /:project_id/kb/ask req.body:", JSON.stringify(req.body));
+    endpointServer.post('/:project_id/kb/qa', function (req, res) {
+      console.log("\n\n\n\n /:project_id/kb/qa req.body:", JSON.stringify(req.body));
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {
@@ -205,8 +205,8 @@ describe('Conversation for AskGPTV2 test', async () => {
 
     });
 
-    endpointServer.post('/:project_id/kb/ask', function (req, res) {
-      console.log("\n\n\n\n /:project_id/kb/ask req.body:", JSON.stringify(req.body));
+    endpointServer.post('/:project_id/kb/qa', function (req, res) {
+      console.log("\n\n\n\n /:project_id/kb/qa req.body:", JSON.stringify(req.body));
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {
@@ -298,8 +298,8 @@ describe('Conversation for AskGPTV2 test', async () => {
 
     });
 
-    endpointServer.post('/:project_id/kb/ask', function (req, res) {
-      console.log("\n\n\n\n /:project_id/kb/ask req.body:", JSON.stringify(req.body));
+    endpointServer.post('/:project_id/kb/qa', function (req, res) {
+      console.log("\n\n\n\n /:project_id/kb/qa req.body:", JSON.stringify(req.body));
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {
