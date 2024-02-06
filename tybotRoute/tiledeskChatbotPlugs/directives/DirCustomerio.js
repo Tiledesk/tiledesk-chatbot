@@ -213,6 +213,7 @@ class DirCustomerio {
     if (this.log) {
       console.log("** API URL:", options.url);
       console.log("** Options:", JSON.stringify(options));
+      console.log("** Options JSON:", JSON.stringify(options.json));
     }
     let axios_options = {
       url: options.url,
