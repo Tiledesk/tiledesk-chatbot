@@ -129,7 +129,11 @@ class DirCustomerio {
         'User-Agent': 'TiledeskBotRuntime',
         'Accept': '*/*'
       },
-      json: bodyParameters,
+      json: {
+        "data": {
+        bodyParameters
+        }
+      },
       method: "POST"
     }
   
