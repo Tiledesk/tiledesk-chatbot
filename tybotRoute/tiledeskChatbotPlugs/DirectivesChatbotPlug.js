@@ -241,11 +241,6 @@ class DirectivesChatbotPlug {
       // }
       
     }
-
-    console.log("directive_name: ", directive_name);
-    console.log("Directives.ASK_GPT_V2: ", Directives.ASK_GPT_V2);
-
-
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
       this.theend();
@@ -615,7 +610,6 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.ASK_GPT_V2) {
-      console.log("eseguo action DirAskGPTV2")
       new DirAskGPTV2(context).execute(directive, async (stop) => {;
         if (context.log) { console.log("AskGPTV2 stop?", stop);}
         if (stop == true) {
