@@ -148,7 +148,7 @@ class DirAskGPTV2 {
     // }
 
     const HTTPREQUEST = {
-      url: server_base_url + "/" + this.context.projectId + "/kb/ask",
+      url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'JWT ' + this.context.token
