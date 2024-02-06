@@ -94,8 +94,8 @@ class DirCustomerio {
         url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
         if (this.log) {console.log('DirCustomerio customer_base_url: ',url)};
       } else {
-        url = "https://track-eu.customer.io/api/v1/forms/"+formid+"/submit";
-        //console.log('DirCustomerio url: ',url);
+        url = "http://localhost:10002/api/v1/forms/"+formid+"/submit";
+        console.log('DirCustomerio url: ',url);
       }
       // CUSTOMER ACCESS TOKEN
       //let token = action.token;
