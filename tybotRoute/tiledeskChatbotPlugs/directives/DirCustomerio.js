@@ -130,9 +130,7 @@ class DirCustomerio {
         'Accept': '*/*'
       },
       json: {
-        "data": {
-        bodyParameters
-        }
+        "data": bodyParameters
       },
       method: "POST"
     }
