@@ -48,10 +48,10 @@ class DirGptTask {
     let falseIntentAttributes = action.falseIntentAttributes;
 
     if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+      console.log("DirGptTask trueIntent", trueIntent)
+      console.log("DirGptTask falseIntent", falseIntent)
+      console.log("DirGptTask trueIntentAttributes", trueIntentAttributes)
+      console.log("DirGptTask falseIntentAttributes", falseIntentAttributes)
     }
 
     // default value
@@ -376,7 +376,7 @@ class DirGptTask {
       if (this.log) {
         const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
         for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value) }
+          if (this.log) { console.log("(gpttask) request parameter:", key, "value:", value, "type:", typeof value) }
         }
       }
     }

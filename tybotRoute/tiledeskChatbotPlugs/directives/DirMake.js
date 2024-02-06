@@ -48,10 +48,10 @@ class DirMake {
     let falseIntentAttributes = action.falseIntentAttributes;
 
     if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+      console.log("DirMake trueIntent", trueIntent)
+      console.log("DirMake falseIntent", falseIntent)
+      console.log("DirMake trueIntentAttributes", trueIntentAttributes)
+      console.log("DirMake falseIntentAttributes", falseIntentAttributes)
     }
 
     // default values?

@@ -48,10 +48,10 @@ class DirQapla {
     let falseIntentAttributes = action.falseIntentAttributes;
 
     if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
+      console.log("DirQapla trueIntent", trueIntent)
+      console.log("DirQapla falseIntent", falseIntent)
+      console.log("DirQapla trueIntentAttributes", trueIntentAttributes)
+      console.log("DirQapla falseIntentAttributes", falseIntentAttributes)
     }
 
     // Set default values

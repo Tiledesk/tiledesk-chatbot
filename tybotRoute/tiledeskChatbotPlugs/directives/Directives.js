@@ -28,6 +28,7 @@ class Directives {
   static CODE = 'code';
   static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
   static ASK_GPT = "askgpt";
+  static ASK_GPT_V2 = "askgptv2";
   static GPT_TASK = "gpt_task";
   static FORM = "form";
   static CAPTURE_USER_REPLY = "capture_user_reply";

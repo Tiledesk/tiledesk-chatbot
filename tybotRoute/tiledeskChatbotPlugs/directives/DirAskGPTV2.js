@@ -5,7 +5,7 @@ let https = require("https");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
 
-class DirAskGPT {
+class DirAskGPTV2 {
 
   constructor(context) {
     if (!context) {
@@ -148,7 +148,7 @@ class DirAskGPT {
     // }
 
     const HTTPREQUEST = {
-      url: server_base_url + "/" + this.context.projectId + "/kbsettings/ask",
+      url: server_base_url + "/" + this.context.projectId + "/kb/ask",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'JWT ' + this.context.token
@@ -444,4 +444,4 @@ class DirAskGPT {
 
 }
 
-module.exports = { DirAskGPT }
+module.exports = { DirAskGPTV2 }
