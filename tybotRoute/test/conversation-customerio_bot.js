@@ -17,16 +17,14 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "customerio",
 				"_tdActionId": "123456789",
-				"token": "MDUxOTBhZjA2NmEzOTFmNzkzNmQ6ZGE1MzA1MmI4NTZmNjM3Y2FhMjk=",
+				"token": "M432QRWRWQ%£53532QQEQEQEQ=",
 				"formid":"1",
 				"bodyParameters": {
-					"data": {
 					"email": "cool10.person@example.com",
 					"first_name": "cool10",
 					"last_name": "person10",
 					"company": "studio10",
 					"website":"miosito10"
-					}
 				},
 				"assignResultTo": "customerio_result",
 				"assignStatusTo": "customerio_status",

@@ -40,7 +40,7 @@ class DirCustomerio {
     if (this.log) { console.log("DirCustomerio action:", JSON.stringify(action)); }
     let token = action.token;
     let formid = action.formid;
-    let bodyParameters = action.bodyParameters;
+    //let bodyParameters = action.data;
 
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
@@ -65,7 +65,7 @@ class DirCustomerio {
     }
     
     //let token = action.token;
-    //let bodyParameters = action.bodyParameters;
+    let bodyParameters = action.bodyParameters;
     if (this.log) {
       console.log("DirCustomerio token: ", token);
       console.log("DirCustomerio formid: ", formid);
@@ -91,11 +91,12 @@ class DirCustomerio {
       // CUSTOMERIO_ENDPONT
       let customer_base_url = process.env.CUSTOMERIO_ENDPONT;
       if (customer_base_url) {
-        url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
+        //url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
+        url = customer_base_url + "/customerio/";
         if (this.log) {console.log('DirCustomerio customer_base_url: ',url)};
       } else {
         url = "http://localhost:10002/api/v1/forms/"+formid+"/submit";
-        console.log('DirCustomerio url: ',url);
+        //console.log('DirCustomerio url: ',url);
       }
       // CUSTOMER ACCESS TOKEN
       //let token = action.token;
@@ -300,6 +301,7 @@ class DirCustomerio {
       }
     }
   }
+ 
 }
 
 module.exports = { DirCustomerio }

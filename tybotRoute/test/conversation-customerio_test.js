@@ -92,14 +92,15 @@ describe('Conversation for customerio test', async () => {
       });
     });
 
-    endpointServer.post('/api/v1/forms/1/submit', function (req, res) {
+    endpointServer.post('/1.3/customerio/', function (req, res) {
       let http_code = 204;
+      let reply = {}
       console.log("endpointServer.post/1.3/customerio/ ")
-      res.status(http_code).send("");
+      res.sendStatus(204);
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      console.log('endpointServer started: ', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -116,7 +117,7 @@ describe('Conversation for customerio test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        //console.log("Message sent:\n", request);
       });
     });
   });
