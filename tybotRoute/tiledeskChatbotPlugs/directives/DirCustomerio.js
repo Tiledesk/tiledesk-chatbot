@@ -244,7 +244,8 @@ class DirCustomerio {
           console.log("Response status:", res.status);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-        if (res && res.status == 204) {
+        if (res && (res.status == 200 || res.status == 204) && res.config.data) {
+        //if (res && res.status == 204) {
           if (callback) {
             callback(null, res.config.data);
           }
