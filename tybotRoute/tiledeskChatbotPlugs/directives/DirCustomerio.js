@@ -91,8 +91,8 @@ class DirCustomerio {
       // CUSTOMERIO_ENDPONT
       let customer_base_url = process.env.CUSTOMERIO_ENDPONT;
       if (customer_base_url) {
-        //url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
-        url = customer_base_url + "/customerio/";
+        url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
+        //url = customer_base_url + "/customerio/";
         if (this.log) {console.log('DirCustomerio customer_base_url: ',url)};
       } else {
         url = "http://localhost:10002/api/v1/forms/"+formid+"/submit";
