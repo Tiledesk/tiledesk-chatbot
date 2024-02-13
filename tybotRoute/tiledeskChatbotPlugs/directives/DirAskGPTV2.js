@@ -165,7 +165,7 @@ class DirAskGPTV2 {
         }
         if (this.log) { console.log("DirAskGPT resbody:", resbody); }
         let answer = resbody.answer;
-        let source = resbody.source_url;
+        let source = resbody.source ;
         await this.#assignAttributes(action, answer, source);
 
         if (err) {
@@ -257,10 +257,7 @@ class DirAskGPTV2 {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
-      // console.log("--> action.assignSourceTo: ", action.assignSourceTo)
-      // console.log("--> source: ", source)
       if (action.assignSourceTo && source) {
-        // console.log("--> source: ", source)
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       }
       // Debug log

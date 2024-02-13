@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 0.2.51-rc1
+- Fix bug: undefined source in AskGPTV2 action
+
 # 0.2.50-rc4
 - Fixed AskGPTV2 action
 
