@@ -110,7 +110,7 @@ class DirHubspot {
       json: json,
       method: "POST"
     }
-    if (this.log) { console.log("DirHubspot MAKE_HTTPREQUEST", JSON.stringify(HUBSPOT_HTTPREQUEST)); }
+    if (this.log) { console.log("DirHubspot HUBSPOT_HTTPREQUEST", JSON.stringify(HUBSPOT_HTTPREQUEST)); }
 
     this.#myrequest(
       HUBSPOT_HTTPREQUEST, async (err, resbody) => {
@@ -253,23 +253,31 @@ class DirHubspot {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
         if (this.log) { console.log("No trueIntentDirective specified"); }
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
         if (this.log) { console.log("No falseIntentDirective specified"); }
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
   }
