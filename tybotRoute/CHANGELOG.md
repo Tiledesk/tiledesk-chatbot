@@ -5,7 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.52
+# v0.2.53
 - Fix bug: missing check for callback in executeCondition in DirHubspot
 
 # v0.2.52
