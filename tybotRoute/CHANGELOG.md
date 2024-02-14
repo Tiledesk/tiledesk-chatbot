@@ -5,9 +5,22 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.54
+- Fix bug: DirHubspot didn't return any result
+
+# v0.2.53
+- Fix bug: missing check for callback in executeCondition in DirHubspot
+
+# v0.2.52
+- Fix bug: wrong call at getKeyFromIntegration in Qapla' directive
+
+# v0.2.51
+- Improved AskGPTV2 action
+- Added Hubspot action
+- Added Customerio action (hidden)
+
 # v0.2.50
 - Added AskGPTV2 action
-- Added Hubspot action
 
 # v0.2.49
 - resplacebotv2, added "/" + blockName (so the blockname will be implicitly executed), removing the need to specify the "/" in the body of the replacebot editor

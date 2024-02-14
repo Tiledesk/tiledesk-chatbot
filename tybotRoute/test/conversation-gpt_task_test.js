@@ -668,6 +668,198 @@ describe('Conversation for GptTask test', async () => {
     });
   });
 
+  it('/task gpt success - get quotes availability and increments quote value', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: this is the answer");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          // assert(attributes["gpt_reply"] === "this is the answer");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/v1/chat/completions', function (req, res) {
+
+      assert(req.headers.authorization === "Bearer sk-123456");
+
+      let reply = {}
+      let http_code = 200;
+
+      if (!req.body.model) {
+        reply.error = "you must provide a model parameter";
+        http_code = 400;
+      }
+      else if (!req.body.messages) {
+        reply.error = "'messages' is a required property";
+        http_code = 400;
+      }
+      else if (req.body.messages && req.body.messages.length == 0) {
+        reply.error = "'[] is too short - 'messages'"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          id: "chatcmpl-7ydspsF20mgTsl4g9yTK8LNbDDYAp",
+          object: "chat.completion",
+          created: 1694687347,
+          model: "gpt-3.5-turbo-0613",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "this is the answer"
+              },
+              finish_reason: "stop"
+            }
+          ],
+          usage: {
+            prompt_tokens: 28,
+            completion_tokens: 100,
+            total_tokens: 128
+          }
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      // let reply = { gptkey: null };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+
+      let reply = { isAvailable: true };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.post('/:project_id/quotes/incr/:type', function (req, res) {
+
+      assert.equal(req.body.tokens, 128);
+      let http_code = 200;
+      let reply = {
+        message: "value incremented for key quotes:tokens:62c3f10152dc7400352bab0d:12/28/2023",
+        key: "quotes:tokens:62c3f10152dc7400352bab0d:12/28/2023",
+        currentQuote: 528
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_task',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/task gpt fail - get quotes availability and stop the flow due to quote exceeding', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      console.log("----> message: ", JSON.stringify(message, null, 2))
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "Quota exceeded");
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+
+    endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+
+      let reply = { isAvailable: false };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    })
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_task_quote_exceeded',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
   it('/task gpt fail - completions fail', (done) => {
 
     let listener;

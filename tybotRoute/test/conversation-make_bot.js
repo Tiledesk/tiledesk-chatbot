@@ -6,6 +6,7 @@ const bot = {
 	"type": "tilebot",
 	"intents": [
 		{
+			// 200 SUCCESS
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
@@ -30,6 +31,7 @@ const bot = {
 			]
 		},
 		{
+			// 404 wrong URL
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",

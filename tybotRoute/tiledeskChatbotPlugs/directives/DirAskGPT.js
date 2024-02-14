@@ -42,6 +42,7 @@ class DirAskGPT {
       return;
     }
 
+    let publicKey = false;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
@@ -103,6 +104,7 @@ class DirAskGPT {
     if (!key) {
       if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
       key = process.env.GPTKEY;
+      publicKey = true;
     }
 
     if (!key) {
@@ -115,6 +117,15 @@ class DirAskGPT {
       }
       callback();
       return;
+    }
+
+    if (publicKey === true) {
+      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      if (keep_going === false) {
+        if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+        callback();
+        return;
+      }
     }
 
     let json = {
@@ -153,6 +164,12 @@ class DirAskGPT {
           }
         }
         else if (resbody.success === true) {
+
+          // if (publicKey === true) {
+          //   let token_usage = resbody.usage.total_tokens;
+          //   this.updateQuote(server_base_url, token_usage);
+          // }
+          
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
