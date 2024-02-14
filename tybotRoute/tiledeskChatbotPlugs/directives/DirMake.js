@@ -86,8 +86,8 @@ class DirMake {
     }
 
     if (!webhook_url || webhook_url === '') {
-      console.error("Error: DirMake Webhook Url is not defined");
-      let status = 422;
+      if (this.log) {console.error("DirMake ERROR - webhook_url is undefined or null or empty string:")};
+      let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
       if (falseIntent) {
