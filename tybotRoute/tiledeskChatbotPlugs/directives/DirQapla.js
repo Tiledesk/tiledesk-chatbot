@@ -289,7 +289,7 @@ class DirQapla {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/qapla",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
