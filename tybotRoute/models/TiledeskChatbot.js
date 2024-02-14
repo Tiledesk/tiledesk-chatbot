@@ -627,7 +627,7 @@ class TiledeskChatbot {
           attributes_native_values[key] = JSON.parse(value);
         }
         catch(err) {
-          console.error("An error occurred while JSON.parse value: " + value + " in allParametersStatic. Error:", err);
+          console.error("An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
         }
       }
     }

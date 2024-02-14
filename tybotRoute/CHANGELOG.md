@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.55
+- Added try-catch in allParametersStatic() To log some weird attributes wrongly unparsed by JSON.parse
+
 # v0.2.54
 - Fix bug: DirHubspot didn't return any result
 
