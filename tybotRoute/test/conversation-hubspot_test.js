@@ -164,271 +164,271 @@ describe('Conversation for hubspot test', async () => {
     });
   });
 
-  // //TEST FAIL CODE 409
-  // it('/hubspot failure - return code 409', (done) => {
+  //TEST FAIL CODE 409
+  it('/hubspot failure - return code 409', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
 
-  //     // console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
-  //     const command1 = message.attributes.commands[1];
-  //     assert(command1.type === "message");
-  //     assert(command1.message.text === 'hubspot status is: 409');
+      // console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'hubspot status is: 409');
       
-  //     const command2 = message.attributes.commands[2];
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === 'hubspot result is: null');
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'hubspot result is: null');
 
-  //     const command3 = message.attributes.commands[3];
-  //     assert(command3.type === "message");
-  //     assert(command3.message.text === 'Hubspot error is: Contact already exists. Existing ID: 801');
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "message");
+      assert(command3.message.text === 'Hubspot error is: Contact already exists. Existing ID: 801');
 
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["hubspot_status"] === 409);
-  //         assert(attributes["hubspot_error"] === "Contact already exists. Existing ID: 801");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["hubspot_status"] === 409);
+          assert(attributes["hubspot_error"] === "Contact already exists. Existing ID: 801");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-  //   });
+    });
 
-  //   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-  //     let http_code = 200;
-  //     let reply = {
-  //       _id: "656728224b45965b69111111",
-  //       id_project: "62c3f10152dc740035000000",
-  //       name: "hubspot",
-  //       value: {
-  //         apikey: "example_api_key"
-  //       }
-  //     }
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "hubspot",
+        value: {
+          apikey: "example_api_key"
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   })
+      res.status(http_code).send(reply);
+    })
 
-  //   endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
+    endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
 
-  //     let http_code = 409;
-  //     let reply = {
-  //       status: "error",
-  //       message: "Contact already exists. Existing ID: 801",
-  //       correlationId: "f426b0c0-1063-4aac-9859-f40108dcb09b",
-  //       category: "CONFLICT"
-  //     }
-  //     res.status(http_code).send(reply);
-  //   });
+      let http_code = 409;
+      let reply = {
+        status: "error",
+        message: "Contact already exists. Existing ID: 801",
+        correlationId: "f426b0c0-1063-4aac-9859-f40108dcb09b",
+        category: "CONFLICT"
+      }
+      res.status(http_code).send(reply);
+    });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     //console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/hubspot#FAILURE409',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      //console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/hubspot#FAILURE409',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
-  // //TEST FAIL CODE 401 FAIL ACCESS TOKEN
-  // it('/hubspot failure - return code 401', (done) => {
+  //TEST FAIL CODE 401 FAIL ACCESS TOKEN
+  it('/hubspot failure - return code 401', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
 
-  //     //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
-  //     const command1 = message.attributes.commands[1];
-  //     assert(command1.type === "message");
-  //     assert(command1.message.text === 'hubspot status is: 401');
+      //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'hubspot status is: 401');
 
-  //     const command2 = message.attributes.commands[2];
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === 'hubspot result is: null');
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'hubspot result is: null');
 
-  //     const command3 = message.attributes.commands[3];
-  //     assert(command3.type === "message");
-  //     assert(command3.message.text === 'Hubspot error is: Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview');
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "message");
+      assert(command3.message.text === 'Hubspot error is: Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview');
 
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["hubspot_status"] === 401);
-  //         assert(attributes["hubspot_error"] === "Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["hubspot_status"] === 401);
+          assert(attributes["hubspot_error"] === "Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-  //   });
+    });
 
-  //   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-  //     let http_code = 200;
-  //     let reply = {
-  //       _id: "656728224b45965b69111111",
-  //       id_project: "62c3f10152dc740035000000",
-  //       name: "hubspot",
-  //       value: {
-  //         apikey: "example_api_key"
-  //       }
-  //     }
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "hubspot",
+        value: {
+          apikey: "example_api_key"
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   })
+      res.status(http_code).send(reply);
+    })
 
 
-  //   endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
-  //     let http_code = 401;
-  //     let reply = {
-  //       status: "error",
-  //       message: "Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview",
-  //       correlationId: "53dab600-5de9-4aa3-b631-b0f11f43e062",
-  //       category: "INVALID_AUTHENTICATION"
-  //     }
-  //     res.status(http_code).send(reply);
-  //   });
+    endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
+      let http_code = 401;
+      let reply = {
+        status: "error",
+        message: "Authentication credentials not found. This API supports OAuth 2.0 authentication and you can find more details at https://developers.hubspot.com/docs/methods/auth/oauth-overview",
+        correlationId: "53dab600-5de9-4aa3-b631-b0f11f43e062",
+        category: "INVALID_AUTHENTICATION"
+      }
+      res.status(http_code).send(reply);
+    });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     //console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/hubspot#FAILUREACCESSTOKEN',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      //console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/hubspot#FAILUREACCESSTOKEN',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
-  // // TEST FAIL 400 EMAIL IS INVALID
-  // it('/hubspot failure - return code 400', (done) => {
+  // TEST FAIL 400 EMAIL IS INVALID
+  it('/hubspot failure - return code 400', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
 
-  //     // console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
-  //     const command1 = message.attributes.commands[1];
-  //     assert(command1.type === "message");
-  //     assert(command1.message.text === 'hubspot status is: 400');
+      // console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'hubspot status is: 400');
 
-  //     const command2 = message.attributes.commands[2];
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === 'hubspot result is: null');
+      const command2 = message.attributes.commands[2];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'hubspot result is: null');
 
-  //     const command3 = message.attributes.commands[3];
-  //     assert(command3.type === "message");
-  //     assert(command3.message.text === 'Hubspot error is: Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]');
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "message");
+      assert(command3.message.text === 'Hubspot error is: Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]');
 
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["hubspot_status"] === 400);
-  //         assert(attributes["hubspot_error"] === "Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["hubspot_status"] === 400);
+          assert(attributes["hubspot_error"] === "Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-  //   });
+    });
 
-  //   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-  //     let http_code = 200;
-  //     let reply = {
-  //       _id: "656728224b45965b69111111",
-  //       id_project: "62c3f10152dc740035000000",
-  //       name: "hubspot",
-  //       value: {
-  //         apikey: "example_api_key"
-  //       }
-  //     }
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "hubspot",
+        value: {
+          apikey: "example_api_key"
+        }
+      }
 
-  //     res.status(http_code).send(reply);
-  //   })
+      res.status(http_code).send(reply);
+    })
 
-  //   endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
-  //     let http_code = 400;
-  //     let reply = {
-  //       "status": "error",
-  //       "message": "Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]",
-  //       "correlationId": "e3d7ddf8-5d21-4059-86d0-35ae9093755c",
-  //       "category": "VALIDATION_ERROR"
-  //     }
-  //     res.status(http_code).send(reply);
-  //   });
+    endpointServer.post('/crm/v3/objects/contacts/batch/create', function (req, res) {
+      let http_code = 400;
+      let reply = {
+        "status": "error",
+        "message": "Property values were not valid: [{\"isValid\":false,\"message\":\"Email address dsfsafas@ is invalid\",\"error\":\"INVALID_EMAIL\",\"name\":\"email\"}]",
+        "correlationId": "e3d7ddf8-5d21-4059-86d0-35ae9093755c",
+        "category": "VALIDATION_ERROR"
+      }
+      res.status(http_code).send(reply);
+    });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     //console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/hubspot#FAILUREEMAIL',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       //console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      //console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/hubspot#FAILUREEMAIL',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        //console.log("Message sent:\n", request);
+      });
+    });
+  });
 
 });
 
