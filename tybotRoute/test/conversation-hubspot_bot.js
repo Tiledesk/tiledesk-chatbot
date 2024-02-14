@@ -144,8 +144,13 @@ const bot = {
 							"type": "text",
 							"text": "hubspot status is: ${hubspot_status}"
 						}
-					},
-					{
+					},{
+						"type": "message",
+						"message": {
+							"type": "text",
+							"text": "hubspot result is: ${hubspot_result}"
+						}
+					},{
 						"type": "message",
 						"message": {
 							"type": "text",
@@ -174,6 +179,12 @@ const bot = {
 						"message": {
 							"type": "text",
 							"text": "hubspot status is: ${hubspot_status}"
+						}
+					},{
+						"type": "message",
+						"message": {
+							"type": "text",
+							"text": "hubspot result is: ${hubspot_result}"
 						}
 					},
 					{

@@ -121,6 +121,7 @@ class DirHubspot {
               console.error("(httprequest) DirHubspot err data:", err.response.data)
             };
 
+            let result = null;
             let status = null;
             let error;
 
@@ -136,11 +137,12 @@ class DirHubspot {
             }
 
             if (this.log) {
+              console.error("(httprequest) DirHubspot err data result:", result);
               console.error("(httprequest) DirHubspot err data status:", status);
               console.error("(httprequest) DirHubspot err data error:", error);
             }
 
-            await this.#assignAttributes(action, status, error);
+            await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
@@ -154,7 +156,8 @@ class DirHubspot {
 
           let status = 201;
           let error = null;
-          await this.#assignAttributes(action, status, error);
+          let result = resbody;
+          await this.#assignAttributes(action, status, result, error);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
             callback(true);
@@ -168,15 +171,19 @@ class DirHubspot {
 
   }
 
-  async #assignAttributes(action, status, error) {
+  async #assignAttributes(action, status, result, error) {
     if (this.log) {
       console.log("DirHubspot assignAttributes action:", action)
       console.log("DirHubspot assignAttributes status:", status)
+      console.log("DirHubspot assignAttributes result:", result)
       console.log("DirHubspot assignAttributes error:", error)
     }
     if (this.context.tdcache) {
       if (action.assignStatusTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
+      }
+      if (action.assignResultTo) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, result);
       }
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
