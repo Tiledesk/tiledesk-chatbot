@@ -6,8 +6,12 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # v0.2.50
-- Added AskGPTV2 action
+- Improved AskGPTV2 action
 - Added Hubspot action
+- Added Customerio action (hidden)
+
+# v0.2.50
+- Added AskGPTV2 action
 
 # v0.2.49
 - resplacebotv2, added "/" + blockName (so the blockname will be implicitly executed), removing the need to specify the "/" in the body of the replacebot editor
