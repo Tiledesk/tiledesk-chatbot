@@ -17,7 +17,7 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "hubspot",
 				"_tdActionId": "123456789",
-				"token": "pat-eu1-67fdd84b-5558-4883-a795-e83e43248963",
+				"token": "pat-eu3-55dss34d-3334-5435-g156-h22e33247244",
 				"bodyParameters": {
 					"inputs": [
 					  {
