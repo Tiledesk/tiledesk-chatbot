@@ -623,7 +623,12 @@ class TiledeskChatbot {
     let attributes_native_values = {};
     if (attributes__as_string_map !== null) {
       for (const [key, value] of Object.entries(attributes__as_string_map)) {
-        attributes_native_values[key] = JSON.parse(value);
+        try {
+          attributes_native_values[key] = JSON.parse(value);
+        }
+        catch(err) {
+          console.error("An error occurred while JSON.parse value: " + value + " in allParametersStatic. Error:", err);
+        }
       }
     }
     // else {
