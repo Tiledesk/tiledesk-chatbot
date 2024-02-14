@@ -5,7 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.50
+# v0.2.52
+- Fix bug: wrong call at getKeyFromIntegration in Qapla' directive
+
+# v0.2.51
 - Improved AskGPTV2 action
 - Added Hubspot action
 - Added Customerio action (hidden)
