@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # v0.2.52
+- Fix bug: missing check for callback in executeCondition in DirHubspot
+
+# v0.2.52
 - Fix bug: wrong call at getKeyFromIntegration in Qapla' directive
 
 # v0.2.51
