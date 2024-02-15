@@ -91,12 +91,12 @@ class DirCustomerio {
     }
     // ------------------------------------------------------------------
     // ONLY DEBUG
-    if (token == null) {
-      token = process.env.CUSTOMERIO_TOKEN;
-      if (this.log) { 
-        console.log("Customerio token integration DEBUG TOKEN: ", token); 
-      }
-    }
+    //if (token == null) {
+      //token = process.env.CUSTOMERIO_TOKEN;
+      //if (this.log) { 
+        //console.log("Customerio token integration DEBUG TOKEN: ", token); 
+      //}
+    //}
     // -----------------------------------------------------------------
 
     if (!token || token === '') {
