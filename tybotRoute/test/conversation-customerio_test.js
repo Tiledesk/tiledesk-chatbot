@@ -68,7 +68,7 @@ describe('Conversation for customerio test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log('/customerio success message: ', JSON.stringify(message, null,2));
+      //console.log('/customerio success message: ', JSON.stringify(message, null,2));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'customerio status is: 204');
@@ -102,18 +102,18 @@ describe('Conversation for customerio test', async () => {
           apikey: "M432QRWRWQ%£53532QQEQEQEQ="
         }
       }
-      console.log("/:project_id/integration/name/:name: ", reply)
+      //console.log("/:project_id/integration/name/:name: ", reply)
       res.status(http_code).send(reply);
     });
 
   
     endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
-      console.log("/forms/formid/submit ");
+      //console.log("/forms/formid/submit ");
       res.sendStatus(204);
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started: ', listener.address());
+      //console.log('endpointServer started: ', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -144,7 +144,7 @@ describe('Conversation for customerio test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
+      //console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -171,12 +171,12 @@ describe('Conversation for customerio test', async () => {
               apikey: "FAKE432QRWRWQ%£53532QQEQEQEQ="
             }
           }
-          console.log("/:project_id/integration/name/:name: ", reply)
+          //console.log("/:project_id/integration/name/:name: ", reply)
           res.status(http_code).send(reply);
       });
 
     endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
-      console.log("/forms/formid/submit 401");
+      //console.log("/forms/formid/submit 401");
       let http_code = 401;
       let reply = {
         "meta": {
@@ -218,7 +218,7 @@ it('/customerio failure - return code 400', (done) => {
   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
     res.send({ success: true });
     const message = req.body;
-    console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
+    //console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
     getChatbotParameters(REQUEST_ID, (err, attributes) => {
       if (err) {
         assert.ok(false);
@@ -244,7 +244,7 @@ it('/customerio failure - return code 400', (done) => {
                 apikey: "FAKE432QRWRWQ%£53532QQEQEQEQ="
               }
          }
-            console.log("/:project_id/integration/name/:name: ", reply)
+            //console.log("/:project_id/integration/name/:name: ", reply)
             res.status(http_code).send(reply);
     });
 
@@ -259,7 +259,7 @@ it('/customerio failure - return code 400', (done) => {
   });
 
   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-    console.log('endpointServer started', listener.address());
+    //console.log('endpointServer started', listener.address());
     let request = {
       "payload": {
         "senderFullname": "guest#367e",
@@ -355,8 +355,8 @@ function getChatbotParameters(requestId, callback) {
 
 function myrequest(options, callback, log) {
   if (log) {
-    console.log("* API URL:", options.url);
-    console.log("* Options:", JSON.stringify(options));
+    //console.log("* API URL:", options.url);
+    //console.log("* Options:", JSON.stringify(options));
   }
   axios(
     {
@@ -368,9 +368,9 @@ function myrequest(options, callback, log) {
     })
     .then((res) => {
       if (log) {
-        console.log("Response for url:111", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        console.log("******** Response for url:", res);
+        //console.log("Response for url:111", options.url);
+        //console.log("Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
       }
       if (res && res.status == 200 && res.data) {
         if (callback) {

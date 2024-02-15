@@ -93,7 +93,9 @@ class DirCustomerio {
     // ONLY DEBUG
     if (token == null) {
       token = process.env.CUSTOMERIO_TOKEN;
-      console.log("Customerio token integration DEBUG TOKEN: ", token); 
+      if (this.log) { 
+        console.log("Customerio token integration DEBUG TOKEN: ", token); 
+      }
     }
     // -----------------------------------------------------------------
 
@@ -188,8 +190,9 @@ class DirCustomerio {
             callback();
           }
         } else if (callback) {
-          if (this.log) { console.log("respose/DirCustomerio Customerio resbody: ", JSON.stringify(resbody, null, 2)); }
+          if (this.log) { console.log("respose/DirCustomerio Customerio resbody: ", JSON.stringify(resbody, null, 2));
           console.log("TRUE");
+         }
           let status = 204;   
           let error = null;
           await this.#assignAttributes(action, status, error); 
@@ -247,16 +250,15 @@ class DirCustomerio {
     }
     if (options.json != null) {
       //axios_options.data = options.json;
-      //axios_options.data = options.json;
-   
-    
     let axios_options_data = JSON.parse(JSON.stringify(options.json));
+    if (this.log) {
       console.log("axios_options data:", JSON.stringify(axios_options_data));
+    }
       //let axios_options_data_data = axios_options_data.data;
       let axios_options_data_data = axios_options_data;
-      console.log("axios_options data data:", JSON.stringify(axios_options_data_data));
+      if (this.log) {console.log("axios_options data data:", JSON.stringify(axios_options_data_data));}
       axios_options.data = axios_options_data_data;
-      console.log("axios_options:", axios_options);
+      if (this.log) {console.log("axios_options:", axios_options);}
   }
     
     if (options.url.startsWith("https:")) {
@@ -356,7 +358,7 @@ class DirCustomerio {
           if (err) {
             resolve(null);
           } else {
-            console.log('Integration: ', integration);
+             if (this.log){console.log('Integration: ', integration);}
             if (integration &&
               integration.value) {
               resolve(integration.value.apikey)
