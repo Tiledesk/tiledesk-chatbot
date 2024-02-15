@@ -252,10 +252,11 @@ class DirCustomerio {
     
     let axios_options_data = JSON.parse(JSON.stringify(options.json));
       console.log("axios_options data:", JSON.stringify(axios_options_data));
-      let axios_options_data_data = axios_options_data.data;
+      //let axios_options_data_data = axios_options_data.data;
+      let axios_options_data_data = axios_options_data;
       console.log("axios_options data data:", JSON.stringify(axios_options_data_data));
       axios_options.data = axios_options_data_data;
-      console.log("axios_options.data:", axios_options);
+      console.log("axios_options:", axios_options);
   }
     
     if (options.url.startsWith("https:")) {
