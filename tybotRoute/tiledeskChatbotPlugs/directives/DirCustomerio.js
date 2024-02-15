@@ -92,7 +92,7 @@ class DirCustomerio {
     // ------------------------------------------------------------------
     // ONLY DEBUG
     if (token == null) {
-      token = 'MDUxOTBhZjA2NmEzOTFmNzkzNmQ6ZGE1MzA1MmI4NTZmNjM3Y2FhMjk=';
+      token = process.env.CUSTOMERIO_TOKEN;
       console.log("Customerio token integration DEBUG TOKEN: ", token); 
     }
     // -----------------------------------------------------------------
