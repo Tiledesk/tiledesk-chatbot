@@ -89,8 +89,13 @@ class DirCustomerio {
     if (this.log) { 
       console.log("Customerio token integration: ", token); 
     }
-  
-
+    // ------------------------------------------------------------------
+    // ONLY DEBUG
+    if (token == null) {
+      token = 'MDUxOTBhZjA2NmEzOTFmNzkzNmQ6ZGE1MzA1MmI4NTZmNjM3Y2FhMjk=';
+      console.log("Customerio token integration DEBUG TOKEN: ", token); 
+    }
+    // -----------------------------------------------------------------
 
     if (!token || token === '') {
       if (this.log) {console.error("DirCustomerio ERROR - token is undefined or null or empty string:")};
