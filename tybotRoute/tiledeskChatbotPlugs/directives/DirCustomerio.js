@@ -17,7 +17,10 @@ class DirCustomerio {
     this.requestId = this.context.requestId;
     this.log = context.log;
     this.intentDir = new DirIntent(context);
-    if (this.log) {console.log('LOG: ', this.log)};
+    if (this.log) {
+      console.log('LOG: ', this.log);
+      console.log('CONTEXT: ', this.context);
+    };
   }
 
   execute(directive, callback) {
@@ -38,7 +41,7 @@ class DirCustomerio {
 
   async go(action, callback) {
     if (this.log) { console.log("DirCustomerio action:", JSON.stringify(action)); }
-    let token = action.token;
+    //let token = action.token;
     let formid = action.formid;
     //let bodyParameters = action.data;
 
@@ -64,7 +67,7 @@ class DirCustomerio {
       }
     }
     
-    //let token = action.token;
+    let token;
     let bodyParameters = action.bodyParameters;
     if (this.log) {
       console.log("DirCustomerio token: ", token);
@@ -76,6 +79,19 @@ class DirCustomerio {
       callback();
       return;
     }
+
+    // SEARCH THE TOKEN INTO INTEGRATION API
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
+    if (this.log) { 
+      console.log("Customerio server_base_url: ", server_base_url); 
+    }
+    token = await this.getKeyFromIntegrations(server_base_url);
+    if (this.log) { 
+      console.log("Customerio token integration: ", token); 
+    }
+  
+
+
     if (!token || token === '') {
       if (this.log) {console.error("DirCustomerio ERROR - token is undefined or null or empty string:")};
       let status = 422;   
@@ -90,14 +106,13 @@ class DirCustomerio {
     try {
       // CUSTOMERIO_ENDPONT
       let customer_base_url = process.env.CUSTOMERIO_ENDPONT;
-      if (customer_base_url != "http://localhost:10002/1.3") {
-        url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
+      if (customer_base_url) {
+        url = customer_base_url + "/forms/"+formid+"/submit";
         if (this.log) {console.log('DirCustomerio customer_base_url: ',url)};
       } else {
         url = "http://localhost:10002/1.3/customerio/";
       }
       // CUSTOMER ACCESS TOKEN
-      //let token = action.token;
       if (this.log) {
         console.log('DirCustomerio url: ',url);
         console.log('DirCustomerio access token: ',token);
@@ -145,21 +160,21 @@ class DirCustomerio {
             let status = null;   
             let error;
             //-------------------------------------------------------
-            // if (err.response &&
-            //   err.response.status) {
-            //       status = err.response.status;
-            // }
-            // if (err.response &&
-            //   err.response.data &&
-            //   err.response.data.meta && err.response.data.meta.error) {
-            //     error = err.response.data.meta.error;
-            // }
+            if (err.response &&
+              err.response.status) {
+                  status = err.response.status;
+            }
+            if (err.response &&
+              err.response.data &&
+              err.response.data.meta && err.response.data.meta.error) {
+                error = err.response.data.meta.error;
+            }
             
             //-------------------------------------------------------
             if (this.log) {
             console.log("FALSE");
-            //console.error("respose/(httprequest) DirCustomerio err data status:", status);
-            //console.error("respose/(httprequest) DirCustomerio err data error:", error);
+            console.error("respose/(httprequest) DirCustomerio err data status:", status);
+            console.error("respose/(httprequest) DirCustomerio err data error:", error);
             console.error("respose/(httprequest) DirCustomerio err action:", action);}
             await this.#assignAttributes(action, status, error);
             this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
@@ -222,12 +237,22 @@ class DirCustomerio {
       params: options.params,
       headers: options.headers
     }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
     if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
+      console.log("options.json:", options.json);
     }
+    if (options.json != null) {
+      //axios_options.data = options.json;
+      //axios_options.data = options.json;
+   
+    
+    let axios_options_data = JSON.parse(JSON.stringify(options.json));
+      console.log("axios_options data:", JSON.stringify(axios_options_data));
+      let axios_options_data_data = axios_options_data.data;
+      console.log("axios_options data data:", JSON.stringify(axios_options_data_data));
+      axios_options.data = axios_options_data_data;
+      console.log("axios_options.data:", axios_options);
+  }
+    
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -238,14 +263,20 @@ class DirCustomerio {
       .then((res) => {
         if (this.log) {
           console.log("Response for url:", options.url);
-          console.log("Response:", res.config.data);
+          console.log("Response data config:", res.config.data);
+          console.log("Response data:", res.data);
+          //console.log("Response:", res);
           console.log("Response status:", res.status);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-        if (res && (res.status == 200 || res.status == 204) && res.config.data) {
-        //if (res && res.status == 204) {
+        if (res && (res.status == 200 || res.status == 204) && (res.data || res.config.data)) {
           if (callback) {
-            callback(null, res.config.data);
+            if (res.data) {
+            callback(null, res.data);
+            }
+            if (res.config.data) {
+              callback(null,  res.config.data);
+            }
           }
         }
         else {
@@ -300,6 +331,39 @@ class DirCustomerio {
       }
     }
   }
+  // FUNCTION getKeyFromIntegrations
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/customerio",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("Customer INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+            console.log('Integration: ', integration);
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
+  
  
 }
 

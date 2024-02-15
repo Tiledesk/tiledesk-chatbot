@@ -92,11 +92,23 @@ describe('Conversation for customerio test', async () => {
       });
     });
 
-    endpointServer.post('/1.3/customerio/', function (req, res) {
-    //endpointServer.post('/api/v1/forms/1/submit', function (req, res) {
-      let http_code = 204;
-      let reply = {}
-      console.log("endpointServer.post/1.3/customerio/ ")
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "customerio",
+        value: {
+          apikey: "M432QRWRWQ%£53532QQEQEQEQ="
+        }
+      }
+      console.log("/:project_id/integration/name/:name: ", reply)
+      res.status(http_code).send(reply);
+    });
+
+  
+    endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
+      console.log("/forms/formid/submit ");
       res.sendStatus(204);
     });
 
@@ -122,185 +134,152 @@ describe('Conversation for customerio test', async () => {
       });
     });
   });
-// TEST FAIL CODE 409
-// it('/hubspot failure - return code 409', (done) => {
-
-//   let listener;
-//   let endpointServer = express();
-//   endpointServer.use(bodyParser.json());
-//   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-//     res.send({ success: true });
-//     const message = req.body;
-//     //console.log("/hubspot failure message: ", JSON.stringify(message, null, 2));
-//     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-//       if (err) {
-//         assert.ok(false);
-//       }
-//       else {
-//         assert(attributes);
-//         assert(attributes["hubspot_status"] === 409);
-//         assert(attributes["hubspot_error"] === "Contact already exists. Existing ID: 801");
-//         listener.close(() => {
-//           done();
-//         });
-//       }
-//     });
-
-//    });
-
-//   endpointServer.post('/1.3/hubspot/', function (req, res) {
-
-//     let http_code = 409;
-//     let reply = {
-//       "status": "error",
-//       "message": "Contact already exists. Existing ID: 801",
-//       "correlationId": "f426b0c0-1063-4aac-9859-f40108dcb09b",
-//       "category": "CONFLICT"
-//   }
-//     res.status(http_code).send(reply);
-//   });
-
-//   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-//     //console.log('endpointServer started', listener.address());
-//     let request = {
-//       "payload": {
-//         "senderFullname": "guest#367e",
-//         "type": "text",
-//         "sender": "A-SENDER",
-//         "recipient": REQUEST_ID,
-//         "text": '/hubspot#FAILURE409',
-//         "id_project": PROJECT_ID,
-//         "metadata": "",
-//         "request": {
-//           "request_id": REQUEST_ID
-//         }
-//       },
-//       "token": "XXX"
-//     }
-//     sendMessageToBot(request, BOT_ID, () => {
-//       // console.log("Message sent:\n", request);
-//     });
-//   });
-// });
 
 //TEST FAIL CODE 401 FAIL ACCESS TOKEN
-  // it('/customerio failure - return code 404', (done) => {
+  it('/customerio failure - return code 401', (done) => {
 
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
-  //     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(attributes);
-  //         assert(attributes["customerio_status"] === 401);
-  //         assert(attributes["customerio_error"] === "Unauthorized request");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["customerio_status"] === 401);
+          assert(attributes["customerio_error"] === "Unauthorized request");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
 
-  //    });
+     });
 
-  //   endpointServer.post('/1.3/customerio/', function (req, res) {
-  //     let http_code = 401;
-  //     let reply = {
-  //       "status": "error",
-  //       "message": "Unauthorized request",
-  //       "correlationId": "53dab600-5de9-4aa3-b631-b0f11f43e062",
-  //       "category": "INVALID_AUTHENTICATION"
-  //     }
-  //     res.status(http_code).send(reply);
-  //   });
+     endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+            _id: "656728224b45965b69111111",
+            id_project: "62c3f10152dc740035000000",
+            name: "customerio",
+            value: {
+              apikey: "FAKE432QRWRWQ%£53532QQEQEQEQ="
+            }
+          }
+          console.log("/:project_id/integration/name/:name: ", reply)
+          res.status(http_code).send(reply);
+      });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     //console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/customerio#FAILUREACCESSTOKEN',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
+      console.log("/forms/formid/submit 401");
+      let http_code = 401;
+      let reply = {
+        "meta": {
+            "error": "Unauthorized request"
+        }
+    }
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      //console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/customerio#FAILUREACCESSTOKEN',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+  
 //TEST FAIL 400 EMAIL IS INVALID
-// it('/customerio failure - return code 400', (done) => {
+it('/customerio failure - return code 400', (done) => {
 
-//   let listener;
-//   let endpointServer = express();
-//   endpointServer.use(bodyParser.json());
-//   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-//     res.send({ success: true });
-//     const message = req.body;
-//     console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
-//     getChatbotParameters(REQUEST_ID, (err, attributes) => {
-//       if (err) {
-//         assert.ok(false);
-//       }
-//       else {
-//         assert(attributes);
-//         assert(attributes["customerio_status"] === 400);
-//         assert(attributes["customerio_error"] === "invalid email identifier");
-//         listener.close(() => {
-//           done();
-//         });
-//       }
-//     });
+  let listener;
+  let endpointServer = express();
+  endpointServer.use(bodyParser.json());
+  endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+    res.send({ success: true });
+    const message = req.body;
+    console.log("/customerio failure message: ", JSON.stringify(message, null, 2));
+    getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      if (err) {
+        assert.ok(false);
+      }
+      else {
+        assert(attributes);
+        assert(attributes["customerio_status"] === 400);
+        assert(attributes["customerio_error"] === "invalid email identifier");
+        listener.close(() => {
+          done();
+        });
+      }
+    });
 
-//    });
+   });
+   endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    let http_code = 200;
+      let reply = {
+              _id: "656728224b45965b69111111",
+              id_project: "62c3f10152dc740035000000",
+              name: "customerio",
+              value: {
+                apikey: "FAKE432QRWRWQ%£53532QQEQEQEQ="
+              }
+         }
+            console.log("/:project_id/integration/name/:name: ", reply)
+            res.status(http_code).send(reply);
+    });
 
-//   endpointServer.post('/1.3/customerio/', function (req, res) {
-//     let http_code = 400;
-//     let reply = {
-//       "status": "error",
-//       "message": "invalid email identifier",
-//       "correlationId": "e3d7ddf8-5d21-4059-86d0-35ae9093755c",
-//       "category": "VALIDATION_ERROR"
-//   }
-//     res.status(http_code).send(reply);
-//   });
+  endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
+    let http_code = 400;
+    let reply = {
+      "meta": {
+          "error": "invalid email identifier"
+      }
+  }
+    res.status(http_code).send(reply);
+  });
 
-//   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-//     console.log('endpointServer started', listener.address());
-//     let request = {
-//       "payload": {
-//         "senderFullname": "guest#367e",
-//         "type": "text",
-//         "sender": "A-SENDER",
-//         "recipient": REQUEST_ID,
-//         "text": '/customerio#FAILUREEMAIL',
-//         "id_project": PROJECT_ID,
-//         "metadata": "",
-//         "request": {
-//           "request_id": REQUEST_ID
-//         }
-//       },
-//       "token": "XXX"
-//     }
-//     sendMessageToBot(request, BOT_ID, () => {
-//        //console.log("Message sent:\n", request);
-//     });
-//   });
-// });
+  listener = endpointServer.listen(10002, '0.0.0.0', () => {
+    console.log('endpointServer started', listener.address());
+    let request = {
+      "payload": {
+        "senderFullname": "guest#367e",
+        "type": "text",
+        "sender": "A-SENDER",
+        "recipient": REQUEST_ID,
+        "text": '/customerio#FAILUREEMAIL',
+        "id_project": PROJECT_ID,
+        "metadata": "",
+        "request": {
+          "request_id": REQUEST_ID
+        }
+      },
+      "token": "XXX"
+    }
+    sendMessageToBot(request, BOT_ID, () => {
+       //console.log("Message sent:\n", request);
+    });
+  });
+});
   
 });
 
