@@ -7,6 +7,7 @@ available on:
 
 # v0.2.55
 - Added try-catch in allParametersStatic() To log some weird attributes wrongly unparsed by JSON.parse
+- Removed logs
 
 # v0.2.54
 - Fix bug: DirHubspot didn't return any result

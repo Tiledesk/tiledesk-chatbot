@@ -76,8 +76,10 @@ class DirIfOnlineAgents {
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
-    console.log("IfOnlineAgents:trueIntent:", trueIntent);
-    console.log("IfOnlineAgents:falseIntent:", falseIntent);
+    if (this.log) {
+      console.log("(DirIfOnlineAgents) IfOnlineAgents:trueIntent:", trueIntent);
+      console.log("(DirIfOnlineAgents) IfOnlineAgents:falseIntent:", falseIntent);
+    }
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
@@ -92,7 +94,6 @@ class DirIfOnlineAgents {
         if (result && result.isopen) {
           this.tdclient.getProjectAvailableAgents((err, agents) => {
             if (this.log) {console.log("Agents", agents);}
-            console.log("IfOnlineAgents:Agents", agents); // PROD
             if (err) {
               console.error("IfOnlineAgents:Error getting available agents:", err);
               callback();
@@ -103,7 +104,6 @@ class DirIfOnlineAgents {
                 if (trueIntent) {
                   let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
                   if (this.log) {console.log("agents (openHours) => trueIntent");}
-                  console.log("IfOnlineAgents:agents (openHours) => trueIntent", intentDirective) // prod
                   this.intentDir.execute(intentDirective, () => {
                     callback(stopOnConditionMet);
                   });
@@ -117,7 +117,6 @@ class DirIfOnlineAgents {
               else if (falseIntent) {
                 let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
                 if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
-                console.log("IfOnlineAgents:agents (openHours) => falseIntent", intentDirective) // prod
                 this.intentDir.execute(intentDirective, () => {
                   callback(stopOnConditionMet);
                 });

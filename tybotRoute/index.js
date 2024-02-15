@@ -126,7 +126,7 @@ router.post('/ext/:botid', async (req, res) => {
   if (!staticBots) {
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId, log);
-    console.log("Created backupMachine:", backupMachine);
+    if (log) {console.log("Created backupMachine:", backupMachine);}
   }
   else {
     intentsMachine = {}
