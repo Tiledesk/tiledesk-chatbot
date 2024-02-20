@@ -80,7 +80,7 @@ class DirHubspot {
 
     let key = await this.getKeyFromIntegrations(server_base_url);
     if (!key) {
-      if (this.log) { console.log("DirGptTask - Key not found in Integrations."); }
+      if (this.log) { console.log("DirHubspot - Key not found in Integrations."); }
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);

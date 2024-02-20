@@ -17,52 +17,14 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "customerio",
 				"_tdActionId": "123456789",
-				"token": "MDUxOTBhZjA2NmEzOTFmNzkzNmQ6ZGE1MzA1MmI4NTZmNjM3Y2FhMjk=",
 				"formid":"1",
 				"bodyParameters": {
-					"data": {
 					"email": "cool10.person@example.com",
 					"first_name": "cool10",
 					"last_name": "person10",
 					"company": "studio10",
 					"website":"miosito10"
-					}
 				},
-				"assignResultTo": "customerio_result",
-				"assignStatusTo": "customerio_status",
-				"assignErrorTo": "customerio_error",
-				"_tdActionType": "customerio",
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE"
-			},
-			]
-		},
-		{
-			// 409 CONTACT ALREADY EXIST
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "customerio#FAILURE409",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionTitle": "customerio",
-				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"token": "123456789",
-				"formid": "1",
-				"bodyParameters": {
-					"inputs": [
-					  {
-						"properties": {
-							"email": "email",
-							"lastname": "lastname",
-							"firstname": "firstname"
-						},
-						"associations": []
-					  }
-					]
-				  },
 				"assignResultTo": "customerio_result",
 				"assignStatusTo": "customerio_status",
 				"assignErrorTo": "customerio_error",
@@ -84,12 +46,13 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "customerio",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"token": "12345678910",
 				"formid":"1",
 				"bodyParameters": {
 					"email": "email",
 					"lastname": "lastname",
-					"firstname": "firstname"
+					"firstname": "firstname",
+					"company": "studio10",
+					"website":"miosito10"
 				},
 				"assignResultTo": "customerio_result",
 				"assignStatusTo": "customerio_status",
@@ -112,7 +75,6 @@ const bot = {
 			"actions": [{
 				"_tdActionTitle": "customerio",
 				"_tdActionId": "072d2d37-07f1-43e1-a4bf-7ddef62c2e2b",
-				"token": "123456789",
 				"bodyParameters": {
 					"email": "email",
 					"lastname": "lastname",
@@ -156,7 +118,7 @@ const bot = {
 			}],
 			"language": "en",
 			"intent_display_name": "customerio intent true",
-			"intent_id": "SUCCESS",
+			"intent_id": "SUCCESS"
 		},
 		{
 			// FALSE INTENT - CUSTOMERIO FAIL
@@ -187,8 +149,7 @@ const bot = {
 			}],
 			"language": "en",
 			"intent_display_name": "customerio intent false",
-			"intent_id": "FAILURE",
-
+			"intent_id": "FAILURE"
 		},
 	]
 }

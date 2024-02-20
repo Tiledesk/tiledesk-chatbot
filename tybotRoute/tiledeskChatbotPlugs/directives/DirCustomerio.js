@@ -15,9 +15,8 @@ class DirCustomerio {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
-    this.log = context.log;
     this.intentDir = new DirIntent(context);
-    if (this.log) {console.log('LOG: ', this.log)};
+    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -31,158 +30,143 @@ class DirCustomerio {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
   async go(action, callback) {
     if (this.log) { console.log("DirCustomerio action:", JSON.stringify(action)); }
-    let token = action.token;
-    let formid = action.formid;
-    let bodyParameters = action.bodyParameters;
-
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    if (this.log) {console.log('DirCustomerio trueIntent',trueIntent)}
     if (!this.tdcache) {
       console.error("Error: DirCustomerio tdcache is mandatory");
       callback();
       return;
     }
-    console.log('DirCustomerio work!');
+
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    if (this.log) {
+      console.log("DirCustomerio trueIntent", trueIntent)
+      console.log("DirCustomerio falseIntent", falseIntent)
+    }
+
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       )
 
+    let formid = action.formid;
+    let bodyParameters = action.bodyParameters;
     if (this.log) {
-      const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-      for (const [key, value] of Object.entries(all_parameters)) {
-        if (this.log) { console.log("DirCustomerio request parameter:", key, "value:", value, "type:", typeof value) }
-      }
-    }
-    
-    //let token = action.token;
-    //let bodyParameters = action.bodyParameters;
-    if (this.log) {
-      console.log("DirCustomerio token: ", token);
       console.log("DirCustomerio formid: ", formid);
       console.log("DirCustomerio bodyParameters: ", bodyParameters);
     }
+
     if (!bodyParameters || bodyParameters === '') {
-      if (this.log) {console.error("DirCustomerio ERROR - bodyParameters is undefined or null or empty string")};
+      if (this.log) { console.error("DirCustomerio ERROR - bodyParameters is undefined or null or empty string") };
       callback();
       return;
     }
-    if (!token || token === '') {
-      if (this.log) {console.error("DirCustomerio ERROR - token is undefined or null or empty string:")};
-      let status = 422;   
+
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
+    const customerio_base_url = process.env.CUSTOMERIO_ENDPOINT || "https://track.customer.io/api/v1";
+    if (this.log) {
+      console.log("DirCustomerio server_base_url: ", server_base_url);
+      console.log("DirCustomerio customerio_base_url: ", customerio_base_url);
+    }
+
+    let key = await this.getKeyFromIntegrations(server_base_url);
+    if (!key) {
+      if (this.log) { console.log("DirCustomerio - Key not found in Integrations."); }
+      let status = 422;
       let error = 'Missing customerio access token';
       await this.#assignAttributes(action, status, error);
-      this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-        callback(); // stop the flow
-      });
-      return;
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+        callback(true);
+        return;
+      }
     }
-    let url;
-    try {
-      // CUSTOMERIO_ENDPONT
-      let customer_base_url = process.env.CUSTOMERIO_ENDPONT;
-      if (customer_base_url) {
-        url = customer_base_url + "/api/v1/forms/"+formid+"/submit";
-        if (this.log) {console.log('DirCustomerio customer_base_url: ',url)};
-      } else {
-        url = "https://track-eu.customer.io/api/v1/forms/"+formid+"/submit";
-        //console.log('DirCustomerio url: ',url);
-      }
-      // CUSTOMER ACCESS TOKEN
-      //let token = action.token;
-      if (this.log) {
-        console.log('DirCustomerio url: ',url);
-        console.log('DirCustomerio access token: ',token);
-      }
 
-      const filler = new Filler();
-      for (const [key, value] of Object.entries(bodyParameters)) {
-        if (this.log) {console.log("bodyParam:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestVariables);
-        bodyParameters[key] = filled_value;
-      }
-      if (this.log) {console.log('DirCustomerio bodyParameters filler: ',bodyParameters)}
-    
+    const filler = new Filler();
+    for (const [key, value] of Object.entries(bodyParameters)) {
+      if (this.log) { console.log("bodyParam:", key, "value:", value) }
+      let filled_value = filler.fill(value, requestVariables);
+      bodyParameters[key] = filled_value;
+    }
+    if (this.log) { console.log('DirCustomerio bodyParameters filler: ', bodyParameters) }
 
-    
-    // Condition branches
-    //let trueIntent = action.trueIntent;
-    //let falseIntent = action.falseIntent;
-    //console.log('DirCustomerio trueIntent',trueIntent)
- 
-    if (this.log) { console.log("DirCustomerio Customerio access token: ", token); }
+    let json = {
+      data: bodyParameters
+    }
+
     const CUSTOMERIO_HTTPREQUEST = {
-      url: url,
+      url: customerio_base_url + "/forms/" + formid + "/submit",
       headers: {
-        'authorization': 'Basic ' + token,
+        'authorization': 'Basic ' + key,
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
         'User-Agent': 'TiledeskBotRuntime',
         'Accept': '*/*'
       },
-      json: bodyParameters,
+      json: json,
       method: "POST"
     }
-  
-    if (this.log) { console.log("myrequest/DirCustomerio CUSTOMERIO_HTTPREQUEST", JSON.stringify(CUSTOMERIO_HTTPREQUEST)); }
+    if (this.log) { console.log("DirCustomerio CUSTOMERIO_HTTPREQUEST", JSON.stringify(CUSTOMERIO_HTTPREQUEST)); }
+
     this.#myrequest(
       CUSTOMERIO_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
             if (this.log) {
-              console.error("respose/(httprequest) DirCustomerio err response:", err)
+              console.error("(httprequest) DirCustomerio err response:", err.response)
+              console.error("(httprequest) DirCustomerio err data:", err.response.data)
             };
-            let status = null;   
+            let status = null;
             let error;
-            //-------------------------------------------------------
-            // if (err.response &&
-            //   err.response.status) {
-            //       status = err.response.status;
-            // }
-            // if (err.response &&
-            //   err.response.data &&
-            //   err.response.data.meta && err.response.data.meta.error) {
-            //     error = err.response.data.meta.error;
-            // }
-            
-            //-------------------------------------------------------
+
+            if (err.response &&
+              err.response.status) {
+              status = err.response.status;
+            }
+            if (err.response &&
+              err.response.data &&
+              err.response.data.meta && err.response.data.meta.error) {
+              error = err.response.data.meta.error;
+            }
+
             if (this.log) {
-            console.log("FALSE");
-            //console.error("respose/(httprequest) DirCustomerio err data status:", status);
-            //console.error("respose/(httprequest) DirCustomerio err data error:", error);
-            console.error("respose/(httprequest) DirCustomerio err action:", action);}
+              console.error("(httprequest) DirCustomerio err data status:", status);
+              console.error("(httprequest) DirCustomerio err data error:", error);
+            }
             await this.#assignAttributes(action, status, error);
-            this.#executeCondition(false, trueIntent, null, falseIntent, null, () => {
-              callback(false); // continue the flow
-            });
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              callback(true);
+              return;
+            }
             callback();
+            return;
+
           }
         } else if (callback) {
-          if (this.log) { console.log("respose/DirCustomerio Customerio resbody: ", JSON.stringify(resbody, null, 2)); }
-          console.log("TRUE");
-          let status = 204;   
+          if (this.log) { console.log("DirCustomerio resbody: ", JSON.stringify(resbody, null, 2)); }
+
+          let status = 204;
           let error = null;
-          await this.#assignAttributes(action, status, error); 
-          await this.#executeCondition(true, trueIntent, null, falseIntent, null, () => {
-            callback(); // stop the flow
-          });
-          if (this.log) { console.log('respose/status: ',status)}
-          //callback();
+          await this.#assignAttributes(action, status, error);
+          if (trueIntent) {
+            await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
         }
       }
     );
-  } catch(e) {
-    console.error('error: ', e)
-  }
+
   }
 
   async #assignAttributes(action, status, error) {
@@ -236,13 +220,16 @@ class DirCustomerio {
       .then((res) => {
         if (this.log) {
           console.log("Response for url:", options.url);
-          console.log("Response:", res.config.data);
-          console.log("Response status:", res.status);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }
-        if (res && res.status == 204) {
+        if (res && (res.status == 200 || res.status == 204) && (res.data || res.config.data)) {
           if (callback) {
-            callback(null, res.config.data);
+            if (res.data) {
+              callback(null, res.data);
+            }
+            if (res.config.data) {
+              callback(null, res.config.data);
+            }
           }
         }
         else {
@@ -252,51 +239,85 @@ class DirCustomerio {
         }
       })
       .catch((error) => {
-        if (this.log) {console.error("An error occurred:", JSON.stringify(error.message))};
         if (callback) {
           callback(error, null);
         }
       });
   }
+
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;
-   
     if (trueIntent) {
-      //console.log('executeCondition/trueIntent',trueIntent)
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-      //console.log('executeCondition/trueIntentDirective',trueIntentDirective)
-      //console.log('executeCondition/trueIntentAttributes',trueIntentAttributes)
     }
     let falseIntentDirective = null;
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
-    if (this.log) {console.log('DirCustomerio executeCondition/result',result)}
+    if (this.log) { console.log('DirCustomerio executeCondition/result', result) }
     if (result === true) {
       if (trueIntentDirective) {
-        console.log("--> TRUE")
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
-        callback();
+        if (this.log) { console.log("No trueIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
       }
     }
     else {
       if (falseIntentDirective) {
-        console.log("--> FALSE");
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
-        callback();
+        if (this.log) { console.log("No falseIntentDirective specified"); }
+        if (callback) {
+          callback();
+        }
       }
     }
   }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/customerio",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("Customerio INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+            if (this.log) { console.log('Integration: ', integration); }
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
+  }
+
 }
 
 module.exports = { DirCustomerio }
