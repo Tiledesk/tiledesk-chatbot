@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.56
+- Fixing Customerio Action not passing testing
+
 # v0.2.55
 - Added try-catch in allParametersStatic() To log some weird attributes wrongly unparsed by JSON.parse
 - Removed logs
