@@ -344,6 +344,7 @@ class TiledeskChatbotUtil {
             // console.log("transcript got:", transcript);
             if (transcript) {
                 transcript = transcript + "\n[" + message.senderFullname + "] " + message.text;
+                
             }
             else {
                 transcript = "[" + message.senderFullname + "] " + message.text;
