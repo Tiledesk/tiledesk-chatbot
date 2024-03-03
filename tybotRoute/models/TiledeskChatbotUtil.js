@@ -346,23 +346,23 @@ class TiledeskChatbotUtil {
             // console.log("transcript got:", transcript);
             const _name_of = name_of(message, chatbot_name);
             if (transcript) {
-                transcript = transcript + "\n[" + _name_of + "] " + message.text;
+                transcript = transcript + "\n" + _name_of + message.text;
             }
             else {
-                transcript = "[" + _name_of + "] " + message.text;
+                transcript = _name_of + message.text;
             }
             // console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
             // let transcript2 = await chatbot.getParameter("transcript");
             // console.log("transcript updated:", transcript2);
         }
-
+        
         function name_of(message, chatbot_name) {
             let fullName = message.senderFullname;
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
             }
-            return fullName;
+            return "[[[" + fullName + "]]]";
         }
     }
 
