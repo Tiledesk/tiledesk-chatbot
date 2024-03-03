@@ -336,18 +336,21 @@ class TiledeskChatbotUtil {
 
     static async updateConversationTranscript(chatbot, message) {
         // console.log("transcript updating with:", message)
+        
+        console.log("chatbot name is: ", chatbot.bot.name);
+        
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             // console.log("transcript got:", transcript);
             if (transcript) {
-                transcript = transcript + "\n[" + message.senderFullname + "] says: " + message.text;
+                transcript = transcript + "\n[" + message.senderFullname + "] " + message.text;
             }
             else {
-                transcript = "[" + message.senderFullname + "] says: " + message.text;
+                transcript = "[" + message.senderFullname + "] " + message.text;
             }
             // console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
-            let transcript2 = await chatbot.getParameter("transcript");
+            // let transcript2 = await chatbot.getParameter("transcript");
             // console.log("transcript updated:", transcript2);
         }
     }
