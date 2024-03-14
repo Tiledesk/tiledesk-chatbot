@@ -115,7 +115,7 @@ class DirBrevo {
 
     let json = {
       email: brevo_email,
-      attributes: brevo_bodyParameters.attributes,
+      attributes: brevo_bodyParameters,
       "emailBlacklisted": false,
 			"smsBlacklisted": false,
 			"listIds": [
