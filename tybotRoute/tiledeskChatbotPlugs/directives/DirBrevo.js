@@ -101,7 +101,20 @@ class DirBrevo {
     }
     if (this.log) { console.log('DirBrevo bodyParameters filler: ', bodyParameters) }
 
-    let json =  bodyParameters
+
+    let json = {
+      email: bodyParameters.email,
+      attributes: bodyParameters.attributes,
+      "emailBlacklisted": false,
+					"smsBlacklisted": false,
+					"listIds": [
+					  21
+					],
+					"updateEnabled": false,
+					"smtpBlacklistSender": [
+					  "info@sendinblue.com"
+					]
+    }
     if (this.log) { console.log('DirBrevo key Debug2: ', key) }
     //----------------
     if (this.log) {console.log("DirBrevo brevo_base_url ",brevo_base_url);}
