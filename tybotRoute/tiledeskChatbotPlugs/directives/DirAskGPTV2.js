@@ -59,6 +59,9 @@ class DirAskGPTV2 {
     let answer = "No answers";
     let source = null;
     let model = "gpt-3.5-turbo";
+    let temperature;
+    let max_tokens;
+    let top_k;
 
     if (!action.question || action.question === '') {
       console.error("Error: DirAskGPT question attribute is mandatory. Executing condition false...");
@@ -70,18 +73,20 @@ class DirAskGPTV2 {
       return;
     }
 
-    // if (!action.kbid) {
-    //   console.error("Error: DirAskGPT kbid attribute is mandatory. Executing condition false...");
-    //   await this.#assignAttributes(action, answer, source);
-    //   if (falseIntent) {
-    //     await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
-    //   }
-    //   callback(true);
-    //   return;
-    // }
-
     if (action.model) {
       model = action.model;
+    }
+
+    if (action.top_k) {
+      top_k = action.top_k;
+    }
+
+    if (action.temperature) {
+      temperature = action.temperature;
+    }
+
+    if (action.max_tokens) {
+      max_tokens = action.max_tokens;
     }
 
     let requestVariables = null;
@@ -92,12 +97,14 @@ class DirAskGPTV2 {
 
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
+    const filled_context = filler.fill(action.context, requestVariables)
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    //const pai_url = process.env.PAI_ENDPOINT || process.env.GPT_ENDPOINT;
+    const kb_endpoint = process.env.KB_ENDPOINT_QA
+    
     if (this.log) {
       console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
-      //console.log("DirAskGPT ApiEndpoint URL: ", pai_url);
+      console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint);
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
@@ -107,7 +114,7 @@ class DirAskGPTV2 {
     }
 
     if (!key) {
-      if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
+      if (this.log) { console.log("DirAskGPT - Retrieve public gptkey")}
       key = process.env.GPTKEY;
       publicKey = true;
     }
@@ -127,7 +134,7 @@ class DirAskGPTV2 {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability(server_base_url);
       if (keep_going === false) {
-        if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+        if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
         callback();
         return;
       }
@@ -139,16 +146,23 @@ class DirAskGPTV2 {
       namespace: this.context.projectId,
       model: model
     };
+    if (top_k) {
+      json.top_k = top_k;
+    }
+    if (temperature) {
+      json.temperature = temperature;
+    }
+    if (max_tokens) {
+      json.max_tokens = max_tokens;
+    }
+    if (filled_context) {
+      json.context = filled_context;
+    }
     if (this.log) { console.log("DirAskGPT json:", json); }
 
-    // const HTTPREQUEST = {
-    //   url: pai_url,
-    //   json: json,
-    //   method: "POST"
-    // }
-
     const HTTPREQUEST = {
-      url: server_base_url + "/" + this.context.projectId + "/kb/qa",
+      // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
+      url: kb_endpoint + "/qa",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'JWT ' + this.context.token
@@ -329,7 +343,7 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+      if (this.log) { console.log("DirAskGPT INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
 
       this.#myrequest(
         INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
@@ -361,12 +375,12 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
+      if (this.log) { console.log("DirAskGPT KB_HTTPREQUEST", KB_HTTPREQUEST); }
 
       this.#myrequest(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            if (this.log) { console.error("DirGptTask Get kb settings error ", err); }
+            if (this.log) { console.error("DirAskGPT Get kb settings error ", err); }
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -391,12 +405,12 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
 
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Check quote availability err: ", err);
+            console.error("(httprequest) DirAskGPT Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {
@@ -422,15 +436,15 @@ class DirAskGPTV2 {
         json: { tokens: tokens },
         method: "POST"
       }
-      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
 
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
+            console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
             rejects(false)
           } else {
-            console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody);
+            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }

@@ -77,6 +77,7 @@ class DirGptTask {
 
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
+    const filled_context = filler.fill(action.context, requestVariables);
 
     let max_tokens = action.max_tokens;
     let temperature = action.temperature;
@@ -141,7 +142,7 @@ class DirGptTask {
     let message = { role: "", content: "" };
     if (action.context) {
       message.role = "system";
-      message.content = action.context;
+      message.content = filled_context;
       json.messages.unshift(message);
     }
     if (this.log) { console.log("DirGptTask json: ", json) }
