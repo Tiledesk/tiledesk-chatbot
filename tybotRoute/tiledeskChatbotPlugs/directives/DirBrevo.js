@@ -119,11 +119,11 @@ class DirBrevo {
       "emailBlacklisted": false,
 			"smsBlacklisted": false,
 			"listIds": [
-					  22
+					  0
 			],
 			"updateEnabled": false,
 			"smtpBlacklistSender": [
-					"info@sendinblue.com"
+					"info@mytest.com"
 			]
     }
     if (this.log) { console.log('DirBrevo key Debug2: ', key) }
