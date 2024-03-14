@@ -98,7 +98,7 @@ class DirBrevo {
 
     let json =  bodyParameters
     // ONLY FOR DEBUG CANCELLARE!!!!!
-    //key = process.env.BREVO_TOKEN;
+    key = process.env.BREVO_TOKEN;
     if (this.log) { console.log('DirBrevo key Debug: ', key) }
     //----------------
     if (this.log) {console.log("DirBrevo brevo_base_url ",brevo_base_url);}
