@@ -79,12 +79,11 @@ class DirBrevo {
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
+    if (this.log) { console.log('DirBrevo key Debug1: ', key) }
     if (!key) {
       if (this.log) { console.log("DirBrevo - Key not found in Integrations."); }
       if (falseIntent) {
-         // ONLY FOR DEBUG CANCELLARE!!!!!
-        await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-        //await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -101,7 +100,7 @@ class DirBrevo {
     let json =  bodyParameters
     // ONLY FOR DEBUG CANCELLARE!!!!!
     key = process.env.BREVO_TOKEN;
-    if (this.log) { console.log('DirBrevo key Debug: ', key) }
+    if (this.log) { console.log('DirBrevo key Debug2: ', key) }
     //----------------
     if (this.log) {console.log("DirBrevo brevo_base_url ",brevo_base_url);}
     if (this.log) { console.log('DirBrevo json: ', json) }
