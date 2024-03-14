@@ -81,7 +81,9 @@ class DirBrevo {
     let key = await this.getKeyFromIntegrations(server_base_url);
     if (this.log) { console.log('DirBrevo key Debug1: ', key) }
     // ONLY FOR DEBUG CANCELLARE!!!!!
-    key = process.env.BREVO_TOKEN;
+    if (process.env.BREVO_DEBUG == '1') {
+      key = process.env.BREVO_TOKEN;
+    }
     if (!key) {
       if (this.log) { console.log("DirBrevo - Key not found in Integrations."); }
       if (falseIntent) {
