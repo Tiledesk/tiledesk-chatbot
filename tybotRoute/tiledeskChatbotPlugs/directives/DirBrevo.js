@@ -82,7 +82,9 @@ class DirBrevo {
     if (!key) {
       if (this.log) { console.log("DirBrevo - Key not found in Integrations."); }
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+         // ONLY FOR DEBUG CANCELLARE!!!!!
+        await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        //await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
