@@ -101,10 +101,21 @@ class DirBrevo {
     }
     if (this.log) { console.log('DirBrevo bodyParameters filler: ', bodyParameters) }
 
+    // CREATE THE JSON FOR BREVO
+    let brevo_email = '';
+    let brevo_bodyParameters = {};
+    for (const [key, value] of Object.entries(bodyParameters)) {
+      if (this.log) { console.log("bodyParam:", key, "value:", value) }
+      if (key === 'email') {brevo_email = value}
+      else { brevo_bodyParameters[key] = value;}
+    }
+    if (this.log) { console.log('DirBrevo brevo_email: ', brevo_email) }
+    if (this.log) { console.log('DirBrevo brevo_bodyParameters: ', brevo_bodyParameters) }
+
 
     let json = {
-      email: bodyParameters.email,
-      attributes: bodyParameters,
+      email: brevo_email,
+      attributes: brevo_bodyParameters.attributes,
       "emailBlacklisted": false,
 			"smsBlacklisted": false,
 			"listIds": [
