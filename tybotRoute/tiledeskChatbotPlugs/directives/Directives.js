@@ -24,6 +24,8 @@ class Directives {
   static SET_ATTRIBUTE = "setattribute";
   static SET_ATTRIBUTE_V2 = "setattribute-v2";
   static REPLY = 'reply';
+  static DTMF_FORM = 'dtmf_form';
+  static BLIND_TRANSFER = 'blind_transfer';
   static RANDOM_REPLY = 'randomreply';
   static CODE = 'code';
   static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
