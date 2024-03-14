@@ -10,6 +10,7 @@ available on:
 - Added support for temperature, top_k, max_tokens and context for AskGPTV2 action
 - Added support for context with variables for GptTask action
 - fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);
+- Added support for DTMF and Blind Transfer (Reply for voice channel)
 
 # v0.2.56
 - Fixing Customerio Action not passing testing
