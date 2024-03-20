@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.57
+- fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);
+- 
+
 # v0.2.56
 - Fixing Customerio Action not passing testing
 
