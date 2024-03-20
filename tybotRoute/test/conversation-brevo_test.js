@@ -68,7 +68,7 @@ describe('Conversation for brevo test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log('/brevo success message: ', JSON.stringify(message, null,2));
+      //console.log('/brevo success message: ', JSON.stringify(message, null,2));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'brevo status is: 201');
@@ -113,7 +113,7 @@ describe('Conversation for brevo test', async () => {
 
   
     endpointServer.post('/api/v3/contacts', function (req, res) {
-      console.log("/api/v3/contacts --> OK");
+      //console.log("/api/v3/contacts --> OK");
       let http_code = 201;
       let reply = {
         "id": 6
@@ -139,7 +139,7 @@ describe('Conversation for brevo test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        //console.log("Message sent:\n", request);
       });
     });
   });
@@ -153,7 +153,7 @@ describe('Conversation for brevo test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("/brevo failure message: ", JSON.stringify(message, null, 2));
+      //console.log("/brevo failure message: ", JSON.stringify(message, null, 2));
       getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
@@ -185,7 +185,7 @@ describe('Conversation for brevo test', async () => {
       });
 
     endpointServer.post('/api/v3/contacts', function (req, res) {
-      console.log("/api/v3/contacts --> KO 401");
+      //console.log("/api/v3/contacts --> KO 401");
       let http_code = 401;
       let reply = {
         "message": "Key not found",
@@ -257,7 +257,7 @@ it('/brevo failure - return code 400', (done) => {
     });
 
   endpointServer.post('/api/v3/contacts', function (req, res) {
-    console.log("/api/v3/contacts --> KO 400");
+    //console.log("/api/v3/contacts --> KO 400");
     let http_code = 400;
     let reply = {
       "code": "invalid_parameter",
@@ -329,7 +329,7 @@ it('/brevo failure double contact - return code 400', (done) => {
     });
 
   endpointServer.post('/api/v3/contacts', function (req, res) {
-    console.log("/api/v3/contacts --> KO 400");
+    //console.log("/api/v3/contacts --> KO 400");
     let http_code = 400;
     let reply = {
       "code": "duplicate_parameter",
