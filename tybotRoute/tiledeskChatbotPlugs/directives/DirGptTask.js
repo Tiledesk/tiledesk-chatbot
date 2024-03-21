@@ -365,7 +365,10 @@ class DirGptTask {
       this.#myrequest(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Get KnowledgeBase err ", err);
+            console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err.message);
+            if (this.log) {
+              console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
+            }
             resolve(null);
           } else {
             if (!resbody.gptkey) {

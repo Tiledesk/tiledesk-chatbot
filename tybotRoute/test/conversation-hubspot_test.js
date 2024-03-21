@@ -69,7 +69,7 @@ describe('Conversation for hubspot test', async () => {
       res.send({ success: true });
       const message = req.body;
 
-      console.log('/hubspot success message: ', JSON.stringify(message, null, 2));
+      // console.log('/hubspot success message: ', JSON.stringify(message, null, 2));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'hubspot status is: 201');
