@@ -80,12 +80,15 @@ class DirWebRequestV2 {
       falseIntent = null;
     }
 
+    let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
+    
     if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
       url: url,
       headers: headers,
       json: json,
-      method: action.method
+      method: action.method,
+      timeout: timeout
     };
     if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
     this.#myrequest(
@@ -302,6 +305,16 @@ class DirWebRequestV2 {
         );
       }
     });
+  }
+
+  #webrequest_timeout(action, default_timeout, min, max) {
+    let timeout = default_timeout;
+    if (action.timeout) {
+      if (action.timeout && typeof action.timeout === "number" && action.timeout > min && action.timeout < max) {
+        timeout = Math.round(action.timeout)
+      }
+    }
+    return timeout
   }
 
 }
