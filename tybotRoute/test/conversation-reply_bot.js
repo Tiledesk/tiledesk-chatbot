@@ -5,44 +5,6 @@ const bot = {
 	"type": "tilebot",
 	"intents": [
 		{
-			// TRUE INTENT
-			"webhook_enabled": false,
-			"enabled": true,
-			"actions": [{
-				"_tdActionType": "reply",
-				"text": "xxx",
-				"attributes": {
-					"commands": [{
-						"type": "wait",
-						"time": 500
-					}, {
-						"type": "message",
-						"message": {
-							"type": "text",
-							"text": "qapla status is: {{qapla_status}}"
-						}
-					},
-					{
-						"type": "message",
-						"message": {
-							"type": "text",
-							"text": "qapla result is: {{qapla_result}}"
-						}
-					},
-					{
-						"type": "message",
-						"message": {
-							"type": "text",
-							"text": "qapla error is: {{qapla_error}}"
-						}
-					}]
-				}
-			}],
-			"language": "en",
-			"intent_display_name": "gpt intent true",
-			"intent_id": "reply"
-		},
-		{
 			"webhook_enabled": false,
 			"enabled": true,
 			"actions": [
@@ -76,6 +38,7 @@ const bot = {
 							},
 							{
 								"type": "settings",
+								"subType": "dtmf_form",
 								"settings": {
 									"maxDigits": "10",
 									"terminators": "#"
@@ -87,6 +50,56 @@ const bot = {
 			],
 			"intent_id": "2a08f448-ab0c-4149-8776-fe7d145a8733",
 			"intent_display_name": "dtmfform",
+			"language": "en"
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"actions": [
+				{
+					"_tdActionTitle": "",
+					"_tdActionId": "8fb872b7-e71a-4b1d-8537-36febe72cd24",
+					"_tdActionType": "dtmf_menu",
+					"attributes": {
+						"disableInputMessage": false,
+						"commands": [
+							{
+								"type": "wait",
+								"time": 500
+							},
+							{
+								"type": "message",
+								"message": {
+									"type": "text",
+									"text": "This is a dtmf menu",
+									"attributes": {
+										"attachment": {
+											"type": "template",
+											"buttons": []
+										}
+									}
+								}
+							},
+							{
+								"type": "wait",
+								"time": 0
+							},
+							{
+								"type": "settings",
+								"subType": "dtmf_menu",
+								"settings": {
+									"no_input": "#no_input_id",
+                                    "no_match": "#no_match_id",
+                                    "timeout": 15,
+                                    "bargein": true
+								}
+							}
+						]
+					}
+				}
+			],
+			"intent_id": "2a08f448-ab0c-4149-8776-fe7d145a8733",
+			"intent_display_name": "dtmfmenu",
 			"language": "en"
 		},
 		{

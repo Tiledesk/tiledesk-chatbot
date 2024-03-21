@@ -114,6 +114,64 @@ describe('Conversation for Reply test', async () => {
     });
   });
 
+  it('/reply success (dtmf menu)', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'This is a dtmf menu');
+
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "settings");
+      assert(command3.subType === "dtmf_menu");
+      assert(command3.settings.no_input === "#no_input_id");
+      assert(command3.settings.no_match === "#no_match_id");
+      assert(command3.settings.timeout === 15);
+      assert(command3.settings.bargein === true);
+
+      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/dtmfmenu',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
   it('/reply success (blind tranfer form)', (done) => {
 
     let listener;

@@ -337,9 +337,9 @@ class TiledeskChatbotUtil {
     static async updateConversationTranscript(chatbot, message) {
         // console.log("transcript updating with:", message)
         
-        console.log("chatbot name is:", chatbot.bot.name);
+        //console.log("chatbot name is:", chatbot.bot.name);
         const chatbot_name = chatbot.bot.name.trim();
-        console.log("chatbot name is:", chatbot_name);
+        //console.log("chatbot name is:", chatbot_name);
 
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");

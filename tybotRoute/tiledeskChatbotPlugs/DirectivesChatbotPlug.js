@@ -298,6 +298,13 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.DTMF_MENU) {
+      // console.log("...DirReply");
+      new DirReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.BLIND_TRANSFER) {
       // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
