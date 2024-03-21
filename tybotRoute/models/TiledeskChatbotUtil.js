@@ -335,12 +335,8 @@ class TiledeskChatbotUtil {
     }
 
     static async updateConversationTranscript(chatbot, message) {
-        // console.log("transcript updating with:", message)
-        
-        console.log("chatbot name is:", chatbot.bot.name);
         const chatbot_name = chatbot.bot.name.trim();
-        console.log("chatbot name is:", chatbot_name);
-
+        
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             // console.log("transcript got:", transcript);
@@ -356,7 +352,7 @@ class TiledeskChatbotUtil {
             // let transcript2 = await chatbot.getParameter("transcript");
             // console.log("transcript updated:", transcript2);
         }
-        
+
         function name_of(message, chatbot_name) {
             let fullName = message.senderFullname;
             if (fullName.trim() === chatbot_name) {
@@ -365,6 +361,46 @@ class TiledeskChatbotUtil {
             return "[[[" + fullName + "]]]";
         }
     }
+
+    static transcriptJSON(transcript) {
+        const regexp = /(<.*>)/gm;
+        const parts = transcript.split(regexp);
+        // console.log("parts:", parts);
+        // console.log("typeof parts:", typeof parts);
+        // console.log("length parts:", parts.length);
+        // console.log("Array.isArray(parts):", Array.isArray(parts));
+        let messages = [];
+        let current_message;
+        try {
+            for (let i = 0; i < parts.length; i++) {
+                let row = parts[i];
+                // console.log("row:", row)
+                if (row.startsWith("<bot:")) {
+                    // console.log("start with", row)
+                    current_message = {
+                        "role": "assistant"
+                    }
+                }
+                else if (row.startsWith("<user:")) {
+                    // console.log("start with", row)
+                    current_message = {
+                        "role": "user"
+                    }
+                }
+                else if (current_message) {
+                    // console.log("adding text", row)
+                    current_message["content"] = row.trim();
+                    messages.push(current_message);
+                }
+            };
+        }
+        catch(error) {
+            console.error("err:", error);
+        }
+        // console.log("messages:", messages);
+        return messages;
+    }
+
 
     static isHiddenMessage(message) {
         if (message && message.attributes && message.attributes.subtype === "info") {
