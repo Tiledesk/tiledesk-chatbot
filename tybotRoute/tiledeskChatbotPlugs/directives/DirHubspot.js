@@ -72,7 +72,7 @@ class DirHubspot {
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const hubspot_base_url = process.env.HUBSPOT_ENDPOINT;
+    const hubspot_base_url = process.env.HUBSPOT_ENDPOINT || "https://api.hubapi.com/crm/v3/";
     if (this.log) {
       console.log("DirHubspot server_base_url ", server_base_url);
       console.log("DirHubspot hubspot_base_url ", hubspot_base_url);
