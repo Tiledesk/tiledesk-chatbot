@@ -18,10 +18,10 @@ const bot = {
 				"_tdActionTitle": "brevo",
 				"_tdActionId": "123456789",
 				"bodyParameters": {
-					"email": "elly@example42.com",
+					"email": "elly@example62.com",
 					"FIRSTNAME": "Ellya",
 					"LASTNAME":"Ninas",
-    				"SMS":"+393284347632",
+    				"SMS":"+393264347637",
 				
 					"emailBlacklisted": false,
 					"smsBlacklisted": false,

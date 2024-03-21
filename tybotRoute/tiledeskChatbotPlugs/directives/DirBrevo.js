@@ -182,11 +182,11 @@ class DirBrevo {
             return;
           }
         } else if (callback) {
-          if (this.log) { console.log("DirBrevo resbody: ", JSON.stringify(resbody, null, 2)); }
+          if (this.log) { console.log("DirBrevo resbody: ", JSON.stringify(resbody, null, 2).slice(2, -1)); }
 
           let status = 201;
           let error = null;
-          let result = resbody;
+          let result = JSON.stringify(resbody, null, 2).slice(2, -1);
           await this.#assignAttributes(action, status, result, error);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
