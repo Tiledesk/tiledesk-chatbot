@@ -246,11 +246,6 @@ router.post('/ext/:botid', async (req, res) => {
   
 });
 
-router.post('/hooks/:hookid', async (req, res) => {
-  // chatbot_id + intend_id
-
-});
-
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
   res.json({success:true});
   const projectId = req.params.projectId;

@@ -81,7 +81,7 @@ class DirWebRequestV2 {
     }
 
     let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
-    
+
     if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
       url: url,
@@ -309,8 +309,8 @@ class DirWebRequestV2 {
 
   #webrequest_timeout(action, default_timeout, min, max) {
     let timeout = default_timeout;
-    if (action.timeout) {
-      if (action.timeout && typeof action.timeout === "number" && action.timeout > min && action.timeout < max) {
+    if (action.settings && action.settings.timeout) {
+      if (action.settings.timeout && typeof action.settings.timeout === "number" && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.timeout)
       }
     }

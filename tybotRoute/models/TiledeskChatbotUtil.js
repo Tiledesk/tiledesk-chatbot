@@ -345,7 +345,7 @@ class TiledeskChatbotUtil {
                 transcript = transcript + "\n" + _name_of + message.text;
             }
             else {
-                transcript = _name_of + message.text;
+                transcript = _name_of + " " + message.text;
             }
             // console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
@@ -358,7 +358,7 @@ class TiledeskChatbotUtil {
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
             }
-            return "[[[" + fullName + "]]]";
+            return "<" + fullName + ">";
         }
     }
 
