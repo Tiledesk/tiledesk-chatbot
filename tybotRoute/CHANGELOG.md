@@ -7,6 +7,10 @@ available on:
 
 # v0.2.58 (next-release)
 - Added support for DTMF Menu (Reply for voice channel)
+- Added Brevo Action
+
+# v0.2.58-rc2
+- Added Brevo Action
 
 # v0.2.58-rc1
 - Added support for DTMF Menu (Reply for voice channel)
