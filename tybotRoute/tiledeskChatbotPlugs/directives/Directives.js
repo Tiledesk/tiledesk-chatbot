@@ -27,17 +27,23 @@ class Directives {
   static RANDOM_REPLY = 'randomreply';
   static CODE = 'code';
   static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
+  static FORM = "form";
+  static CAPTURE_USER_REPLY = "capture_user_reply";
+  static REPLACE_BOT_V2 = "replacebotv2";
+  /**** AI ****/
   static ASK_GPT = "askgpt";
   static ASK_GPT_V2 = "askgptv2";
   static GPT_TASK = "gpt_task";
-  static FORM = "form";
-  static CAPTURE_USER_REPLY = "capture_user_reply";
+  /**** INTEGRATIONS ****/
   static QAPLA = 'qapla';
   static MAKE = 'make';
-  static REPLACE_BOT_V2 = "replacebotv2";
   static HUBSPOT = 'hubspot';
   static CUSTOMERIO = 'customerio';
   static BREVO = 'brevo';
+  /**** VOICE CHANNEL ****/
+  static DTMF_FORM = 'dtmf_form';
+  static DTMF_MENU = 'dtmf_menu';
+  static BLIND_TRANSFER = 'blind_transfer';
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

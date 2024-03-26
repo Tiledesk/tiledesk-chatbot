@@ -174,7 +174,13 @@ router.post('/ext/:botid', async (req, res) => {
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
 
-  let reply = await chatbot.replyToMessage(message);
+  let reply = null;
+  try {
+    reply = await chatbot.replyToMessage(message);
+  }
+  catch(err) {
+    console.error("An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+  }
   if (!reply) {
     reply = {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
