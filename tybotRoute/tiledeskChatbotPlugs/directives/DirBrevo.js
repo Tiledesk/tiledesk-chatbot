@@ -72,10 +72,10 @@ class DirBrevo {
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const brevo_base_url = process.env.BREVO_ENDPOINT;
+    const brevo_base_url = process.env.BREVO_ENDPOINT || "https://api.brevo.com/v3"
     if (this.log) {
       console.log("DirBrevo server_base_url ", server_base_url);
-      console.log("DirBrevo brevo_base_url ",brevo_base_url);
+      console.log("DirBrevo brevo_base_url ", brevo_base_url);
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
