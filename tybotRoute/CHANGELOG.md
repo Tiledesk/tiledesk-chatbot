@@ -6,8 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # v0.2.58
-- added timeout option to WebRequestv2
+- added settings.timeout option to WebRequestv2
 - added TiledeskChatbotUtil.transcriptJSON(transcript)
+- added flow attribute "decodedCustomJWT"
 
 # v0.2.57
 - fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);

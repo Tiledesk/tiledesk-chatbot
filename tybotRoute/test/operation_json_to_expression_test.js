@@ -244,9 +244,9 @@ describe('JSON operation to expression', function() {
                     function: "JSONparse"
                 }
             ];
-            console.log("JSONparse value:", operands[0].value);
+            // console.log("JSONparse value:", operands[0].value);
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            console.log("JSONparse expression:", expression);
+            // console.log("JSONparse expression:", expression);
             assert.equal(expression, 'JSON.parse(String($data.json_var))');
         });
 
