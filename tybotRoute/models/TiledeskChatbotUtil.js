@@ -572,6 +572,9 @@ class TiledeskChatbotUtil {
                 if (message.request.attributes && message.request.attributes.decoded_jwt) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_DECODED_JWT_KEY, message.request.attributes.decoded_jwt);
                 }
+                if (message.request.requester && message.request.requester.isAuthenticated === true) {
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY, true);
+                }
             }
             // console.log("message.request.language", message.request["language"])
             if (message.request && message.request.department) {

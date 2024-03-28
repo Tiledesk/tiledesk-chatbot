@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.59
+- added flow attribute "strongAuthentication" mapped on requester.isAuthenticated
+
 # v0.2.58
 - added settings.timeout option to WebRequestv2
 - added TiledeskChatbotUtil.transcriptJSON(transcript)
