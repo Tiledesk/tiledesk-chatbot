@@ -140,7 +140,10 @@ class DirGptTask {
               KB_HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                   if (callback) {
-                    console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err);
+                    console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err.message);
+                    if (this.log) {
+                      console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
+                    }
                     await this.#assignAttributes(action, answer);
                     if (falseIntent) {
                       await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);

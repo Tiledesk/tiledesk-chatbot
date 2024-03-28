@@ -57,7 +57,7 @@ class DirCode {
     // }
     let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, attributes);
     script_context.context = variablesManager;
-    console.log("script_context:", script_context);
+    // console.log("script_context:", script_context);
     const tdExpression = new TiledeskExpression();
     //console.log("tdExpression:", tdExpression.evaluateJavascriptExpression);
     try {

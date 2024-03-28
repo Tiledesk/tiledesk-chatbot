@@ -465,8 +465,49 @@ describe('removeEmptyReplyCommands', function() {
         assert(commands.length === 0);
         assert(TiledeskChatbotUtil.isValidReply(message) === false);
     });
+
+    it('Gets transcript as object', async () => {
+        const transcript = `<bot:My bot Name>
+
+lorem ipsum 1
+lorem ipsum 2
+<user:John> lorem ipsum 3
+lorem ipsum 4
+<user:John> lorem ipsum 3
+
+lorem ipsum 4
+<bot:My bot Name> lorem ipsum 3
+lorem ipsum 4
+<user:John> lorem ipsum 3
+lorem ipsum 4
+<bot:My bot Name> bye
+closing conversation
+`
+        const transcript_array = TiledeskChatbotUtil.transcriptJSON(transcript);
+        console.log("transcript_object:", transcript_array);
+        assert(transcript_array.length === 6);
+        assert(transcript_array[0].role === "assistant");
+        assert(transcript_array[0].content === "lorem ipsum 1\nlorem ipsum 2");
+        assert(transcript_array[1].role === "user");
+        assert(transcript_array[1].content === "lorem ipsum 3\nlorem ipsum 4");
+
+        assert(transcript_array[2].role === "user");
+        assert(transcript_array[2].content === "lorem ipsum 3\n\nlorem ipsum 4");
+
+        assert(transcript_array[3].role === "assistant");
+        assert(transcript_array[3].content === "lorem ipsum 3\nlorem ipsum 4");
+
+        assert(transcript_array[4].role === "user");
+        assert(transcript_array[4].content === "lorem ipsum 3\nlorem ipsum 4");
+
+        assert(transcript_array[5].role === "assistant");
+        assert(transcript_array[5].content === "bye\nclosing conversation");
+//         { role: 'assistant', content: 'lorem ipsum 1\nlorem ipsum 2' },
+//   { role: 'user', content: 'lorem ipsum 3\nlorem ipsum 4' },
+//   { role: 'user', content: 'lorem ipsum 3\n\nlorem ipsum 4' },
+//   { role: 'assistant', content: 'lorem ipsum 3\nlorem ipsum 4' },
+//   { role: 'user', content: 'lorem ipsum 3\nlorem ipsum 4' },
+//   { role: 'assistant', content: 'bye\nclosing conversation' }
+    });
+
 });
-
-
-
-

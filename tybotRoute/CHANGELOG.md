@@ -5,15 +5,21 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.58 (next-release)
+# v0.2.60 (next-release)
 - Added support for DTMF Menu (Reply for voice channel)
 - Added Brevo Action
 
-# v0.2.58-rc2
+# v0.2.60-rc1
 - Added Brevo Action
-
-# v0.2.58-rc1
 - Added support for DTMF Menu (Reply for voice channel)
+
+# v0.2.59
+- added flow attribute "strongAuthentication" mapped on request.requester.isAuthenticated (true|false)
+
+# v0.2.58
+- added settings.timeout option to WebRequestv2
+- added TiledeskChatbotUtil.transcriptJSON(transcript)
+- added flow attribute "decodedCustomJWT"
 
 # v0.2.57
 - Changed env variables for AskGPT actions
@@ -21,6 +27,7 @@ available on:
 - Added support for context with variables for GptTask action
 - fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);
 - Added support for DTMF Form and Blind Transfer (Reply for voice channel)
+- Added context and top_k parameter in DirAskGPTV2
 
 # v0.2.56
 - Fixing Customerio Action not passing testing
