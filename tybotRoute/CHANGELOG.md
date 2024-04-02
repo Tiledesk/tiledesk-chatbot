@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.60
+- added flow attributes:
+  - lastUserDocumentAsAttachmentURL: Document as a downloadable on click
+  - lastUserDocumentAsInlineURL: Document as "view inline" on click
+ - flow attribute "strongAuthentication" renamed in "strongAuthenticated"
+
 # v0.2.59
 - added flow attribute "strongAuthentication" mapped on request.requester.isAuthenticated (true|false)
 

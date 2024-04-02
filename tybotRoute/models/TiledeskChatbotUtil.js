@@ -494,9 +494,16 @@ class TiledeskChatbotUtil {
                     //     "uid": "lo68oz8i"
                     // }
                     if (message.metadata.src) {
-                    await chatbot.addParameter("lastUserDocumentURL", message.metadata.src);
-                    await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
-                    await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
+                        await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
+                        const url_as_attachment = message.metadata.src;
+                        await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
+                        let url_inline = url_as_attachment;
+                        if (url_as_attachment.match(/.*\/download.*/)) { // removing "/download" removes the "Content-disposion: attachment" HTTP header
+                            url_inline = url_as_attachment.replace('/download', '/');
+                        }
+                        await chatbot.addParameter("lastUserDocumentAsInlineURL", url_inline);
+                        await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
+                        await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
                     }
                 }
                 else {
@@ -590,12 +597,6 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
             }
-        
-            if (projectId === "641864da99c1fb00131ba495") {
-                console.log("641864da99c1fb00131ba495 > for projectId:", JSON.stringify(message))
-            }
-            // for BUG
-            // if (chatbot.log) {console.log("message.request.attributes.payload", JSON.stringify(message.request.attributes.payload))}
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
                 if (!message.attributes) {
                     message.attributes = {}
