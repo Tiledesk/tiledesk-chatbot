@@ -5,9 +5,23 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.60
+- added flow attributes:
+  - lastUserDocumentAsAttachmentURL: Document as a downloadable on click
+  - lastUserDocumentAsInlineURL: Document as "view inline" on click
+ - flow attribute "strongAuthentication" renamed in "strongAuthenticated"
+
+# v0.2.59
+- added flow attribute "strongAuthentication" mapped on request.requester.isAuthenticated (true|false)
+
+# v0.2.58
+- added settings.timeout option to WebRequestv2
+- added TiledeskChatbotUtil.transcriptJSON(transcript)
+- added flow attribute "decodedCustomJWT"
+
 # v0.2.57
 - fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);
-- 
+- Added context and top_k parameter in DirAskGPTV2
 
 # v0.2.56
 - Fixing Customerio Action not passing testing

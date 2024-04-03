@@ -126,7 +126,10 @@ class DirQapla {
       QAPLA_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            console.error("(httprequest) DirQapla getShipment err:", err);
+            console.error("(httprequest) DirQapla getShipment err:", err.message);
+            if (this.log) {
+              console.error("(httprequest) DirQapla getShipment full err:", err);
+            }
             error = "Unable to get shipment";
             await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
