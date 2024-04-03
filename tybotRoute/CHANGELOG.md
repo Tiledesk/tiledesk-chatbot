@@ -5,11 +5,17 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+
+# v0.2.61 (next-release)
+
+# v0.2.61-rc1
+- Added VXML actions (dmtf_menu, dtmf_form, blind_transfer)
+
 # v0.2.60
 - added flow attributes:
-  - lastUserDocumentAsAttachmentURL: Document as a downloadable on click
-  - lastUserDocumentAsInlineURL: Document as "view inline" on click
- - flow attribute "strongAuthentication" renamed in "strongAuthenticated"
+- lastUserDocumentAsAttachmentURL: Document as a downloadable on click
+- lastUserDocumentAsInlineURL: Document as "view inline" on click
+- flow attribute "strongAuthentication" renamed in "strongAuthenticated"
 
 # v0.2.59
 - added flow attribute "strongAuthentication" mapped on request.requester.isAuthenticated (true|false)
