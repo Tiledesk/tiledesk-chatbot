@@ -315,7 +315,7 @@ class DirWebRequestV2 {
     console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
     if (action.settings && action.settings.timeout) {
       if (action.settings.timeout && (typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
-        timeout = Math.round(action.timeout)
+        timeout = Math.round(action.settings.timeout)
         console.log("new timeout:", timeout);
       }
     }
