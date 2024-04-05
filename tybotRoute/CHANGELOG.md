@@ -6,7 +6,8 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# v0.2.61 (next-release)
+# v0.2.61
+- fixed WebRequestv2 timeout
 
 # v0.2.61-rc1
 - Added VXML actions (dmtf_menu, dtmf_form, blind_transfer)

@@ -80,7 +80,7 @@ class DirWebRequestV2 {
       falseIntent = null;
     }
 
-    let timeout = this.#webrequest_timeout(action, 20000, 0, 300000);
+    let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     console.log("final timeout", timeout);
     if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
@@ -309,20 +309,23 @@ class DirWebRequestV2 {
 
   #webrequest_timeout(action, default_timeout, min, max) {
     let timeout = default_timeout;
-    console.log("default timeout:", timeout);
-    console.log("action.settings:", action.settings);
-    console.log("action.settings.timeout:", action.settings.timeout);
-    console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
-    console.log("action.settings.timeout > min", action.settings.timeout > min)
-    console.log("action.settings.timeout < max", action.settings.timeout < max)
+    if (!action.settings) {
+      return timeout;
+    }
+    // console.log("default timeout:", timeout);
+    // console.log("action.settings:", action.settings);
+    // console.log("action.settings.timeout:", action.settings.timeout);
+    // console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
+    // console.log("action.settings.timeout > min", action.settings.timeout > min)
+    // console.log("action.settings.timeout < max", action.settings.timeout < max)  
     
-    if (action.settings && action.settings.timeout) {
+    if (action.settings.timeout) {
       if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.settings.timeout)
-        console.log("new timeout:", timeout);
+        // console.log("new timeout:", timeout);
       }
     }
-    console.log("returning timeout:", timeout);
+    // console.log("returning timeout:", timeout);
     return timeout
   }
 
