@@ -212,7 +212,7 @@ class DirWebRequestV2 {
       method: options.method,
       params: options.params,
       headers: options.headers,
-      timeout: 20000
+      timeout: options.timeout
     }
     if (options.json !== null) {
       axios_options.data = options.json
