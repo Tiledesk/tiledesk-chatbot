@@ -313,8 +313,11 @@ class DirWebRequestV2 {
     console.log("action.settings:", action.settings);
     console.log("action.settings.timeout:", action.settings.timeout);
     console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
+    console.log("action.settings.timeout > min", action.settings.timeout > min)
+    console.log("action.settings.timeout < max", action.settings.timeout < max)
+    
     if (action.settings && action.settings.timeout) {
-      if (action.settings.timeout && (typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
+      if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.settings.timeout)
         console.log("new timeout:", timeout);
       }
