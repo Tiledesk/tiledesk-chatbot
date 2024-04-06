@@ -75,8 +75,8 @@ class DirCaptureUserReply {
       // console.log("(DirCaptureUserReply) lockIntent");
       await this.chatbot.lockAction(this.requestId, actionId);
       // console.log("(DirCaptureUserReply) lockAction");
-      let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-      let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
+      // let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+      // let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
       // console.log("(DirCaptureUserReply) _lockedAction", _lockedAction)
       // console.log("(DirCaptureUserReply) _lockedIntent", _lockedIntent)
       callback();
