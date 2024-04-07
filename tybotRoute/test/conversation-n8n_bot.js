@@ -22,6 +22,7 @@ const bot = {
                     "class":"1A",
 					"mail": "elly@example62.com"
 				  },
+                "url" : "1234",
 				"assignResultTo": "n8n_result",
 				"assignStatusTo": "n8n_status",
 				"assignErrorTo": "n8n_error",

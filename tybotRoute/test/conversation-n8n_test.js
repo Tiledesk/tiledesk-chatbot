@@ -112,7 +112,7 @@ describe('Conversation for n8n test', async () => {
     });
 
   
-    endpointServer.post('/api/v3/contacts', function (req, res) {
+    endpointServer.post('/api/v3/1234', function (req, res) {
       console.log("/api/v3/contacts --> OK");
       let http_code = 201;
       let reply = {
