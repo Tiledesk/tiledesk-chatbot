@@ -72,7 +72,7 @@ class DirN8N {
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const n8n_base_url = process.env.N8N_ENDPOINT || "https://ninella.app.n8n.cloud/webhook-test/1c200ab9-1b3e-41fb-b33f-feb584fb9885"
+    const n8n_base_url = process.env.N8N_ENDPOINT || "https://ninella.app.n8n.cloud/webhook-test/"
     if (this.log) {
       console.log("DirN8n server_base_url ", server_base_url);
       console.log("DirN8n n8n_base_url ", n8n_base_url);
