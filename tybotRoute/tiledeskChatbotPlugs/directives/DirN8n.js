@@ -76,7 +76,7 @@ class DirN8N {
 
     if (this.log) {
       console.log("DirN8n server_base_url ", server_base_url);
-      console.log("DirN8n n8n_base_url ", n8n_base_url);
+      console.log("DirN8n n8n_base_url test ", n8n_base_url);
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
@@ -121,7 +121,7 @@ class DirN8N {
         url = action.url;
     }
 
-    if (this.log) {console.log("DirN8n n8n_base_url ",url);}
+    if (this.log) {console.log("DirN8n n8n_base_url pro ",url);}
     if (this.log) { console.log('DirN8n json: ', json) }
     
     const N8N_HTTPREQUEST = {
