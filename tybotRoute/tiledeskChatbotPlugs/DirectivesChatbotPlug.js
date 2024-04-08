@@ -44,6 +44,7 @@ const { DirMake } = require('./directives/DirMake');
 const { DirReplaceBotV2 } = require('./directives/DirReplaceBotV2');
 const { DirHubspot } = require('./directives/DirHubspot');
 const { DirCustomerio } = require('./directives/DirCustomerio');
+const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
 
 class DirectivesChatbotPlug {
@@ -716,6 +717,12 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.CUSTOMERIO) {
       new DirCustomerio(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      })
+    }
+    else if (directive_name === Directives.BREVO) {
+      new DirBrevo(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       })

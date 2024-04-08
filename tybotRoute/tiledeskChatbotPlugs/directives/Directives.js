@@ -39,6 +39,7 @@ class Directives {
   static MAKE = 'make';
   static HUBSPOT = 'hubspot';
   static CUSTOMERIO = 'customerio';
+  static BREVO = 'brevo';
   /**** VOICE CHANNEL ****/
   static DTMF_FORM = 'dtmf_form';
   static DTMF_MENU = 'dtmf_menu';
