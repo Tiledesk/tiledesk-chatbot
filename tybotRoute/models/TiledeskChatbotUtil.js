@@ -335,22 +335,72 @@ class TiledeskChatbotUtil {
     }
 
     static async updateConversationTranscript(chatbot, message) {
-        // console.log("transcript updating with:", message)
+        const chatbot_name = chatbot.bot.name.trim();
+        
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             // console.log("transcript got:", transcript);
+            const _name_of = name_of(message, chatbot_name);
             if (transcript) {
-                transcript = transcript + "\n[" + message.senderFullname + "] says: " + message.text;
+                transcript = transcript + "\n" + _name_of + message.text;
             }
             else {
-                transcript = "[" + message.senderFullname + "] says: " + message.text;
+                transcript = _name_of + " " + message.text;
             }
             // console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
-            let transcript2 = await chatbot.getParameter("transcript");
+            // let transcript2 = await chatbot.getParameter("transcript");
             // console.log("transcript updated:", transcript2);
         }
+
+        function name_of(message, chatbot_name) {
+            let fullName = message.senderFullname;
+            if (fullName.trim() === chatbot_name) {
+                fullName = "bot:" + fullName;
+            }
+            return "<" + fullName + ">";
+        }
     }
+
+    static transcriptJSON(transcript) {
+        const regexp = /(<.*>)/gm;
+        const parts = transcript.split(regexp);
+        // console.log("parts:", parts);
+        // console.log("typeof parts:", typeof parts);
+        // console.log("length parts:", parts.length);
+        // console.log("Array.isArray(parts):", Array.isArray(parts));
+        let messages = [];
+        let current_message;
+        try {
+            for (let i = 0; i < parts.length; i++) {
+                let row = parts[i];
+                // console.log("row:", row)
+                if (row.startsWith("<bot:")) {
+                    // console.log("start with", row)
+                    current_message = {
+                        "role": "assistant"
+                    }
+                }
+                else if (row.startsWith("<user:")) {
+                    // console.log("start with", row)
+                    current_message = {
+                        "role": "user"
+                    }
+                }
+                else if (current_message) {
+                    // console.log("adding text", row)
+                    current_message["content"] = row.trim();
+                    messages.push(current_message);
+                }
+            };
+        }
+        catch(error) {
+            console.error("err:", error);
+        }
+        // console.log("messages:", messages);
+        return messages;
+    }
+
 
     static isHiddenMessage(message) {
         if (message && message.attributes && message.attributes.subtype === "info") {
@@ -444,9 +494,16 @@ class TiledeskChatbotUtil {
                     //     "uid": "lo68oz8i"
                     // }
                     if (message.metadata.src) {
-                    await chatbot.addParameter("lastUserDocumentURL", message.metadata.src);
-                    await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
-                    await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
+                        await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
+                        const url_as_attachment = message.metadata.src;
+                        await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
+                        let url_inline = url_as_attachment;
+                        if (url_as_attachment.match(/.*\/download.*/)) { // removing "/download" removes the "Content-disposion: attachment" HTTP header
+                            url_inline = url_as_attachment.replace('/download', '/');
+                        }
+                        await chatbot.addParameter("lastUserDocumentAsInlineURL", url_inline);
+                        await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
+                        await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
                     }
                 }
                 else {
@@ -498,72 +555,76 @@ class TiledeskChatbotUtil {
                 }
             }
             
-        
             await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY, messageId);
             if (message.request && message.request.location && message.request.location.country) {
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_COUNTRY_KEY, message.request.location.country);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_COUNTRY_KEY, message.request.location.country);
             }
             if (message.request && message.request.location && message.request.location.city) {
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
             }
             // console.log("message.request.language", message.request["language"]);
             if (message.request) {
-            let user_language = message.request["language"];
-            if (message.request["language"]) {
-                // console.log("HTTP language:", message.request["language"]);
-                var languages = parser.parse(message.request["language"]);
-                // console.log("languages:", languages);
-                if (languages && languages.length > 0 && languages[0].code) {
-                user_language = languages[0].code;
+                let user_language = message.request["language"];
+                if (message.request["language"]) {
+                    // console.log("HTTP language:", message.request["language"]);
+                    var languages = parser.parse(message.request["language"]);
+                    // console.log("languages:", languages);
+                    if (languages && languages.length > 0 && languages[0].code) {
+                    user_language = languages[0].code;
+                    }
                 }
-            }
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, user_language);
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY, user_language);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_AGENT_KEY, message.request.userAgent);
+                if (message.request.attributes && message.request.attributes.decoded_jwt) {
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_DECODED_JWT_KEY, message.request.attributes.decoded_jwt);
+                }
+                if (message.request.requester) {
+                    if (message.request.requester.isAuthenticated === true) {
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY, true);
+                    }
+                    else {
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY, false);
+                    }
+                }
             }
             // console.log("message.request.language", message.request["language"])
             if (message.request && message.request.department) {
-            // It was an error when getting this from widget message's attributes
-            // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
-            // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
-            // get from request.department instead
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
+                // It was an error when getting this from widget message's attributes
+                // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
+                // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
+                // get from request.department instead
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
             }
-        
-            if (projectId === "641864da99c1fb00131ba495") {
-            console.log("641864da99c1fb00131ba495 > for projectId:", JSON.stringify(message))
-            }
-            // for BUG
-            // if (chatbot.log) {console.log("message.request.attributes.payload", JSON.stringify(message.request.attributes.payload))}
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
-            if (!message.attributes) {
-                message.attributes = {}
-            }
-            message.attributes.payload = message.request.attributes.payload
-            if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-            // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-            }
+                if (!message.attributes) {
+                    message.attributes = {}
+                }
+                message.attributes.payload = message.request.attributes.payload
+                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+                }
         
             if (message.attributes) {
-            if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
-            if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
-            if (message.attributes.payload) {
-                try {
-                for (const [key, value] of Object.entries(message.attributes.payload)) {
-                    // const value = all_parameters[key];
-                    const value_type = typeof value;
-                    //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
-                    //await chatbot.addParameter(key, String(value));
-                    await chatbot.addParameter(key, value);
+                if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
+                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
+                if (message.attributes.payload) {
+                    try {
+                        for (const [key, value] of Object.entries(message.attributes.payload)) {
+                            // const value = all_parameters[key];
+                            const value_type = typeof value;
+                            //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
+                            //await chatbot.addParameter(key, String(value));
+                            await chatbot.addParameter(key, value);
+                        }
+                    }
+                    catch(err) {
+                        console.error("Error importing message payload in request variables:", err);
+                    }
                 }
-                }
-                catch(err) {
-                console.error("Error importing message payload in request variables:", err);
-                }
-            }
             }
             
             const _bot = chatbot.bot; // aka FaqKB

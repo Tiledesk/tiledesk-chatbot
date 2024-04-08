@@ -80,12 +80,15 @@ class DirWebRequestV2 {
       falseIntent = null;
     }
 
+    let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
+    console.log("final timeout", timeout);
     if (this.log) {console.log("webRequest URL", url);}
     const HTTPREQUEST = {
       url: url,
       headers: headers,
       json: json,
-      method: action.method
+      method: action.method,
+      timeout: timeout
     };
     if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
     this.#myrequest(
@@ -209,7 +212,7 @@ class DirWebRequestV2 {
       method: options.method,
       params: options.params,
       headers: options.headers,
-      timeout: 20000
+      timeout: options.timeout
     }
     if (options.json !== null) {
       axios_options.data = options.json
@@ -302,6 +305,28 @@ class DirWebRequestV2 {
         );
       }
     });
+  }
+
+  #webrequest_timeout(action, default_timeout, min, max) {
+    let timeout = default_timeout;
+    if (!action.settings) {
+      return timeout;
+    }
+    // console.log("default timeout:", timeout);
+    // console.log("action.settings:", action.settings);
+    // console.log("action.settings.timeout:", action.settings.timeout);
+    // console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
+    // console.log("action.settings.timeout > min", action.settings.timeout > min)
+    // console.log("action.settings.timeout < max", action.settings.timeout < max)  
+    
+    if (action.settings.timeout) {
+      if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
+        timeout = Math.round(action.settings.timeout)
+        // console.log("new timeout:", timeout);
+      }
+    }
+    // console.log("returning timeout:", timeout);
+    return timeout
   }
 
 }

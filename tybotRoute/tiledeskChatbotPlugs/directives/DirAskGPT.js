@@ -89,10 +89,10 @@ class DirAskGPT {
     const filled_question = filler.fill(action.question, requestVariables);
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const pai_url = process.env.PAI_ENDPOINT || process.env.GPT_ENDPOINT;
+    const kb_endpoint = process.env.KB_ENDPOINT;
     if (this.log) {
       console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
-      console.log("DirAskGPT ApiEndpoint URL: ", pai_url);
+      console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint);
     }
 
     let key = await this.getKeyFromIntegrations(server_base_url);
@@ -136,12 +136,12 @@ class DirAskGPT {
     if (this.log) { console.log("DirAskGPT json:", json); }
 
     const HTTPREQUEST = {
-      url: pai_url,
+      url: kb_endpoint + "/qa",
       json: json,
       method: "POST"
     }
     if (this.log) { console.log("DirAskGPT HTTPREQUEST", HTTPREQUEST); }
-
+    
     this.#myrequest(
       HTTPREQUEST, async (err, resbody) => {
         if (this.log && err) {

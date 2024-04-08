@@ -174,7 +174,13 @@ router.post('/ext/:botid', async (req, res) => {
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
 
-  let reply = await chatbot.replyToMessage(message);
+  let reply = null;
+  try {
+    reply = await chatbot.replyToMessage(message);
+  }
+  catch(err) {
+    console.error("An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+  }
   if (!reply) {
     reply = {
       "text": "No messages found. Is 'defaultFallback' intent missing?"
@@ -238,11 +244,6 @@ router.post('/ext/:botid', async (req, res) => {
     });
   }
   
-});
-
-router.post('/hooks/:hookid', async (req, res) => {
-  // chatbot_id + intend_id
-
 });
 
 router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => {
