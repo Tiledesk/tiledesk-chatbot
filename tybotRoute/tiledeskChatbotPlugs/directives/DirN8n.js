@@ -72,7 +72,8 @@ class DirN8N {
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const n8n_base_url = process.env.N8N_ENDPOINT || "https://ninella.app.n8n.cloud/webhook-test/"
+    const n8n_base_url = process.env.N8N_ENDPOINT;
+
     if (this.log) {
       console.log("DirN8n server_base_url ", server_base_url);
       console.log("DirN8n n8n_base_url ", n8n_base_url);
@@ -113,10 +114,18 @@ class DirN8N {
     let json = n8n_bodyParameters;
     if (this.log) { console.log('DirN8n key Debug2: ', key) }
     //----------------
-    if (this.log) {console.log("DirN8n n8n_base_url ",n8n_base_url);}
+    let url;
+    if (n8n_base_url) {
+        url = n8n_base_url;
+    } else {
+        url = action.url;
+    }
+
+    if (this.log) {console.log("DirN8n n8n_base_url ",url);}
     if (this.log) { console.log('DirN8n json: ', json) }
+    
     const N8N_HTTPREQUEST = {
-      url: n8n_base_url + '/' + action.url,
+      url: n8n_base_url,
       headers: {
         'Authorization': 'Basic ' + key,
         'Content-Type': 'application/json',
