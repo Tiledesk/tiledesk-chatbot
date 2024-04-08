@@ -5,6 +5,8 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.62-rc1
+- Added VXML actions (speech_form, play_prompt)
 
 # v0.2.61
 - fixed WebRequestv2 timeout
