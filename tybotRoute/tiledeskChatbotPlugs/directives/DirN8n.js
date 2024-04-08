@@ -125,7 +125,7 @@ class DirN8N {
     if (this.log) { console.log('DirN8n json: ', json) }
     
     const N8N_HTTPREQUEST = {
-      url: n8n_base_url,
+      url: url,
       headers: {
         'Authorization': 'Basic ' + key,
         'Content-Type': 'application/json',
