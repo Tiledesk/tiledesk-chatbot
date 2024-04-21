@@ -5,6 +5,8 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.62
+- axios 0.27.2 => 1.6.8
 
 # v0.2.61
 - fixed WebRequestv2 timeout
