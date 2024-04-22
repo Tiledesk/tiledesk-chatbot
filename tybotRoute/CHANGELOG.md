@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.62-rc3
+- Added n8n action (webrequest)
+
 # v0.2.62-rc1
 - Added VXML actions (speech_form, play_prompt)
 
