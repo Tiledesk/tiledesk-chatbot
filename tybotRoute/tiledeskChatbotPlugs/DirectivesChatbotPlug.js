@@ -727,6 +727,19 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       })
     }
+    else if (directive_name === Directives.N8N) {
+      new DirWebRequestV2(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("stop on condition?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);

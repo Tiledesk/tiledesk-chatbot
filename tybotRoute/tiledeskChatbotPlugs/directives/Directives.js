@@ -40,6 +40,7 @@ class Directives {
   static HUBSPOT = 'hubspot';
   static CUSTOMERIO = 'customerio';
   static BREVO = 'brevo';
+  static N8N = 'n8n';
   /**** VOICE CHANNEL ****/
   static DTMF_FORM = 'dtmf_form';
   static DTMF_MENU = 'dtmf_menu';
