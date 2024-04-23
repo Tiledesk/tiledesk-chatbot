@@ -335,8 +335,11 @@ class TiledeskChatbotUtil {
     }
 
     static async updateConversationTranscript(chatbot, message) {
+        if (!message || !message.senderFullname) { // not a conversation, can it be an Automation invocation?
+            return null;
+        }
+
         const chatbot_name = chatbot.bot.name.trim();
-        
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             // console.log("transcript got:", transcript);
@@ -354,6 +357,9 @@ class TiledeskChatbotUtil {
         }
 
         function name_of(message, chatbot_name) {
+            if (!message.senderFullname) {
+                return null;
+            }
             let fullName = message.senderFullname;
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
