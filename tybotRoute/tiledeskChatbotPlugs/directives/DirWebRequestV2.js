@@ -54,17 +54,61 @@ class DirWebRequestV2 {
         headers[key] = filled_value;
       }
     }
+
     let json = null;
-    if (action.jsonBody && action.bodyType == "json") {
-      if (this.log) {console.log("action.body is:", action.jsonBody);}
-      let jsonBody = filler.fill(action.jsonBody, requestVariables);
-      try {
-        json = JSON.parse(jsonBody);
-        if (this.log) {console.log("json is:", json);}
+    try {
+      if (action.jsonBody && action.bodyType == "json") {
+        if (this.log) {console.log("action.body is:", action.jsonBody);}
+        let jsonBody = filler.fill(action.jsonBody, requestVariables);
+        try {
+          json = JSON.parse(jsonBody);
+          if (this.log) {console.log("json is:", json);}
+        }
+        catch(err) {
+          console.error("Error parsing webRequest jsonBody:", jsonBody);
+        }
       }
-      catch(err) {
-        console.error("Error parsing webRequest jsonBody:", jsonBody);
+      else if (action.formData && action.bodyType == "form-data") {
+        let formData = filler.fill(action.formData, requestVariables);
+        if (this.log) {console.log("action.body is form-data:", formData);}
+        // // fill
+        // if (formData && formData.length > 0) {
+        //   for (let i = 0; i < formData.length; i++) {
+        //     let field = formData[i];
+        //     if (field.value) {
+        //       field.value = filler.fill(field.value, requestAttributes);
+        //       if (this.log) {console.log("field filled:", field.value);}
+        //     }
+        //   }      
+        // }
+        json = {};
+        for (let i = 0; i < formData.length; i++) {
+          let field = formData[i];
+          if (field.enabled && field.value && field.type === "URL") {
+            if (this.log) {console.log("Getting file:", field.value);}
+            let response = await axios.get(field.value,
+              {
+                responseType: 'stream'
+              }
+            );
+            let stream = response.data;
+            // if (this.log) {console.log("Stream data:", stream);}
+            json[field.name] = stream;
+            // process.exit(0);
+          }
+          else if (field.enabled && field.value && field.type === "Text") {
+            json[field.name] = field.value;
+          }
+        }
+        if (this.log) {console.log("final json:", json);}
       }
+      else {
+        if (this.log) {console.log("no action upload parts");}
+      }
+
+    }
+    catch(error) {
+      console.error("Error", error);
     }
     
     // Condition branches
@@ -81,8 +125,9 @@ class DirWebRequestV2 {
     }
 
     let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
-    console.log("final timeout", timeout);
+    
     if (this.log) {console.log("webRequest URL", url);}
+    
     const HTTPREQUEST = {
       url: url,
       headers: headers,
@@ -90,6 +135,7 @@ class DirWebRequestV2 {
       method: action.method,
       timeout: timeout
     };
+
     if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
     this.#myrequest(
       HTTPREQUEST, async (err, res) => {
@@ -203,108 +249,114 @@ class DirWebRequestV2 {
   }
 
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers,
-      timeout: options.timeout
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
+    try {
+      if (this.log) {
+        console.log("API URL:", options.url);
+        //console.log("** Options:", JSON.stringify(options));
+        // Stringify "options". FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
+        let cache = [];
+        let str_Options = JSON.stringify(options, function(key, value) { // try to use a separate function
+          if (typeof value === 'object' && value != null) {
+            if (cache.indexOf(value) !== -1) {
+              return;
+            }
+            cache.push(value);
+          }
+          return value;
+        });
+        console.log("** Options:", str_Options);
+
+
+      }
+      let axios_options = {
+        url: options.url,
+        method: options.method,
+        params: options.params,
+        headers: options.headers,
+        timeout: options.timeout
+      }
+    
+      if (options.json !== null) {
+        axios_options.data = options.json
+      }
+      // if (this.log) {
+      //   console.log("axios_options:", JSON.stringify(axios_options));
+      // }
+      if (options.url.startsWith("https:")) {
+        const httpsAgent = new https.Agent({
+          rejectUnauthorized: false,
+        });
+        axios_options.httpsAgent = httpsAgent;
+      }
+    
+      axios(axios_options)
+      .then((res) => {
+        if (this.log) {
+          console.log("Success Response:", res);
+          console.log("Response for url:", options.url);
+          console.log("Response headers:\n", JSON.stringify(res.headers));
+        }
+        if (callback) {
+          callback(null, res);
+        }
+      })
+      .catch( (err) => {
+        if (this.log) {
+          if (err.response) {
+            console.log("Error Response data:", err.response.data);
+          }
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
+          let cache = [];
+          let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
+            if (typeof value === 'object' && value != null) {
+              if (cache.indexOf(value) !== -1) {
+                return;
+              }
+              cache.push(value);
+            }
+            return value;
+          });
+          console.error("An error occurred: ", error_log);
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
+          // console.error("An error occurred:", JSON.stringify(err));
+        }
+        if (callback) {
+          let status = 1000;
+          let cache = [];
+          let str_error = JSON.stringify(err, function(key, value) { // try to use a separate function
+            if (typeof value === 'object' && value != null) {
+              if (cache.indexOf(value) !== -1) {
+                return;
+              }
+              cache.push(value);
+            }
+            return value;
+          });
+          let error = JSON.parse(str_error) // "status" disappears without this trick
+          let errorMessage = JSON.stringify(error);
+          if (error.status) {
+            status = error.status;
+          }
+          if (error.message) {
+            errorMessage = error.message;
+          }
+          let data = null;
+          if (err.response) {
+            data =  err.response.data;
+          }
+          callback(
+            null, {
+              status: status,
+              data: data,
+              error: errorMessage
+            }
+          );
+        }
       });
-      axios_options.httpsAgent = httpsAgent;
     }
-    axios(axios_options)
-    .then((res) => {
-      if (this.log) {
-        console.log("Success Response:", res);
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
-      if (callback) {
-        callback(null, res);
-      }
-        // if (callback) {
-        //   let data = null;
-        //   let status = 1000;
-        //   if (res) {
-        //     status = res.status;
-        //     data = res.data;
-        //   }
-        //   callback(
-        //     {
-        //       status: status,
-        //       data: data
-        //     }, null
-        //   );
-        // }
-      
-    })
-    .catch( (err) => {
-      if (this.log) {
-        if (err.response) {
-          console.log("Error Response data:", err.response.data);
-        }
-        // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-        let cache = [];
-        let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
-          if (typeof value === 'object' && value != null) {
-            if (cache.indexOf(value) !== -1) {
-              return;
-            }
-            cache.push(value);
-          }
-          return value;
-        });
-        console.error("An error occurred: ", error_log);
-        // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-        // console.error("An error occurred:", JSON.stringify(err));
-      }
-      if (callback) {
-        let status = 1000;
-        let cache = [];
-        let str_error = JSON.stringify(err, function(key, value) { // try to use a separate function
-          if (typeof value === 'object' && value != null) {
-            if (cache.indexOf(value) !== -1) {
-              return;
-            }
-            cache.push(value);
-          }
-          return value;
-        });
-        let error = JSON.parse(str_error) // "status" disappears without this trick
-        let errorMessage = JSON.stringify(error);
-        if (error.status) {
-          status = error.status;
-        }
-        if (error.message) {
-          errorMessage = error.message;
-        }
-        let data = null;
-        if (err.response) {
-          data =  err.response.data;
-        }
-        callback(
-          null, {
-            status: status,
-            data: data,
-            error: errorMessage
-          }
-        );
-      }
-    });
+    catch(error) {
+      console.error("Error:", error);
+    }
   }
 
   #webrequest_timeout(action, default_timeout, min, max) {

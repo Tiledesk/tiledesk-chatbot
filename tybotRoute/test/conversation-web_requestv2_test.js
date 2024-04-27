@@ -376,6 +376,89 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
   });
 
+  it('/webrequestv2 - post: POST a form-data, get result, assign status', (done) => {
+    console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    var multer = require('multer');
+    // read file contents for testing purposes
+    var path = require("path");
+    var fs = require('fs');
+    const upload = multer({ dest: 'uploads/' })
+    endpointServer.post('/test/webrequest/post/form-data', upload.single('file'), async (req, res) => {
+      console.log("/webrequestv2 POST form-data req.file:", req.file);
+      let file_contents = null;
+      try {
+        file_contents = fs.readFileSync(req.file.path, 'utf8');
+        console.log("file_data:", file_contents);
+      } catch (err) {
+        console.error(err);
+      }
+
+      console.log("/webrequestv2 POST form-data req.body:", req.body);
+      console.log("/webrequestv2 POST form-data req.headers:", req.headers);
+      console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
+      const responseBody = {
+        "purpose": req.body.purpose,
+        "file_contents": file_contents
+      };
+      console.log("Sending back: ", responseBody);
+      res.send(responseBody);
+    });
+    endpointServer.get('/test/webrequest/post/form-data/simple_file.txt', upload.single('file'), async (req, res) => {
+      res.send("This is a simple text file");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+    
+      assert(command1.type === "message");
+      assert(command1.message.text === "HTTP form-data Success. purpose: assistants file_contents: This is a simple text file");
+      assert(command1.type === "message");
+      getChatbotParameters(REQUEST_ID, (err, params) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(params);
+          assert(params["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2 - post form-data",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
 });
 
 /**
