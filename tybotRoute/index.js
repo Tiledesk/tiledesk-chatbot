@@ -363,7 +363,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const authorization = req.headers["authorization"];
   if (!authorization) {
     console.log("No authorization header...");
-    res.status(401);
+    res.status(401).send("Unauthorized");
     return;
   }
   console.log("Authorization header field checking", req.headers["authorization"]);
