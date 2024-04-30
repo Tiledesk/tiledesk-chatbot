@@ -8,6 +8,7 @@ available on:
 
 # v0.2.63
 - BUG fix on /ext/parameters/requests/:requestid
+- Moved getChatbotParameters function in TiledeskChatbotUtil
 
 # v0.2.62
 - Whatsapp fix (transcript error whitout "senderFullname")
