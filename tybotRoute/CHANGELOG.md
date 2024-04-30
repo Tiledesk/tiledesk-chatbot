@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# v0.2.63
+- BUG fix on /ext/parameters/requests/:requestid
+
 # v0.2.62
 - Whatsapp fix (transcript error whitout "senderFullname")
 
