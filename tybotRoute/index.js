@@ -384,14 +384,14 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const request_parts = requestId.split("-");
   if (request_parts && request_parts.length >= 3) {
     const project_id = request_parts[2];
-    console.log("ProjectId:", project_id);
+    // console.log("ProjectId:", project_id);
     if (project_id !== "656054000410fa00132e5dcc") {
       res.status(401).send("Unauthorized");
       return;
     }
   }
   else if (!request_parts || ( request_parts && request_parts.length < 3) ) {
-    res.status(401).send("Unauthorized");
+    res.status(500).send("Invalid request ID");
     return;
   }
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
