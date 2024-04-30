@@ -359,15 +359,33 @@ router.get('/message/context/:messageid', async (req, res) => {
 });
 
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
-  console.log("Checking authorization...");
-  const authorization = req.headers["authorization"];
-  if (!authorization) {
-    console.log("No authorization header...");
-    res.status(401).send("Unauthorized");
-    return;
-  }
-  console.log("Authorization header field checking", req.headers["authorization"]);
+  // console.log("Checking authorization...");
+  // const authorization = req.headers["authorization"];
+  // if (!authorization) {
+  //   console.log("No authorization header...");
+  //   res.status(401).send("Unauthorized");
+  //   return;
+  // }
+  // const token = req.headers["authorization"];
+  // const publicKey = process.env.GLOBAL_SECRET_OR_PUB_KEY;
+  // console.log("Got public key:", publicKey);
+  // const _decoded = null;
+  // jwt.verify(token, publicKey, function (err, decoded) {
+  //   _decoded = decoded;
+  // });
+  // console.log("Authorization header field checking", req.headers["authorization"]);
+  
+
   const requestId = req.params.requestid;
+  const request_parts = requestId.split("-");
+  if (request_parts && request_parts.length >= 3) {
+    const project_id = request_parts[2];
+    console.log("ProjectId:", project_id);
+    if (project_id !== "656054000410fa00132e5dcc") {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+  }
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   if (parameters === null) {
     res.send([]);
