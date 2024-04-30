@@ -382,10 +382,10 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
     return;
   }
   const request_parts = requestId.split("-");
-  if (request_parts && request_parts.length >= 3) {
+  if (request_parts && request_parts.length >= 4) {
     const project_id = request_parts[2];
     // console.log("ProjectId:", project_id);
-    if (project_id !== "656054000410fa00132e5dcc") {
+    if (project_id !== "656054000410fa00132e5dcc") { //&& project_id !== "ANOTHER P_ID"
       res.status(401).send("Unauthorized");
       return;
     }
