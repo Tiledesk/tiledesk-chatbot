@@ -377,6 +377,10 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   
 
   const requestId = req.params.requestid;
+  if (!requestId) {
+    res.status(404).send("Not found");
+    return;
+  }
   const request_parts = requestId.split("-");
   if (request_parts && request_parts.length >= 3) {
     const project_id = request_parts[2];
@@ -385,6 +389,10 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
       res.status(401).send("Unauthorized");
       return;
     }
+  }
+  else if (!request_parts || ( request_parts && request_parts.length < 3) ) {
+    res.status(401).send("Unauthorized");
+    return;
   }
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   if (parameters === null) {
