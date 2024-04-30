@@ -377,7 +377,7 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('/webrequestv2 - post: POST a form-data, get result, assign status', (done) => {
-    console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
+    // console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -388,7 +388,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     var fs = require('fs');
     const upload = multer({ dest: 'uploads/' })
     endpointServer.post('/test/webrequest/post/form-data', upload.single('file'), async (req, res) => {
-      console.log("/webrequestv2 POST form-data req.file:", req.file);
+      // console.log("/webrequestv2 POST form-data req.file:", req.file);
       let file_contents = null;
       try {
         file_contents = fs.readFileSync(req.file.path, 'utf8');
@@ -397,9 +397,9 @@ describe('Conversation for WebRequestV2 test', async () => {
         console.error(err);
       }
 
-      console.log("/webrequestv2 POST form-data req.body:", req.body);
-      console.log("/webrequestv2 POST form-data req.headers:", req.headers);
-      console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
+      // console.log("/webrequestv2 POST form-data req.body:", req.body);
+      // console.log("/webrequestv2 POST form-data req.headers:", req.headers);
+      // console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
       const responseBody = {
         "purpose": req.body.purpose,
         "file_contents": file_contents
@@ -411,7 +411,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       res.send("This is a simple text file");
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);

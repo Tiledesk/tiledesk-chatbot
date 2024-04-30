@@ -4,7 +4,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 
-class DirWebRequestV2 {
+class DirAssistant {
   constructor(context) {
     if (!context) {
       throw new Error('context object is mandatory.');
@@ -42,73 +42,66 @@ class DirWebRequestV2 {
         this.tdcache, this.requestId
       );
     }
+    
     const filler = new Filler();
     const url = filler.fill(action.url, requestAttributes);
 
-    let headers = {};
-    if (action.headersString) {
-      let headersDict = action.headersString
-      for (const [key, value] of Object.entries(headersDict)) {
-        if (this.log) {console.log("header:", key, "value:", value)}
-        let filled_value = filler.fill(value, requestAttributes);
-        headers[key] = filled_value;
-      }
+    // message => Mandatory
+    // assistantId => Mandatory
+    // threadIdAttributeName => Optional
+    // replyAttributeName => Optional
+    // errorAttributeName => Optional
+    // action.settings.timeout
+
+    let replyAttributeName = "assistantReply";
+    if (action.replyAttributeName) { // default = "assistantReply"
+      replyAttributeName = action.replyAttributeName;
     }
 
-    let json = null;
-    try {
-      if (action.jsonBody && action.bodyType == "json") {
-        if (this.log) {console.log("action.body is:", action.jsonBody);}
-        let jsonBody = filler.fill(action.jsonBody, requestAttributes);
-        try {
-          json = JSON.parse(jsonBody);
-          if (this.log) {console.log("json is:", json);}
-        }
-        catch(err) {
-          console.error("Error parsing webRequest jsonBody:", jsonBody);
-        }
-      }
-      else if (action.formData && action.bodyType == "form-data") {
-        let formData = filler.fill(action.formData, requestAttributes);
-        if (this.log) {console.log("action.body is form-data:", formData);}
-        // // fill
-        if (formData && formData.length > 0) {
-          for (let i = 0; i < formData.length; i++) {
-            let field = formData[i];
-            if (field.value) {
-              field.value = filler.fill(field.value, requestAttributes);
-              if (this.log) {console.log("field filled:", field.value);}
-            }
-          }
-        }
-        json = {};
-        for (let i = 0; i < formData.length; i++) {
-          let field = formData[i];
-          if (field.enabled && field.value && field.type === "URL") {
-            if (this.log) {console.log("Getting file:", field.value);}
-            let response = await axios.get(field.value,
-              {
-                responseType: 'stream'
-              }
-            );
-            let stream = response.data;
-            // if (this.log) {console.log("Stream data:", stream);}
-            json[field.name] = stream;
-            // process.exit(0);
-          }
-          else if (field.enabled && field.value && field.type === "Text") {
-            json[field.name] = field.value;
-          }
-        }
-        if (this.log) {console.log("final json:", json);}
-      }
-      else {
-        if (this.log) {console.log("no action upload parts");}
-      }
+    let errorAttributeName = "assistantError";
+    if (action.errorAttributeName) { // default = "assistantError"
+      errorAttributeName = action.errorAttributeName;
+    }
 
+    let threadIdAttributeName = "firstThread";
+    if (action.threadIdAttributeName) { // default = "firstThread"
+      threadIdAttributeName = action.threadIdAttributeName;
+    }
+
+    let _assistantId = null;
+    if (action.assistantId) { // mandatory
+      _assistantId = action.assistant;
+    }
+    else {
+      // TODO MANAGE SETTINGS ERROR
+      callback(false);
+      return;
+    }
+
+    let _message = null;
+    if (action.message) { // mandatory
+      _message = action.message;
+    }
+    else {
+      // TODO MANAGE SETTINGS ERROR
+      callback(false);
+      return;
+    }
+
+    let assistantId = _assistantId;
+    try {
+      assistantId = filler.fill(_assistantId, requestAttributes);
     }
     catch(error) {
-      console.error("Error", error);
+      console.error("Error while filling assistantId:", error);
+    }
+
+    let message = _message;
+    try {
+      message = filler.fill(_message, requestAttributes);
+    }
+    catch(error) {
+      console.error("Error while filling message:", error);
     }
     
     // Condition branches
@@ -124,8 +117,18 @@ class DirWebRequestV2 {
       falseIntent = null;
     }
 
-    let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
+    this.timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     
+    const apikey = await this.getGPT_APIKEY();
+    let threadId = requestVariables[threadIdAttributeName];
+    if (!threadId || (threadId && threadId.trim() === '') ) {
+      // create thread if it doesn't exist
+      threadId = await this.createThread(apikey);
+    }
+    await this.addMessage(threadId, apikey);
+    await this.runThreadOnAssistant(assistantId, threadId, apikey);
+    await this.lastThreadMessage(threadId, apikey);
+
     if (this.log) {console.log("webRequest URL", url);}
     
     const HTTPREQUEST = {
@@ -381,6 +384,104 @@ class DirWebRequestV2 {
     return timeout
   }
 
+  async getGPT_APIKEY() {
+
+  }
+
+  async createThread(apikey) {
+    return new Promise( async (resolve, reject) => {
+      const url = "https://api.openai.com/v1/threads";
+      const headers = {
+        "Authorization": apikey,
+        "OpenAI-Beta": "assistants=v2"
+      }
+      const HTTPREQUEST = {
+        url: url,
+        headers: headers,
+        json: '', // no old messages on creation
+        method: "POST",
+        timeout: this.timeout
+      };
+      if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
+      this.#myrequest(
+        HTTPREQUEST, async (err, res) => {
+          if (this.log && err) {
+            console.log("webRequest error:", err);
+          }
+          if (this.log) {console.log("got res:", res);}
+          let resbody = res.data;
+          let status = res.status;
+          let error = res.error;
+          await this.#assignAttributes(action, resbody, status, error)
+          if (this.log) {console.log("webRequest resbody:", resbody);}
+          if (err) {
+            if (this.log) {console.error("webRequest error:", err);}
+            if (callback) {
+              if (falseIntent) {
+                this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                  callback(true); // stop the flow
+                });
+              }
+              else {
+                callback(false); // continue the flow
+              }
+            }
+          }
+          else if(res.status >= 200 && res.status <= 299) {
+            if (trueIntent) {
+              await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                callback(true); // stop the flow
+              });
+            }
+            else {
+              callback(false); // continue the flow
+            }
+          }
+          else {
+            if (falseIntent) {
+              this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                callback(true); // stop the flow
+              });
+            }
+            else {
+              callback(false); // continue the flow
+            }
+          }
+        }
+      );
+    });
+    // POST 
+    // JSON = ''
+  }
+  
+  async addMessage(threadId, apikey) {
+  
+    // POST https://api.openai.com/v1/threads/{{threadID}}/messages
+  
+    // JSON
+    /*
+    {
+    "role": "user",
+    "content": {{last_user_text | json}},
+    "attachments": [
+      {
+        "file_id": "file-9rf2OwoLy22Q6bePkO0Zmhlc",
+        "tools": [
+          {
+            "type": "code_interpreter"
+          }
+        ]
+      }
+    ]
+  }
+  */
+  }
+  
+  async runThreadOnAssistant(threadId, assistantId, apikey) {
+  
+  }
 }
 
-module.exports = { DirWebRequestV2 };
+
+
+module.exports = { DirAssistant };
