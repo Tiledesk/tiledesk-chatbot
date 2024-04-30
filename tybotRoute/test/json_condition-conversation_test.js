@@ -17,10 +17,12 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 describe('Conversation for JSONCondition test', async () => {
 
   let app_listener;
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
@@ -68,7 +70,7 @@ describe('Conversation for JSONCondition test', async () => {
     
       assert(command2.type === "message");
       assert(command2.message.text === "You won!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }
@@ -125,7 +127,7 @@ describe('Conversation for JSONCondition test', async () => {
     
       assert(command2.type === "message");
       assert(command2.message.text === "You lost!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }
@@ -182,7 +184,7 @@ describe('Conversation for JSONCondition test', async () => {
     
       assert(command2.type === "message");
       assert(command2.message.text === "I don't know!");
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }

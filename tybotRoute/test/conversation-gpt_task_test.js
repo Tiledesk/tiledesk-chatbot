@@ -16,12 +16,14 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 let SERVER_PORT = 10001
 
 describe('Conversation for GptTask test', async () => {
 
   let app_listener;
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
@@ -73,7 +75,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is the answer");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -196,7 +198,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "John");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -320,7 +322,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === 'This is your json: { "firstname": "John", "lastname": "Doe" }');
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -443,7 +445,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is the answer");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -566,7 +568,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is the answer");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -683,7 +685,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is the answer");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -814,7 +816,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "Quota exceeded");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -875,7 +877,7 @@ describe('Conversation for GptTask test', async () => {
       // console.log(" ### reply text: ", command2.message.text)
       assert(command2.message.text === "gpt replied: No answer.");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -954,7 +956,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answer.");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -1032,7 +1034,7 @@ describe('Conversation for GptTask test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answer.");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }

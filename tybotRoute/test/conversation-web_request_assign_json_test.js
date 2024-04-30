@@ -17,11 +17,13 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 describe('Conversation for WebRequest assign test', async () => {
 
   let app_listener;
-
+  let util = new TiledeskChatbotUtil();
+  
   before(() => {
     return new Promise(async (resolve, reject) => {
       console.log("Starting tilebot server...");
@@ -149,7 +151,7 @@ describe('Conversation for WebRequest assign test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Lo stato del tuo ordine è ATTESA ELABORAZIONE");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -227,7 +229,7 @@ describe('Conversation for WebRequest assign test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Il tuo stato non è valido: shipment not found");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -321,32 +323,32 @@ function sendMessageToBot(message, botId, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

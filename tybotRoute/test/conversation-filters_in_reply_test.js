@@ -17,10 +17,12 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 describe('Conversation for Filters in reply test', async () => {
 
   let app_listener;
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
@@ -68,7 +70,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Italian");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -133,7 +135,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "English");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -198,7 +200,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Italian");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -264,7 +266,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "English");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -330,7 +332,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Hey this is Jovana!");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -395,7 +397,7 @@ describe('Conversation for Filters in reply test', async () => {
       
       assert(command2.type === "message");
       assert(command2.message.text === "Ciao Jovana qui!");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -464,7 +466,7 @@ describe('Conversation for Filters in reply test', async () => {
       assert(command2.message.text === "I didn't understand. Can you rephrase your question?");
       assert(command4.type === "message");
       assert(command4.message.text === "Or pick accordingly below");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -531,7 +533,7 @@ describe('Conversation for Filters in reply test', async () => {
       assert(command2.message.text === "Non ho capito, ti spiace parafrasare?");
       assert(command4.type === "message");
       assert(command4.message.text === "Oppure scegli una delle opzioni");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -599,7 +601,7 @@ describe('Conversation for Filters in reply test', async () => {
       assert(command2.message.text === "I didn't understand. Can you rephrase your question?");
       assert(command4.type === "message");
       assert(command4.message.text === "Or pick accordingly below");
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -692,32 +694,32 @@ function sendMessageToBot(message, botId, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

@@ -4,6 +4,8 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst');
 const { TiledeskChatbot } = require('./TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
+require('dotenv').config();
+let axios = require('axios');
 
 class TiledeskChatbotUtil {
 
@@ -751,6 +753,77 @@ class TiledeskChatbotUtil {
         }
         return isValid;
     }
+
+    /**
+     * A stub to get the request parameters, hosted by tilebot on:
+     * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
+     *
+     * @param {string} requestId. Tiledesk chatbot/requestId parameters
+     */
+    getChatbotParameters(requestId, callback) {
+        // const jwt_token = this.fixToken(token);
+        const url = `${process.env.TYBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
+        const HTTPREQUEST = {
+            url: url,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'get'
+        };
+        this.myrequest(
+            HTTPREQUEST,
+            function (err, resbody) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                }
+                else {
+                    if (callback) {
+                        callback(null, resbody);
+                    }
+                }
+            }, false
+        );
+    }
+
+    myrequest(options, callback, log) {
+        if (log) {
+          console.log("API URL:", options.url);
+          console.log("** Options:", JSON.stringify(options));
+        }
+        axios(
+          {
+            url: options.url,
+            method: options.method,
+            data: options.json,
+            params: options.params,
+            headers: options.headers
+          })
+          .then((res) => {
+            if (log) {
+              console.log("Response for url:", options.url);
+              console.log("Response headers:\n", JSON.stringify(res.headers));
+            }
+            if (res && res.status == 200 && res.data) {
+              if (callback) {
+                callback(null, res.data);
+              }
+            }
+            else {
+              if (callback) {
+                callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
+              }
+            }
+          })
+          .catch((error) => {
+            // console.error("An error occurred:", error);
+            if (callback) {
+              callback(error, null, null);
+            }
+          });
+      }
+      
 
 }
 

@@ -11,6 +11,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 const bots_data = require('./conversation-askgpt_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
@@ -22,6 +23,7 @@ let SERVER_PORT = 10001
 describe('Conversation for AskGPT test', async () => {
 
   let app_listener;
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
@@ -73,7 +75,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is mock gpt reply");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -193,7 +195,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: this is mock gpt reply");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -289,7 +291,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -393,7 +395,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -463,7 +465,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -535,7 +537,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
    
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -615,7 +617,7 @@ describe('Conversation for AskGPT test', async () => {
       assert(command2.type === "message");
       assert(command2.message.text === "gpt replied: No answers");
 
-      getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
@@ -728,32 +730,32 @@ function sendMessageToBot(message, botId, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

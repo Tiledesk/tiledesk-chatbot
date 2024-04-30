@@ -17,7 +17,7 @@ const PROJECT_ID = "projectID"; //const PROJECT_ID = process.env.TEST_PROJECT_ID
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
-
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 // // normalize the bot structure for the static intent search
 // let intents = bot.intents;
 // delete bot.intents;
@@ -40,7 +40,10 @@ const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
 
 let app_listener;
 
+
 describe('Conversation1 - Form filling', async () => {
+
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
@@ -97,7 +100,7 @@ describe('Conversation1 - Form filling', async () => {
       assert(command2.time === 500);
 
 
-      getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }
@@ -223,7 +226,7 @@ describe('Conversation1 - Form filling', async () => {
       }
       else if (message.text === "It's a good form Andrea") {
         // verify parameters
-        getChatbotParameters(REQUEST_ID, (err, params) => {
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
           if (err) {
             assert.ok(false);
           }
@@ -698,7 +701,7 @@ describe('Conversation1 - Form filling', async () => {
       const message = req.body;
       if (message.text) {
         assert(message.text === "myvar: places");
-        getChatbotParameters(REQUEST_ID, (err, params) => {
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
           if (err) {
             assert.ok(false);
           }
@@ -751,7 +754,7 @@ describe('Conversation1 - Form filling', async () => {
       const message = req.body;
       if (message.text) {
         assert(message.text === "myvar: places");
-        getChatbotParameters(REQUEST_ID, (err, params) => {
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
           if (err) {
             assert.ok(false);
           }
@@ -1038,32 +1041,32 @@ function sendMessageToBot(message, botId, token, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {
