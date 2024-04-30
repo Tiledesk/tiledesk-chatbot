@@ -390,7 +390,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
       return;
     }
   }
-  else if (!request_parts || ( request_parts && request_parts.length < 3) ) {
+  else if (!request_parts || ( request_parts && request_parts.length < 4) ) {
     res.status(500).send("Invalid request ID");
     return;
   }
