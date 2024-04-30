@@ -359,11 +359,14 @@ router.get('/message/context/:messageid', async (req, res) => {
 });
 
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
+  console.log("Checking authorization...");
   const authorization = req.headers["authorization"];
   if (!authorization) {
-    res.status(400);
+    console.log("No authorization header...");
+    res.status(401);
     return;
   }
+  console.log("Authorization header field checking", req.headers["authorization"]);
   const requestId = req.params.requestid;
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
   if (parameters === null) {
