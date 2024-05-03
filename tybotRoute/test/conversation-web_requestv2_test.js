@@ -11,13 +11,13 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 const bots_data = require('./conversation-web_requestv2-bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 describe('Conversation for WebRequestV2 test', async () => {
 
@@ -71,7 +71,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
+      console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -81,15 +81,14 @@ describe('Conversation for WebRequestV2 test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "result assigned to: [object Object] status assigned to: 200");
       assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["var1"] !== null);
-          assert(params["status1"] === 200);
+          assert(attributes);
+          assert(attributes["var1"] !== null);
+          assert(attributes["status1"] === 200);
           listener.close(() => {
             done();
           });
@@ -148,12 +147,12 @@ describe('Conversation for WebRequestV2 test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP GET Success");
       assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
+          assert(attributes);
           listener.close(() => {
             done();
           });
@@ -212,12 +211,12 @@ describe('Conversation for WebRequestV2 test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP GET Failure");
       assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
+          assert(attributes);
           listener.close(() => {
             done();
           });
@@ -273,14 +272,14 @@ describe('Conversation for WebRequestV2 test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP GET Failure with status 300 error Request failed with status code 300");
       assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
-          assert(params["error"] === "Request failed with status code 300");
-          assert(params["status"] === 300);
+          assert(attributes);
+          assert(attributes["error"] === "Request failed with status code 300");
+          assert(attributes["status"] === 300);
           listener.close(() => {
             done();
           });
@@ -340,13 +339,13 @@ describe('Conversation for WebRequestV2 test', async () => {
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP POST Success with status 200. From reply, name: myname, email: myemail");
       assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(params);
-          assert(params["status"] === 200);
+          assert(attributes);
+          assert(attributes["status"] === 200);
           listener.close(() => {
             done();
           });
@@ -364,6 +363,89 @@ describe('Conversation for WebRequestV2 test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": "/webrequestv2 - post",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a form-data, get result, assign status', (done) => {
+    // console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    var multer = require('multer');
+    // read file contents for testing purposes
+    var path = require("path");
+    var fs = require('fs');
+    const upload = multer({ dest: 'uploads/' })
+    endpointServer.post('/test/webrequest/post/form-data', upload.single('file'), async (req, res) => {
+      // console.log("/webrequestv2 POST form-data req.file:", req.file);
+      let file_contents = null;
+      try {
+        file_contents = fs.readFileSync(req.file.path, 'utf8');
+        console.log("file_data:", file_contents);
+      } catch (err) {
+        console.error(err);
+      }
+
+      // console.log("/webrequestv2 POST form-data req.body:", req.body);
+      // console.log("/webrequestv2 POST form-data req.headers:", req.headers);
+      // console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
+      const responseBody = {
+        "purpose": req.body.purpose,
+        "file_contents": file_contents
+      };
+      console.log("Sending back: ", responseBody);
+      res.send(responseBody);
+    });
+    endpointServer.get('/test/webrequest/post/form-data/simple_file.txt', upload.single('file'), async (req, res) => {
+      res.send("This is a simple text file");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+    
+      assert(command1.type === "message");
+      assert(command1.message.text === "HTTP form-data Success. purpose: assistants file_contents: This is a simple text file");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2 - post form-data",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {

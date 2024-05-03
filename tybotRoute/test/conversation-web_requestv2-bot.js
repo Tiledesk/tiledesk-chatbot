@@ -225,6 +225,63 @@ const bot = {
 			},
 			"text": "HTTP GET Failure"
 		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "webrequestv2 - post form-data",
+		"intent_id": "POST-FORM-DATA",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionTitle": "POST",
+			"url": "http://localhost:10002/test/webrequest/post/form-data",
+			"headersString": {
+				"Content-Type": "multipart/form-data",
+				// "Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime"
+			},
+			"formData": 
+			[
+				{
+					"name": "purpose",
+					"type": "Text",
+					"value": "assistants",
+					"enabled": true
+				},
+				{
+					"name": "file",
+					"type": "URL",
+					//"value": "https://tiledesk-html-site-tiledesk.replit.app/Curriculum_Andrea_Sponziello_english.txt",
+					"value": "http://localhost:10002/test/webrequest/post/form-data/simple_file.txt",
+					"enabled": true
+				}
+			],
+			"bodyType": "form-data",
+			"assignErrorTo": "error",
+			"assignResultTo": "result",
+			"assignStatusTo": "status",
+			"method": "POST",
+			"_tdActionType": "webrequestv2"
+		}, {
+			"_tdActionTitle": "",
+			"_tdActionType": "reply",
+			"attributes": {
+				"disableInputMessage": false,
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "HTTP form-data Success. purpose: {{result.purpose}} file_contents: {{result.file_contents}}"
+					}
+				}]
+			},
+			"text": "HTTP form-data Success"
+		}]
 	}]
 }
 
