@@ -395,7 +395,12 @@ router.get('/ext/reserved/parameters/requests/:requestid', async (req, res) => {
       "lastUserImageType", // image
       "lastUserDocumentURL", // file
       "lastUserDocumentName", // file
-      "lastUserDocumentType" // file
+      "lastUserDocumentType", // file
+      "ticketId",
+      TiledeskChatbotConst.REQ_CHAT_CHANNEL,
+      "user_lead_id",
+      "lastUserText",
+      TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY
     ]
     let userParams = {};
     if (parameters) {
