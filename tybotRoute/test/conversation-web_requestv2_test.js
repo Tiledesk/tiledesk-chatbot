@@ -405,7 +405,17 @@ describe('Conversation for WebRequestV2 test', async () => {
         "purpose": req.body.purpose,
         "file_contents": file_contents
       };
-      console.log("Sending back: ", responseBody);
+      console.log("Deleting uploaded files...");
+      const uploads_folder = "./uploads";
+      fs.readdir(uploads_folder, (err, files) => {
+        console.log("Removing files: ", files);
+        if (err) throw err;
+        for (const file of files) {
+          fs.unlink(path.join(uploads_folder, file), (err) => {
+            if (err) throw err;
+          });
+        }
+      });
       res.send(responseBody);
     });
     endpointServer.get('/test/webrequest/post/form-data/simple_file.txt', upload.single('file'), async (req, res) => {
