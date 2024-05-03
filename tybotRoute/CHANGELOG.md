@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# v0.2.64 - rc
+- removed system parameters from /reserved/parameters
+
 # v0.2.63
 - BUG fix on /ext/parameters/requests/:requestid
 - Moved getChatbotParameters function in TiledeskChatbotUtil
