@@ -46,6 +46,7 @@ const { DirHubspot } = require('./directives/DirHubspot');
 const { DirCustomerio } = require('./directives/DirCustomerio');
 const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
+const { DirAssistant } = require('./directives/DirAssistant');
 
 class DirectivesChatbotPlug {
 
@@ -726,6 +727,20 @@ class DirectivesChatbotPlug {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       })
+    }
+    else if (directive_name === Directives.GPT_ASSISTANT) {
+      // console.log("...GPT_ASSISTANT");
+      new DirAssistant(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("stop on condition?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
     }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);

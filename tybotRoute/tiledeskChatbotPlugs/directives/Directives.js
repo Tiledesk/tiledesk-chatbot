@@ -46,6 +46,7 @@ class Directives {
   static BLIND_TRANSFER = 'blind_transfer';
   static SPEECH_FORM = 'speech_form';
   static PLAY_PROMPT = 'play_prompt';
+  static GPT_ASSISTANT = 'gpt_assistant';
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

@@ -107,8 +107,8 @@ class DirAssistant {
     // Condition branches
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
-    const trueIntentAttributes = action.trueIntentAttributes;
-    const falseIntentAttributes = action.falseIntentAttributes;
+    // const trueIntentAttributes = action.trueIntentAttributes;
+    // const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
     if (trueIntent && trueIntent.trim() === "") {
       trueIntent = null;
@@ -127,7 +127,7 @@ class DirAssistant {
     }
     await this.addMessage(threadId, apikey);
     await this.runThreadOnAssistant(assistantId, threadId, apikey);
-    await this.lastThreadMessage(threadId, apikey);
+    let returnMessage = await this.lastThreadMessage(threadId, apikey);
 
     if (this.log) {console.log("webRequest URL", url);}
     
@@ -385,7 +385,30 @@ class DirAssistant {
   }
 
   async getGPT_APIKEY() {
+    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
+    let key = await this.getKeyFromIntegrations(server_base_url);
+    if (!key) {
+      if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
+      key = await this.getKeyFromKbSettings(server_base_url);
+    }
 
+    if (!key) {
+      if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
+      key = process.env.GPTKEY;
+      publicKey = true;
+    }
+
+    if (!key) {
+      console.error("DirGptTask gptkey is mandatory");
+      await this.#assignAttributes(action, answer);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
   }
 
   async createThread(apikey) {
@@ -479,6 +502,37 @@ class DirAssistant {
   
   async runThreadOnAssistant(threadId, assistantId, apikey) {
   
+  }
+
+  async getKeyFromIntegrations(server_base_url) {
+    return new Promise((resolve) => {
+
+      const INTEGRATIONS_HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+
+      this.#myrequest(
+        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+          if (err) {
+            resolve(null);
+          } else {
+
+            if (integration &&
+              integration.value) {
+              resolve(integration.value.apikey)
+            }
+            else {
+              resolve(null)
+            }
+          }
+        })
+    })
   }
 }
 
