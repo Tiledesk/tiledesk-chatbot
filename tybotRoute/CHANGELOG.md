@@ -9,6 +9,7 @@ available on:
 # v0.2.64 - rc
 - removed system parameters from /reserved/parameters
 - Web Request Action: added multipart form-data support with files binary from URL source
+- Added DirAssistant Action
 
 # v0.2.63
 - BUG fix on /ext/parameters/requests/:requestid
