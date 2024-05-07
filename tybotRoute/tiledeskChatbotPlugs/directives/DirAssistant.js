@@ -153,6 +153,9 @@ class DirAssistant {
           console.log("threadId:", threadId);
         }
       }
+      else {
+        if (this.log) { console.log("Reusing threadId (used flow attribute:" + threadIdAttribute + "):", threadId); }
+      }
       await this.addMessage(prompt, threadId, apikey);
       if (this.log) {console.log("Message added.");}
       await this.runThreadOnAssistant(assistantId, threadId, apikey);
