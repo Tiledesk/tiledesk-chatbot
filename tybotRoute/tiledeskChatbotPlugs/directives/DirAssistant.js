@@ -147,6 +147,7 @@ class DirAssistant {
         const thread = await this.createThread(apikey);
         if (this.log) {console.log("Thread crated.");}
         threadId = thread.id;
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, threadIdAttribute, threadId);
         if (this.log) {
           console.log("thread:", thread);
           console.log("threadId:", threadId);
