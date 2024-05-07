@@ -163,7 +163,8 @@ class DirAssistant {
       if (lastMessage !== null) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, lastMessage);
         if (trueIntent) {
-          await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+          await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+          callback(true);
         }
         else {
           callback(false);
@@ -171,8 +172,15 @@ class DirAssistant {
         }
       }
       else {
-        callback(false);
-        return;
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, null);
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+          callback(true);
+        }
+        else {
+          callback(false);
+          return;
+        }
       }
     }
     catch (error) {
@@ -199,23 +207,31 @@ class DirAssistant {
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
         if (this.log) {console.log("No trueIntentDirective specified");}
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          callback();
+          if (callback) {
+            callback();
+          }
         });
       }
       else {
         if (this.log) {console.log("No falseIntentDirective specified");}
-        callback();
+        if (callback) {
+          callback();
+        }
       }
     }
   }
@@ -484,7 +500,7 @@ class DirAssistant {
         method: "GET"
       }
       if (this.log) { console.log("DirAssistant INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-      
+
       this.#myrequest(
         INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
           if (err) {

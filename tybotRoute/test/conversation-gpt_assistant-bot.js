@@ -18,9 +18,20 @@ const bot = {
 			"threadIdAttribute": "firstThread",
 			"assignResultTo": "assistantReply",
 			"assignErrorTo": "assistantError",
-			"_tdActionType": "gpt_assistant"
-		}, {
-			"_tdActionTitle": "reply check action",
+			"_tdActionType": "gpt_assistant",
+			"trueIntent": "#SUCCESS",
+			"falseIntent": "#FAILURE"
+		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "GPT Assistant reply",
+		"intent_id": "SUCCESS",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionTitle": "reply success",
 			"_tdActionType": "reply",
 			"attributes": {
 				"disableInputMessage": false,
