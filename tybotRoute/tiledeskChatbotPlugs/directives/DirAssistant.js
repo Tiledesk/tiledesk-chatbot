@@ -47,7 +47,7 @@ class DirAssistant {
     const url = filler.fill(action.url, requestAttributes);
     // prompt => Mandatory
     // assistantId => Mandatory
-    // threadIdAttributeName => Optional // default "firstThread"
+    // threadIdAttribute => Optional // default "firstThread"
     // assignResultTo => Optional // default "assistantReply"
     // assignErrorTo => Optional // default "assistantError"
     // action.settings.timeout => Optional
@@ -122,7 +122,7 @@ class DirAssistant {
 
     this.timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     
-    const apikey = await this.getGPT_APIKEY();
+    let apikey = await this.getGPT_APIKEY();
     if (this.log) {console.log("apikey:", apikey);}
     if (!apikey) {
       const reply = "DirAssistant gptkey is mandatory in Integrations";
@@ -133,6 +133,10 @@ class DirAssistant {
         callback(true);
       }
       return;
+    }
+    else {
+      apikey = "Bearer " + apikey;
+      console.log("APIKEY::", apikey);
     }
     let threadId = null;
     try {
@@ -502,11 +506,11 @@ class DirAssistant {
       if (this.log) { console.log("DirAssistant INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
 
       this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
+        INTEGRATIONS_HTTPREQUEST, async (err, res) => {
           if (err) {
             resolve(null);
           } else {
-
+            let integration = res.data;
             if (integration &&
               integration.value) {
               resolve(integration.value.apikey)
@@ -563,7 +567,7 @@ class DirAssistant {
       axios(axios_options)
       .then((res) => {
         if (this.log) {
-          console.log("Success Response:", res);
+          // console.log("Success Response:", res);
           console.log("Response for url:", options.url);
           console.log("Response headers:\n", JSON.stringify(res.headers));
         }

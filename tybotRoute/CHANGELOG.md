@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# v0.2.65
+- fix OPENAI_APIKEY: removed Bearer prefix
+
 # v0.2.64
 - removed system parameters from /reserved/parameters
 - Web Request Action: added multipart form-data support with files binary from URL source
