@@ -288,19 +288,19 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
-      // console.log("...DirReply");
-      new DirReply(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
-      });
-    }
-    else if (directive_name === Directives.REPLY_V2) {
       console.log("...DirReplyV2");
       new DirReplyV2(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
+    // else if (directive_name === Directives.REPLY_V2) {
+    //   console.log("...DirReplyV2");
+    //   new DirReplyV2(context).execute(directive, async () => {
+    //     let next_dir = await this.nextDirective(this.directives);
+    //     this.process(next_dir);
+    //   });
+    // }
     else if (directive_name === Directives.DTMF_FORM) {
       // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
