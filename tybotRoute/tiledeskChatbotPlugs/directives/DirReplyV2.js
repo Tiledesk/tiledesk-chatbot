@@ -17,6 +17,7 @@ class DirReplyV2 {
     this.tdcache = context.tdcache;
     this.log = context.log;
     this.intentDir = new DirIntent(context);
+    this.chatbot = context.chatbot;
   }
 
   execute(directive, callback) {
