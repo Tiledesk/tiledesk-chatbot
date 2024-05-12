@@ -336,6 +336,51 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static allReplyButtons(message) {
+        let all_buttons = [];
+        if (message.attributes && message.attributes.commands) {
+            // console.log("message.attributes ok")
+            let commands = message.attributes.commands;
+            if (commands.length > 0) {
+                // console.log("commands ok", commands.length)
+                for (let i = 0; i < commands.length; i++) {
+                    let command = commands[i];
+                    // console.log("got command:", command)s
+                    if (command.type === 'message' && command.message) {
+                        if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0){
+                            // console.log("command with buttons ok:")
+                            let buttons = command.message.attributes.attachment.buttons;
+                            
+                            buttons.forEach(button => {
+                                if (button.type === "action" || button.type === "text") {
+                                    // console.log("pushing button:", button);
+                                    all_buttons.push(button);
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        return all_buttons;
+    }
+
+    static buttonByText(text, buttons) {
+        if (buttons === null || text === null) {
+            return null;
+        }
+        let search_text = text.toLowerCase();
+        let selected_button = null;
+        for (let i = 0; i < buttons.length; i++) {
+            const button = buttons[i];
+            if (button.value !== null && button.value.toLowerCase() === search_text) {
+                selected_button = button;
+                break; 
+            }
+        }
+        return selected_button;
+    }
+
     static async updateConversationTranscript(chatbot, message) {
         if (!message || !message.senderFullname) { // not a conversation, can it be an Automation invocation?
             return null;

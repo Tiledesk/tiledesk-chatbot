@@ -264,6 +264,159 @@ describe('commands.button filler', function() {
     
 });
 
+describe('message buttons collector', function() {
+  
+    it('collects all buttons in a reply and makes multiple searches using button value', async () => {
+        const message = {
+            "attributes": {
+                "commands": [{
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "text",
+                        "text": "message1",
+                        "attributes": {
+                            "attachment": {
+                                "type": "template",
+                                "buttons": [
+                                    {
+                                        type: "action",
+                                        value: "Option 1",
+                                        action: "option 1",
+                                        show_echo: true
+                                    },
+                                    {
+                                        type: "action",
+                                        value: "Option 2",
+                                        action: "option 2",
+                                        show_echo: true
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "text",
+                        "text": "message2"
+                    }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "image",
+                        "text": "message3 - image",
+                        "metadata": {
+                            "src": ""
+                        }
+                    }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "text",
+                        "text": "message4",
+                        "attributes": {
+                            "attachment": {
+                                "type": "template",
+                                "buttons": [{
+                                    type: "url",
+                                    value: "Dante",
+                                    link: "https://en.m.wikipedia.org/wiki/Dante_Alighieri",
+                                    target: "self"
+                                }]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "text",
+                        "text": "message4",
+                        "attributes": {
+                            "attachment": {
+                                "type": "template",
+                                "buttons": [{
+                                    type: "url",
+                                    value: "Dante",
+                                    link: "https://en.m.wikipedia.org/wiki/Dante_Alighieri",
+                                    target: "self"
+                                }]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "wait",
+                    "time": 500
+                }, {
+                    "type": "message",
+                    "message": {
+                        "type": "text",
+                        "text": "message2",
+                        "attributes": {
+                            "attachment": {
+                                "type": "template",
+                                "buttons": [
+                                    {
+                                        type: "action",
+                                        value: "Option 3",
+                                        action: "option 3",
+                                        show_echo: true
+                                    },
+                                    {
+                                        type: "text",
+                                        value: "Go here"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }]
+            }
+        }
+        // collect all buttons
+        const buttons = TiledeskChatbotUtil.allReplyButtons(message);
+        // console.log("all buttons:", buttons);
+        assert(buttons);
+        assert(buttons.length === 4);
+
+        // search in buttons by text:
+        const button1 = TiledeskChatbotUtil.buttonByText("OPTion 1", buttons);
+        // console.log("button found:", button1);
+        assert(button1.value === "Option 1");
+
+        const button2 = TiledeskChatbotUtil.buttonByText("option 2", buttons);
+        // console.log("button found:", button2);
+        assert(button2.value === "Option 2");
+        
+        const button3 = TiledeskChatbotUtil.buttonByText("option 4", buttons);
+        // console.log("button found:", button3);
+        assert(button3 == null);
+        
+        const button4 = TiledeskChatbotUtil.buttonByText("Go here", buttons);
+        // console.log("button found:", button4);
+        assert(button4.value == "Go here");
+        
+        const button5 = TiledeskChatbotUtil.buttonByText("GO HERE", buttons);
+        // console.log("button found:", button5);
+        assert(button5.value == "Go here");
+    });
+    
+});
+
 describe('removeEmptyReplyCommands', function() {
   
     // it('One random reply', async () => {
