@@ -97,7 +97,11 @@ class DirReplyV2 {
       const buttons = TiledeskChatbotUtil.allReplyButtons(message);
       console.log("Buttons:", buttons);
       if (buttons && buttons.length > 0) {
-        await this.lockUnlock(action);
+        const stop_here = await this.lockUnlock(action);
+        if (stop_here) {
+          callback();
+          return;
+        }
         // last user text
         const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
         console.log("got last user text");
@@ -177,7 +181,7 @@ class DirReplyV2 {
 
   }
 
-  async lockUnlock(action) {
+  async lockUnlock(action, callback) {
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
     console.log("(DirReplyV2) lockedAction:", lockedAction);
     if (!lockedAction) {
@@ -192,18 +196,19 @@ class DirReplyV2 {
       console.log("(DirReplyV2) lockAction");
       let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
       let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
-      console.log("(DirReplyV2) _lockedAction", _lockedAction)
-      console.log("(DirReplyV2) _lockedIntent", _lockedIntent)
-      callback();
-      return;
+      console.log("(DirReplyV2) _lockedAction", _lockedAction);
+      console.log("(DirReplyV2) _lockedIntent", _lockedIntent);
+      // callback();
+      return true;
     } else {
       try {
         await this.chatbot.unlockIntent(this.requestId);
         await this.chatbot.unlockAction(this.requestId);
-        console.log("unlocked ReplyV2")
+        console.log("unlocked ReplyV2");
+        return false;
       }
       catch(e) {
-        console.error("Error", e)
+        console.error("Error", e);
       }
     }
   }
