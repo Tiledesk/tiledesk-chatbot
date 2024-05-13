@@ -93,42 +93,6 @@ class DirReplyV2 {
         TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }
 
-      // get buttons if available
-      const buttons = TiledeskChatbotUtil.allReplyButtons(message);
-      console.log("Buttons:", buttons);
-      if (buttons && buttons.length > 0) {
-        const stop_here = await this.lockUnlock(action);
-        if (stop_here) {
-          callback();
-          return;
-        }
-        // last user text
-        const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
-        console.log("got last user text");
-        const button = TiledeskChatbotUtil.buttonByText(last_user_text);
-        // invoke button
-        if (button && button.action) {
-          let action = DirIntent.intentDirectiveFor(button.action, null);
-          this.intentDir.execute({ action: action }, () => {
-            if (callback) {
-              callback();
-            }
-            return;
-          });
-        }
-        else { // if text button simply continue...
-          if (callback) {
-            callback();
-          }
-          return;
-        }
-        
-    
-      
-        
-      
-      }
-
       // temporary send back of reserved attributes
       if (!message.attributes) {
         message.attributes = {}
@@ -168,9 +132,37 @@ class DirReplyV2 {
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
-          setTimeout(() => {
+          setTimeout(async () => {
             // console.log("callback after delay")
-            callback();
+            // callback();
+
+
+
+            // get buttons if available
+            const buttons = TiledeskChatbotUtil.allReplyButtons(message);
+            console.log("Buttons:", buttons);
+            if (buttons && buttons.length > 0) {
+              const locked = await this.lockUnlock(action);
+              if (locked) {
+                callback();
+              }
+              else {
+                // last user text
+                const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
+                console.log("got last user text");
+                const button = TiledeskChatbotUtil.buttonByText(last_user_text);
+                // invoke button
+                if (button && button.action) {
+                  let action = DirIntent.intentDirectiveFor(button.action, null);
+                  this.intentDir.execute({ action: action }, () => {
+                    callback();
+                  });
+                }
+                else { // if text button simply continue...
+                  callback();
+                }
+              }
+            }
           }, delay);
         }
         else {
