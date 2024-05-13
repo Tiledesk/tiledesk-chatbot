@@ -18,6 +18,7 @@ class DirReplyV2 {
     this.log = context.log;
     this.intentDir = new DirIntent(context);
     this.chatbot = context.chatbot;
+    this.reply = context.reply;
   }
 
   execute(directive, callback) {
