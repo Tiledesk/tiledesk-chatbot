@@ -125,7 +125,7 @@ class DirAssistant {
     let apikey = await this.getGPT_APIKEY();
     if (this.log) {console.log("apikey:", apikey);}
     if (!apikey) {
-      const reply = "DirAssistant gptkey is mandatory in Integrations";
+      const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
       if (this.log) { console.error(reply); };
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {

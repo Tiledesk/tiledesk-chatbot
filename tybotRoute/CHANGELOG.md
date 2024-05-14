@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# v0.2.65
+# v0.2.65 - online
 - fix OPENAI_APIKEY: removed Bearer prefix
 
 # v0.2.64
