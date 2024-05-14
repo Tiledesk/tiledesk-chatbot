@@ -196,7 +196,10 @@ class DirAskGPTV2 {
         else if (resbody.success === true) {
 
           if (publicKey === true) {
-            let token_usage = resbody.prompt_token_size;
+            let token_usage = {
+              tokens: resbody.prompt_token_size,
+              model: json.model
+            }
             this.updateQuote(server_base_url, token_usage);
           }
 

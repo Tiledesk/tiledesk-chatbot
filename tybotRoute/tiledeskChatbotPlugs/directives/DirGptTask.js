@@ -57,6 +57,7 @@ class DirGptTask {
 
     // default value
     let answer = "No answer.";
+    let model = "gpt-3.5-turbo";
 
     if (!action.question || action.question === '') {
       console.error("Error: DirGptTask question attribute is mandatory. Executing condition false...")
@@ -81,6 +82,10 @@ class DirGptTask {
 
     let max_tokens = action.max_tokens;
     let temperature = action.temperature;
+    
+    if (action.model) {
+      model = action.model;
+    }
 
     if (this.log) {
       console.log("DirGptTask max_tokens: ", max_tokens);
@@ -180,7 +185,10 @@ class DirGptTask {
           await this.#assignAttributes(action, answer_json);
 
           if (publicKey === true) {
-            let token_usage = resbody.usage.total_tokens;
+            let token_usage = {
+              tokens: resbody.usage.total_tokens,
+              model: json.model
+            }
             this.updateQuote(server_base_url, token_usage);
           }
 
