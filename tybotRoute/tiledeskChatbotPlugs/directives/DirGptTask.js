@@ -185,11 +185,11 @@ class DirGptTask {
           await this.#assignAttributes(action, answer_json);
 
           if (publicKey === true) {
-            let token_usage = {
+            let tokens_usage = {
               tokens: resbody.usage.total_tokens,
               model: json.model
             }
-            this.updateQuote(server_base_url, token_usage);
+            this.updateQuote(server_base_url, tokens_usage);
           }
 
           if (trueIntent) {
@@ -420,7 +420,7 @@ class DirGptTask {
     })
   }
 
-  async updateQuote(server_base_url, tokens) {
+  async updateQuote(server_base_url, tokens_usage) {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
@@ -429,7 +429,7 @@ class DirGptTask {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
-        json: { tokens: tokens },
+        json: tokens_usage,
         method: "POST"
       }
       if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }

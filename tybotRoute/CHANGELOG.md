@@ -5,7 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.66-rc2
+# v0.2.66-rc3
 - changed updateQuotes method
 - fix missing model in updateQuote
 
