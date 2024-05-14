@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.66-rc3
+- changed updateQuotes method
+- fix missing model in updateQuote
+
+# v0.2.66-rc1
+- fix missing model in updateQuote
 
 # v0.2.65 - online
 - fix OPENAI_APIKEY: removed Bearer prefix
