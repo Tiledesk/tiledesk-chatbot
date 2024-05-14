@@ -196,11 +196,11 @@ class DirAskGPTV2 {
         else if (resbody.success === true) {
 
           if (publicKey === true) {
-            let token_usage = {
+            let tokens_usage = {
               tokens: resbody.prompt_token_size,
               model: json.model
             }
-            this.updateQuote(server_base_url, token_usage);
+            this.updateQuote(server_base_url, tokens_usage);
           }
 
           if (trueIntent) {
@@ -427,7 +427,7 @@ class DirAskGPTV2 {
     })
   }
 
-  async updateQuote(server_base_url, tokens) {
+  async updateQuote(server_base_url, tokens_usage) {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
@@ -436,7 +436,7 @@ class DirAskGPTV2 {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
-        json: { tokens: tokens },
+        json: tokens_usage,
         method: "POST"
       }
       if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
