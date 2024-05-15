@@ -35,8 +35,8 @@ class DirReplyV2 {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
   }
 
@@ -83,9 +83,23 @@ class DirReplyV2 {
           else { // no match (treating text buttons as no-match for the moment)
             console.log("no button found", JSON.stringify(button));
             // if noMatchIntent invoke
-            // else
-            callback();
-            return;
+            const button = TiledeskChatbotUtil.buttonByText("nomatch", buttons);
+            console.log("nomatch button found", JSON.stringify(button));
+            // invoke button
+            if (button && button.action) {
+              console.log("moving to nomatch action", button.action);
+              let button_action = DirIntent.intentDirectiveFor(button.action, null);
+              this.intentDir.execute(button_action, () => {
+                console.log("nomatch action invoked", button_action);
+              });
+              callback(true);
+              return;
+            }
+            else {
+              callback();
+              return;
+            }
+            
           }
         }
         else {

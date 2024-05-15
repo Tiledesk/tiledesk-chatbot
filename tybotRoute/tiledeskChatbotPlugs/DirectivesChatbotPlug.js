@@ -289,9 +289,15 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.REPLY) {
       console.log("...DirReplyV2");
-      new DirReplyV2(context).execute(directive, async () => {
-        let next_dir = await this.nextDirective(this.directives);
-        this.process(next_dir);
+      new DirReplyV2(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     // else if (directive_name === Directives.REPLY_V2) {
