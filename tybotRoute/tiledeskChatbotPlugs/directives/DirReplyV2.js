@@ -108,10 +108,10 @@ class DirReplyV2 {
       const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
       if (noinput && noinput.action) {
         console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
-        await chatbot.addParameter("userInput", true);
-        console.log("Set userInput: true, checking...", await chatbot.getParameter("userInput"));
+        await this.chatbot.addParameter("userInput", true);
+        console.log("Set userInput: true, checking...", await this.chatbot.getParameter("userInput"));
         setTimeout(async () => {
-          let userInput = await chatbot.getParameter("userInput");
+          let userInput = await this.chatbot.getParameter("userInput");
           if (!userInput) {
             console.log("no 'userInput'. Moving to noinput action", noinput.action);
             let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
