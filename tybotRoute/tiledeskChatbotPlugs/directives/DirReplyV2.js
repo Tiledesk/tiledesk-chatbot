@@ -54,6 +54,47 @@ class DirReplyV2 {
           const value_type = typeof value;
         }
       }
+
+
+
+      // lock/unlock
+      // get buttons if available
+      const buttons = TiledeskChatbotUtil.allReplyButtons(message);
+      console.log("Buttons:", JSON.stringify(buttons));
+      if (buttons && buttons.length > 0) {
+        const locked = await this.lockUnlock(action);
+        if (!locked) { // == just unlocked
+          // last user text
+          const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
+          console.log("got last user text");
+          const button = TiledeskChatbotUtil.buttonByText(last_user_text, buttons);
+          console.log("button found", JSON.stringify(button));
+          // invoke button
+          if (button && button.action) {
+            console.log("moving to button action", button.action);
+            let button_action = DirIntent.intentDirectiveFor(button.action, null);
+            console.log("action with .intentName:", button_action);
+            this.intentDir.execute(button_action, () => {
+              console.log("action invoked", button_action);
+              callback();
+              return;
+            });
+          }
+          else { // no match (treating text buttons as no-match for the moment)
+            console.log("no button found", JSON.stringify(button));
+            // if noMatchIntent invoke
+            // else
+            callback();
+            return;
+          }
+        }
+        else {
+          // continue...
+        }
+      }
+
+
+      // process normally to render and send the reply
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
@@ -134,40 +175,11 @@ class DirReplyV2 {
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(async () => {
             // console.log("callback after delay")
-            // callback();
+            callback();
 
 
 
-            // get buttons if available
-            const buttons = TiledeskChatbotUtil.allReplyButtons(message);
-            console.log("Buttons:", JSON.stringify(buttons));
-            if (buttons && buttons.length > 0) {
-              const locked = await this.lockUnlock(action);
-              if (locked) {
-                callback();
-              }
-              else {
-                // last user text
-                const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
-                console.log("got last user text");
-                const button = TiledeskChatbotUtil.buttonByText(last_user_text, buttons);
-                console.log("button found", JSON.stringify(button));
-                // invoke button
-                if (button && button.action) {
-                  console.log("moving to button action", button.action);
-                  let button_action = DirIntent.intentDirectiveFor(button.action, null);
-                  console.log("action with .intentName:", button_action);
-                  this.intentDir.execute(button_action, () => {
-                    console.log("action invoked", button_action);
-                    callback();
-                  });
-                }
-                else { // if text button simply continue...
-                  console.log("no button action found", JSON.stringify(button));
-                  callback();
-                }
-              }
-            }
+            
           }, delay);
         }
         else {
