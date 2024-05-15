@@ -140,7 +140,7 @@ class DirReplyV2 {
 
             // get buttons if available
             const buttons = TiledeskChatbotUtil.allReplyButtons(message);
-            console.log("Buttons:", buttons);
+            console.log("Buttons:", JSON.stringify(buttons));
             if (buttons && buttons.length > 0) {
               const locked = await this.lockUnlock(action);
               if (locked) {
