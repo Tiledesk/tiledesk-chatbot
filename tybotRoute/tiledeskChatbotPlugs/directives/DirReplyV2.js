@@ -115,6 +115,9 @@ class DirReplyV2 {
           let userInput = await this.chatbot.getParameter("userInput");
           if (!userInput) {
             console.log("no 'userInput'. Moving to noinput action", noinput.action);
+            await this.chatbot.unlockIntent(this.requestId);
+            await this.chatbot.unlockAction(this.requestId);
+            console.log("unlocked ReplyV2");
             let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
             this.intentDir.execute(noinput_action, () => {
               console.log("noinput action invoked", noinput_action);
