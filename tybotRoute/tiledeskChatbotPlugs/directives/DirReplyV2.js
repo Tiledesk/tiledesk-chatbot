@@ -76,9 +76,9 @@ class DirReplyV2 {
             console.log("action with .intentName:", button_action);
             this.intentDir.execute(button_action, () => {
               console.log("action invoked", button_action);
-              callback();
-              return;
             });
+            callback();
+            return;
           }
           else { // no match (treating text buttons as no-match for the moment)
             console.log("no button found", JSON.stringify(button));
