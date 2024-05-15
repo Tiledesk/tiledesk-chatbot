@@ -150,15 +150,19 @@ class DirReplyV2 {
                 // last user text
                 const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
                 console.log("got last user text");
-                const button = TiledeskChatbotUtil.buttonByText(last_user_text);
+                const button = TiledeskChatbotUtil.buttonByText(last_user_text, buttons);
+                console.log("button found", JSON.stringify(button));
                 // invoke button
                 if (button && button.action) {
+                  console.log("moving to button action", button.action);
                   let action = DirIntent.intentDirectiveFor(button.action, null);
                   this.intentDir.execute({ action: action }, () => {
+                    console.log("action invoked", action);
                     callback();
                   });
                 }
                 else { // if text button simply continue...
+                  console.log("no button action found", JSON.stringify(button));
                   callback();
                 }
               }
