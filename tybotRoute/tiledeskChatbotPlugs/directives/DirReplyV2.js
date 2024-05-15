@@ -81,7 +81,6 @@ class DirReplyV2 {
             return;
           }
           else { // no match (treating text buttons as no-match for the moment)
-            console.log("no button found", JSON.stringify(button));
             // if noMatchIntent invoke
             const button = TiledeskChatbotUtil.buttonByText("nomatch", buttons);
             console.log("nomatch button found", JSON.stringify(button));
