@@ -156,6 +156,7 @@ class DirReplyV2 {
                 if (button && button.action) {
                   console.log("moving to button action", button.action);
                   let action = DirIntent.intentDirectiveFor(button.action, null);
+                  console.log("action with .intentName:", action);
                   this.intentDir.execute({ action: action }, () => {
                     console.log("action invoked", action);
                     callback();
