@@ -63,7 +63,7 @@ class DirIntent {
   }
 
   go(action, callback) {
-    // console.log("action intent:", action);
+    console.log("action intent:", action);
     const intentName = action.intentName;
     // const intentId = action.intentId;
     //console.log("new_supportRequest", JSON.stringify(this.supportRequest));
