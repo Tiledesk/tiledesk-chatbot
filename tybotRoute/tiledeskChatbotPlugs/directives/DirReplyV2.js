@@ -55,9 +55,7 @@ class DirReplyV2 {
         }
       }
 
-
-
-      // lock/unlock
+      // lock/unlock + no-match
       // get buttons if available
       const buttons = TiledeskChatbotUtil.allReplyButtons(message);
       console.log("Buttons:", JSON.stringify(buttons));
@@ -106,6 +104,23 @@ class DirReplyV2 {
         }
       }
 
+      // if noInputIntent set a timeout:
+      const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
+      if (noinput && noinput.action) {
+        console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
+        await chatbot.addParameter("userInput", true);
+        console.log("Set userInput: true, checking...", await chatbot.getParameter("userInput"));
+        setTimeout(async () => {
+          let userInput = await chatbot.getParameter("userInput");
+          if (!userInput) {
+            console.log("no 'userInput'. Moving to noinput action", noinput.action);
+            let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
+            this.intentDir.execute(noinput_action, () => {
+              console.log("noinput action invoked", noinput_action);
+            });
+          }
+        }, 10000);
+      }
 
       // process normally to render and send the reply
       const filler = new Filler();
