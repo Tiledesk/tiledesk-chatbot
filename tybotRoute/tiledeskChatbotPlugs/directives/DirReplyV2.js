@@ -60,7 +60,7 @@ class DirReplyV2 {
       const buttons = TiledeskChatbotUtil.allReplyButtons(message);
       console.log("Buttons:", JSON.stringify(buttons));
       if (buttons && buttons.length > 0) {
-        const locked = await this.lockUnlock(action);
+        const locked = await this.lockUnlock(action); // first time locked, then unlocked
         if (!locked) { // == just unlocked
           // last user text
           const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
@@ -100,31 +100,31 @@ class DirReplyV2 {
           }
         }
         else {
-          // continue...
+          // if noInputIntent set a timeout:
+          const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
+          if (noinput && noinput.action) {
+            console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
+            await this.chatbot.addParameter("userInput", false);
+            console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
+            setTimeout(async () => {
+              console.log("noinput timeout triggered!");
+              let userInput = await this.chatbot.getParameter("userInput");
+              if (!userInput) {
+                console.log("no 'userInput'. Moving to noinput action", noinput.action);
+                await this.chatbot.unlockIntent(this.requestId);
+                await this.chatbot.unlockAction(this.requestId);
+                console.log("unlocked ReplyV2");
+                let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
+                this.intentDir.execute(noinput_action, () => {
+                  console.log("noinput action invoked", noinput_action);
+                });
+              }
+            }, 10000);
+          }
         }
       }
 
-      // if noInputIntent set a timeout:
-      const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
-      if (noinput && noinput.action) {
-        console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
-        await this.chatbot.addParameter("userInput", false);
-        console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
-        setTimeout(async () => {
-          console.log("noinput timeout triggered!");
-          let userInput = await this.chatbot.getParameter("userInput");
-          if (!userInput) {
-            console.log("no 'userInput'. Moving to noinput action", noinput.action);
-            await this.chatbot.unlockIntent(this.requestId);
-            await this.chatbot.unlockAction(this.requestId);
-            console.log("unlocked ReplyV2");
-            let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
-            this.intentDir.execute(noinput_action, () => {
-              console.log("noinput action invoked", noinput_action);
-            });
-          }
-        }, 10000);
-      }
+      
 
       // process normally to render and send the reply
       const filler = new Filler();
