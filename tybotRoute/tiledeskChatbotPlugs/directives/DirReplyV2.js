@@ -41,7 +41,14 @@ class DirReplyV2 {
   }
 
   async go(action, callback) {
+    console.log("Eccolo!", JSON.stringify(action));
     const message = action;
+    let current;
+    if (message.attributes.commands[1].message.text) {
+      current = message.attributes.commands[1].message.text
+    }
+    console.log("current:", current);
+    let must_stop = false;
     // fill
     let requestAttributes = null;
     if (this.tdcache) {
@@ -60,8 +67,9 @@ class DirReplyV2 {
       const buttons = TiledeskChatbotUtil.allReplyButtons(message);
       console.log("Buttons:", JSON.stringify(buttons));
       if (buttons && buttons.length > 0) {
-        const locked = await this.lockUnlock(action); // first time locked, then unlocked
-        if (!locked) { // == just unlocked
+        const locked = await this.lockUnlock(action); // first time returns locked, then unlocked
+        if (!locked) {
+          console.log("second pass! unlocked!")
           // last user text
           const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
           console.log("got last user text");
@@ -75,6 +83,7 @@ class DirReplyV2 {
             this.intentDir.execute(button_action, () => {
               console.log("action invoked", button_action);
             });
+            console.log("callback(true) + return", current);
             callback(true);
             return;
           }
@@ -89,17 +98,22 @@ class DirReplyV2 {
               this.intentDir.execute(button_action, () => {
                 console.log("nomatch action invoked", button_action);
               });
+              console.log("callback(true) + return 2", current);
               callback(true);
               return;
             }
             else {
-              callback();
+              // there is no "no-match", go on...
+              console.log("callback(false) + return 3", current);
+              callback(false);
               return;
             }
-            
           }
         }
         else {
+          console.log("first time! unlocked!")
+          must_stop = true; // you must stop after any callback if there are buttons
+
           // if noInputIntent set a timeout:
           const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
           if (noinput && noinput.action) {
@@ -119,14 +133,13 @@ class DirReplyV2 {
                   console.log("noinput action invoked", noinput_action);
                 });
               }
-            }, 10000);
+            }, 20000);
           }
         }
       }
 
       
-
-      // process normally to render and send the reply
+      console.log("proceding normally to render and send the reply", current);
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
@@ -205,18 +218,15 @@ class DirReplyV2 {
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
+          console.log("start timeout callback(" + must_stop + ") for:", current)
           setTimeout(async () => {
-            // console.log("callback after delay")
-            callback();
-
-
-
-            
+            console.log("callback(" + must_stop + ") after delay", current)
+            callback(must_stop);
           }, delay);
         }
         else {
           // console.log("invalid delay.")
-          callback();
+          callback(must_stop);
         }
     });
 

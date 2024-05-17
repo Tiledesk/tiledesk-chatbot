@@ -279,6 +279,7 @@ class DirectivesChatbotPlug {
       new DirMessage(context).execute(directive, async (stop) => {
         if (stop) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          console.log("Stopping Actions on:", JSON.stringify(directive));
           this.theend();
         }
         else {
@@ -292,10 +293,13 @@ class DirectivesChatbotPlug {
       new DirReplyV2(context).execute(directive, async (stop) => {
         if (stop) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          console.log("Stopping Actions on:", JSON.stringify(directive));
           this.theend();
         }
         else {
+          console.log("ACTUAL ==============>:", JSON.stringify(directive));
           let next_dir = await this.nextDirective(this.directives);
+          console.log("ORAAAAAAAA ==============>:", JSON.stringify(next_dir));
           this.process(next_dir);
         }
       });
