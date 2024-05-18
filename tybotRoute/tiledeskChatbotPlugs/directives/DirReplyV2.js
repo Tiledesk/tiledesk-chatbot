@@ -84,22 +84,32 @@ class DirReplyV2 {
               console.log("action invoked", button_action);
             });
             console.log("callback(true) + return", current);
-            callback(true);
+            callback(true); // must_stop = true
             return;
           }
           else { // no match (treating text buttons as no-match for the moment)
             // if noMatchIntent invoke
-            const button = TiledeskChatbotUtil.buttonByText("nomatch", buttons);
+            // const button = TiledeskChatbotUtil.buttonByText("nomatch", buttons);
             console.log("nomatch button found", JSON.stringify(button));
-            // invoke button
-            if (button && button.action) {
-              console.log("moving to nomatch action", button.action);
-              let button_action = DirIntent.intentDirectiveFor(button.action, null);
-              this.intentDir.execute(button_action, () => {
-                console.log("nomatch action invoked", button_action);
+            // // invoke button
+            // if (button && button.action) {
+            //   console.log("moving to nomatch action", button.action);
+            //   let button_action = DirIntent.intentDirectiveFor(button.action, null);
+            //   this.intentDir.execute(button_action, () => {
+            //     console.log("nomatch action invoked", button_action);
+            //   });
+            //   console.log("callback(true) + return 2", current);
+            //   callback(true);
+            //   return;
+            // }
+            if (action.noMatchIntent) {
+              console.log("moving to nomatch action", action.noMatchIntent);
+              let nomatch_action = DirIntent.intentDirectiveFor(action.noMatchIntent, null);
+              this.intentDir.execute(nomatch_action, () => {
+                console.log("nomatch action invoked", nomatch_action);
               });
-              console.log("callback(true) + return 2", current);
-              callback(true);
+              console.log("callback(true) + return no-match", current);
+              callback(true); // must_stop = true
               return;
             }
             else {

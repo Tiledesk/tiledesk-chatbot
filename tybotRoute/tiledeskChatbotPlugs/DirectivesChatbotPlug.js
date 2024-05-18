@@ -289,6 +289,13 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
+      console.log("...DirReply");
+      new DirReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.REPLY_V2) {
       console.log("...DirReplyV2");
       new DirReplyV2(context).execute(directive, async (stop) => {
         if (stop) {
@@ -297,9 +304,7 @@ class DirectivesChatbotPlug {
           this.theend();
         }
         else {
-          console.log("ACTUAL ==============>:", JSON.stringify(directive));
           let next_dir = await this.nextDirective(this.directives);
-          console.log("ORAAAAAAAA ==============>:", JSON.stringify(next_dir));
           this.process(next_dir);
         }
       });
@@ -761,7 +766,7 @@ class DirectivesChatbotPlug {
       });
     }
     else {
-      //console.log("Unhandled Post-message Directive:", directive_name);
+      console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
       this.process(next_dir);
     }

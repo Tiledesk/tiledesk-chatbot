@@ -61,8 +61,7 @@ describe('Conversation for Reply v2 test', async () => {
     });
   });
 
-  it('reply to "buttons"', (done) => {
-
+  it('reply with text "one" to action button "one"', (done) => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -118,6 +117,148 @@ describe('Conversation for Reply v2 test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": '/buttons',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('reply with a wrong (no button matching) text invoking the no-match block', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const first_reply = message.attributes.commands[1];
+      assert(first_reply.type === "message");
+      console.log("first_reply.message.text", first_reply.message.text)
+      const reply = first_reply.message.text;
+      if (reply === "Please select an option") {
+
+        let request = {
+          "payload": {
+            "_id": "message_id2",
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "no button text => no match",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        });
+      }
+      else if (reply === "no matching button text found") {
+        console.log("no matching block ok");
+        listener.close(() => {
+          done();
+        });
+      }
+      else {
+        console.error("Unexpected message.");
+        assert.ok(false);
+      }
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/buttons',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('reply with a wrong (no button matching) text and no "no-match block" configured. It continues the action flow', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      console.log("req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const first_reply = message.attributes.commands[1];
+      assert(first_reply.type === "message");
+      console.log("first_reply.message.text", first_reply.message.text)
+      const reply = first_reply.message.text;
+      if (reply === "Please select an option") {
+
+        let request = {
+          "payload": {
+            "_id": "message_id2",
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "no button text => no match",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        });
+      }
+      else if (reply === "no match, continue") {
+        console.log("no matching block ok");
+        listener.close(() => {
+          done();
+        });
+      }
+      else {
+        console.error("Unexpected message.");
+        assert.ok(false);
+      }
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/buttons-without-nomatch',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
