@@ -41,12 +41,13 @@ const bot = {
         {
             "webhook_enabled": false,
             "enabled": true,
-			"intent_display_name": "buttons",
+            "intent_display_name": "buttons",
             "intent_id": "3043ab48-9dd5-4a40-959d-fb2b6a84f2f9",
             "actions": [
                 {
                     "_tdActionType": "replyv2",
-					"noMatchIntent": "no-matching-button",
+					"noInputIntent": "noInputBlock",
+					"noInputTimeout": 2000,
                     "attributes": {
                         "disableInputMessage": false,
                         "commands": [
@@ -272,6 +273,42 @@ const bot = {
             "language": "en",
             "intent_display_name": "buttons-without-nomatch",
             "intent_id": "3043ab48-9dd5-4a40-959d-fb2b6a84f2f9"
+        },
+        {
+            "webhook_enabled": false,
+            "enabled": true,
+            "actions": [
+                {
+                    "_tdActionTitle": "",
+                    "_tdActionId": "bef75b6f-b82b-453c-9d92-ee6a5f702e9c",
+                    "_tdActionType": "replyv2",
+                    "attributes": {
+                        "disableInputMessage": false,
+                        "commands": [
+                            {
+                                "type": "wait",
+                                "time": 500
+                            },
+                            {
+                                "type": "message",
+                                "message": {
+                                    "type": "text",
+                                    "text": "No user interaction",
+                                    "attributes": {
+                                        "attachment": {
+                                            "type": "template",
+                                            "buttons": []
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "language": "en",
+            "intent_display_name": "noInputBlock",
+            "intent_id": "83dd82a3-fa4b-4c46-8ad3-4f355cff2be8"
         },
         {
             "webhook_enabled": false,

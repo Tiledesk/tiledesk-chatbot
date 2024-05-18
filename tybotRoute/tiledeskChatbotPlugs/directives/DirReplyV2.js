@@ -125,25 +125,50 @@ class DirReplyV2 {
           must_stop = true; // you must stop after any callback if there are buttons
 
           // if noInputIntent set a timeout:
-          const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
-          if (noinput && noinput.action) {
-            console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
-            await this.chatbot.addParameter("userInput", false);
-            console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
-            setTimeout(async () => {
-              console.log("noinput timeout triggered!");
-              let userInput = await this.chatbot.getParameter("userInput");
-              if (!userInput) {
-                console.log("no 'userInput'. Moving to noinput action", noinput.action);
-                await this.chatbot.unlockIntent(this.requestId);
-                await this.chatbot.unlockAction(this.requestId);
-                console.log("unlocked ReplyV2");
-                let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
-                this.intentDir.execute(noinput_action, () => {
-                  console.log("noinput action invoked", noinput_action);
-                });
-              }
-            }, 20000);
+          // const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
+          // if (noinput && noinput.action) {
+          //   console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
+          //   await this.chatbot.addParameter("userInput", false);
+          //   console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
+          //   setTimeout(async () => {
+          //     console.log("noinput timeout triggered!");
+          //     let userInput = await this.chatbot.getParameter("userInput");
+          //     if (!userInput) {
+          //       console.log("no 'userInput'. Moving to noinput action", noinput.action);
+          //       await this.chatbot.unlockIntent(this.requestId);
+          //       await this.chatbot.unlockAction(this.requestId);
+          //       console.log("unlocked ReplyV2");
+          //       let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
+          //       this.intentDir.execute(noinput_action, () => {
+          //         console.log("noinput action invoked", noinput_action);
+          //       });
+          //     }
+          //   }, 20000);
+          // }
+          console.log("action:", action);
+          if (action.noInputIntent) {
+            console.log("NoInputIntent found:", action.noInputIntent);
+            const noInputIntent = action.noInputIntent;
+            const noInputTimeout = action.noInputTimeout;
+            console.log("noInputTimeout found:", noInputTimeout);
+            if (noInputTimeout > 0 && noInputTimeout < 300000) {
+              await this.chatbot.addParameter("userInput", false); // control variable. On each user input is set to true
+              console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
+              setTimeout(async () => {
+                console.log("noinput timeout triggered!");
+                let userInput = await this.chatbot.getParameter("userInput");
+                if (!userInput) {
+                  console.log("no 'userInput'. Executing noinput action:", noInputIntent);
+                  await this.chatbot.unlockIntent(this.requestId);
+                  await this.chatbot.unlockAction(this.requestId);
+                  console.log("unlocked (for noInput) ReplyV2");
+                  let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
+                  this.intentDir.execute(noinput_action, () => {
+                    console.log("noinput action invoked", noinput_action);
+                  });
+                }
+              }, noInputTimeout);
+            }
           }
         }
       }
