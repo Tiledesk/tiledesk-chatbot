@@ -67,10 +67,9 @@ class DirReplyV2 {
       const buttons = TiledeskChatbotUtil.allReplyButtons(message);
       console.log("Buttons:", JSON.stringify(buttons));
       if (buttons && buttons.length > 0) {
-        const locked = await this.lockUnlock(action); // first time returns locked, then unlocked
+        const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
         if (!locked) {
           console.log("second pass! unlocked!")
-          // last user text
           const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
           console.log("got last user text");
           const button = TiledeskChatbotUtil.buttonByText(last_user_text, buttons);
@@ -121,30 +120,8 @@ class DirReplyV2 {
           }
         }
         else {
-          console.log("first time! unlocked!")
-          must_stop = true; // you must stop after any callback if there are buttons
-
-          // if noInputIntent set a timeout:
-          // const noinput = TiledeskChatbotUtil.buttonByText("noinput", buttons);
-          // if (noinput && noinput.action) {
-          //   console.log("Setting up a noinput timeout because of noinput button found:", JSON.stringify(noinput));
-          //   await this.chatbot.addParameter("userInput", false);
-          //   console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput"));
-          //   setTimeout(async () => {
-          //     console.log("noinput timeout triggered!");
-          //     let userInput = await this.chatbot.getParameter("userInput");
-          //     if (!userInput) {
-          //       console.log("no 'userInput'. Moving to noinput action", noinput.action);
-          //       await this.chatbot.unlockIntent(this.requestId);
-          //       await this.chatbot.unlockAction(this.requestId);
-          //       console.log("unlocked ReplyV2");
-          //       let noinput_action = DirIntent.intentDirectiveFor(noinput.action, null);
-          //       this.intentDir.execute(noinput_action, () => {
-          //         console.log("noinput action invoked", noinput_action);
-          //       });
-          //     }
-          //   }, 20000);
-          // }
+          console.log("first time pass!")
+          must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
           console.log("action:", action);
           if (action.noInputIntent) {
             console.log("NoInputIntent found:", action.noInputIntent);

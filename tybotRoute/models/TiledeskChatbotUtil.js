@@ -496,7 +496,7 @@ class TiledeskChatbotUtil {
             }
             
             if (message.text && message.sender !== "_tdinternal") {
-                await chatbot.addParameter("userInput", true); // reset userInput
+                await chatbot.addParameter("userInput", true); // set userInput
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
                 if (message.channel) {
