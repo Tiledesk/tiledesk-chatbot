@@ -81,6 +81,7 @@ class TiledeskChatbot {
             await this.unlockIntent(this.requestId);
             await this.unlockAction(this.requestId);
             // console.log("RESET LOCKED INTENT.");
+            await chatbot.addParameter("userInput", true); // set userInput
             if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly  invoked with an action:", message.attributes.action);}
           }
         } catch(error) {

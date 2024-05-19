@@ -47,6 +47,7 @@ const { DirCustomerio } = require('./directives/DirCustomerio');
 const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
 const { DirAssistant } = require('./directives/DirAssistant');
+const { DirReplyV2 } = require('./directives/DirReplyV2');
 
 class DirectivesChatbotPlug {
 
@@ -291,6 +292,19 @@ class DirectivesChatbotPlug {
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.REPLY_V2) {
+      // console.log("...DirReplyV2");
+      new DirReplyV2(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     else if (directive_name === Directives.DTMF_FORM) {

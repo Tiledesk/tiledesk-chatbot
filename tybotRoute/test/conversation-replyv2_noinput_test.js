@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("..");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -11,7 +11,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-capture-bot.js').bots_data;
+const bots_data = require('./conversation-replyv2_noinput_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
@@ -20,7 +20,7 @@ const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for capture test', async () => {
+describe('Conversation for Reply v2 test (noInput)', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -45,12 +45,12 @@ describe('Conversation for capture test', async () => {
               console.log('Tilebot connector listening on port ', port);
               resolve();
             });
-        });
+          });
       }
-      catch(error) {
+      catch (error) {
         console.error("error:", error)
       }
-      
+
     })
   });
 
@@ -61,76 +61,55 @@ describe('Conversation for capture test', async () => {
     });
   });
 
-  it('/capture1', (done) => {
-    console.log("Wait a little (≃1s)...");
+  it('reply with noInput connected AND no user interaction', (done) => {
+    console.log("Wait a little (≃2s)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/capture1 req.body: ", req.body)
+      // console.log("replyv2 req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
+
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      assert(command2.type === "message");
-      const message_text = command2.message.text
-      
+      const first_reply = message.attributes.commands[1];
+      assert(first_reply.type === "message");
+      // console.log("first_reply.message.text", first_reply.message.text)
+      const reply = first_reply.message.text;
+      if (reply === "Please select an option") {
+        // console.log("NO USER INPUT... this will trigger the noInputIntent block");
 
-      
-        if (message_text === "your name?") {
-          let request = {
-            "payload": {
-              "_id": null,
-              "senderFullname": "guest#367e",
-              "type": "text",
-              "sender": "A-SENDER",
-              "recipient": REQUEST_ID,
-              "text": "Andrea",
-              "id_project": PROJECT_ID,
-              "request": {
-                "request_id": REQUEST_ID,
-              }
-            },
-            "token": CHATBOT_TOKEN
-          }
-          // console.log("capturex1. Got reply before locked action.", message_text)
-          setTimeout(() => {
-            sendMessageToBot(request, BOT_ID, () => {
-              // console.log("Message sent.", request);
-            });
-          }, 1000);
-        }
-        else if (message_text === "It's a good form Andrea") {
-          // verify parameters
-          // console.log("capturex2. Got reply after locked action.", message_text)
-          util.getChatbotParameters(REQUEST_ID, (err, params) => {
-            if (err) {
-              assert.ok(false);
-            }
-            else {
-              // console.log("params2:", params);
-              assert(params);
-              assert(params["username"] === "Andrea");
-              listener.close(() => {
-                // console.log("done2");
-                done();
-              });
-            }
-          });
-  
-        }
-        else {
-          console.error("Unexpected message2.");
-          assert.ok(false);
-        }
-      
-      
-
-
-
-
+        // let request = {
+        //   "payload": {
+        //     "_id": "message_id2",
+        //     "senderFullname": "guest#367e",
+        //     "type": "text",
+        //     "sender": "A-SENDER",
+        //     "recipient": REQUEST_ID,
+        //     "text": "one",
+        //     "id_project": PROJECT_ID,
+        //     "request": {
+        //       "request_id": REQUEST_ID,
+        //     }
+        //   },
+        //   "token": CHATBOT_TOKEN
+        // }
+        // sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        // });
+      }
+      else if (reply === "No user interaction") {
+        // console.log("No input block ok");
+        listener.close(() => {
+          done();
+        });
+      }
+      else {
+        console.error("Unexpected message.");
+        assert.ok(false);
+      }
     });
+
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
@@ -140,7 +119,85 @@ describe('Conversation for capture test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/capture1',
+          "text": '/buttons',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('reply with noInput connected AND user interaction', (done) => {
+    console.log("Wait a little (≃3s)...");
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("replyv2 req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const first_reply = message.attributes.commands[1];
+      assert(first_reply.type === "message");
+      // console.log("first_reply.message.text", first_reply.message.text)
+      const reply = first_reply.message.text;
+      if (reply === "Please select an option") {
+        // console.log("NOW THE USER REPLIES");
+        let request = {
+          "payload": {
+            "_id": "message_id2",
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "one",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        });
+      }
+      else if (reply === "option one") {
+        // console.log("correct reply, just waiting to (not) receive the noInputIntent reply (that should arrive in 2000 ms");
+        setTimeout(() => {
+          listener.close(() => {
+            done();
+          });
+        }, 3000);
+      }
+      else if (reply === "No user interaction") {
+        console.log("THIS MESSAGE SHOULD NOT BE RECEIVED");
+        assert.ok(false);
+      }
+      else {
+        console.error("Unexpected message.");
+        assert.ok(false);
+      }
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/buttons',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -258,7 +315,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
+      // console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }
