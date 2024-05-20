@@ -136,7 +136,7 @@ class DirReplyV2 {
                 await this.chatbot.addParameter("userInput", false); // control variable. On each user input is set to true
                 if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput")); }
                 setTimeout(async () => {
-                  if (this.log) {  onsole.log("noinput timeout triggered!"); }
+                  if (this.log) { console.log("noinput timeout triggered!"); }
                   let userInput = await this.chatbot.getParameter("userInput");
                   if (!userInput) {
                     if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }

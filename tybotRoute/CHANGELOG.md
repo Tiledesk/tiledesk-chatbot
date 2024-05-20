@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.67
+- console.log crash fixed on noinput
+
 # v0.2.66
 - changed updateQuotes method
 - fix missing model in updateQuote
