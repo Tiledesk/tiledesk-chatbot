@@ -83,7 +83,7 @@ class DirIfOnlineAgents {
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
-    this.tdclient.openNow((err, result) => {
+    this.tdclient.openNow(async (err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
         console.error("IfOnlineAgents:tdclient.openNow Error:", err);
@@ -92,6 +92,53 @@ class DirIfOnlineAgents {
       }
       else {
         if (result && result.isopen) {
+          let checkCurrentDepartment = action.checkCurrentDepartment;
+          let selectedDepartment = action.selectedDepartmentId;
+          if (checkCurrentDepartment) {
+            const depId = this.context.departmentId;
+            const agents = await this.getDepartmentAvailableAgents(depId);
+            // check
+          }
+          else if (selectedDepartment) {
+            const agents = await this.getDepartmentAvailableAgents(selectedDepartment);
+            // check
+          }
+          else {
+            this.tdclient.getProjectAvailableAgents((err, agents) => {
+              if (this.log) {console.log("Agents", agents);}
+              if (err) {
+                console.error("IfOnlineAgents:Error getting available agents:", err);
+                callback();
+              }
+              else {
+                if (this.log) {console.log("Agents count:", agents.length);}
+                if (agents.length > 0) {
+                  if (trueIntent) {
+                    let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+                    if (this.log) {console.log("agents (openHours) => trueIntent");}
+                    this.intentDir.execute(intentDirective, () => {
+                      callback(stopOnConditionMet);
+                    });
+                  }
+                  else {
+                    console.log("NO IfOnlineAgents trueIntent defined. callback()") // prod
+                    callback();
+                    return;
+                  }
+                }
+                else if (falseIntent) {
+                  let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+                  if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
+                  this.intentDir.execute(intentDirective, () => {
+                    callback(stopOnConditionMet);
+                  });
+                }
+                else {
+                  callback();
+                }
+              }
+            });
+          }
           this.tdclient.getProjectAvailableAgents((err, agents) => {
             if (this.log) {console.log("Agents", agents);}
             if (err) {
@@ -146,6 +193,107 @@ class DirIfOnlineAgents {
           callback();
         }
       }
+    });
+  }
+
+  async getDepartmentAvailableAgents(depId) {
+    return new Promise( (resolve, reject) => {
+      this.tdclient.getDepartment(depId, async (error, dep) => {
+        if (error) {
+          console.error("(DirIfOnlineAgents) Error:", error);
+        }
+        else {
+          const groupId = dep.groupId;
+          try {
+            if (groupId) {
+              const group = await this.getGroup(groupId);
+              const agents = await this.getGroupAvailableAgents(group.members);
+              resolve(agents);
+            }
+            else { // go project-wide
+              this.tdclient.getProjectAvailableAgents((err, agents) => {
+                if (this.log) {console.log("Agents", agents);}
+                if (err) {
+                  console.error("IfOnlineAgents:Error getting available agents:", err);
+                  reject(error);
+                }
+                else {
+                  if (this.log) {console.log("Agents count:", agents.length);}
+                  resolve(agents);
+                }
+              });
+            }
+          }
+          catch(error) {
+            console.error("(DirIfOnlineAgents) Error:", error);
+            reject(error);
+          }
+        }
+      });
+    });
+  }
+
+  async getGroup(groupId, callback) {
+    return new Promise ( (resolve, reject) => {
+      const URL = `${this.APIURL}/${this.projectId}/groups/${groupId}`
+      const HTTPREQUEST = {
+        url: URL,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': this.context.token
+        },
+        method: 'GET',
+        httpsOptions: this.httpsOptions
+      };
+      TiledeskClient.myrequest(
+        HTTPREQUEST,
+        function(err, resbody) {
+          if (err) {
+            reject(err);
+            if (callback) {
+              callback(err);
+            }
+          }
+          else {
+            resolve(resbody);
+            if (callback) {
+              callback(null, resbody);
+            }
+          }
+        }, this.log
+      );
+    });
+  }
+
+  async getGroup(groupId, callback) {
+    return new Promise ( (resolve, reject) => {
+      const URL = `${this.APIURL}/${this.projectId}/groups/${groupId}`
+      const HTTPREQUEST = {
+        url: URL,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': this.context.token
+        },
+        method: 'GET',
+        httpsOptions: this.httpsOptions
+      };
+      TiledeskClient.myrequest(
+        HTTPREQUEST,
+        function(err, resbody) {
+          if (err) {
+            reject(err);
+            if (callback) {
+              callback(err);
+            }
+          }
+          else {
+            resolve(resbody);
+            if (callback) {
+              callback(null, resbody);
+            }
+          }
+        }, this.log
+      );
     });
   }
 
