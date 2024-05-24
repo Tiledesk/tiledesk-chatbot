@@ -832,6 +832,7 @@ class TiledeskChatbotUtil {
             "ticketId",
             TiledeskChatbotConst.REQ_CHAT_CHANNEL,
             "user_lead_id",
+            "userLeadId",
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
             "userInput"
@@ -848,7 +849,7 @@ class TiledeskChatbotUtil {
           }
           return userParams;
     }
-    
+
     /**
      * A stub to get the request parameters, hosted by tilebot on:
      * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
