@@ -212,6 +212,9 @@ class DirReplyV2 {
       }
       try {
         let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+        if (this.log) {
+          console.log("userFlowAttributes:", userFlowAttributes);
+        }
         if (userFlowAttributes) {
           message.attributes["flowAttributes"] = userFlowAttributes;
         }
