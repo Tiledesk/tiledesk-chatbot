@@ -62,11 +62,12 @@ describe('Conversation for Reply v2 test', async () => {
   });
 
   it('reply with text "one" to action button "one"', (done) => {
+    console.log('reply with text "one" to action button "one"');
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("replyv2 req.body:", JSON.stringify(req.body));
+      console.log("replyv2 req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -132,6 +133,7 @@ describe('Conversation for Reply v2 test', async () => {
   });
 
   it('reply with a wrong (no button matching) text invoking the no-match block', (done) => {
+    console.log('reply with a wrong (no button matching) text invoking the no-match block');
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());

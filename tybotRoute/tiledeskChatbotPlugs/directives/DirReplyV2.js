@@ -210,6 +210,15 @@ class DirReplyV2 {
       if (requestAttributes['userFullname']) {
         message.attributes.updateUserFullname = requestAttributes['userFullname'];
       }
+      try {
+        let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+        if (userFlowAttributes) {
+          message.attributes["flowAttributes"] = userFlowAttributes;
+        }
+      }
+      catch(error) {
+        console.error("Error:", error);
+      }
       // intent_info
       if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
