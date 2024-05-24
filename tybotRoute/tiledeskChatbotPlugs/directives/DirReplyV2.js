@@ -214,6 +214,12 @@ class DirReplyV2 {
       if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
       }
+      // userFlowAttributes
+      let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+      if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
+      if (userFlowAttributes) {
+        message.attributes["flowAttributes"] = userFlowAttributes;
+      }
     }
     // send!
     let cleanMessage = message;

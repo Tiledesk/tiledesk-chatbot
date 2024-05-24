@@ -62,7 +62,7 @@ describe('Conversation for capture test', async () => {
   });
 
   it('/capture1', (done) => {
-    console.log("Wait a little (≃1s)...");
+    console.log("Wait a little (~1s)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());

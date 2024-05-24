@@ -62,7 +62,7 @@ describe('Conversation for Reply v2 test (noInput)', async () => {
   });
 
   it('reply with noInput connected AND no user interaction', (done) => {
-    console.log("Wait a little (≃2s)...");
+    console.log("Wait a little (~2s)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -135,7 +135,7 @@ describe('Conversation for Reply v2 test (noInput)', async () => {
   });
 
   it('reply with noInput connected AND user interaction', (done) => {
-    console.log("Wait a little (≃3s)...");
+    console.log("Wait a little (~3s)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
