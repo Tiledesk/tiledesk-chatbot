@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 const { DirIntent } = require("./DirIntent");
+const { defaultOptions } = require('liquidjs');
 
 class DirReplyV2 {
 
@@ -72,7 +73,36 @@ class DirReplyV2 {
         if (this.log) { console.log("Action Buttons:", JSON.stringify(buttons)); }
         if (buttons && buttons.length > 0) {
           const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
-          if (!locked) {
+          if (locked) { // fist execution returns (just) locked
+            if (this.log) { console.log("first time pass!"); }
+            must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
+            // console.log("action:", action);
+            if (action.noInputIntent) {
+              if (this.log) { console.log("NoInputIntent found:", action.noInputIntent); }
+              const noInputIntent = action.noInputIntent;
+              const noInputTimeout = action.noInputTimeout;
+              if (this.log) { console.log("noInputTimeout found:", noInputTimeout); }
+              if (noInputTimeout > 0 && noInputTimeout < 300000) {
+                await this.chatbot.addParameter("userInput", false); // control variable. On each user input is set to true
+                if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput")); }
+                setTimeout(async () => {
+                  if (this.log) { console.log("noinput timeout triggered!"); }
+                  let userInput = await this.chatbot.getParameter("userInput");
+                  if (!userInput) {
+                    if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }
+                    await this.chatbot.unlockIntent(this.requestId);
+                    await this.chatbot.unlockAction(this.requestId);
+                    if (this.log) {  console.log("unlocked (for noInput) ReplyV2"); }
+                    let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
+                    this.intentDir.execute(noinput_action, () => {
+                      if (this.log) {  console.log("noinput action invoked", noinput_action); }
+                    });
+                  }
+                }, noInputTimeout);
+              }
+            }
+          }
+          else { // second execution
             if (this.log) { console.log("second pass! unlocked!"); }
             const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
             if (this.log) { console.log("got last user text"); }
@@ -116,39 +146,18 @@ class DirReplyV2 {
                 return;
               }
               else {
-                // there is no "no-match", go on...
-                if (this.log) { console.log("callback(false) + return 3", current); }
-                callback(false);
+                const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
+                console.log("defaultFallback action invoked", defaultFallbackAction);
+                this.intentDir.execute( defaultFallbackAction, () => {
+                  if (this.log) { console.log("defaultFallback action invoked", defaultFallbackAction); }
+                });
+                if (this.log) { console.log("callback(true) + return no-match", current); }
+                callback(true); // must_stop = true
                 return;
-              }
-            }
-          }
-          else {
-            if (this.log) { console.log("first time pass!"); }
-            must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
-            // console.log("action:", action);
-            if (action.noInputIntent) {
-              if (this.log) { console.log("NoInputIntent found:", action.noInputIntent); }
-              const noInputIntent = action.noInputIntent;
-              const noInputTimeout = action.noInputTimeout;
-              if (this.log) { console.log("noInputTimeout found:", noInputTimeout); }
-              if (noInputTimeout > 0 && noInputTimeout < 300000) {
-                await this.chatbot.addParameter("userInput", false); // control variable. On each user input is set to true
-                if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput")); }
-                setTimeout(async () => {
-                  if (this.log) { console.log("noinput timeout triggered!"); }
-                  let userInput = await this.chatbot.getParameter("userInput");
-                  if (!userInput) {
-                    if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }
-                    await this.chatbot.unlockIntent(this.requestId);
-                    await this.chatbot.unlockAction(this.requestId);
-                    if (this.log) {  console.log("unlocked (for noInput) ReplyV2"); }
-                    let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
-                    this.intentDir.execute(noinput_action, () => {
-                      if (this.log) {  console.log("noinput action invoked", noinput_action); }
-                    });
-                  }
-                }, noInputTimeout);
+                // // there is no "no-match", go on...
+                // if (this.log) { console.log("callback(false) + return 3", current); }
+                // callback(false);
+                // return;
               }
             }
           }

@@ -202,12 +202,12 @@ describe('Conversation for Reply v2 test', async () => {
     });
   });
 
-  it('reply with a wrong (no button matching) text and no "no-match block" configured. It continues the action flow', (done) => {
+  it('reply with a wrong (no button matching) text and no "no-match block" configured. It moves to the defaultFallback', (done) => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("replyv2 req.body:", JSON.stringify(req.body));
+      console.log("replyv2 req.body...:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -237,12 +237,17 @@ describe('Conversation for Reply v2 test', async () => {
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
         });
       }
-      else if (reply === "no match, continue") {
-        // console.log("no matching block ok");
+      else if (reply === "I didn't understand. Can you rephrase your question?") {
         listener.close(() => {
           done();
         });
       }
+      // else if (reply === "no match, continue") {
+      //   // console.log("no matching block ok");
+      //   listener.close(() => {
+      //     done();
+      //   });
+      // }
       else {
         console.error("Unexpected message.");
         assert.ok(false);

@@ -352,7 +352,7 @@ class TiledeskChatbotUtil {
                             let buttons = command.message.attributes.attachment.buttons;
                             
                             buttons.forEach(button => {
-                                if (button.type === "action" || button.type === "text") {
+                                if (button.type === "action") {
                                     // console.log("pushing button:", button);
                                     all_buttons.push(button);
                                 }
