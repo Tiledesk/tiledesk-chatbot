@@ -46,7 +46,7 @@ class DirMessageToBot {
   }
 
   go(action, callback) {
-    // console.log("action intent:", action);
+    console.log("message action intent:", action);
     const message = action.message;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;

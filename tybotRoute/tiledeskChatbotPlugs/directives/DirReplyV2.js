@@ -152,7 +152,7 @@ class DirReplyV2 {
 
                 console.log("re-send original message:",JSON.stringify(this.originalMessage));
                 const messageDir = new DirMessageToBot(this.context);
-                messageDir.execute( { action: this.originalMessage }, () => {
+                messageDir.execute( { action: { message: this.originalMessage }  }, () => {
                   if (this.log) { console.log("messageDir invoked"); }
                 });
                 if (this.log) { console.log("callback(true) + return no-match", current); }
