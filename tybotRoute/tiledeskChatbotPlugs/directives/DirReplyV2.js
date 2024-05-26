@@ -4,6 +4,7 @@ const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 const { DirIntent } = require("./DirIntent");
 const { defaultOptions } = require('liquidjs');
+const { DirMessageToBot } = require('./DirMessageToBot');
 
 class DirReplyV2 {
 
@@ -147,14 +148,24 @@ class DirReplyV2 {
               }
               else {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
-                const textAction = { action: { text: last_user_text } };
-                console.log("textAction invoked:",textAction ); //, defaultFallbackAction);
-                this.intentDir.execute( textAction, () => {
-                  if (this.log) { console.log("textAction invoked", textAction); }
+
+                console.log("re-send original message");
+                const messageDir = new DirMessageToBot(context);
+                this.messageDir.execute( message, () => {
+                  if (this.log) { console.log("messageDir invoked"); }
                 });
                 if (this.log) { console.log("callback(true) + return no-match", current); }
                 callback(true); // must_stop = true
                 return;
+
+                // const textAction = { action: { text: last_user_text } };
+                // console.log("textAction invoked:",textAction ); //, defaultFallbackAction);
+                // this.intentDir.execute( textAction, () => {
+                //   if (this.log) { console.log("textAction invoked", textAction); }
+                // });
+                // if (this.log) { console.log("callback(true) + return no-match", current); }
+                // callback(true); // must_stop = true
+                // return;
 
 
                 // // there is no "no-match", go on...
@@ -269,6 +280,7 @@ class DirReplyV2 {
     });
 
   }
+
 
   async lockUnlock(action, callback) {
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
