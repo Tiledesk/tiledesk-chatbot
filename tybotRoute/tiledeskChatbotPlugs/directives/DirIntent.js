@@ -65,6 +65,8 @@ class DirIntent {
   go(action, callback) {
     // console.log("action intent:", action);
     const intentName = action.intentName;
+    const text = action.text;
+    // console.log("IntentDir text:", text);
     // const intentId = action.intentId;
     //console.log("new_supportRequest", JSON.stringify(this.supportRequest));
     const projectId = this.supportRequest.id_project;
@@ -74,17 +76,13 @@ class DirIntent {
     if (intentName) {
       intent_command = "/" + intentName;
     }
-    // else if (intentId) {
-    //   intent_command = "/#" + intentId;
+    // else {
+    //   console.error("(DirIntent) No intent name found in action");
+    //   callback();
+    //   return;
     // }
-    else {
-      console.error("(DirIntent) No intent name found in action");
-      callback();
-      return;
-    }
 
-    // if (intentName) {
-    //   let intent_command = "/" + intentName;
+    const final_command = intent_command || text;
     let intent_command_request = {
       "payload": {
         "_id": uuidv4(),
@@ -92,7 +90,7 @@ class DirIntent {
         "type": "text",
         "sender": "_tdinternal",
         "recipient": requestId,
-        "text": intent_command,
+        "text": final_command,
         "id_project": projectId,
         "request": {
           "request_id": requestId,

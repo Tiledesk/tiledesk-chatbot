@@ -146,14 +146,17 @@ class DirReplyV2 {
                 return;
               }
               else {
-                const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
-                console.log("defaultFallback action invoked", defaultFallbackAction);
-                this.intentDir.execute( defaultFallbackAction, () => {
-                  if (this.log) { console.log("defaultFallback action invoked", defaultFallbackAction); }
+                // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
+                const textAction = { action: { text: last_user_text } };
+                console.log("textAction invoked:",textAction ); //, defaultFallbackAction);
+                this.intentDir.execute( textAction, () => {
+                  if (this.log) { console.log("textAction invoked", textAction); }
                 });
                 if (this.log) { console.log("callback(true) + return no-match", current); }
                 callback(true); // must_stop = true
                 return;
+
+
                 // // there is no "no-match", go on...
                 // if (this.log) { console.log("callback(false) + return 3", current); }
                 // callback(false);
