@@ -21,6 +21,7 @@ class DirReplyV2 {
     this.intentDir = new DirIntent(context);
     this.chatbot = context.chatbot;
     this.reply = context.reply;
+    this.originalMessage = context.message;
   }
 
   execute(directive, callback) {
@@ -149,9 +150,9 @@ class DirReplyV2 {
               else {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
 
-                console.log("re-send original message");
+                console.log("re-send original message:",);
                 const messageDir = new DirMessageToBot(this.context);
-                this.messageDir.execute( message, () => {
+                messageDir.execute( this.originalMessage, () => {
                   if (this.log) { console.log("messageDir invoked"); }
                 });
                 if (this.log) { console.log("callback(true) + return no-match", current); }
