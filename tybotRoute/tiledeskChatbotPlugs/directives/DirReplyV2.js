@@ -150,7 +150,7 @@ class DirReplyV2 {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
 
                 console.log("re-send original message");
-                const messageDir = new DirMessageToBot(context);
+                const messageDir = new DirMessageToBot(this.context);
                 this.messageDir.execute( message, () => {
                   if (this.log) { console.log("messageDir invoked"); }
                 });
