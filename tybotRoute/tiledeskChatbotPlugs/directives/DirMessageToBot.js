@@ -65,7 +65,7 @@ class DirMessageToBot {
       TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
     }
     this.sendMessageToBot(TILEBOT_ENDPOINT, outgoing_message, botId, () => {
-      console.log("(DirMessageToBot) sendMessageToBot() req_body sent:", intent_command_request);
+      console.log("(DirMessageToBot) sendMessageToBot() req_body sent");
       callback(true);
     });
   }
