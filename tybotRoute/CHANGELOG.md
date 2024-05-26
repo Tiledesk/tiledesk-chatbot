@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.68
+- added flow attributes in replyv2
+- ReplyV2 now re-forward the message if "no-match" connector is undefined (behaving exactly like the classic Reply)
+
 # v0.2.67
 - console.log crash fixed on noinput
 

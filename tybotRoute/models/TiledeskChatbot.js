@@ -254,6 +254,7 @@ class TiledeskChatbot {
       let faqs;
       try {
         faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
+        if (this.log) {console.log("got faq by EXACT MATCH", faqs);}
       }
       catch (error) {
         console.error("An error occurred during exact match:", error);

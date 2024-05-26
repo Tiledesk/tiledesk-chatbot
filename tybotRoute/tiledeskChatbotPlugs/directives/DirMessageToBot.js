@@ -46,10 +46,10 @@ class DirMessageToBot {
   }
 
   go(action, callback) {
-    console.log("message action intent:", action);
+    // console.log("message action intent:", action);
     const message = action.message;
-    const projectId = this.supportRequest.id_project;
-    const requestId = this.supportRequest.request_id;
+    // const projectId = this.supportRequest.id_project;
+    // const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
 
     let outgoing_message = {
@@ -65,7 +65,7 @@ class DirMessageToBot {
       TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
     }
     this.sendMessageToBot(TILEBOT_ENDPOINT, outgoing_message, botId, () => {
-      console.log("(DirMessageToBot) sendMessageToBot() req_body sent");
+      // console.log("(DirMessageToBot) sendMessageToBot() req_body sent");
       callback(true);
     });
   }

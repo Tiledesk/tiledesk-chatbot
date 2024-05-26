@@ -192,6 +192,38 @@ const bot = {
         {
             "webhook_enabled": false,
             "enabled": true,
+            "question": "no button text => no match",
+            "answer": "reply to intent1",
+            "actions": [
+                {
+                    "_tdActionTitle": "",
+                    "_tdActionId": "78f492af-245d-4f56-8bde-9fcd6824d494mm",
+                    "_tdActionType": "replyv2",
+                    "attributes": {
+                        "disableInputMessage": false,
+                        "commands": [
+                            {
+                                "type": "wait",
+                                "time": 500
+                            },
+                            {
+                                "type": "message",
+                                "message": {
+                                    "type": "text",
+                                    "text": "no button text => no match reply"
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "language": "en",
+            "intent_display_name": "no button text => no match",
+            "intent_id": "exact match"
+        },
+        {
+            "webhook_enabled": false,
+            "enabled": true,
             "actions": [
                 {
                     "_tdActionType": "replyv2",
@@ -327,5 +359,10 @@ const bots_data = {
 	"bots": {}
 }
 bots_data.bots["botID"] = bot;
+
+// becasue of exact search match
+bots_data.bots["botID"].questions_intent = {
+    "no button text => no match": "no button text => no match"
+}
 
 module.exports = { bots_data: bots_data };

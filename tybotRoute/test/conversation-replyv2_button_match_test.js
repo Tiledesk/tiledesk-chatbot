@@ -207,7 +207,7 @@ describe('Conversation for Reply v2 test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("replyv2 req.body...:", JSON.stringify(req.body));
+      // console.log("replyv2 req.body...:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -237,7 +237,7 @@ describe('Conversation for Reply v2 test', async () => {
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
         });
       }
-      else if (reply === "I didn't understand. Can you rephrase your question?") {
+      else if (reply === "no button text => no match reply") {
         listener.close(() => {
           done();
         });

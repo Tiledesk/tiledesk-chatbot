@@ -34,8 +34,12 @@ class MockBotsDataSource {
    * @returns an Array of matches
    */
   async getByExactMatch(botId, text) {
+    // console.log("text is:", text);
+    // console.log("this.data.bots[botId]:", this.data.bots[botId]);
     const intent_display_name = this.data.bots[botId].questions_intent[text];
+    // console.log("intent_display_name:", intent_display_name);
     if (intent_display_name) {
+      // console.log("intent by display name:", this.data.bots[botId].intents[intent_display_name]);
       return [this.data.bots[botId].intents[intent_display_name]];
     }
     return null;
