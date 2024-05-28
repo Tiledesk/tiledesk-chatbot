@@ -5,8 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.69
+- added flow attributes in reply action (original)
+
 # v0.2.68
-- added flow attributes in replyv2
+- added flow attributes in replyv2 action
 - ReplyV2 now "re-forwards" the original message when the "no-match" connector is undefined (behaving exactly like the classic Reply)
 
 # v0.2.67
