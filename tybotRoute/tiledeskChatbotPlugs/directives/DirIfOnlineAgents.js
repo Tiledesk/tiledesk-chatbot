@@ -244,7 +244,7 @@ class DirIfOnlineAgents {
         method: 'GET',
         httpsOptions: this.httpsOptions
       };
-      TiledeskClient.myrequest(
+      this.#myrequest(
         HTTPREQUEST,
         function(err, resbody) {
           if (err) {
@@ -290,7 +290,7 @@ class DirIfOnlineAgents {
         method: 'GET',
         httpsOptions: this.httpsOptions
       };
-      TiledeskClient.myrequest(
+      this.#myrequest(
         HTTPREQUEST,
         function(err, resbody) {
           if (err) {
@@ -324,21 +324,53 @@ class DirIfOnlineAgents {
     });
   }
 
-  // parseParams(directive_parameter) {
-  //   let trueIntent = null;
-  //   let falseIntent = null;
-  //   const params = ms(directive_parameter);
-  //   if (params.trueIntent) {
-  //     trueIntent = params.trueIntent;
-  //   }
-  //   if (params.falseIntent) {
-  //     falseIntent = params.falseIntent;
-  //   }
-  //   return {
-  //     trueIntent: trueIntent,
-  //     falseIntent: falseIntent
-  //   }
-  // }
+  #myrequest(options, callback) {
+    if (this.log) {
+      console.log("API URL:", options.url);
+      console.log("** Options:", JSON.stringify(options));
+    }
+    let axios_options = {
+      url: options.url,
+      method: options.method,
+      params: options.params,
+      headers: options.headers
+    }
+    if (options.json !== null) {
+      axios_options.data = options.json
+    }
+    if (this.log) {
+      console.log("axios_options:", JSON.stringify(axios_options));
+    }
+    if (options.url.startsWith("https:")) {
+      const httpsAgent = new https.Agent({
+        rejectUnauthorized: false,
+      });
+      axios_options.httpsAgent = httpsAgent;
+    }
+    axios(axios_options)
+      .then((res) => {
+        if (this.log) {
+          console.log("Response for url:", options.url);
+          console.log("Response headers:\n", JSON.stringify(res.headers));
+        }
+        if (res && res.status == 200 && res.data) {
+          if (callback) {
+            callback(null, res.data);
+          }
+        }
+        else {
+          if (callback) {
+            callback(new Error("Response status is not 200"), null);
+          }
+        }
+      })
+      .catch((error) => {
+        if (callback) {
+          callback(error, null);
+        }
+      });
+  }
+
 }
 
 module.exports = { DirIfOnlineAgents };
