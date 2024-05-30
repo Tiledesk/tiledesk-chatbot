@@ -236,7 +236,7 @@ class DirIfOnlineAgents {
 
   async getGroup(groupId, callback) {
     return new Promise ( (resolve, reject) => {
-      const URL = `${this.APIURL}/${this.projectId}/groups/${groupId}`
+      const URL = `${this.context.TILEDESK_APIURL}/${this.context.projectId}/groups/${groupId}`
       const HTTPREQUEST = {
         url: URL,
         headers: {
