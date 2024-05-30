@@ -1,6 +1,5 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
-const ms = require('minimist-string');
 
 class DirIfOnlineAgents {
 
@@ -149,37 +148,22 @@ class DirIfOnlineAgents {
                     // [
                     //   {
                     //       "user_available": false,
-                    //       "number_assigned_requests": 0,
-                    //       "last_login_at": "2023-10-26T16:18:54.048Z",
-                    //       "status": "active",
-                    //       "_id": "653a9baff34cdb002cf97fa9",
-                    //       "id_project": "65203e12f8c0cf002cf4110b",
+                    // ...
                     //       "id_user": {
                     //           "status": 100,
-                    //           "_id": "62b317986993970035f0697e",
                     //           "email": "michele@tiledesk.com",
                     //           "firstname": "Michele",
                     //           "lastname": "Pomposo",
-                    //           "emailverified": true,
-                    //           "createdAt": "2022-06-22T13:22:32.604Z",
-                    //           "updatedAt": "2023-01-31T16:43:36.166Z",
-                    //           "__v": 0,
-                    //           "attributes": null
+                    // ...
                     //       },
                     //       "role": "admin",
-                    //       "createdBy": "5e09d16d4d36110017506d7f",
                     //       "tags": [],
-                    //       "createdAt": "2023-10-26T17:02:39.876Z",
-                    //       "updatedAt": "2023-11-16T12:37:31.994Z",
-                    //       "__v": 0,
                     //       "presence": {
                     //           "status": "offline",
                     //           "changedAt": "2023-11-16T12:37:31.990Z"
                     //       },
-                    //       "isAuthenticated": true,
-                    //       "id": "653a9baff34cdb002cf97fa9",
                     //       "isBusy": false
-                    //   },
+                    //   }, ... ]
                     // filter on availability
                     console.log("getting available agents for dep:", dep);
                     let available_agents = [];
@@ -192,10 +176,12 @@ class DirIfOnlineAgents {
                   }
                 }
                 else {
+                  this.chatbot.addParameter("flowError", "(If online Agents) Empty group:" + groupId);
                   return [];
                 }
               }
               else {
+                this.chatbot.addParameter("flowError", "(If online Agents) Error: no group for groupId:" + groupId);
                 return [];
               }
             }
