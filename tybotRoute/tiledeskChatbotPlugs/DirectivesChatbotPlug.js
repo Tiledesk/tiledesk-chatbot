@@ -48,6 +48,8 @@ const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
+const { DirLeadUpdate } = require('./directives/DirLeadUpdate');
+
 
 class DirectivesChatbotPlug {
 
@@ -87,7 +89,7 @@ class DirectivesChatbotPlug {
       console.log("Message text ripped from directives:", parsed_result.text);
     }
     if (parsed_result && parsed_result.directives && parsed_result.directives.length > 0) {
-      if (this.log) {console.log("Do not process more intents. Process directives and return");}
+      if (this.log) { console.log("Do not process more intents. Process directives and return"); }
       const text = parsed_result.text;
       message.text = text;
       this.directives = parsed_result.directives;
@@ -117,7 +119,7 @@ class DirectivesChatbotPlug {
     }
     const supportRequest = this.supportRequest;
     // console.log("supportRequest is:", JSON.stringify(supportRequest))
-    
+
     const token = this.token;
     const API_URL = this.API_URL;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
@@ -125,9 +127,9 @@ class DirectivesChatbotPlug {
     // const requestId = supportRequest.request_id
     let depId;
     if (supportRequest.department && supportRequest.department._id) {
-      if (this.log) {console.log("setting depId:", supportRequest.department._id);}
+      if (this.log) { console.log("setting depId:", supportRequest.department._id); }
       depId = supportRequest.department._id;
-      if (this.log) {console.log("depId is:", depId);}
+      if (this.log) { console.log("depId is:", depId); }
     }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
@@ -139,7 +141,7 @@ class DirectivesChatbotPlug {
       log: this.log
     });
 
-    this.context =  {
+    this.context = {
       projectId: projectId,
       chatbot: this.chatbot,
       message: this.message,
@@ -155,25 +157,25 @@ class DirectivesChatbotPlug {
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }
-    if (this.log) {console.log("this.context.departmentId is:", this.context.departmentId);}
-    
+    if (this.log) { console.log("this.context.departmentId is:", this.context.departmentId); }
+
     this.curr_directive_index = -1;
-    if (this.log) { console.log("processing directives...");}
-    
+    if (this.log) { console.log("processing directives..."); }
+
     const next_dir = await this.nextDirective(directives);
-    if (this.log) { console.log("next_dir:", JSON.stringify(next_dir));}
+    if (this.log) { console.log("next_dir:", JSON.stringify(next_dir)); }
     await this.process(next_dir);
   }
 
   async nextDirective(directives) {
-    if (this.log) {console.log("....nextDirective() checkStep():");}
+    if (this.log) { console.log("....nextDirective() checkStep():"); }
     const go_on = await TiledeskChatbot.checkStep(
       this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
     // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
     if (go_on == false) {
-      if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
+      if (this.log) { console.log("go_on == false! nextDirective() Stopped!"); }
       return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
     // else if (go_on == 2) {
@@ -224,28 +226,28 @@ class DirectivesChatbotPlug {
     if (directive && directive.action) {
       // console.log("Checking locks", JSON.stringify(directive));
       // try {
-        const action_id = directive.action["_tdActionId"];
-        // console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
-        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        // console.log("locked_action_id:", locked_action_id);
-        if ( locked_action_id && (locked_action_id !== action_id) ) {
-          // console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-          return;
-        }
-        else {
-          // go on
-          // console.log("Going on to next directive...");
-        }
+      const action_id = directive.action["_tdActionId"];
+      // console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      // console.log("locked_action_id:", locked_action_id);
+      if (locked_action_id && (locked_action_id !== action_id)) {
+        // console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }
+      else {
+        // go on
+        // console.log("Going on to next directive...");
+      }
       // }
       // catch(error) {
       //   console.error("Error on locks:", error);
       // }
-      
+
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
-      if (context.log) { console.log("stop process(). directive is (null?):", directive);}
+      if (context.log) { console.log("stop process(). directive is (null?):", directive); }
       this.theend();
     }
     else if (directive_name === Directives.DEPARTMENT) {
@@ -264,7 +266,7 @@ class DirectivesChatbotPlug {
       // console.log(".....DirIntent")
       new DirIntent(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -278,7 +280,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.MESSAGE) {
       new DirMessage(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -298,7 +300,7 @@ class DirectivesChatbotPlug {
       // console.log("...DirReplyV2");
       new DirReplyV2(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -352,7 +354,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.IF_OPEN_HOURS) {
       new DirIfOpenHours(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -367,7 +369,7 @@ class DirectivesChatbotPlug {
       // console.log("...DirIfOnlineAgents")
       new DirIfOnlineAgents(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -388,9 +390,9 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.CONDITION) { // DEPRECATED
       // console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
+        if (context.log) { console.log("stop on condition?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -404,7 +406,7 @@ class DirectivesChatbotPlug {
       new DirJSONCondition(context).execute(directive, async (stop) => {
         // console.log("stop on condition?", stop);
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -588,9 +590,9 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.WEB_REQUEST_V2) {
       // console.log("...DirWebRequestV2");
       new DirWebRequestV2(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
+        if (context.log) { console.log("stop on condition?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -602,9 +604,9 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.FORM) {
       console.log("...DirForm");
       new DirForm(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on form?", stop);}
+        if (context.log) { console.log("stop on form?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -636,9 +638,9 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_HELP_CENTER) {
       new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DeflectToHelpCenter stop?", stop);}
+        if (context.log) { console.log("DeflectToHelpCenter stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -648,10 +650,11 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.ASK_GPT) {
-      new DirAskGPT(context).execute(directive, async (stop) => {;
-        if (context.log) { console.log("AskGPT stop?", stop);}
+      new DirAskGPT(context).execute(directive, async (stop) => {
+        ;
+        if (context.log) { console.log("AskGPT stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -661,10 +664,11 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.ASK_GPT_V2) {
-      new DirAskGPTV2(context).execute(directive, async (stop) => {;
-        if (context.log) { console.log("AskGPTV2 stop?", stop);}
+      new DirAskGPTV2(context).execute(directive, async (stop) => {
+        ;
+        if (context.log) { console.log("AskGPTV2 stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -675,9 +679,9 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.GPT_TASK) {
       new DirGptTask(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("GPTTask stop?", stop);}
+        if (context.log) { console.log("GPTTask stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -694,9 +698,9 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.QAPLA) {
       new DirQapla(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DirQapla stop?", stop);}
+        if (context.log) { console.log("DirQapla stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -707,9 +711,9 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.MAKE) {
       new DirMake(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DirMake stop?", stop);}
+        if (context.log) { console.log("DirMake stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -720,9 +724,9 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.HUBSPOT) {
       new DirHubspot(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("Hubspot stop?", stop);}
+        if (context.log) { console.log("Hubspot stop?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         } else {
           let next_dir = await this.nextDirective(this.directives);
@@ -745,9 +749,9 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.GPT_ASSISTANT) {
       // console.log("...GPT_ASSISTANT");
       new DirAssistant(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
+        if (context.log) { console.log("stop on condition?", stop); }
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive)); }
           this.theend();
         }
         else {
@@ -755,6 +759,14 @@ class DirectivesChatbotPlug {
           this.process(next_dir);
         }
       });
+    } else if (directive_name === Directives.LEAD_UPDDATE) {
+
+      console.log('here directive_name', directive_name)
+      console.log('here directive', directive)
+      new DirLeadUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      })
     }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
@@ -790,7 +802,7 @@ class DirectivesChatbotPlug {
     if (this.log) { console.log("processing Inline directives:", directives); }
     const process = (directive) => {
       if (directive) {
-        if (this.log) {console.log("__directive.name:", directive.name);}
+        if (this.log) { console.log("__directive.name:", directive.name); }
       }
       let directive_name = null;
       if (directive && directive.name) {
@@ -812,7 +824,7 @@ class DirectivesChatbotPlug {
       //   });
       // }
       else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
-        const helpDir = new DirDeflectToHelpCenter({HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId});
+        const helpDir = new DirDeflectToHelpCenter({ HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId });
         helpDir.execute(directive, pipeline, 3, () => {
           process(nextDirective());
         });
