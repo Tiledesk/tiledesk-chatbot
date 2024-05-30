@@ -95,7 +95,7 @@ class DirIfOnlineAgents {
     }
     catch(err) {
       console.error("(DirIfOnlineAgents) An error occurred:", err);
-      this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + JSON.stringify(err));
+      this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + err);
       callback();
     }
   }
