@@ -8,32 +8,10 @@ class DirIfOnlineAgents {
     if (!context) {
       throw new Error('context object is mandatory.');
     }
+    this.context = context;
+    this.chatbot = context.chatbot;
     this.tdclient = context.tdclient;
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   requestId: supportRequest,
-    //   APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   log: false
-    // }
     this.intentDir = new DirIntent(context);
-    //   {
-    //     API_ENDPOINT: context.TILEDESK_APIURL,
-    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-    //     supportRequest: context.supportRequest,
-    //     token: context.token,
-    //     log: context.log
-    //   }
-    // );
     this.log = context.log;
   }
 
@@ -41,21 +19,6 @@ class DirIfOnlineAgents {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      // if (!params.trueIntent && !params.falseIntent) {
-      //   if (this.log) {
-      //     console.log("missing both params.trueIntent & params.falseIntent");
-      //   }
-      //   callback();
-      //   return;
-      // }
-      action = {
-        trueIntent: params.trueIntent,
-        falseIntent: params.falseIntent
-      }
     }
     else {
       callback();
@@ -66,7 +29,7 @@ class DirIfOnlineAgents {
     });
   }
 
-  go(action, callback) {
+  async go(action, callback) {
     if (!action.trueIntent && !action.falseIntent) {
       if (this.log) {
         console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");
@@ -82,116 +45,81 @@ class DirIfOnlineAgents {
     }
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
-    let stopOnConditionMet = action.stopOnConditionMet;
-    this.tdclient.openNow(async (err, result) => {
-      if (this.log) {console.log("openNow():", result);}
-      if (err) {
-        console.error("IfOnlineAgents:tdclient.openNow Error:", err);
-        callback();
-        return;
-      }
-      else {
-        if (result && result.isopen) {
-          let checkCurrentDepartment = action.checkCurrentDepartment;
-          let selectedDepartment = action.selectedDepartmentId;
-          if (checkCurrentDepartment) {
-            const depId = this.context.departmentId;
-            const agents = await this.getDepartmentAvailableAgents(depId);
-            // check
-          }
-          else if (selectedDepartment) {
-            const agents = await this.getDepartmentAvailableAgents(selectedDepartment);
-            // check
-          }
-          else {
-            this.tdclient.getProjectAvailableAgents((err, agents) => {
-              if (this.log) {console.log("Agents", agents);}
-              if (err) {
-                console.error("IfOnlineAgents:Error getting available agents:", err);
-                callback();
-              }
-              else {
-                if (this.log) {console.log("Agents count:", agents.length);}
-                if (agents.length > 0) {
-                  if (trueIntent) {
-                    let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-                    if (this.log) {console.log("agents (openHours) => trueIntent");}
-                    this.intentDir.execute(intentDirective, () => {
-                      callback(stopOnConditionMet);
-                    });
-                  }
-                  else {
-                    console.log("NO IfOnlineAgents trueIntent defined. callback()") // prod
-                    callback();
-                    return;
-                  }
-                }
-                else if (falseIntent) {
-                  let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-                  if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
-                  this.intentDir.execute(intentDirective, () => {
-                    callback(stopOnConditionMet);
-                  });
-                }
-                else {
-                  callback();
-                }
-              }
+    let stopOnConditionMet = true; //action.stopOnConditionMet;
+
+    try {
+      const result = await this.openNow();
+      if (result && result.isopen) {
+        let checkCurrentDepartment = action.checkCurrentDepartment;
+        let checkSelectedDepartment = action.checkSelectedDepartment;
+        let selectedDepartment = action.selectedDepartmentId;
+        let agents;
+
+        if (checkCurrentDepartment || checkSelectedDepartment) {
+          const depId = checkCurrentDepartment ? this.context.departmentId : selectedDepartment;
+          agents = await this.getDepartmentAvailableAgents(depId);
+        }
+        else { // go project-wide
+          agents = await this.getProjectAvailableAgents();
+        }
+
+        if (agents && agents.length > 0) {
+          if (trueIntent) {
+            let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+            if (this.log) {console.log("agents (openHours) => trueIntent");}
+            this.intentDir.execute(intentDirective, () => {
+              callback(stopOnConditionMet);
             });
           }
-          this.tdclient.getProjectAvailableAgents((err, agents) => {
-            if (this.log) {console.log("Agents", agents);}
-            if (err) {
-              console.error("IfOnlineAgents:Error getting available agents:", err);
-              callback();
-            }
-            else {
-              if (this.log) {console.log("Agents count:", agents.length);}
-              if (agents.length > 0) {
-                if (trueIntent) {
-                  let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-                  if (this.log) {console.log("agents (openHours) => trueIntent");}
-                  this.intentDir.execute(intentDirective, () => {
-                    callback(stopOnConditionMet);
-                  });
-                }
-                else {
-                  console.log("NO IfOnlineAgents trueIntent defined. callback()") // prod
-                  callback();
-                  return;
-                }
-              }
-              else if (falseIntent) {
-                let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-                if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
-                this.intentDir.execute(intentDirective, () => {
-                  callback(stopOnConditionMet);
-                });
-              }
-              else {
-                callback();
-              }
-            }
+          else {
+            console.log("(DirIfOnlineAgents) NO IfOnlineAgents trueIntent defined. callback()") // prod
+            this.chatbot.addParameter("flowError", "(If online Agents) No IfOnlineAgents success path defined.");
+            callback();
+            return;
+          }
+        }
+        else if (falseIntent) { // no agents available
+          let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+          if (this.log) {console.log("(DirIfOnlineAgents) !agents (openHours) => falseIntent", intentDirective);}
+          this.intentDir.execute(intentDirective, () => {
+            callback(stopOnConditionMet);
           });
         }
-        else if (result && !result.isopen) {
-          if (falseIntent) {
-            let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-            if (this.log) {console.log("!agents (!openHours) => falseIntent");}
-            console.log("!agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
-            this.intentDir.execute(intentDirective, () => {
-              callback();
-            });
-          }
-          else {
-            callback();
-          }
-        }
         else {
-          if (this.log) {console.log("undeterminate result.");}
-          console.log("undeterminate result.");
+          if (this.log) {console.log("(DirIfOnlineAgents) Error: No falseIntent defined", intentDirective);}
+          this.chatbot.addParameter("flowError", "(If online Agents) No path for 'no available agents' defined.");
           callback();
         }
+      }
+    }
+    catch(err) {
+      console.error("(DirIfOnlineAgents) An error occurred:", err);
+      this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + JSON.stringify(err));
+      callback();
+    }
+  }
+
+  async openNow() {
+    return new Promise( (resolve, reject) => {
+      this.tdclient.openNow(async (err, result) => {
+        if (this.log) {console.log("openNow():", result);}
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  async getProjectAvailableAgents() {
+    this.tdclient.getProjectAvailableAgents((err, agents) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(agents);
       }
     });
   }
@@ -200,28 +128,81 @@ class DirIfOnlineAgents {
     return new Promise( (resolve, reject) => {
       this.tdclient.getDepartment(depId, async (error, dep) => {
         if (error) {
-          console.error("(DirIfOnlineAgents) Error:", error);
+          reject(error);
         }
         else {
-          const groupId = dep.groupId;
+          console.log("got department:", JSON.stringify(dep));
+          const groupId = dep.id_group;
+          console.log("department.groupId:", groupId);
           try {
             if (groupId) {
               const group = await this.getGroup(groupId);
-              const agents = await this.getGroupAvailableAgents(group.members);
-              resolve(agents);
-            }
-            else { // go project-wide
-              this.tdclient.getProjectAvailableAgents((err, agents) => {
-                if (this.log) {console.log("Agents", agents);}
-                if (err) {
-                  console.error("IfOnlineAgents:Error getting available agents:", err);
-                  reject(error);
+              console.log("got group info:", group);
+              if (group) {
+                if (group.members) {
+                  console.log("group members ids:", group.members);
+                  let group_members = await getTeammates(group.members);
+                  console.log("group members details:", group_members);
+                  let all_teammates = await this.getAllTeammates();
+                  console.log("all teammates:", all_teammates);
+                  if (all_teammates && all_teammates.length > 0){
+                    // [
+                    //   {
+                    //       "user_available": false,
+                    //       "number_assigned_requests": 0,
+                    //       "last_login_at": "2023-10-26T16:18:54.048Z",
+                    //       "status": "active",
+                    //       "_id": "653a9baff34cdb002cf97fa9",
+                    //       "id_project": "65203e12f8c0cf002cf4110b",
+                    //       "id_user": {
+                    //           "status": 100,
+                    //           "_id": "62b317986993970035f0697e",
+                    //           "email": "michele@tiledesk.com",
+                    //           "firstname": "Michele",
+                    //           "lastname": "Pomposo",
+                    //           "emailverified": true,
+                    //           "createdAt": "2022-06-22T13:22:32.604Z",
+                    //           "updatedAt": "2023-01-31T16:43:36.166Z",
+                    //           "__v": 0,
+                    //           "attributes": null
+                    //       },
+                    //       "role": "admin",
+                    //       "createdBy": "5e09d16d4d36110017506d7f",
+                    //       "tags": [],
+                    //       "createdAt": "2023-10-26T17:02:39.876Z",
+                    //       "updatedAt": "2023-11-16T12:37:31.994Z",
+                    //       "__v": 0,
+                    //       "presence": {
+                    //           "status": "offline",
+                    //           "changedAt": "2023-11-16T12:37:31.990Z"
+                    //       },
+                    //       "isAuthenticated": true,
+                    //       "id": "653a9baff34cdb002cf97fa9",
+                    //       "isBusy": false
+                    //   },
+                    // filter on availability
+                    console.log("getting available agents for dep:", dep);
+                    let available_agents = [];
+                    available_agents.forEach((agent) => {
+                      if (agent.user_available === true && group_members.includes(agent.id)) {
+                        available_agents.push(agent);
+                      }
+                    });
+                    resolve(available_agents);
+                  }
                 }
                 else {
-                  if (this.log) {console.log("Agents count:", agents.length);}
-                  resolve(agents);
+                  return [];
                 }
-              });
+              }
+              else {
+                return [];
+              }
+            }
+            else {
+              // no group => assigned to all teammates
+              agents = await this.getProjectAvailableAgents();
+              return agents;
             }
           }
           catch(error) {
@@ -233,37 +214,37 @@ class DirIfOnlineAgents {
     });
   }
 
-  async getGroup(groupId, callback) {
-    return new Promise ( (resolve, reject) => {
-      const URL = `${this.APIURL}/${this.projectId}/groups/${groupId}`
-      const HTTPREQUEST = {
-        url: URL,
-        headers: {
-          'Content-Type' : 'application/json',
-          'Authorization': this.context.token
-        },
-        method: 'GET',
-        httpsOptions: this.httpsOptions
-      };
-      TiledeskClient.myrequest(
-        HTTPREQUEST,
-        function(err, resbody) {
-          if (err) {
-            reject(err);
-            if (callback) {
-              callback(err);
-            }
-          }
-          else {
-            resolve(resbody);
-            if (callback) {
-              callback(null, resbody);
-            }
-          }
-        }, this.log
-      );
-    });
-  }
+  // async getGroup(groupId, callback) {
+  //   return new Promise ( (resolve, reject) => {
+  //     const URL = `${this.APIURL}/${this.projectId}/groups/${groupId}`
+  //     const HTTPREQUEST = {
+  //       url: URL,
+  //       headers: {
+  //         'Content-Type' : 'application/json',
+  //         'Authorization': this.context.token
+  //       },
+  //       method: 'GET',
+  //       httpsOptions: this.httpsOptions
+  //     };
+  //     TiledeskClient.myrequest(
+  //       HTTPREQUEST,
+  //       function(err, resbody) {
+  //         if (err) {
+  //           reject(err);
+  //           if (callback) {
+  //             callback(err);
+  //           }
+  //         }
+  //         else {
+  //           resolve(resbody);
+  //           if (callback) {
+  //             callback(null, resbody);
+  //           }
+  //         }
+  //       }, this.log
+  //     );
+  //   });
+  // }
 
   async getGroup(groupId, callback) {
     return new Promise ( (resolve, reject) => {
@@ -287,6 +268,20 @@ class DirIfOnlineAgents {
             }
           }
           else {
+          //   {
+          //     "members": [
+          //         "62b317986993970035f0697e",
+          //         "5aaa99024c3b110014b478f0"
+          //     ],
+          //     "_id": "65ddec23fd8dc3003295cdd7",
+          //     "name": "Sales",
+          //     "trashed": false,
+          //     "id_project": "65203e12f8c0cf002cf4110b",
+          //     "createdBy": "5e09d16d4d36110017506d7f",
+          //     "createdAt": "2024-02-27T14:05:23.373Z",
+          //     "updatedAt": "2024-02-27T14:05:29.137Z",
+          //     "__v": 0
+          // }
             resolve(resbody);
             if (callback) {
               callback(null, resbody);
@@ -297,21 +292,67 @@ class DirIfOnlineAgents {
     });
   }
 
-  parseParams(directive_parameter) {
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
+  async getAllTeammates(members, callback) {
+    return new Promise ( (resolve, reject) => {
+      const URL = `${this.APIURL}/${this.projectId}/project_users`
+      const HTTPREQUEST = {
+        url: URL,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': this.context.token
+        },
+        method: 'GET',
+        httpsOptions: this.httpsOptions
+      };
+      TiledeskClient.myrequest(
+        HTTPREQUEST,
+        function(err, resbody) {
+          if (err) {
+            reject(err);
+            if (callback) {
+              callback(err);
+            }
+          }
+          else {
+          //   {
+          //     "members": [
+          //         "62b317986993970035f0697e",
+          //         "5aaa99024c3b110014b478f0"
+          //     ],
+          //     "_id": "65ddec23fd8dc3003295cdd7",
+          //     "name": "Sales",
+          //     "trashed": false,
+          //     "id_project": "65203e12f8c0cf002cf4110b",
+          //     "createdBy": "5e09d16d4d36110017506d7f",
+          //     "createdAt": "2024-02-27T14:05:23.373Z",
+          //     "updatedAt": "2024-02-27T14:05:29.137Z",
+          //     "__v": 0
+          // }
+            resolve(resbody);
+            if (callback) {
+              callback(null, resbody);
+            }
+          }
+        }, this.log
+      );
+    });
   }
+
+  // parseParams(directive_parameter) {
+  //   let trueIntent = null;
+  //   let falseIntent = null;
+  //   const params = ms(directive_parameter);
+  //   if (params.trueIntent) {
+  //     trueIntent = params.trueIntent;
+  //   }
+  //   if (params.falseIntent) {
+  //     falseIntent = params.falseIntent;
+  //   }
+  //   return {
+  //     trueIntent: trueIntent,
+  //     falseIntent: falseIntent
+  //   }
+  // }
 }
 
 module.exports = { DirIfOnlineAgents };
