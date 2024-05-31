@@ -51,16 +51,16 @@ class DirIfOnlineAgents {
     try {
       const result = await this.openNow();
       if (result && result.isopen) {
-        let checkCurrentDepartment = action.checkCurrentDepartment;
-        let checkSelectedDepartment = action.checkSelectedDepartment;
-        let selectedDepartment = action.selectedDepartmentId;
+        const selectedOption = action.selectedOption;
+        
         let agents;
-
-        if (checkCurrentDepartment || checkSelectedDepartment) {
-          const depId = checkCurrentDepartment ? this.context.departmentId : selectedDepartment;
-          agents = await this.getDepartmentAvailableAgents(depId);
+        if (selectedOption === "currentDep") {
+          agents = await this.getDepartmentAvailableAgents(this.context.departmentId);
         }
-        else { // go project-wide
+        else if (selectedOption === "selectedDep") {
+          agents = await this.getDepartmentAvailableAgents(action.selectedDepartmentId);
+        }
+        else { // if (checkAll) => go project-wide
           agents = await this.getProjectAvailableAgents();
         }
 
