@@ -180,7 +180,7 @@ class DirIfOnlineAgents {
                     console.log("(DirIfOnlineAgents) filtering available agents for group:", groupId);
                     let available_agents = [];
                     all_teammates.forEach((agent) => {
-                      console.log("Checking teammate:", agent.id_user._id, " (available:", agent.user_available, ") with members:",group.members );
+                      console.log("Checking teammate:", agent.id_user._id, "(", agent.id_user.email ,") (available:", agent.user_available, ") with members:",group.members );
                       if (agent.user_available === true && group.members.includes(agent.id_user._id)) {
                         console.log("Adding teammate:", agent.id_user._id);
                         available_agents.push(agent);
