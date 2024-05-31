@@ -56,13 +56,19 @@ class DirIfOnlineAgents {
         
         let agents;
         if (selectedOption === "currentDep") {
+          console.log("(DirIfOnlineAgents) selectedOption === currentDep");
           agents = await this.getDepartmentAvailableAgents(this.context.departmentId);
+          console.log("(DirIfOnlineAgents) agents:", agents);
         }
         else if (selectedOption === "selectedDep") {
+          console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId);
           agents = await this.getDepartmentAvailableAgents(action.selectedDepartmentId);
+          console.log("(DirIfOnlineAgents) agents:", agents);
         }
         else { // if (checkAll) => go project-wide
+          console.log("(DirIfOnlineAgents) selectedOption === all");
           agents = await this.getProjectAvailableAgents();
+          console.log("(DirIfOnlineAgents) agents:", agents);
         }
 
         if (agents && agents.length > 0) {
