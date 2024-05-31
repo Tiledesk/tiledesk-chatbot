@@ -177,10 +177,12 @@ class DirIfOnlineAgents {
                     //       "isBusy": false
                     //   }, ... ]
                     // filter on availability
-                    console.log("(DirIfOnlineAgents) getting available agents for dep:", dep);
+                    console.log("(DirIfOnlineAgents) filtering available agents for group:", groupId);
                     let available_agents = [];
                     available_agents.forEach((agent) => {
+                      console.log("Checking teammate:", agent.id, " (available:", agent.user_available, ") with members:",group.members );
                       if (agent.user_available === true && group.members.includes(agent.id)) {
+                        console.log("Adding teammate:", agent);
                         available_agents.push(agent);
                       }
                     });
