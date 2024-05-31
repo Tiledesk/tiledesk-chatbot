@@ -92,11 +92,12 @@ class TiledeskChatbot {
 
       // resetting any noInput timeout setting userInput = true
       if (message.sender != "_tdinternal") {
+        if (this.log) {console.log("resetting any noInput timeout setting userInput = (false?)", await this.getParameter("userInput") );}
         try {
           await this.addParameter("userInput", true); // set userInput
           if (this.log) {console.log("userInput?", await this.getParameter("userInput") );}
         } catch(error) {
-          console.error("Error resetting locked intent:", error);
+          console.error("Error resetting userInput:", error);
         }
       }
 
