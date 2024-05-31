@@ -251,7 +251,7 @@ class DirIfOnlineAgents {
         url: URL,
         headers: {
           'Content-Type' : 'application/json',
-          'Authorization': this.context.token
+          'Authorization': this.fixToken(this.context.token)
         },
         method: 'GET',
         httpsOptions: this.httpsOptions
@@ -297,7 +297,7 @@ class DirIfOnlineAgents {
         url: URL,
         headers: {
           'Content-Type' : 'application/json',
-          'Authorization': this.context.token
+          'Authorization': this.fixToken(this.context.token)
         },
         method: 'GET',
         httpsOptions: this.httpsOptions
@@ -383,6 +383,14 @@ class DirIfOnlineAgents {
       });
   }
 
+  fixToken(token) {
+    if (token.startsWith('JWT ')) {
+      return token
+    }
+    else {
+      return 'JWT ' + token
+    }
+  }
 }
 
 module.exports = { DirIfOnlineAgents };
