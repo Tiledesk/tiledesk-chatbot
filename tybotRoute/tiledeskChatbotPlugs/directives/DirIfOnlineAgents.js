@@ -111,7 +111,7 @@ class DirIfOnlineAgents {
   async openNow() {
     return new Promise( (resolve, reject) => {
       this.tdclient.openNow(async (err, result) => {
-        if (this.log) {console.log("openNow():", result);}
+        if (this.log) {console.log("(DirIfOnlineAgents) openNow():", result);}
         if (err) {
           reject(err);
         }
@@ -142,20 +142,20 @@ class DirIfOnlineAgents {
           reject(error);
         }
         else {
-          console.log("got department:", JSON.stringify(dep));
+          console.log("(DirIfOnlineAgents) got department:", JSON.stringify(dep));
           const groupId = dep.id_group;
-          console.log("department.groupId:", groupId);
+          console.log("(DirIfOnlineAgents) department.groupId:", groupId);
           try {
             if (groupId) {
               const group = await this.getGroup(groupId);
-              console.log("got group info:", group);
+              console.log("(DirIfOnlineAgents) got group info:", group);
               if (group) {
                 if (group.members) {
-                  console.log("group members ids:", group.members);
-                  let group_members = await getTeammates(group.members);
-                  console.log("group members details:", group_members);
+                  console.log("(DirIfOnlineAgents) group members ids:", group.members);
+                  // let group_members = await getTeammates(group.members);
+                  // console.log("group members details:", group_members);
                   let all_teammates = await this.getAllTeammates();
-                  console.log("all teammates:", all_teammates);
+                  console.log("(DirIfOnlineAgents) all teammates:", all_teammates);
                   if (all_teammates && all_teammates.length > 0){
                     // [
                     //   {
@@ -177,13 +177,14 @@ class DirIfOnlineAgents {
                     //       "isBusy": false
                     //   }, ... ]
                     // filter on availability
-                    console.log("getting available agents for dep:", dep);
+                    console.log("(DirIfOnlineAgents) getting available agents for dep:", dep);
                     let available_agents = [];
                     available_agents.forEach((agent) => {
-                      if (agent.user_available === true && group_members.includes(agent.id)) {
+                      if (agent.user_available === true && group.members.includes(agent.id)) {
                         available_agents.push(agent);
                       }
                     });
+                    console.log("(DirIfOnlineAgents) available agents in group:", available_agents);
                     resolve(available_agents);
                   }
                 }
