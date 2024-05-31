@@ -293,7 +293,7 @@ class DirIfOnlineAgents {
 
   async getAllTeammates(members, callback) {
     return new Promise ( (resolve, reject) => {
-      const URL = `${this.APIURL}/${this.projectId}/project_users`
+      const URL = `${this.context.TILEDESK_APIURL}/${this.context.projectId}/project_users`
       const HTTPREQUEST = {
         url: URL,
         headers: {
