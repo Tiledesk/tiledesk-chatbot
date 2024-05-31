@@ -1,4 +1,5 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { rejects } = require('assert');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
@@ -115,14 +116,16 @@ class DirIfOnlineAgents {
   }
 
   async getProjectAvailableAgents() {
-    this.tdclient.getProjectAvailableAgents((err, agents) => {
-      if (err) {
-        reject(err);
-      }
-      else {
-        resolve(agents);
-      }
-    });
+    return new Promise( (resolve, reject) => {
+      this.tdclient.getProjectAvailableAgents((err, agents) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(agents);
+        }
+      });
+    })
   }
 
   async getDepartmentAvailableAgents(depId) {
