@@ -81,7 +81,7 @@ class DirIfOnlineAgents {
             });
           }
           else {
-            console.log("(DirIfOnlineAgents) NO IfOnlineAgents trueIntent defined. callback()") // prod
+            console.log("(DirIfOnlineAgents) No IfOnlineAgents trueIntent defined. callback()") // prod
             this.chatbot.addParameter("flowError", "(If online Agents) No IfOnlineAgents success path defined.");
             callback();
             return;
