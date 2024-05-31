@@ -179,7 +179,7 @@ class DirIfOnlineAgents {
                     // filter on availability
                     console.log("(DirIfOnlineAgents) filtering available agents for group:", groupId);
                     let available_agents = [];
-                    available_agents.forEach((agent) => {
+                    all_teammates.forEach((agent) => {
                       console.log("Checking teammate:", agent.id, " (available:", agent.user_available, ") with members:",group.members );
                       if (agent.user_available === true && group.members.includes(agent.id)) {
                         console.log("Adding teammate:", agent);
