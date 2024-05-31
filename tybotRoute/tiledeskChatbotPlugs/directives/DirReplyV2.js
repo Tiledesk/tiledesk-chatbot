@@ -89,7 +89,8 @@ class DirReplyV2 {
                 if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput")); }
                 setTimeout(async () => {
                   if (this.log) { console.log("noinput timeout triggered!"); }
-                  let userInput = await this.chatbot.getParameter("userInput");
+                  const userInput = await this.chatbot.getParameter("userInput");
+                  if (this.log) {  console.log("got 'userInput':", userInput); }
                   if (!userInput) {
                     if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }
                     await this.chatbot.unlockIntent(this.requestId);
@@ -99,6 +100,9 @@ class DirReplyV2 {
                     this.intentDir.execute(noinput_action, () => {
                       if (this.log) {  console.log("noinput action invoked", noinput_action); }
                     });
+                  }
+                  else {
+                    if (this.log) {  console.log("skipping noinput action because of userInput", userInput); }
                   }
                 }, noInputTimeout);
               }
