@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.70
+- added DirIfOnlineAgentsV2
+- Fix. TiledeskChatbot: WRONG: await chatbot.addParameter("userInput", true); ====>    FIXED: this.addParameter("userInput", true)
+- Fix. Fixed WRONG addParameter(key, value) invocation in TiledeskChatbot with 3 (instead of key, value) parameters
+
 # v0.2.69
 - added flow attributes in reply action (original)
 
