@@ -496,7 +496,8 @@ class TiledeskChatbotUtil {
             }
             
             if (message.text && message.sender !== "_tdinternal") {
-                await chatbot.addParameter("userInput", true); // set userInput
+                // await chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
+                await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // set userInput
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
                 if (message.channel) {
@@ -835,7 +836,7 @@ class TiledeskChatbotUtil {
             "userLeadId",
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
-            "userInput"
+            TiledeskChatbotConst.USER_INPUT
           ]
           let userParams = {};
           if (flowAttributes) {

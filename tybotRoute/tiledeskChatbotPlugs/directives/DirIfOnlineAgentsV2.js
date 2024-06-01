@@ -57,7 +57,7 @@ class DirIfOnlineAgentsV2 {
         
         let agents;
         if (selectedOption === "currentDep") {
-          console.log("(DirIfOnlineAgents) selectedOption === currentDep");
+          console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", this.context.departmentId);
           agents = await this.getDepartmentAvailableAgents(this.context.departmentId);
           console.log("(DirIfOnlineAgents) agents:", agents);
         }

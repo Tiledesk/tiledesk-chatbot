@@ -3,8 +3,9 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 const { DirIntent } = require("./DirIntent");
-const { defaultOptions } = require('liquidjs');
+// const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');
+const { v4: uuidv4 } = require('uuid');
 
 class DirReplyV2 {
 
@@ -84,14 +85,15 @@ class DirReplyV2 {
               const noInputIntent = action.noInputIntent;
               const noInputTimeout = action.noInputTimeout;
               if (this.log) { console.log("noInputTimeout found:", noInputTimeout); }
-              if (noInputTimeout > 0 && noInputTimeout < 300000) {
-                await this.chatbot.addParameter("userInput", false); // control variable. On each user input is set to true
-                if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter("userInput")); }
+              if (noInputTimeout > 0 && noInputTimeout < 7776000) {
+                const timeout_id = uuidv4();
+                await this.chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, timeout_id); // control variable. On each user input is removed
+                if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT)); }
                 setTimeout(async () => {
                   if (this.log) { console.log("noinput timeout triggered!"); }
-                  const userInput = await this.chatbot.getParameter("userInput");
+                  const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
                   if (this.log) {  console.log("got 'userInput':", userInput); }
-                  if (!userInput) {
+                  if (userInput && userInput === timeout_id) {
                     if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }
                     await this.chatbot.unlockIntent(this.requestId);
                     await this.chatbot.unlockAction(this.requestId);

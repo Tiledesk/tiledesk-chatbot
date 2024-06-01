@@ -22,6 +22,7 @@ class TiledeskChatbotConst {
     static REQ_CHAT_CHANNEL = "chatChannel";
     static REQ_DECODED_JWT_KEY = "decodedCustomJWT";
     static REQ_REQUESTER_IS_AUTHENTICATED_KEY = "strongAuthenticated";
+    static USER_INPUT = "_userInput";
 
     // static REQ_DEPARTMENT_ID_KEY = "tdDepartmentId";
     // static REQ_PROJECT_ID_KEY = "projectId";

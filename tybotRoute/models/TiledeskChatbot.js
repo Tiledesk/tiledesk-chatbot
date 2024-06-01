@@ -9,6 +9,7 @@ const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
+const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
@@ -91,15 +92,16 @@ class TiledeskChatbot {
       }
 
       // resetting any noInput timeout setting userInput = true
-      if (message.sender != "_tdinternal") {
-        if (this.log) {console.log("resetting any noInput timeout setting userInput = (false?)", await this.getParameter("userInput") );}
-        try {
-          await this.addParameter("userInput", true); // set userInput
-          if (this.log) {console.log("userInput?", await this.getParameter("userInput") );}
-        } catch(error) {
-          console.error("Error resetting userInput:", error);
-        }
-      }
+      // if (message.sender != "_tdinternal") {
+      //   if (this.log) {console.log("resetting any noInput timeout setting userInput = (false?)", await this.getParameter(TiledeskChatbotConst.USER_INPUT) );}
+      //   try {
+      //     // await this.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
+      //     await this.deleteParameter(TiledeskChatbotConst.USER_INPUT); // reset userInput
+      //     if (this.log) {console.log("userInput?", await this.getParameter(TiledeskChatbotConst.USER_INPUT) );}
+      //   } catch(error) {
+      //     console.error("Error resetting userInput:", error);
+      //   }
+      // }
 
       // any external invocation restarts the steps counter
       try {
