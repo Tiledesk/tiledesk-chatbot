@@ -41,7 +41,7 @@ class DirLeadUpdate {
   }
 
   async go(action, callback) {
-
+    console.log("DirLeadUpdate action:", JSON.stringify(action))
     if (this.log) { console.log("DirLeadUpdate action:", JSON.stringify(action)); }
     if (!this.tdcache) {
       console.error("Error: DirLeadUpdate tdcache is mandatory");
@@ -49,9 +49,9 @@ class DirLeadUpdate {
       return;
     }
 
-    let bodyParameters = action.bodyParameters;
-    console.log("[DirLeadUpdate] go action:", action);
-    console.log("[DirLeadUpdate] go bodyParemeters:", bodyParameters);
+    // let bodyParameters = action.bodyParameters;
+    // console.log("[DirLeadUpdate] go action:", action);
+    // console.log("[DirLeadUpdate] go bodyParemeters:", bodyParameters);
 
     // let lead_fullname = bodyParameters.senderFullname;
     // let email = bodyParameters.email;
@@ -67,11 +67,12 @@ class DirLeadUpdate {
     console.log('[DirLeadUpdate] HERE!!!!! 1 ')
     const filler = new Filler();
     console.log('[DirLeadUpdate] HERE!!!!! 2 ')
-    const lead_fullname = filler.fill(fullname, requestVariables );
+    let 
+    const lead_fullname = filler.fill(action.fullname, requestVariables );
     // const lead_email = filler.fill(bodyParameters.leadEmail, requestVariables );
     console.log('[DirLeadUpdate] HERE!!!!! 3 ')
     console.log("[DirLeadUpdate] >>>>>>> Hello lead_fullname:", lead_fullname);
-    console.log("[DirLeadUpdate] >>>>>>> Hello lead_email:", lead_email);
+    // console.log("[DirLeadUpdate] >>>>>>> Hello lead_email:", lead_email);
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
 
