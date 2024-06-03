@@ -67,7 +67,7 @@ class DirLeadUpdate {
     console.log('[DirLeadUpdate] HERE!!!!! 1 ')
     const filler = new Filler();
     console.log('[DirLeadUpdate] HERE!!!!! 2 ')
-    let 
+    
     const lead_fullname = filler.fill(fullname, requestVariables );
     // const lead_email = filler.fill(bodyParameters.leadEmail, requestVariables );
     console.log('[DirLeadUpdate] HERE!!!!! 3 ')
