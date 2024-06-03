@@ -37,8 +37,7 @@ router.post('/ext/:botid', async (req, res) => {
     console.log("Removed req.body.payload.request.snapshot field");
   }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
-  console.log("REQUEST BODY:", JSON.stringify(req.body));
-  
+
   const botId = req.params.botid;
   if (log) {console.log(" :", botId);}
   const message = req.body.payload;

@@ -58,26 +58,26 @@ class DirIfOnlineAgentsV2 {
         let agents;
         if (selectedOption === "currentDep") {
           let departmentId;
-          console.log("checking supportRequest:", this.context.supportRequest);
+          // console.log("checking supportRequest:", this.context.supportRequest);
           if (this.context.departmentId) {
             departmentId = this.context.departmentId;
           }
           else {
             departmentId = this.context?.supportRequest?.attributes?.departmentId;
           }
-          console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId);
+          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
           agents = await this.getDepartmentAvailableAgents(departmentId);
-          console.log("(DirIfOnlineAgents) agents:", agents);
+          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else if (selectedOption === "selectedDep") {
-          console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId);
+          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
           agents = await this.getDepartmentAvailableAgents(action.selectedDepartmentId);
-          console.log("(DirIfOnlineAgents) agents:", agents);
+          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else { // if (checkAll) => go project-wide
-          console.log("(DirIfOnlineAgents) selectedOption === all");
+          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all"); }
           agents = await this.getProjectAvailableAgents();
-          console.log("(DirIfOnlineAgents) agents:", agents);
+          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
         if (agents && agents.length > 0) {
@@ -89,7 +89,7 @@ class DirIfOnlineAgentsV2 {
             });
           }
           else {
-            console.log("(DirIfOnlineAgents) No IfOnlineAgents trueIntent defined. callback()") // prod
+            if (this.log) { console.log("(DirIfOnlineAgents) No IfOnlineAgents trueIntent defined. callback()"); } // prod
             this.chatbot.addParameter("flowError", "(If online Agents) No IfOnlineAgents success path defined.");
             callback();
             return;
@@ -150,20 +150,20 @@ class DirIfOnlineAgentsV2 {
           reject(error);
         }
         else {
-          console.log("(DirIfOnlineAgents) got department:", JSON.stringify(dep));
+          if (this.log) {console.log("(DirIfOnlineAgents) got department:", JSON.stringify(dep)); }
           const groupId = dep.id_group;
-          console.log("(DirIfOnlineAgents) department.groupId:", groupId);
+          if (this.log) {console.log("(DirIfOnlineAgents) department.groupId:", groupId); }
           try {
             if (groupId) {
               const group = await this.getGroup(groupId);
-              console.log("(DirIfOnlineAgents) got group info:", group);
+              if (this.log) { console.log("(DirIfOnlineAgents) got group info:", group); }
               if (group) {
                 if (group.members) {
-                  console.log("(DirIfOnlineAgents) group members ids:", group.members);
+                  if (this.log) { console.log("(DirIfOnlineAgents) group members ids:", group.members);}
                   // let group_members = await getTeammates(group.members);
                   // console.log("group members details:", group_members);
                   let all_teammates = await this.getAllTeammates();
-                  console.log("(DirIfOnlineAgents) all teammates:", all_teammates);
+                  if (this.log) { console.log("(DirIfOnlineAgents) all teammates:", all_teammates); }
                   if (all_teammates && all_teammates.length > 0){
                     // [
                     //   {
@@ -188,13 +188,13 @@ class DirIfOnlineAgentsV2 {
                     console.log("(DirIfOnlineAgents) filtering available agents for group:", groupId);
                     let available_agents = [];
                     all_teammates.forEach((agent) => {
-                      console.log("Checking teammate:", agent.id_user._id, "(", agent.id_user.email ,") Available:", agent.user_available, ") with members:",group.members );
+                      if (this.log) { console.log("Checking teammate:", agent.id_user._id, "(", agent.id_user.email ,") Available:", agent.user_available, ") with members:",group.members ); }
                       if (agent.user_available === true && group.members.includes(agent.id_user._id)) {
                         console.log("Adding teammate:", agent.id_user._id);
                         available_agents.push(agent);
                       }
                     });
-                    console.log("(DirIfOnlineAgents) available agents in group:", available_agents);
+                    if (this.log) { console.log("(DirIfOnlineAgents) available agents in group:", available_agents); }
                     resolve(available_agents);
                   }
                 }

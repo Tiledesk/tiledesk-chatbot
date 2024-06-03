@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.74 - online
+- Fix. Get DepartmentId in test-mode in IfOnelineAgentsV2
+
 # v0.2.73 - debug
 - Fix. static getMachine with check on bot not null
 
