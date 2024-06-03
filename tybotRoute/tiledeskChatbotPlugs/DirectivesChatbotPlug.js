@@ -211,7 +211,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    // console.log(".process(directive):", JSON.stringify(directive));
+    console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
@@ -769,7 +769,7 @@ class DirectivesChatbotPlug {
       })
     }
     else {
-      //console.log("Unhandled Post-message Directive:", directive_name);
+      console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
       this.process(next_dir);
     }
