@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+
+# v0.2.72
+- Fix. userParams not in /reserved...
+
 # v0.2.71
 - Fix. DirReplyV2 "NoInput" bug. Refactored with the introduction of "timeout_id", an ID specific for each noInput timeout: this.chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, timeout_id)
 

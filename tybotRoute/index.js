@@ -414,7 +414,7 @@ router.get('/ext/reserved/parameters/requests/:requestid', async (req, res) => {
     //     }
     //   }
     // }
-    TiledeskChatbotUtil.userFlowAttributes(parameters);
+    const userParams = TiledeskChatbotUtil.userFlowAttributes(parameters);
     res.send(userParams);
   }
 });
