@@ -63,7 +63,7 @@ class DirIfOnlineAgentsV2 {
             departmentId = this.context.departmentId;
           }
           else {
-            departmentId = this.context?.supportRequest?.payload?.attributes?.departmentId;
+            departmentId = this.context?.supportRequest?.attributes?.departmentId;
           }
           console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId);
           agents = await this.getDepartmentAvailableAgents(departmentId);
