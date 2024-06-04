@@ -11,7 +11,7 @@ class DirLeadUpdate {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    console.log('[DirLeadUpdate] >>>>> context ', context) 
+    console.log('DirLeadUpdate >>>>> CONTEX ', JSON.stringify(this.context)) 
     console.log("DirLeadUpdate SUPPORT REQUEST:", JSON.stringify(this.context.supportRequest));
     this.projectId = context.projectId;
     this.requestId = context.requestId;
