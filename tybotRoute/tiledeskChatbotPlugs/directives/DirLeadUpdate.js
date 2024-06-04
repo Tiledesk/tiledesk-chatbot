@@ -12,6 +12,7 @@ class DirLeadUpdate {
     }
     this.context = context;
     console.log('[DirLeadUpdate] >>>>> context ', context) 
+    console.log("DirLeadUpdate SUPPORT REQUEST:", JSON.stringify(this.context.supportRequest));
     this.projectId = context.projectId;
     this.requestId = context.requestId;
     this.token = context.token;
