@@ -118,7 +118,7 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
-    console.log("DIRECTIVE CHATBOT PLUG supportRequest is:", JSON.stringify(supportRequest))
+    console.log("CHATBOT PLUG supportRequest is:", JSON.stringify(supportRequest))
 
     const token = this.token;
     const API_URL = this.API_URL;
@@ -157,6 +157,7 @@ class DirectivesChatbotPlug {
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }
+    console.log("CHATBOT PLUG CONTEX is:", JSON.stringify(this.context))
     if (this.log) { console.log("this.context.departmentId is:", this.context.departmentId); }
 
     this.curr_directive_index = -1;
@@ -213,6 +214,7 @@ class DirectivesChatbotPlug {
   async process(directive) {
     console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
+    console.log("CHATBOT PLUG CONTEX 2 is:", JSON.stringify(this.context))
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
       if (context.log) {
