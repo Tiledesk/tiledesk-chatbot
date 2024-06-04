@@ -118,7 +118,7 @@ class DirectivesChatbotPlug {
       return;
     }
     const supportRequest = this.supportRequest;
-    // console.log("supportRequest is:", JSON.stringify(supportRequest))
+    console.log("DIRECTIVE CHATBOT PLUG supportRequest is:", JSON.stringify(supportRequest))
 
     const token = this.token;
     const API_URL = this.API_URL;

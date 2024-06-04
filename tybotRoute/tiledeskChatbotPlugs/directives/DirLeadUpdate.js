@@ -85,6 +85,17 @@ class DirLeadUpdate {
       fullname: lead_fullname
     }
    
+      // Condition branches
+      let trueIntent = action.trueIntent;
+      let falseIntent = action.falseIntent;
+      // const trueIntentAttributes = action.trueIntentAttributes;
+      // const falseIntentAttributes = action.falseIntentAttributes;
+      if (trueIntent && trueIntent.trim() === "") {
+        trueIntent = null;
+      }
+      if (falseIntent && falseIntent.trim() === "") {
+        falseIntent = null;
+      }
 
     const HTTPREQUEST = {
       url: server_base_url + "/" + this.context.projectId + "/leads/" + this.context.request.lead._id ,
@@ -96,15 +107,21 @@ class DirLeadUpdate {
       method: "POST"
     }
     this.#myrequest( 
-      HTTPREQUEST, async (err, resbody) => { 
-        console.log('[DirLeadUpdate] resbody' , resbody)
+      HTTPREQUEST, async (err, res) => { 
+        if (this.log && err) {
+          console.log("[DirLeadUpdate] error:", err);
+        }
+        if (this.log) {console.log("got res:", res);}
+        let resbody = res.data;
+        let status = res.status;
+        let error = res.error;
+        await this.#assignAttributes(action, resbody, status, error);
+        if (this.log) {console.log("[DirLeadUpdate] resbody:", resbody);}
         if (err) {
+          if (this.log) {console.error("[DirLeadUpdate] error:", err);}
           if (callback) {
-            console.error("[DirLeadUpdate] err response:", err)
-
-            await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
               callback(true);
               return;
             }
@@ -113,9 +130,9 @@ class DirLeadUpdate {
           
           }
         } else if (callback) { 
-          await this.#assignAttributes(action, status, result, error);
+          await this.#assignAttributes(action, resbody, status, error);
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+            await this.#executeCondition(true, trueIntent, null, falseIntent, null)
             callback(true);
             return;
           }
@@ -127,11 +144,11 @@ class DirLeadUpdate {
   }
 
 
-  async #assignAttributes(action, status, result, error) {
+  async #assignAttributes(action, resbody, status, error) {
     if (this.log) {
       console.log("[DirLeadUpdate] assignAttributes action:", action)
       console.log("[DirLeadUpdate] assignAttributes status:", status)
-      console.log("[DirLeadUpdate] assignAttributes result:", result)
+      console.log("[DirLeadUpdate] assignAttributes resbody:", resbody)
       console.log("[DirLeadUpdate] assignAttributes error:", error)
     }
     if (this.context.tdcache) {
@@ -139,7 +156,7 @@ class DirLeadUpdate {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, status);
       }
       if (action.assignResultTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, result);
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, resbody);
       }
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, error);
