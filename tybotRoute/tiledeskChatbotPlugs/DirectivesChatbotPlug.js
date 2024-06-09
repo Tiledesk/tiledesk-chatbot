@@ -158,6 +158,7 @@ class DirectivesChatbotPlug {
       log: this.log
     }
     console.log("CHATBOT PLUG CONTEX is:", JSON.stringify(this.context))
+    console.log("CHATBOT PLUG CONTEX > supportRequest is:", JSON.stringify(supportRequest))
     if (this.log) { console.log("this.context.departmentId is:", this.context.departmentId); }
 
     this.curr_directive_index = -1;
