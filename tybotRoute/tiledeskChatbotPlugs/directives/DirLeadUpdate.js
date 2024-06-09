@@ -19,6 +19,7 @@ class DirLeadUpdate {
     this.tdcache = context.tdcache;
     this.log = context.log;
     console.log('[DirLeadUpdate] >>>>>> log ', this.log) 
+    
   }
 
   execute(directive, callback) {
@@ -96,8 +97,10 @@ class DirLeadUpdate {
       if (falseIntent && falseIntent.trim() === "") {
         falseIntent = null;
       }
-
+    const lead_id = await this.context.chatbot.getParameter("userLeadId");
+    console.log('[DirLeadUpdate] lead_id ', lead_id ) 
     const HTTPREQUEST = {
+      
       url: server_base_url + "/" + this.context.projectId + "/leads/" + this.context.request.lead._id ,
       headers: {
         'Content-Type': 'application/json',
