@@ -57,11 +57,13 @@ class DirAskGPTV2 {
 
     // default values
     let answer = "No answers";
-    let source = null;
+    let namespace = this.context.projectId;
     let model = "gpt-3.5-turbo";
     let temperature;
     let max_tokens;
     let top_k;
+    
+    let source = null;
 
     if (!action.question || action.question === '') {
       console.error("Error: DirAskGPT question attribute is mandatory. Executing condition false...");
@@ -73,6 +75,9 @@ class DirAskGPTV2 {
       return;
     }
 
+    if (action.namespace) {
+      namespace = action.namespace;
+    }
     if (action.model) {
       model = action.model;
     }
@@ -143,7 +148,7 @@ class DirAskGPTV2 {
     let json = {
       question: filled_question,
       gptkey: key,
-      namespace: this.context.projectId,
+      namespace: namespace,
       model: model
     };
     if (top_k) {
