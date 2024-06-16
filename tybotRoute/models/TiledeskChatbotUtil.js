@@ -252,13 +252,13 @@ class TiledeskChatbotUtil {
                         if (commands[i].message) {
                             if (commands[i].message.type === "text") { // check text commands
                                 if (( commands[i].message.text && commands[i].message.text.trim() === "") || !commands[i].message.text) {
-                                    console.log("deleting command:", commands[i]);
+                                    // console.log("deleting command:", commands[i]);
                                     commands.splice(i, 1);
                                     if (commands[i-1]) {
                                         if (commands[i-1].type === "wait") {
                                             commands.splice(i-1, 1);
                                             i--;
-                                            console.log("deleted wait");
+                                            // console.log("deleted wait");
                                         }
                                     }
                                 }
@@ -369,16 +369,41 @@ class TiledeskChatbotUtil {
         if (buttons === null || text === null) {
             return null;
         }
-        let search_text = text.toLowerCase();
+        let search_text = text.toLowerCase().trim();
         let selected_button = null;
         for (let i = 0; i < buttons.length; i++) {
             const button = buttons[i];
             if (button.value !== null && button.value.toLowerCase() === search_text) {
                 selected_button = button;
-                break; 
+                break;
+            }
+            else if (button.alias && button.alias.trim() !== "") { // search in button alias
+                let alias = button.alias.split(",");
+                // console.log("alias splitted:", alias);
+                if (alias.length > 0) {
+                    for (let ii = 0; ii < alias.length; ii++) {
+                        alias[ii] = alias[ii].toLowerCase().trim();
+                    }
+                    // console.log("alias proc:", alias);
+                    if (alias.indexOf(search_text) > -1) {
+                        selected_button = button;
+                        break;
+                    }
+                }
             }
         }
+
         return selected_button;
+    }
+
+    static stripEmoji(str) {
+        // console.log("checking:", str);
+        if (str === null) {
+            return str;
+        }
+        return str.replace(/\p{Emoji}/gu, '')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
     
     static async updateConversationTranscript(chatbot, message) {

@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.76 - dev
+- Added support to button alias
+
 # v0.2.75 - dev
 - Fix. get images and urls also without text
 - "userLeadId" = message.request.lead._id (instead of the unuseful lead.lead_id)
