@@ -79,6 +79,7 @@ class DirIfOnlineAgentsV2 {
               });
             }
             else {
+              console.log("non qui...");
               callback(false);
             }
           }
@@ -97,6 +98,7 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
+        console.log("anyway qui...");
         if (agents && agents.length > 0) {
           if (trueIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
