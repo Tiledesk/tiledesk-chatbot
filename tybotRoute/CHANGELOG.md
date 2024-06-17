@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.77 - dev
+- Fix. get images and urls. image URL was Wrongly removed after the upload message
+
 # v0.2.76 - dev
 - Added support to button alias
 
