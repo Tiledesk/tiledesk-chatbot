@@ -68,6 +68,9 @@ class DirIfOnlineAgentsV2 {
             );
             if (this.log) {console.log("Attributes:::", JSON.stringify(attributes))}
           }
+          else {
+            console.log("No cache!!!!");
+          }
           
           // if (this.context.departmentId) {
           //   departmentId = this.context.departmentId;
