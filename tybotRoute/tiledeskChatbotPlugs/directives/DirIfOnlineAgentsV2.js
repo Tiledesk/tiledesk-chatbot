@@ -69,7 +69,7 @@ class DirIfOnlineAgentsV2 {
           } else {
             console.log("oppure qui...");
             // departmentId = this.context?.supportRequest?.attributes?.departmentId;
-            console.error("(DirIfOnlineAgents) no departmentId found in attributes"); }
+            console.error("(DirIfOnlineAgents) no departmentId found in attributes");
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
             console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); 
             if (falseIntent) { // no agents available
@@ -83,9 +83,6 @@ class DirIfOnlineAgentsV2 {
               callback(false);
             }
           }
-          // if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
-          // agents = await this.getDepartmentAvailableAgents(departmentId);
-          // if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else if (selectedOption === "selectedDep") {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
