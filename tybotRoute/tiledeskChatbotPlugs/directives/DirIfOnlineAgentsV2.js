@@ -59,13 +59,15 @@ class DirIfOnlineAgentsV2 {
         if (selectedOption === "currentDep") {
           console.log("(DirIfOnlineAgents) currentDep"); 
           let departmentId;
-          console.log("this.context.departmentId:", this.context.departmentId);
+          console.log("this.context.departmentId:", this.context.departmentId, typeof(this.context.departmentId));
           if (this.context.departmentId) {
+            console.log("qui...");
             departmentId = this.context.departmentId;
             if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
             agents = await this.getDepartmentAvailableAgents(departmentId);
             if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           else {
+            console.log("oppure qui...");
             // departmentId = this.context?.supportRequest?.attributes?.departmentId;
             console.error("(DirIfOnlineAgents) no departmentId found in attributes"); }
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
