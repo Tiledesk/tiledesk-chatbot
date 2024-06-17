@@ -68,6 +68,8 @@ class DirIfOnlineAgentsV2 {
               this.context.tdcache, this.context.requestId
             );
             if (this.log) {console.log("Attributes:::", JSON.stringify(attributes))}
+            departmentId = attributes["department_id"];
+            if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
           }
           else {
             console.log("No cache!!!!");
