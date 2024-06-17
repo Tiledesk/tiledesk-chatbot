@@ -62,7 +62,7 @@ class DirIfOnlineAgentsV2 {
           console.log("this.context.departmentId:", this.context.departmentId);
 
           if (this.context.tdcache) {
-            attributes = 
+            let attributes = 
             await TiledeskChatbot.allParametersStatic(
               this.context.tdcache, this.context.requestId
             );
