@@ -67,7 +67,8 @@ class DirIfOnlineAgentsV2 {
           else {
             // departmentId = this.context?.supportRequest?.attributes?.departmentId;
             console.error("(DirIfOnlineAgents) no departmentId found in attributes"); }
-            this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
+            await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
+            console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); }
             if (falseIntent) { // no agents available
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
               this.intentDir.execute(intentDirective, () => {
