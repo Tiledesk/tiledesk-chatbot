@@ -59,8 +59,9 @@ class DirIfOnlineAgentsV2 {
         let agents;
         if (selectedOption === "currentDep") {
           console.log("(DirIfOnlineAgents) currentDep"); 
-          let departmentId = await this.chatbot.getParameter("department_id");
-          console.log("this.context.departmentId:", this.context.departmentId);
+          let departmentId;
+          // let departmentId = await this.chatbot.getParameter("department_id");
+          // console.log("this.context.departmentId:", this.context.departmentId);
 
           if (this.context.tdcache) {
             let attributes = 
@@ -71,26 +72,20 @@ class DirIfOnlineAgentsV2 {
             departmentId = attributes["department_id"];
             if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
           }
-          else {
-            console.log("No cache!!!!");
-          }
           
           // if (this.context.departmentId) {
           //   departmentId = this.context.departmentId;
           // }
 
           if (departmentId) {
-            console.log("qui...");
             // departmentId = this.context.departmentId;
             // if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
             agents = await this.getDepartmentAvailableAgents(departmentId);
             if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           } else {
-            console.log("oppure qui...");
-            // departmentId = this.context?.supportRequest?.attributes?.departmentId;
             console.error("(DirIfOnlineAgents) no departmentId found in attributes");
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
-            console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); 
+            if (this.log) {console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); }
             if (falseIntent) { // no agents available
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
               this.intentDir.execute(intentDirective, () => {
@@ -99,7 +94,6 @@ class DirIfOnlineAgentsV2 {
               return;
             }
             else {
-              console.log("non qui...");
               callback(false);
               return;
             }

@@ -71,7 +71,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
+      // console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -393,7 +393,7 @@ describe('Conversation for WebRequestV2 test', async () => {
       let file_contents = null;
       try {
         file_contents = fs.readFileSync(req.file.path, 'utf8');
-        console.log("file_data:", file_contents);
+        // console.log("file_data:", file_contents);
       } catch (err) {
         console.error(err);
       }
@@ -405,10 +405,10 @@ describe('Conversation for WebRequestV2 test', async () => {
         "purpose": req.body.purpose,
         "file_contents": file_contents
       };
-      console.log("Deleting uploaded files...");
+      // console.log("Deleting uploaded files...");
       const uploads_folder = "./uploads";
       fs.readdir(uploads_folder, (err, files) => {
-        console.log("Removing files: ", files);
+        // console.log("Removing files: ", files);
         if (err) throw err;
         for (const file of files) {
           fs.unlink(path.join(uploads_folder, file), (err) => {

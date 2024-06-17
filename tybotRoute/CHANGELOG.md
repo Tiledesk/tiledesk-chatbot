@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.78 - dev
+- Fixed? Get DepartmentId for default department in test-mode in IfOnelineAgentsV2
+
 # v0.2.77 - dev
 - Fix. get images and urls. image URL was Wrongly removed after the upload message
 
