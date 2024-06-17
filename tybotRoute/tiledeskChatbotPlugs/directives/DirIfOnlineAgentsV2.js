@@ -59,7 +59,7 @@ class DirIfOnlineAgentsV2 {
         if (selectedOption === "currentDep") {
           console.log("(DirIfOnlineAgents) currentDep"); 
           let departmentId;
-          // console.log("checking supportRequest:", this.context.supportRequest);
+          console.log("this.context.departmentId:", this.context.departmentId);
           if (this.context.departmentId) {
             departmentId = this.context.departmentId;
             if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
