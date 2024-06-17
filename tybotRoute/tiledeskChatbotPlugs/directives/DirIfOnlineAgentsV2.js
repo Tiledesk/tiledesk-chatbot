@@ -3,6 +3,7 @@ const { rejects } = require('assert');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
 class DirIfOnlineAgentsV2 {
 
