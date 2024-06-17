@@ -551,20 +551,20 @@ class TiledeskChatbotUtil {
                 //     "width": 1724
                 // }
                 if (message.metadata.src) {
-                await chatbot.addParameter("lastUserImageURL", message.metadata.src);
-                await chatbot.addParameter("lastUserImageName", message.metadata.name);
-                await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
-                await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-                await chatbot.addParameter("lastUserImageType", message.metadata.type);
+                    await chatbot.addParameter("lastUserImageURL", message.metadata.src);
+                    await chatbot.addParameter("lastUserImageName", message.metadata.name);
+                    await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
+                    await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
+                    await chatbot.addParameter("lastUserImageType", message.metadata.type);
                 }
             }
-            else {
-                await chatbot.addParameter("lastUserImageURL", null);
-                await chatbot.addParameter("lastUserImageName", null);
-                await chatbot.addParameter("lastUserImageWidth", null);
-                await chatbot.addParameter("lastUserImageHeight", null);
-                await chatbot.addParameter("lastUserImageType", null);
-            }
+            // else {
+            //     await chatbot.addParameter("lastUserImageURL", null);
+            //     await chatbot.addParameter("lastUserImageName", null);
+            //     await chatbot.addParameter("lastUserImageWidth", null);
+            //     await chatbot.addParameter("lastUserImageHeight", null);
+            //     await chatbot.addParameter("lastUserImageType", null);
+            // }
             // get document
             if (message.type && message.type === "file" && message.metadata) {
                 // "type": "file",
@@ -588,11 +588,11 @@ class TiledeskChatbotUtil {
                     await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
                 }
             }
-            else {
-                await chatbot.addParameter("lastUserDocumentURL", null);
-                await chatbot.addParameter("lastUserDocumentName", null);
-                await chatbot.addParameter("lastUserDocumentType", null);
-            }
+            // else {
+            //     await chatbot.addParameter("lastUserDocumentURL", null);
+            //     await chatbot.addParameter("lastUserDocumentName", null);
+            //     await chatbot.addParameter("lastUserDocumentType", null);
+            // }
             if (message && message.request && message.request.lead) {
                 if (message.request.lead.email) {
                     await chatbot.addParameter("userEmail", message.request.lead.email);
