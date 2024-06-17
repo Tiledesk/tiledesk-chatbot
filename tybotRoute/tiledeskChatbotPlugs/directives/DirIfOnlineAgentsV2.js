@@ -57,11 +57,12 @@ class DirIfOnlineAgentsV2 {
         
         let agents;
         if (selectedOption === "currentDep") {
+          console.log("(DirIfOnlineAgents) currentDep"); 
           let departmentId;
           // console.log("checking supportRequest:", this.context.supportRequest);
           if (this.context.departmentId) {
             departmentId = this.context.departmentId;
-            if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
+            if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
             agents = await this.getDepartmentAvailableAgents(departmentId);
             if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           else {
