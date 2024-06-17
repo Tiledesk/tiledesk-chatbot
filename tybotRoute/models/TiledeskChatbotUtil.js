@@ -678,6 +678,10 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
             }
+            else if (message.attributes && message.attributes.departmentId) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
+            }
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
                 if (!message.attributes) {
                     message.attributes = {}
