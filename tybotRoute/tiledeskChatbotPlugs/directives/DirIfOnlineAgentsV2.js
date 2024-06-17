@@ -61,13 +61,26 @@ class DirIfOnlineAgentsV2 {
           // console.log("checking supportRequest:", this.context.supportRequest);
           if (this.context.departmentId) {
             departmentId = this.context.departmentId;
-          }
+            if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
+            agents = await this.getDepartmentAvailableAgents(departmentId);
+            if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           else {
-            departmentId = this.context?.supportRequest?.attributes?.departmentId;
+            // departmentId = this.context?.supportRequest?.attributes?.departmentId;
+            console.error("(DirIfOnlineAgents) no departmentId found in attributes"); }
+            this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
+            if (falseIntent) { // no agents available
+              let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+              this.intentDir.execute(intentDirective, () => {
+                callback(stopOnConditionMet);
+              });
+            }
+            else {
+              callback(false);
+            }
           }
-          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
-          agents = await this.getDepartmentAvailableAgents(departmentId);
-          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
+          // if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
+          // agents = await this.getDepartmentAvailableAgents(departmentId);
+          // if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else if (selectedOption === "selectedDep") {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
