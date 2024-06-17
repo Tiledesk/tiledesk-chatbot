@@ -60,6 +60,15 @@ class DirIfOnlineAgentsV2 {
           console.log("(DirIfOnlineAgents) currentDep"); 
           let departmentId = await this.chatbot.getParameter("department_id");
           console.log("this.context.departmentId:", this.context.departmentId);
+
+          if (this.context.tdcache) {
+            attributes = 
+            await TiledeskChatbot.allParametersStatic(
+              this.context.tdcache, this.context.requestId
+            );
+            if (this.log) {console.log("Attributes:", JSON.stringify(attributes))}
+          }
+          
           // if (this.context.departmentId) {
           //   departmentId = this.context.departmentId;
           // }
