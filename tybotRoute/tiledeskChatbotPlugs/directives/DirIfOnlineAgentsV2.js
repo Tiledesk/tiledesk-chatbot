@@ -66,7 +66,7 @@ class DirIfOnlineAgentsV2 {
             if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
             agents = await this.getDepartmentAvailableAgents(departmentId);
             if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
-          else {
+          } else {
             console.log("oppure qui...");
             // departmentId = this.context?.supportRequest?.attributes?.departmentId;
             console.error("(DirIfOnlineAgents) no departmentId found in attributes"); }
