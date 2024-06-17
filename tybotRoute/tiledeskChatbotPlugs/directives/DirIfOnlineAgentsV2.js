@@ -77,10 +77,12 @@ class DirIfOnlineAgentsV2 {
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
+              return;
             }
             else {
               console.log("non qui...");
               callback(false);
+              return;
             }
           }
         }
