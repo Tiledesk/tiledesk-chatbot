@@ -376,10 +376,10 @@ describe('removeEmptyReplyCommands', function() {
             }
         }
         const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-        console.log("cleanMessage reply:", JSON.stringify(cleanMessage));
+        // console.log("cleanMessage reply:", JSON.stringify(cleanMessage));
         const commands = cleanMessage.attributes.commands;
-        console.log("commands reply:", JSON.stringify(commands));
-        console.log("commands reply.length:", commands.length);
+        // console.log("commands reply:", JSON.stringify(commands));
+        // console.log("commands reply.length:", commands.length);
         assert(commands.length === 8);
         assert(commands[0].type === "wait");
         assert(commands[0].time === 500);
@@ -394,7 +394,7 @@ describe('removeEmptyReplyCommands', function() {
         assert(commands[4].type === "wait");
         assert(commands[4].time === 500);
         assert(commands[5].message.type === "frame");
-        console.log("commands[5].message.text", commands[5].message.text)
+        // console.log("commands[5].message.text", commands[5].message.text)
         assert(commands[5].message.text === undefined);
 
         assert(commands[6].type === "wait");
@@ -459,9 +459,9 @@ describe('removeEmptyReplyCommands', function() {
             }
         }
         const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-        console.log("cleanMessage 2 reply:", JSON.stringify(cleanMessage));
+        // console.log("cleanMessage 2 reply:", JSON.stringify(cleanMessage));
         const commands = cleanMessage.attributes.commands;
-        console.log("commands 2 reply:", JSON.stringify(commands));
+        // console.log("commands 2 reply:", JSON.stringify(commands));
         assert(commands.length === 0);
         assert(TiledeskChatbotUtil.isValidReply(message) === false);
     });
@@ -484,7 +484,7 @@ lorem ipsum 4
 closing conversation
 `
         const transcript_array = TiledeskChatbotUtil.transcriptJSON(transcript);
-        console.log("transcript_object:", transcript_array);
+        // console.log("transcript_object:", transcript_array);
         assert(transcript_array.length === 6);
         assert(transcript_array[0].role === "assistant");
         assert(transcript_array[0].content === "lorem ipsum 1\nlorem ipsum 2");
@@ -508,6 +508,128 @@ closing conversation
 //   { role: 'assistant', content: 'lorem ipsum 3\nlorem ipsum 4' },
 //   { role: 'user', content: 'lorem ipsum 3\nlorem ipsum 4' },
 //   { role: 'assistant', content: 'bye\nclosing conversation' }
+    });
+
+});
+
+describe('commands.button filler', function() {
+  
+    it('commands.button: one variable in a link', async () => {
+        const command = {
+            "type": "message",
+            "message": {
+                "type": "text",
+                "text": "I don't know!",
+                "attributes": {
+                    "attachment": {
+                        "type": "template",
+                        "buttons": [{
+                            "value": "button text",
+                            "type": "url",
+                            "target": "blank",
+                            "link": "http://testurl.com/${project_id}/detail"
+                        }]
+                    }
+                }
+            }
+        }
+        const vars = {
+            "project_id": "009988"
+        }
+        TiledeskChatbotUtil.fillCommandAttachments(command, vars);
+        // console.log("command:", JSON.stringify(command))
+        assert(command.message.attributes.attachment.buttons[0].value === "button text");
+        assert(command.message.attributes.attachment.buttons[0].type === "url");
+        assert(command.message.attributes.attachment.buttons[0].target === "blank");
+        assert(command.message.attributes.attachment.buttons[0].link === "http://testurl.com/009988/detail");
+    });
+    
+});
+
+describe('Search buttons by text', function() {
+
+    it('strip emojis', async () => {
+        const str = "🥰🥰🥰🥰🥰🥰Andrea✅";
+                           
+        const stripped = TiledeskChatbotUtil.stripEmoji(str);
+        // console.log("stripped:", stripped);
+        // console.log("length:", stripped.length);
+        // for (let i = 0; i < stripped.length; i++) {
+        //     console.log(">" + stripped.charAt(i));
+        // }
+        assert(stripped === "Andrea");
+    });
+
+    it('match on button.value', async () => {
+        const buttons = [
+            {
+                "value": "Yes"
+            },
+            {
+                "value": "No"
+            }
+        ];
+                           
+        const button = TiledeskChatbotUtil.buttonByText("Yes", buttons);
+        // console.log("button:", JSON.stringify(button));
+        assert(button !== null);
+        assert(button.value === "Yes");
+    });
+
+    it('match on button.value', async () => {
+        const buttons = [
+            {
+                "value": "Yes"
+            },
+            {
+                "value": "No"
+            }
+        ];
+                           
+        const button = TiledeskChatbotUtil.buttonByText("yes", buttons);
+        // console.log("button:", JSON.stringify(button));
+        assert(button !== null);
+        assert(button.value === "Yes");
+    });
+
+    it('match on button.alias', async () => {
+        const buttons = [
+            {
+                "value": "Yes",
+                "alias": "yep,sure"
+            },
+            {
+                "value": "No",
+                "alias": "nope, nada"
+            }
+        ];
+        
+        // console.log("alias:",buttons);
+
+        const button = TiledeskChatbotUtil.buttonByText("yep", buttons);
+        // console.log("button:", JSON.stringify(button));
+        assert(button !== null);
+        assert(button.value === "Yes");
+
+        const button2 = TiledeskChatbotUtil.buttonByText(" yep ", buttons);
+        // console.log("button2:", JSON.stringify(button2));
+        assert(button2 !== null);
+        assert(button2.value === "Yes");
+
+        const button3 = TiledeskChatbotUtil.buttonByText(" SURE ", buttons);
+        // console.log("button2:", JSON.stringify(button3));
+        assert(button3 !== null);
+        assert(button3.value === "Yes");
+
+        const button4 = TiledeskChatbotUtil.buttonByText(" nope ", buttons);
+        // console.log("button4:", JSON.stringify(button4));
+        assert(button4 !== null);
+        assert(button4.value === "No");
+
+        const button5 = TiledeskChatbotUtil.buttonByText("Nada", buttons);
+        // console.log("button5:", JSON.stringify(button5));
+        assert(button5 !== null);
+        assert(button5.value === "No");
     });
 
 });

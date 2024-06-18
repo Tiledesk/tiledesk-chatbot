@@ -252,13 +252,13 @@ class TiledeskChatbotUtil {
                         if (commands[i].message) {
                             if (commands[i].message.type === "text") { // check text commands
                                 if (( commands[i].message.text && commands[i].message.text.trim() === "") || !commands[i].message.text) {
-                                    console.log("deleting command:", commands[i]);
+                                    // console.log("deleting command:", commands[i]);
                                     commands.splice(i, 1);
                                     if (commands[i-1]) {
                                         if (commands[i-1].type === "wait") {
                                             commands.splice(i-1, 1);
                                             i--;
-                                            console.log("deleted wait");
+                                            // console.log("deleted wait");
                                         }
                                     }
                                 }
@@ -369,16 +369,41 @@ class TiledeskChatbotUtil {
         if (buttons === null || text === null) {
             return null;
         }
-        let search_text = text.toLowerCase();
+        let search_text = text.toLowerCase().trim();
         let selected_button = null;
         for (let i = 0; i < buttons.length; i++) {
             const button = buttons[i];
             if (button.value !== null && button.value.toLowerCase() === search_text) {
                 selected_button = button;
-                break; 
+                break;
+            }
+            else if (button.alias && button.alias.trim() !== "") { // search in button alias
+                let alias = button.alias.split(",");
+                // console.log("alias splitted:", alias);
+                if (alias.length > 0) {
+                    for (let ii = 0; ii < alias.length; ii++) {
+                        alias[ii] = alias[ii].toLowerCase().trim();
+                    }
+                    // console.log("alias proc:", alias);
+                    if (alias.indexOf(search_text) > -1) {
+                        selected_button = button;
+                        break;
+                    }
+                }
             }
         }
+
         return selected_button;
+    }
+
+    static stripEmoji(str) {
+        // console.log("checking:", str);
+        if (str === null) {
+            return str;
+        }
+        return str.replace(/\p{Emoji}/gu, '')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
     
     static async updateConversationTranscript(chatbot, message) {
@@ -510,103 +535,104 @@ class TiledeskChatbotUtil {
                 }
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_TYPE_KEY, message.type);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY, TiledeskChatbotUtil.lastUserMessageFrom(message)); // JSON TYPE *NEW
-                // get image
-                if (message.type && message.type === "image" && message.metadata) {
-                    // "text": "\nimage text",
-                    // "id_project": "65203e12f8c0cf002cf4110b",
-                    // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
-                    // "metadata": {
-                    //     "height": 905,
-                    //     "name": "tiledesk_Open graph_general.png",
-                    //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
-                    //     "type": "image/png",
-                    //     "uid": "lo68iyq5",
-                    //     "width": 1724
-                    // }
-                    if (message.metadata.src) {
+            }
+
+            // get image
+            if (message.type && message.type === "image" && message.metadata) {
+                // "text": "\nimage text",
+                // "id_project": "65203e12f8c0cf002cf4110b",
+                // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
+                // "metadata": {
+                //     "height": 905,
+                //     "name": "tiledesk_Open graph_general.png",
+                //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
+                //     "type": "image/png",
+                //     "uid": "lo68iyq5",
+                //     "width": 1724
+                // }
+                if (message.metadata.src) {
                     await chatbot.addParameter("lastUserImageURL", message.metadata.src);
                     await chatbot.addParameter("lastUserImageName", message.metadata.name);
                     await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
                     await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
                     await chatbot.addParameter("lastUserImageType", message.metadata.type);
+                }
+            }
+            // else {
+            //     await chatbot.addParameter("lastUserImageURL", null);
+            //     await chatbot.addParameter("lastUserImageName", null);
+            //     await chatbot.addParameter("lastUserImageWidth", null);
+            //     await chatbot.addParameter("lastUserImageHeight", null);
+            //     await chatbot.addParameter("lastUserImageType", null);
+            // }
+            // get document
+            if (message.type && message.type === "file" && message.metadata) {
+                // "type": "file",
+                // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
+                // "metadata": {
+                //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
+                //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
+                //     "type": "application/pdf",
+                //     "uid": "lo68oz8i"
+                // }
+                if (message.metadata.src) {
+                    await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
+                    const url_as_attachment = message.metadata.src;
+                    await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
+                    let url_inline = url_as_attachment;
+                    if (url_as_attachment.match(/.*\/download.*/)) { // removing "/download" removes the "Content-disposion: attachment" HTTP header
+                        url_inline = url_as_attachment.replace('/download', '/');
+                    }
+                    await chatbot.addParameter("lastUserDocumentAsInlineURL", url_inline);
+                    await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
+                    await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
+                }
+            }
+            // else {
+            //     await chatbot.addParameter("lastUserDocumentURL", null);
+            //     await chatbot.addParameter("lastUserDocumentName", null);
+            //     await chatbot.addParameter("lastUserDocumentType", null);
+            // }
+            if (message && message.request && message.request.lead) {
+                if (message.request.lead.email) {
+                    await chatbot.addParameter("userEmail", message.request.lead.email);
+                }
+                if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                    // worth saving
+                    try {
+                        // const current_userFullname = await chatbot.getParameter("userFullname");
+                        // if (current_userFullname && current_userFullname.startsWith("guest#")) { // replace if exists as guest#
+                        //     await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                        // }
+                        // else if (!current_userFullname) {
+                            await chatbot.addParameter("userFullname", message.request.lead.fullname);
+                        // }
+                    }
+                    catch(error) {
+                        console.error("Error on setting userFullname:", error);
                     }
                 }
                 else {
-                    await chatbot.addParameter("lastUserImageURL", null);
-                    await chatbot.addParameter("lastUserImageName", null);
-                    await chatbot.addParameter("lastUserImageWidth", null);
-                    await chatbot.addParameter("lastUserImageHeight", null);
-                    await chatbot.addParameter("lastUserImageType", null);
+                    // console.log("!lead.fullname");
                 }
-                // get document
-                if (message.type && message.type === "file" && message.metadata) {
-                    // "type": "file",
-                    // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
-                    // "metadata": {
-                    //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
-                    //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
-                    //     "type": "application/pdf",
-                    //     "uid": "lo68oz8i"
-                    // }
-                    if (message.metadata.src) {
-                        await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
-                        const url_as_attachment = message.metadata.src;
-                        await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
-                        let url_inline = url_as_attachment;
-                        if (url_as_attachment.match(/.*\/download.*/)) { // removing "/download" removes the "Content-disposion: attachment" HTTP header
-                            url_inline = url_as_attachment.replace('/download', '/');
-                        }
-                        await chatbot.addParameter("lastUserDocumentAsInlineURL", url_inline);
-                        await chatbot.addParameter("lastUserDocumentName", message.metadata.name);
-                        await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
+                // console.log("Getting userPhone:", JSON.stringify(message.request));
+                if (message.request.lead.phone) {
+                    await chatbot.addParameter("userPhone", message.request.lead.phone);
+                }
+                if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
+                    const splits = message.request.lead.lead_id.split("-");
+                    if (splits && splits.length > 1) {
+                        await chatbot.addParameter("currentPhoneNumber",splits[1]);
                     }
                 }
-                else {
-                    await chatbot.addParameter("lastUserDocumentURL", null);
-                    await chatbot.addParameter("lastUserDocumentName", null);
-                    await chatbot.addParameter("lastUserDocumentType", null);
+                if (message.request.lead._id) {
+                    await chatbot.addParameter("userLeadId", message.request.lead._id);
                 }
-                if (message && message.request && message.request.lead) {
-                    if (message.request.lead.email) {
-                        await chatbot.addParameter("userEmail", message.request.lead.email);
-                    }
-                    if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
-                        // worth saving
-                        try {
-                            // const current_userFullname = await chatbot.getParameter("userFullname");
-                            // if (current_userFullname && current_userFullname.startsWith("guest#")) { // replace if exists as guest#
-                            //     await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                            // }
-                            // else if (!current_userFullname) {
-                                await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                            // }
-                        }
-                        catch(error) {
-                            console.error("Error on setting userFullname:", error);
-                        }
-                    }
-                    else {
-                        // console.log("!lead.fullname");
-                    }
-                    // console.log("Getting userPhone:", JSON.stringify(message.request));
-                    if (message.request.lead.phone) {
-                        await chatbot.addParameter("userPhone", message.request.lead.phone);
-                    }
-                    if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
-                        const splits = message.request.lead.lead_id.split("-");
-                        if (splits && splits.length > 1) {
-                            await chatbot.addParameter("currentPhoneNumber",splits[1]);
-                        }
-                    }
-                    if (message.request.lead.lead_id) {
-                        await chatbot.addParameter("userLeadId", message.request.lead.lead_id);
-                    }
-                    if (message.request.lead.company) {
-                        await chatbot.addParameter("userCompany", message.request.lead.company);
-                    }
-                    if (message.request.ticket_id) {
-                        await chatbot.addParameter("ticketId", message.request.ticket_id);
-                    }
+                if (message.request.lead.company) {
+                    await chatbot.addParameter("userCompany", message.request.lead.company);
+                }
+                if (message.request.ticket_id) {
+                    await chatbot.addParameter("ticketId", message.request.ticket_id);
                 }
             }
             
@@ -652,6 +678,10 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.request.department._id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.request.department.name);
             }
+            else if (message.attributes && message.attributes.departmentId) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
+            }
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
                 if (!message.attributes) {
                     message.attributes = {}
@@ -660,7 +690,6 @@ class TiledeskChatbotUtil {
                 if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
                 }
-        
             if (message.attributes) {
                 if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}

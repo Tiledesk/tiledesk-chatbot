@@ -3,6 +3,7 @@ const { rejects } = require('assert');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 
 class DirIfOnlineAgentsV2 {
 
@@ -57,17 +58,42 @@ class DirIfOnlineAgentsV2 {
         
         let agents;
         if (selectedOption === "currentDep") {
-          let departmentId;
-          // console.log("checking supportRequest:", this.context.supportRequest);
-          if (this.context.departmentId) {
-            departmentId = this.context.departmentId;
+          console.log("(DirIfOnlineAgents) currentDep"); 
+          // let departmentId;
+          let departmentId = await this.chatbot.getParameter("department_id");
+          console.log("this.context.departmentId:", departmentId);
+
+          // if (this.context.tdcache) {
+          //   let attributes = 
+          //   await TiledeskChatbot.allParametersStatic(
+          //     this.context.tdcache, this.context.requestId
+          //   );
+          //   if (this.log) {console.log("Attributes:::", JSON.stringify(attributes))}
+          //   departmentId = attributes["department_id"];
+          //   if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
+          // }
+
+          if (departmentId) {
+            // departmentId = this.context.departmentId;
+            // if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId, typeof(departmentId)); }
+            agents = await this.getDepartmentAvailableAgents(departmentId);
+            if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
+          } else {
+            console.error("(DirIfOnlineAgents) no departmentId found in attributes");
+            await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
+            if (this.log) {console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); }
+            if (falseIntent) { // no agents available
+              let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+              this.intentDir.execute(intentDirective, () => {
+                callback(stopOnConditionMet);
+              });
+              return;
+            }
+            else {
+              callback(false);
+              return;
+            }
           }
-          else {
-            departmentId = this.context?.supportRequest?.attributes?.departmentId;
-          }
-          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === currentDep. Current department:", departmentId); }
-          agents = await this.getDepartmentAvailableAgents(departmentId);
-          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else if (selectedOption === "selectedDep") {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
@@ -80,6 +106,7 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
+        console.log("anyway qui...");
         if (agents && agents.length > 0) {
           if (trueIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

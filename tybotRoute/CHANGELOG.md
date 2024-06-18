@@ -5,8 +5,24 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.79 - dev
+- Fixed. Get DepartmentId for default department in test-mode in IfOnelineAgentsV2 with correct attribute get with chatbot.getParameter()
+
+# v0.2.78 - dev
+- Fixed? Get DepartmentId for default department in test-mode in IfOnelineAgentsV2
+
+# v0.2.77 - dev
+- Fix. get images and urls. image URL was Wrongly removed after the upload message
+
+# v0.2.76 - dev
+- Added support to button alias
+
+# v0.2.75 - dev
+- Fix. get images and urls also without text
+- "userLeadId" = message.request.lead._id (instead of the unuseful lead.lead_id)
+
 # v0.2.74 - online
-- Fix. Get DepartmentId in test-mode in IfOnelineAgentsV2
+- Fix. Get DepartmentId for default department in test-mode in IfOnelineAgentsV2
 
 # v0.2.73 - debug
 - Fix. static getMachine with check on bot not null
