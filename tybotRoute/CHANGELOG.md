@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.80
+- Changed AskGPT Action to support namespaces
+
 # v0.2.79 - dev
 - Fixed. Get DepartmentId for default department in test-mode in IfOnelineAgentsV2 with correct attribute get with chatbot.getParameter()
 
