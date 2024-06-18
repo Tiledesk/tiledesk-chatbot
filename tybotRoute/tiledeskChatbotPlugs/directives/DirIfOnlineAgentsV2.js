@@ -72,10 +72,6 @@ class DirIfOnlineAgentsV2 {
           //   departmentId = attributes["department_id"];
           //   if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
           // }
-          
-          // if (this.context.departmentId) {
-          //   departmentId = this.context.departmentId;
-          // }
 
           if (departmentId) {
             // departmentId = this.context.departmentId;
