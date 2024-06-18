@@ -59,19 +59,19 @@ class DirIfOnlineAgentsV2 {
         let agents;
         if (selectedOption === "currentDep") {
           console.log("(DirIfOnlineAgents) currentDep"); 
-          let departmentId;
-          // let departmentId = await this.chatbot.getParameter("department_id");
-          // console.log("this.context.departmentId:", this.context.departmentId);
+          // let departmentId;
+          let departmentId = await this.chatbot.getParameter("department_id");
+          console.log("this.context.departmentId:", departmentId);
 
-          if (this.context.tdcache) {
-            let attributes = 
-            await TiledeskChatbot.allParametersStatic(
-              this.context.tdcache, this.context.requestId
-            );
-            if (this.log) {console.log("Attributes:::", JSON.stringify(attributes))}
-            departmentId = attributes["department_id"];
-            if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
-          }
+          // if (this.context.tdcache) {
+          //   let attributes = 
+          //   await TiledeskChatbot.allParametersStatic(
+          //     this.context.tdcache, this.context.requestId
+          //   );
+          //   if (this.log) {console.log("Attributes:::", JSON.stringify(attributes))}
+          //   departmentId = attributes["department_id"];
+          //   if (this.log) {console.log("Attributes.departmentId:::", departmentId)}
+          // }
           
           // if (this.context.departmentId) {
           //   departmentId = this.context.departmentId;
