@@ -161,7 +161,7 @@ class DirAskGPTV2 {
       json.max_tokens = max_tokens;
     }
     if (filled_context) {
-      json.context = filled_context;
+      json.system_context = filled_context;
     }
     if (this.log) { console.log("DirAskGPT json:", json); }
 
