@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.82
+- Added {context} in 'system_context' in AskGPTv2
+
 # v0.2.81
 - Changed from 'context' to 'system_context' in AskGPTv2
 
