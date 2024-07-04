@@ -104,7 +104,6 @@ class DirAskGPTV2 {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
-    console.log("filled_context: ", filled_context);
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const kb_endpoint = process.env.KB_ENDPOINT_QA
@@ -173,8 +172,6 @@ class DirAskGPTV2 {
     } else {
       json.system_context = filled_context;
     }
-
-    console.log("json: ", json)
 
     if (this.log) { console.log("DirAskGPT json:", json); }
 
