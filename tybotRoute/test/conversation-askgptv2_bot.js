@@ -8,7 +8,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt success",
+			"intent_display_name": "gpt_success",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -27,7 +27,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt success advanced",
+			"intent_display_name": "gpt_success_custom_context",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -49,6 +49,30 @@ const bot = {
 		{
 			"webhook_enabled": false,
 			"enabled": true,
+			"language": "en",
+			"intent_display_name": "gpt_success_advanced_context",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "askgptv2",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "gpt_reply",
+				"assignSourceTo": "gpt_source",
+				"model": "gpt-4",
+				"temperature": 0.7,
+				"max_tokens": 1000,
+				"top_k": 2,
+				"context": "this is the context: {{custom_context}}",
+				"advancedPrompt": true,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+				"question": "this is the question: {{last_user_message}}"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
@@ -60,7 +84,7 @@ const bot = {
 				"falseIntent": "#FAILURE",
 			}],
 			"language": "en",
-			"intent_display_name": "gpt fail",
+			"intent_display_name": "gpt_fail",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": ""
