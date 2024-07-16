@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -11,20 +11,21 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-actions_bot.js').bots_data;
+const bots_data = require('./conversation-codev2_action_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for anomaly detection test', async () => {
+describe('Conversation for CodeV2 Action test', async () => {
 
   let app_listener;
-
+  let util = new TiledeskChatbotUtil();
+  
   before(() => {
     return new Promise(async (resolve, reject) => {
-      
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
@@ -39,7 +40,7 @@ describe('Conversation for anomaly detection test', async () => {
           console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port... ', port);
+            console.log('Tilebot connector listening on port ', port);
             resolve();
           });
         });
@@ -48,43 +49,69 @@ describe('Conversation for anomaly detection test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
+      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
-  it('/anomaly', (done) => {
-    // console.log("/anomaly story...");
-    let message_id = uuidv4();
+  it('/coding{"name", "Andrea"}', (done) => {
+    console.log("/coding");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
+      // console.log("/coding ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
-      assert(message.attributes.error !== null);
-      assert(message.attributes.runtimeError.message === "Request error: anomaly detection. MAX ACTIONS exeeded.");
-      // console.log("/anomaly test success");
-      listener.close(() => {
-        // console.log("/anomaly lister test closed");
-        done();
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      
+      assert(command2.type === "message");
+      assert(command2.message.text === "myvar: 1"); // qui verificare effettiva esecuzione
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          console.log("final attributes (dirCode):", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["name"] === "Andrea");
+          assert(attributes["lastname"] === "Sponziello");
+          assert(attributes["myvar"] === "1");
+          assert(attributes["jsondata2"]["a"] === "1");
+          listener.close(() => {
+            done();
+          });
+        }
       });
+
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
-          "_id": message_id,
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/anomaly",
+          "text": '/coding{"name": "Andrea"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
+          },
+          "attributes": {
+            "payload": {
+              "lastname": "Sponziello",
+              "jsondata2": {
+                "a": "1",
+                "b": 2
+              }
+            }
           }
         },
         "token": CHATBOT_TOKEN
@@ -93,7 +120,6 @@ describe('Conversation for anomaly detection test', async () => {
         // console.log("Message sent:\n", request);
       });
     });
-
   });
 
 });
@@ -134,6 +160,39 @@ function sendMessageToBot(message, botId, callback) {
     }, false
   );
 }
+
+/**
+ * A stub to get the request parameters, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
+ *
+ * @param {string} requestId. Tiledesk chatbot/requestId parameters
+ */
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

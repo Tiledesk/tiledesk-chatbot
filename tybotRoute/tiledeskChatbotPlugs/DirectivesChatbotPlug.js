@@ -49,6 +49,7 @@ const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
+const { DirCodeV2 } = require('./directives/DirCodeV2');
 
 class DirectivesChatbotPlug {
 
@@ -637,6 +638,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.CODE) {
       // console.log("...DirCode", directive);
       new DirCode(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CODE_V2) {
+      // console.log("...DirCode", directive);
+      new DirCodeV2(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
