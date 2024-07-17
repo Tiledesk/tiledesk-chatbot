@@ -44,28 +44,22 @@ class TiledeskChatbot {
 
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
-      // get bot info
-      // if (this.log) {
-      //   console.log("replyToMessage():", JSON.stringify(message));
+      // let lead = null;
+      // if (message.request) {
+      //   this.request = message.request;
+      //   lead = message.request.lead;
+      //   if (lead && lead.fullname) {
+      //     if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
+      //     await this.addParameter("userFullname", lead.fullname);
+      //   }
+      //   if (lead && lead.email) {
+      //     if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
+      //     await this.addParameter("userEmail", lead.email);
+      //   }
       // }
-      let lead = null;
-      if (message.request) {
-        this.request = message.request;
-        lead = message.request.lead;
-        if (lead && lead.fullname) {
-          if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
-          // await this.addParameter(this.requestId, "userFullname", lead.fullname);
-          await this.addParameter("userFullname", lead.fullname);
-        }
-        if (lead && lead.email) {
-          if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
-          // await this.addParameter(this.requestId, "userEmail", lead.email);
-          await this.addParameter("userEmail", lead.email);
-        }
-      }
-      if (this.log) {
-        console.log("replyToMessage() > lead found:", JSON.stringify(lead));
-      }
+      // if (this.log) {
+      //   console.log("replyToMessage() > lead found:", JSON.stringify(lead));
+      // }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
