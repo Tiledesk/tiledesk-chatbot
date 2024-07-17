@@ -44,22 +44,22 @@ class TiledeskChatbot {
 
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
-      // let lead = null;
-      // if (message.request) {
-      //   this.request = message.request;
-      //   lead = message.request.lead;
-      //   if (lead && lead.fullname) {
-      //     if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
-      //     await this.addParameter("userFullname", lead.fullname);
-      //   }
-      //   if (lead && lead.email) {
-      //     if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
-      //     await this.addParameter("userEmail", lead.email);
-      //   }
-      // }
-      // if (this.log) {
-      //   console.log("replyToMessage() > lead found:", JSON.stringify(lead));
-      // }
+      let lead = null;
+      if (message.request) {
+        this.request = message.request;
+        lead = message.request.lead;
+        if (lead && lead.fullname) {
+          if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
+          await this.addParameter("userFullname", lead.fullname);
+        }
+        if (lead && lead.email) {
+          if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
+          await this.addParameter("userEmail", lead.email);
+        }
+      }
+      if (this.log) {
+        console.log("replyToMessage() > lead found:", JSON.stringify(lead));
+      }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
