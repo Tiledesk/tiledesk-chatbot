@@ -773,7 +773,7 @@ class TiledeskChatbotUtil {
         //     "sub": "guest",
         //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
         //   }
-        let userFullname = await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+        let userFullname = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
         console.log("userFullname:", userFullname);
     }
 
