@@ -598,7 +598,8 @@ class TiledeskChatbotUtil {
                 if (message.request.lead.email) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
                 }
-                if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                // if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                if (message.request.lead.fullname) {
                     // worth saving
                     console.log("worth saving. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)
                     try {
@@ -774,8 +775,8 @@ class TiledeskChatbotUtil {
         //     "sub": "guest",
         //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
         //   }
-        let userFullname = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-        console.log("userFullname:", userFullname);
+        // let userFullname = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+        // console.log("userFullname:", userFullname);
     }
 
     static actionsToDirectives(actions) {
