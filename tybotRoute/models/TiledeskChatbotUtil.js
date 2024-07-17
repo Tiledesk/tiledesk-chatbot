@@ -698,6 +698,7 @@ class TiledeskChatbotUtil {
                             const value_type = typeof value;
                             //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
                             //await chatbot.addParameter(key, String(value));
+                            console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
                     }
