@@ -85,9 +85,10 @@ class DirIfOpenHours {
       return;
     }
     this.tdclient.openNow((err, result) => {
+      console.log("openNow():", result);
       if (this.log) {console.log("openNow():", result);}
       if (err) {
-        console.error("DirIfOpenHours Error:", err);
+        console.error("*** DirIfOpenHours Error:", err);
         callback();
       }
       else if (result && result.isopen) {
