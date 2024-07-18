@@ -71,7 +71,7 @@ class DirContactUpdate {
           type: "text",
           text: "Updated lead fullname on widget with: " + userFullname,
           attributes: {
-            subtype: "info",
+            // subtype: "info",
             updateUserFullname: userFullname
           }
         };
