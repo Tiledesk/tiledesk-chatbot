@@ -211,7 +211,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    console.log(".process(directive):", JSON.stringify(directive));
+    // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {

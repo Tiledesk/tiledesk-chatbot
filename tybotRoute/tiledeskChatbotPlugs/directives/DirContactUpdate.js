@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
+const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 
 class DirContactUpdate {
 
@@ -56,7 +57,8 @@ class DirContactUpdate {
       updateProperties[key] = filler.fill(value, requestAttributes);
       if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", value); }
     }
-    this.tdclient.updateLead(this.supportRequest.lead._id, updateProperties, null, null, () => {
+    const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
+    this.tdclient.updateLead(leadId, updateProperties, null, null, () => {
       if (this.log) {console.log("(DirContactUpdate) Lead updated.", updateProperties);}
       // send hidden info to update widget lead fullname only if it is a conversation!
       if (this.requestId.startsWith("support-group") && updateProperties['fullname']) {

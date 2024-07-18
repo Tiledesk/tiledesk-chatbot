@@ -614,22 +614,22 @@ class TiledeskChatbotUtil {
                 }
                 // console.log("Getting userPhone:", JSON.stringify(message.request));
                 if (message.request.lead.phone) {
-                    await chatbot.addParameter("userPhone", message.request.lead.phone);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_PHONE_KEY, message.request.lead.phone);
                 }
                 if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
                     const splits = message.request.lead.lead_id.split("-");
                     if (splits && splits.length > 1) {
-                        await chatbot.addParameter("currentPhoneNumber",splits[1]);
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_CURRENT_PHONE_NUMBER_KEY,splits[1]);
                     }
                 }
                 if (message.request.lead._id) {
-                    await chatbot.addParameter("userLeadId", message.request.lead._id);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY, message.request.lead._id);
                 }
                 if (message.request.lead.company) {
-                    await chatbot.addParameter("userCompany", message.request.lead.company);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_COMPANY_KEY, message.request.lead.company);
                 }
                 if (message.request.ticket_id) {
-                    await chatbot.addParameter("ticketId", message.request.ticket_id);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_TICKET_ID_KEY, message.request.ticket_id);
                 }
             }
             
