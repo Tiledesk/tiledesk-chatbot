@@ -22,6 +22,24 @@ const bot = {
 				}],
 		},
 		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "custom_slot",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [
+				{
+					"_tdActionTitle": "if_open_hours",
+					"stopOnConditionMet": true,
+					"_tdActionType": "ifopenhours",
+					"slot_id": 'slotID',
+					"trueIntent": "#SUCCESS",
+					"falseIntent": "#FAILURE"
+				}],
+		},
+		{
 			// TRUE INTENT
 			"webhook_enabled": false,
 			"enabled": true,

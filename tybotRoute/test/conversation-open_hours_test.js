@@ -66,7 +66,7 @@ describe('Conversation for Operating Hours test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
+
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -82,8 +82,11 @@ describe('Conversation for Operating Hours test', async () => {
     });
 
     endpointServer.get('/projects/:project_id/isopen', function (req, res) {
-      console.log("isopen called")
-      res.send({ isopen: true });
+      assert(req.query.timeSlot === undefined);
+      let reply = {}
+      let status = 200;
+      reply.isopen = true;
+      res.status(status).send(reply);
     })
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -109,233 +112,162 @@ describe('Conversation for Operating Hours test', async () => {
     });
   });
 
-  // it('/operating_hours_is_closed', (done) => {
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-  //     // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-  //     // console.log("command2", command2);
-  //     assert(command2.type === "message");
-  //     assert(command2.message.type === "frame");
-  //     listener.close(() => {
-  //       done();
-  //     });
+  it('/operating_hours_is_closed', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
 
-  //   });
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "closed");
 
-  //   endpointServer.post('/bot', function (req, res) {
-  //     // console.log("/bot req.body:", JSON.stringify(req.body));
-  //     // const reply = {
-  //     //   type: "image",
-  //     //   metadata: {
-  //     //     src: `https://img_url`
-  //     //   }
-  //     // }
-  //     const reply = {
-  //       "actions": [{
-  //         "_tdActionType": "reply",
-  //         "attributes": {
-  //           "commands": [{
-  //             "type": "wait",
-  //             "time": 500
-  //           }, {
-  //             "type": "message",
-  //             "message": {
-  //               "type": "frame",
-  //               "metadata": {
-  //                 src: "http://",
-  //                 height: 410
-  //               }
-  //             }
-  //           }]
-  //         }
-  //       }]
-  //     }
-  //     res.send(reply);
-  //   });
+      listener.close(() => {
+        done();
+      });
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/webhook',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    });
 
-  // it('/time_slot_is_open', (done) => {
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-  //     // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-  //     // console.log("command2", command2);
-  //     assert(command2.type === "message");
-  //     assert(command2.message.type === "frame");
-  //     listener.close(() => {
-  //       done();
-  //     });
+    endpointServer.get('/projects/:project_id/isopen', function (req, res) {
+      assert(req.query.timeSlot === undefined);
+      let reply = {}
+      let status = 200;
+      reply.isopen = false;
+      res.status(status).send(reply);
+    })
 
-  //   });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/operating_hours',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
 
-  //   endpointServer.post('/bot', function (req, res) {
-  //     // console.log("/bot req.body:", JSON.stringify(req.body));
-  //     // const reply = {
-  //     //   type: "image",
-  //     //   metadata: {
-  //     //     src: `https://img_url`
-  //     //   }
-  //     // }
-  //     const reply = {
-  //       "actions": [{
-  //         "_tdActionType": "reply",
-  //         "attributes": {
-  //           "commands": [{
-  //             "type": "wait",
-  //             "time": 500
-  //           }, {
-  //             "type": "message",
-  //             "message": {
-  //               "type": "frame",
-  //               "metadata": {
-  //                 src: "http://",
-  //                 height: 410
-  //               }
-  //             }
-  //           }]
-  //         }
-  //       }]
-  //     }
-  //     res.send(reply);
-  //   });
+  it('/time_slot_is_open', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/webhook',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "open");
 
-  // it('/time_slot_is_closed', (done) => {
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-  //     // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-  //     // console.log("command2", command2);
-  //     assert(command2.type === "message");
-  //     assert(command2.message.type === "frame");
-  //     listener.close(() => {
-  //       done();
-  //     });
+      listener.close(() => {
+        done();
+      });
 
-  //   });
+    });
 
-  //   endpointServer.post('/bot', function (req, res) {
-  //     // console.log("/bot req.body:", JSON.stringify(req.body));
-  //     // const reply = {
-  //     //   type: "image",
-  //     //   metadata: {
-  //     //     src: `https://img_url`
-  //     //   }
-  //     // }
-  //     const reply = {
-  //       "actions": [{
-  //         "_tdActionType": "reply",
-  //         "attributes": {
-  //           "commands": [{
-  //             "type": "wait",
-  //             "time": 500
-  //           }, {
-  //             "type": "message",
-  //             "message": {
-  //               "type": "frame",
-  //               "metadata": {
-  //                 src: "http://",
-  //                 height: 410
-  //               }
-  //             }
-  //           }]
-  //         }
-  //       }]
-  //     }
-  //     res.send(reply);
-  //   });
+    endpointServer.get('/projects/:project_id/isopen', function (req, res) {
+      // assert(req.query.timeSlot !== null);
+      // assert(req.query.timeSlot === "slotID");
+      let reply = {}
+      let status = 200;
+      reply.isopen = true;
+      res.status(status).send(reply);
+    })
 
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
-  //     let request = {
-  //       "payload": {
-  //         "senderFullname": "guest#367e",
-  //         "type": "text",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": '/webhook',
-  //         "id_project": PROJECT_ID,
-  //         "metadata": "",
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": "XXX"
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
-  //     });
-  //   });
-  // });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/custom_slot',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/time_slot_is_closed', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "closed");
+
+      listener.close(() => {
+        done();
+      });
+
+    });
+
+    endpointServer.get('/projects/:project_id/isopen', function (req, res) {
+      // assert(req.query.timeSlot !== null);
+      // assert(req.query.timeSlot === "slotID");
+      let reply = {}
+      let status = 200;
+      reply.isopen = false;
+      res.status(status).send(reply);
+    })
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/custom_slot',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+
 });
 
 /**
