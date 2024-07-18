@@ -61,7 +61,7 @@ class DirContactUpdate {
     this.tdclient.updateLead(leadId, updateProperties, null, null, () => {
       if (this.log) {console.log("(DirContactUpdate) Lead updated.", updateProperties);}
       // send hidden info to update widget lead fullname only if it is a conversation!
-      if (this.log) {console.log("(DirContactUpdate) requestId:", requestId); }
+      if (this.log) {console.log("(DirContactUpdate) requestId:", this.requestId); }
       if (this.log) {console.log("(DirContactUpdate) updateProperties:", updateProperties); }
       if (this.log) {console.log("(DirContactUpdate) updateProperties['fullname']:", updateProperties['fullname']); }
       if (this.requestId.startsWith("support-group") && updateProperties['fullname']) {
