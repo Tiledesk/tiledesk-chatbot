@@ -39,6 +39,7 @@ class DirContactUpdate {
   }
 
   async go(action, callback) {
+    if (this.log) {console.log("(DirContactUpdate) start. Update properties:",  action.update); }
     const contactProperties = action.update;
     
     // fill
@@ -51,7 +52,7 @@ class DirContactUpdate {
     }
     const filler = new Filler();
     let updateProperties = {}
-    for (const [key, value] of Object.entries(requestAttributes)) {
+    for (const [key, value] of Object.entries(contactProperties)) {
       updateProperties[key] = filler.fill(value, requestAttributes);
       if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", value); }
     }
