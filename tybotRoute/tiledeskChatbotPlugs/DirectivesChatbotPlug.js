@@ -49,6 +49,7 @@ const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
+const { DirContactUpdate } = require('./directives/DirContactUpdate');
 
 class DirectivesChatbotPlug {
 
@@ -768,6 +769,12 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.CONTACT_UPDATE) {
+      new DirContactUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else {
