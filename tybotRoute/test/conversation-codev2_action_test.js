@@ -34,6 +34,7 @@ describe('Conversation for CodeV2 Action test', async () => {
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
+          CODE_RUUNER_ENDPOINT: process.env.CODE_RUUNER_ENDPOINT,
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {

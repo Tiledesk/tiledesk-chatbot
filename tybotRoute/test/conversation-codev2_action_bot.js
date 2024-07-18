@@ -32,9 +32,6 @@ console.log('a var...chatbot_name!', context.attributes.chatbot_name);
 context.setAttribute('myvar', '1');
 context.deleteAttribute('chatbot_name');
 context.deleteAttribute('conversation_id');
-context.attributes.jsondata2.c = 7;
-context.setAttribute('jsondata2', jsondata2);
-console.log("all vars:", context.allVars());
 `
 		}, {
 			"_tdActionTitle": "",
@@ -82,9 +79,7 @@ console.log('a var...chatbot_name!', context.attributes.chatbot_name);
 context.setAttribute('myvar', '1');
 context.deleteAttribute('chatbot_name');
 context.deleteAttribute('conversation_id');
-context.attributes.jsondata2.c = 7;
 context.setAttribute('jsondata2', jsondata2);
-console.log("all vars:", context.allVars());
 `
 		}, {
 			"_tdActionTitle": "",

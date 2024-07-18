@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
@@ -16,6 +18,9 @@ class DirCodeV2 {
     let action;
     if (directive.action) {
       action = directive.action
+      action._timeout = 60000;  // must be evaluated where to put
+      action._language = 'JavaScript';  // must be evaluated where to put
+      action._contextId = '<TBD>';  // must be evaluated where to put
     }
     else {
       callback();
@@ -24,63 +29,59 @@ class DirCodeV2 {
     this.go(action, (stop) => {
       callback(stop);
     });
-    
+
   }
 
   async go(action, callback) {
-    // console.log("action.source:", action.source)
+    // console.log("action.source:", action.source);
     const source_code = action.source;
     if (!source_code || source_code.trim() === "") {
-      if (this.log) {console.log("Invalid source_code");}
+      if (this.log) { console.log("Invalid source_code"); }
       callback();
       return;
     }
-    let script_context = {
-      console: console
-    }
+
     let attributes = null;
     if (this.context.tdcache) {
-      attributes = 
-      await TiledeskChatbot.allParametersStatic(
-        this.context.tdcache, this.context.requestId
-      );
-      if (this.log) {console.log("Attributes:", JSON.stringify(attributes))}
+      attributes =
+        await TiledeskChatbot.allParametersStatic(
+          this.context.tdcache, this.context.requestId
+        );
+      if (this.log) { console.log("Attributes:", JSON.stringify(attributes)) }
     }
     else {
       console.error("(DirCode) No this.context.tdcache");
       callback();
       return;
     }
-    // console.log("before variables:", variables);
-    // for (const [key, value] of Object.entries(attributes)) {
-    //   script_context[key] = value;
-    // }
+
     let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, attributes);
-    script_context.context = variablesManager;
-    // console.log("script_context:", script_context);
-    const tdExpression = new TiledeskExpression();
-    //console.log("tdExpression:", tdExpression.evaluateJavascriptExpression);
     try {
-      const result = new TiledeskExpression().evaluateJavascriptExpression(source_code, script_context);
-      // console.log("result:", result);
-      // console.log("script_context.tiledeskVars:", script_context.tiledeskVars);
-      for (const [key, value] of Object.entries(script_context.context.ops.set)) {
-        // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
-        // await variablesManager.set(key, value);
+      const dto = {
+        runnerId: variablesManager.requestId,
+        contextId: action._contextId,
+        env: attributes,
+        language: action._language,
+        code: [
+          action.source
+        ],
+        timeout: action._timeout,
+      }
+
+      const response = await axios.create({ baseURL: process.env.CODE_RUUNER_BASEURL, timeout: dto.timeout + 10000 })
+        .post(process.env.CODE_RUUNER_ENDPOINT, dto);
+      console.log('Response data:', response.data);
+
+      for (const [key, value] of Object.entries(response.data.ops.set)) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
       }
-      // if (this.log) {
-        // let newvars_set = await variablesManager.all();
-        // console.log("newvars_set:", newvars_set);
-      // }
-      for (const [key, value] of Object.entries(script_context.context.ops.del)) {
-        // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
+
+      for (const [key, value] of Object.entries(response.data.ops.del)) {
         await variablesManager.delete(key);
       }
-      const newvars_del = await variablesManager.all();
-      // console.log("newvars_del:", newvars_del);
+
     }
-    catch(err) {
+    catch (err) {
       console.error("An error occurred:", err);
     }
     callback();
