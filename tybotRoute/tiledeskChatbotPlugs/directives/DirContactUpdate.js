@@ -67,7 +67,7 @@ class DirContactUpdate {
       if (this.requestId.startsWith("support-group") && updateProperties['userFullname']) {
         if (this.log) {console.log("(DirContactUpdate) send hidden info to update widget lead fullname"); }
         const userFullname = updateProperties['fullname'];
-        updateLeadDataOnWidgetMessage = {
+        const updateLeadDataOnWidgetMessage = {
           type: "text",
           text: "Updated lead fullname on widget with: " + userFullname,
           attributes: {
