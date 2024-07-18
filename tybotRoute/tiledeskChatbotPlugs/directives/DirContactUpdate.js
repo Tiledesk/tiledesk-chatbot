@@ -57,7 +57,7 @@ class DirContactUpdate {
       if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", value); }
     }
     this.tdclient.updateLead(this.supportRequest.lead._id, updateProperties, null, null, () => {
-      if (this.log) {console.log("Lead updated.", updateProperties);}
+      if (this.log) {console.log("(DirContactUpdate) Lead updated.", updateProperties);}
       // send hidden info to update widget lead fullname only if it is a conversation!
       if (this.requestId.startsWith("support-group") && updateProperties['fullname']) {
         const userFullname = updateProperties['fullname'];
@@ -74,9 +74,9 @@ class DirContactUpdate {
           updateLeadDataOnWidgetMessage,
           (err) => {
             if (err) {
-              console.error("Error sending reply:", err);
+              console.error("(DirContactUpdate) Error sending reply:", err);
             }
-            if (this.log) {console.log("Reply message sent:", updateLeadDataOnWidgetMessage);}
+            if (this.log) {console.log("(DirContactUpdate) hidden message sent:", updateLeadDataOnWidgetMessage);}
             callback();
         });
       }
