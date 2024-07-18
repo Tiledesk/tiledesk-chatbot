@@ -63,10 +63,10 @@ class DirContactUpdate {
       // send hidden info to update widget lead fullname only if it is a conversation!
       if (this.log) {console.log("(DirContactUpdate) requestId:", this.requestId); }
       if (this.log) {console.log("(DirContactUpdate) updateProperties:", updateProperties); }
-      if (this.log) {console.log("(DirContactUpdate) updateProperties['fullname']:", updateProperties['fullname']); }
+      if (this.log) {console.log("(DirContactUpdate) updateProperties['userFullname']:", updateProperties['userFullname']); }
       if (this.requestId.startsWith("support-group") && updateProperties['userFullname']) {
         if (this.log) {console.log("(DirContactUpdate) send hidden info to update widget lead fullname"); }
-        const userFullname = updateProperties['fullname'];
+        const userFullname = updateProperties['userFullname'];
         const updateLeadDataOnWidgetMessage = {
           type: "text",
           text: "Updated lead fullname on widget with: " + userFullname,
