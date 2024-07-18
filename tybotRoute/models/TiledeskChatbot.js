@@ -787,15 +787,8 @@ class TiledeskChatbot {
         fullname: all_parameters['userFullname'],
         phone: all_parameters['userPhone']
       }
-      // tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
-        tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
+      tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
         if (this.log) {console.log("Lead updated.")}
-        // tdclient.updateRequestAttributes(requestId, {
-        //   preChatForm: all_parameters,
-        //   updated: Date.now
-        // }, () => {
-        //   if (this.log) {console.log("Prechat updated.");}
-        // });
       });
     };
   }
