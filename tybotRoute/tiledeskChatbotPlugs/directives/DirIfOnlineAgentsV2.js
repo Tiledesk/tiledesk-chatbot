@@ -192,11 +192,10 @@ class DirIfOnlineAgentsV2 {
         url: URL,
         headers: {
           'Content-Type' : 'application/json',
-          'Authorization': this.jwt_token
+          'Authorization': this.fixToken(this.context.token)
         },
         // json: true,
         method: 'GET',
-        httpsOptions: this.httpsOptions
       };
       this.#myrequest(
         HTTPREQUEST,
