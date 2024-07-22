@@ -150,6 +150,18 @@ class DirIfOnlineAgentsV2 {
           this.chatbot.addParameter("flowError", "(If online Agents) No path for 'no available agents' defined.");
           callback();
         }
+      } else {
+        if (falseIntent) {
+          let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+          if (this.log) {console.log("!agents (!openHours) => falseIntent");}
+          console.log("!agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
+          this.intentDir.execute(intentDirective, () => {
+            callback();
+          });
+        }
+        else {
+          callback();
+        }
       }
     }
     catch(err) {
