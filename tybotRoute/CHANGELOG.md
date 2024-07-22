@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.85
+- Improved "If operating hours" action with time slots
+- Other fix (?)
+
 # v0.2.84
 - Fixed "guest#" bug
 - Fixed default_context in AskGPTv2
