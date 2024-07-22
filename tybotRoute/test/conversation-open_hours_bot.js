@@ -34,7 +34,7 @@ const bot = {
 					"_tdActionTitle": "if_open_hours",
 					"stopOnConditionMet": true,
 					"_tdActionType": "ifopenhours",
-					"slot_id": 'slotID',
+					"slotId": 'slotID',
 					"trueIntent": "#SUCCESS",
 					"falseIntent": "#FAILURE"
 				}],
