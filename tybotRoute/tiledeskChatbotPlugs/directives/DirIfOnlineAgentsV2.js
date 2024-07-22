@@ -52,8 +52,24 @@ class DirIfOnlineAgentsV2 {
     let stopOnConditionMet = true; //action.stopOnConditionMet;
 
     try {
-      const result = await this.openNow();
-      if (result && result.isopen) {
+      const ignoreProjectWideOperatingHours = action.ignoreOperatingHours;
+      let isOpen = false;
+      if (ignoreProjectWideOperatingHours === true) {
+        // always go on to only check agents availability
+        isOpen = true;
+      }
+      else {
+        const result = await this.openNow();
+        if (result && result.isopen) {
+          isOpen = true;
+        }
+        else {
+          isOpen = false;
+        }
+      }
+      
+      // if (result && result.isopen) {
+      if (isOpen === true) { // always true if ignoreProjectWideOperatingHours = true
         const selectedOption = action.selectedOption;
         
         let agents;
