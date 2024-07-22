@@ -187,7 +187,8 @@ class DirIfOnlineAgentsV2 {
 
   async getProjectAvailableAgents(raw, callback) {
     return new Promise( (resolve, reject) => {
-      const URL = `${this.APIURL}/projects/${this.projectId}/users/availables?raw=${raw}`
+      const APIURL = process.env.API_ENDPOINT || process.env.API_URL;
+      const URL = `${APIURL}/projects/${this.projectId}/users/availables?raw=${raw}`
       const HTTPREQUEST = {
         url: URL,
         headers: {
