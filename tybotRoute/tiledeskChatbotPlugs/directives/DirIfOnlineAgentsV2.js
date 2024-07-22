@@ -118,7 +118,7 @@ class DirIfOnlineAgentsV2 {
         }
         else { // if (checkAll) => go project-wide
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all"); }
-          agents = await this.getProjectAvailableAgents();
+          agents = await this.getProjectAvailableAgents(true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
@@ -185,18 +185,51 @@ class DirIfOnlineAgentsV2 {
     });
   }
 
-  async getProjectAvailableAgents() {
+  async getProjectAvailableAgents(raw, callback) {
     return new Promise( (resolve, reject) => {
-      this.tdclient.getProjectAvailableAgents((err, agents) => {
-        if (err) {
-          reject(err);
-        }
-        else {
-          resolve(agents);
-        }
-      });
-    })
+      const URL = `${this.APIURL}/projects/${this.projectId}/users/availables?raw=${raw}`
+      const HTTPREQUEST = {
+        url: URL,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': this.jwt_token
+        },
+        // json: true,
+        method: 'GET',
+        httpsOptions: this.httpsOptions
+      };
+      this.#myrequest(
+        HTTPREQUEST,
+        function(err, resbody) {
+          if (err) {
+            if (callback) {
+              callback(err);
+            }
+            reject(err);
+          }
+          else {
+            if (callback) {
+              callback(null, resbody);
+            }
+            resolve(resbody);
+          }
+        }, this.log);
+    });
+    
   }
+
+  // async getProjectAvailableAgents() {
+  //   return new Promise( (resolve, reject) => {
+  //     this.tdclient.getProjectAvailableAgents((err, agents) => {
+  //       if (err) {
+  //         reject(err);
+  //       }
+  //       else {
+  //         resolve(agents);
+  //       }
+  //     });
+  //   })
+  // }
 
   async getDepartmentAvailableAgents(depId) {
     return new Promise( (resolve, reject) => {
@@ -265,7 +298,7 @@ class DirIfOnlineAgentsV2 {
             }
             else {
               // no group => assigned to all teammates
-              const agents = await this.getProjectAvailableAgents();
+              const agents = await this.getProjectAvailableAgents(true);
               resolve(agents);
             }
           }
