@@ -44,28 +44,22 @@ class TiledeskChatbot {
 
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
-      // get bot info
-      // if (this.log) {
-      //   console.log("replyToMessage():", JSON.stringify(message));
-      // }
       let lead = null;
       if (message.request) {
         this.request = message.request;
-        lead = message.request.lead;
-        if (lead && lead.fullname) {
-          if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
-          // await this.addParameter(this.requestId, "userFullname", lead.fullname);
-          await this.addParameter("userFullname", lead.fullname);
-        }
-        if (lead && lead.email) {
-          if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
-          // await this.addParameter(this.requestId, "userEmail", lead.email);
-          await this.addParameter("userEmail", lead.email);
-        }
+        // lead = message.request.lead;
+        // if (lead && lead.fullname) {
+        //   if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
+        //   await this.addParameter("userFullname", lead.fullname);
+        // }
+        // if (lead && lead.email) {
+        //   if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
+        //   await this.addParameter("userEmail", lead.email);
+        // }
       }
-      if (this.log) {
-        console.log("replyToMessage() > lead found:", JSON.stringify(lead));
-      }
+      // if (this.log) {
+      //   console.log("replyToMessage() > lead found:", JSON.stringify(lead));
+      // }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
@@ -793,15 +787,8 @@ class TiledeskChatbot {
         fullname: all_parameters['userFullname'],
         phone: all_parameters['userPhone']
       }
-      // tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
-        tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
+      tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
         if (this.log) {console.log("Lead updated.")}
-        // tdclient.updateRequestAttributes(requestId, {
-        //   preChatForm: all_parameters,
-        //   updated: Date.now
-        // }, () => {
-        //   if (this.log) {console.log("Prechat updated.");}
-        // });
       });
     };
   }

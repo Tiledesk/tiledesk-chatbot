@@ -210,7 +210,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(req.body.max_tokens === 1000)
       assert(req.body.top_k === 2)
       assert(req.body.question === "this is the question: come ti chiami")
-      assert(req.body.system_context === "this is the context: sei un assistente fantastico\nAnswer if and ONLY if the answer is contained in the context provided. If the answer is not contained in the context provided ALWAYS answer with <NOANS>\n{context}")
+      assert(req.body.system_context === "this is the context: sei un assistente fantastico\nYou are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}")
 
       let reply = {}
       let http_code = 200;

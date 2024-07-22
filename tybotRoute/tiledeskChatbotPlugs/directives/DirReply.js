@@ -119,10 +119,11 @@ class DirReply {
     //   callback(); // cancel reply operation
     //   return;
     // }
-    // console.log("valid message!", cleanMessage);
+    
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
+    // console.log("sending message!", cleanMessage);
     this.context.tdclient.sendSupportMessage(
       this.requestId,
       cleanMessage,
@@ -130,7 +131,7 @@ class DirReply {
         if (err) {
           console.error("Error sending reply:", err);
         }
-        if (this.log) {console.log("Reply message sent");}
+        if (this.log) {console.log("Reply message sent", cleanMessage);}
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
