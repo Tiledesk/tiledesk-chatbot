@@ -118,7 +118,7 @@ class DirIfOnlineAgentsV2 {
         }
         else { // if (checkAll) => go project-wide
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all"); }
-          agents = await this.getProjectAvailableAgents();
+          agents = await this.getProjectAvailableAgents(true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
@@ -150,6 +150,18 @@ class DirIfOnlineAgentsV2 {
           this.chatbot.addParameter("flowError", "(If online Agents) No path for 'no available agents' defined.");
           callback();
         }
+      } else {
+        if (falseIntent) {
+          let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+          if (this.log) {console.log("!agents (!openHours) => falseIntent");}
+          console.log("!agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
+          this.intentDir.execute(intentDirective, () => {
+            callback();
+          });
+        }
+        else {
+          callback();
+        }
       }
     }
     catch(err) {
@@ -173,18 +185,51 @@ class DirIfOnlineAgentsV2 {
     });
   }
 
-  async getProjectAvailableAgents() {
+  async getProjectAvailableAgents(raw, callback) {
     return new Promise( (resolve, reject) => {
-      this.tdclient.getProjectAvailableAgents((err, agents) => {
-        if (err) {
-          reject(err);
-        }
-        else {
-          resolve(agents);
-        }
-      });
-    })
+      const APIURL = process.env.API_ENDPOINT || process.env.API_URL;
+      const URL = `${APIURL}/projects/${this.context.projectId}/users/availables?raw=${raw}`
+      const HTTPREQUEST = {
+        url: URL,
+        headers: {
+          'Content-Type' : 'application/json',
+          'Authorization': this.fixToken(this.context.token)
+        },
+        // json: true,
+        method: 'GET',
+      };
+      this.#myrequest(
+        HTTPREQUEST,
+        function(err, resbody) {
+          if (err) {
+            if (callback) {
+              callback(err);
+            }
+            reject(err);
+          }
+          else {
+            if (callback) {
+              callback(null, resbody);
+            }
+            resolve(resbody);
+          }
+        }, this.log);
+    });
+    
   }
+
+  // async getProjectAvailableAgents() {
+  //   return new Promise( (resolve, reject) => {
+  //     this.tdclient.getProjectAvailableAgents((err, agents) => {
+  //       if (err) {
+  //         reject(err);
+  //       }
+  //       else {
+  //         resolve(agents);
+  //       }
+  //     });
+  //   })
+  // }
 
   async getDepartmentAvailableAgents(depId) {
     return new Promise( (resolve, reject) => {
@@ -253,7 +298,7 @@ class DirIfOnlineAgentsV2 {
             }
             else {
               // no group => assigned to all teammates
-              const agents = await this.getProjectAvailableAgents();
+              const agents = await this.getProjectAvailableAgents(true);
               resolve(agents);
             }
           }

@@ -1,6 +1,7 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
+let https = require("https");
 const ms = require('minimist-string');
 
 class DirIfOpenHours {
@@ -91,8 +92,8 @@ class DirIfOpenHours {
     }
     
     let slot_id = null;
-    if (action.slot_id) {
-      slot_id = action.slot_id;
+    if (action.slotId) {
+      slot_id = action.slotId;
     }
     
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
