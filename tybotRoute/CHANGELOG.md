@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.87
+- Fixed DirAssistant empty error {}
+
 # v0.2.86
 - Added to ifOnlineAgents Action: ignoreProjectWideOperatingHours = action.ignoreOperatingHours;
 - Updated ifOnlineAgents with get available agents with 'raw' option
