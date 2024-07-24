@@ -122,7 +122,6 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
-        console.log("anyway qui...");
         if (agents && agents.length > 0) {
           if (trueIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
@@ -187,8 +186,7 @@ class DirIfOnlineAgentsV2 {
 
   async getProjectAvailableAgents(raw, callback) {
     return new Promise( (resolve, reject) => {
-      const APIURL = process.env.API_ENDPOINT || process.env.API_URL;
-      const URL = `${APIURL}/projects/${this.context.projectId}/users/availables?raw=${raw}`
+      const URL = `${this.context.TILEDESK_APIURL}/projects/${this.context.projectId}/users/availables?raw=${raw}`
       const HTTPREQUEST = {
         url: URL,
         headers: {

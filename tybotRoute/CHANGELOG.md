@@ -7,6 +7,7 @@ available on:
 
 # v0.2.86
 - Added to ifOnlineAgents Action: ignoreProjectWideOperatingHours = action.ignoreOperatingHours;
+- Updated ifOnlineAgents with get available agents with 'raw' option
 
 # v0.2.85
 - Improved "If operating hours" action with time slots
