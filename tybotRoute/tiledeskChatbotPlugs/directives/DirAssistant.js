@@ -624,11 +624,11 @@ class DirAssistant {
             data =  err.response.data;
           }
           callback(
-            null, {
+            {
               status: status,
               data: data,
               error: errorMessage
-            }
+            }, data
           );
         }
       });
