@@ -7,6 +7,7 @@ available on:
 
 # v0.2.87
 - Fixed DirAssistant empty error {}
+- Added to DirAssistant "lastMessageData" attribute (The message content original JSON structure useful to get annotations in messages, message type etc.)
 
 # v0.2.86
 - Added to ifOnlineAgents Action: ignoreProjectWideOperatingHours = action.ignoreOperatingHours;

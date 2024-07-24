@@ -170,6 +170,7 @@ class DirAssistant {
       // process.exit(0);
       if (lastMessage !== null) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, lastMessage);
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "lastMessageData", messages.data[0].content); // content is an array, see on this source end for messages structure example, including content. Ex get annotation[0]: content[0].text.annotations[0]
         if (trueIntent) {
           await this.#executeCondition(true, trueIntent, null, falseIntent, null);
           callback(true);
@@ -643,3 +644,87 @@ class DirAssistant {
 
 
 module.exports = { DirAssistant };
+
+// Messages list response example
+
+/*
+{
+  "object": "list",
+  "data": [
+      {
+          "id": "msg_FfKaNU82uBYQU9gANFkKJ5Wi",
+          "object": "thread.message",
+          "created_at": 1721681044,
+          "assistant_id": null,
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": null,
+          "role": "user",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "vendete sedie di altezza superiore o uguale a 50 cm?",
+                      "annotations": []
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      },
+      {
+          "id": "msg_Ddxnqi7M9vvLdS9YYO4FHjVt",
+          "object": "thread.message",
+          "created_at": 1721680934,
+          "assistant_id": "asst_qNjiwCVxo3kL2mnN1QyP50Zb",
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": "run_k8mPIrZPnsO0hAiezD9y2f1t",
+          "role": "assistant",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "Una delle best practices raccomandate per garantire un alto livello di sicurezza informatica per la linea di prodotti \"boss\" è la seguente:\n\n- Aggiornare i dispositivi con l'ultima versione del firmware disponibile. È possibile consultare il portale KSA per verificare la disponibilità degli aggiornamenti【6:0†source】.\n\nSe hai altri dubbi o necessiti di ulteriori informazioni, non esitare a chiedere!",
+                      "annotations": [
+                          {
+                              "type": "file_citation",
+                              "text": "【6:0†source】",
+                              "start_index": 305,
+                              "end_index": 317,
+                              "file_citation": {
+                                  "file_id": "file-dwR6qSwVUIrhImd9espzExGw",
+                                  "quote": ""
+                              }
+                          }
+                      ]
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      },
+      {
+          "id": "msg_ng244T4mymroFWZ912r9DvWZ",
+          "object": "thread.message",
+          "created_at": 1721680931,
+          "assistant_id": null,
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": null,
+          "role": "user",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "dimmi una delle best practices  che conosci",
+                      "annotations": []
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      }
+  ],
+  "first_id": "msg_FfKaNU82uBYQU9gANFkKJ5Wi",
+  "last_id": "msg_ng244T4mymroFWZ912r9DvWZ",
+  "has_more": false
+}
+*/
