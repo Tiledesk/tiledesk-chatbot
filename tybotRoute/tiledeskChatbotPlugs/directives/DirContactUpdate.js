@@ -56,7 +56,7 @@ class DirContactUpdate {
     for (const [key, value] of Object.entries(contactProperties)) {
       updateProperties[key] = filler.fill(value, requestAttributes);
       if (key === "fullname") {
-        await chatbot.addParameter(REQ_LEAD_USERFULLNAME_KEY, value);
+        await this.context.chatbot.addParameter(REQ_LEAD_USERFULLNAME_KEY, value);
         if (this.log) {console.log("(DirContactUpdate) updating attribute:",REQ_LEAD_USERFULLNAME_KEY, "with property key:", key, "and value:", value); }
       }
       // else if ( key === "email") {
