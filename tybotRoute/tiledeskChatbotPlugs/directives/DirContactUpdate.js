@@ -55,14 +55,16 @@ class DirContactUpdate {
     let updateProperties = {}
     for (const [key, value] of Object.entries(contactProperties)) {
       let filled_value = filler.fill(value, requestAttributes);
+      if (this.log) {console.log("(DirContactUpdate) setting property key:",key, "with value:", value, "filled value:", filled_value); }
       updateProperties[key] = filled_value;
       if (key === "fullname") {
         await this.context.chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, filled_value);
         if (this.log) {console.log("(DirContactUpdate) updating attribute:",TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, "with property key:", key, "and value:", filled_value); }
       }
-      // else if ( key === "email") {
-      //   static REQ_LEAD_EMAIL_KEY = "userEmail";
-      // }
+      else if ( key === "email") {
+        await this.context.chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, filled_value);
+        if (this.log) {console.log("(DirContactUpdate) updating attribute:",TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, "with property key:", key, "and value:", filled_value); }
+      }
       // else if (key === "phone") {
       //   static REQ_USER_PHONE_KEY = "userPhone";
       // }
