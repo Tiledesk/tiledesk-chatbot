@@ -598,7 +598,8 @@ class TiledeskChatbotUtil {
                 if (message.request.lead.email) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
                 }
-                if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+                if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#") && currentLeadName) {
                 // if (message.request.lead.fullname) {
                     // worth saving
                     console.log("worth saving. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)
