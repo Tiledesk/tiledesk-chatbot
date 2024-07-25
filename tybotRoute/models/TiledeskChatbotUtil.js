@@ -594,15 +594,16 @@ class TiledeskChatbotUtil {
             //     await chatbot.addParameter("lastUserDocumentType", null);
             // }
             if (message && message.request && message.request.lead) {
-                console.log("lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)
+                if (chatbot.log) {console.log("lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
                 if (message.request.lead.email) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+                if (chatbot.log) {console.log("You lead name from attributes::")}
                 if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#") && currentLeadName) {
                 // if (message.request.lead.fullname) {
                     // worth saving
-                    console.log("worth saving. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)
+                    if (chatbot.log) {console.log("worth saving. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
