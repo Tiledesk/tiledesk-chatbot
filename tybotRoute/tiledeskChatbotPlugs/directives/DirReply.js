@@ -97,9 +97,9 @@ class DirReply {
       // if (requestAttributes['userEmail']) {
       //     message.attributes.updateUserEmail = requestAttributes['userEmail'];
       // }
-      if (requestAttributes['userFullname']) {
-        message.attributes.updateUserFullname = requestAttributes['userFullname'];
-      }
+      // if (requestAttributes['userFullname']) {
+      //   message.attributes.updateUserFullname = requestAttributes['userFullname'];
+      // }
       // intent_info
       if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
