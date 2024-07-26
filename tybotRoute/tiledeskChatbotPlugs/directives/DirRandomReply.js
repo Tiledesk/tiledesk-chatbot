@@ -78,12 +78,12 @@ class DirRandomReply {
         message.attributes = {}
       }
       // Reserved names: userEmail, userFullname
-      if (requestVariables['userEmail']) {
-          message.attributes.updateUserEmail = requestVariables['userEmail'];
-      }
-      if (requestVariables['userFullname']) {
-        message.attributes.updateUserFullname = requestVariables['userFullname'];
-      }
+      // if (requestVariables['userEmail']) {
+      //     message.attributes.updateUserEmail = requestVariables['userEmail'];
+      // }
+      // if (requestVariables['userFullname']) {
+      //   message.attributes.updateUserFullname = requestVariables['userFullname'];
+      // }
     }
     // send!
     if (this.log) {console.log("Reply:", JSON.stringify(message))};
