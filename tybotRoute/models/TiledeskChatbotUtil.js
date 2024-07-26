@@ -436,6 +436,9 @@ class TiledeskChatbotUtil {
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
             }
+            else {
+                fullName = "user:" + fullName;
+            }
             return "<" + fullName + ">";
         }
     }
