@@ -94,9 +94,9 @@ class DirReply {
         message.attributes = {}
       }
       // Reserved names: userEmail, userFullname
-      if (requestAttributes['userEmail']) {
-          message.attributes.updateUserEmail = requestAttributes['userEmail'];
-      }
+      // if (requestAttributes['userEmail']) {
+      //     message.attributes.updateUserEmail = requestAttributes['userEmail'];
+      // }
       if (requestAttributes['userFullname']) {
         message.attributes.updateUserFullname = requestAttributes['userFullname'];
       }

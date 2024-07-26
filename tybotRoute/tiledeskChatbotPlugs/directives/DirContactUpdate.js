@@ -68,7 +68,7 @@ class DirContactUpdate {
       // else if (key === "phone") {
       //   static REQ_USER_PHONE_KEY = "userPhone";
       // }
-      if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", value); }
+      if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", filled_value); }
     }
     const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
     this.tdclient.updateLead(leadId, updateProperties, null, null, () => {
