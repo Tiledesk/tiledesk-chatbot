@@ -218,6 +218,10 @@ class TiledeskExpression {
             name: "roundAsNumber",
             applyPattern: "TiledeskMath.round(Number(#1))"
         },
+        "convertToNumber": {
+            name: "convertToNumber",
+            applyPattern: "Number(#1)"
+        },
         "JSONparse": {
             name: "JSONparse",
             applyPattern: "JSON.parse(String(#1))"
