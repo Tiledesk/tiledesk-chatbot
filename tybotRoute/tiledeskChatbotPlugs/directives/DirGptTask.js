@@ -104,10 +104,10 @@ class DirGptTask {
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
       if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
-      console.log("DirGptTask transcript string: ", transcript_string)
+
       transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
       if (this.log) { console.log("DirGptTask transcript: ", transcript) }
-      //console.log("DirGptTask transcript: ", transcript)
+      console.log("DirGptTask transcript: ", JSON.stringify(transcript))
     }
 
 
