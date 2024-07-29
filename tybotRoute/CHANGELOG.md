@@ -5,6 +5,17 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.91
+- Added voice flow attributes: dnis, callId, ani
+
+# v0.2.89
+- Added convertToNumber to operations in setAttribute
+- Added setAttributeV2 test
+
+# v0.2.88
+- Added DirContactUpdate (aka LeadUpdate). No test case added for LeadUpdate. Only testable with a validation test.
+- Fixed: Attribute parameters userFullname & userEmail now are able to "bypass" the request.lead not correctly updating on the same conversation. If updated in the flow (through LeadUpdate action), they will maintain their own value through the current conversation flow.
+
 # v0.2.87
 - Fixed DirAssistant empty error {}
 - Added to DirAssistant "lastMessageData" attribute (The message content original JSON structure useful to get annotations in messages, message type etc.)
