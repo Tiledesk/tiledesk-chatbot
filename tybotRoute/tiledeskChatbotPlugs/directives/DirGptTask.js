@@ -97,15 +97,17 @@ class DirGptTask {
     }
 
 
+    console.log("is history enabled: ", action.history);
     if (action.history) {
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
       if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
-
+      console.log("DirGptTask transcript string: ", transcript_string)
       transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
       if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      //console.log("DirGptTask transcript: ", transcript)
     }
 
 
@@ -176,6 +178,7 @@ class DirGptTask {
             role: msg.role,
             content: msg.content
           }
+          console.log("add following message to messages: ", message);
           json.messages.unshift(message)
         }
       })
@@ -183,6 +186,7 @@ class DirGptTask {
 
     if (this.log) { console.log("DirGptTask json: ", json) }
     console.log("DirGptTask json: ", json)
+    console.log("DirGptTask json: ", JSON.stringify(json))
 
     const HTTPREQUEST = {
       url: openai_url,
