@@ -715,13 +715,24 @@ class TiledeskChatbotUtil {
                             const value_type = typeof value;
                             //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
                             //await chatbot.addParameter(key, String(value));
-                            console.log("Adding from message.attributes:", key, "->", value);
+                            // console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
                     }
                     catch(err) {
                         console.error("Error importing message payload in request variables:", err);
                     }
+                }
+
+                // voice-vxml attributes
+                if (message.attributes.dnis) {
+                    await chatbot.addParameter("dnis", message.attributes.dnis);
+                }
+                if (message.attributes.callId) {
+                    await chatbot.addParameter("callId", message.attributes.callId);
+                }
+                if (message.attributes.ani) {
+                    await chatbot.addParameter("ani", message.attributes.ani);
                 }
             }
             
