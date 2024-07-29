@@ -153,6 +153,7 @@ class DirGptTask {
 
     let json = {
       model: action.model,
+      messages: [],
       // messages: [
       //   {
       //     role: "user",
