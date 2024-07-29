@@ -898,7 +898,12 @@ describe('Conversation for GptTask test', async () => {
       let reply = {}
       let http_code = 400;
 
-      reply.error = "Generic error";
+      reply.error = {
+        "message": "you must provide a model parameter",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+      }
 
       res.status(http_code).send(reply);
     });

@@ -21,7 +21,8 @@ const bot = {
 				"context": "you are an awesome assistant",
 				"max_tokens": 100,
 				"temperature": 0,
-				"model": "gpt-3.5-turbo"
+				"model": "gpt-3.5-turbo",
+				"history": true
 			},
 			{
 				"_tdActionType": "reply",

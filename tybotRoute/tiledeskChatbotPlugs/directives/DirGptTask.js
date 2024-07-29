@@ -3,6 +3,8 @@ const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 require('dotenv').config();
 
 class DirGptTask {
@@ -12,6 +14,7 @@ class DirGptTask {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
@@ -47,6 +50,7 @@ class DirGptTask {
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
+    let transcript;
 
     if (this.log) {
       console.log("DirGptTask trueIntent", trueIntent)
@@ -91,6 +95,19 @@ class DirGptTask {
       console.log("DirGptTask max_tokens: ", max_tokens);
       console.log("DirGptTask temperature: ", temperature);
     }
+
+
+    if (action.history) {
+      let transcript_string = await TiledeskChatbot.getParameterStatic(
+        this.context.tdcache,
+        this.context.requestId,
+        TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
+      if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
+
+      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+      if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+    }
+
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
@@ -141,16 +158,31 @@ class DirGptTask {
         }
       ],
       max_tokens: action.max_tokens,
-      temperature: action.temperature
+      temperature: action.temperature,
     }
 
     let message = { role: "", content: "" };
+
     if (action.context) {
       message.role = "system";
       message.content = filled_context;
       json.messages.unshift(message);
     }
+
+    if (transcript) {
+      transcript.forEach(msg => {
+        if (!msg.content.startsWith('/')) {
+          let message = {
+            role: msg.role,
+            content: msg.content
+          }
+          json.messages.unshift(message)
+        }
+      })
+    }
+
     if (this.log) { console.log("DirGptTask json: ", json) }
+    console.log("DirGptTask json: ", json)
 
     const HTTPREQUEST = {
       url: openai_url,
@@ -167,10 +199,11 @@ class DirGptTask {
         if (err) {
           if (this.log) {
             console.error("(httprequest) DirGptTask openai err:", err);
-            console.error("(httprequest) DirGptTask openai err:", err.response.data);
+            console.error("(httprequest) DirGptTask openai err:", err.response?.data?.error?.message);
           }
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
+            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
@@ -179,6 +212,7 @@ class DirGptTask {
           return;
         } else {
           if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
+          console.log("DirGptTask resbody: ", JSON.stringify(resbody));
           answer = resbody.choices[0].message.content;
           // check if answer is a json
           let answer_json = await this.convertToJson(answer);

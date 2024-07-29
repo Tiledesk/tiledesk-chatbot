@@ -435,12 +435,14 @@ class TiledeskChatbotUtil {
             let fullName = message.senderFullname;
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
+            } else {
+                fullName = "user:" + fullName;
             }
             return "<" + fullName + ">";
         }
     }
 
-    static transcriptJSON(transcript) {
+    static async transcriptJSON(transcript) {
         const regexp = /(<.*>)/gm;
         const parts = transcript.split(regexp);
         // console.log("parts:", parts);
