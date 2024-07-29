@@ -57,6 +57,7 @@ class DirContactUpdate {
       let filled_value = filler.fill(value, requestAttributes);
       if (this.log) {console.log("(DirContactUpdate) setting property key:",key, "with value:", value, "filled value:", filled_value); }
       updateProperties[key] = filled_value;
+      // it's important that all the lead's properties are immediatly updated in the current flow invocation so the updated values will be available in the next actions
       if (key === "fullname") {
         await this.context.chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, filled_value);
         if (this.log) {console.log("(DirContactUpdate) updating attribute:",TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, "with property key:", key, "and value:", filled_value); }

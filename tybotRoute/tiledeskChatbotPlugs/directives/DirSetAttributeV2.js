@@ -97,9 +97,27 @@ class DirSetAttributeV2 {
 
     async go(action, callback) {
         if (this.log) {console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));}
+        if (action && !action.operation) {
+            if (this.log) {console.log("(SetAttributeV2) Error operation is mandatory");}
+            callback();
+        }
         if (action && action.operation && action.operation.operands) {
-            if (this.log) {console.log("filling in setattribute...");}
+            if (this.log) {console.log("(SetAttributeV2) filling in setattribute...");}
             await this.fillValues(action.operation.operands);
+        }
+        console.log("action.operation.operands.length", action.operation.operands.length);
+        console.log("action.operation.operands[0].type", action.operation.operands[0].type);
+        
+        // FUN FACT: THIS TOOK A LOT OF EFFERT BUT IT WAS NEVER USED. YOU CAN SIMPLY CREATE A JSON ATTRIBUTE APPLYING
+        // JSONparse FUNCTION TO AN ATTRIBUTE.
+        if (action.operation.operands && action.operation.operands.length === 1 && action.operation.operands[0].type === "json") {
+            if (this.log) {console.log("(SetAttributeV2) setting json value...");}
+            console.log("(SetAttributeV2) setting json value... destination:", action.destination);
+            const json_value = JSON.parse(action.operation.operands[0].value);
+            console.log("(SetAttributeV2) json_value:", json_value);
+            await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, json_value);
+            callback();
+            return; // on json types no operations are permitted beyond assignment
         }
         if (this.log) {console.log("filled in setattribute:", action.operation);}
         // let res = validate(action, schema);
@@ -199,6 +217,44 @@ class DirSetAttributeV2 {
         }
         catch(error) {
             console.error("Error while filling operands:", error);
+        }
+    }
+
+    convertOperandValues(operands) {
+        console.log("Converting operands:", operands);
+        // operation: {
+        //     operators: ["addAsNumber", "subtractAsNumber", "divideAsNumber", "multiplyAsNumber"],
+        //     operands: [
+        //         {
+        //             value: "previous",
+        //             isVariable: true,
+        //             type: "string"
+        //         }
+        //     ]
+        try {
+            operands.forEach(operand => {
+                if (operand.type) {
+                    console.log("Converting operands - operand.type:", operand.type.toLowerCase());
+                    if (operand.type.toLowerCase() === "number") {
+                        console.log("Converting operands - number");
+                        operand.value = Number(operand.value);
+                        console.log("new value:", operand.value);
+                        console.log("new value type:", typeof operand.value);
+                    }
+                    else if (operand.type.toLowerCase() === "json") {
+                        console.log("Converting operands - json, value =", operand.value);
+                        operand.value = JSON.parse(operand.value);
+                        console.log("new value:", operand.value);
+                        console.log("new value type:", typeof operand.value);
+                    }
+                    else {
+                        console.log("Converting operands - ??");
+                    }
+                }
+            });
+        }
+        catch(error) {
+            console.error("Error while converting operands:", error);
         }
     }
 }
