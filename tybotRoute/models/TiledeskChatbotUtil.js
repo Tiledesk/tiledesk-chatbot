@@ -597,16 +597,25 @@ class TiledeskChatbotUtil {
             // }
             if (message && message.request && message.request.lead) {
                 if (chatbot.log) {console.log("lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
-                if (message.request.lead.email) {
-                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
+                let currentLeadEmail = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY);
+                if (chatbot.log) {console.log("You lead email from attributes:", currentLeadEmail, "message.request.lead.email:", message.request.lead.email);}
+                if (message.request.lead.email && !currentLeadEmail) {
+                    // worth saving
+                    if (chatbot.log) {console.log("worth saving email. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                    try {
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
+                    }
+                    catch(error) {
+                        console.error("Error on setting userEmail:", error);
+                    }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                if (chatbot.log) {console.log("You lead name from attributes:", currentLeadName, "message.request.lead.fullname:", message.request.lead.fullname, "message.request.lead.fullname.startsWith(guest#)", message.request.lead.fullname.startsWith("guest#"))}
+                if (chatbot.log) {console.log("You lead name from attributes:", currentLeadName, "message.request.lead.fullname:", message.request.lead.fullname)}
                 // if (message.request.lead.fullname && message.request.lead.fullname.startsWith("guest#") && !currentLeadName) {
                 // if (message.request.lead.fullname) {
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    if (chatbot.log) {console.log("worth saving. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                    if (chatbot.log) {console.log("worth saving fullname. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
