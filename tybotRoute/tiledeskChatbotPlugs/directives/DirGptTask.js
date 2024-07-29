@@ -163,27 +163,22 @@ class DirGptTask {
       temperature: action.temperature,
     }
 
-    let message = { role: "", content: "" };
-
     if (action.context) {
-      let message = {
-        role: "system",
-        content: filled_context
-      }
+      let message = { role: "system", content: filled_context }
       json.messages.push(message);
     }
 
     if (transcript) {
       transcript.forEach(msg => {
         if (!msg.content.startsWith('/')) {
-          let message = {
-            role: msg.role,
-            content: msg.content
-          }
+          let message = { role: msg.role, content: msg.content }
           json.messages.push(message)
         }
       })
-    }
+    } else {
+      let message = { role: "user", content: filled_question };
+      json.messages.push(message);
+    } 
 
     if (this.log) { console.log("DirGptTask json: ", json) }
 
