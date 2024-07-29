@@ -153,12 +153,12 @@ class DirGptTask {
 
     let json = {
       model: action.model,
-      messages: [
-        {
-          role: "user",
-          content: filled_question
-        }
-      ],
+      // messages: [
+      //   {
+      //     role: "user",
+      //     content: filled_question
+      //   }
+      // ],
       max_tokens: action.max_tokens,
       temperature: action.temperature,
     }
@@ -166,9 +166,11 @@ class DirGptTask {
     let message = { role: "", content: "" };
 
     if (action.context) {
-      message.role = "system";
-      message.content = filled_context;
-      json.messages.unshift(message);
+      let message = {
+        role: "system",
+        content: filled_context
+      }
+      json.messages.push(message);
     }
 
     if (transcript) {
@@ -179,7 +181,7 @@ class DirGptTask {
             content: msg.content
           }
           console.log("add following message to messages: ", message);
-          json.messages.unshift(message)
+          json.messages.push(message)
         }
       })
     }
