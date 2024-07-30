@@ -20,7 +20,8 @@ const bot = {
 				"model": "gpt-4",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
-				"question": "this is the question: {{last_user_message}}"
+				"question": "this is the question: {{last_user_message}}",
+				"history": true
 			}]
 		},
 		{

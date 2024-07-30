@@ -3,6 +3,8 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 require('dotenv').config();
 
 class DirAskGPTV2 {
@@ -63,7 +65,7 @@ class DirAskGPTV2 {
     let max_tokens;
     let top_k;
     let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
-
+    let transcript;
     let source = null;
 
     if (!action.question || action.question === '') {
@@ -104,6 +106,20 @@ class DirAskGPTV2 {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
+
+    console.log("action.history: ", action.history)
+    if (action.history) {
+      let transcript_string = await TiledeskChatbot.getParameterStatic(
+        this.context.tdcache,
+        this.context.requestId,
+        TiledeskChatbotConst.REQ_TRANSCRIPT_KEY
+      )
+      if (this.log) { console.log("DirAskGPT transcript string: ", transcript_string) }
+      console.log("DirAskGPT transcript string: ", transcript_string)
+      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+      if (this.log) { console.log("DirAskGPT transcript ", transcript) }
+      console.log("DirAskGPT transcript ", transcript)
+    }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const kb_endpoint = process.env.KB_ENDPOINT_QA
@@ -175,6 +191,9 @@ class DirAskGPTV2 {
 
     if (this.log) { console.log("DirAskGPT json:", json); }
 
+    if (transcript) {
+      this.generateChatHistory(transcript);
+    }
     const HTTPREQUEST = {
       // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
@@ -468,6 +487,10 @@ class DirAskGPTV2 {
         }
       )
     })
+  }
+
+  async generateChatHistory(transcript) {
+    console.log("transcript: ", transcript);
   }
 
 
