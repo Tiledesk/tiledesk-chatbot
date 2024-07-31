@@ -5,6 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+
+# v0.2.93-rc1
+- Set specific system_context for each AI smodels
+
+# v0.2.92
+- Improves GPTTask action: added support for history
+
 # v0.2.91
 - Added voice flow attributes: dnis, callId, ani
 
