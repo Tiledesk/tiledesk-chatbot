@@ -44,7 +44,8 @@ const bot = {
 				"context": "this is the context: {{custom_context}}",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
-				"question": "this is the question: {{last_user_message}}"
+				"question": "this is the question: {{last_user_message}}",
+				"history": true
 			}]
 		},
 		{
@@ -68,7 +69,8 @@ const bot = {
 				"advancedPrompt": true,
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
-				"question": "this is the question: {{last_user_message}}"
+				"question": "this is the question: {{last_user_message}}",
+				"history": true
 			}]
 		},
 		{
@@ -83,6 +85,7 @@ const bot = {
 				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
+				"history": true
 			}],
 			"language": "en",
 			"intent_display_name": "gpt_fail",
@@ -102,6 +105,7 @@ const bot = {
 				"question": "",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
+				"history": true
 			}],
 			"language": "en",
 			"intent_display_name": "gpt_fail_noquestion",
@@ -121,6 +125,7 @@ const bot = {
 				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
+				"history": true
 			}],
 			"language": "en",
 			"intent_display_name": "gpt_fail_nokbid",

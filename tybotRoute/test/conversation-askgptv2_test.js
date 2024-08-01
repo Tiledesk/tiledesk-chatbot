@@ -435,7 +435,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
+          //console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -486,7 +486,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -503,7 +503,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        console.log("Message sent:\n", request);
       });
     });
   });

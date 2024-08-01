@@ -5,6 +5,7 @@ let https = require("https");
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const assert = require("assert");
 require('dotenv').config();
 
 class DirAskGPTV2 {
@@ -107,7 +108,7 @@ class DirAskGPTV2 {
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
 
-    console.log("action.history: ", action.history)
+    console.log("**** ASKGPT **** action.history: ", action.history)
     if (action.history) {
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
@@ -115,10 +116,10 @@ class DirAskGPTV2 {
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY
       )
       if (this.log) { console.log("DirAskGPT transcript string: ", transcript_string) }
-      console.log("DirAskGPT transcript string: ", transcript_string)
+
       transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
       if (this.log) { console.log("DirAskGPT transcript ", transcript) }
-      console.log("DirAskGPT transcript ", transcript)
+      console.log("**** ASKGPT **** DirAskGPT transcript ", transcript)
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
@@ -189,11 +190,14 @@ class DirAskGPTV2 {
       json.system_context = filled_context;
     }
 
-    if (this.log) { console.log("DirAskGPT json:", json); }
-
     if (transcript) {
-      this.generateChatHistory(transcript);
+      json.chat_history_dict = await this.transcriptToLLM(transcript);
+      console.log("**** ASKGPT **** DirAskGPT json.chat_history_dict:", json.chat_history_dict)
     }
+
+    if (this.log) { console.log("DirAskGPT json:", json); }
+    console.log("**** ASKGPT **** DirAskGPT json:", json)
+    
     const HTTPREQUEST = {
       // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
@@ -489,8 +493,52 @@ class DirAskGPTV2 {
     })
   }
 
-  async generateChatHistory(transcript) {
-    console.log("transcript: ", transcript);
+  /**
+   * Transforms the transcirpt array in a dictionary like '0': { "question": "xxx", "answer":"xxx"}
+   * merging consecutive messages with the same role in a single question or answer.
+   * If the first message was sent from assistant, this will be deleted.
+   */
+  async transcriptToLLM(transcript) {
+    
+    let objectTranscript = {};
+
+    if (transcript.length === 0) {
+      return objectTranscript;
+    }
+
+    let mergedTranscript = [];
+    let current = transcript[0];
+
+    for (let i = 1; i < transcript.length; i++) {
+      if (transcript[i].role === current.role) {
+        current.content += '\n' + transcript[i].content;
+      } else {
+        mergedTranscript.push(current);
+        current = transcript[i]
+      }
+    }
+    mergedTranscript.push(current);
+
+    if (mergedTranscript[0].role === 'assistant') {
+      mergedTranscript.splice(0, 1)
+    }
+
+    let counter = 0;
+    for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
+      // Check if [i] is role user and [i+1] is role assistant??
+      assert(mergedTranscript[i].role === 'user');
+      assert(mergedTranscript[i+1].role === 'assistant');
+
+      if (!mergedTranscript[i].content.startsWith('/')) {
+        objectTranscript[counter] = {
+          question: mergedTranscript[i].content,
+          answer: mergedTranscript[i+1].content
+        }
+        counter++;
+      }
+    }
+
+    return objectTranscript;
   }
 
 
