@@ -5,6 +5,12 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.93
+- Added model contexts
+
+# v0.2.92
+- Improved GPTTask Action with support for history
+
 # v0.2.91
 - Added voice flow attributes: dnis, callId, ani
 
