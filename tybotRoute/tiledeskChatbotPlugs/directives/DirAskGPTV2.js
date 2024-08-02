@@ -108,7 +108,6 @@ class DirAskGPTV2 {
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
 
-    console.log("**** ASKGPT **** action.history: ", action.history)
     if (action.history) {
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
@@ -119,7 +118,6 @@ class DirAskGPTV2 {
 
       transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
       if (this.log) { console.log("DirAskGPT transcript ", transcript) }
-      console.log("**** ASKGPT **** DirAskGPT transcript ", transcript)
     }
 
     const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
@@ -192,11 +190,9 @@ class DirAskGPTV2 {
 
     if (transcript) {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
-      console.log("**** ASKGPT **** DirAskGPT json.chat_history_dict:", json.chat_history_dict)
     }
 
     if (this.log) { console.log("DirAskGPT json:", json); }
-    console.log("**** ASKGPT **** DirAskGPT json:", json)
     
     const HTTPREQUEST = {
       // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
