@@ -442,7 +442,7 @@ class TiledeskChatbotUtil {
         }
     }
 
-    static async transcriptJSON(transcript) {
+    static transcriptJSON(transcript) {
         const regexp = /(<.*>)/gm;
         const parts = transcript.split(regexp);
         // console.log("parts:", parts);
