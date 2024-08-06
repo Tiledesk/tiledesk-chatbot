@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.95-rc1
+- Changed DTMF_MENU action to ReplyV2
+
 # v0.2.94
 - Added support for chat history for AskGPTv2 action
 
