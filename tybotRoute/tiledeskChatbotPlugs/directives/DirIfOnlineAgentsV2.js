@@ -79,6 +79,7 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("this.context.departmentId:", departmentId);}
 
           if (departmentId) {
+            if (this.log) {console.log("(DirIfOnlineAgents) agents = await this.getProjectAvailableAgents(", departmentId, ", true);"); }
             agents = await this.getProjectAvailableAgents(departmentId, true);
             if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           } else {
@@ -100,11 +101,13 @@ class DirIfOnlineAgentsV2 {
         }
         else if (selectedOption === "selectedDep") {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
+          if (this.log) {console.log("(DirIfOnlineAgents) agents = await this.getProjectAvailableAgents(", action.selectedDepartmentId, ", true);"); }
+          
           agents = await this.getProjectAvailableAgents(action.selectedDepartmentId, true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else { // if (checkAll) => go project-wide
-          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all"); }
+          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all | getProjectAvailableAgents(null, true)"); }
           agents = await this.getProjectAvailableAgents(null, true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
