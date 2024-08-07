@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.95
+- If Online Agents V2 - bug fix (If Project Available Agents V2 -> MWeb)
+
 # v0.2.94
 - Added support for chat history for AskGPTv2 action
 
