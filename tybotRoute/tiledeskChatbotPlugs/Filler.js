@@ -6,7 +6,7 @@ class Filler {
   fill(text, parameters) {
     // create dynamic attributes
     parameters["timestamp"] = Date.now(); // type number
-    parameters["now"] = Date.now(); // type Object
+    parameters["now"] = new Date(); // type Object
 
     // legacy parser first
     if (text == null || text == undefined || typeof text !== 'string') {
