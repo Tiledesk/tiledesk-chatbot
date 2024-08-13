@@ -4,6 +4,10 @@ var engine = new Liquid();
 class Filler {
 
   fill(text, parameters) {
+    // create dynamic attributes
+    parameters["timestamp"] = Date.now(); // type number
+    parameters["now"] = Date.now(); // type Object
+
     // legacy parser first
     if (text == null || text == undefined || typeof text !== 'string') {
       // console.log("Skip filling. 'text' is null or not a string");
