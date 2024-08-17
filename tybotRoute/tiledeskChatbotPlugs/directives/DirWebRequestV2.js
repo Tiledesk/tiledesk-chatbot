@@ -273,7 +273,9 @@ class DirWebRequestV2 {
         method: options.method,
         params: options.params,
         headers: options.headers,
-        timeout: options.timeout
+        timeout: options.timeout,
+        maxContentLength: 10000000, // max 10mb response size
+        maxBodyLength: 10000000 // max 10mb request body size
       }
     
       if (options.json !== null) {
