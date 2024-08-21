@@ -55,13 +55,13 @@ describe('Conversation for Filters in reply test', async () => {
   });
 
   it('/start{"user_language", "it"}', (done) => {
-    // console.log('/start{"user_language", "it"}');
+    console.log('/start{"user_language", "it"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
+      console.log("/start 'it' ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);

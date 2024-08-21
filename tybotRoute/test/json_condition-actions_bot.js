@@ -217,7 +217,7 @@ const bot = {
 					"type": "expression",
 					"conditions": [{
 						"type": "condition",
-						"operand1": "score",
+						"operand1": "{{score}}",
 						"operator": "equalAsNumbers",
 						"operand2": {
 							"type": "const",
@@ -235,7 +235,7 @@ const bot = {
 					"type": "expression",
 					"conditions": [{
 						"type": "condition",
-						"operand1": "score",
+						"operand1": "{{score}}",
 						"operator": "lessThanOrEqual",
 						"operand2": {
 							"type": "const",
@@ -253,7 +253,7 @@ const bot = {
 					"type": "expression",
 					"conditions": [{
 						"type": "condition",
-						"operand1": "score",
+						"operand1": "{{score}}",
 						"operator": "notEqualAsNumbers",
 						"operand2": {
 							"type": "const",
@@ -265,7 +265,7 @@ const bot = {
 						"operator": "AND"
 					}, {
 						"type": "condition",
-						"operand1": "score",
+						"operand1": "{{score}}",
 						"operator": "notEqualAsNumbers",
 						"operand2": {
 							"type": "const",

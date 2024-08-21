@@ -41,7 +41,7 @@ const bot = {
 				"type": "expression",
 				"conditions": [{
 					"type": "condition",
-					"operand1": "track_result",
+					"operand1": "{{track_result}}",
 					"operator": "equalAsStrings",
 					"operand2": {
 						"type": "const",

@@ -56,6 +56,7 @@ class DirJSONCondition {
   }
 
   async go(action, callback) {
+    console.log("json condition action:", action);
     // const groups = action.jsonCondition.groups;
     const groups = action.groups; // NEXT
     const trueIntent = action.trueIntent;
@@ -102,8 +103,10 @@ class DirJSONCondition {
     // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    // console.log("full json condition expression:", expression);
+    console.log("full json condition expression:", expression);
     result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
+    console.log("full json condition ok");
+    console.log("executed condition:", expression, "result:", result);
     if (this.log) {console.log("executed condition:", expression, "result:", result);}
     if (result === true) {
       if (trueIntentDirective) {

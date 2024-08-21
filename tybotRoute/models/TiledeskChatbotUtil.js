@@ -175,6 +175,7 @@ class TiledeskChatbotUtil {
 
     //static filterOnVariables(commands, variables) {
     static filterOnVariables(message, variables) {
+        console.log("attributes:", variables);
         if (!variables) {
           return;
         }
@@ -182,20 +183,22 @@ class TiledeskChatbotUtil {
             let commands = message.attributes.commands;
             message.text = "";
             for (let i = commands.length - 1; i >= 0; i--) {
-                // console.log("...commands[" + i + "]");
+                console.log("...commands[" + i + "]");
                 if (commands[i].type === "message") { // is a message, not wait
-                    // console.log("commands[i]:", commands[i].message.text);
-                    // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
+                    console.log("commands[i]:", commands[i].message.text);
                     
                     // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                     const jsonCondition = commands[i].message["_tdJSONCondition"];
-                    // console.log("jsonCondition:", jsonCondition);
+                    console.log("jsonCondition:", jsonCondition);
                     if (jsonCondition) {
                         // const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
-                        const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
-                        // console.log("full json condition expression eval on command.message:", expression);
+                        
+                        const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition, variables);
+                        console.log("full json condition expression eval on command.message:", expression);
                         const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
+                        
                         // console.log("conditionResult:", conditionResult);
+                        
                         // FALSE
                         // console.log("commands[i]lang:", commands[i]);
                         if (conditionResult === false) {

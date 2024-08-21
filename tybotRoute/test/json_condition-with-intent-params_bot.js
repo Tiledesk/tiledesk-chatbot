@@ -77,7 +77,7 @@ const bot = {
 				"type": "expression",
 				"conditions": [{
 					"type": "condition",
-					"operand1": "star_type",
+					"operand1": "{{star_type}}",
 					"operator": "equalAsStrings",
 					"operand2": {
 						"type": "const",

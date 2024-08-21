@@ -41,7 +41,7 @@ const bot = {
 				"type": "expression",
 				"conditions": [{
 					"type": "condition",
-					"operand1": "lastUserMessage.type",
+					"operand1": "{{lastUserMessage.type}}",
 					"operator": "equalAsStrings",
 					"operand2": {
 						"type": "const",

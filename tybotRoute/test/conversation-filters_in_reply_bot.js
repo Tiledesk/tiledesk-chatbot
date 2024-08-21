@@ -22,7 +22,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -44,7 +44,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -80,7 +80,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -102,7 +102,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -137,7 +137,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "notEqualAsStrings",
 								"operand2": {
 									"type": "const",
@@ -159,7 +159,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "notEqualAsStrings",
 								"operand2": {
 									"type": "const",
@@ -201,7 +201,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "notEqualAsStrings",
 								"operand2": {
 									"type": "const",
@@ -223,7 +223,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -245,7 +245,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -287,7 +287,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "equalAsStrings",
 								"operand2": {
 									"type": "const",
@@ -325,7 +325,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",
@@ -337,7 +337,7 @@ const bot = {
 								"operator": "OR"
 							}, {
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",
@@ -359,7 +359,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",
@@ -371,7 +371,7 @@ const bot = {
 								"operator": "OR"
 							}, {
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",
@@ -393,7 +393,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",
@@ -415,7 +415,7 @@ const bot = {
 							"type": "expression",
 							"conditions": [{
 								"type": "condition",
-								"operand1": "user_language",
+								"operand1": "{{user_language}}",
 								"operator": "matches",
 								"operand2": {
 									"type": "const",

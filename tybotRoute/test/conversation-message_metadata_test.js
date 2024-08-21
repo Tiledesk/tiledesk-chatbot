@@ -125,13 +125,13 @@ describe('Conversation for message.metadata test', async () => {
   // });
 
   it('/condition with json metadata: evaluates message.metadata', (done) => {
-    // console.log("/webrequestv2");
+    console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
       
       res.send({ success: true });
       
