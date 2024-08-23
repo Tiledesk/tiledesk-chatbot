@@ -119,6 +119,9 @@ class DirJSONCondition {
       }
     }
     else {
+      if (result === null) {
+        await this.chatbot.addParameter("flowError", "An error occurred evaluating condition: result === null");
+      }
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
           // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
