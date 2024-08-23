@@ -1,8 +1,8 @@
 const { DirIntent } = require('./DirIntent');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskExpression } = require('../../TiledeskExpression');
+const { TiledeskExpressionV2 } = require('../../TiledeskExpressionV2');
 
-class DirJSONCondition {
+class DirJSONConditionV2 {
 
   constructor(context) {
     if (!context) {
@@ -88,22 +88,21 @@ class DirJSONCondition {
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
-    let variables = null;
+    let attributes = null;
     if (this.context.tdcache) {
-      variables = 
+      attributes = 
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      if (this.log) {console.log("Variables:", JSON.stringify(variables))}
+      if (this.log) {console.log("attributes:", JSON.stringify(attributes))}
     }
     else {
       console.error("(DirJSONCondition) No this.context.tdcache");
     }
-    // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
-    const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    // console.log("full json condition expression:", expression);
-    result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
+    const expression = TiledeskExpressionV2.JSONGroupsToExpression(groups, attributes);
+    console.log("full json condition expression:", expression);
+    result = new TiledeskExpressionV2().evaluateStaticExpression(expression);
     if (this.log) {console.log("executed condition:", expression, "result:", result);}
     if (result === true) {
       if (trueIntentDirective) {
@@ -119,9 +118,6 @@ class DirJSONCondition {
       }
     }
     else {
-      if (result === null) {
-        await this.chatbot.addParameter("flowError", "An error occurred evaluating Condition expression");
-      }
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
           // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
@@ -138,4 +134,4 @@ class DirJSONCondition {
 
 }
 
-module.exports = { DirJSONCondition };
+module.exports = { DirJSONConditionV2 };

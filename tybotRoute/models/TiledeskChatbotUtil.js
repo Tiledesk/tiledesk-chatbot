@@ -6,6 +6,7 @@ let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
 let axios = require('axios');
+const { TiledeskExpressionV2 } = require('../TiledeskExpressionV2.js');
 
 class TiledeskChatbotUtil {
 
@@ -189,15 +190,21 @@ class TiledeskChatbotUtil {
                     
                     // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                     const jsonCondition = commands[i].message["_tdJSONCondition"];
+                    const jsonConditionv2 = commands[i].message["_tdJSONConditionV2"];
                     // console.log("jsonCondition:", jsonCondition);
-                    if (jsonCondition) {
-                        // const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
-                        const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
-                        // console.log("full json condition expression eval on command.message:", expression);
-                        const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
-                        // console.log("conditionResult:", conditionResult);
+                    if (jsonCondition || jsonConditionv2 ) {
+                        let conditionResult;
+                        if (jsonCondition) {
+                            console.log("jsonConditionv1:", jsonCondition);
+                            const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
+                            conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);    
+                        }
+                        else if (jsonConditionv2) {
+                            const expression = TiledeskExpressionV2.JSONGroupToExpression(jsonCondition);
+                            conditionResult = new TiledeskExpressionV2().evaluateStaticExpression(expression, variables);    
+                        }
+                        
                         // FALSE
-                        // console.log("commands[i]lang:", commands[i]);
                         if (conditionResult === false) {
                             // console.log("deleting command:", commands[i]);
                             commands.splice(i, 1);
@@ -210,9 +217,7 @@ class TiledeskChatbotUtil {
                             }
                         }
                         else {
-                            // console.log("comands[i]:", commands[i], commands[i].message, commands[i].message.text)
                             if (commands[i] && commands[i].message && commands[i].message.text) {
-                                // console.log("curr text:", message.text)
                                 if (message.text === "") {
                                     message.text = commands[i].message.text;    
                                 }
