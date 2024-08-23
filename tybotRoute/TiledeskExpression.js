@@ -359,7 +359,7 @@ class TiledeskExpression {
             // console.log("operand1_s:", operand1_s);
         }
         else {
-            console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
+            console.error("Condition evaluation stopped because of invalid operand1", condition.operand1);
             return null;
         }
         
