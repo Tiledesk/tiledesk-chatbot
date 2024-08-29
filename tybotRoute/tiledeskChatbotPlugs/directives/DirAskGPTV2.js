@@ -171,6 +171,21 @@ class DirAskGPTV2 {
     }
 
     
+    if (action.namespaceAsName) {
+      namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)  
+      if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
+    }
+    
+    if (!namespace) {
+      console.log("DirAskGPT - Error: namespace is undefined")
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+    }
+
     let json = {
       question: filled_question,
       gptkey: key,
@@ -202,7 +217,7 @@ class DirAskGPTV2 {
     }
 
     if (this.log) { console.log("DirAskGPT json:", json); }
-    
+
     const HTTPREQUEST = {
       // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
@@ -544,6 +559,39 @@ class DirAskGPTV2 {
     }
 
     return objectTranscript;
+  }
+
+  async getNamespaceIdFromName(server_base_url, name) {
+    return new Promise((resolve) => {
+
+      const HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
+
+      this.#myrequest(
+        HTTPREQUEST, async (err, namespaces) => {
+          if (err) {
+            console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
+            resolve(null)
+          } else {
+            if (this.log) { console.log("(httprequest) DirAskGPT Increment token quote resbody: ", namespaces); }
+            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", namespaces);
+
+            let namespace = namespaces.find(n => n.name === name);
+            let namespace_id = namespace.id;
+
+            resolve(namespace_id);
+          }
+        }
+      )
+    })
+
   }
 
 
