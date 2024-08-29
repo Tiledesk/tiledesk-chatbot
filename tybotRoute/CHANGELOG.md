@@ -158,6 +158,9 @@ available on:
 - added flow attribute "decodedCustomJWT"
 
 # v0.2.57
+- Changed env variables for AskGPT actions
+- Added support for temperature, top_k, max_tokens and context for AskGPTV2 action
+- Added support for context with variables for GptTask action
 - fixed catching reply error in index.js: reply = await chatbot.replyToMessage(message);
 - Added context and top_k parameter in DirAskGPTV2
 
