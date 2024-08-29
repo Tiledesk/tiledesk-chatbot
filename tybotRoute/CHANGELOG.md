@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.96-rc1
+- Added support for response_format in GptTask
+- Added namespaceAsName parameter in AskGPTv2
+
 # v0.2.97
 - Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
 - Added jsonCondition test on json objects properties
