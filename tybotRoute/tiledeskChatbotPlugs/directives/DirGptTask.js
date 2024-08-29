@@ -168,6 +168,12 @@ class DirGptTask {
       json.messages.push(message);
     }
 
+    if (action.format_type) {
+      json.response_format = {
+        type: action.format_type
+      }
+    }
+
     if (transcript) {
       transcript.forEach(msg => {
         if (!msg.content.startsWith('/')) {
