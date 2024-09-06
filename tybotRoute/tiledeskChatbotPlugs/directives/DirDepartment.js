@@ -122,7 +122,7 @@ class DirDepartment {
             callback();
           }
           else {
-            console.log("DirDepartment response:",JSON.stringify(res));
+            if (this.log) { console.log("DirDepartment response:",JSON.stringify(res)); }
             callback(deps);
           }
         });

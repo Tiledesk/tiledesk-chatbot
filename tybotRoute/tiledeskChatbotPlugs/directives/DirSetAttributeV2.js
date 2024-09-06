@@ -105,16 +105,16 @@ class DirSetAttributeV2 {
             if (this.log) {console.log("(SetAttributeV2) filling in setattribute...");}
             await this.fillValues(action.operation.operands);
         }
-        console.log("action.operation.operands.length", action.operation.operands.length);
-        console.log("action.operation.operands[0].type", action.operation.operands[0].type);
+        if (this.log) { console.log("action.operation.operands.length", action.operation.operands.length); }
+        if (this.log) { console.log("action.operation.operands[0].type", action.operation.operands[0].type); }
         
         // FUN FACT: THIS TOOK A LOT OF EFFERT BUT IT WAS NEVER USED. YOU CAN SIMPLY CREATE A JSON ATTRIBUTE APPLYING
         // JSONparse FUNCTION TO AN ATTRIBUTE.
         if (action.operation.operands && action.operation.operands.length === 1 && action.operation.operands[0].type === "json") {
             if (this.log) {console.log("(SetAttributeV2) setting json value...");}
-            console.log("(SetAttributeV2) setting json value... destination:", action.destination);
+            if (this.log) { console.log("(SetAttributeV2) setting json value... destination:", action.destination); }
             const json_value = JSON.parse(action.operation.operands[0].value);
-            console.log("(SetAttributeV2) json_value:", json_value);
+            if (this.log) { console.log("(SetAttributeV2) json_value:", json_value); }
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, json_value);
             callback();
             return; // on json types no operations are permitted beyond assignment
