@@ -5,14 +5,29 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+<!-- // CHECK IT!!!
+# v0.2.98
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
+
 # v0.2.97
+- Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
+- Added jsonCondition test on json objects properties
+- Added flowError on JSONCondition when result = null
+- Added fix on Filler -->
+
+# v0.2.96
+- Added timestamp (number) and now (Date Object) attributes
+
 - Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
 - Added jsonCondition test on json objects properties
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler
 
-# v0.2.96
-- Added timestamp (number) and now (Date Object) attributes
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
 
 # v0.2.95
 - If Online Agents V2 - bug fix (If Project Available Agents V2 -> MWeb)
