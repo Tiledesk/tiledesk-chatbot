@@ -172,7 +172,11 @@ class DirAskGPTV2 {
 
     
     if (action.namespaceAsName) {
-      namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)  
+      // Namespace could be an attribute
+      const filled_namespace = filler.fill(action.namespace, requestVariables)
+      
+      // namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)
+      namespace = await this.getNamespaceIdFromName(server_base_url, filled_namespace);
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     }
     
@@ -572,7 +576,7 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
+      if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
 
       this.#myrequest(
         HTTPREQUEST, async (err, namespaces) => {
@@ -580,8 +584,7 @@ class DirAskGPTV2 {
             console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
             resolve(null)
           } else {
-            if (this.log) { console.log("(httprequest) DirAskGPT Increment token quote resbody: ", namespaces); }
-            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", namespaces);
+            if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
 
             let namespace = namespaces.find(n => n.name === name);
             let namespace_id = namespace.id;

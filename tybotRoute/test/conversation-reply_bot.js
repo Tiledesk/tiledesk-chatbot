@@ -41,7 +41,8 @@ const bot = {
 								"subType": "dtmf_form",
 								"settings": {
 									"maxDigits": "10",
-									"terminators": "#"
+									"terminators": "#",
+									"transferTo": "{{transfer_to}}"
 								}
 							}
 						]
