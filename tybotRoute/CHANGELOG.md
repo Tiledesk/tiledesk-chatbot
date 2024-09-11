@@ -17,6 +17,12 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.97
+- Added support for "chatbotToken” attribute
+- Added new Action: clear_transcript
+- Exclude transcript generation when request type differs from "support-group-*"
+- "step" key reset on DirWait => this.chatbot.addParameter( step_key, 0 )
+
 # v0.2.96
 - Added timestamp (number) and now (Date Object) attributes
 

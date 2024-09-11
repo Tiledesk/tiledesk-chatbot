@@ -442,6 +442,13 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static async clearConversationTranscript(chatbot, callback) {
+        await chatbot.addParameter("transcript", "");
+        if (callback) {
+            callback();
+        }
+    }
+
     static transcriptJSON(transcript) {
         const regexp = /(<.*>)/gm;
         const parts = transcript.split(regexp);
@@ -506,7 +513,7 @@ class TiledeskChatbotUtil {
         return message;
     }
 
-    static async updateRequestAttributes(chatbot, message, projectId, requestId) {
+    static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
             if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
@@ -519,7 +526,10 @@ class TiledeskChatbotUtil {
             // TODO add projectName too
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
             if (chatbot.bot) {
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+            }
+            if (chatbotToken) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken);
             }
             
             if (message.text && message.sender !== "_tdinternal") {

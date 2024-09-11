@@ -1,7 +1,17 @@
 
+const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+
 class DirWait {
 
-  constructor() {
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
+    }
+    this.context = context;
+    this.tdclient = context.tdclient;
+    this.tdcache = context.tdcache;
+    this.requestId = context.requestId;
+    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -38,10 +48,11 @@ class DirWait {
     })
   }
 
-  go(action, callback) {
-    // console.log(">>>>__", callback)
+  async go(action, callback) {
+    // reset step
+    const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
+    await this.chatbot.addParameter( step_key, 0 );
     setTimeout(() => {
-      // console.log("QUINO....__")
       callback();
     }, action.millis);
   }

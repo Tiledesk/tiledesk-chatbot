@@ -30,6 +30,7 @@ class TiledeskChatbotConst {
     static REQ_USER_LEAD_ID_KEY = "userLeadId";
     static REQ_USER_COMPANY_KEY = "userCompany";
     static REQ_TICKET_ID_KEY = "ticketId";
+    static REQ_CHATBOT_TOKEN = "chatbotToken";
     
 
     // static REQ_DEPARTMENT_ID_KEY = "tdDepartmentId";

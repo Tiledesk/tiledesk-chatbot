@@ -50,6 +50,7 @@ class Directives {
   static REPLY_V2 = 'replyv2';
   static IF_ONLINE_AGENTS_V2 = "ifonlineagentsv2";
   static CONTACT_UPDATE = "leadupdate";
+  static CLEAR_TRANSCRIPT = "clear_transcript";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

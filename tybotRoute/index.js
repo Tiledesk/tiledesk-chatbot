@@ -171,8 +171,10 @@ router.post('/ext/:botid', async (req, res) => {
   //   if (log) {console.log("forced conversion of \\\\start /start");}
   //   message.text = "/start";
   // }
-  await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
-  await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+  await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  if (requestId.startsWith("support-group-")) {
+    await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+  }
 
   let reply = null;
   try {

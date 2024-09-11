@@ -50,6 +50,7 @@ const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
+const { DirClearTranscript } = require('./directives/DirClearTranscript');
 
 class DirectivesChatbotPlug {
 
@@ -684,8 +685,15 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONTACT_UPDATE) {
-      console.log("...CONTACT_UPDATE");
+      // console.log("...CONTACT_UPDATE");
       new DirContactUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CLEAR_TRANSCRIPT) {
+      console.log("...CLEAR_TRANSCRIPT");
+      new DirClearTranscript(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
