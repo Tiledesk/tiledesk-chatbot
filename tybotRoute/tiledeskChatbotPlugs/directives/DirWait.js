@@ -50,12 +50,11 @@ class DirWait {
   }
 
   async go(action, callback) {
-    // reset step
+    // reset step?
     const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
     console.log("step_key:", step_key);
-    if (step_key) {
+    if (step_key && action && action.millis > 2000 * 60) { // at list 2 mimutes waiting time to reset the steps counter
       await this.tdcache.set(step_key, 0);
-      // await this.chatbot.addParameter( step_key, 0 );
       console.log("step_key after:", await this.tdcache.get( step_key ));
       
     }
