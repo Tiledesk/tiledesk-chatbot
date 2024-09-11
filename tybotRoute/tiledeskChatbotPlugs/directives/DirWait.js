@@ -9,6 +9,7 @@ class DirWait {
     }
     this.context = context;
     this.tdclient = context.tdclient;
+    this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.log = context.log;
@@ -51,7 +52,10 @@ class DirWait {
   async go(action, callback) {
     // reset step
     const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
-    await this.chatbot.addParameter( step_key, 0 );
+    console.log("step_key:", step_key);
+    if (step_key) {
+      await this.chatbot.addParameter( step_key, 0 );
+    }
     setTimeout(() => {
       callback();
     }, action.millis);
