@@ -55,6 +55,8 @@ class DirWait {
     console.log("step_key:", step_key);
     if (step_key) {
       await this.chatbot.addParameter( step_key, 0 );
+      console.log("step_key after:", await this.chatbot.getParameter( step_key ));
+      
     }
     setTimeout(() => {
       callback();
