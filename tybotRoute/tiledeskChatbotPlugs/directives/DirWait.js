@@ -54,8 +54,9 @@ class DirWait {
     const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
     console.log("step_key:", step_key);
     if (step_key) {
-      await this.chatbot.addParameter( step_key, 0 );
-      console.log("step_key after:", await this.chatbot.getParameter( step_key ));
+      await this.tdcache.set(step_key, 0);
+      // await this.chatbot.addParameter( step_key, 0 );
+      console.log("step_key after:", await this.tdcache.get( step_key ));
       
     }
     setTimeout(() => {
