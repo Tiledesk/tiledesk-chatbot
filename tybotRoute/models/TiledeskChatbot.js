@@ -13,7 +13,7 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 1000;
+  static MAX_STEPS = 100;
 
   constructor(config) {
     if (!config.botsDataSource) {
