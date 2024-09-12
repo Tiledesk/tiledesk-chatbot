@@ -104,6 +104,7 @@ class TiledeskChatbot {
             console.log("Resetting current step by request message:", message.text);
           }
           await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
+          await TiledeskChatbot.resetStarted(this.tdcache, this.requestId);
           if (this.log) {
             if (this.tdcache) {
               let currentStep = 
@@ -716,6 +717,14 @@ class TiledeskChatbot {
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     // console.log("resetStep() parameter_key:", parameter_key);
+    if (_tdcache) {
+      await _tdcache.set(parameter_key, 0);
+    }
+  }
+
+  static async resetStarted(_tdcache, requestId) {
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
+    console.log("resetStarted() parameter_key:", parameter_key);
     if (_tdcache) {
       await _tdcache.set(parameter_key, 0);
     }
