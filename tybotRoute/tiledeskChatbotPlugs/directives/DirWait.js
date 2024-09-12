@@ -55,6 +55,7 @@ class DirWait {
     // console.log("step_key:", step_key);
     if (action && action.millis >= 1000) {//2000 * 60) { // at list 2 minutes waiting time to reset the steps counter
       // await this.tdcache.set(step_key, 0);
+      console.log("resetting steps counter");
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
       // console.log("step_key after:", await this.tdcache.get( step_key ));
     }
