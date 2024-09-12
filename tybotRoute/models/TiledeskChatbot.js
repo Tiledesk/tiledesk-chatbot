@@ -13,7 +13,7 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 200;
+  static MAX_STEPS = 1000;
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -673,42 +673,44 @@ class TiledeskChatbot {
 
   static async checkStep(_tdcache, requestId, max_steps, log) {
     if (log) {console.log("CHECKING ON MAX_STEPS:", max_steps);}
-    let go_on = true; // continue
+    // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     if (log) {console.log("__parameter_key:", parameter_key);}
     await _tdcache.incr(parameter_key);
     // console.log("incr-ed");
     let _current_step = await _tdcache.get(parameter_key);
-    // if (!_current_step) { // this shouldn't be happening
-    //   _current_step = 0;
-    // }
     let current_step = Number(_current_step);
-    // current_step += 1;
-    // await _tdcache.set(parameter_key, current_step); // increment step
-    // console.log("CURRENT-STEP:", current_step);
     if (current_step > max_steps) {
       if (log) {console.log("max_steps limit just violated");}
       if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
-      // await TiledeskChatbot.resetStep(_tdcache, requestId);
-      // go_on = 1; // stop execution, send error message
-      go_on = false
-    }
-    // else if (current_step > max_steps + 1) { // max_steps limit already violated
-    //   console.log("CURRENT-STEP > MAX_STEPS!", current_step);
-    //   // await TiledeskChatbot.resetStep(_tdcache, requestId);
-    //   go_on = 2; // stop execution, don't send error message (already sent with go_on = 1)
-    // }
-    else {
-      // go_on = 0;
-      go_on = true;
+      // go_on = false
+      return false;
     }
     // else {
-      // console.log("CURRENT-STEP UNDER MAX_STEPS THRESHOLD:)", current_step);
-      // current_step += 1;
-      // await _tdcache.set(parameter_key, current_step); // increment step
-      // console.log("current_step from cache:", await _tdcache.get(parameter_key));
+    //   go_on = true;
     // }
-    return go_on;
+
+    // check execution_time
+    const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 * 60 * 4 // 4 hours
+    let start_time_key = await _tdcache.get(TiledeskChatbot.requestCacheKey(requestId) + ":started");
+    let start_time = await this.tdcache.get(start_time_key);
+    const now = Date.now();
+    if (start_time === null) {
+      console.log("start_time is null");
+      await this.tdcache.set(start_time_key, now);
+      return true;
+    }
+    else {
+      console.log("start_time:", start_time);
+      const execution_time = now - start_time;
+      console.log("execution_time:", execution_time);
+      if (execution_time > TOTAL_ALLOWED_EXECUTION_TIME) {
+        console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
+        return false;
+      }
+    }
+    console.log("Continue flow");
+    return true;
   }
 
   static async resetStep(_tdcache, requestId) {
