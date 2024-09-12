@@ -14,7 +14,7 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 class TiledeskChatbot {
 
   static MAX_STEPS = 20;
-  static MAX_EXECUTION_TIME = 1000 * 60; // * 60 * 12 // 12 hours;
+  static MAX_EXECUTION_TIME = 1000 * 120; // * 60 * 12 // 12 hours;
 
   constructor(config) {
     if (!config.botsDataSource) {
