@@ -693,11 +693,11 @@ class TiledeskChatbot {
     // check execution_time
     const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 * 60 * 4 // 4 hours
     let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
-    let start_time = await this.tdcache.get(start_time_key);
+    let start_time = await _tdcache.get(start_time_key);
     const now = Date.now();
     if (start_time === null) {
       console.log("start_time is null");
-      await this.tdcache.set(start_time_key, now);
+      await _tdcache.set(start_time_key, now);
       return true;
     }
     else {
