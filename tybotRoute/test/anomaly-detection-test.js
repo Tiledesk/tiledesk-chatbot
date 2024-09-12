@@ -62,7 +62,7 @@ describe('Conversation for anomaly detection test', async () => {
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.error !== null);
-      assert(message.attributes.runtimeError.message.startsWith("Request error: anomaly detection. MAX ACTIONS")); // exeeded.");
+      assert(message.attributes.runtimeError.message.startsWith("Anomaly detection. MAX ACTIONS")); // exeeded.");
       // console.log("/anomaly test success");
       listener.close(() => {
         // console.log("/anomaly lister test closed");
