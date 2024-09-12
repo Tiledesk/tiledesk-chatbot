@@ -696,7 +696,7 @@ class TiledeskChatbot {
     let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
     let start_time = await _tdcache.get(start_time_key);
     const now = Date.now();
-    if (start_time === null) {
+    if (start_time === null || start_time === 0) {
       console.log("start_time is null");
       await _tdcache.set(start_time_key, now);
       return true;
