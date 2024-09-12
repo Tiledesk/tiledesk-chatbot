@@ -697,14 +697,14 @@ class TiledeskChatbot {
     let start_time = await _tdcache.get(start_time_key);
     console.log("cached start_time is:", start_time, typeof start_time);
     const now = Date.now();
-    if (start_time === null || start_time === 0) {
+    if (start_time === null || Number(start_time) === 0) {
       console.log("start_time is null");
       await _tdcache.set(start_time_key, now);
       return true;
     }
     else {
       console.log("start_time:", start_time);
-      const execution_time = now - start_time;
+      const execution_time = now - Number(start_time);
       console.log("execution_time:", execution_time);
       if (execution_time > TOTAL_ALLOWED_EXECUTION_TIME) {
         console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
