@@ -687,7 +687,7 @@ class TiledeskChatbot {
       if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
       // go_on = false
       return {
-        error: "Request error: anomaly detection. MAX ACTIONS(" + max_steps + ") exeeded."
+        error: "Request error: anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded."
       };
     }
     // else {
@@ -710,13 +710,12 @@ class TiledeskChatbot {
       const execution_time = now - Number(start_time);
       // console.log("execution_time:", execution_time);
       if (execution_time > max_execution_time) {
-        console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
+        if (log) {console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");}
         return {
-          error: "Request error: anomaly detection. TOTAL_ALLOWED_EXECUTION (" + max_execution_time + ") exeeded."
+          error: "Request error: anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded."
         };
       }
     }
-    // console.log("Continue flow");
     return {};
   }
 
