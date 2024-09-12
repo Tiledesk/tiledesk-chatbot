@@ -14,6 +14,7 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 class TiledeskChatbot {
 
   static MAX_STEPS = 20;
+  static MAX_EXECUTION_TIME = 1000 * 60; // * 60 * 12 // 12 hours;
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -672,7 +673,7 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
-  static async checkStep(_tdcache, requestId, max_steps, log) {
+  static async checkStep(_tdcache, requestId, max_steps, max_execution_time, log) {
     if (log) {console.log("CHECKING ON MAX_STEPS:", max_steps);}
     // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
@@ -685,34 +686,38 @@ class TiledeskChatbot {
       if (log) {console.log("max_steps limit just violated");}
       if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
       // go_on = false
-      return false;
+      return {
+        error: "Request error: anomaly detection. MAX ACTIONS(" + max_steps + ") exeeded."
+      };
     }
     // else {
     //   go_on = true;
     // }
 
     // check execution_time
-    const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 // * 60 * 12 // 12 hours
+    // const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 // * 60 * 12 // 12 hours
     let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
     let start_time = await _tdcache.get(start_time_key);
-    console.log("cached start_time is:", start_time, typeof start_time);
+    // console.log("cached start_time is:", start_time, typeof start_time);
     const now = Date.now();
     if (start_time === null || Number(start_time) === 0) {
-      console.log("start_time is null");
+      // console.log("start_time is null");
       await _tdcache.set(start_time_key, now);
-      return true;
+      return {};
     }
     else {
-      console.log("start_time:", start_time);
+      // console.log("start_time:", start_time);
       const execution_time = now - Number(start_time);
-      console.log("execution_time:", execution_time);
-      if (execution_time > TOTAL_ALLOWED_EXECUTION_TIME) {
+      // console.log("execution_time:", execution_time);
+      if (execution_time > max_execution_time) {
         console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
-        return false;
+        return {
+          error: "Request error: anomaly detection. TOTAL_ALLOWED_EXECUTION (" + max_execution_time + ") exeeded."
+        };
       }
     }
-    console.log("Continue flow");
-    return true;
+    // console.log("Continue flow");
+    return {};
   }
 
   static async resetStep(_tdcache, requestId) {
