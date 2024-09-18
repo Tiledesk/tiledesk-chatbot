@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.99
+- Added "chatbotToken" to RESERVED attributes
+
 # v0.2.98
 - Support for MAX_EXECUTION_TIME (total execution time of a flow without user interaction)
 - MAX_STEPS = 1000

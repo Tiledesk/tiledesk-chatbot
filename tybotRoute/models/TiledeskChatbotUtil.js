@@ -901,7 +901,8 @@ class TiledeskChatbotUtil {
             "userLeadId",
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
-            TiledeskChatbotConst.USER_INPUT
+            TiledeskChatbotConst.USER_INPUT,
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN
           ]
           let userParams = {};
           if (flowAttributes) {
