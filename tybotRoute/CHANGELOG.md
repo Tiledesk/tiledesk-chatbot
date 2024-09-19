@@ -19,6 +19,8 @@ available on:
 
 # v0.2.99
 - Added "chatbotToken" to RESERVED attributes
+- Added UUID, UUIDv4 dynamic attributes
+- Remove console.error from Filler liquidJS catch clause
 
 # v0.2.98
 - Support for MAX_EXECUTION_TIME (total execution time of a flow without user interaction)
