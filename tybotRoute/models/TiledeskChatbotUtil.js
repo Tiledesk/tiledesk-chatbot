@@ -844,7 +844,7 @@ class TiledeskChatbotUtil {
         if (requestId.startsWith("support-group-")) {
             const parts = requestId.split("-");
             // console.log("parts support request:", parts);
-            if (parts.length === 4) {
+            if (parts.length >= 4) {
                 isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
             }
             else {

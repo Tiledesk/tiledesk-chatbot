@@ -17,8 +17,12 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.102
+- isValid modified: if (parts.length >= 4) instead of "if (parts.length === 4)" that blocked whatsapp requests
+
 # v0.2.101
 - Dynamic attribute "now" is a ISOString date
+- MAX_EXECUTION_TIME = 1000 * 3600 * 4 // 4 hours
 
 # v0.2.100 -> test
 - Added "chatbotToken" to RESERVED attributes
