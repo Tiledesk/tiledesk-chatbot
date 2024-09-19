@@ -17,7 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.99
+# v0.2.101
+- Dynamic attribute "now" is a ISOString date
+
+# v0.2.100 -> test
 - Added "chatbotToken" to RESERVED attributes
 - Added UUID, UUIDv4 dynamic attributes
 - Remove console.error from Filler liquidJS catch clause

@@ -11,7 +11,7 @@ class Filler {
     }
 
     parameters["timestamp"] = Date.now(); // type number
-    parameters["now"] = new Date(); // type Object
+    parameters["now"] = new Date().toISOString(); // type Object
     parameters["UUID"] = uuidv4().replace(/-/g, '');
     parameters["UUIDv4"] = uuidv4();
 
