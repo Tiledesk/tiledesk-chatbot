@@ -929,6 +929,110 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
   });
 
+  it('/gpt_fail_empty_kb - the ask service does not return a relevant answer', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      console.log("---> : ", command2.message.text)
+      assert(command2.message.text === "gpt replied: No answers");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "No answers");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+      let reply = {}
+      let http_code = 400;
+
+      reply = {
+        "success": false,
+        "statusText": "Bad Request",
+        "error": {
+          "answer": "No answer",
+          "success": false,
+          "namespace": "66ec24a028a0c600130baa6a",
+          "id": null,
+          "ids": null,
+          "source": null,
+          "sources": null,
+          "citations": null,
+          "content_chunks": null,
+          "prompt_token_size": 0,
+          "error_message": "IndexError('list index out of range')",
+          "chat_history_dict": {}
+        }
+      }
+      
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_fail',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
   it('/gpt_fail_undefined_key - move to false intent if gptkey does not exists (key undefined)', (done) => {
     let listener;
     let endpointServer = express();

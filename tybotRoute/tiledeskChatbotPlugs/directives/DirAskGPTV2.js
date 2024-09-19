@@ -240,11 +240,13 @@ class DirAskGPTV2 {
           console.log("DirAskGPT error: ", err);
         }
         if (this.log) { console.log("DirAskGPT resbody:", resbody); }
-        let answer = resbody.answer;
-        let source = resbody.source;
-        await this.#assignAttributes(action, answer, source);
+        
+        // let answer = resbody.answer;
+        // let source = resbody.source;
+        // await this.#assignAttributes(action, answer, source);
 
         if (err) {
+          await this.#assignAttributes(action, answer, source);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -257,6 +259,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
 
+          await this.#assignAttributes(action, resbody.answer, resbody.source);
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_size,
@@ -273,6 +276,7 @@ class DirAskGPTV2 {
           callback();
           return;
         } else {
+          await this.#assignAttributes(action, answer, source);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
