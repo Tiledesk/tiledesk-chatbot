@@ -34,7 +34,7 @@ router.get('/public/community', async (req, res) => { // ?text=...
     //   search_obj["$language"] = req.query.language;
     // }
     query.$text = search_obj; 
-    console.log("Using query:", query)   
+    // console.log("Using query:", query)   
   }
 
   try {

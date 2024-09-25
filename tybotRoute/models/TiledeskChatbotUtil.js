@@ -158,22 +158,6 @@ class TiledeskChatbotUtil {
 
     }
 
-    // static errorMessage(message) {
-    //     return {
-    //         name: "message",
-    //         action: {
-    //             "_tdThenStop": true,
-    //             text: message,
-    //             attributes: {
-    //                 runtimeError: {
-    //                     message: message
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    //static filterOnVariables(commands, variables) {
     static filterOnVariables(message, variables) {
         if (!variables) {
           return;
@@ -588,6 +572,7 @@ class TiledeskChatbotUtil {
                 //     "uid": "lo68oz8i"
                 // }
                 if (message.metadata.src) {
+                    
                     await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
                     const url_as_attachment = message.metadata.src;
                     await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
@@ -733,6 +718,7 @@ class TiledeskChatbotUtil {
                     }
                 }
 
+                // TODO - REMOVE - THEY ARE IN ATTRIBUTES.PAYLOAD
                 // voice-vxml attributes
                 if (message.attributes.dnis) {
                     await chatbot.addParameter("dnis", message.attributes.dnis);

@@ -38,7 +38,6 @@ class DirIfOpenHours {
     //   }
     // );
     //this.log = context.log;
-    this.log = true;
   }
 
   execute(directive, callback) {

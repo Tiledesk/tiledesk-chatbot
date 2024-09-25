@@ -33,7 +33,7 @@ class DirIfOnlineAgentsV2 {
   }
 
   async go(action, callback) {
-    console.log("(DirIfOnlineAgents) action:", action);
+    // console.log("(DirIfOnlineAgents) action:", action);
     if (!action.trueIntent && !action.falseIntent) {
       if (this.log) {
         console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");

@@ -17,6 +17,21 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.107 -> production
+- clean logs (more)
+
+# v0.2.106 -> production
+- clean logs
+
+# v0.2.105 -> production
+- clean logs
+
+# v0.2.104 -> production
+- isValid fixed
+
+# v0.2.103 -> test
+- isValid removed
+
 # v0.2.102
 - isValid modified: if (parts.length >= 4) instead of "if (parts.length === 4)" that blocked whatsapp requests
 

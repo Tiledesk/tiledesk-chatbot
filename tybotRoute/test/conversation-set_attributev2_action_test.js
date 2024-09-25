@@ -61,7 +61,7 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
+      // console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -111,13 +111,13 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
   });
 
   it('/json assignment', (done) => {
-    console.log("/json assignment");
+    // console.log("/json assignment");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
+      // console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -134,8 +134,8 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
         else {
           console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
-          console.log("attributes[myvar]:", attributes["myvar"]);
-          console.log("typeof attributes[myvar]:", typeof attributes["myvar"]);
+          // console.log("attributes[myvar]:", attributes["myvar"]);
+          // console.log("typeof attributes[myvar]:", typeof attributes["myvar"]);
           assert(typeof attributes["myvar"] === "object");
           listener.close(() => {
             done();
@@ -176,7 +176,7 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
+      // console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -193,8 +193,8 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
         else {
           console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
-          console.log("attributes[myvar]:", attributes["age"]);
-          console.log("typeof attributes[age]:", typeof attributes["age"]);
+          // console.log("attributes[myvar]:", attributes["age"]);
+          // console.log("typeof attributes[age]:", typeof attributes["age"]);
           assert(typeof attributes["age"] === "number");
           listener.close(() => {
             done();
@@ -235,7 +235,7 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
+      // console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);

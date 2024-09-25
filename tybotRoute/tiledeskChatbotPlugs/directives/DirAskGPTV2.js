@@ -513,7 +513,7 @@ class DirAskGPTV2 {
             console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
             rejects(false)
           } else {
-            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
+            // console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }
