@@ -174,9 +174,9 @@ class DirGptTask {
       json.messages.push(message);
     } 
 
-    if (action.formatType && action.formatType !== 'none') {
+    if (action.formatType && action.formatType === true) {
       json.response_format = {
-        type: action.formatType
+        type: 'json_object'
       }
     }
     
@@ -212,7 +212,7 @@ class DirGptTask {
           if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
           answer = resbody.choices[0].message.content;
 
-          if (action.formatType === "json_object" || action.formatType === undefined || action.formatType === null) {
+          if (action.formatType === true || action.formatType === undefined || action.formatType === null) {
             answer = await this.convertToJson(answer);
           }
         

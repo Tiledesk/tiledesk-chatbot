@@ -196,6 +196,7 @@ describe('Conversation for GptTask test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
+      console.log("command2.message: ", command2.message)
       assert(command2.message.text === "gpt replied: [object Object]");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
