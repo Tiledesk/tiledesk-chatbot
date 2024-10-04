@@ -145,6 +145,8 @@ class DirGptTask {
       let keep_going = await this.checkQuoteAvailability(server_base_url);
       if (keep_going === false) {
         if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+        console.log("DirGptTask - Quota exceeded for tokens. Skip the action")
+        await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
         callback();
         return;
       }
@@ -153,12 +155,6 @@ class DirGptTask {
     let json = {
       model: action.model,
       messages: [],
-      // messages: [
-      //   {
-      //     role: "user",
-      //     content: filled_question
-      //   }
-      // ],
       max_tokens: action.max_tokens,
       temperature: action.temperature,
     }
@@ -180,6 +176,12 @@ class DirGptTask {
       json.messages.push(message);
     } 
 
+    if (action.formatType && action.formatType !== 'none') {
+      json.response_format = {
+        type: action.formatType
+      }
+    }
+    
     if (this.log) { console.log("DirGptTask json: ", json) }
 
     const HTTPREQUEST = {
@@ -211,9 +213,12 @@ class DirGptTask {
         } else {
           if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
           answer = resbody.choices[0].message.content;
-          // check if answer is a json
-          let answer_json = await this.convertToJson(answer);
-          await this.#assignAttributes(action, answer_json);
+
+          if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
+            answer = await this.convertToJson(answer);
+          }
+        
+          await this.#assignAttributes(action, answer);
 
           if (publicKey === true) {
             let tokens_usage = {
@@ -471,7 +476,7 @@ class DirGptTask {
             console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
             rejects(false)
           } else {
-            console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody);
+            if (this.log) { console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody); }
             resolve(true);
           }
         }

@@ -169,7 +169,262 @@ describe('Conversation for GptTask test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt task no condition',
+          "text": '/gpt_task_no_condition',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/gpt_task_response_format_json_object success (key from integrations) (old action without condition) - invokes the gpt task mockup and test the returning attributes', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: [object Object]");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert.equal(typeof attributes["gpt_reply"], 'object');
+          let json = attributes["gpt_reply"];
+          assert(json.firstname === 'John')
+          assert(json.lastname === 'Doe')
+          assert(json.age === 30)
+          assert(json.phone_number === null)
+          assert(json.city === 'London')
+
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/v1/chat/completions', function (req, res) {
+
+      assert(req.headers.authorization === "Bearer example_api_key");
+      assert(req.body.response_format.type === "json_object");
+
+      let reply = {}
+      let http_code = 200;
+
+      if (!req.body.model) {
+        reply.error = "you must provide a model parameter";
+        http_code = 400;
+      }
+      else if (!req.body.messages) {
+        reply.error = "'messages' is a required property";
+        http_code = 400;
+      }
+      else if (req.body.messages && req.body.messages.length == 0) {
+        reply.error = "'[] is too short - 'messages'"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          id: "chatcmpl-7ydspsF20mgTsl4g9yTK8LNbDDYAp",
+          object: "chat.completion",
+          created: 1694687347,
+          model: "gpt-3.5-turbo-0613",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "{\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"age\": 30,\n  \"phone_number\": null,\n  \"city\": \"London\"\n}"
+              },
+              finish_reason: "stop"
+            }
+          ],
+          usage: {
+            prompt_tokens: 30,
+            completion_tokens: 48,
+            total_tokens: 78
+          }
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_task_response_format_json_object',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/gpt_task_response_format_none success (key from integrations) (old action without condition) - invokes the gpt task mockup and test the returning attributes', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === 'gpt replied: {\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"age\": 30,\n  \"phone_number\": null,\n  \"city\": \"London\"\n}');
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert.equal(typeof attributes["gpt_reply"], 'string');
+
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/v1/chat/completions', function (req, res) {
+
+      assert(req.headers.authorization === "Bearer example_api_key");
+
+      let reply = {}
+      let http_code = 200;
+
+      if (!req.body.model) {
+        reply.error = "you must provide a model parameter";
+        http_code = 400;
+      }
+      else if (!req.body.messages) {
+        reply.error = "'messages' is a required property";
+        http_code = 400;
+      }
+      else if (req.body.messages && req.body.messages.length == 0) {
+        reply.error = "'[] is too short - 'messages'"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          id: "chatcmpl-7ydspsF20mgTsl4g9yTK8LNbDDYAp",
+          object: "chat.completion",
+          created: 1694687347,
+          model: "gpt-3.5-turbo-0613",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: "{\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"age\": 30,\n  \"phone_number\": null,\n  \"city\": \"London\"\n}"
+              },
+              finish_reason: "stop"
+            }
+          ],
+          usage: {
+            prompt_tokens: 30,
+            completion_tokens: 48,
+            total_tokens: 78
+          }
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_task_response_format_none',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -286,7 +541,7 @@ describe('Conversation for GptTask test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -822,6 +1077,7 @@ describe('Conversation for GptTask test', async () => {
         }
         else {
           assert(attributes);
+          assert(attributes['flowError'] === "GPT Error: tokens quota exceeded")
           listener.close(() => {
             done();
           });
@@ -830,6 +1086,21 @@ describe('Conversation for GptTask test', async () => {
 
     });
 
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = {};
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = "Integration not found";
+
+      res.status(http_code).send(reply);
+    })
 
     endpointServer.get('/:project_id/quotes/:type', function (req, res) {
 
@@ -949,6 +1220,7 @@ describe('Conversation for GptTask test', async () => {
 
   it('/task gpt fail - missing gpt key', (done) => {
 
+    process.env.GPTKEY='' // Used to nullify the env variable
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -959,7 +1231,6 @@ describe('Conversation for GptTask test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answer.");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -968,6 +1239,7 @@ describe('Conversation for GptTask test', async () => {
         else {
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answer.");
+          assert(attributes["flowError"] === "GPT Error: gpt apikey is undefined")
           listener.close(() => {
             done();
           });
@@ -985,6 +1257,7 @@ describe('Conversation for GptTask test', async () => {
 
       res.status(http_code).send(reply);
     });
+    
 
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
 
@@ -998,6 +1271,14 @@ describe('Conversation for GptTask test', async () => {
 
       let http_code = 200;
       let reply = "Integration not found";
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+
+      let reply = { isAvailable: false };
+      let http_code = 200;
 
       res.status(http_code).send(reply);
     })
@@ -1027,6 +1308,7 @@ describe('Conversation for GptTask test', async () => {
 
   it('/task gpt fail - missing action question parameter', (done) => {
 
+    let request_id = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -1037,15 +1319,16 @@ describe('Conversation for GptTask test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answer.");
+      assert(command2.message.text === "gpt replied: ");
 
-      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+      util.getChatbotParameters(request_id, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answer.");
+          assert(attributes["gpt_reply"] === undefined);
+          assert(attributes["flowError"] === "GPT Error: question attribute is undefined")
           listener.close(() => {
             done();
           });
@@ -1087,12 +1370,12 @@ describe('Conversation for GptTask test', async () => {
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/gpt_task',
+          "recipient": request_id,
+          "text": '/gpt_task_no_question',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
-            "request_id": REQUEST_ID
+            "request_id": request_id
           }
         },
         "token": "XXX"
