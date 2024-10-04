@@ -17,6 +17,12 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.108 -> test
+- Added DirUnassign
+- Added chatbot_id
+- Added support for citations in AskGPTV2
+- Added support Json type in GPT Task
+
 # v0.2.107 -> production
 - clean logs (more)
 
