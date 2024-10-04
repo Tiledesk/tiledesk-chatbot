@@ -77,6 +77,12 @@ class DirReply {
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
               if (this.log) {console.log("command filled:", command.message.text);}
             }
+            if (command.type === 'settings' && command.settings) {
+              Object.keys(command.settings).forEach(k => {
+                command.settings[k] = filler.fill(command.settings[k], requestAttributes)
+                if (this.log) {console.log("settings command filled:", command.settings[k]);}
+              })
+            }
           }
         }
       }

@@ -158,22 +158,6 @@ class TiledeskChatbotUtil {
 
     }
 
-    // static errorMessage(message) {
-    //     return {
-    //         name: "message",
-    //         action: {
-    //             "_tdThenStop": true,
-    //             text: message,
-    //             attributes: {
-    //                 runtimeError: {
-    //                     message: message
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    //static filterOnVariables(commands, variables) {
     static filterOnVariables(message, variables) {
         if (!variables) {
           return;
@@ -442,6 +426,13 @@ class TiledeskChatbotUtil {
         }
     }
 
+    static async clearConversationTranscript(chatbot, callback) {
+        await chatbot.addParameter("transcript", "");
+        if (callback) {
+            callback();
+        }
+    }
+
     static transcriptJSON(transcript) {
         const regexp = /(<.*>)/gm;
         const parts = transcript.split(regexp);
@@ -506,7 +497,7 @@ class TiledeskChatbotUtil {
         return message;
     }
 
-    static async updateRequestAttributes(chatbot, message, projectId, requestId) {
+    static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
             if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
@@ -519,7 +510,10 @@ class TiledeskChatbotUtil {
             // TODO add projectName too
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
             if (chatbot.bot) {
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+            }
+            if (chatbotToken) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken);
             }
             
             if (message.text && message.sender !== "_tdinternal") {
@@ -578,6 +572,7 @@ class TiledeskChatbotUtil {
                 //     "uid": "lo68oz8i"
                 // }
                 if (message.metadata.src) {
+                    
                     await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
                     const url_as_attachment = message.metadata.src;
                     await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
@@ -723,6 +718,7 @@ class TiledeskChatbotUtil {
                     }
                 }
 
+                // TODO - REMOVE - THEY ARE IN ATTRIBUTES.PAYLOAD
                 // voice-vxml attributes
                 if (message.attributes.dnis) {
                     await chatbot.addParameter("dnis", message.attributes.dnis);
@@ -834,7 +830,7 @@ class TiledeskChatbotUtil {
         if (requestId.startsWith("support-group-")) {
             const parts = requestId.split("-");
             // console.log("parts support request:", parts);
-            if (parts.length === 4) {
+            if (parts.length >= 4) {
                 isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
             }
             else {
@@ -891,7 +887,8 @@ class TiledeskChatbotUtil {
             "userLeadId",
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
-            TiledeskChatbotConst.USER_INPUT
+            TiledeskChatbotConst.USER_INPUT,
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN
           ]
           let userParams = {};
           if (flowAttributes) {

@@ -5,14 +5,67 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+<!-- // CHECK IT!!!
+# v0.2.98
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
+
 # v0.2.97
+- Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
+- Added jsonCondition test on json objects properties
+- Added flowError on JSONCondition when result = null
+- Added fix on Filler -->
+
+# v0.2.107 -> production
+- clean logs (more)
+
+# v0.2.106 -> production
+- clean logs
+
+# v0.2.105 -> production
+- clean logs
+
+# v0.2.104 -> production
+- isValid fixed
+
+# v0.2.103 -> test
+- isValid removed
+
+# v0.2.102
+- isValid modified: if (parts.length >= 4) instead of "if (parts.length === 4)" that blocked whatsapp requests
+
+# v0.2.101
+- Dynamic attribute "now" is a ISOString date
+- MAX_EXECUTION_TIME = 1000 * 3600 * 4 // 4 hours
+
+# v0.2.100 -> test
+- Added "chatbotToken" to RESERVED attributes
+- Added UUID, UUIDv4 dynamic attributes
+- Remove console.error from Filler liquidJS catch clause
+
+# v0.2.98
+- Support for MAX_EXECUTION_TIME (total execution time of a flow without user interaction)
+- MAX_STEPS = 1000
+- MAX_EXECUTION_TIME = 12 hrs
+
+# v0.2.97
+- Added support for "chatbotToken” attribute
+- Added new Action: clear_transcript
+- Exclude transcript generation when request type differs from "support-group-*"
+- "step" key reset on DirWait => this.chatbot.addParameter( step_key, 0 )
+
+# v0.2.96
+- Added timestamp (number) and now (Date Object) attributes
+
 - Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
 - Added jsonCondition test on json objects properties
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler
 
-# v0.2.96
-- Added timestamp (number) and now (Date Object) attributes
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
 
 # v0.2.95
 - If Online Agents V2 - bug fix (If Project Available Agents V2 -> MWeb)

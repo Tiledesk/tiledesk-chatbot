@@ -33,7 +33,7 @@ class DirIfOnlineAgentsV2 {
   }
 
   async go(action, callback) {
-    console.log("(DirIfOnlineAgents) action:", action);
+    // console.log("(DirIfOnlineAgents) action:", action);
     if (!action.trueIntent && !action.falseIntent) {
       if (this.log) {
         console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");
@@ -110,6 +110,7 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all | getProjectAvailableAgents(null, true)"); }
           agents = await this.getProjectAvailableAgents(null, true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
+          console.log("(DirIfOnlineAgents) agents:", agents);
         }
 
         if (agents && agents.length > 0) {

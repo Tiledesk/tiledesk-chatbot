@@ -71,6 +71,52 @@ describe('filler with liquidJS syntax {{}}', function() {
         const text = filler.fill(template, vars);
         assert(text === "Your first item is t2");
     });
+
+    it('native dynamic params timestamp', async () => {
+        const vars = {
+        }
+        const template = "timestamp: {{timestamp}}"
+        const filler = new Filler();
+        const text = filler.fill(template, vars);
+        const parts = text.split(":");
+        
+        // console.log("text:", text);
+        assert(parts[1] != "{{timestamp}}");
+    });
+
+    it('native dynamic params now', async () => {
+        const vars = {
+        }
+        const template = "now: {{now}}"
+        const filler = new Filler();
+        const text = filler.fill(template, vars);
+        const parts = text.split(":");
+        
+        // console.log("text:", text);
+        assert(parts[1] != "{{now}}");
+    });
+
+    it('native dynamic params now', async () => {
+        const vars = {
+        }
+        const template = "UUID: {{UUID}}"
+        const filler = new Filler();
+        const text = filler.fill(template, vars);
+        const parts = text.split(":");
+        
+        // console.log("text:", text);
+        assert(parts[1] != "{{UUID}}");
+    });
+
+    it('error: "{(lastUserText}) Analizza e risolvi il problema"', async () => {
+        const vars = {
+        }
+        const template = "{{lastUserText}) Analizza e risolvi il problema"
+        const filler = new Filler();
+        const text = filler.fill(template, vars);
+        // console.log("text:", text);
+        assert(text === template);
+    });
     
 });
 

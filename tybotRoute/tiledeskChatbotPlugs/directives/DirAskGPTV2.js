@@ -171,6 +171,25 @@ class DirAskGPTV2 {
     }
 
     
+    if (action.namespaceAsName) {
+      // Namespace could be an attribute
+      const filled_namespace = filler.fill(action.namespace, requestVariables)
+      
+      // namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)
+      namespace = await this.getNamespaceIdFromName(server_base_url, filled_namespace);
+      if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
+    }
+    
+    if (!namespace) {
+      console.log("DirAskGPT - Error: namespace is undefined")
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+    }
+
     let json = {
       question: filled_question,
       gptkey: key,
@@ -202,7 +221,7 @@ class DirAskGPTV2 {
     }
 
     if (this.log) { console.log("DirAskGPT json:", json); }
-    
+
     const HTTPREQUEST = {
       // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
@@ -221,11 +240,13 @@ class DirAskGPTV2 {
           console.log("DirAskGPT error: ", err);
         }
         if (this.log) { console.log("DirAskGPT resbody:", resbody); }
-        let answer = resbody.answer;
-        let source = resbody.source;
-        await this.#assignAttributes(action, answer, source);
+        
+        // let answer = resbody.answer;
+        // let source = resbody.source;
+        // await this.#assignAttributes(action, answer, source);
 
         if (err) {
+          await this.#assignAttributes(action, answer, source);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -238,6 +259,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
 
+          await this.#assignAttributes(action, resbody.answer, resbody.source);
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_size,
@@ -254,6 +276,7 @@ class DirAskGPTV2 {
           callback();
           return;
         } else {
+          await this.#assignAttributes(action, answer, source);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -490,7 +513,7 @@ class DirAskGPTV2 {
             console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
             rejects(false)
           } else {
-            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
+            // console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }
@@ -544,6 +567,38 @@ class DirAskGPTV2 {
     }
 
     return objectTranscript;
+  }
+
+  async getNamespaceIdFromName(server_base_url, name) {
+    return new Promise((resolve) => {
+
+      const HTTPREQUEST = {
+        url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
+
+      this.#myrequest(
+        HTTPREQUEST, async (err, namespaces) => {
+          if (err) {
+            console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
+            resolve(null)
+          } else {
+            if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
+
+            let namespace = namespaces.find(n => n.name === name);
+            let namespace_id = namespace.id;
+
+            resolve(namespace_id);
+          }
+        }
+      )
+    })
+
   }
 
 

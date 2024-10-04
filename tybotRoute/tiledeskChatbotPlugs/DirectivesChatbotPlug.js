@@ -50,6 +50,7 @@ const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
+const { DirClearTranscript } = require('./directives/DirClearTranscript');
 
 class DirectivesChatbotPlug {
 
@@ -170,13 +171,13 @@ class DirectivesChatbotPlug {
   async nextDirective(directives) {
     if (this.log) {console.log("....nextDirective() checkStep():");}
     const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS, this.log
+      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS,  TiledeskChatbot.MAX_EXECUTION_TIME, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
     // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
-    if (go_on == false) {
+    if (go_on.error) {
       if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
-      return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
+      return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
     // else if (go_on == 2) {
     //   return null;
@@ -684,8 +685,15 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONTACT_UPDATE) {
-      console.log("...CONTACT_UPDATE");
+      // console.log("...CONTACT_UPDATE");
       new DirContactUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CLEAR_TRANSCRIPT) {
+      console.log("...CLEAR_TRANSCRIPT");
+      new DirClearTranscript(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

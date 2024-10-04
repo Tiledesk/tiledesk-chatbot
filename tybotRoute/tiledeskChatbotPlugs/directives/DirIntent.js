@@ -78,7 +78,7 @@ class DirIntent {
     //   intent_command = "/#" + intentId;
     // }
     else {
-      console.error("(DirIntent) No intent name found in action");
+      // console.error("(DirIntent) No intent name found in action");
       callback();
       return;
     }

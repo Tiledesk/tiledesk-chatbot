@@ -38,7 +38,6 @@ class DirIfOpenHours {
     //   }
     // );
     //this.log = context.log;
-    this.log = true;
   }
 
   execute(directive, callback) {
@@ -216,7 +215,6 @@ class DirIfOpenHours {
     }
     axios(axios_options)
     .then((res) => {
-      console.log("siamo quiii")
       if (this.log) {
           console.log("Response for url:", options.url);
           console.log("Response headers:\n", JSON.stringify(res.headers));
@@ -233,7 +231,6 @@ class DirIfOpenHours {
         }
       })
       .catch((error) => {
-        console.log("siamo quiii")
         // console.error("An error occurred:", JSON.stringify(error.data));
         if (callback) {
           callback(error, null);

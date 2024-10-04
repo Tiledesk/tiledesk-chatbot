@@ -68,9 +68,8 @@ router.post('/ext/:botid', async (req, res) => {
     res.status(200).send({"success":true});
   }
   else {
-    res.status(400).send({"success": false, error: "Request id is invalid"});
-    // console.log("request id, projectId:", requestId, projectId)
-    // process.exit(0)
+    res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
+    return;
   }
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
@@ -171,8 +170,10 @@ router.post('/ext/:botid', async (req, res) => {
   //   if (log) {console.log("forced conversion of \\\\start /start");}
   //   message.text = "/start";
   // }
-  await TiledeskChatbotUtil.updateRequestAttributes(chatbot, message, projectId, requestId);
-  await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+  await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  if (requestId.startsWith("support-group-")) {
+    await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+  }
 
   let reply = null;
   try {
