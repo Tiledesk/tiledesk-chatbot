@@ -4,6 +4,7 @@ class TiledeskChatbotConst {
     static REQ_PROJECT_ID_KEY = "project_id";
     static REQ_REQUEST_ID_KEY = "conversation_id";
     static REQ_CHATBOT_NAME_KEY = "chatbot_name";
+    static REQ_CHATBOT_ID_KEY = "chatbot_id";
     static REQ_LAST_USER_TEXT_KEY = "last_user_text";
     static REQ_LAST_USER_TEXT_v2_KEY = "lastUserText";
     static REQ_LAST_MESSAGE_ID_KEY = "last_message_id";
@@ -31,24 +32,7 @@ class TiledeskChatbotConst {
     static REQ_USER_COMPANY_KEY = "userCompany";
     static REQ_TICKET_ID_KEY = "ticketId";
     static REQ_CHATBOT_TOKEN = "chatbotToken";
-    
-
-    // static REQ_DEPARTMENT_ID_KEY = "tdDepartmentId";
-    // static REQ_PROJECT_ID_KEY = "projectId";
-    // static REQ_REQUEST_ID_KEY = "tdRequestId";
-    // static REQ_CHATBOT_NAME_KEY = "tdChatbotName";
-    // static REQ_LAST_USER_TEXT_KEY = "tdLastUserText";
-    // static REQ_LAST_MESSAGE_ID_KEY = "tdLastMessageId";
-    // static REQ_COUNTRY_KEY = "tdCountry";
-    // static REQ_CITY_KEY = "tdCity";
-    // static REQ_USER_SOURCE_PAGE_KEY = "tdUserSourcePage";
-    // static REQ_USER_LANGUAGE_KEY = "tdUserLanguage";
-    // static REQ_USER_AGENT_KEY = "tdUserAgent";
-    // static REQ_DEPARTMENT_NAME_KEY = "tdDepartmentName";
-    // static REQ_END_USER_ID_KEY = "tdEndUserId";
-    // static REQ_END_USER_IP_ADDRESS_KEY = "tdEndUserIpAddress";
-    // static REQ_CHAT_URL = "chat_url";
-    
+    static REQ_CHATBOT_TOKEN_v2 = "chatbot_jwt_token";
 }
 
 module.exports = { TiledeskChatbotConst };

@@ -467,6 +467,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   else {
     const RESERVED = [
       TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
+      TiledeskChatbotConst.REQ_CHATBOT_ID_KEY,
       TiledeskChatbotConst.REQ_CHAT_URL,
       TiledeskChatbotConst.REQ_CITY_KEY,
       TiledeskChatbotConst.REQ_COUNTRY_KEY,
