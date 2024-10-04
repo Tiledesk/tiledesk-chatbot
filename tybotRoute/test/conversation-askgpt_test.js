@@ -382,6 +382,8 @@ describe('Conversation for AskGPT test', async () => {
   });
 
   it('/gpt fail - move to false intent if gptkey does not exists (key undefined)', (done) => {
+    
+    process.env.GPTKEY='' // Used to nullify the env variable
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
