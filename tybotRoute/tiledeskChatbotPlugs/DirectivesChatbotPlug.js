@@ -51,6 +51,7 @@ const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
+const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 
 class DirectivesChatbotPlug {
 
@@ -694,6 +695,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.CLEAR_TRANSCRIPT) {
       console.log("...CLEAR_TRANSCRIPT");
       new DirClearTranscript(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.MOVE_TO_UNASSIGNED) {
+      console.log("...MOVE_TO_UNASSIGNED");
+      new DirMoveToUnassigned(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
