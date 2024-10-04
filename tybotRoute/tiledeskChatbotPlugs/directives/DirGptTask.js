@@ -145,8 +145,8 @@ class DirGptTask {
       let keep_going = await this.checkQuoteAvailability(server_base_url);
       if (keep_going === false) {
         if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
-        console.log("DirGptTask - Quota exceeded for tokens. Skip the action")
         await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback();
         return;
       }

@@ -1057,6 +1057,7 @@ describe('Conversation for GptTask test', async () => {
 
   it('/task gpt fail - get quotes availability and stop the flow due to quote exceeding', (done) => {
 
+    process.env.GPTKEY = "example_api_key"
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -1064,7 +1065,6 @@ describe('Conversation for GptTask test', async () => {
       res.send({ success: true });
       const message = req.body;
 
-      // console.log("----> message: ", JSON.stringify(message, null, 2))
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
