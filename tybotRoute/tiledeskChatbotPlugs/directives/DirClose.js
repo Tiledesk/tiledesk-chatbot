@@ -8,15 +8,16 @@ class DirClose {
         this.context = context;
         this.tdclient = context.tdclient;
         this.requestId = context.requestId;
+        this.chatbot = context.chatbot;
     }
     
     execute(directive, callback) {
-        this.tdclient.closeRequest(this.requestId, (err) => {
+        this.tdclient.closeRequest(this.requestId, async (err) => {
             if (err) {
                 console.error("Error in 'close directive':", err);
             }
             else {
-                // console.log("Successfully closed on close()");
+                await this.chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT);
             }
             callback();
         });

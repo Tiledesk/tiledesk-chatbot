@@ -511,14 +511,16 @@ class TiledeskChatbotUtil {
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
             if (chatbot.bot) {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_ID_KEY, chatbot.bot._id);
             }
             if (chatbotToken) {
-                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
             }
             
             if (message.text && message.sender !== "_tdinternal") {
                 // await chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
-                await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // set userInput
+                await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // user wrote, delete userInput, replyv2 will not trigger timeout action
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
                 if (message.channel) {
@@ -888,7 +890,8 @@ class TiledeskChatbotUtil {
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
             TiledeskChatbotConst.USER_INPUT,
-            TiledeskChatbotConst.REQ_CHATBOT_TOKEN
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN,
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2,
           ]
           let userParams = {};
           if (flowAttributes) {
