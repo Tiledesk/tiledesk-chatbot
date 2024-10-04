@@ -953,7 +953,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        console.log("Message sent:\n", request);
+        //console.log("Message sent:\n", request);
       });
     });
   });
@@ -1067,7 +1067,6 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      console.log("---> : ", command2.message.text)
       assert(command2.message.text === "gpt replied: No answers");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
@@ -1075,7 +1074,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -1161,6 +1159,8 @@ describe('Conversation for AskGPTV2 test', async () => {
   });
 
   it('/gpt_fail_undefined_key - move to false intent if gptkey does not exists (key undefined)', (done) => {
+    
+    process.env.GPTKEY='' // Used to nullify the env variable
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
