@@ -739,6 +739,133 @@ describe('Conversation for AskGPTV2 test', async () => {
       });
     });
   });
+
+  it('/gpt_success_citations_on (key from integrations) - invokes the askgpt mockup and test the returning attributes', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+      console.log("req.body: ", req.body)
+      let reply = {}
+      let http_code = 200;
+      if (!req.body.question) {
+        reply.error = "question field is mandatory"
+        http_code = 400;
+      }
+      else if (!req.body.model) {
+        reply.error = "model field is mandatory"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          answer: "this is mock gpt reply",
+          success: true,
+          id: "123456789",
+          ids: ["9876543210", "0123456789"],
+          source: "http://gethelp.test.com/article",
+          sources: [ "TextArticle", "http://gethelp.test.com/article"],
+          prompt_token_size: 762,
+          citations: [
+            {
+              source_id: 0,
+              source_name: "TextArticle"
+            }
+          ],
+          
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    // no longer used in this test --> key retrieved from integrations
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = { gptkey: "sk-123456" };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_success_citations_on{"last_user_message":"come ti chiami"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
   
   it('/gpt_success (key from kbsettings) - invokes the askgpt mockup and test the returning attributes', (done) => {
     let listener;

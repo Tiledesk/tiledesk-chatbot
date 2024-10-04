@@ -66,6 +66,7 @@ class DirAskGPTV2 {
     let max_tokens;
     let top_k;
     let transcript;
+    let citations = false;
     //let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
 
     let contexts = {
@@ -105,6 +106,10 @@ class DirAskGPTV2 {
 
     if (action.max_tokens) {
       max_tokens = action.max_tokens;
+    }
+
+    if (action.citations) {
+      citations = action.citations;
     }
 
     let requestVariables = null;
@@ -194,7 +199,8 @@ class DirAskGPTV2 {
       question: filled_question,
       gptkey: key,
       namespace: namespace,
-      model: model
+      model: model,
+      citations: citations
     };
     if (top_k) {
       json.top_k = top_k;
