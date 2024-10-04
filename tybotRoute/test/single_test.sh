@@ -9,3 +9,4 @@
 # npx mocha ./test/condition_evaluator_test --exit
 # npx mocha ./test/chatbot_util_test --exit
 npx mocha ./test/conversation-actions-test.js --timeout 10000 --exit
+npx mocha ./test/conversation-askgptv2_test.js --timeout 10000 --grep "gpt_fail_missing_key" --exit
