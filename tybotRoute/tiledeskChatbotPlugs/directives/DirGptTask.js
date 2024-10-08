@@ -171,6 +171,7 @@ class DirGptTask {
           json.messages.push(message)
         }
       })
+      json.messages.push({ role: "user", content: filled_question });
     } else {
       let message = { role: "user", content: filled_question };
       json.messages.push(message);
