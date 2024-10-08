@@ -19,6 +19,7 @@ available on:
 
 # v0.2.109 -> test
 - Added DirMoveToUnassigned
+- Fixed bug: GptTask doesn't work properly with trascript
 
 # v0.2.108 -> test
 - Added chatbot_id
