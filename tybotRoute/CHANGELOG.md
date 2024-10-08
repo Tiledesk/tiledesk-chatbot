@@ -17,6 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.110 -> test
+- Added DirMoveToUnassigned
+- Added DirConnectBlock
+
 # v0.2.109 -> test
 - Added DirMoveToUnassigned
 - Fixed bug: GptTask doesn't work properly with trascript
