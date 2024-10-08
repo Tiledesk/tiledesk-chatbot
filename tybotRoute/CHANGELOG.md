@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.109 -> test
+- Fixed bug: GptTask doesn't work properly with trascript
+
 # v0.2.108 -> test
 - Added DirUnassign
 - Added chatbot_id
