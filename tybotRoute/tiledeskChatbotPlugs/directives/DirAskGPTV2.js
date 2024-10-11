@@ -624,7 +624,7 @@ class DirAskGPTV2 {
         type: "pod",
         apikey: "",
         vector_size: 1536,
-        index_name: "example-index"
+        index_name: "pugliai-tiledesk"
       }
       resolve(engine);
     })
