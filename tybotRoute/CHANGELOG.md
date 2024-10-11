@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.112 -> test
+- Fix index name in DirAskGPTV2
+
 # v0.2.111 -> test
 - Updated DirAskGPTV2 with engine support
 
