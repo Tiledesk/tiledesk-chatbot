@@ -67,6 +67,7 @@ class DirAskGPTV2 {
     let top_k;
     let transcript;
     let citations = false;
+    let engine;
     //let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
 
     let contexts = {
@@ -174,15 +175,23 @@ class DirAskGPTV2 {
         return;
       }
     }
+    let ns;
 
-    
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
-      
       // namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)
-      namespace = await this.getNamespaceIdFromName(server_base_url, filled_namespace);
+      ns = await this.getNamespace(server_base_url, filled_namespace, null);
+      namespace = ns.id;
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
+    } else {
+      ns = await this.getNamespace(server_base_url, null, namespace);
+    }
+
+    if (ns.engine) {
+      engine = ns.engine;
+    } else {
+      engine = await this.setDefaultEngine()
     }
     
     if (!namespace) {
@@ -200,7 +209,8 @@ class DirAskGPTV2 {
       gptkey: key,
       namespace: namespace,
       model: model,
-      citations: citations
+      citations: citations,
+      engine: engine
     };
     if (top_k) {
       json.top_k = top_k;
@@ -575,9 +585,8 @@ class DirAskGPTV2 {
     return objectTranscript;
   }
 
-  async getNamespaceIdFromName(server_base_url, name) {
+  async getNamespace(server_base_url, name, id) {
     return new Promise((resolve) => {
-
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
         headers: {
@@ -587,7 +596,6 @@ class DirAskGPTV2 {
         method: "GET"
       }
       if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
-
       this.#myrequest(
         HTTPREQUEST, async (err, namespaces) => {
           if (err) {
@@ -595,17 +603,64 @@ class DirAskGPTV2 {
             resolve(null)
           } else {
             if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
+            if (name) {
+              let namespace = namespaces.find(n => n.name === name);
+              resolve(namespace);
+            } else {
+              let namespace = namespaces.find(n => n.id === id);
+              resolve(namespace);
+            }
 
-            let namespace = namespaces.find(n => n.name === name);
-            let namespace_id = namespace.id;
-
-            resolve(namespace_id);
           }
         }
       )
     })
-
   }
+
+  async setDefaultEngine() {
+    return new Promise((resolve) => {
+      let engine = {
+        name: "pinecone",
+        type: "pod",
+        apikey: "",
+        vector_size: 1536,
+        index_name: "example-index"
+      }
+      resolve(engine);
+    })
+  }
+
+  // async getNamespaceIdFromName(server_base_url, name) {
+  //   return new Promise((resolve) => {
+
+  //     const HTTPREQUEST = {
+  //       url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'JWT ' + this.context.token
+  //       },
+  //       method: "GET"
+  //     }
+  //     if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
+
+  //     this.#myrequest(
+  //       HTTPREQUEST, async (err, namespaces) => {
+  //         if (err) {
+  //           console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
+  //           resolve(null)
+  //         } else {
+  //           if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
+
+  //           let namespace = namespaces.find(n => n.name === name);
+  //           let namespace_id = namespace.id;
+
+  //           resolve(namespace_id);
+  //         }
+  //       }
+  //     )
+  //   })
+
+  // }
 
 
 }

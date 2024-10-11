@@ -92,6 +92,12 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     endpointServer.post('/api/qa', function (req, res) {
+
+      assert(req.body.engine !== null);
+      assert(req.body.engine !== undefined);
+      assert(req.body.engine.name === 'pinecone');
+      assert(req.body.engine.type === 'serverless');
+
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {
@@ -118,21 +124,6 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-      let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "openai",
-        value: {
-          apikey: "example_api_key",
-          organization: "TIledesk"
-        }
-      }
-
-      res.status(http_code).send(reply);
-    })
-
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
       let http_code = 200;
       let reply = {
@@ -156,6 +147,66 @@ describe('Conversation for AskGPTV2 test', async () => {
 
       res.status(http_code).send(reply);
     });
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
+
+      res.status(http_code).send(reply);
+    })
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
@@ -278,6 +329,59 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     });
 
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
       let request = {
@@ -386,6 +490,59 @@ describe('Conversation for AskGPTV2 test', async () => {
           organization: "TIledesk"
         }
       }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
 
       res.status(http_code).send(reply);
     })
@@ -805,6 +962,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
       let http_code = 200;
       let reply = {
         _id: "656728224b45965b69111111",
@@ -819,18 +977,55 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
 
       let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "openai",
-        value: {
-          apikey: "example_api_key",
-          organization: "TIledesk"
-        }
-      }
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
 
       res.status(http_code).send(reply);
     })
@@ -927,6 +1122,59 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
 
       let reply = { gptkey: "sk-123456" };
@@ -957,6 +1205,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       });
     });
   });
+
 
   it('/gpt_fail_no_answer - the ask service does not return a relevant answer', (done) => {
     let listener;
@@ -1020,6 +1269,59 @@ describe('Conversation for AskGPTV2 test', async () => {
           organization: "TIledesk"
         }
       }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
 
       res.status(http_code).send(reply);
     })
@@ -1122,6 +1424,59 @@ describe('Conversation for AskGPTV2 test', async () => {
           organization: "TIledesk"
         }
       }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "6679917bfc0f8a002d72ec54",
+          name: "Test Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 256,
+            temperature: 0.7,
+            top_k: 4,
+            context: "You are an awesome AI Assistant."
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        },
+      ]
 
       res.status(http_code).send(reply);
     })
