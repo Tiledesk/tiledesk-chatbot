@@ -171,7 +171,9 @@ class DirAskGPTV2 {
       let keep_going = await this.checkQuoteAvailability(server_base_url);
       if (keep_going === false) {
         if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
-        callback();
+        await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);  
         return;
       }
     }
