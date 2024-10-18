@@ -17,7 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.112 -> test
+# v0.2.113 -> test
+- Fixed DirClose not importing TiledeskChatbotConst
+
+# v0.2.112 -> prod
 - Fix index name in DirAskGPTV2
 
 # v0.2.111 -> test
