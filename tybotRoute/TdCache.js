@@ -92,6 +92,9 @@ class TdCache {
 
     async hset(dict_key, key, value, options) {
       //console.log("hsetting dict_key key value", dict_key, key, value)
+      if (!options) {
+        options = {EX: 86400}
+      }
       return new Promise( async (resolve, reject) => {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
@@ -235,6 +238,16 @@ class TdCache {
         }
         return resolve();
       })
+    }
+    
+    async publish(key, value) {
+      await this.client.publis(key, value);
+    }
+
+    subscribe(key, callback) {
+      this.client.subscribe(key, (message) => {
+        callback(message);
+      });
     }
 }
 
