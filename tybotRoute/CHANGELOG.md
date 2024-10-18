@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.111 -> test
+- Fixed DirClose not importing TiledeskChatbotConst
+
 # v0.2.110 -> test
 - Added DirMoveToUnassigned
 - Added DirConnectBlock
