@@ -1,7 +1,7 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 const { TiledeskChatbotConst } = require('./TiledeskChatbotConst');
-const { TiledeskChatbot } = require('./TiledeskChatbot.js');
+// const { TiledeskChatbot } = require('./TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
@@ -739,7 +739,7 @@ class TiledeskChatbotUtil {
             if (chatbot.log) {
                 console.log("Adding Globals to context..., chatbot.attributes?", JSON.stringify(_bot));
             }
-            
+            if (chatbot.log) { console.log("Importing Globals..."); }
             if (_bot.attributes && _bot.attributes.globals) {
                 if (chatbot.log) {console.log("Got Globals:", JSON.stringify(_bot.attributes.globals));}
                 _bot.attributes.globals.forEach(async (global_var) => {
@@ -759,7 +759,7 @@ class TiledeskChatbotUtil {
             if (chatbot.log) {
                 // console.log("tdcache:", chatbot.tdcache);
                 console.log("requestId:", requestId);
-                console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
+                console.log("REQ_PROJECT_ID_KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
                 //   console.log("TiledeskChatbot:", TiledeskChatbot);
                 let proj_ = await chatbot.getParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
                 console.log("request parameter proj_:", proj_);

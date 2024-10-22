@@ -50,6 +50,7 @@ const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
+const { DirWebResponse } = require('./directives/DirWebResponse');
 
 class DirectivesChatbotPlug {
 
@@ -119,11 +120,9 @@ class DirectivesChatbotPlug {
     }
     const supportRequest = this.supportRequest;
     // console.log("supportRequest is:", JSON.stringify(supportRequest))
-    
     const token = this.token;
     const API_URL = this.API_URL;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
-
     // const requestId = supportRequest.request_id
     let depId;
     if (supportRequest.department && supportRequest.department._id) {
@@ -140,7 +139,6 @@ class DirectivesChatbotPlug {
       APIKEY: "___",
       log: this.log
     });
-
     this.context =  {
       projectId: projectId,
       chatbot: this.chatbot,
@@ -686,6 +684,13 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.CONTACT_UPDATE) {
       console.log("...CONTACT_UPDATE");
       new DirContactUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.WEB_RESPONSE) {
+      console.log("...WEB_RESPONSE");
+      new DirWebResponse(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

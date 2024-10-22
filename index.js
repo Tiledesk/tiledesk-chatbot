@@ -17,11 +17,11 @@ app.use("/langbot", chooserRoute);
 
 // TEMP
 // const bots_data = require('./tybotRoute/test/conversation-actions_bot.js').bots_data;
-
+const bots_data = require('./tybotRoute/test/conversation-webhook_action_bot.js').bots_data;
 tybot.startApp(
   {
-    MONGODB_URI: process.env.mongoUrl,
-    // bots: bots_data,
+    // MONGODB_URI: process.env.mongoUrl,
+    bots: bots_data,
     API_ENDPOINT: process.env.API_ENDPOINT,
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT,
@@ -30,7 +30,7 @@ tybot.startApp(
     log: process.env.TILEBOT_LOG
   }, () => {
     console.log("Tilebot route successfully started.");
-    var port = process.env.PORT || 3000;
+    var port = process.env.PORT || 10002;
     app.listen(port, function () {
       console.log('Tilebot connector listening on port ', port);
     });

@@ -7,6 +7,7 @@ class TdCache {
         this.redis_port = config.port;
         this.redis_password = config.password;
         this.client = null;
+        this.redis_sub = null;
     }
 
     async connect(callback) {
@@ -34,6 +35,15 @@ class TdCache {
                 }
                 //console.log("Redis is ready.");
             });
+            await this.client.connect();
+            this.redis_sub = redis.createClient(
+              {
+                  host: this.redis_host,
+                  port: this.redis_port,
+                  password: this.redis_password
+              });
+              // console.log("redis is:", this.redis_sub)
+            await this.redis_sub.connect();
         });
     }
 
@@ -91,7 +101,11 @@ class TdCache {
     }
 
     async hset(dict_key, key, value, options) {
-      //console.log("hsetting dict_key key value", dict_key, key, value)
+      // console.log("hsetting dict_key key value", dict_key, key, value)
+      if (!value) {
+        // console.error("value cannot be null");
+        return;
+      }
       if (!options) {
         options = {EX: 86400}
       }
@@ -99,7 +113,7 @@ class TdCache {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
           try {
-            await this.client.hset(
+            await this.client.HSET(
               dict_key,
               key,
               value,
@@ -112,7 +126,7 @@ class TdCache {
         else {
           try {
             //console.log("setting here...key", key, value)
-            await this.client.hset(
+            await this.client.HSET(
               dict_key,
               key,
               value);
@@ -135,7 +149,7 @@ class TdCache {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
           try {
-            await this.client.hdel(
+            await this.client.HDEL(
               dict_key,
               key,
               'EX', options.EX);
@@ -147,7 +161,7 @@ class TdCache {
         else {
           try {
             //console.log("setting here...key", key, value)
-            await this.client.hdel(
+            await this.client.HDEL(
               dict_key,
               key);
           }
@@ -169,60 +183,21 @@ class TdCache {
     }
     
     async get(key, callback) {
-      //console.log("getting key", key)
-      return new Promise( async (resolve, reject) => {
-        this.client.get(key, (err, value) => {
-          if (err) {
-            reject(err);
-          }
-          else {
-            if (callback) {
-              callback(value);
-          }
-          return resolve(value);
-          }
-        });
-      });
+      // console.log("getting key", key)
+      const value = this.client.GET(key);
+      return value;    
     }
 
     async hgetall(dict_key, callback) {
-      //console.log("hgetting dics", dict_key);
-      return new Promise( async (resolve, reject) => {
-        this.client.hgetall(dict_key, (err, value) => {
-          if (err) {
-            reject(err);
-            if (callback) {
-              callback(err, null);
-            }
-          }
-          else {
-            if (callback) {
-              callback(null, value);
-            }
-            resolve(value);
-          }
-        });
-      });
+      // console.log("hgetting dics", dict_key);
+      const all = this.client.HGETALL(dict_key);
+      return all;
     }
 
     async hget(dict_key, key, callback) {
-      //console.log("hgetting dics", dict_key);
-      return new Promise( async (resolve, reject) => {
-        this.client.hget(dict_key, key, (err, value) => {
-          if (err) {
-            reject(err);
-            if (callback) {
-              callback(err, null);
-            }
-          }
-          else {
-            if (callback) {
-              callback(null, value);
-            }
-            resolve(value);
-          }
-        });
-      });
+      // console.log("hgetting dics", dict_key);
+      const value = await this.client.HGET(dict_key, key);
+      return value;
     }
     
     async getJSON(key, callback) {
@@ -241,14 +216,14 @@ class TdCache {
     }
     
     async publish(key, value) {
-      await this.client.publis(key, value);
+      await this.redis_sub.publish(key, value);
     }
 
-    subscribe(key, callback) {
-      this.client.subscribe(key, (message) => {
-        callback(message);
-      });
-    }
+    // subscribe(key, callback) {
+    //   this.redis_sub.subscribe(key, (message) => {
+    //     callback(message);
+    //   });
+    // }
 }
 
 module.exports = { TdCache };

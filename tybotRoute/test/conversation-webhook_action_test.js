@@ -11,28 +11,22 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-webhook_bot.js').bots_data;
-// console.log("bots_data", bots_data)
-const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
-const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
-const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
-const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const bots_data = require('./conversation-webhook_action_bot.js').bots_data;
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
 
-let SERVER_PORT = 10001
+let SERVER_PORT = 10002
 
-describe('Conversation for Webhook test', async () => {
+describe('Invoke Webhook Action', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
   
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      console.log("Starting tilebot server...", bots_data);
       try {
         tybot.startApp(
           {
-            // MONGODB_URI: process.env.mongoUrl,
             bots: bots_data,
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
@@ -57,111 +51,45 @@ describe('Conversation for Webhook test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
+      console.log("Server Closed.");
       done();
     });
   });
 
-  it('/webhook', (done) => {
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/start got reply ...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.commands !== null);
-      // console.log("/start got reply ...message.attributes:", JSON.stringify(message.attributes));
-      // console.log("message.attributes.commands:", JSON.stringify(message.attributes.commands));
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      // console.log("command2", command2);
-      assert(command2.type === "message");
-      assert(command2.message.type === "frame");
-      listener.close(() => {
-        done();
-      });
-
-    });
-
-    endpointServer.post('/bot', function (req, res) {
-      // console.log("/bot req.body:", JSON.stringify(req.body));
-      // const reply = {
-      //   type: "image",
-      //   metadata: {
-      //     src: `https://img_url`
-      //   }
-      // }
-      const reply = {
-        "actions": [{
-          "_tdActionType": "reply",
-          "attributes": {
-            "commands": [{
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "type": "frame",
-                "metadata": {
-                  src: "http://",
-                  height: 410
-                }
-              }
-            }]
-          }
-        }]
-      }
-      res.send(reply);
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/webhook',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": "XXX"
-      }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
-      });
+  it('invokes synchro webhook', (done) => {
+    const webhook_id = "WEBHOOK-TEST-ID";
+    callWebhook(webhook_id, "GET", null, (err, webhook_response) => {
+      console.log("webhook_response:\n", webhook_response);
+      assert(webhook_response.type === "B" && webhook_response.size === "M" && webhook_response.height === 200)
+      done();
     });
   });
 
 });
 
 /**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
+ * A stub to invoke a webhook, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/webhook/${webhook_id}
  *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
+ * @param {Object} webhook_id. The webhook_id
+ * @param {string} method. webhook method
+ * @param {string} payload. webhook payload
  */
-function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+function callWebhook(webhook_id, method, payload, callback) {
+  const url = `http://localhost:${SERVER_PORT}/webhook/${webhook_id}`;
+  console.log("callWebhook URL", url);
   const HTTPREQUEST = {
     url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
+    // headers: {
+    //   'Content-Type': 'application/json'
+    // },
+    // json: payload,
+    method: method
   };
   myrequest(
     HTTPREQUEST,
     function (err, resbody) {
+      console.log("resbody:", resbody)
       if (err) {
         if (callback) {
           callback(err);
@@ -172,7 +100,7 @@ function sendMessageToBot(message, botId, callback) {
           callback(null, resbody);
         }
       }
-    }, false
+    }, true
   );
 }
 
@@ -244,6 +172,5 @@ function myrequest(options, callback, log) {
       if (callback) {
         callback(error, null, null);
       }
-    }
-  );
+    });
 }

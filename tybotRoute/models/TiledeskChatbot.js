@@ -605,8 +605,8 @@ class TiledeskChatbot {
 
   async getParameter(parameter_name) {
     // console.log("this.tdcache::", this.tdcache)
-    // console.log("this.requestId::", this.requestId)
-    // console.log("parameter_name::", parameter_name)
+    // console.log("getParameter this.requestId::", this.requestId)
+    // console.log("getParameter parameter_name::", parameter_name)
     
     return await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
@@ -655,8 +655,10 @@ class TiledeskChatbot {
 
   static async getParameterStatic(_tdcache, requestId, key) {
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
+    // console.log("getParameterStatic key::", key)
     let value = await _tdcache.hget(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
+    // console.log("getParameter got value for key::", key)
     try {
       value = JSON.parse(value);
     }

@@ -33,8 +33,9 @@ class DirWebResponse {
   }
 
   async go(action, callback) {
-    const payload = action.payload;
-    const status = action.status;
+    console.log("Web response...");
+    let payload = action.payload;
+    let status = action.status;
 
     // fill
     let requestAttributes = null;
@@ -51,15 +52,44 @@ class DirWebResponse {
       // }
       const filler = new Filler();
       // fill text attribute
-      payload = filler.fill(payload, requestAttributes);
-      status = filler.fill(status, requestAttributes);
+      try {
+        payload = filler.fill(payload, requestAttributes);
+        status = filler.fill(status, requestAttributes);
+      }
+      catch(e) {
+        console.error(e)
+      }
+      
     }
-
+    // let webhook_id;
+    // try {
+    //   webhook_id = this.chatbot.getParameter("webhook_id");
+    // }
+    // catch(e) {
+    //   console.error(e)
+    // }
     let webResponse = {
       status: status,
       payload: payload
+      // webhook_id: webhook_id
     }
-    this.context.tdcache.publish("webhooks/" + this.chatbot.getParameter("webhook_id"),webResponse );
+    const topic = `/webhooks/${this.requestId}`;
+    const to_send =  JSON.stringify(webResponse);
+    try {
+      console.log("Publishing webresponse:",  to_send, "to topic:", topic);
+      this.tdcache.publish(topic, to_send);
+      console.log("Published webresponse:",  to_send, "to topic:", topic);
+      // while (true) {
+      //   console.log("publishing...")
+      //   await this.tdcache.publish("article_12",  to_send );
+      //   // await publisher.publish('article_12', JSON.stringify(article));
+      //   await sleep(2000);
+      // }
+    }
+    catch(e) {
+      console.error(e)
+    }
+    callback();
     // this.context.tdclient.sendResponse(
     //   webResponse,
     //   this.projectId,
@@ -72,6 +102,12 @@ class DirWebResponse {
     //     callback();
     // });
   }
+}
+
+async function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 /**

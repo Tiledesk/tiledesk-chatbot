@@ -13,12 +13,16 @@ const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
 // let parser = require('accept-language-parser');
+const { v4: uuidv4 } = require('uuid');
+let axios = require('axios');
+const redis = require('redis');
 
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
 let tdcache = null;
+let redis_sub = null;
 
 // DEV
 // const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
@@ -28,6 +32,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
+// const { default: block } = require('liquidjs/dist/src/tags/block.js');
 let APIURL = null;
 let staticBots;
 
@@ -211,6 +216,7 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+      
       directivesPlug.processDirectives( () => {
         if (log) {console.log("Actions - Directives executed.");}
       });
@@ -559,6 +565,97 @@ router.post('/echobot', (req, res) => {
   });
 });
 
+router.get('/webhook/:webhook_id', async (req, res) => {
+  const webhook_id = req.params['webhook_id'];
+  console.log('/webhook/:webhook_id:', webhook_id);
+  // console.log('/webhook/:webhook_id, body.payload: ', webhook_id + ", " + JSON.stringify(req.body.payload));
+  console.log('/webhook/:webhook_id, method: ', webhook_id + ", " + req.method);
+  
+  // get webhook flow by id (block_id, chatbot_id, project_id)
+  const webhook = getWebhook(webhook_id);
+  console.log("got webhook:", webhook);
+  if (!webhook) {
+    res.status(404).send({"success":false, "error": "Webhook id not found"});
+    return;
+  }
+  // invoke webhook block
+  // unique ID for each execution
+  const execution_id = uuidv4().replace(/-/g, '');
+  const project_id = webhook.project_id;
+  const request_id = "automation-request-" + project_id + "-" + execution_id;
+  const command = "/" + webhook.block_id;
+  let request = {
+    "payload": {
+      "recipient": request_id,
+      "text": command,
+      "id_project": project_id,
+      "request": {
+        "request_id": request_id
+      }
+    }, token: ".."
+  }
+  if (webhook.async) {
+    console.log("Async webhook");
+    sendMessageToBot(request, webhook.bot_id, async () => {
+      console.log("Async webhook message sent:\n", request);
+      res.status(200).send({"success":true});
+      return;
+    });
+  }
+  else {
+    console.log("Sync webhook. Subscribe and wait for reply...");
+    const topic = `/webhooks/${request_id}`;
+    console.log("sync webhook, subscribing to topic:", topic);
+    try {
+      console.log(`node-redis version is ${require('redis/package.json').version}`);
+      const subscriber = redis.createClient();
+      await subscriber.connect();
+      const listner = async (message, topic) => {
+        console.log("web response is:", message);
+        await subscriber.unsubscribe(topic, listner);
+        console.log("message:", message);
+        let json = JSON.parse(message);
+        let status = 200;
+        if (json.status) {
+          status = json.status;
+          console.log("status:", status);
+        }
+        else {
+          console.log("default status:", status);
+        }
+        res.status(status).send(json.payload);
+      }
+      await subscriber.subscribe(topic, listner);
+    }
+    catch(e) {
+      console.error("error", e)
+    }
+    
+    // tdcache.subscribe(topic, (message) => {
+    //   console.log("got webhook response:", message);
+    //   res.status(message.status).send(message.payload);
+    // });
+    console.log("Sync webhook. Triggering webhook block...");
+    sendMessageToBot(request, webhook.bot_id, () => {
+      console.log("Synch webhook message sent:\n", request);
+    });
+  }
+});
+
+function getWebhook(webhook_id) {
+  // lookup by webhook_id returns => 
+  const webhooks = {
+    "WEBHOOK-TEST-ID": {
+      block_id: "#webhook-block-4d7ad6ed-57dc-4dbe-9570-83e693b562e8",
+      bot_id: "botID",
+      project_id: "projectID",
+      webhook_id: webhook_id,
+      async: false
+    }
+  }
+  return webhooks[webhook_id];
+}
+
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
   //console.log("Starting Tilebot with Settings:", settings);
@@ -645,6 +742,9 @@ async function connectRedis() {
     try {
       console.log("(Tilebot) Connecting Redis...");
       await tdcache.connect();
+      // redis_sub = redis.createClient();
+      // await redis_sub.connect();
+      // tdcache.redis_sub = redis_sub;
     }
     catch (error) {
       tdcache = null;
@@ -675,4 +775,79 @@ async function checkRequest(request_id, id_project) {
   // WARNING! Move this function in models/TiledeskChatbotUtil.js
 }
 
+/**
+ * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/ext/${botId}
+ *
+ * @param {Object} message. The message to send
+ * @param {string} botId. Tiledesk botId
+ * @param {string} token. User token
+ */
+function sendMessageToBot(message, botId, callback) {
+  // const jwt_token = this.fixToken(token);
+  const url = `${APIURL}/ext/${botId}`;
+  console.log("sendMessageToBot URL", url);
+  const HTTPREQUEST = {
+    url: url,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    json: message,
+    method: 'POST'
+  };
+  myrequest(
+    HTTPREQUEST,
+    function (err, resbody) {
+      if (err) {
+        if (callback) {
+          callback(err);
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, resbody);
+        }
+      }
+    }, false
+  );
+}
+
+function myrequest(options, callback, log) {
+  if (log) {
+    console.log("API URL:", options.url);
+    console.log("** Options:", JSON.stringify(options));
+  }
+  axios(
+    {
+      url: options.url,
+      method: options.method,
+      data: options.json,
+      params: options.params,
+      headers: options.headers
+    })
+    .then((res) => {
+      if (log) {
+        console.log("Response for url:", options.url);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
+      }
+      if (res && res.status == 200 && res.data) {
+        if (callback) {
+          callback(null, res.data);
+        }
+      }
+      else {
+        if (callback) {
+          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("An error occurred:", error);
+      if (callback) {
+        callback(error, null, null);
+      }
+    }
+  );
+}
 module.exports = { router: router, startApp: startApp};
