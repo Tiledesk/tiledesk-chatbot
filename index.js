@@ -16,12 +16,12 @@ app.use("/chatbots", templatesRoute);
 app.use("/langbot", chooserRoute);
 
 // TEMP
-// const bots_data = require('./tybotRoute/test/conversation-actions_bot.js').bots_data;
+const bots_data = require('./tybotRoute/test/temp_webhook_action_bot.js').bots_data;
 
 tybot.startApp(
   {
-    MONGODB_URI: process.env.mongoUrl,
-    // bots: bots_data,
+    // MONGODB_URI: process.env.mongoUrl,
+    bots: bots_data,
     API_ENDPOINT: process.env.API_ENDPOINT,
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT,

@@ -17,7 +17,12 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.113 -> test
+# v0.2.114 -> test
+- Creating smart webhook endpoint on index.js
+- Added check on attribute size < 20Mb
+- SetAttributeV2: added persistency service
+
+# v0.2.113 -> prod
 - Fixed DirClose not importing TiledeskChatbotConst
 
 # v0.2.112 -> prod

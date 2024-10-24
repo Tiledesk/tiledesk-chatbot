@@ -618,8 +618,17 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    if (parameter_name === null || parameter_name === undefined) {
+      // console.error("Error saving key:", parameter_name, "value:", parameter_value);
+      return;
+    }
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const parameter_value_s = JSON.stringify(parameter_value);
+    // console.log("saving key:", parameter_name, "value:", parameter_value);
+    if (parameter_value_s?.length > 20000000) {
+      // console.log("Error. Attribute size too big (> 20mb):", parameter_value_s);
+      return;
+    }
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
   }
 

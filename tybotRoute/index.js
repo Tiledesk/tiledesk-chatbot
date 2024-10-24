@@ -561,6 +561,40 @@ router.post('/echobot', (req, res) => {
   });
 });
 
+router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
+  const project_id = req.params['project_id'];
+  const bot_id = req.params['bot_id'];
+  const block_id = req.params['block_id'];
+  const body = request.body;
+  console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
+  console.log('/block/:project_id/:bot_id/:block_id.body', body);
+  
+  // invoke block
+  // unique ID for each execution
+  const execution_id = uuidv4().replace(/-/g, '');
+  const request_id = "automation-request-" + project_id + "-" + execution_id;
+  const command = "/" + block_id;
+  let request = {
+    "payload": {
+      "recipient": request_id,
+      "text": command,
+      "id_project": project_id,
+      "request": {
+        "request_id": request_id
+      },
+      "attributes": {
+        "payload": body
+      }
+    }, token: ".."
+  }
+  console.log("sendMessageToBot()...");
+  sendMessageToBot(request, bot_id, async () => {
+    console.log("Async webhook message sent:\n", request);
+    res.status(200).send({"success":true});
+    return;
+  });
+});
+
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
   //console.log("Starting Tilebot with Settings:", settings);
@@ -675,6 +709,82 @@ async function checkRequest(request_id, id_project) {
   //    return (false, motivation);
   
   // WARNING! Move this function in models/TiledeskChatbotUtil.js
+}
+
+/**
+ * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/ext/${botId}
+ *
+ * @param {Object} message. The message to send
+ * @param {string} botId. Tiledesk botId
+ * @param {string} token. User token
+ */
+function sendMessageToBot(message, botId, callback) {
+  // const jwt_token = this.fixToken(token);
+  const url = `${APIURL}/ext/${botId}`;
+  console.log("sendMessageToBot URL", url);
+  const HTTPREQUEST = {
+    url: url,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    json: message,
+    method: 'POST'
+  };
+  myrequest(
+    HTTPREQUEST,
+    function (err, resbody) {
+      if (err) {
+        if (callback) {
+          callback(err);
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, resbody);
+        }
+      }
+    }, false
+  );
+}
+
+function myrequest(options, callback, log) {
+  if (log) {
+    console.log("API URL:", options.url);
+    console.log("** Options:", JSON.stringify(options));
+  }
+  axios(
+    {
+      url: options.url,
+      method: options.method,
+      data: options.json,
+      params: options.params,
+      headers: options.headers
+    })
+    .then((res) => {
+      if (log) {
+        console.log("Response for url:", options.url);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
+      }
+      if (res && res.status == 200 && res.data) {
+        if (callback) {
+          callback(null, res.data);
+        }
+      }
+      else {
+        if (callback) {
+          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("An error occurred:", error);
+      if (callback) {
+        callback(error, null, null);
+      }
+    }
+  );
 }
 
 module.exports = { router: router, startApp: startApp};
