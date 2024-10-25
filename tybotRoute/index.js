@@ -12,6 +12,7 @@ const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
 const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
 const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
+const { v4: uuidv4 } = require('uuid');
 // let parser = require('accept-language-parser');
 
 router.use(bodyParser.json({limit: '50mb'}));
