@@ -723,7 +723,7 @@ async function checkRequest(request_id, id_project) {
  */
 function sendMessageToBot(message, botId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${APIURL}/ext/${botId}`;
+  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
   console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
