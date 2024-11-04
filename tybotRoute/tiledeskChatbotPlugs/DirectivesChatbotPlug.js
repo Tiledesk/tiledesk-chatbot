@@ -52,6 +52,7 @@ const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
+const { DirWhatsappStatic, DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 
 class DirectivesChatbotPlug {
 
@@ -619,6 +620,17 @@ class DirectivesChatbotPlug {
       new DirWhatsappByAttribute(context).execute(directive, async (stop) => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.SEND_WHATSAPP) {
+      new DirSendWhatsapp(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          if (context.log) { console.log("Stoppin Actions on:", JSON.stringify(directive));}
+          this.theend();
+        } else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     else if (directive_name === Directives.QAPLA) {

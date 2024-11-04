@@ -27,6 +27,7 @@ class Directives {
   static RANDOM_REPLY = 'randomreply';
   static CODE = 'code';
   static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
+  static SEND_WHATSAPP = 'send_whatsapp';
   static FORM = "form";
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
