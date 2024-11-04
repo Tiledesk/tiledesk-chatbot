@@ -9,6 +9,7 @@ class DirJSONCondition {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
+    this.chatbot = this.context.chatbot;
     // let context =  {
     //   projectId: projectId,
     //   token: token,
