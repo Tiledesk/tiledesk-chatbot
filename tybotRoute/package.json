@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "0.2.113",
+  "version": "0.2.116",
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "@tiledesk/helpcenter-query-client": "^0.1.8",
     "@tiledesk/tiledesk-chatbot-client": "^0.5.30",
     "@tiledesk/tiledesk-chatbot-util": "^0.8.39",
-    "@tiledesk/tiledesk-client": "^0.10.5",
+    "@tiledesk/tiledesk-client": "^0.10.12",
     "accept-language-parser": "^1.5.0",
     "axios": "^0.27.2",
     "body-parser": "^1.19.0",

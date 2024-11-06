@@ -210,7 +210,7 @@ router.post('/ext/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
           token: token,
           log: log,
-          HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
+          // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
@@ -563,6 +563,7 @@ router.post('/echobot', (req, res) => {
   });
 });
 
+// draft webhook
 router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const project_id = req.params['project_id'];
   const bot_id = req.params['bot_id'];

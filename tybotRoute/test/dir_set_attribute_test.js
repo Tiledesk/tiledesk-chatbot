@@ -67,7 +67,7 @@ describe('Testing dir_set_attribute_test', function() {
     });
     
     describe('Testing dir_set_attribute_test with a single const', function() {
-        it('should print Radis: counter; value: 10', async function() {
+        it('should print Redis: counter; value: 10', async function() {
             let keyTest, valueTest;
             TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
                 return {};
