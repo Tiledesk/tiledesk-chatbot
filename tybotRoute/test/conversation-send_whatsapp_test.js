@@ -69,14 +69,18 @@ describe('Conversation for GptTask test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", message)
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "Whatsapp message sent successfully");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          // assert(attributes);
+          assert(attributes);
           listener.close(() => {
             done();
           });
@@ -85,7 +89,23 @@ describe('Conversation for GptTask test', async () => {
 
     });
 
-  
+    endpointServer.post('/modules/whatsapp/api/tiledesk/broadcast', function (req, res) {
+
+      assert(req.body.receiver_list.length === 1);
+      assert(req.body.broadcast === false);
+      
+      let receiver = req.body.receiver_list[0];
+      assert(receiver.phone_number === '+393485566777');
+      assert(receiver.body_params[0].text === 'Giacomo');
+
+      let reply = {
+        success: true,
+        message: "Job started. Send messages in queue."
+      };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    })
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
@@ -95,7 +115,7 @@ describe('Conversation for GptTask test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/send_whatsapp{"firstname":"Giacomo"}',
+          "text": '/send_whatsapp{"firstname":"Giacomo", "phone_number": "+393485566777"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -118,14 +138,18 @@ describe('Conversation for GptTask test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", message)
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "Whatsapp message sent successfully");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          // assert(attributes);
+          assert(attributes);
           listener.close(() => {
             done();
           });
@@ -133,6 +157,28 @@ describe('Conversation for GptTask test', async () => {
       });
 
     });
+
+    endpointServer.post('/modules/whatsapp/api/tiledesk/broadcast', function (req, res) {
+
+      assert(req.body.receiver_list.length === 1);
+      assert(req.body.broadcast === false);
+
+      let receiver = req.body.receiver_list[0];
+      assert(receiver.phone_number === '+393485566777');
+      assert(receiver.header_params[0].type === 'IMAGE');
+      assert(receiver.header_params[0].image.link === 'https://img.repo.com/car.png');
+      assert(receiver.body_params[0].text === 'Giacomo');
+      assert(receiver.body_params[1].text === 'bmw');
+      assert(receiver.buttons_params[0].text === 'user1234');
+
+      let reply = {
+        success: true,
+        message: "Job started. Send messages in queue."
+      };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    })
 
   
 

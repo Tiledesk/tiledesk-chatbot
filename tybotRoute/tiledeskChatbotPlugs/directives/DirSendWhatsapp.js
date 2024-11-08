@@ -29,8 +29,8 @@ class DirSendWhatsapp {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     })
   }
 
@@ -46,8 +46,6 @@ class DirSendWhatsapp {
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
 
-    console.log("Payload: ", action.payload);
-
     let requestVariables = null;
     requestVariables = 
       await TiledeskChatbot.allParametersStatic(
@@ -57,16 +55,10 @@ class DirSendWhatsapp {
     // Declarations
     let payload = action.payload;
 
-    if (this.log) {
-      // Declaration logs
-    }
-
     const filler = new Filler();
     
     // receiver_list will be of just one element, so we can pick up only the first element, if exists.
     let receiver = payload.receiver_list[0];
-
-    console.log("receiver (before): ", receiver);
     
 
     //header_params: text, image, document. NO: location
@@ -75,12 +67,7 @@ class DirSendWhatsapp {
     //footer_paramas: non supportati
 
     receiver = await this.fillWholeReceiver(receiver, requestVariables);
-    console.log("receiver (after): ", receiver);
-    console.log("receiver (after): ", receiver.header_params);
-
     payload.receiver_list[0] = receiver;
-
-
     payload.transaction_id = this.context.requestId;
     payload.broadcast = false;
     
@@ -92,138 +79,60 @@ class DirSendWhatsapp {
     } else {
       whatsapp_api_url = server_base_url + "/modules/whatsapp/api"
     }
-    console.log("DirSendWhatsapp whatsapp_api_url: ", whatsapp_api_url);
+    if (this.log) { console.log("DirSendWhatsapp whatsapp_api_url: ", whatsapp_api_url); };
 
     const HTTPREQUEST = {
       url: whatsapp_api_url + "/tiledesk/broadcast",
       headers: {
         'Content-Type': 'application/json'
       },
-      json: attribute_value,
+      json: payload,
       method: 'POST'
     }
 
+    if (this.log) { console.log("DirSendWhatsapp HTTPREQUEST:  ", HTTPREQUEST); }
+
     this.#myrequest(
       HTTPREQUEST, async (err, resbody) => {
-        if (this.log && err) {
-          console.log("")
+        if (err) {
+          console.error("DirSendWhatsapp error: ", err);
+          await this.chatbot.addParameter("flowError", "SendWhatsapp Error: " + err);
+          if (callback) {
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              callback(true);
+              return;
+            }
+            callback();
+            return;
+          }
+        } else if (resbody.success === true) {
+          if (callback) {
+            if (trueIntent) {
+              await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+              callback(true);
+              return;
+            }
+            callback();
+            return;
+          }
+        } else {
+          if (this.log) { console.log("DirSendWhatsapp unexpected resbody: ", resbody); }
+          if (callback) {
+            if (falseIntent) {
+              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              callback(true);
+              return
+            }
+            callback();
+            return;
+          }
         }
       }
     )
-
-    // JSON sample
-    // {
-    //   "id_project": "62c3f10152dc7400352bab0d",
-    //   "phone_number_id": "109639215462567",
-    //   "template": {
-    //     "name": "codice_sconto_2",
-    //     "language": "it"
-    //   },
-    //   "receiver_list": [
-    //     {
-    //       "phone_number": "+393484506627",
-    //       "body_params": [
-    //         {
-    //           "type": "text",
-    //           "text": "Giovanni"
-    //         },
-    //         {
-    //           "type": "text",
-    //           "text": "30%"
-    //         },
-    //         {
-    //           "type": "text",
-    //           "text": "SUMMER2024"
-    //         }
-    //       ]
-    //     }
-    //   ]
-    // }
-    console.log("payload to be sent: ", JSON.stringify(payload, null, 2));
-
-
-    
-
-    if (callback) {
-      if (trueIntent) {
-        console.log("exec true intent")
-        await this.#executeCondition(true, trueIntent, null, falseIntent, null);
-        
-        callback();
-        return;
-      }
-      callback();
-      return;
-    }
-
-
-
-
-
-
-
-
-    // const whatsapp_api_url_pre = process.env.WHATSAPP_ENDPOINT;
-    // const server_base_url = process.env.API_URL || process.env.API_ENDPOINT;
-
-    // if (whatsapp_api_url_pre) {
-    //   whatsapp_api_url = whatsapp_api_url_pre;
-    // } else {
-    //   whatsapp_api_url = server_base_url + "/modules/whatsapp/api"
-    // }
-    // console.log("DirWhatsappByAttribute whatsapp_api_url: ", whatsapp_api_url);
-
-    // if (!action.attributeName) {
-    //   console.error("DirWhatsappByAttribute attributeName is mandatory")
-    //   callback();
-    //   return;
-    // }
-    // if (this.log) { console.log("DirWhatsappByAttribute attributeName: ", action.attributeName )};
-
-    // const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
-    // if (this.log) { console.log("attribute_value:", JSON.stringify(attribute_value)); }
-
-    // if (attribute_value == null) {
-    //   console.error("DirWhatsappByAttribute attribute_value is undefined");
-    //   callback();
-    //   return;
-    // }
-
-    // attribute_value.transaction_id = this.context.requestId;
-
-    // const HTTPREQUEST = {
-    //   url: whatsapp_api_url + "/tiledesk/broadcast",
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   },
-    //   json: attribute_value,
-    //   method: 'POST'
-    // }
-
-    // return new Promise((resolve, reject) => {
-    //   DirWhatsappByAttribute.myrequest(
-    //     HTTPREQUEST,
-    //     function (err, resbody) {
-    //       if (err) {
-    //         if (callback) {
-    //           callback(err);
-    //         }
-    //         reject(err);
-    //       }
-    //       else {
-    //         if (callback) {
-    //           callback(null, resbody);
-    //         }
-    //         console.log("(tybot) broadcast sent: ", resbody);
-    //         resolve(resbody);
-    //       }
-    //     }, true);
-    // })
-
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    console.log("executeCondition...")
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
@@ -269,11 +178,9 @@ class DirSendWhatsapp {
 
       const filler = new Filler();
       try {
-
         receiver.phone_number = filler.fill(receiver.phone_number, requestVariables);
         if (receiver.header_params) {
           receiver.header_params.forEach(p => {
-            console.log("p: ", p)
             if (p.type === 'TEXT') {
               p.text = filler.fill(p.text, requestVariables)
             } 
@@ -309,8 +216,7 @@ class DirSendWhatsapp {
   }
 
   // HTTP REQUEST
-  static async myrequest(options, callback, log) {
-    console.log("my request execution")
+  async #myrequest(options, callback, log) {
     return await axios({
       url: options.url,
       method: options.method,

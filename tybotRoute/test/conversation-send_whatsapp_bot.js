@@ -26,7 +26,7 @@ const bot = {
 					},
 					"receiver_list": [
 						{
-							"phone_number": "+393484506627",
+							"phone_number": "{{phone_number}}",
 							"body_params": [{
 								"type": "text",
 								"text": "{{firstname}}"
@@ -112,13 +112,13 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "Ok"
+							"text": "Whatsapp message sent successfully"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "gpt intent true",
+			"intent_display_name": "send whatsapp intent true",
 			"intent_id": "SUCCESS"
 		},
 		{
@@ -136,13 +136,13 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "KO"
+							"text": "Error sending whatsapp message"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "gpt intent false",
+			"intent_display_name": "send whatsapp intent false",
 			"intent_id": "FAILURE"
 		}
 	]
