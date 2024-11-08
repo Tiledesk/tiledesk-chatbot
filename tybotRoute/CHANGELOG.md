@@ -17,6 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.119 -> test
+- fixed: addParameter("payload", message) => addParameter("payload", message.attributes.payload)
+- JSONCondition: added in constructor => this.chatbot = context.chatbot;
+
 # v0.2.118 -> test
 - added payload to attributes: await chatbot.addParameter("payload", message);
 
