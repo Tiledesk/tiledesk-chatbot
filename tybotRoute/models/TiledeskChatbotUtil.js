@@ -501,6 +501,9 @@ class TiledeskChatbotUtil {
         // update request context
         try {
             if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
+            if (message && message.sender !== "_tdinternal") {
+                await chatbot.addParameter("payload", message);
+            }
             const messageId = message._id;
             const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
             // await chatbot.addParameter("chatbot", chatbot);
