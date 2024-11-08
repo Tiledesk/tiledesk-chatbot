@@ -15,6 +15,7 @@ class DirAskGPTV2 {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);

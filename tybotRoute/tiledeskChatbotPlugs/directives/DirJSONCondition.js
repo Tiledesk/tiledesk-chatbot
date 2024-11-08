@@ -27,6 +27,7 @@ class DirJSONCondition {
     //   APIKEY: "___",
     //   log: context.log
     // });
+    this.chatbot = context.chatbot;
     this.intentDir = new DirIntent(context);
     //   {
     //     API_ENDPOINT: context.TILEDESK_APIURL,
