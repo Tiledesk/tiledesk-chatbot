@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.117 -> test
+- block endpoint fixed with APIURL
+
 # v0.2.116 -> test
 - updates @tiledesk/tiledesk-client => v0.10.12
 
