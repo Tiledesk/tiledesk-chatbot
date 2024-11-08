@@ -501,9 +501,6 @@ class TiledeskChatbotUtil {
         // update request context
         try {
             if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
-            if (message && message.sender !== "_tdinternal") {
-                await chatbot.addParameter("payload", message);
-            }
             const messageId = message._id;
             const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
             // await chatbot.addParameter("chatbot", chatbot);
@@ -717,6 +714,7 @@ class TiledeskChatbotUtil {
                             // console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
+                        await chatbot.addParameter("payload", message);
                     }
                     catch(err) {
                         console.error("Error importing message payload in request variables:", err);

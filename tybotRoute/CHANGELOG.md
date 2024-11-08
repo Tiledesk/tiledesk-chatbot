@@ -18,7 +18,7 @@ available on:
 - Added fix on Filler -->
 
 # v0.2.118 -> test
-- added payload to attributes: if (message && message.sender !== "_tdinternal") {await chatbot.addParameter("payload", message);}
+- added payload to attributes: await chatbot.addParameter("payload", message);
 
 # v0.2.117 -> test
 - block endpoint fixed with APIURL
