@@ -97,11 +97,11 @@ class DirSetAttributeV2 {
 
     async go(action, callback) {
         if (this.log) {console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));}
-        if (!action) {
-            if (this.log) {console.log("(SetAttributeV2) Error 'action' is missing");}
-            callback();
-            return;
-        }
+        // if (!action) {
+        //     if (this.log) {console.log("(SetAttributeV2) Error 'action' is missing");}
+        //     callback();
+        //     return;
+        // }
         if (action && !action.operation) {
             if (this.log) {console.log("(SetAttributeV2) Error operation is mandatory");}
             callback();
