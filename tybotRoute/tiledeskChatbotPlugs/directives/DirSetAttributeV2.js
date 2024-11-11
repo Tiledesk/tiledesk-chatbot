@@ -97,6 +97,11 @@ class DirSetAttributeV2 {
 
     async go(action, callback) {
         if (this.log) {console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));}
+        if (!action) {
+            if (this.log) {console.log("(SetAttributeV2) Error 'action' is missing");}
+            callback();
+            return;
+        }
         if (action && !action.operation) {
             if (this.log) {console.log("(SetAttributeV2) Error operation is mandatory");}
             callback();
@@ -110,6 +115,7 @@ class DirSetAttributeV2 {
         
         // FUN FACT: THIS TOOK A LOT OF EFFORT BUT IT WAS NEVER USED. YOU CAN SIMPLY CREATE A JSON ATTRIBUTE APPLYING
         // JSONparse FUNCTION TO AN ATTRIBUTE.
+        // DEPRECATED because type = json is not available in the UI!
         if (action.operation.operands && action.operation.operands.length === 1 && action.operation.operands[0].type === "json") {
             if (this.log) {console.log("(SetAttributeV2) setting json value...");}
             if (this.log) { console.log("(SetAttributeV2) setting json value... destination:", action.destination); }
@@ -131,12 +137,12 @@ class DirSetAttributeV2 {
         //     callback();
         //     return;
         // }
-        if (action.operation.operators === undefined && action.operation.operands.length !== 1) {
+        if (action.operation?.operators === undefined && action.operation?.operands?.length !== 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
             callback();
             return;
         }
-        if (action.operation.operators !== undefined && action.operation.operators.length !== action.operation.operands.length - 1) {
+        if (action.operation?.operators !== undefined && action.operation?.operators?.length !== action.operation?.operands?.length - 1) {
             if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
             callback();
             return;
@@ -146,25 +152,40 @@ class DirSetAttributeV2 {
         //     await this.fillValues(action.operation.operands);
         // }
         // console.log("dirsetattribute, action.operation.operands:", action.operation.operands);
-        const expression = TiledeskExpression.JSONOperationToExpression(action.operation.operators, action.operation.operands);
-        const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        // console.log("dirsetattribute, attributes:", attributes);
-        attributes.TiledeskMath = TiledeskMath;
-        attributes.TiledeskString = TiledeskString;
-        const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
-        // console.log("filling in setattribute, result:", result);
-        // THE GOAL OF ATTRIBUTE-FILLING THE "DESTINATION" FIELD IS TO SUPPORT DYNAMIC ATTRIBUTES
-        // (ATTRS WHOSE NAME IS UNKNOWN AD DESIGN-TIME)
-        // STILL UNSUPPORTED IN UI
-        let destination = await this.fillDestination(action.destination);
-        await this.saveAttribute(destination, result);
+        try {
+            const expression = TiledeskExpression.JSONOperationToExpression(action.operation?.operators, action.operation?.operands);
+            const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+            // console.log("dirsetattribute, attributes:", attributes);
+            if (attributes) {
+                attributes.TiledeskMath = TiledeskMath;
+                attributes.TiledeskString = TiledeskString;
+                const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
+                // console.log("filling in setattribute, result:", result);
+                // THE GOAL OF ATTRIBUTE-FILLING THE "DESTINATION" FIELD IS TO SUPPORT DYNAMIC ATTRIBUTES
+                // (ATTRS WHOSE NAME IS UNKNOWN AD DESIGN-TIME)
+                // STILL UNSUPPORTED IN UI
+                let destination = await this.fillDestination(action.destination);
+                await this.saveAttribute(destination, result);
+            }
+        }
+        catch(err) {
+            console.error("SetAttributeV2 error:", err);
+        }
+        
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, destination, result);
         callback();
     }
 
-    async saveAttribute(key, value) {
+    async saveAttribute(key, value, persist) {
+        if (this.log) {
+            console.log("SetAttributeV2 saving attribute:", key, value, persist);
+        }
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
-        // this.persistOnTiledesk(destination, result);
+        // if (persist) {
+        //     console.log("SetAttributeV2 persisting...");
+        //     await this.persistOnTiledesk(destination, result);
+        // }
+        
         // await make persistent autenticato con "Chatbot Token" (solo il chatbot può usare questo servizio)
         // sarebbe il top che accodasse
         /**
@@ -194,23 +215,24 @@ class DirSetAttributeV2 {
             },
             json: json,
             method: 'POST'
-          }
-          if (this.log) { console.log("SetAttribute. HTTPREQUEST: ", HTTPREQUEST); }
-          this.#myrequest(
+        }
+        if (this.log) { console.log("SetAttribute. HTTPREQUEST: ", HTTPREQUEST); }
+        this.#myrequest(
             HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                     if (this.log) {
                         console.error("SetAttribute. persistOnTiledesk() error:", err);
                     }
-                    callback();
-                    return;
+                    // callback();
+                    // return;
                 } else {
                     if (this.log) { console.log("SetAttribute. Attributes saved.", JSON.stringify(resbody)); }
-                    callback();
-                    return;
+                    // callback();
+                    // return;
                 }
             }
-        )
+        );
+        return;
     }
 
     async fillDestination(destination) {

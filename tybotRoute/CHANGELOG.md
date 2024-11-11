@@ -17,8 +17,27 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.119 -> test
+- fixed: addParameter("payload", message) => addParameter("payload", message.attributes.payload)
+- JSONCondition: added in constructor => this.chatbot = context.chatbot;
+
+# v0.2.118 -> test
+- added payload to attributes: await chatbot.addParameter("payload", message);
+
+# v0.2.117 -> test
+- block endpoint fixed with APIURL
+
+# v0.2.116 -> test
+- updates @tiledesk/tiledesk-client => v0.10.12
+
+# v0.2.115 -> test
+- removed log console.error("TiledeskExpression.evaluate() error:...")
+- Log setting fix in DirectivesChatbotPlug: const tdclient = new TiledeskClient({...
+- SetAttributeV2: added check for action null: if (!action) {...
+- SetAttributeV2:added check with ? operator: if (action.operation?.operators === undefined && ...
+
 # v0.2.114 -> test
-- Creating smart webhook endpoint on index.js
+- Creating draft webhook endpoint on index.js: router.post('/block/:project_id/:bot_id/:block_id' ...
 - Added check on attribute size < 20Mb
 - SetAttributeV2: added persistency service
 

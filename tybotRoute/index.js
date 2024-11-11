@@ -210,7 +210,7 @@ router.post('/ext/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
           token: token,
           log: log,
-          HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
+          // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
@@ -563,6 +563,7 @@ router.post('/echobot', (req, res) => {
   });
 });
 
+// draft webhook
 router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const project_id = req.params['project_id'];
   const bot_id = req.params['bot_id'];
@@ -590,7 +591,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     }, token: ".."
   }
   console.log("sendMessageToBot()...");
-  sendMessageToBot(request, bot_id, async () => {
+  sendMessageToBot(process.env.TYBOT_ENDPOINT, request, bot_id, async () => {
     console.log("Async webhook message sent:\n", request);
     res.status(200).send({"success":true});
     return;
@@ -721,9 +722,12 @@ async function checkRequest(request_id, id_project) {
  * @param {string} botId. Tiledesk botId
  * @param {string} token. User token
  */
-function sendMessageToBot(message, botId, callback) {
+function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
+  if (!TILEBOT_ENDPOINT) {
+    TILEBOT_ENDPOINT = `${APIURL}/modules/tilebot`
+  }
+  const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,

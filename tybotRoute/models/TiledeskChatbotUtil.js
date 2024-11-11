@@ -714,6 +714,7 @@ class TiledeskChatbotUtil {
                             // console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
+                        await chatbot.addParameter("payload", message.attributes.payload);
                     }
                     catch(err) {
                         console.error("Error importing message payload in request variables:", err);

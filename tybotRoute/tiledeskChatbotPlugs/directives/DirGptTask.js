@@ -104,8 +104,12 @@ class DirGptTask {
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
       if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
 
-      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-      if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      if (transcript_string) {
+        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      } else {
+        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+      }
     }
 
 
