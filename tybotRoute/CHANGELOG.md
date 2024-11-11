@@ -20,6 +20,7 @@ available on:
 # v0.2.120 -> test
 - removed check in go() - it is already in execute() - on SetAttributeV2: if (!action) {...}
 - merged Whatsapp Action
+- updated "@tiledesk/tiledesk-client": "^0.10.13"
 
 # v0.2.119 -> test
 - fixed: addParameter("payload", message) => addParameter("payload", message.attributes.payload)
