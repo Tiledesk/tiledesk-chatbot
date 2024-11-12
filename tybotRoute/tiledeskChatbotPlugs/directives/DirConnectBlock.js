@@ -191,7 +191,7 @@ class DirConnectBlock {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", error);
+      console.error("An error occurred:", JSON.stringify(error), "url:", options.url);
       if (callback) {
         callback(error, null, null);
       }

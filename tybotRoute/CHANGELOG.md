@@ -17,7 +17,11 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.121 -> prod
+# v0.2.122 -> test
+- fixed check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js with return
+- removed logs
+
+# v0.2.121 -> test
 - added check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js
 
 # v0.2.120 -> prod

@@ -225,7 +225,7 @@ class DirIntent {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", error);
+      console.error("(DirIntent) An error occurred:", JSON.stringify(error), "url:", options.url);
       if (callback) {
         callback(error, null, null);
       }

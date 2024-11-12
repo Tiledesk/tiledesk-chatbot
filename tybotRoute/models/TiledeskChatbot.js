@@ -267,7 +267,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("got faq by EXACT MATCH", faqs);}
       }
       catch (error) {
-        console.error("An error occurred during exact match:", error);
+        console.error("(TiledeskChatbot) An error occurred during exact match:", JSON.stringify(error));
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}

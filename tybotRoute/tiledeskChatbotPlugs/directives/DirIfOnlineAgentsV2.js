@@ -110,7 +110,6 @@ class DirIfOnlineAgentsV2 {
           if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all | getProjectAvailableAgents(null, true)"); }
           agents = await this.getProjectAvailableAgents(null, true);
           if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
-          console.log("(DirIfOnlineAgents) agents:", agents);
         }
 
         if (agents && agents.length > 0) {
@@ -154,7 +153,7 @@ class DirIfOnlineAgentsV2 {
       }
     }
     catch(err) {
-      console.error("(DirIfOnlineAgents) An error occurred:", err);
+      console.error("(DirIfOnlineAgents) An error occurred:" + err);
       this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + err);
       callback();
     }
@@ -208,178 +207,6 @@ class DirIfOnlineAgentsV2 {
     });
     
   }
-
-  // async getDepartmentAvailableAgents(depId) {
-  //   return new Promise( (resolve, reject) => {
-  //     this.tdclient.getDepartment(depId, async (error, dep) => {
-  //       if (error) {
-  //         reject(error);
-  //       }
-  //       else {
-  //         if (this.log) {console.log("(DirIfOnlineAgents) got department:", JSON.stringify(dep)); }
-  //         const groupId = dep.id_group;
-  //         if (this.log) {console.log("(DirIfOnlineAgents) department.groupId:", groupId); }
-  //         try {
-  //           if (groupId) {
-  //             const group = await this.getGroup(groupId);
-  //             if (this.log) { console.log("(DirIfOnlineAgents) got group info:", group); }
-  //             if (group) {
-  //               if (group.members) {
-  //                 if (this.log) { console.log("(DirIfOnlineAgents) group members ids:", group.members);}
-  //                 // let group_members = await getTeammates(group.members);
-  //                 // console.log("group members details:", group_members);
-  //                 let all_teammates = await this.getAllTeammates();
-  //                 if (this.log) { console.log("(DirIfOnlineAgents) all teammates:", all_teammates); }
-  //                 if (all_teammates && all_teammates.length > 0){
-  //                   // [
-  //                   //   {
-  //                   //       "user_available": false,
-  //                   // ...
-  //                   //       "id_user": {
-  //                   //           "status": 100,
-  //                   //           "email": "michele@tiledesk.com",
-  //                   //           "firstname": "Michele",
-  //                   //           "lastname": "Pomposo",
-  //                   // ...
-  //                   //       },
-  //                   //       "role": "admin",
-  //                   //       "tags": [],
-  //                   //       "presence": {
-  //                   //           "status": "offline",
-  //                   //           "changedAt": "2023-11-16T12:37:31.990Z"
-  //                   //       },
-  //                   //       "isBusy": false
-  //                   //   }, ... ]
-  //                   // filter on availability
-  //                   console.log("(DirIfOnlineAgents) filtering available agents for group:", groupId);
-  //                   let available_agents = [];
-  //                   all_teammates.forEach((agent) => {
-  //                     if (this.log) { console.log("Checking teammate:", agent.id_user._id, "(", agent.id_user.email ,") Available:", agent.user_available, ") with members:",group.members ); }
-  //                     if (agent.user_available === true && group.members.includes(agent.id_user._id)) {
-  //                       console.log("Adding teammate:", agent.id_user._id);
-  //                       available_agents.push(agent);
-  //                     }
-  //                   });
-  //                   if (this.log) { console.log("(DirIfOnlineAgents) available agents in group:", available_agents); }
-  //                   resolve(available_agents);
-  //                 }
-  //               }
-  //               else {
-  //                 this.chatbot.addParameter("flowError", "(If online Agents) Empty group:" + groupId);
-  //                 resolve([]);
-  //               }
-  //             }
-  //             else {
-  //               this.chatbot.addParameter("flowError", "(If online Agents) Error: no group for groupId:" + groupId);
-  //               resolve([]);
-  //             }
-  //           }
-  //           else {
-  //             // no group => assigned to all teammates
-  //             const agents = await this.getProjectAvailableAgents(true);
-  //             resolve(agents);
-  //           }
-  //         }
-  //         catch(error) {
-  //           console.error("(DirIfOnlineAgents) Error:", error);
-  //           reject(error);
-  //         }
-  //       }
-  //     });
-  //   });
-  // }
-
-  // async getGroup(groupId, callback) {
-  //   return new Promise ( (resolve, reject) => {
-  //     const URL = `${this.context.TILEDESK_APIURL}/${this.context.projectId}/groups/${groupId}`
-  //     const HTTPREQUEST = {
-  //       url: URL,
-  //       headers: {
-  //         'Content-Type' : 'application/json',
-  //         'Authorization': this.fixToken(this.context.token)
-  //       },
-  //       method: 'GET',
-  //       httpsOptions: this.httpsOptions
-  //     };
-  //     this.#myrequest(
-  //       HTTPREQUEST,
-  //       function(err, resbody) {
-  //         if (err) {
-  //           reject(err);
-  //           if (callback) {
-  //             callback(err);
-  //           }
-  //         }
-  //         else {
-  //         //   {
-  //         //     "members": [
-  //         //         "62b317986993970035f0697e",
-  //         //         "5aaa99024c3b110014b478f0"
-  //         //     ],
-  //         //     "_id": "65ddec23fd8dc3003295cdd7",
-  //         //     "name": "Sales",
-  //         //     "trashed": false,
-  //         //     "id_project": "65203e12f8c0cf002cf4110b",
-  //         //     "createdBy": "5e09d16d4d36110017506d7f",
-  //         //     "createdAt": "2024-02-27T14:05:23.373Z",
-  //         //     "updatedAt": "2024-02-27T14:05:29.137Z",
-  //         //     "__v": 0
-  //         // }
-  //           resolve(resbody);
-  //           if (callback) {
-  //             callback(null, resbody);
-  //           }
-  //         }
-  //       }, this.log
-  //     );
-  //   });
-  // }
-
-  // async getAllTeammates(members, callback) {
-  //   return new Promise ( (resolve, reject) => {
-  //     const URL = `${this.context.TILEDESK_APIURL}/${this.context.projectId}/project_users`
-  //     const HTTPREQUEST = {
-  //       url: URL,
-  //       headers: {
-  //         'Content-Type' : 'application/json',
-  //         'Authorization': this.fixToken(this.context.token)
-  //       },
-  //       method: 'GET',
-  //       httpsOptions: this.httpsOptions
-  //     };
-  //     this.#myrequest(
-  //       HTTPREQUEST,
-  //       function(err, resbody) {
-  //         if (err) {
-  //           reject(err);
-  //           if (callback) {
-  //             callback(err);
-  //           }
-  //         }
-  //         else {
-  //         //   {
-  //         //     "members": [
-  //         //         "62b317986993970035f0697e",
-  //         //         "5aaa99024c3b110014b478f0"
-  //         //     ],
-  //         //     "_id": "65ddec23fd8dc3003295cdd7",
-  //         //     "name": "Sales",
-  //         //     "trashed": false,
-  //         //     "id_project": "65203e12f8c0cf002cf4110b",
-  //         //     "createdBy": "5e09d16d4d36110017506d7f",
-  //         //     "createdAt": "2024-02-27T14:05:23.373Z",
-  //         //     "updatedAt": "2024-02-27T14:05:29.137Z",
-  //         //     "__v": 0
-  //         // }
-  //           resolve(resbody);
-  //           if (callback) {
-  //             callback(null, resbody);
-  //           }
-  //         }
-  //       }, this.log
-  //     );
-  //   });
-  // }
 
   #myrequest(options, callback) {
     if (this.log) {

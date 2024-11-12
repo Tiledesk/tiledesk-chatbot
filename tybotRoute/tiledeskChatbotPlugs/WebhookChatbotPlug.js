@@ -25,6 +25,7 @@ class WebhookChatbotPlug {
       if (!this.validWebhookURL(this.webhookurl)) {
         if (this.log) {console.error("(WebhookChatbotPlug) Error. Invalid webhook URL:", this.webhookurl, "on context:", JSON.stringify(context));}
         pipeline.nextplug();
+        return;
       }
       this.execWebhook(answer, context, this.webhookurl, (err, message_from_webhook) => {
         if (this.log) {console.log("message_from_webhook:", message_from_webhook);}

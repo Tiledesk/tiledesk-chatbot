@@ -182,7 +182,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply = await chatbot.replyToMessage(message);
   }
   catch(err) {
-    console.error("An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+    console.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
   }
   if (!reply) {
     reply = {
@@ -785,7 +785,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
+      console.error("(tybotRoute index) An error occurred:", JSON.stringify(error), "url:", options.url);
       if (callback) {
         callback(error, null, null);
       }
