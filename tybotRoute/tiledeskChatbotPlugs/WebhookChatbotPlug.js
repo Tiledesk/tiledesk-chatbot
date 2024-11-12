@@ -22,6 +22,10 @@ class WebhookChatbotPlug {
     if (answer.attributes && answer.attributes.webhook && answer.attributes.webhook === true) {
       if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
       if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", JSON.stringify(context));}
+      if (!this.validWebhookURL(this.webhookurl)) {
+        if (this.log) {console.error("(WebhookChatbotPlug) Error. Invalid webhook URL:", this.webhookurl, "on context:", JSON.stringify(context));}
+        pipeline.nextplug();
+      }
       this.execWebhook(answer, context, this.webhookurl, (err, message_from_webhook) => {
         if (this.log) {console.log("message_from_webhook:", message_from_webhook);}
         if (err) {
@@ -67,6 +71,13 @@ class WebhookChatbotPlug {
     if (this.log) {console.log("Start processing webhook...");}
   }
   
+  validWebhookURL(webhookurl) {
+    if (!webhookurl) {
+      return false;
+    }
+    return true;
+  }
+
   execWebhook(reply_message, context, webhookurl, callback) {
     if (this.log) {
       console.log("WEBHOOK. on context", JSON.stringify(context));

@@ -17,7 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.120 -> test
+# v0.2.121 -> prod
+- added check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js
+
+# v0.2.120 -> prod
 - removed check in go() - it is already in execute() - on SetAttributeV2: if (!action) {...}
 - merged Whatsapp Action
 - updated "@tiledesk/tiledesk-client": "^0.10.13"
