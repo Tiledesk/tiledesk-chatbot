@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.123 -> test
+- DirSendEmail removed log
+
 # v0.2.122 -> test
 - fixed check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js with return
 - removed logs, err => JSON.stringify(err)
