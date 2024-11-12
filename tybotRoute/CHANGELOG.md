@@ -19,7 +19,7 @@ available on:
 
 # v0.2.122 -> test
 - fixed check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js with return
-- removed logs
+- removed logs, err => JSON.stringify(err)
 
 # v0.2.121 -> test
 - added check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js
