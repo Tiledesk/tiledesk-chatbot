@@ -143,20 +143,21 @@ class TiledeskChatbot {
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, lead);//, bot);
-          // if (!reply.attributes) {
-          //   reply.attributes = {}
-          // }
-          // // used by the Clients to get some info about the intent that generated this reply
-          // reply.attributes.intent_display_name = faq.intent_display_name;
-          // reply.attributes.intent_id = faq.intent_id;
+          resolve(reply);
+          return;
         }
         else {
-          reply = {
-            "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
-          }
+          // reply = {
+          //   "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
+          // }
+          // because of some race condition, during a mixed ReplyV2 Action button + Replace bot an
+          // intent can be found locked outside of the original chatbot scope.
+          // The temp solution is to immediatly unlock the intent and let the flow continue.
+          await this.unlockIntent(this.requestId);
+          await this.unlockAction(this.requestId);
         }
-        resolve(reply);
-        return;
+        // resolve(reply);
+        // return;
       }
       // }
       // else if (message.text.startsWith("/")) {

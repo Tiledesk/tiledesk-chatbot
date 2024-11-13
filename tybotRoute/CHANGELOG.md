@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.124 -> test
+- TiledeskChatbot.js: fixed problem with locked-intent error.
+
 # v0.2.123 -> test
 - DirSendEmail removed log
 
