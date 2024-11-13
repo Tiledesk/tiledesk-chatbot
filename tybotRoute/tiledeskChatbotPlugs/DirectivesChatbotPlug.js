@@ -207,7 +207,8 @@ class DirectivesChatbotPlug {
         attributes: {
           runtimeError: {
             message: message
-          }
+          },
+          subtype: "info"
         }
       }
     }

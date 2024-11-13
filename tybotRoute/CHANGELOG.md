@@ -19,6 +19,8 @@ available on:
 
 # v0.2.124 -> test
 - TiledeskChatbot.js: fixed problem with locked-intent error.
+- DirectivesChatbotPlug -> errorMessage is now hidden
+- TESTING WITH VALUES: static MAX_STEPS = 10 && MAX_EXECUTION_TIME = 1000 * 60 * 2; (2 minutes)
 
 # v0.2.123 -> test
 - DirSendEmail removed log
