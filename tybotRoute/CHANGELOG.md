@@ -17,6 +17,11 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.127 -> test
+- TiledeskChatbot =>
+  - static MAX_STEPS = 1000;
+  - static MAX_EXECUTION_TIME = 1000 * 3600 * 8;
+  
 # v0.2.126 -> test
 - TdCache async del(key, callback) FIXED (await unsupported problem)
 
