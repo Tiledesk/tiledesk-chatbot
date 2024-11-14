@@ -17,6 +17,13 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.126 -> test
+- TdCache async del(key, callback) FIXED (await unsupported problem)
+
+# v0.2.125 -> test
+- class TiledeskChatbot static MAX_STEPS = 1000;
+- class TiledeskChatbot static MAX_EXECUTION_TIME = 1000 * 3600 * 6; Increased from 4 => 6 hours
+
 # v0.2.124 -> test
 - TiledeskChatbot.js: fixed problem with locked-intent error.
 - DirectivesChatbotPlug -> errorMessage is now hidden

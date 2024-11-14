@@ -230,12 +230,11 @@ class TdCache {
     
     async del(key, callback) {
       return new Promise( async (resolve, reject) => {
-        this.client.del(key, () => {
-          if (callback) {
+        await this.client.del(key);
+        if (callback) {
             callback();
-          }
-          return resolve();
-        });
+        }
+        return resolve();
       })
     }
 }
