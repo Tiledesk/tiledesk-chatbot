@@ -133,7 +133,7 @@ class DirAddTags {
         })
       }
 
-      if (this.log) {  console.log('(DirAddTags) UPDAE lead with existingTags and newTags', existingTags, newTags) }
+      if (this.log) {  console.log('(DirAddTags) UPDATE lead with existingTags and newTags', existingTags, newTags) }
       let updatedLead = await this.updateLeadWithTags(server_base_url, request.lead._id, existingTags, newTags)
       if(!updatedLead){
         callback();
@@ -306,7 +306,9 @@ class DirAddTags {
       let filteredTags = tags.filter(newTag => !request_tags.some(existing => existing.tag === newTag))
                               .map((tag) => ({tag: tag, color: '#f0806f'}))
       json.tags.push(...filteredTags)
-      console.log('updateRequestWithTags  tags--> ', json)
+      if (this.log) {
+        console.log('(httprequest) DirAddTags updateRequestWithTags tags--> ', json)
+      }
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId,
         headers: {
