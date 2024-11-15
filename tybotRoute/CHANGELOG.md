@@ -18,6 +18,8 @@ available on:
 - Added fix on Filler -->
 
 # v0.2.127 -> test
+- Updated axios from 0.27.2 to 1.7.7
+# v0.2.127 -> test
 - TiledeskChatbot =>
   - static MAX_STEPS = 1000;
   - static MAX_EXECUTION_TIME = 1000 * 3600 * 8;
