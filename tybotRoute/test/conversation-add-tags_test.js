@@ -500,7 +500,7 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
@@ -581,7 +581,7 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
@@ -662,7 +662,7 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
@@ -743,7 +743,7 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')

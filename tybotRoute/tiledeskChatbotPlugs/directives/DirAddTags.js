@@ -285,7 +285,7 @@ class DirAddTags {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAddTags Check quote availability err: ", err);
+            console.error("(httprequest) DirAddTags add tags to list err: ", err);
             resolve(true)
           } else {
             if (resbody) {
@@ -323,7 +323,6 @@ class DirAddTags {
             resolve(true)
           } else {
             if (resbody) {
-              console.log('(httprequest) DirAddTags response:', resbody)
               resolve(resbody)
             } else {
               resolve(false)
@@ -346,14 +345,14 @@ class DirAddTags {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
-        method: "PATCH",
+        method: "PUT",
         json: json
       }
 
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAddTags patch request with new tags err: ", err);
+            console.error("(httprequest) DirAddTags put lead with new tags err: ", err);
             resolve(true)
           } else {
             if (resbody) {
