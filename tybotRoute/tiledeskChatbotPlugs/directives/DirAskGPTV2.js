@@ -413,7 +413,7 @@ class DirAskGPTV2 {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }

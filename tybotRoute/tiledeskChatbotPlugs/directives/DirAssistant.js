@@ -136,7 +136,6 @@ class DirAssistant {
     }
     else {
       apikey = "Bearer " + apikey;
-      console.log("APIKEY::", apikey);
     }
     let threadId = null;
     try {
@@ -166,7 +165,7 @@ class DirAssistant {
           lastMessage = messages.data[0].content[0].text.value;
         }
       }
-      console.log("lastMessage:", lastMessage);
+
       // process.exit(0);
       if (lastMessage !== null) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, lastMessage);
@@ -596,7 +595,7 @@ class DirAssistant {
             }
             return value;
           });
-          console.error("An error occurred: ", error_log);
+          console.error("(DirAssistant) An error occurred: ", error_log);
           // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
           // console.error("An error occurred:", JSON.stringify(err));
         }

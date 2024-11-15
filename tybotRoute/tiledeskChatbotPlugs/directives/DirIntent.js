@@ -225,7 +225,7 @@ class DirIntent {
       }
     })
     .catch( (error) => {
-      console.error("(DirIntent) An error occurred:", JSON.stringify(error), "url:", options.url);
+      console.error("(DirIntent) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null, null);
       }

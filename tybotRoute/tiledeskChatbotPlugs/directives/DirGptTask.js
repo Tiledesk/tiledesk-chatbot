@@ -361,6 +361,7 @@ class DirGptTask {
         }
       })
       .catch((error) => {
+        console.error("(DirGptTask) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }
@@ -447,7 +448,6 @@ class DirGptTask {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {

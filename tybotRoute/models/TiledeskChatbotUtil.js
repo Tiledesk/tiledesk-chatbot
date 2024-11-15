@@ -970,7 +970,7 @@ class TiledeskChatbotUtil {
             }
           })
           .catch((error) => {
-            // console.error("An error occurred:", error);
+            console.error("(TiledeskChatbotUtil) Axios error: ", JSON.stringify(error));
             if (callback) {
               callback(error, null, null);
             }

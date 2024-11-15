@@ -231,7 +231,7 @@ class DirIfOpenHours {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirIfOpenHours) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }

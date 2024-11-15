@@ -249,6 +249,7 @@ class DirIfOnlineAgentsV2 {
         }
       })
       .catch((error) => {
+        console.error("(DirIfOnlineAgents) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }

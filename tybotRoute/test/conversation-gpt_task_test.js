@@ -1386,6 +1386,66 @@ describe('Conversation for GptTask test', async () => {
     });
   });
 
+  it('/axios-error-management', (done) => {
+
+    let request_id = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      // assert(message.attributes.commands !== null);
+      // assert(message.attributes.commands.length === 2);
+      // const command2 = message.attributes.commands[1];
+      // assert(command2.type === "message");
+      // assert(command2.message.text === "gpt replied: ");
+
+      util.getChatbotParameters(request_id, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      console.log("asdasdsa")
+      let http_code = 502;
+      let reply = "Communication interrupted";
+
+      res.status(http_code).send(reply);
+    })
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": request_id,
+          "text": '/gpt_task_axios_error',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": request_id
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
 });
 
 /**

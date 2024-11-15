@@ -81,7 +81,7 @@ class DirCode {
       // console.log("newvars_del:", newvars_del);
     }
     catch(err) {
-      console.error("An error occurred:", err);
+      console.error("(DirCode) An error occurred:", err);
     }
     callback();
     return;

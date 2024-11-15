@@ -190,7 +190,7 @@ class DirWebRequest {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", JSON.stringify(error));
+      console.error("(DirWebRequest) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null);
       }

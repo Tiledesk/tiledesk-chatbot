@@ -281,7 +281,7 @@ class DirQapla {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirQapla) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }

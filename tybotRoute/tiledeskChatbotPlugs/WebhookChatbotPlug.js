@@ -206,7 +206,7 @@ class WebhookChatbotPlug {
       }
     })
     .catch(function (error) {
-      console.error("An error occurred:", error);
+      console.error("(WebhookChatbotPlug) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null, null);
       }
