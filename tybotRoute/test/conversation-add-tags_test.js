@@ -72,7 +72,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -86,6 +87,7 @@ describe('Conversation for AddTags test', async () => {
           name: 'chat21'
         }
       }
+      console.log('reply', reply)
       res.status(200).send(reply)
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
@@ -153,7 +155,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -234,8 +237,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -316,7 +319,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -408,7 +412,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')

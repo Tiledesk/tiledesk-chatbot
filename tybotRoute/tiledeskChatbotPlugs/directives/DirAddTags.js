@@ -302,9 +302,9 @@ class DirAddTags {
 
   async updateRequestWithTags(server_base_url, request_tags, tags) {
     return new Promise((resolve) => {
-      let json = request_tags
+      let json = {tags: request_tags}
       tags.forEach(tag => {
-        json.push({tag: tag, color: '#f0806f'})
+        json.tags.push({tag: tag, color: '#f0806f'})
       });
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId,
@@ -323,6 +323,7 @@ class DirAddTags {
             resolve(true)
           } else {
             if (resbody) {
+              console.log('(httprequest) DirAddTags response:', resbody)
               resolve(resbody)
             } else {
               resolve(false)
