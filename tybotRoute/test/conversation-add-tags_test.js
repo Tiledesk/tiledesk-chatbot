@@ -111,7 +111,13 @@ describe('Conversation for AddTags test', async () => {
       let reply = {
         request_id: req.params.requestId,
         id_project: req.params.projectId,
-        tags: [],
+        tags: [
+          {
+            _id: 'tagId',
+            color: '#43B1F2',
+            tag: 'tag1'
+          }
+        ],
         status: 200,
         channel: {
           name: 'chat21'
@@ -542,7 +548,7 @@ describe('Conversation for AddTags test', async () => {
         lead: {
           _id: 'leadID',
           id_project: req.params.projectId,
-          tags: []
+          tags: ['tag1']
         },
         channel: {
           name: 'chat21'

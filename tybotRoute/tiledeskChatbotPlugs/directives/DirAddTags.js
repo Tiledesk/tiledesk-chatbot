@@ -304,9 +304,10 @@ class DirAddTags {
   async updateRequestWithTags(server_base_url, request_tags, tags) {
     return new Promise((resolve) => {
       let json = {tags: request_tags}
-      tags.forEach(tag => {
-        json.tags.push({tag: tag, color: '#f0806f'})
-      });
+      let filteredTags = tags.filter(newTag => !request_tags.some(existing => existing.tag === newTag))
+                              .map((tag) => ({tag: tag, color: '#f0806f'}))
+      json.tags.push(...filteredTags)
+
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId,
         headers: {
