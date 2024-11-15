@@ -123,7 +123,6 @@ class DirAddTags {
       let existingTags = request.lead.tags
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
 
-      console.log('Push to list?', action.pushToList)
       if(action.pushToList){
         newTags.forEach(async (tag) => {
           let tags = await this.addNewTag(server_base_url,tag)
@@ -307,7 +306,7 @@ class DirAddTags {
       let filteredTags = tags.filter(newTag => !request_tags.some(existing => existing.tag === newTag))
                               .map((tag) => ({tag: tag, color: '#f0806f'}))
       json.tags.push(...filteredTags)
-
+      console.log('updateRequestWithTags  tags--> ', json)
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId,
         headers: {
