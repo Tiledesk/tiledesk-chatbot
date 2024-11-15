@@ -123,6 +123,7 @@ class DirAddTags {
       let existingTags = request.lead.tags
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
 
+      console.log('Push to list?', action.pushToList)
       if(action.pushToList){
         newTags.forEach(async (tag) => {
           let tags = await this.addNewTag(server_base_url,tag)
@@ -336,9 +337,8 @@ class DirAddTags {
   async updateLeadWithTags(server_base_url, lead_id, lead_tags, tags) {
     return new Promise((resolve) => {
       let json = {tags: lead_tags}
-      tags.forEach(tag => {
-        json.tags.push(tag)
-      });
+      let filteredTags = tags.filter(tag => !lead_tags.includes(tag))
+      json.tags.push(...filteredTags)
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/leads/" + lead_id,
         headers: {
