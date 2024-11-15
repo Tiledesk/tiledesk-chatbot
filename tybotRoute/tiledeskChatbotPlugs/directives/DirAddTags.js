@@ -141,7 +141,7 @@ class DirAddTags {
       }
     }
     
-    callback(true);
+    callback();
     return;
     
 
@@ -336,9 +336,9 @@ class DirAddTags {
 
   async updateLeadWithTags(server_base_url, lead_id, lead_tags, tags) {
     return new Promise((resolve) => {
-      let json = lead_tags
+      let json = {tags: lead_tags}
       tags.forEach(tag => {
-        json.push(tag)
+        json.tags.push(tag)
       });
       const HTTPREQUEST = {
         url: server_base_url + "/" + this.context.projectId + "/leads/" + lead_id,

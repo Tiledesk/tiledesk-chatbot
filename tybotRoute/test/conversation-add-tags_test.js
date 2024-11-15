@@ -505,7 +505,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
@@ -585,7 +586,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
@@ -665,7 +667,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
@@ -745,7 +748,8 @@ describe('Conversation for AddTags test', async () => {
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      let tags = req.body
+      assert(req.body.tags)
+      let tags = req.body.tags
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
