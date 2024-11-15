@@ -96,7 +96,7 @@ class DirAddTags {
     if(target === 'request'){
       
       let existingTags = request.tags
-      let newTags = filled_tags.split(',').filter(tag => tag !== '')
+      let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
