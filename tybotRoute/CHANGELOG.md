@@ -17,7 +17,7 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.130-rc1
+# v0.2.130-rc2
 - index.js /block => added "token": "NO-TOKEN"
 
 # v0.2.129 -> test

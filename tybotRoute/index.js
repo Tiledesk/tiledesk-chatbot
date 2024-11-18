@@ -569,6 +569,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const bot_id = req.params['bot_id'];
   const block_id = req.params['block_id'];
   const body = req.body;
+  console.log("/block/ .body:", JSON.stringify(body));
   // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
   // console.log('/block/:project_id/:bot_id/:block_id.body', body);
   
@@ -591,7 +592,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     "token": "NO-TOKEN"
   }
-  console.log("sendMessageToBot()...");
+  console.log("sendMessageToBot()...", JSON.stringify(request));
   sendMessageToBot(process.env.TYBOT_ENDPOINT, request, bot_id, async () => {
     // console.log("Async webhook message sent:\n", request);
     res.status(200).send({"success":true});
