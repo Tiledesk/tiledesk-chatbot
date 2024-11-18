@@ -47,10 +47,19 @@ class TdCache {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
           try {
-            await this.client.set(
+            this.client.set(
               key,
               value,
-              'EX', options.EX);
+              'EX', options.EX,
+              (err) => {
+                if (err) {
+                  reject(err);
+                }
+                else {
+                  return resolve();
+                }
+              }
+            );
           }
           catch(error) {
             reject(error)
@@ -61,18 +70,27 @@ class TdCache {
             //console.log("setting here...key", key, value)
             await this.client.set(
               key,
-              value);
+              value,
+              (err) => {
+                if (err) {
+                  reject(err);
+                }
+                else {
+                  return resolve();
+                }
+              }
+            );
           }
           catch(error) {
-            console.error("Error", error);
+            console.error("TdCache Error:", error);
             reject(error)
           }
         }
-        if (options && options.callback) {
-            options.callback();
-        }
+        // if (options && options.callback) {
+        //     options.callback();
+        // }
         //console.log("resolving...", key);
-        return resolve();
+        // return resolve();
       });
     }
 

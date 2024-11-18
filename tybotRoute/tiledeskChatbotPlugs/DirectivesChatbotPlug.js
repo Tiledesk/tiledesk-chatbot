@@ -136,13 +136,19 @@ class DirectivesChatbotPlug {
     }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
-    const tdclient = new TiledeskClient({
-      projectId: projectId,
-      token: token,
-      APIURL: API_URL,
-      APIKEY: "___",
-      log: this.log
-    });
+    let tdclient = null;
+    try {
+      tdclient = new TiledeskClient({
+        projectId: projectId,
+        token: token,
+        APIURL: API_URL,
+        APIKEY: "___",
+        log: this.log
+      });
+    }
+    catch(err) {
+      console.log("An error occurred while creating TiledeskClient in DirectivesChatbotPlug:", err);
+    }
 
     this.context =  {
       projectId: projectId,
