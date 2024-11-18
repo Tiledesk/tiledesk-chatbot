@@ -33,6 +33,7 @@ class TiledeskChatbotConst {
     static REQ_TICKET_ID_KEY = "ticketId";
     static REQ_CHATBOT_TOKEN = "chatbotToken";
     static REQ_CHATBOT_TOKEN_v2 = "chatbot_jwt_token";
+    static API_BASE_URL = "api_base_url";
 }
 
 module.exports = { TiledeskChatbotConst };

@@ -517,7 +517,15 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
             }
+            if (process.env.TILEDESK_API) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
+            }
             
+            if (process.env.API_ENDPOINT) {
+                await chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+            }
+
             if (message.text && message.sender !== "_tdinternal") {
                 // await chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
                 await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // user wrote, delete userInput, replyv2 will not trigger timeout action

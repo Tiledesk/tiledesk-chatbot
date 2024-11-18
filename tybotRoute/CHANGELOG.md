@@ -17,8 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.130-rc2
+# v0.2.130-rc3
 - index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
 
 # v0.2.129 -> test
 - (TiledeskChatbot) sending as "info": "An error occurred while getting locked intent:'" + locked_intent + "'"
