@@ -588,7 +588,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
       "attributes": {
         "payload": body
       }
-    }
+    },
+    "token": "NO-TOKEN"
   }
   console.log("sendMessageToBot()...");
   sendMessageToBot(process.env.TYBOT_ENDPOINT, request, bot_id, async () => {

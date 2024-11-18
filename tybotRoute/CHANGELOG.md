@@ -17,11 +17,13 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-
+# v0.2.130-rc1
+- index.js /block => added "token": "NO-TOKEN"
 
 # v0.2.129 -> test
 - (TiledeskChatbot) sending as "info": "An error occurred while getting locked intent:'" + locked_intent + "'"
 - (DirectivesChatbotPlug) added try catch on new TiledeskClient() => try {tdclient = new TiledeskClient({...})}
+- index.js /block => added "token": "NO-TOKEN"
 
 # v0.2.128 -> test
 - Updated axios from 0.27.2 to 1.7.7
