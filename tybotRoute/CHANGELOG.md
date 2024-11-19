@@ -17,7 +17,7 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.130-rc5
+# v0.2.130
 - (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
 
 # v0.2.130-rc4
