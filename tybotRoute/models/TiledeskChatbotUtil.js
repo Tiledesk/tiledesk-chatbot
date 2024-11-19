@@ -523,7 +523,7 @@ class TiledeskChatbotUtil {
             }
             
             if (process.env.API_ENDPOINT) {
-                await chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+                await chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_URL);
             }
 
             if (message.text && message.sender !== "_tdinternal") {
