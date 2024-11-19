@@ -17,6 +17,11 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.130
+- (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
+- index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+
 # v0.2.130-rc5
 - (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
 
