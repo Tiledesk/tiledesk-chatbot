@@ -83,19 +83,18 @@ class DirAddTags {
     }
 
 
-    let request = await this.tdClient.getRequestById(this.requestId);
-    if (this.log) { console.log('(DirAddTags) request detail: ', request) }
-    if(!request){
-      if (this.log) { console.log("(DirAddTags) - request not found for request_id:", this.requestId); }
-      callback();
-      return;
-    }
+    // let request = await this.tdClient.getRequestById(this.requestId);
+    // if (this.log) { console.log('(DirAddTags) request detail: ', request) }
+    // if(!request){
+    //   if (this.log) { console.log("(DirAddTags) - request not found for request_id:", this.requestId); }
+    //   callback();
+    //   return;
+    // }
 
 
     /** use case: CONVERSATION */
     if(target === 'request'){
       
-      let existingTags = request.tags
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
 
       if(action.pushToList){
@@ -108,8 +107,8 @@ class DirAddTags {
         })
       }
 
-      if (this.log) { console.log('(DirAddTags) UPDATE request with existingTags and newTags', existingTags, newTags) }
-      let updatedRequest = await this.updateRequestWithTags(server_base_url, existingTags, newTags)
+      if (this.log) { console.log('(DirAddTags) UPDATE request with newTags', newTags) }
+      let updatedRequest = await this.updateRequestWithTags(server_base_url, newTags)
       if(!updatedRequest){
         callback();
         return;
@@ -117,11 +116,17 @@ class DirAddTags {
 
     }
 
-    /** use case: CONVERSATION */
+    /** use case: LEAD */
     if(target === 'lead'){
-
-      let existingTags = request.lead.tags
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
+
+      let request = await this.tdClient.getRequestById(this.requestId);
+      if (this.log) { console.log('(DirAddTags) request detail: ', request) }
+      if(!request){
+        if (this.log) { console.log("(DirAddTags) - request not found for request_id:", this.requestId); }
+        callback();
+        return;
+      }
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
@@ -133,8 +138,8 @@ class DirAddTags {
         })
       }
 
-      if (this.log) {  console.log('(DirAddTags) UPDATE lead with existingTags and newTags', existingTags, newTags) }
-      let updatedLead = await this.updateLeadWithTags(server_base_url, request.lead._id, existingTags, newTags)
+      if (this.log) {  console.log('(DirAddTags) UPDATE lead with newTags', newTags) }
+      let updatedLead = await this.updateLeadWithTags(server_base_url, request.lead._id, newTags)
       if(!updatedLead){
         callback();
         return;
@@ -300,22 +305,21 @@ class DirAddTags {
   }
 
 
-  async updateRequestWithTags(server_base_url, request_tags, tags) {
+  async updateRequestWithTags(server_base_url, tags) {
     return new Promise((resolve) => {
-      let json = {tags: request_tags}
-      let filteredTags = tags.filter(newTag => !request_tags.some(existing => existing.tag === newTag))
-                              .map((tag) => ({tag: tag, color: '#f0806f'}))
-      json.tags.push(...filteredTags)
+      let json = []
+      let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
+      json.push(...filteredTags)
       if (this.log) {
         console.log('(httprequest) DirAddTags updateRequestWithTags tags--> ', json)
       }
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId,
+        url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
-        method: "PATCH",
+        method: "PUT",
         json: json
       }
 
@@ -336,19 +340,16 @@ class DirAddTags {
     })
   }
 
-  async updateLeadWithTags(server_base_url, lead_id, lead_tags, tags) {
+  async updateLeadWithTags(server_base_url, lead_id, tags) {
     return new Promise((resolve) => {
-      let json = {tags: lead_tags}
-      let filteredTags = tags.filter(tag => !lead_tags.includes(tag))
-      json.tags.push(...filteredTags)
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/leads/" + lead_id,
+        url: server_base_url + "/" + this.context.projectId + "/leads/" + lead_id + '/tag',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
         method: "PUT",
-        json: json
+        json: tags
       }
 
       this.#myrequest(

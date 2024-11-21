@@ -67,13 +67,12 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/requests/:requestId/', function (req, res) {
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      let tags = req.body
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -87,7 +86,6 @@ describe('Conversation for AddTags test', async () => {
           name: 'chat21'
         }
       }
-      console.log('reply', reply)
       res.status(200).send(reply)
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
@@ -101,29 +99,6 @@ describe('Conversation for AddTags test', async () => {
           });
         }
       });
-
-    });
-
-    endpointServer.get('/:projectId/requests/:requestId/', function (req, res) {
-      assert(req.params.projectId)
-      assert(req.params.requestId)
-      assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
-      let reply = {
-        request_id: req.params.requestId,
-        id_project: req.params.projectId,
-        tags: [
-          {
-            _id: 'tagId',
-            color: '#43B1F2',
-            tag: 'tag1'
-          }
-        ],
-        status: 200,
-        channel: {
-          name: 'chat21'
-        }
-      }
-      res.status(200).send(reply)
 
     });
 
@@ -156,13 +131,12 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/requests/:requestId/', function (req, res) {
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      let tags = req.body
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -238,13 +212,12 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/requests/:requestId/', function (req, res) {
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      let tags = req.body
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -315,18 +288,17 @@ describe('Conversation for AddTags test', async () => {
     });
   });
   
-  it('Add tags to converstion and push to tags list', (done) => {
+  it('Add tags to conversation and push to tags list', (done) => {
 
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/requests/:requestId/', function (req, res) {
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      let tags = req.body
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -366,22 +338,6 @@ describe('Conversation for AddTags test', async () => {
         id_project: req.params.projectId
       }
       res.status(200).send(tag)
-    });
-
-    endpointServer.get('/:projectId/requests/:requestId/', function (req, res) {
-      assert(req.params.projectId)
-      assert(req.params.requestId)
-      let reply = {
-        request_id: req.params.requestId,
-        id_project: req.params.projectId,
-        tags: [],
-        status: 200,
-        channel: {
-          name: 'chat21'
-        }
-      }
-      res.status(200).send(reply)
-
     });
 
 
@@ -408,18 +364,17 @@ describe('Conversation for AddTags test', async () => {
     });
   });
 
-  it('Add tags to converstion and push to tags list (with variable as single value)', (done) => {
+  it('Add tags to conversation and push to tags list (with variable as single value)', (done) => {
 
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.patch('/:projectId/requests/:requestId/', function (req, res) {
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.requestId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      let tags = req.body
       tags.forEach(tag => {
         if(!tag._id)
         tag._id = uuidv4().replace(/-/g, '')
@@ -460,23 +415,6 @@ describe('Conversation for AddTags test', async () => {
       }
       res.status(200).send(tag)
     });
-
-    endpointServer.get('/:projectId/requests/:requestId/', function (req, res) {
-      assert(req.params.projectId)
-      assert(req.params.requestId)
-      let reply = {
-        request_id: req.params.requestId,
-        id_project: req.params.projectId,
-        tags: [],
-        status: 200,
-        channel: {
-          name: 'chat21'
-        }
-      }
-      res.status(200).send(reply)
-
-    });
-
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       // console.log('endpointServer started', listener.address());
@@ -506,13 +444,13 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      assert(req.body.length > 0)
+      let tags = req.body
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
@@ -587,17 +525,17 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      assert(req.body.length > 0)
+      let tags = req.body
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
-        tags: tags,
+        tags: [ 'tag0' , ...tags ],
         status: 100
       }
       res.status(200).send(lead)
@@ -668,17 +606,17 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      assert(req.body.length > 0)
+      let tags = req.body
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
-        tags: tags,
+        tags: ['tag0', ...tags ],
         status: 100
       }
       res.status(200).send(lead)
@@ -749,17 +687,17 @@ describe('Conversation for AddTags test', async () => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.put('/:projectId/leads/:leadId/', function (req, res) {
+    endpointServer.put('/:projectId/leads/:leadId/tag', function (req, res) {
       assert(req.params.projectId)
       assert(req.params.leadId)
       assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
       assert(req.body)
-      assert(req.body.tags)
-      let tags = req.body.tags
+      assert(req.body.length > 0)
+      let tags = req.body
       let lead = {
         _id: req.params.leadId,
         id_project: req.params.projectId,
-        tags: tags,
+        tags: [ 'tag0', ...tags],
         status: 100
       }
       res.status(200).send(lead)
