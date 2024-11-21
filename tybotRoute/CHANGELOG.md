@@ -17,7 +17,89 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.112 -> test
+# v0.2.130
+- (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
+- index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+
+# v0.2.130-rc5
+- (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
+
+# v0.2.130-rc4
+- (TiledeskChatbotUtil) process.env.API_ENDPOINT => process.env.API_URL
+
+# v0.2.130-rc3
+- index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+
+# v0.2.129 -> test
+- (TiledeskChatbot) sending as "info": "An error occurred while getting locked intent:'" + locked_intent + "'"
+- (DirectivesChatbotPlug) added try catch on new TiledeskClient() => try {tdclient = new TiledeskClient({...})}
+
+# v0.2.128 -> test
+- Updated axios from 0.27.2 to 1.7.7
+- fixes tdcache .set() with callback
+
+# v0.2.127 -> test
+- TiledeskChatbot =>
+  - static MAX_STEPS = 1000;
+  - static MAX_EXECUTION_TIME = 1000 * 3600 * 8;
+
+# v0.2.126 -> test
+- TdCache async del(key, callback) FIXED (await unsupported problem)
+
+# v0.2.125 -> test
+- class TiledeskChatbot static MAX_STEPS = 1000;
+- class TiledeskChatbot static MAX_EXECUTION_TIME = 1000 * 3600 * 6; Increased from 4 => 6 hours
+
+# v0.2.124 -> test
+- TiledeskChatbot.js: fixed problem with locked-intent error.
+- DirectivesChatbotPlug -> errorMessage is now hidden
+- TESTING WITH VALUES: static MAX_STEPS = 10 && MAX_EXECUTION_TIME = 1000 * 60 * 2; (2 minutes)
+
+# v0.2.123 -> test
+- DirSendEmail removed log
+
+# v0.2.122 -> test
+- fixed check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js with return
+- removed logs, err => JSON.stringify(err)
+
+# v0.2.121 -> test
+- added check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js
+
+# v0.2.120 -> prod
+- removed check in go() - it is already in execute() - on SetAttributeV2: if (!action) {...}
+- merged Whatsapp Action
+- updated "@tiledesk/tiledesk-client": "^0.10.13"
+
+# v0.2.119 -> test
+- fixed: addParameter("payload", message) => addParameter("payload", message.attributes.payload)
+- JSONCondition: added in constructor => this.chatbot = context.chatbot;
+
+# v0.2.118 -> test
+- added payload to attributes: await chatbot.addParameter("payload", message);
+
+# v0.2.117 -> test
+- block endpoint fixed with APIURL
+
+# v0.2.116 -> test
+- updates @tiledesk/tiledesk-client => v0.10.12
+
+# v0.2.115 -> test
+- removed log console.error("TiledeskExpression.evaluate() error:...")
+- Log setting fix in DirectivesChatbotPlug: const tdclient = new TiledeskClient({...
+- SetAttributeV2: added check for action null: if (!action) {...
+- SetAttributeV2:added check with ? operator: if (action.operation?.operators === undefined && ...
+
+# v0.2.114 -> test
+- Creating draft webhook endpoint on index.js: router.post('/block/:project_id/:bot_id/:block_id' ...
+- Added check on attribute size < 20Mb
+- SetAttributeV2: added persistency service
+
+# v0.2.113 -> prod
+- Fixed DirClose not importing TiledeskChatbotConst
+
+# v0.2.112 -> prod
 - Fix index name in DirAskGPTV2
 
 # v0.2.111 -> test

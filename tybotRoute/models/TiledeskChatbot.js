@@ -13,8 +13,8 @@ const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 1000;
-  static MAX_EXECUTION_TIME = 1000 * 3600 * 4; // 4 hours
+  static MAX_STEPS = 1000; // prod 1000;
+  static MAX_EXECUTION_TIME = 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -143,17 +143,21 @@ class TiledeskChatbot {
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, lead);//, bot);
-          // if (!reply.attributes) {
-          //   reply.attributes = {}
-          // }
-          // // used by the Clients to get some info about the intent that generated this reply
-          // reply.attributes.intent_display_name = faq.intent_display_name;
-          // reply.attributes.intent_id = faq.intent_id;
+          // resolve(reply);
+          // return;
         }
         else {
           reply = {
-            "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
+            "text": "An error occurred while getting locked intent:'" + locked_intent + "'",
+            "attributes": {
+              "subtype": "info"
+            }
           }
+          // because of some race condition, during a mixed ReplyV2 Action button + Replace bot an
+          // intent can be found locked outside of the original chatbot scope.
+          // The temp solution is to immediatly unlock the intent and let the flow continue.
+          await this.unlockIntent(this.requestId);
+          await this.unlockAction(this.requestId);
         }
         resolve(reply);
         return;
@@ -267,7 +271,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("got faq by EXACT MATCH", faqs);}
       }
       catch (error) {
-        console.error("An error occurred during exact match:", error);
+        console.error("(TiledeskChatbot) An error occurred during exact match:", JSON.stringify(error));
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
@@ -618,8 +622,17 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    if (parameter_name === null || parameter_name === undefined) {
+      // console.error("Error saving key:", parameter_name, "value:", parameter_value);
+      return;
+    }
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const parameter_value_s = JSON.stringify(parameter_value);
+    // console.log("saving key:", parameter_name, "value:", parameter_value);
+    if (parameter_value_s?.length > 20000000) {
+      // console.log("Error. Attribute size too big (> 20mb):", parameter_value_s);
+      return;
+    }
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
   }
 

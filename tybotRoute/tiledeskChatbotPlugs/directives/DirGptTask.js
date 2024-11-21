@@ -104,8 +104,12 @@ class DirGptTask {
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
       if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
 
-      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-      if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      if (transcript_string) {
+        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      } else {
+        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+      }
     }
 
 
@@ -357,6 +361,7 @@ class DirGptTask {
         }
       })
       .catch((error) => {
+        console.error("(DirGptTask) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }
@@ -443,7 +448,6 @@ class DirGptTask {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {

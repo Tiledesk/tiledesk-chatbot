@@ -15,6 +15,7 @@ class DirAskGPTV2 {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
@@ -171,7 +172,9 @@ class DirAskGPTV2 {
       let keep_going = await this.checkQuoteAvailability(server_base_url);
       if (keep_going === false) {
         if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
-        callback();
+        await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);  
         return;
       }
     }
@@ -410,7 +413,7 @@ class DirAskGPTV2 {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }

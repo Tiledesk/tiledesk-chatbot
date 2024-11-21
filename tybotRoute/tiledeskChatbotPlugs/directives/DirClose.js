@@ -1,4 +1,6 @@
 
+const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+
 class DirClose {
 
     constructor(context) {

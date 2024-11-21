@@ -137,7 +137,7 @@ class DirReply {
         if (err) {
           console.error("Error sending reply:", err);
         }
-        if (this.log) {console.log("Reply message sent", cleanMessage);}
+        if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays

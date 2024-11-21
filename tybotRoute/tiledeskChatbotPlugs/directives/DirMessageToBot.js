@@ -143,7 +143,7 @@ class DirMessageToBot {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", error);
+      console.error("(DirMessageToBot) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null, null);
       }

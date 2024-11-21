@@ -47,19 +47,10 @@ class TdCache {
         if (options && options.EX) {
           //console.log("expires:", options.EX)
           try {
-            this.client.set(
+            await this.client.set(
               key,
               value,
-              'EX', options.EX,
-              (err) => {
-                if (err) {
-                  reject(err);
-                }
-                else {
-                  return resolve();
-                }
-              }
-            );
+              'EX', options.EX);
           }
           catch(error) {
             reject(error)
@@ -70,27 +61,18 @@ class TdCache {
             //console.log("setting here...key", key, value)
             await this.client.set(
               key,
-              value,
-              (err) => {
-                if (err) {
-                  reject(err);
-                }
-                else {
-                  return resolve();
-                }
-              }
-            );
+              value);
           }
           catch(error) {
-            console.error("TdCache Error:", error);
+            console.error("Error", error);
             reject(error)
           }
         }
-        // if (options && options.callback) {
-        //     options.callback();
-        // }
+        if (options && options.callback) {
+            options.callback();
+        }
         //console.log("resolving...", key);
-        // return resolve();
+        return resolve();
       });
     }
 
@@ -248,12 +230,11 @@ class TdCache {
     
     async del(key, callback) {
       return new Promise( async (resolve, reject) => {
-        this.client.del(key, () => {
-          if (callback) {
+        await this.client.del(key);
+        if (callback) {
             callback();
-          }
-          return resolve();
-        });
+        }
+        return resolve();
       })
     }
 }

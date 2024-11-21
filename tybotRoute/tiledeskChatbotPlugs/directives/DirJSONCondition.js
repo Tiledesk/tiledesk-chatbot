@@ -9,6 +9,7 @@ class DirJSONCondition {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
+    this.chatbot = context.chatbot;
     // let context =  {
     //   projectId: projectId,
     //   token: token,
@@ -27,6 +28,7 @@ class DirJSONCondition {
     //   APIKEY: "___",
     //   log: context.log
     // });
+    this.chatbot = context.chatbot;
     this.intentDir = new DirIntent(context);
     //   {
     //     API_ENDPOINT: context.TILEDESK_APIURL,

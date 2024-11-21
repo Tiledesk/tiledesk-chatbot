@@ -263,7 +263,7 @@ class TiledeskExpression {
             // console.log("res=", res)
         }
         catch (err) {
-            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
+            // console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
         }
         return res;
     }
@@ -337,7 +337,7 @@ class TiledeskExpression {
             res = vm.run(`let $data = this;${expression}`);
         }
         catch (err) {
-            console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+            // console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
         return res;
     }
