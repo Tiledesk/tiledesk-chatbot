@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.131-rc2
+- changed API_URL with API_ENDPOINT
+
 # v0.2.131-rc1
 - added: AUDIO_RECORD vxml action as reply_v2 actionType
 - added: DirAddTags action
