@@ -712,14 +712,12 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CLEAR_TRANSCRIPT) {
-      console.log("...CLEAR_TRANSCRIPT");
       new DirClearTranscript(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.MOVE_TO_UNASSIGNED) {
-      console.log("...MOVE_TO_UNASSIGNED");
       new DirMoveToUnassigned(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
