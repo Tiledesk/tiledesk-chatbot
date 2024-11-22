@@ -19,7 +19,7 @@ class DirMessage {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.API_ENDPOINT = context.TILEDESK_APIURL,
+    this.API_ENDPOINT = context.API_ENDPOINT,
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.projectId = context.projectId;
     this.requestId = context.requestId;

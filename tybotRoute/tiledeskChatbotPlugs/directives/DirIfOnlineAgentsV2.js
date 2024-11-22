@@ -15,6 +15,7 @@ class DirIfOnlineAgentsV2 {
     this.chatbot = context.chatbot;
     this.tdclient = context.tdclient;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -175,7 +176,7 @@ class DirIfOnlineAgentsV2 {
 
   async getProjectAvailableAgents(departmentId, raw, callback) {
     return new Promise( (resolve, reject) => {
-      let URL = `${this.context.TILEDESK_APIURL}/projects/${this.context.projectId}/users/availables?raw=${raw}`
+      let URL = `${this.API_ENDPOINT}/projects/${this.context.projectId}/users/availables?raw=${raw}`
       if (departmentId) {
         URL = URL + `&department=${departmentId}`
       }

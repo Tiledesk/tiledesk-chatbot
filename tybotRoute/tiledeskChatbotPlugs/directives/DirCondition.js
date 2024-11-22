@@ -10,33 +10,7 @@ class DirCondition {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   log: false
-    // }
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
     this.intentDir = new DirIntent(context);
-    //   {
-    //     API_ENDPOINT: context.TILEDESK_APIURL,
-    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-    //     supportRequest: context.supportRequest,
-    //     token: context.token,
-    //     log: context.log
-    //   }
-    // );
     this.log = context.log;
   }
 

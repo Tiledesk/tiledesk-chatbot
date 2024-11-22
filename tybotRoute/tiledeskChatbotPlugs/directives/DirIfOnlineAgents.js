@@ -9,31 +9,7 @@ class DirIfOnlineAgents {
       throw new Error('context object is mandatory.');
     }
     this.tdclient = context.tdclient;
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   requestId: supportRequest,
-    //   APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   log: false
-    // }
     this.intentDir = new DirIntent(context);
-    //   {
-    //     API_ENDPOINT: context.TILEDESK_APIURL,
-    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-    //     supportRequest: context.supportRequest,
-    //     token: context.token,
-    //     log: context.log
-    //   }
-    // );
     this.log = context.log;
   }
 

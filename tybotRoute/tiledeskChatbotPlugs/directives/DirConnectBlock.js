@@ -10,23 +10,11 @@ class DirConnectBlock {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.API_ENDPOINT = context.TILEDESK_APIURL,
+    this.API_ENDPOINT = context.API_ENDPOINT,
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.supportRequest = context.supportRequest;
     this.token = context.token;
     this.log = context.log;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   tdclient: tdclient,
-    //   log: true
-    // }
   }
 
   execute(directive, callback) {
