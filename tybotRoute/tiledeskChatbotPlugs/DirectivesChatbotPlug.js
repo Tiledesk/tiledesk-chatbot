@@ -52,7 +52,8 @@ const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
-const { DirWhatsappStatic, DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
+const { DirAddTags } = require('./directives/DirAddTags');
+const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 
 class DirectivesChatbotPlug {
 
@@ -342,6 +343,13 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.PLAY_PROMPT) {
+      // console.log("...DirReply");
+      new DirReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.AUDIO_RECORD) {
       // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
@@ -728,6 +736,20 @@ class DirectivesChatbotPlug {
       new DirConnectBlock(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.ADD_TAGS) {
+      // console.log(".....DirAddTags")
+      new DirAddTags(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("GPTTask stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       });
     }
     else {

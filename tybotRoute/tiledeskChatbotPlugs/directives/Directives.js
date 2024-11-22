@@ -47,6 +47,7 @@ class Directives {
   static BLIND_TRANSFER = 'blind_transfer';
   static SPEECH_FORM = 'speech_form';
   static PLAY_PROMPT = 'play_prompt';
+  static AUDIO_RECORD = 'audio_record';
   static GPT_ASSISTANT = 'gpt_assistant';
   static REPLY_V2 = 'replyv2';
   static IF_ONLINE_AGENTS_V2 = "ifonlineagentsv2";
@@ -54,6 +55,7 @@ class Directives {
   static CLEAR_TRANSCRIPT = "clear_transcript";
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
+  static ADD_TAGS = 'add_tags'
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

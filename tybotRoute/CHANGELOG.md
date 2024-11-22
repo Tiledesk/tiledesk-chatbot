@@ -17,6 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.131-rc1
+- added: AUDIO_RECORD vxml action as reply_v2 actionType
+- added: DirAddTags action
+
 # v0.2.130
 - (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
 - index.js /block => added "token": "NO-TOKEN"
