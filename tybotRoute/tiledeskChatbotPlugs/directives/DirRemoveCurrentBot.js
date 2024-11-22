@@ -8,10 +8,9 @@ class DirRemoveCurrentBot {
     }
 
     this.context = context;
-    this.tdclient = context.tdclient;
     this.requestId = context.requestId;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
+
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
@@ -38,7 +37,7 @@ class DirRemoveCurrentBot {
   }
 
   go(action, callback) {
-    this.tdclient.removeCurrentBot(this.requestId, (err) => {
+    this.tdClient.removeCurrentBot(this.requestId, (err) => {
       callback();
     });
   }

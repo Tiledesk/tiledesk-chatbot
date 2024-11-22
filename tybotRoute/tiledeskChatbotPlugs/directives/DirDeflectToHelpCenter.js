@@ -142,7 +142,7 @@ class DirDeflectToHelpCenter {
           }
 
           if (this.log) {console.log("HC reply:", JSON.stringify(message))};
-          this.tdclient.sendSupportMessage(
+          this.tdClient.sendSupportMessage(
             this.context.requestId,
             message,
             (err) => {

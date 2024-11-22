@@ -130,7 +130,7 @@ class DirIfOpenHours {
       }
     )
 
-    // this.tdclient.openNow(action.slot_id, (err, result) => {
+    // this.tdClient.openNow(action.slot_id, (err, result) => {
     //   console.log("openNow():", result);
     //   if (this.log) {console.log("openNow():", result);}
     //   if (err) {

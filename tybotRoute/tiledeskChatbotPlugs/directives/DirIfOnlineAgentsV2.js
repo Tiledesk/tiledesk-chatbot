@@ -171,7 +171,7 @@ class DirIfOnlineAgentsV2 {
 
   async openNow() {
     return new Promise( (resolve, reject) => {
-      this.tdclient.openNow(async (err, result) => {
+      this.tdClient.openNow(async (err, result) => {
         if (this.log) {console.log("(DirIfOnlineAgents) openNow():", result);}
         if (err) {
           reject(err);

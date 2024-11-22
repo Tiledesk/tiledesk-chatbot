@@ -34,7 +34,7 @@ class DirMoveToAgent {
   }
 
   async go(action, callback) {
-    this.tdclient.moveToAgent(this.requestId, (err) => {
+    this.tdClient.moveToAgent(this.requestId, (err) => {
       if (err) {
         console.error("Error moving to agent:", err);
       }

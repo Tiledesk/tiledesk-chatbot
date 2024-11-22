@@ -16,6 +16,9 @@ describe('Directive DirClose', function() {
       name: "close"
     };
     let dir = new DirClose({
+        projectId: "projectID",
+        API_ENDPOINT: process.env.API_ENDPOINT,
+        token: "XXX",
         tdclient: new MockTdClient(),
         requestId: "A-REQUEST-ID"
     });
@@ -33,7 +36,7 @@ describe('Directive DirClose', function() {
           markbot: true
       }
     }
-    let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, API_ENDPOINT: "APIURL", token: "token", log: false, HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});
+    let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, projectId: supportRequest.id_project, API_ENDPOINT: "APIURL", token: "token", log: false, HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});
     const bot_answer = await ExtUtil.execPipelineExt(supportRequest, answer, directivesPlug, null, false);
     // console.log("bot_answer:", bot_answer)
     // console.log("directivesPlug.directives", directivesPlug.directives);

@@ -93,7 +93,7 @@ class DirForm {
         form_reply.message.attributes.markbot = true;
         // return form_reply.message;
 
-        this.tdclient.sendSupportMessage(
+        this.tdClient.sendSupportMessage(
           this.requestId,
           form_reply.message,
           (err) => {

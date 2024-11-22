@@ -67,7 +67,7 @@ class DirAssignFromFunction {
   async invoke(functionName, callback) {
     switch (functionName) {
       case "openNow":
-        this.tdclient.openNow((err, result) => {
+        this.tdClient.openNow((err, result) => {
           if (this.log) {console.log("openNow():", result);}
           if (err) {
             callback(err);
@@ -81,7 +81,7 @@ class DirAssignFromFunction {
         });
         break;
       case "availableAgents":
-        this.tdclient.getProjectAvailableAgents((err, agents) => {
+        this.tdClient.getProjectAvailableAgents((err, agents) => {
           if (this.log) {console.log("Agents on 'open'", agents);}
           if (err || !agents) {
             console.error("Error getting available agents in DirWhenAvailableAgents", err);

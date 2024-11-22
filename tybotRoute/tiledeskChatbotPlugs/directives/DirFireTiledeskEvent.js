@@ -29,7 +29,7 @@ class DirFireTiledeskEvent {
         name: event_name,
         attributes: params.payload
       }
-      this.tdclient.fireEvent(event, function(err, result) {
+      this.tdClient.fireEvent(event, function(err, result) {
           if (err) {
               console.error("An error occurred invoking an event:", err);
           }

@@ -14,6 +14,7 @@ class DirClose {
         this.API_ENDPOINT = context.API_ENDPOINT;
         this.log = context.log;
 
+        console.log("this.context.projectId: ", context)
         this.tdClient = new TiledeskClient({
             projectId: this.context.projectId,
             token: this.context.token,
@@ -24,7 +25,7 @@ class DirClose {
     }
     
     execute(directive, callback) {
-        this.tdclient.closeRequest(this.requestId, async (err) => {
+        this.tdClient.closeRequest(this.requestId, async (err) => {
             if (err) {
                 console.error("Error in 'close directive':", err);
             }

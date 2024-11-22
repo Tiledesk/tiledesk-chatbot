@@ -81,7 +81,7 @@ class DirSetConversationTags {
               subtype: "info"
             }
           }
-          this.tdclient.sendSupportMessage(
+          this.tdClient.sendSupportMessage(
             this.requestId,
             message, (err) => {
               if (err) {
@@ -100,7 +100,7 @@ class DirSetConversationTags {
   }
 
   moveToDepartment(requestId, depName, callback) {
-    this.tdclient.getAllDepartments((err, deps) => {
+    this.tdClient.getAllDepartments((err, deps) => {
       if (this.log) {console.log("deps:", JSON.stringify(deps));}
       if (err) {
         console.error("getAllDepartments() error:", err);
@@ -117,7 +117,7 @@ class DirSetConversationTags {
         }
       }
       if (dep) {
-        this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
+        this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
             console.error("DirDepartment error:", err);
             callback();

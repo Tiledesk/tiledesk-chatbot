@@ -70,7 +70,7 @@ class DirIfOnlineAgents {
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
-    this.tdclient.openNow((err, result) => {
+    this.tdClient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
         console.error("IfOnlineAgents:tdclient.openNow Error:", err);
@@ -79,7 +79,7 @@ class DirIfOnlineAgents {
       }
       else {
         if (result && result.isopen) {
-          this.tdclient.getProjectAvailableAgents((err, agents) => {
+          this.tdClient.getProjectAvailableAgents((err, agents) => {
             if (this.log) {console.log("Agents", agents);}
             if (err) {
               console.error("IfOnlineAgents:Error getting available agents:", err);

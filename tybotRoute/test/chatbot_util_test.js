@@ -458,7 +458,6 @@ lorem ipsum 4
 closing conversation
 `
         const transcript_array = TiledeskChatbotUtil.transcriptJSON(transcript);
-        console.log("transcript_object:", transcript_array);
         assert(transcript_array.length === 6);
         assert(transcript_array[0].role === "assistant");
         assert(transcript_array[0].content === "lorem ipsum 1\nlorem ipsum 2");

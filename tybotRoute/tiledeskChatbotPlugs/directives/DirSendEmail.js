@@ -73,7 +73,7 @@ class DirSendEmail {
             replyto: reply_to
           }
           // console.log("email message:", JSON.stringify(message));
-          const message_echo = await this.tdclient.sendEmail(message);
+          const message_echo = await this.tdClient.sendEmail(message);
           if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
           if (this.log) {console.log("email sent. filled_text:", filled_text);}
           if (this.log) {console.log("email sent. filled_to:", filled_to);}

@@ -45,7 +45,7 @@ class DirMoveToUnassigned {
 
   async moveToUnassigned(requestId, callback) {
     const empty_participants = [] // STATUS WILL MOVE AUTOMATICALLY TO UNASSIGNED (100)
-    this.tdclient.updateRequestParticipants(requestId, empty_participants, (err) => {
+    this.tdClient.updateRequestParticipants(requestId, empty_participants, (err) => {
       if (callback) {
         callback(err);
       }

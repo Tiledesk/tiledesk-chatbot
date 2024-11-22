@@ -273,7 +273,7 @@ class DirReplyV2 {
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
-    this.tdclient.sendSupportMessage(
+    this.tdClient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {

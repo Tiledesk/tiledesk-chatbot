@@ -51,7 +51,7 @@ class DirReplaceBot {
     );
     const filler = new Filler();
     botName = filler.fill(botName, variables);
-    this.tdclient.replaceBotByName(this.requestId, botName, () => {
+    this.tdClient.replaceBotByName(this.requestId, botName, () => {
       callback();
     });
   }

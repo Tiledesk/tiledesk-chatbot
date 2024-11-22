@@ -81,7 +81,7 @@ class DirContactUpdate {
       if (this.log) {console.log("(DirContactUpdate) updating property:", key, "value:", filled_value); }
     }
     const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
-    this.tdclient.updateLead(leadId, updateProperties, null, null, () => {
+    this.tdClient.updateLead(leadId, updateProperties, null, null, () => {
       if (this.log) {console.log("(DirContactUpdate) Lead updated.", updateProperties);}
       // send hidden info to update widget lead fullname only if it is a conversation!
       if (this.log) {console.log("(DirContactUpdate) requestId:", this.requestId); }
@@ -100,7 +100,7 @@ class DirContactUpdate {
       //     }
       //   };
       //   if (this.log) {console.log("(DirContactUpdate) sending updateLeadDataOnWidgetMessage:", updateLeadDataOnWidgetMessage); }
-      //   this.tdclient.sendSupportMessage(
+      //   this.tdClient.sendSupportMessage(
       //     this.requestId,
       //     updateLeadDataOnWidgetMessage,
       //     (err) => {

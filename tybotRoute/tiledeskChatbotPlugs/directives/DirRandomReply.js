@@ -97,7 +97,7 @@ class DirRandomReply {
     }
     // send!
     if (this.log) {console.log("Reply:", JSON.stringify(message))};
-    this.tdclient.sendSupportMessage(
+    this.tdClient.sendSupportMessage(
       this.requestId,
       message,
       (err) => {

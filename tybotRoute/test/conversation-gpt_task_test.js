@@ -1416,7 +1416,6 @@ describe('Conversation for GptTask test', async () => {
 
     endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-      console.log("asdasdsa")
       let http_code = 502;
       let reply = "Communication interrupted";
 

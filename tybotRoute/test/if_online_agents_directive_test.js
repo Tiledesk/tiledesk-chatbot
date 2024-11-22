@@ -15,6 +15,8 @@ describe('Directive DirIfOnlineAgents', function() {
     };
     directive = {};
     let dir = new DirIfOnlineAgents({
+        projectId: "projectID",
+        token: "XXX",
         tdclient: new MockTdClient()
     });
     dir.execute(directive, () => {
@@ -32,6 +34,8 @@ describe('Directive DirIfOnlineAgents', function() {
     };
     directive = {};
     let dir = new DirIfOnlineAgents({
+        projectId: "projectID",
+        token: "XXX",
         tdclient: new MockTdClient()
     });
     dir.execute(directive, () => {
