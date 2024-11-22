@@ -1,16 +1,27 @@
+const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 
 class DirRemoveCurrentBot {
 
-  constructor(config) {
-    if (!config.tdclient) {
-      throw new Error('tdclient (TiledeskClient) object is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
     }
-    this.tdclient = config.tdclient;
-    this.requestId = config.requestId;
+
+    this.context = context;
+    this.tdclient = context.tdclient;
+    this.requestId = context.requestId;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
-    console.log("Remove current bot");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -27,7 +38,7 @@ class DirRemoveCurrentBot {
   }
 
   go(action, callback) {
-    tdclient.removeCurrentBot(this.requestId, (err) => {
+    this.tdclient.removeCurrentBot(this.requestId, (err) => {
       callback();
     });
   }

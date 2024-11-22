@@ -8,7 +8,6 @@ class DirClearTranscript {
             throw new Error('context object is mandatory.');
         }
         this.context = context;
-        this.tdclient = context.tdclient;
         this.requestId = context.requestId;
     }
     

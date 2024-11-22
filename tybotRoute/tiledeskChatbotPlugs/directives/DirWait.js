@@ -8,7 +8,6 @@ class DirWait {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;

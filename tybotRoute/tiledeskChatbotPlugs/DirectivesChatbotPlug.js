@@ -1,7 +1,6 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
-// const { DirOfflineHours } = require('./directives/DirOfflineHours'); // DEPRECATED
 const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
 const { DirWait } = require('./directives/DirWait');
@@ -163,7 +162,6 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      tdclient: tdclient,
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }

@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
 const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirContactUpdate {
 
@@ -16,8 +17,16 @@ class DirContactUpdate {
     this.supportRequest = context.supportRequest;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.tdclient = context.tdclient;
+    this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -91,7 +100,7 @@ class DirContactUpdate {
       //     }
       //   };
       //   if (this.log) {console.log("(DirContactUpdate) sending updateLeadDataOnWidgetMessage:", updateLeadDataOnWidgetMessage); }
-      //   this.context.tdclient.sendSupportMessage(
+      //   this.tdclient.sendSupportMessage(
       //     this.requestId,
       //     updateLeadDataOnWidgetMessage,
       //     (err) => {

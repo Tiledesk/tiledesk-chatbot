@@ -8,6 +8,7 @@ const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 const req = require("express/lib/request");
 const { rejects } = require("assert");
 const { update } = require("../../models/faq");
+const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 require('dotenv').config();
 
 class DirAddTags {
@@ -20,11 +21,16 @@ class DirAddTags {
     this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
-    this.tdClient = this.context.tdclient;
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    // this.intentDir = new DirIntent(context);
     this.log = context.log;
-    // this.log = true;
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {

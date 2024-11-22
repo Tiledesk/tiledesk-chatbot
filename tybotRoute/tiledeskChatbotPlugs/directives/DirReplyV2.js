@@ -6,6 +6,7 @@ const { DirIntent } = require("./DirIntent");
 // const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirReplyV2 {
 
@@ -23,6 +24,15 @@ class DirReplyV2 {
     this.chatbot = context.chatbot;
     this.reply = context.reply;
     this.originalMessage = context.message;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -263,7 +273,7 @@ class DirReplyV2 {
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
-    this.context.tdclient.sendSupportMessage(
+    this.tdclient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {

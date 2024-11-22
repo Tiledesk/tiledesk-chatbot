@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirReply {
 
@@ -15,6 +16,15 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -130,7 +140,7 @@ class DirReply {
     if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     // console.log("sending message!", cleanMessage);
-    this.context.tdclient.sendSupportMessage(
+    this.tdclient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {

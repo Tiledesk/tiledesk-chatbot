@@ -1,13 +1,24 @@
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const ms = require('minimist-string');
 
 class DirFireTiledeskEvent {
 
-  constructor(config) {
-    if (!config.tdclient) {
-      throw new Error('config.tdclient (TiledeskClient) object is mandatory.');
+  constructor(context) {
+    if (!context) {
+      throw new Error('context object is mandatory.');
     }
-    this.tdclient = config.tdclient;
-    this.log = config.log;
+
+    this.context = context;
+    this.log = context.log;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {

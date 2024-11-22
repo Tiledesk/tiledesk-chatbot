@@ -7,37 +7,10 @@ class DirCaptureUserReply {
     if (!context) {
       throw new Error('context object is mandatory.');
     }
+    
     this.context = context;
     this.reply = context.reply;
-    // reply = {
-    //   actions: [
-    //     {
-    //       _tdActionType: 'askgpt',
-    //       _tdActionTitle: 'gpt action',
-    //       assignReplyTo: 'gpt_reply',
-    //       assignSourceTo: 'gpt_source',
-    //       kbid: 'XXX',
-    //       trueIntent: '#SUCCESS',
-    //       falseIntent: '#FAILURE',
-    //       question: 'this is the question: ${last_user_message}'
-    //     }
-    //   ],
-    //   attributes: {
-    //     clienttimestamp: 1695548792706,
-    //     intent_info: {
-    //       intent_name: 'gpt success',
-    //       intent_id: '00f93b97-89ee-466d-a09c-e47a18943057',
-    //       is_fallback: false,
-    //       confidence: undefined,
-    //       question_payload: [Object],
-    //       botId: 'botID',
-    //       bot: [Object]
-    //     },
-    //     webhook: false
-    //   }
-    // }
     this.message = context.message;
-    this.tdclient = context.tdclient;
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;

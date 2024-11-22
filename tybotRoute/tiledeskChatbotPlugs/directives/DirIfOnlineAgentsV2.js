@@ -4,6 +4,7 @@ const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirIfOnlineAgentsV2 {
 
@@ -13,10 +14,18 @@ class DirIfOnlineAgentsV2 {
     }
     this.context = context;
     this.chatbot = context.chatbot;
-    this.tdclient = context.tdclient;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
+
   }
 
   execute(directive, callback) {

@@ -10,10 +10,11 @@ class DirIfOpenHours {
     if (!context) {
       throw new Error('context object is mandatory.');
     }
-    this.tdclient = context.tdclient;
+
     this.context = context;
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.intentDir = new DirIntent(context);
+    this.log = context.log;
   }
 
   execute(directive, callback) {

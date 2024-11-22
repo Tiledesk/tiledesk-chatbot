@@ -2,6 +2,7 @@
 const { Directives } = require('./Directives');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirMoveToUnassigned {
 
@@ -10,9 +11,17 @@ class DirMoveToUnassigned {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.requestId = context.requestId;
     this.log = context.log;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
