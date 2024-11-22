@@ -16,6 +16,7 @@ class DirSendWhatsapp {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -73,12 +74,11 @@ class DirSendWhatsapp {
     payload.broadcast = false;
     
     const whatsapp_api_url_pre = process.env.WHATSAPP_ENDPOINT;
-    const server_base_url = process.env.API_URL || process.env.API_ENDPOINT;
 
     if (whatsapp_api_url_pre) {
       whatsapp_api_url = whatsapp_api_url_pre;
     } else {
-      whatsapp_api_url = server_base_url + "/modules/whatsapp/api"
+      whatsapp_api_url = this.API_ENDPOINT + "/modules/whatsapp/api"
     }
     if (this.log) { console.log("DirSendWhatsapp whatsapp_api_url: ", whatsapp_api_url); };
 

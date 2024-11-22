@@ -928,7 +928,6 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     endpointServer.post('/api/qa', function (req, res) {
-      console.log("req.body: ", req.body)
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {

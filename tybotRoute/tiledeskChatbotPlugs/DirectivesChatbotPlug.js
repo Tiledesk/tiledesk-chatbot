@@ -65,7 +65,7 @@ class DirectivesChatbotPlug {
 
   constructor(config) {
     this.supportRequest = config.supportRequest;
-    this.API_URL = config.TILEDESK_API_ENDPOINT;
+    this.API_ENDPOINT = config.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.log = config.log;
@@ -125,7 +125,7 @@ class DirectivesChatbotPlug {
     // console.log("supportRequest is:", JSON.stringify(supportRequest))
     
     const token = this.token;
-    const API_URL = this.API_URL;
+    const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
 
     // const requestId = supportRequest.request_id
@@ -142,7 +142,7 @@ class DirectivesChatbotPlug {
       tdclient = new TiledeskClient({
         projectId: projectId,
         token: token,
-        APIURL: API_URL,
+        APIURL: API_ENDPOINT,
         APIKEY: "___",
         log: this.log
       });
@@ -159,7 +159,7 @@ class DirectivesChatbotPlug {
       supportRequest: supportRequest,
       reply: this.reply,
       requestId: supportRequest.request_id,
-      TILEDESK_APIURL: API_URL,
+      API_ENDPOINT: API_ENDPOINT,
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
@@ -768,7 +768,7 @@ class DirectivesChatbotPlug {
     }
     const supportRequest = this.supportRequest;
     const token = this.token;
-    const API_URL = this.API_URL;
+    const API_ENDPOINT = this.API_ENDPOINT;
     // const requestId = supportRequest.request_id
     // let depId;
     // if (supportRequest.department && supportRequest.department._id) {
@@ -778,7 +778,7 @@ class DirectivesChatbotPlug {
     const tdclient = new TiledeskClient({
       projectId: projectId,
       token: token,
-      APIURL: API_URL,
+      APIURL: API_ENDPOINT,
       APIKEY: "___",
       log: false
     });

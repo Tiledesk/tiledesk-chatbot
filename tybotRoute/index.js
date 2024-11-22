@@ -30,7 +30,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
-let APIURL = null;
+let API_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
@@ -160,7 +160,7 @@ router.post('/ext/:botid', async (req, res) => {
     botId: botId,
     bot: bot,
     token: token,
-    APIURL: APIURL,
+    APIURL: API_ENDPOINT,
     APIKEY: "___",
     tdcache: tdcache,
     requestId: requestId,
@@ -206,7 +206,7 @@ router.post('/ext/:botid', async (req, res) => {
           directives: directives,
           chatbot: chatbot,
           supportRequest: message.request,
-          TILEDESK_API_ENDPOINT: APIURL,
+          API_ENDPOINT: API_ENDPOINT,
           TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
           token: token,
           log: log,
@@ -232,7 +232,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply.attributes.splits = true;
     reply.attributes.markbot = true;
     reply.attributes.fillParams = true;
-    let extEndpoint = `${APIURL}/modules/tilebot/`;
+    let extEndpoint = `${API_ENDPOINT}/modules/tilebot/`;
     if (process.env.TYBOT_ENDPOINT) {
       extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
     }
@@ -264,7 +264,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
-    APIURL: APIURL,
+    APIURL: API_ENDPOINT,
     APIKEY: "___",
     log: false
   });
@@ -309,10 +309,10 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   }
   if (log) {
     console.log("/ext request....", JSON.stringify(request));
-    console.log("/ext APIURL....", APIURL);
+    console.log("/ext API_ENDPOINT....", API_ENDPOINT);
     console.log("/ext process.env.TYBOT_ENDPOINT....", process.env.TYBOT_ENDPOINT);
   }
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, TILEDESK_API_ENDPOINT: APIURL, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // let directivesPlug = null;
   // PIPELINE-EXT
   // if (log) {console.log("answer to process:", JSON.stringify(answer));}
@@ -542,7 +542,7 @@ router.post('/echobot', (req, res) => {
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
-    APIURL: APIURL,
+    APIURL: API_ENDPOINT,
     APIKEY: "___",
     log: false
   });
@@ -619,8 +619,8 @@ async function startApp(settings, completionCallback) {
     throw new Error("settings.API_ENDPOINT is mandatory id no settings.bots.");
   }
   else {
-    APIURL = settings.API_ENDPOINT;
-    console.log("(Tilebot) settings.API_ENDPOINT:", APIURL);
+    API_ENDPOINT = settings.API_ENDPOINT;
+    console.log("(Tilebot) settings.API_ENDPOINT:", API_ENDPOINT);
   }
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
@@ -730,7 +730,7 @@ async function checkRequest(request_id, id_project) {
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
   // const jwt_token = this.fixToken(token);
   if (!TILEBOT_ENDPOINT) {
-    TILEBOT_ENDPOINT = `${APIURL}/modules/tilebot`
+    TILEBOT_ENDPOINT = `${API_ENDPOINT}/modules/tilebot`
   }
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   console.log("sendMessageToBot URL", url);

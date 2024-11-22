@@ -16,6 +16,7 @@ class DirHubspot {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -71,14 +72,10 @@ class DirHubspot {
       return;
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const hubspot_base_url = process.env.HUBSPOT_ENDPOINT || "https://api.hubapi.com/crm/v3/";
-    if (this.log) {
-      console.log("DirHubspot server_base_url ", server_base_url);
-      console.log("DirHubspot hubspot_base_url ", hubspot_base_url);
-    }
+    if (this.log) { console.log("DirHubspot hubspot_base_url ", hubspot_base_url); }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirHubspot - Key not found in Integrations."); }
       if (falseIntent) {
@@ -289,11 +286,11 @@ class DirHubspot {
     }
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/hubspot",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/hubspot",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

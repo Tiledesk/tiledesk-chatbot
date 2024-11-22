@@ -517,10 +517,13 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
             }
-            if (process.env.TILEDESK_API) {
-                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
-                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
-            }
+            /**
+             * RefactoringCheck: can this be deleted?
+             */
+            // if (process.env.TILEDESK_API) {
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
+            // }
             
             if (process.env.API_URL) {
                 await chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_URL);

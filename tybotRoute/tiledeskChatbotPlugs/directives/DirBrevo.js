@@ -16,6 +16,7 @@ class DirBrevo {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -71,14 +72,10 @@ class DirBrevo {
       return;
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const brevo_base_url = process.env.BREVO_ENDPOINT || "https://api.brevo.com/v3"
-    if (this.log) {
-      console.log("DirBrevo server_base_url ", server_base_url);
-      console.log("DirBrevo brevo_base_url ", brevo_base_url);
-    }
+    if (this.log) { console.log("DirBrevo brevo_base_url ", brevo_base_url); }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    let key = await this.getKeyFromIntegrations();
     if (this.log) { console.log('DirBrevo key Debug1: ', key) }
     // ONLY FOR DEBUG CANCELLARE!!!!!
     //  if (process.env.BREVO_DEBUG == '1') {
@@ -320,11 +317,11 @@ class DirBrevo {
     }
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/Brevo",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/Brevo",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

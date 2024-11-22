@@ -14,6 +14,7 @@ class DirAssistant {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -264,8 +265,7 @@ class DirAssistant {
       return process.env.TEST_OPENAI_APIKEY
     }
     else {
-      const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-      return await this.getKeyFromIntegrations(server_base_url);
+      return await this.getKeyFromIntegrations();
     }
   }
 
@@ -496,11 +496,11 @@ class DirAssistant {
     });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

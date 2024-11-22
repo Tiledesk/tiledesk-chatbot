@@ -21,6 +21,7 @@ class DirAddTags {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.tdClient = this.context.tdclient;
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     // this.intentDir = new DirIntent(context);
     this.log = context.log;
     // this.log = true;
@@ -77,12 +78,6 @@ class DirAddTags {
       console.log("(DirAddTags) tags: ", filled_tags);
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    if (this.log) {
-      console.log("(DirAddTags) server_base_url ", server_base_url);
-    }
-
-
     // let request = await this.tdClient.getRequestById(this.requestId);
     // if (this.log) { console.log('(DirAddTags) request detail: ', request) }
     // if(!request){
@@ -91,7 +86,6 @@ class DirAddTags {
     //   return;
     // }
 
-
     /** use case: CONVERSATION */
     if(target === 'request'){
       
@@ -99,7 +93,7 @@ class DirAddTags {
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
-          let tags = await this.addNewTag(server_base_url,tag)
+          let tags = await this.addNewTag(tag)
           if(!tags){
             callback();
             return;
@@ -108,7 +102,7 @@ class DirAddTags {
       }
 
       if (this.log) { console.log('(DirAddTags) UPDATE request with newTags', newTags) }
-      let updatedRequest = await this.updateRequestWithTags(server_base_url, newTags)
+      let updatedRequest = await this.updateRequestWithTags(newTags)
       if(!updatedRequest){
         callback();
         return;
@@ -130,7 +124,7 @@ class DirAddTags {
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
-          let tags = await this.addNewTag(server_base_url,tag)
+          let tags = await this.addNewTag(tag)
           if(!tags){
             callback();
             return;
@@ -139,7 +133,7 @@ class DirAddTags {
       }
 
       if (this.log) {  console.log('(DirAddTags) UPDATE lead with newTags', newTags) }
-      let updatedLead = await this.updateLeadWithTags(server_base_url, request.lead._id, newTags)
+      let updatedLead = await this.updateLeadWithTags(request.lead._id, newTags)
       if(!updatedLead){
         callback();
         return;
@@ -273,10 +267,10 @@ class DirAddTags {
       });
   }
 
-  async addNewTag(server_base_url, tag){
+  async addNewTag(tag){
     return new Promise((resolve, rejects)=> {
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/tags",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/tags",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -305,7 +299,7 @@ class DirAddTags {
   }
 
 
-  async updateRequestWithTags(server_base_url, tags) {
+  async updateRequestWithTags(tags) {
     return new Promise((resolve) => {
       let json = []
       let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
@@ -314,7 +308,7 @@ class DirAddTags {
         console.log('(httprequest) DirAddTags updateRequestWithTags tags--> ', json)
       }
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -340,10 +334,10 @@ class DirAddTags {
     })
   }
 
-  async updateLeadWithTags(server_base_url, lead_id, tags) {
+  async updateLeadWithTags(lead_id, tags) {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/leads/" + lead_id + '/tag',
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/leads/" + lead_id + '/tag',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

@@ -12,32 +12,8 @@ class DirIfOpenHours {
     }
     this.tdclient = context.tdclient;
     this.context = context;
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   requestId: supportRequest,
-    //   APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   log: false
-    // }
+    this.API_ENDPOINT = context.API_ENDPOINT;
     this.intentDir = new DirIntent(context);
-    //   {
-    //     API_ENDPOINT: context.TILEDESK_APIURL,
-    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-    //     supportRequest: context.supportRequest,
-    //     token: context.token,
-    //     log: context.log
-    //   }
-    // );
-    //this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -95,10 +71,7 @@ class DirIfOpenHours {
       slot_id = action.slotId;
     }
     
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    if (this.log) { console.log("DirAskGPT ApiEndpoint URL: ", server_base_url); }
-    
-    let isopen_url = server_base_url + "/projects/" + this.context.projectId + "/isopen";
+    let isopen_url = this.API_ENDPOINT + "/projects/" + this.context.projectId + "/isopen";
     if (slot_id) {
       isopen_url = isopen_url.concat("?timeSlot=" + slot_id);
     }

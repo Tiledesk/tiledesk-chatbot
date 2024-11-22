@@ -15,6 +15,7 @@ class DirAskGPT {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -88,17 +89,13 @@ class DirAskGPT {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const kb_endpoint = process.env.KB_ENDPOINT;
-    if (this.log) {
-      console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
-      console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint);
-    }
+    if (this.log) { console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint); }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
-      key = await this.getKeyFromKbSettings(server_base_url);
+      key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
@@ -120,7 +117,7 @@ class DirAskGPT {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
         if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
         callback();
@@ -167,7 +164,7 @@ class DirAskGPT {
 
           // if (publicKey === true) {
           //   let token_usage = resbody.usage.total_tokens;
-          //   this.updateQuote(server_base_url, token_usage);
+          //   this.updateQuote(token_usage);
           // }
           
           if (trueIntent) {
@@ -305,11 +302,11 @@ class DirAskGPT {
       });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -337,11 +334,11 @@ class DirAskGPT {
     })
   }
 
-  async getKeyFromKbSettings(server_base_url) {
+  async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
       const KB_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

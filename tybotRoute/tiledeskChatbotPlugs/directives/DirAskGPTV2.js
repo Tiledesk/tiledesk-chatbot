@@ -19,6 +19,7 @@ class DirAskGPTV2 {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -136,18 +137,13 @@ class DirAskGPTV2 {
       if (this.log) { console.log("DirAskGPT transcript ", transcript) }
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const kb_endpoint = process.env.KB_ENDPOINT_QA
-    
-    if (this.log) {
-      console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
-      console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint);
-    }
+    if (this.log) { console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint); }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
-      key = await this.getKeyFromKbSettings(server_base_url);
+      key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
@@ -169,7 +165,7 @@ class DirAskGPTV2 {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
         if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
         await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
@@ -183,12 +179,11 @@ class DirAskGPTV2 {
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
-      // namespace = await this.getNamespaceIdFromName(server_base_url, action.namespace)
-      ns = await this.getNamespace(server_base_url, filled_namespace, null);
+      ns = await this.getNamespace(filled_namespace, null);
       namespace = ns.id;
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     } else {
-      ns = await this.getNamespace(server_base_url, null, namespace);
+      ns = await this.getNamespace(null, namespace);
     }
 
     if (ns.engine) {
@@ -242,7 +237,6 @@ class DirAskGPTV2 {
     if (this.log) { console.log("DirAskGPT json:", json); }
 
     const HTTPREQUEST = {
-      // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
       headers: {
         'Content-Type': 'application/json',
@@ -284,7 +278,7 @@ class DirAskGPTV2 {
               tokens: resbody.prompt_token_size,
               model: json.model
             }
-            this.updateQuote(server_base_url, tokens_usage);
+            this.updateQuote(tokens_usage);
           }
 
           if (trueIntent) {
@@ -420,11 +414,11 @@ class DirAskGPTV2 {
       });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -452,11 +446,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async getKeyFromKbSettings(server_base_url) {
+  async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
       const KB_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -482,11 +476,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async checkQuoteAvailability(server_base_url) {
+  async checkQuoteAvailability() {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -512,11 +506,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async updateQuote(server_base_url, tokens_usage) {
+  async updateQuote(tokens_usage) {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/incr/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -588,10 +582,10 @@ class DirAskGPTV2 {
     return objectTranscript;
   }
 
-  async getNamespace(server_base_url, name, id) {
+  async getNamespace(name, id) {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -632,39 +626,6 @@ class DirAskGPTV2 {
       resolve(engine);
     })
   }
-
-  // async getNamespaceIdFromName(server_base_url, name) {
-  //   return new Promise((resolve) => {
-
-  //     const HTTPREQUEST = {
-  //       url: server_base_url + "/" + this.context.projectId + "/kb/namespace/all",
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'JWT ' + this.context.token
-  //       },
-  //       method: "GET"
-  //     }
-  //     if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
-
-  //     this.#myrequest(
-  //       HTTPREQUEST, async (err, namespaces) => {
-  //         if (err) {
-  //           console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
-  //           resolve(null)
-  //         } else {
-  //           if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
-
-  //           let namespace = namespaces.find(n => n.name === name);
-  //           let namespace_id = namespace.id;
-
-  //           resolve(namespace_id);
-  //         }
-  //       }
-  //     )
-  //   })
-
-  // }
-
 
 }
 
