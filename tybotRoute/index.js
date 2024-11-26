@@ -332,7 +332,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
       if (log) {console.log("/ext => bot_answer sent:", JSON.stringify(bot_answer));}
       if (err) {
-        console.error("/ext => Error sending message", err);
+        console.error("/ext => Error sending message", JSON.stringify(err));
       }
       directivesPlug.processDirectives( () => {
         if (log) {console.log("After message - Directives executed.");}
