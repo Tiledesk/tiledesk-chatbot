@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.132-rc1
+- added: support for internal api endpoint
+
 # v0.2.131-rc2
 - changed API_URL with API_ENDPOINT
 
