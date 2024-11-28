@@ -9,12 +9,11 @@ const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
-const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 1000; // prod 1000;
-  static MAX_EXECUTION_TIME = 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
+  static MAX_STEPS = process.env.CHATBOT_MAX_STEPS || 1000; // prod 1000;
+  static MAX_EXECUTION_TIME = process.env.CHATBOT_MAX_EXECUTION_TIME || 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
 
   constructor(config) {
     if (!config.botsDataSource) {

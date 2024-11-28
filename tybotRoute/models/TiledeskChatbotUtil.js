@@ -1,7 +1,6 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 const { TiledeskChatbotConst } = require('./TiledeskChatbotConst');
-const { TiledeskChatbot } = require('./TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();

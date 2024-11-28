@@ -20,9 +20,10 @@ available on:
 # v0.2.131-rc2
 - changed API_URL with API_ENDPOINT
 
-# v0.2.131-rc1
+# v0.2.131
 - added: AUDIO_RECORD vxml action as reply_v2 actionType
 - added: DirAddTags action
+- externalized: process.env.CHATBOT_MAX_STEPS and process.env.CHATBOT_MAX_EXECUTION_TIME
 
 # v0.2.130
 - (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL

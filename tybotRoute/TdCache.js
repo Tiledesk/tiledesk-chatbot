@@ -28,7 +28,7 @@ class TdCache {
             //     console.log('Redis Connected!');
             // });
             this.client.on('ready',function() {
-              console.log("connected")
+              // console.log("connected")
                 resolve();
                 if (callback) {
                     callback();
