@@ -1,5 +1,5 @@
 {
-  "name": "tiledesk-bot-web-sandbox",
+  "name": "@tiledesk/tiledesk-chatbot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

@@ -20,12 +20,12 @@ app.use("/langbot", chooserRoute);
 
 tybot.startApp(
   {
-    MONGODB_URI: process.env.mongoUrl,
+    MONGODB_URI: process.env.MONGODB_URI,
     // bots: bots_data,
     API_ENDPOINT: process.env.API_ENDPOINT,
-    REDIS_HOST: process.env.REDIS_HOST,
-    REDIS_PORT: process.env.REDIS_PORT,
-    REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+    REDIS_HOST: process.env.CACHE_REDIS_HOST,
+    REDIS_PORT: process.env.CACHE_REDIS_PORT,
+    REDIS_PASSWORD: process.env.CACHE_REDIS_PASSWORD,
     // CACHE_ENABLED: process.env.CACHE_ENABLED,
     log: process.env.TILEBOT_LOG
   }, () => {
