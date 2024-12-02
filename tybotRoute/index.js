@@ -21,6 +21,8 @@ router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
 let tdcache = null;
+let MAX_STEPS = 1000;
+let MAX_EXECUTION_TIME = 1000 * 3600 * 8;
 
 // DEV
 // const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
@@ -165,6 +167,8 @@ router.post('/ext/:botid', async (req, res) => {
     tdcache: tdcache,
     requestId: requestId,
     projectId: projectId,
+    MAX_STEPS: MAX_STEPS,
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME,
     log: log
   });
   if (log) {console.log("MESSAGE CONTAINS:", message.text);}
@@ -638,6 +642,19 @@ async function startApp(settings, completionCallback) {
     log = true;
   }
   console.log("(Tilebot) log:", log);
+
+
+  if (process.env.CHATBOT_MAX_STEPS) {
+    MAX_STEPS = Number(process.env.CHATBOT_MAX_STEPS);
+  }
+
+  if (process.env.CHATBOT_MAX_EXECUTION_TIME) {
+    MAX_EXECUTION_TIME = Number(process.env.CHATBOT_MAX_EXECUTION_TIME);// test // prod1000 * 3600 * 4; // 4 hours
+  }
+
+  console.log("(Tilebot) MAX_STEPS: ", MAX_STEPS)
+  console.log("(Tilebot) MAX_EXECUTION_TIME: ", MAX_EXECUTION_TIME)
+
   var pjson = require('./package.json');
   console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
 
