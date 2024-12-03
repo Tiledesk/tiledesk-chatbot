@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.134
+- Added filter for mweb on hidden messages
+
 # v0.2.133
 - Removed MAX_STEPS and MAX_EXECUTION_TIME as static variable of TiledeskChatbot
 
