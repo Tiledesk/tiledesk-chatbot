@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -17,7 +17,7 @@ const PROJECT_ID = "projectID"; //const PROJECT_ID = process.env.TEST_PROJECT_ID
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 // // normalize the bot structure for the static intent search
 // let intents = bot.intents;
 // delete bot.intents;
