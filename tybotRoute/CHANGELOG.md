@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.136
+- TdCache rollback
+
 # v0.2.135
 - Updated to redis 4.7.0 + Tdcache.js
 - Disabled close_directive_test.js - DirClose directive - too old, not passing
