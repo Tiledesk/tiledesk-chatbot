@@ -17,6 +17,11 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.135
+- Updated to redis 4.7.0 + Tdcache.js
+- Disabled close_directive_test.js - DirClose directive - too old, not passing
+- Disabled conversation-gpt_assistant_test.js
+
 # v0.2.134
 - Added filter for mweb on hidden messages
 
