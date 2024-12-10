@@ -6,7 +6,6 @@ const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 const req = require("express/lib/request");
-const { rejects } = require("assert");
 const { update } = require("../../models/faq");
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 require('dotenv').config();
@@ -274,7 +273,7 @@ class DirAddTags {
   }
 
   async addNewTag(tag){
-    return new Promise((resolve, rejects)=> {
+    return new Promise((resolve, reject)=> {
       const HTTPREQUEST = {
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/tags",
         headers: {

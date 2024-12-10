@@ -458,7 +458,7 @@ class DirGptTask {
   }
 
   async updateQuote(tokens_usage) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
 
       const HTTPREQUEST = {
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
@@ -475,7 +475,7 @@ class DirGptTask {
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
-            rejects(false)
+            reject(false)
           } else {
             if (this.log) { console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody); }
             resolve(true);
