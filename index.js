@@ -34,4 +34,4 @@ tybot.startApp(
     app.listen(port, function () {
       console.log('Tilebot connector listening on port ', port);
     });
-  });
+});
