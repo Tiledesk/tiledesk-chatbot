@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.137-rc2
+- Added debug logs
+
 # v0.2.137-rc1
 - Updated: hidden message is enabled only in dev mode for dratf requests
 
