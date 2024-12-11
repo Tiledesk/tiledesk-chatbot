@@ -95,9 +95,7 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    console.log("(DirMessage) supportRequest:", JSON.stringify(this.supportRequest))
     if(this.supportRequest && !this.supportRequest.draft){
-      console.log("(DirMessage) draft request:", message.text)
       callback();
       return;
     }
