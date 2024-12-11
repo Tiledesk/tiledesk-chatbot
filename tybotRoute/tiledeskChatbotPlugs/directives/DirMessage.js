@@ -95,11 +95,11 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    if(this.supportRequest && this.supportRequest.draft){
-      if (!message.text.startsWith('/')) {
-        callback();
-        return;
-      }
+    console.log("(DirMessage) supportRequest:", JSON.stringify(this.supportRequest))
+    if(this.supportRequest && !this.supportRequest.draft){
+      console.log("(DirMessage) draft request:", message.text)
+      callback();
+      return;
     }
     // if (this.projectId === "656054000410fa00132e5dcc") {
     //   if (!message.text.startsWith('/')) {
