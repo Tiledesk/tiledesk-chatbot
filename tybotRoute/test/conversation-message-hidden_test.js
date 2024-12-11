@@ -19,7 +19,7 @@ const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for message.metadata test', async () => {
+describe('Conversation for Hidden message test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -55,7 +55,7 @@ describe('Conversation for message.metadata test', async () => {
   });
 
 
-  it('/condition with json metadata: evaluates message.metadata', (done) => {
+  it('Send hidden message --> request.draft = true ', (done) => {
     // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
@@ -67,21 +67,16 @@ describe('Conversation for message.metadata test', async () => {
       res.send({ success: true });
       
       const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command1 = message.attributes.commands[1];
+      assert(message.attributes);
+      assert.equal(message.attributes.subtype, 'info');
+      assert.equal(message.text, 'this is an hidden message');
     
-      assert(command1.type === "message");
-      assert(command1.message.text === "it's true");
-      assert(command1.type === "message");
       util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(params);
-          assert(params["lastUserMessage"] !== null);
-          assert(params["lastUserMessage"]["metadata"]["src"] === "http://image_src");
           listener.close(() => {
             done();
           });
@@ -95,14 +90,133 @@ describe('Conversation for message.metadata test', async () => {
         "payload": {
         //   "_id": message_id,
           "senderFullname": "guest#367e",
-          "type": "image",
+          "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/condition with json metadata",
+          "text": "/send_hidden_message",
           "id_project": PROJECT_ID,
-          "metadata": {
-            src: "http://image_src"
-          },
+          "request": {
+            "request_id": REQUEST_ID,
+            "draft": true
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Send hidden message --> request.draft = false ', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      
+      const message = req.body;
+      if(message.text = 'hidden message not sent: ok'){
+        
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command1 = message.attributes.commands[1];
+      
+        assert(command1.type === "message");
+        assert(command1.message.text === "hidden message not sent: ok");
+
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(params);
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+        
+      }
+    
+      
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/no_draft",
+          "id_project": PROJECT_ID,
+          "request": {
+            "request_id": REQUEST_ID,
+            "draft": false
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Send hidden message --> request.draft NOT EXIST ', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      
+      const message = req.body;
+      if(message.text = 'hidden message not sent: ok'){
+        
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command1 = message.attributes.commands[1];
+      
+        assert(command1.type === "message");
+        assert(command1.message.text === "hidden message not sent: ok");
+
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(params);
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      }
+    
+      
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/no_draft",
+          "id_project": PROJECT_ID,
           "request": {
             "request_id": REQUEST_ID
           }
