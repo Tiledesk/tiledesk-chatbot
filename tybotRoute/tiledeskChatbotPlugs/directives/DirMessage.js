@@ -25,6 +25,7 @@ class DirMessage {
     this.requestId = context.requestId;
     this.token = context.token;
     this.log = this.context.log;
+    console.log('---> support request ---> ', this.context.supportRequest)
   }
 
   execute(directive, callback) {
