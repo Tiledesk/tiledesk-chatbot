@@ -93,6 +93,8 @@ class DirMessage {
     // const message = action.body.message;
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
+    
+    console.log("----> Message to extEndpoint:", JSON.stringify(message))
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
     if (this.TILEBOT_ENDPOINT) {
       extEndpoint = `${this.TILEBOT_ENDPOINT}`;
