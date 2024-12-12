@@ -628,6 +628,9 @@ async function startApp(settings, completionCallback) {
   }
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
+    console.log("startApp REDIS_HOST: ", settings.REDIS_HOST)
+    console.log("startApp REDIS_PORT: ", settings.REDIS_PORT)
+    console.log("startApp REDIS_PASSWORD: ", settings.REDIS_PASSWORD)
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
       port: settings.REDIS_PORT,
@@ -702,6 +705,7 @@ async function startApp(settings, completionCallback) {
 }
 
 async function connectRedis() {
+  console.log("connectRedis tdcache: ", tdcache)
   if (tdcache) {
     try {
       console.log("(Tilebot) Connecting Redis...");

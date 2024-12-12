@@ -3,9 +3,13 @@ const redis = require('redis');
 class TdCache {
 
     constructor(config) {
+        console.log("TdCache config: ", config);
         this.redis_host = config.host;
         this.redis_port = config.port;
         this.redis_password = config.password;
+        console.log("TdCache this.redis_host: ", this.redis_host);
+        console.log("TdCache this.redis_port: ", this.redis_port);
+        console.log("TdCache this.redis_password: ", this.redis_password);
         this.client = null;
         this.redis_sub = null;
     }
