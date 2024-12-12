@@ -17,6 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.138-rc1
+- Updated redis to 4.7.0
+- Updated tdCache
+
 # v0.2.137
 - Updated: hidden message is enabled only in dev mode for dratf requests
 - Bug-fixed: flows variables is not updated with attributes.payload
