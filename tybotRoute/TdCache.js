@@ -19,8 +19,9 @@ class TdCache {
         return new Promise( async (resolve, reject) => {
             this.client = redis.createClient(
                 {
-                    host: this.redis_host,
-                    port: this.redis_port,
+                    url: `redis://${this.redis_host}:${this.redis_port}`,
+                    // host: this.redis_host,
+                    // port: this.redis_port,
                     password: this.redis_password
                 });
             this.client.on('error', err => {
