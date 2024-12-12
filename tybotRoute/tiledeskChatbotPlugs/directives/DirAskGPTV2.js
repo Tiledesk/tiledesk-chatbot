@@ -174,6 +174,7 @@ class DirAskGPTV2 {
         return;
       }
     }
+
     let ns;
 
     if (action.namespaceAsName) {
@@ -184,6 +185,11 @@ class DirAskGPTV2 {
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     } else {
       ns = await this.getNamespace(null, namespace);
+    }
+
+    if (!ns) {
+      await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
     }
 
     if (ns.engine) {
