@@ -25,6 +25,7 @@ class DirMessage {
     this.requestId = context.requestId;
     this.token = context.token;
     this.log = this.context.log;
+    this.supportRequest = this.context.supportRequest
   }
 
   execute(directive, callback) {
@@ -94,12 +95,16 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    if (this.projectId === "656054000410fa00132e5dcc") {
-      if (!message.text.startsWith('/')) {
-        callback();
-        return;
-      }
+    if(this.supportRequest && !this.supportRequest.draft){
+      callback();
+      return;
     }
+    // if (this.projectId === "656054000410fa00132e5dcc") {
+    //   if (!message.text.startsWith('/')) {
+    //     callback();
+    //     return;
+    //   }
+    // }
 
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
     if (this.TILEBOT_ENDPOINT) {
