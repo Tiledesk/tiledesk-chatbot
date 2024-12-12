@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "0.2.138-rc3",
+  "version": "0.2.138-rc4",
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
