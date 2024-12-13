@@ -1,5 +1,4 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { rejects } = require('assert');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");

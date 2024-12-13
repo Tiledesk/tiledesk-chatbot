@@ -174,6 +174,7 @@ class DirAskGPTV2 {
         return;
       }
     }
+
     let ns;
 
     if (action.namespaceAsName) {
@@ -184,6 +185,11 @@ class DirAskGPTV2 {
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     } else {
       ns = await this.getNamespace(null, namespace);
+    }
+
+    if (!ns) {
+      await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
     }
 
     if (ns.engine) {
@@ -507,7 +513,7 @@ class DirAskGPTV2 {
   }
 
   async updateQuote(tokens_usage) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
 
       const HTTPREQUEST = {
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
@@ -524,7 +530,7 @@ class DirAskGPTV2 {
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
-            rejects(false)
+            reject(false)
           } else {
             // console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);

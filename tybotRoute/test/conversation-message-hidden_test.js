@@ -11,7 +11,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-gpt_assistant-bot.js').bots_data;
+const bots_data = require('./conversation-message-hidden-bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
@@ -19,7 +19,7 @@ const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for DirAssistant test', async () => {
+describe('Conversation for Hidden message test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -29,7 +29,7 @@ describe('Conversation for DirAssistant test', async () => {
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.MONGODB_URI,
+          // MONGODB_URI: process.env.mongoUrl,
           bots: bots_data,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
@@ -54,34 +54,29 @@ describe('Conversation for DirAssistant test', async () => {
     });
   });
 
-  it('/gpt_assistant: gets a message from the assistant', (done) => {
-    if (!process.env.TEST_OPENAI_APIKEY) {
-      console.log("Skipping DirAssistant test!");
-      done();
-      return;
-    }
+
+  it('Send hidden message --> request.draft = true ', (done) => {
+    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/DirAssistant...req.body:", JSON.stringify(req.body));
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      
       res.send({ success: true });
+      
       const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text.includes("products") );
-      assert(command1.type === "message");
+      assert(message.attributes);
+      assert.equal(message.attributes.subtype, 'info');
+      assert.equal(message.text, 'this is an hidden message');
+    
       util.getChatbotParameters(REQUEST_ID, (err, params) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["assistantReply"] !== null);
           listener.close(() => {
             done();
           });
@@ -98,9 +93,130 @@ describe('Conversation for DirAssistant test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/GPT Assistant",
+          "text": "/send_hidden_message",
           "id_project": PROJECT_ID,
-          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID,
+            "draft": true
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Send hidden message --> request.draft = false ', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      
+      const message = req.body;
+      if(message.text = 'hidden message not sent: ok'){
+        
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command1 = message.attributes.commands[1];
+      
+        assert(command1.type === "message");
+        assert(command1.message.text === "hidden message not sent: ok");
+
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(params);
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+        
+      }
+    
+      
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/no_draft",
+          "id_project": PROJECT_ID,
+          "request": {
+            "request_id": REQUEST_ID,
+            "draft": false
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Send hidden message --> request.draft NOT EXIST ', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/condition with json metadata...req.body:", JSON.stringify(req.body));
+      res.send({ success: true });
+      
+      const message = req.body;
+      if(message.text = 'hidden message not sent: ok'){
+        
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command1 = message.attributes.commands[1];
+      
+        assert(command1.type === "message");
+        assert(command1.message.text === "hidden message not sent: ok");
+
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(params);
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      }
+    
+      
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+        //   "_id": message_id,
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/no_draft",
+          "id_project": PROJECT_ID,
           "request": {
             "request_id": REQUEST_ID
           }
@@ -158,32 +274,32 @@ function sendMessageToBot(message, botId, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   // const jwt_token = this.fixToken(token);
+//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

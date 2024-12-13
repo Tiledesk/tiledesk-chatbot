@@ -17,6 +17,28 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.138-rc1
+- Updated redis to 4.7.0
+- Updated tdCache
+
+# v0.2.137
+- Updated: hidden message is enabled only in dev mode for dratf requests
+- Bug-fixed: flows variables is not updated with attributes.payload
+
+# v0.2.136
+- TdCache rollback
+
+# v0.2.135
+- Updated to redis 4.7.0 + Tdcache.js
+- Disabled close_directive_test.js - DirClose directive - too old, not passing
+- Disabled conversation-gpt_assistant_test.js
+
+# v0.2.134
+- Added filter for mweb on hidden messages
+
+# v0.2.133
+- Removed MAX_STEPS and MAX_EXECUTION_TIME as static variable of TiledeskChatbot
+
 # v0.2.132
 - Added support for external API_ENDPOINT
 - Removed logs

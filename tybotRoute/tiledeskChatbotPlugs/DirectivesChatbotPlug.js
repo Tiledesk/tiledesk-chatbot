@@ -178,7 +178,7 @@ class DirectivesChatbotPlug {
   async nextDirective(directives) {
     if (this.log) {console.log("....nextDirective() checkStep():");}
     const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS,  TiledeskChatbot.MAX_EXECUTION_TIME, this.log
+      this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
     // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}

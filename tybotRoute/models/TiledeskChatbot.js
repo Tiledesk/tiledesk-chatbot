@@ -12,8 +12,8 @@ const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnloc
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = process.env.CHATBOT_MAX_STEPS || 1000; // prod 1000;
-  static MAX_EXECUTION_TIME = process.env.CHATBOT_MAX_EXECUTION_TIME || 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
+  // static MAX_STEPS = process.env.CHATBOT_MAX_STEPS || 1000; // prod 1000;
+  // static MAX_EXECUTION_TIME = process.env.CHATBOT_MAX_EXECUTION_TIME || 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -39,6 +39,8 @@ class TiledeskChatbot {
     this.APIKEY = config.APIKEY;
     this.requestId = config.requestId;
     this.projectId = config.projectId;
+    this.MAX_STEPS = config.MAX_STEPS;
+    this.MAX_EXECUTION_TIME = config.MAX_EXECUTION_TIME;
     this.log = config.log;
   }
 

@@ -21,6 +21,8 @@ router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
 let tdcache = null;
+let MAX_STEPS = 1000;
+let MAX_EXECUTION_TIME = 1000 * 3600 * 8;
 
 // DEV
 // const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
@@ -165,6 +167,8 @@ router.post('/ext/:botid', async (req, res) => {
     tdcache: tdcache,
     requestId: requestId,
     projectId: projectId,
+    MAX_STEPS: MAX_STEPS,
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME,
     log: log
   });
   if (log) {console.log("MESSAGE CONTAINS:", message.text);}
@@ -605,7 +609,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
-  //console.log("Starting Tilebot with Settings:", settings);
+  console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
@@ -624,6 +628,9 @@ async function startApp(settings, completionCallback) {
   }
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
+    console.log("startApp REDIS_HOST: ", settings.REDIS_HOST)
+    console.log("startApp REDIS_PORT: ", settings.REDIS_PORT)
+    console.log("startApp REDIS_PASSWORD: ", settings.REDIS_PASSWORD)
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
       port: settings.REDIS_PORT,
@@ -638,6 +645,19 @@ async function startApp(settings, completionCallback) {
     log = true;
   }
   console.log("(Tilebot) log:", log);
+
+
+  if (process.env.CHATBOT_MAX_STEPS) {
+    MAX_STEPS = Number(process.env.CHATBOT_MAX_STEPS);
+  }
+
+  if (process.env.CHATBOT_MAX_EXECUTION_TIME) {
+    MAX_EXECUTION_TIME = Number(process.env.CHATBOT_MAX_EXECUTION_TIME);// test // prod1000 * 3600 * 4; // 4 hours
+  }
+
+  console.log("(Tilebot) MAX_STEPS: ", MAX_STEPS)
+  console.log("(Tilebot) MAX_EXECUTION_TIME: ", MAX_EXECUTION_TIME)
+
   var pjson = require('./package.json');
   console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
 
@@ -685,6 +705,7 @@ async function startApp(settings, completionCallback) {
 }
 
 async function connectRedis() {
+  console.log("connectRedis tdcache: ", tdcache)
   if (tdcache) {
     try {
       console.log("(Tilebot) Connecting Redis...");
