@@ -15,13 +15,14 @@ class TdCache {
     }
 
     async connect(callback) {
-        // client = redis.createClient();
+
         return new Promise( async (resolve, reject) => {
+            /**
+             * Connect redis client
+             */
             this.client = redis.createClient(
                 {
                     url: `redis://${this.redis_host}:${this.redis_port}`,
-                    // host: this.redis_host,
-                    // port: this.redis_port,
                     password: this.redis_password
                 });
             this.client.on('error', err => {
@@ -35,16 +36,29 @@ class TdCache {
                 if (callback) {
                     callback();
                 }
-                //console.log("Redis is ready.");
             });
             await this.client.connect();
+
+            /**
+             * Connect redis subscription client
+             */
             this.redis_sub = redis.createClient(
               {
-                  host: this.redis_host,
-                  port: this.redis_port,
-                  password: this.redis_password
+                url: `redis://${this.redis_host}:${this.redis_port}`,
+                password: this.redis_password
               });
-              // console.log("redis is:", this.redis_sub)
+            this.redis_sub.on('error', err => {
+                reject(err);
+                if (callback) {
+                    callback(err);
+                }
+            });
+            this.redis_sub.on('ready',function() {
+                resolve();
+                if (callback) {
+                    callback();
+                }
+            });
             await this.redis_sub.connect();
         });
     }
