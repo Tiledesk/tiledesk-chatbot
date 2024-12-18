@@ -609,7 +609,6 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
-  console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
@@ -628,9 +627,6 @@ async function startApp(settings, completionCallback) {
   }
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
-    console.log("startApp REDIS_HOST: ", settings.REDIS_HOST)
-    console.log("startApp REDIS_PORT: ", settings.REDIS_PORT)
-    console.log("startApp REDIS_PASSWORD: ", settings.REDIS_PASSWORD)
     tdcache = new TdCache({
       host: settings.REDIS_HOST,
       port: settings.REDIS_PORT,
@@ -705,7 +701,6 @@ async function startApp(settings, completionCallback) {
 }
 
 async function connectRedis() {
-  console.log("connectRedis tdcache: ", tdcache)
   if (tdcache) {
     try {
       console.log("(Tilebot) Connecting Redis...");
