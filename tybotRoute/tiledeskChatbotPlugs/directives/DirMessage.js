@@ -26,6 +26,7 @@ class DirMessage {
     this.token = context.token;
     this.log = this.context.log;
     this.supportRequest = this.context.supportRequest
+    this.hMessage = false
   }
 
   execute(directive, callback) {
@@ -70,6 +71,7 @@ class DirMessage {
       }
       if (directive.name === Directives.HMESSAGE) {
         action.attributes.subtype = "info";
+        this.hMessage = true;
       }
       // if (directive.name === Directives.HMESSAGE) {
       //   action.sender = "tiledesk";
@@ -95,7 +97,7 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    if(this.supportRequest && !this.supportRequest.draft){
+    if(this.hMessage && this.supportRequest && !this.supportRequest.draft){
       callback();
       return;
     }
