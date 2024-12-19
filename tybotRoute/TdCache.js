@@ -21,10 +21,10 @@ class TdCache {
              * Connect redis client
              */
             this.client = redis.createClient(
-                {
-                    url: `redis://${this.redis_host}:${this.redis_port}`,
-                    password: this.redis_password
-                });
+              {
+                  url: `redis://${this.redis_host}:${this.redis_port}`,
+                  password: this.redis_password
+              });
             this.client.on('error', err => {
                 reject(err);
                 if (callback) {
