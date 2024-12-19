@@ -17,6 +17,10 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.138-rc8
+- Updated redis to 4.7.0
+- Updated tdCache
+
 # v0.2.138-rc6
 - First deploy external
 
