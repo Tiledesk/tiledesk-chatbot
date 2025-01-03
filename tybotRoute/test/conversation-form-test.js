@@ -50,7 +50,7 @@ describe('Conversation1 - Form filling', async () => {
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.mongoUrl,
+          // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
@@ -278,7 +278,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('(intent-to-intent) /move_to => /target_intent', (done) => {
-    console.log("ALWAYS PASSES: (intent-to-intent) /move_to => /target_intent");
+    // console.log("ALWAYS PASSES: (intent-to-intent) /move_to => /target_intent");
     try {
       let listener;
       let endpointServer = express();
