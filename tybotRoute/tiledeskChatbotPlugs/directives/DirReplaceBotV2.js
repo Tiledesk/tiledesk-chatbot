@@ -56,13 +56,20 @@ class DirReplaceBotV2 {
     const filler = new Filler();
     botName = filler.fill(botName, variables);
 
+    let data;
+    if (action.nameAsSlug && action.nameAsSlug === true) {
+      data.slug = botName;
+    } else {
+      data.name = botName;
+    }
+
     const HTTPREQUEST = {
       url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + "/replace",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'JWT ' + this.context.token
       },
-      json: { name: botName},
+      json: data,
       method: 'PUT'
     }
 
