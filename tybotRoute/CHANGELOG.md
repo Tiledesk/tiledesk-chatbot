@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.139-rc3
+- Improved ReplaceBotV2 with slug option
+
 # v0.2.139-rc1
 - Improved ReplaceBotV2
 
