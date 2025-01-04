@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -11,13 +11,13 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-code_action_bot.js').bots_data;
+const bots_data = require('./conversation-code_action_v1_v2_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
 describe('Conversation for Code Action test', async () => {
 

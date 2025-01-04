@@ -26,7 +26,7 @@ const bot = {
 		}, {
 			"_tdActionTitle": "code",
 			"_tdActionId": "ca7835b8-319a-4272-8f94-f75c7bcf6f62",
-			"_tdActionType": "code",
+			"_tdActionType": "codev2",
 			"source": `
 console.log('a var...chatbot_name!', context.attributes.chatbot_name);
 context.setAttribute('myvar', '1');
@@ -57,8 +57,7 @@ console.log("all vars:", context.allVars());
 		"language": "en",
 		"intent_display_name": "coding",
 		"intent_id": "intent1"
-	}
-	]
+	}]
 }
 
 // normalize the bot structure for the static intent search
