@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { Logger } = require('../../Logger');
 
 class DirReply {
 
@@ -16,6 +17,7 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+    const logger = new Logger({});
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
