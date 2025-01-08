@@ -13,6 +13,7 @@ class Logger {
             //throw new Error('config.request_id is mandatory');
         }
 
+        console.log("config.request_id: ", config.request_id);
         this.request_id = config.request_id;
         this.dev = config.dev;
 
@@ -67,7 +68,8 @@ class Logger {
         })
     }
 
-    info(text, request) {
+    info(text) {
+        console.log("config.request_id: ", config.request_id);
         if (!this.request_id || !this.jobManager) {
             console.log("this.request_id: ", this.request_id);
             console.log("this.jobManager: ", this.jobManager);
@@ -77,7 +79,7 @@ class Logger {
 
         console.log("adding info log: ", text)
         let data = {
-            request_id: request,
+            request_id: this.request_id,
             text: text,
             level: "info"
         }

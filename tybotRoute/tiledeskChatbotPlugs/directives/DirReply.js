@@ -68,6 +68,7 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+      console.log("message.text: ", message.text)
       this.logger.info("Sending reply " + message.text);
 
       if (message.metadata) {
@@ -135,7 +136,7 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
-    this.logger.info("Sending reply with clean message " + cleanMessage);
+    this.logger.info("Sending reply with clean message " + JSON.stringify(cleanMessage));
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);
