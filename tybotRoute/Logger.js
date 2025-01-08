@@ -9,14 +9,18 @@ class Logger {
         }
 
         if (!config.request_id) {
-            throw new Error('config.request_id is mandatory');
+            console.error('config.request_id is mandatory');
+            //throw new Error('config.request_id is mandatory');
         }
 
+        this.request_id = config.request_id;
         this.dev = config.dev;
 
         this.AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
         if (!this.AMQP_MANAGER_URL) {
-            throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
+            console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
+            return;
+            //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
         }
 
         this.jobManager = new JobManager(this.AMQP_MANAGER_URL, {
@@ -26,10 +30,13 @@ class Logger {
             topic: "logs",
         })
 
-        jobManager.connectAndStartPublisher((status, error) => {
+        console.log("jobManager")
+        this.jobManager.connectAndStartPublisher((status, error) => {
+            console.log("jobManager connectAndStartPublisher")
             if (error) {
                 console.error("connectAndStartPublisher error: ", error)
-                throw new Error("Error starting logger");
+                console.error("Logger not available...');")
+                //throw new Error("Error starting logger");
             } else {
                 console.log("Logger Started. Status ", status);
             }
@@ -37,8 +44,12 @@ class Logger {
     }
 
     error(text) {
+        if (!this.request_id || !this.jobManager) {
+            return;
+        }
+
         let data = {
-            request_id: request,
+            request_id: this.request_id,
             text: text,
             level: "error"
         }
@@ -46,11 +57,17 @@ class Logger {
             let response_data = { success: true, message: "Scheduled" };
             if (callback) {
                 callback(err, response_data);
+                return;
             }
+            return;
         })
     }
 
     info(text, request) {
+        if (!this.request_id || !this.jobManager) {
+            return;
+        }
+
         let data = {
             request_id: request,
             text: text,
