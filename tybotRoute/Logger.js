@@ -69,7 +69,7 @@ class Logger {
     }
 
     info(text) {
-        console.log("config.request_id: ", config.request_id);
+        console.log("config.request_id: ", this.request_id);
         if (!this.request_id || !this.jobManager) {
             console.log("this.request_id: ", this.request_id);
             console.log("this.jobManager: ", this.jobManager);
