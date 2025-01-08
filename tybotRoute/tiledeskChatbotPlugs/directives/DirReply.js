@@ -136,6 +136,7 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
+    this.logger.info("Sending reply " + cleanMessage.text);
     this.logger.info("Sending reply with clean message " + JSON.stringify(cleanMessage));
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
