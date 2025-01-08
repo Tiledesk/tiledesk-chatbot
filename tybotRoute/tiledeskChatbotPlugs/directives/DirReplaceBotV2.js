@@ -56,7 +56,7 @@ class DirReplaceBotV2 {
     const filler = new Filler();
     botName = filler.fill(botName, variables);
 
-    let data;
+    let data = {};
     if (action.nameAsSlug && action.nameAsSlug === true) {
       data.slug = botName;
     } else {
