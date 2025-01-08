@@ -45,9 +45,13 @@ class Logger {
 
     error(text) {
         if (!this.request_id || !this.jobManager) {
+            console.log("this.request_id: ", this.request_id);
+            console.log("this.jobManager: ", this.jobManager);
+            console.log("Return");
             return;
         }
 
+        console.log("adding error log: ", text)
         let data = {
             request_id: this.request_id,
             text: text,
@@ -65,9 +69,13 @@ class Logger {
 
     info(text, request) {
         if (!this.request_id || !this.jobManager) {
+            console.log("this.request_id: ", this.request_id);
+            console.log("this.jobManager: ", this.jobManager);
+            console.log("Return");
             return;
         }
 
+        console.log("adding info log: ", text)
         let data = {
             request_id: request,
             text: text,
