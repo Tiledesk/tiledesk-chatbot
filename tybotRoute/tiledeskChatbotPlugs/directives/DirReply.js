@@ -5,6 +5,8 @@ let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
 
+let logger;
+
 class DirReply {
 
   constructor(context) {
@@ -17,7 +19,7 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
-    const logger = new Logger({});
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
@@ -66,6 +68,8 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+      this.logger.info("Sending reply " + message.text);
+
       if (message.metadata) {
         if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
         if (message.metadata.src) {
@@ -131,6 +135,7 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
+    this.logger.info("Sending reply with clean message " + cleanMessage);
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);
@@ -148,8 +153,10 @@ class DirReply {
       (err) => {
         if (err) {
           console.error("Error sending reply:", err);
+          this.logger.error("Error sending reply: " + err);
         }
         if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
+        this.logger.info("Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays

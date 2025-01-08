@@ -8,9 +8,11 @@ class Logger {
             throw new Error('config is mandatory');
         }
 
-        if (!config.API_URL) {
+        if (!config.request_id) {
             throw new Error('config.request_id is mandatory');
         }
+
+        this.dev = config.dev;
 
         this.AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
         if (!this.AMQP_MANAGER_URL) {
