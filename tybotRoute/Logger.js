@@ -25,7 +25,7 @@ class Logger {
         }
 
         this.jobManager = new Publisher(this.AMQP_MANAGER_URL, {
-            debug: false,
+            debug: true,
             queueName: "logs_queue",
             exchange: "tiledesk-multi",
             topic: "logs",
