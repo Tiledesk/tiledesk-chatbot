@@ -699,7 +699,6 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
             }
-
             if (message.attributes) {
                 if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
@@ -920,6 +919,7 @@ class TiledeskChatbotUtil {
     }
 
     /**
+     * DEPRECATED
      * A stub to get the request parameters, hosted by tilebot on:
      * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
      *
