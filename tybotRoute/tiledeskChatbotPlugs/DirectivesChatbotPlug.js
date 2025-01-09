@@ -53,6 +53,7 @@ const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
+const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 
 class DirectivesChatbotPlug {
 
@@ -485,6 +486,12 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.REPLACE_BOT_V2) {
       new DirReplaceBotV2(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.REPLACE_BOT_V3) {
+      new DirReplaceBotV3(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

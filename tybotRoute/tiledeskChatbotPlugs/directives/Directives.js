@@ -31,6 +31,7 @@ class Directives {
   static FORM = "form";
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
+  static REPLACE_BOT_V3 = "replacebotv3";
   /**** AI ****/
   static ASK_GPT = "askgpt";
   static ASK_GPT_V2 = "askgptv2";
