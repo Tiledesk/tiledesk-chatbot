@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.139-rc5
+- Added ReplaceBotV3 action
+
 # v0.2.138
 - Bug-fixed: hiddenMessage not blocked
 - Bug-fixed: DirAskGPTV2 has hardcoded engine
