@@ -1,4 +1,4 @@
-let JobManager = require("@tiledesk/tiledesk-multi-worker");
+let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
 class Logger {
 
@@ -24,7 +24,7 @@ class Logger {
             //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
         }
 
-        this.jobManager = new JobManager(this.AMQP_MANAGER_URL, {
+        this.jobManager = new Publisher(this.AMQP_MANAGER_URL, {
             debug: false,
             queueName: "logs_queue",
             exchange: "tiledesk-multi",
