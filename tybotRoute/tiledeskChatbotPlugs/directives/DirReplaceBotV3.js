@@ -42,7 +42,7 @@ class DirReplaceBotV3 {
   }
 
   async go(action, callback) {
-    let botName = action.botName;
+    let botId = action.botId;
     let botSlug = action.botSlug;
     let useSlug = action.useSlug;
     let blockName = action.blockName;
@@ -52,14 +52,14 @@ class DirReplaceBotV3 {
       this.context.tdcache, this.context.requestId
     );
     const filler = new Filler();
-    botName = filler.fill(botName, variables);
+    //botId = filler.fill(botId, variables);
     botSlug = filler.fill(botSlug, variables);
 
     let data = {};
     if (useSlug && useSlug === true) {
       data.slug = botSlug;
     } else {
-      data.name = botName;
+      data.id = botId;
     }
 
     const HTTPREQUEST = {
