@@ -1,5 +1,13 @@
 let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
+const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
+let jobManager = new Publisher(AMQP_MANAGER_URL, {
+    debug: true,
+    queueName: "logs_queue",
+    exchange: "tiledesk-multi",
+    topic: "logs",
+})
+
 class Logger {
 
     constructor(config) {
@@ -17,31 +25,12 @@ class Logger {
         this.request_id = config.request_id;
         this.dev = config.dev;
 
-        this.AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
-        if (!this.AMQP_MANAGER_URL) {
+        if (!AMQP_MANAGER_URL) {
             console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
             return;
             //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
         }
 
-        this.jobManager = new Publisher(this.AMQP_MANAGER_URL, {
-            debug: true,
-            queueName: "logs_queue",
-            exchange: "tiledesk-multi",
-            topic: "logs",
-        })
-
-        console.log("jobManager")
-        this.jobManager.connectAndStartPublisher((status, error) => {
-            console.log("jobManager connectAndStartPublisher")
-            if (error) {
-                console.error("connectAndStartPublisher error: ", error)
-                console.error("Logger not available...');")
-                //throw new Error("Error starting logger");
-            } else {
-                console.log("Logger Started. Status ", status);
-            }
-        })
     }
 
     error(text) {
@@ -58,12 +47,8 @@ class Logger {
             text: text,
             level: "error"
         }
-        this.jobManager.publish(data, (err, ok) => {
-            let response_data = { success: true, message: "Scheduled" };
-            if (callback) {
-                callback(err, response_data);
-                return;
-            }
+        jobManager.publish(data, (err, ok) => {
+            if (err) console.warn("publish log fail: ", err);
             return;
         })
     }
@@ -83,14 +68,13 @@ class Logger {
             text: text,
             level: "info"
         }
+
         this.jobManager.publish(data, (err, ok) => {
-            let response_data = { success: true, message: "Scheduled" };
-            if (callback) {
-                callback(err, response_data);
-            }
+            if (err) console.warn("publish log fail: ", err);
+            return;
         })
     }
-    
+
 }
 
 module.exports = { Logger }
