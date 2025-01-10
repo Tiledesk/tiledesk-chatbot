@@ -24,6 +24,13 @@ available on:
 - Bug-fixed: hiddenMessage not blocked
 - Bug-fixed: DirAskGPTV2 has hardcoded engine
 
+# v0.2.138-rc8
+- Updated redis to 4.7.0
+- Updated tdCache
+
+# v0.2.138-rc6
+- First deploy external
+
 # v0.2.138-rc1
 - Updated redis to 4.7.0
 - Updated tdCache
