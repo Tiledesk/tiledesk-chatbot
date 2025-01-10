@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
 
 const axios = require("axios").default;
+let https = require("https");
 
 class DirReplaceBotV3 {
 
@@ -155,7 +156,7 @@ class DirReplaceBotV3 {
         }
       });
   }
-  
+
 }
 
 module.exports = { DirReplaceBotV3 };
