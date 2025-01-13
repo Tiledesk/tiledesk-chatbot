@@ -1,13 +1,13 @@
 let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
-let jobManager = new Publisher(AMQP_MANAGER_URL, {
+let publisher = new Publisher(AMQP_MANAGER_URL, {
     debug: true,
     queueName: "logs_queue",
     exchange: "tiledesk-multi",
     topic: "logs",
 })
-console.log("*** jobManager: ", jobManager)
+console.log("*** publisher: ", publisher)
 
 class Logger {
 
@@ -35,9 +35,9 @@ class Logger {
     }
 
     error(text) {
-        if (!this.request_id || !jobManager) {
+        if (!this.request_id || !publisher) {
             console.log("this.request_id: ", this.request_id);
-            console.log("this.jobManager: ", this.jobManager);
+            console.log("publisher: ", publisher);
             console.log("Return");
             return;
         }
@@ -48,7 +48,7 @@ class Logger {
             text: text,
             level: "error"
         }
-        jobManager.publish(data, (err, ok) => {
+        publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
             return;
         })
@@ -56,9 +56,9 @@ class Logger {
 
     info(text) {
         console.log("config.request_id: ", this.request_id);
-        if (!this.request_id || !jobManager) {
+        if (!this.request_id || !publisher) {
             console.log("this.request_id: ", this.request_id);
-            console.log("this.jobManager: ", this.jobManager);
+            console.log("publisher: ", publisher);
             console.log("Return");
             return;
         }
@@ -70,7 +70,7 @@ class Logger {
             level: "info"
         }
 
-        this.jobManager.publish(data, (err, ok) => {
+        publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
             return;
         })
