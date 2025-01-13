@@ -7,6 +7,7 @@ let jobManager = new Publisher(AMQP_MANAGER_URL, {
     exchange: "tiledesk-multi",
     topic: "logs",
 })
+console.log("*** jobManager: ", jobManager)
 
 class Logger {
 
@@ -34,7 +35,7 @@ class Logger {
     }
 
     error(text) {
-        if (!this.request_id || !this.jobManager) {
+        if (!this.request_id || !jobManager) {
             console.log("this.request_id: ", this.request_id);
             console.log("this.jobManager: ", this.jobManager);
             console.log("Return");
@@ -55,7 +56,7 @@ class Logger {
 
     info(text) {
         console.log("config.request_id: ", this.request_id);
-        if (!this.request_id || !this.jobManager) {
+        if (!this.request_id || !jobManager) {
             console.log("this.request_id: ", this.request_id);
             console.log("this.jobManager: ", this.jobManager);
             console.log("Return");
