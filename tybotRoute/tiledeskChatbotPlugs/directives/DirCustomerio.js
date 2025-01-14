@@ -16,6 +16,7 @@ class DirCustomerio {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -69,14 +70,10 @@ class DirCustomerio {
       return;
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const customerio_base_url = process.env.CUSTOMERIO_ENDPOINT || "https://track.customer.io/api/v1";
-    if (this.log) {
-      console.log("DirCustomerio server_base_url: ", server_base_url);
-      console.log("DirCustomerio customerio_base_url: ", customerio_base_url);
-    }
+    if (this.log) { console.log("DirCustomerio customerio_base_url: ", customerio_base_url); }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirCustomerio - Key not found in Integrations."); }
       let status = 422;
@@ -287,11 +284,11 @@ class DirCustomerio {
     }
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/customerio",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/customerio",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

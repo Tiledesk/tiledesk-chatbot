@@ -2,6 +2,7 @@ const { param } = require('express/lib/request');
 const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirSendEmail {
@@ -11,29 +12,18 @@ class DirSendEmail {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   log: false
-    // }
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    
+    this.log = context.log;    
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -82,8 +72,8 @@ class DirSendEmail {
             to: filled_to,
             replyto: reply_to
           }
-          console.log("email message:", JSON.stringify(message));
-          const message_echo = await this.tdclient.sendEmail(message);
+          // console.log("email message:", JSON.stringify(message));
+          const message_echo = await this.tdClient.sendEmail(message);
           if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
           if (this.log) {console.log("email sent. filled_text:", filled_text);}
           if (this.log) {console.log("email sent. filled_to:", filled_to);}

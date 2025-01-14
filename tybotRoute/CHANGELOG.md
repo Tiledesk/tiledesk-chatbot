@@ -5,6 +5,256 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+<!-- // CHECK IT!!!
+# v0.2.98
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
+
+# v0.2.97
+- Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
+- Added jsonCondition test on json objects properties
+- Added flowError on JSONCondition when result = null
+- Added fix on Filler -->
+
+# v0.2.139-rc5
+- Added ReplaceBotV3 action
+
+# v0.2.138
+- Bug-fixed: hiddenMessage not blocked
+- Bug-fixed: DirAskGPTV2 has hardcoded engine
+
+# v0.2.138-rc8
+- Updated redis to 4.7.0
+- Updated tdCache
+
+# v0.2.138-rc6
+- First deploy external
+
+# v0.2.138-rc1
+- Updated redis to 4.7.0
+- Updated tdCache
+
+# v0.2.137
+- Updated: hidden message is enabled only in dev mode for dratf requests
+- Bug-fixed: flows variables is not updated with attributes.payload
+
+# v0.2.136
+- TdCache rollback
+
+# v0.2.135
+- Updated to redis 4.7.0 + Tdcache.js
+- Disabled close_directive_test.js - DirClose directive - too old, not passing
+- Disabled conversation-gpt_assistant_test.js
+
+# v0.2.134
+- Added filter for mweb on hidden messages
+
+# v0.2.133
+- Removed MAX_STEPS and MAX_EXECUTION_TIME as static variable of TiledeskChatbot
+
+# v0.2.132
+- Added support for external API_ENDPOINT
+- Removed logs
+
+# v0.2.131-rc2
+- changed API_URL with API_ENDPOINT
+
+# v0.2.131
+- added: AUDIO_RECORD vxml action as reply_v2 actionType
+- added: DirAddTags action
+- externalized: process.env.CHATBOT_MAX_STEPS and process.env.CHATBOT_MAX_EXECUTION_TIME
+
+# v0.2.130
+- (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
+- index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+
+# v0.2.130-rc5
+- (TiledeskChatbotUtil) fix process.env.API_ENDPOINT => process.env.API_URL
+
+# v0.2.130-rc4
+- (TiledeskChatbotUtil) process.env.API_ENDPOINT => process.env.API_URL
+
+# v0.2.130-rc3
+- index.js /block => added "token": "NO-TOKEN"
+- (TiledeskChatbotUtil) added: chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_ENDPOINT);
+
+# v0.2.129 -> test
+- (TiledeskChatbot) sending as "info": "An error occurred while getting locked intent:'" + locked_intent + "'"
+- (DirectivesChatbotPlug) added try catch on new TiledeskClient() => try {tdclient = new TiledeskClient({...})}
+
+# v0.2.128 -> test
+- Updated axios from 0.27.2 to 1.7.7
+- fixes tdcache .set() with callback
+
+# v0.2.127 -> test
+- TiledeskChatbot =>
+  - static MAX_STEPS = 1000;
+  - static MAX_EXECUTION_TIME = 1000 * 3600 * 8;
+
+# v0.2.126 -> test
+- TdCache async del(key, callback) FIXED (await unsupported problem)
+
+# v0.2.125 -> test
+- class TiledeskChatbot static MAX_STEPS = 1000;
+- class TiledeskChatbot static MAX_EXECUTION_TIME = 1000 * 3600 * 6; Increased from 4 => 6 hours
+
+# v0.2.124 -> test
+- TiledeskChatbot.js: fixed problem with locked-intent error.
+- DirectivesChatbotPlug -> errorMessage is now hidden
+- TESTING WITH VALUES: static MAX_STEPS = 10 && MAX_EXECUTION_TIME = 1000 * 60 * 2; (2 minutes)
+
+# v0.2.123 -> test
+- DirSendEmail removed log
+
+# v0.2.122 -> test
+- fixed check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js with return
+- removed logs, err => JSON.stringify(err)
+
+# v0.2.121 -> test
+- added check if (!this.validWebhookURL(this.webhookurl)) {... on WebhookChatbotPlug.js
+
+# v0.2.120 -> prod
+- removed check in go() - it is already in execute() - on SetAttributeV2: if (!action) {...}
+- merged Whatsapp Action
+- updated "@tiledesk/tiledesk-client": "^0.10.13"
+
+# v0.2.119 -> test
+- fixed: addParameter("payload", message) => addParameter("payload", message.attributes.payload)
+- JSONCondition: added in constructor => this.chatbot = context.chatbot;
+
+# v0.2.118 -> test
+- added payload to attributes: await chatbot.addParameter("payload", message);
+
+# v0.2.117 -> test
+- block endpoint fixed with APIURL
+
+# v0.2.116 -> test
+- updates @tiledesk/tiledesk-client => v0.10.12
+
+# v0.2.115 -> test
+- removed log console.error("TiledeskExpression.evaluate() error:...")
+- Log setting fix in DirectivesChatbotPlug: const tdclient = new TiledeskClient({...
+- SetAttributeV2: added check for action null: if (!action) {...
+- SetAttributeV2:added check with ? operator: if (action.operation?.operators === undefined && ...
+
+# v0.2.114 -> test
+- Creating draft webhook endpoint on index.js: router.post('/block/:project_id/:bot_id/:block_id' ...
+- Added check on attribute size < 20Mb
+- SetAttributeV2: added persistency service
+
+# v0.2.113 -> prod
+- Fixed DirClose not importing TiledeskChatbotConst
+
+# v0.2.112 -> prod
+- Fix index name in DirAskGPTV2
+
+# v0.2.111 -> test
+- Updated DirAskGPTV2 with engine support
+
+# v0.2.110 -> test
+- Added DirMoveToUnassigned
+- Added DirConnectBlock
+
+# v0.2.109 -> test
+- Added DirMoveToUnassigned
+- Fixed bug: GptTask doesn't work properly with trascript
+
+# v0.2.108 -> test
+- Added chatbot_id
+- Added support for citations in AskGPTV2
+- Added support Json type in GPT Task
+
+# v0.2.107 -> production
+- clean logs (more)
+
+# v0.2.106 -> production
+- clean logs
+
+# v0.2.105 -> production
+- clean logs
+
+# v0.2.104 -> production
+- isValid fixed
+
+# v0.2.103 -> test
+- isValid removed
+
+# v0.2.102
+- isValid modified: if (parts.length >= 4) instead of "if (parts.length === 4)" that blocked whatsapp requests
+
+# v0.2.101
+- Dynamic attribute "now" is a ISOString date
+- MAX_EXECUTION_TIME = 1000 * 3600 * 4 // 4 hours
+
+# v0.2.100 -> test
+- Added "chatbotToken" to RESERVED attributes
+- Added UUID, UUIDv4 dynamic attributes
+- Remove console.error from Filler liquidJS catch clause
+
+# v0.2.98
+- Support for MAX_EXECUTION_TIME (total execution time of a flow without user interaction)
+- MAX_STEPS = 1000
+- MAX_EXECUTION_TIME = 12 hrs
+
+# v0.2.97
+- Added support for "chatbotToken” attribute
+- Added new Action: clear_transcript
+- Exclude transcript generation when request type differs from "support-group-*"
+- "step" key reset on DirWait => this.chatbot.addParameter( step_key, 0 )
+
+# v0.2.96
+- Added timestamp (number) and now (Date Object) attributes
+
+- Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
+- Added jsonCondition test on json objects properties
+- Added flowError on JSONCondition when result = null
+- Added fix on Filler
+
+- Added possibility to select namespace by name
+- Added filler to namespace in DirAskGPTv2 
+- Added filler to command.settings in DirReply	
+
+# v0.2.95
+- If Online Agents V2 - bug fix (If Project Available Agents V2 -> MWeb)
+
+# v0.2.94
+- Added support for chat history for AskGPTv2 action
+
+# v0.2.93
+- Added model contexts
+
+# v0.2.92
+- Improved GPTTask Action with support for history
+
+# v0.2.91
+- Added voice flow attributes: dnis, callId, ani
+
+# v0.2.89
+- Added convertToNumber to operations in setAttribute
+- Added setAttributeV2 test
+
+# v0.2.88
+- Added DirContactUpdate (aka LeadUpdate). No test case added for LeadUpdate. Only testable with a validation test.
+- Fixed: Attribute parameters userFullname & userEmail now are able to "bypass" the request.lead not correctly updating on the same conversation. If updated in the flow (through LeadUpdate action), they will maintain their own value through the current conversation flow.
+
+# v0.2.87
+- Fixed DirAssistant empty error {}
+- Added to DirAssistant "lastMessageData" attribute (The message content original JSON structure useful to get annotations in messages, message type etc.)
+
+# v0.2.86
+- Added to ifOnlineAgents Action: ignoreProjectWideOperatingHours = action.ignoreOperatingHours;
+- Updated ifOnlineAgents with get available agents with 'raw' option
+
+# v0.2.85
+- Improved "If operating hours" action with time slots
+- Other fix (?)
+
+# v0.2.84
+- Fixed "guest#" bug
+- Fixed default_context in AskGPTv2
+
 # v0.2.83
 - Added support for advanced context in AskGPTv2
 

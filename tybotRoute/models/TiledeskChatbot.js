@@ -9,11 +9,11 @@ const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
-const { TiledeskChatbotConst } = require('./TiledeskChatbotConst.js');
 
 class TiledeskChatbot {
 
-  static MAX_STEPS = 200;
+  // static MAX_STEPS = process.env.CHATBOT_MAX_STEPS || 1000; // prod 1000;
+  // static MAX_EXECUTION_TIME = process.env.CHATBOT_MAX_EXECUTION_TIME || 1000 * 3600 * 8;// test // prod1000 * 3600 * 4; // 4 hours
 
   constructor(config) {
     if (!config.botsDataSource) {
@@ -39,33 +39,29 @@ class TiledeskChatbot {
     this.APIKEY = config.APIKEY;
     this.requestId = config.requestId;
     this.projectId = config.projectId;
+    this.MAX_STEPS = config.MAX_STEPS;
+    this.MAX_EXECUTION_TIME = config.MAX_EXECUTION_TIME;
     this.log = config.log;
   }
 
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
-      // get bot info
-      // if (this.log) {
-      //   console.log("replyToMessage():", JSON.stringify(message));
-      // }
       let lead = null;
       if (message.request) {
         this.request = message.request;
-        lead = message.request.lead;
-        if (lead && lead.fullname) {
-          if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
-          // await this.addParameter(this.requestId, "userFullname", lead.fullname);
-          await this.addParameter("userFullname", lead.fullname);
-        }
-        if (lead && lead.email) {
-          if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
-          // await this.addParameter(this.requestId, "userEmail", lead.email);
-          await this.addParameter("userEmail", lead.email);
-        }
+        // lead = message.request.lead;
+        // if (lead && lead.fullname) {
+        //   if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
+        //   await this.addParameter("userFullname", lead.fullname);
+        // }
+        // if (lead && lead.email) {
+        //   if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
+        //   await this.addParameter("userEmail", lead.email);
+        // }
       }
-      if (this.log) {
-        console.log("replyToMessage() > lead found:", JSON.stringify(lead));
-      }
+      // if (this.log) {
+      //   console.log("replyToMessage() > lead found:", JSON.stringify(lead));
+      // }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
@@ -110,6 +106,7 @@ class TiledeskChatbot {
             console.log("Resetting current step by request message:", message.text);
           }
           await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
+          await TiledeskChatbot.resetStarted(this.tdcache, this.requestId);
           if (this.log) {
             if (this.tdcache) {
               let currentStep = 
@@ -147,17 +144,21 @@ class TiledeskChatbot {
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, lead);//, bot);
-          // if (!reply.attributes) {
-          //   reply.attributes = {}
-          // }
-          // // used by the Clients to get some info about the intent that generated this reply
-          // reply.attributes.intent_display_name = faq.intent_display_name;
-          // reply.attributes.intent_id = faq.intent_id;
+          // resolve(reply);
+          // return;
         }
         else {
           reply = {
-            "text": "An error occurred while getting locked intent:'" + locked_intent + "'"
+            "text": "An error occurred while getting locked intent:'" + locked_intent + "'",
+            "attributes": {
+              "subtype": "info"
+            }
           }
+          // because of some race condition, during a mixed ReplyV2 Action button + Replace bot an
+          // intent can be found locked outside of the original chatbot scope.
+          // The temp solution is to immediatly unlock the intent and let the flow continue.
+          await this.unlockIntent(this.requestId);
+          await this.unlockAction(this.requestId);
         }
         resolve(reply);
         return;
@@ -271,7 +272,7 @@ class TiledeskChatbot {
         if (this.log) {console.log("got faq by EXACT MATCH", faqs);}
       }
       catch (error) {
-        console.error("An error occurred during exact match:", error);
+        console.error("(TiledeskChatbot) An error occurred during exact match:", JSON.stringify(error));
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
@@ -622,8 +623,17 @@ class TiledeskChatbot {
   }
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
+    if (parameter_name === null || parameter_name === undefined) {
+      // console.error("Error saving key:", parameter_name, "value:", parameter_value);
+      return;
+    }
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const parameter_value_s = JSON.stringify(parameter_value);
+    // console.log("saving key:", parameter_name, "value:", parameter_value);
+    if (parameter_value_s?.length > 20000000) {
+      // console.log("Error. Attribute size too big (> 20mb):", parameter_value_s);
+      return;
+    }
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
   }
 
@@ -677,49 +687,63 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
-  static async checkStep(_tdcache, requestId, max_steps, log) {
+  static async checkStep(_tdcache, requestId, max_steps, max_execution_time, log) {
     if (log) {console.log("CHECKING ON MAX_STEPS:", max_steps);}
-    let go_on = true; // continue
+    // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     if (log) {console.log("__parameter_key:", parameter_key);}
     await _tdcache.incr(parameter_key);
     // console.log("incr-ed");
     let _current_step = await _tdcache.get(parameter_key);
-    // if (!_current_step) { // this shouldn't be happening
-    //   _current_step = 0;
-    // }
     let current_step = Number(_current_step);
-    // current_step += 1;
-    // await _tdcache.set(parameter_key, current_step); // increment step
-    // console.log("CURRENT-STEP:", current_step);
     if (current_step > max_steps) {
       if (log) {console.log("max_steps limit just violated");}
       if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
-      // await TiledeskChatbot.resetStep(_tdcache, requestId);
-      // go_on = 1; // stop execution, send error message
-      go_on = false
-    }
-    // else if (current_step > max_steps + 1) { // max_steps limit already violated
-    //   console.log("CURRENT-STEP > MAX_STEPS!", current_step);
-    //   // await TiledeskChatbot.resetStep(_tdcache, requestId);
-    //   go_on = 2; // stop execution, don't send error message (already sent with go_on = 1)
-    // }
-    else {
-      // go_on = 0;
-      go_on = true;
+      // go_on = false
+      return {
+        error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded."
+      };
     }
     // else {
-      // console.log("CURRENT-STEP UNDER MAX_STEPS THRESHOLD:)", current_step);
-      // current_step += 1;
-      // await _tdcache.set(parameter_key, current_step); // increment step
-      // console.log("current_step from cache:", await _tdcache.get(parameter_key));
+    //   go_on = true;
     // }
-    return go_on;
+
+    // check execution_time
+    // const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 // * 60 * 12 // 12 hours
+    let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
+    let start_time = await _tdcache.get(start_time_key);
+    // console.log("cached start_time is:", start_time, typeof start_time);
+    const now = Date.now();
+    if (start_time === null || Number(start_time) === 0) {
+      // console.log("start_time is null");
+      await _tdcache.set(start_time_key, now);
+      return {};
+    }
+    else {
+      // console.log("start_time:", start_time);
+      const execution_time = now - Number(start_time);
+      // console.log("execution_time:", execution_time);
+      if (execution_time > max_execution_time) {
+        if (log) {console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");}
+        return {
+          error: "Anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded."
+        };
+      }
+    }
+    return {};
   }
 
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     // console.log("resetStep() parameter_key:", parameter_key);
+    if (_tdcache) {
+      await _tdcache.set(parameter_key, 0);
+    }
+  }
+
+  static async resetStarted(_tdcache, requestId) {
+    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
+    // console.log("resetStarted() parameter_key:", parameter_key);
     if (_tdcache) {
       await _tdcache.set(parameter_key, 0);
     }
@@ -793,15 +817,8 @@ class TiledeskChatbot {
         fullname: all_parameters['userFullname'],
         phone: all_parameters['userPhone']
       }
-      // tdclient.updateLeadData(leadId, all_parameters['userEmail'], all_parameters['userFullname'], null, () => {
-        tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
+      tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
         if (this.log) {console.log("Lead updated.")}
-        // tdclient.updateRequestAttributes(requestId, {
-        //   preChatForm: all_parameters,
-        //   updated: Date.now
-        // }, () => {
-        //   if (this.log) {console.log("Prechat updated.");}
-        // });
       });
     };
   }

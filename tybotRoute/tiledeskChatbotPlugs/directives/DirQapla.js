@@ -15,6 +15,7 @@ class DirQapla {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -82,18 +83,14 @@ class DirQapla {
       return;
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    if (this.log) { 
-      console.log("DirQapla server_base_url: ", qapla_base_url); 
-      console.log("DirQapla qapla_base_url: ", qapla_base_url); 
-    }
+    if (this.log) { console.log("DirQapla qapla_base_url: ", qapla_base_url); }
 
     let key = action.apiKey;
 
     if (!key) {
       if (this.log) { console.log("DirQapla - Key not found into action. Searching in integrations..."); }
-      key = await this.getKeyFromIntegrations(server_base_url);
+      key = await this.getKeyFromIntegrations();
     }
 
     if (!key) {
@@ -281,18 +278,18 @@ class DirQapla {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirQapla) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }
       });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/qapla",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/qapla",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

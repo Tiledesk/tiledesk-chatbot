@@ -9,27 +9,17 @@ class DirAssignFromFunction {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   log: false
-    // }
-    this.tdclient = context.tdclient;
-    // new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
     this.log = context.log;
     this.tdcache = context.tdcache;
+    this.API_ENDPOINT = context.API_ENDPOINT;
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   async execute(directive, callback) {
@@ -77,7 +67,7 @@ class DirAssignFromFunction {
   async invoke(functionName, callback) {
     switch (functionName) {
       case "openNow":
-        this.tdclient.openNow((err, result) => {
+        this.tdClient.openNow((err, result) => {
           if (this.log) {console.log("openNow():", result);}
           if (err) {
             callback(err);
@@ -91,7 +81,7 @@ class DirAssignFromFunction {
         });
         break;
       case "availableAgents":
-        this.tdclient.getProjectAvailableAgents((err, agents) => {
+        this.tdClient.getProjectAvailableAgents((err, agents) => {
           if (this.log) {console.log("Agents on 'open'", agents);}
           if (err || !agents) {
             console.error("Error getting available agents in DirWhenAvailableAgents", err);

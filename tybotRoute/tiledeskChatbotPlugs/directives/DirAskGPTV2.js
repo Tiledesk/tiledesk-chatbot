@@ -3,6 +3,9 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const assert = require("assert");
 require('dotenv').config();
 
 class DirAskGPTV2 {
@@ -12,9 +15,11 @@ class DirAskGPTV2 {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -62,8 +67,19 @@ class DirAskGPTV2 {
     let temperature;
     let max_tokens;
     let top_k;
-    let default_context = "Answer if and ONLY if the answer is contained in the context provided. If the answer is not contained in the context provided ALWAYS answer with <NOANS>\n{context}"
-    
+    let transcript;
+    let citations = false;
+    let engine;
+    //let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
+
+    let contexts = {
+      "gpt-3.5-turbo":        "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
+      "gpt-4":                "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
+      "gpt-4-turbo-preview":  "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
+      "gpt-4o":               "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf the context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n####{context}####",
+      "gpt-4o-mini":          "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf the context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n####{context}####"
+    }
+
     let source = null;
 
     if (!action.question || action.question === '') {
@@ -95,6 +111,10 @@ class DirAskGPTV2 {
       max_tokens = action.max_tokens;
     }
 
+    if (action.citations) {
+      citations = action.citations;
+    }
+
     let requestVariables = null;
     requestVariables =
       await TiledeskChatbot.allParametersStatic(
@@ -105,18 +125,25 @@ class DirAskGPTV2 {
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const kb_endpoint = process.env.KB_ENDPOINT_QA
-    
-    if (this.log) {
-      console.log("DirAskGPT ApiEndpoint URL: ", server_base_url);
-      console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint);
+    if (action.history) {
+      let transcript_string = await TiledeskChatbot.getParameterStatic(
+        this.context.tdcache,
+        this.context.requestId,
+        TiledeskChatbotConst.REQ_TRANSCRIPT_KEY
+      )
+      if (this.log) { console.log("DirAskGPT transcript string: ", transcript_string) }
+
+      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+      if (this.log) { console.log("DirAskGPT transcript ", transcript) }
     }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    const kb_endpoint = process.env.KB_ENDPOINT_QA
+    if (this.log) { console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint); }
+
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
-      key = await this.getKeyFromKbSettings(server_base_url);
+      key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
@@ -138,20 +165,56 @@ class DirAskGPTV2 {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
         if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
-        callback();
+        await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);  
         return;
       }
     }
 
+    let ns;
+
+    if (action.namespaceAsName) {
+      // Namespace could be an attribute
+      const filled_namespace = filler.fill(action.namespace, requestVariables)
+      ns = await this.getNamespace(filled_namespace, null);
+      namespace = ns.id;
+      if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
+    } else {
+      ns = await this.getNamespace(null, namespace);
+    }
+
+    if (!ns) {
+      await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+    }
+
+    if (ns.engine) {
+      engine = ns.engine;
+    } else {
+      engine = await this.setDefaultEngine()
+    }
     
+    if (!namespace) {
+      console.log("DirAskGPT - Error: namespace is undefined")
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+    }
+
     let json = {
       question: filled_question,
       gptkey: key,
       namespace: namespace,
-      model: model
+      model: model,
+      citations: citations,
+      engine: engine
     };
     if (top_k) {
       json.top_k = top_k;
@@ -165,18 +228,21 @@ class DirAskGPTV2 {
     
     if (!action.advancedPrompt) {
       if (filled_context) {
-        json.system_context = filled_context + "\n" + default_context;
+        json.system_context = filled_context + "\n" + contexts[model];
       } else {
-        json.system_context = default_context;
+        json.system_context = contexts[model];
       }
     } else {
       json.system_context = filled_context;
     }
 
+    if (transcript) {
+      json.chat_history_dict = await this.transcriptToLLM(transcript);
+    }
+
     if (this.log) { console.log("DirAskGPT json:", json); }
 
     const HTTPREQUEST = {
-      // url: server_base_url + "/" + this.context.projectId + "/kb/qa",
       url: kb_endpoint + "/qa",
       headers: {
         'Content-Type': 'application/json',
@@ -193,11 +259,13 @@ class DirAskGPTV2 {
           console.log("DirAskGPT error: ", err);
         }
         if (this.log) { console.log("DirAskGPT resbody:", resbody); }
-        let answer = resbody.answer;
-        let source = resbody.source;
-        await this.#assignAttributes(action, answer, source);
+        
+        // let answer = resbody.answer;
+        // let source = resbody.source;
+        // await this.#assignAttributes(action, answer, source);
 
         if (err) {
+          await this.#assignAttributes(action, answer, source);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -210,12 +278,13 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
 
+          await this.#assignAttributes(action, resbody.answer, resbody.source);
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_size,
               model: json.model
             }
-            this.updateQuote(server_base_url, tokens_usage);
+            this.updateQuote(tokens_usage);
           }
 
           if (trueIntent) {
@@ -226,6 +295,7 @@ class DirAskGPTV2 {
           callback();
           return;
         } else {
+          await this.#assignAttributes(action, answer, source);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -343,18 +413,18 @@ class DirAskGPTV2 {
         }
       })
       .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
+        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }
       });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -382,11 +452,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async getKeyFromKbSettings(server_base_url) {
+  async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
       const KB_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -412,11 +482,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async checkQuoteAvailability(server_base_url) {
+  async checkQuoteAvailability() {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -442,11 +512,11 @@ class DirAskGPTV2 {
     })
   }
 
-  async updateQuote(server_base_url, tokens_usage) {
-    return new Promise((resolve) => {
+  async updateQuote(tokens_usage) {
+    return new Promise((resolve, reject) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/incr/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -460,9 +530,9 @@ class DirAskGPTV2 {
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
-            rejects(false)
+            reject(false)
           } else {
-            console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
+            // console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }
@@ -470,6 +540,98 @@ class DirAskGPTV2 {
     })
   }
 
+  /**
+   * Transforms the transcirpt array in a dictionary like '0': { "question": "xxx", "answer":"xxx"}
+   * merging consecutive messages with the same role in a single question or answer.
+   * If the first message was sent from assistant, this will be deleted.
+   */
+  async transcriptToLLM(transcript) {
+    
+    let objectTranscript = {};
+
+    if (transcript.length === 0) {
+      return objectTranscript;
+    }
+
+    let mergedTranscript = [];
+    let current = transcript[0];
+
+    for (let i = 1; i < transcript.length; i++) {
+      if (transcript[i].role === current.role) {
+        current.content += '\n' + transcript[i].content;
+      } else {
+        mergedTranscript.push(current);
+        current = transcript[i]
+      }
+    }
+    mergedTranscript.push(current);
+
+    if (mergedTranscript[0].role === 'assistant') {
+      mergedTranscript.splice(0, 1)
+    }
+
+    let counter = 0;
+    for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
+      // Check if [i] is role user and [i+1] is role assistant??
+      assert(mergedTranscript[i].role === 'user');
+      assert(mergedTranscript[i+1].role === 'assistant');
+
+      if (!mergedTranscript[i].content.startsWith('/')) {
+        objectTranscript[counter] = {
+          question: mergedTranscript[i].content,
+          answer: mergedTranscript[i+1].content
+        }
+        counter++;
+      }
+    }
+
+    return objectTranscript;
+  }
+
+  async getNamespace(name, id) {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.context.token
+        },
+        method: "GET"
+      }
+      if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
+      this.#myrequest(
+        HTTPREQUEST, async (err, namespaces) => {
+          if (err) {
+            console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
+            resolve(null)
+          } else {
+            if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
+            if (name) {
+              let namespace = namespaces.find(n => n.name === name);
+              resolve(namespace);
+            } else {
+              let namespace = namespaces.find(n => n.id === id);
+              resolve(namespace);
+            }
+
+          }
+        }
+      )
+    })
+  }
+
+  async setDefaultEngine() {
+    return new Promise((resolve) => {
+      let engine = {
+        name: "pinecone",
+        type: process.env.PINECONE_TYPE,
+        apikey: "",
+        vector_size: 1536,
+        index_name: process.env.PINECONE_INDEX
+      }
+      resolve(engine);
+    })
+  }
 
 }
 

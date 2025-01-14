@@ -15,6 +15,7 @@ class DirGptTask {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -85,15 +86,11 @@ class DirGptTask {
       console.log("DirGptTask temperature: ", temperature);
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
     const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
-    if (this.log) {
-      console.log("DirGptTask server_base_url ", server_base_url);
-      console.log("DirGptTask openai_url ", openai_url);
-    }
+    if (this.log) { console.log("DirGptTask openai_url ", openai_url); }
 
     const INTEGRATIONS_HTTPREQUEST = {
-      url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+      url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'JWT ' + this.context.token
@@ -127,7 +124,7 @@ class DirGptTask {
             if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
 
             const KB_HTTPREQUEST = {
-              url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+              url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'JWT ' + this.context.token

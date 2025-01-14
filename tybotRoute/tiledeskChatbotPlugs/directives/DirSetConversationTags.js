@@ -1,3 +1,4 @@
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Filler } = require('../Filler');
 
 class DirSetConversationTags {
@@ -8,8 +9,16 @@ class DirSetConversationTags {
     }
     this.context = context;
     this.log = context.log;
-    this.tdclient = context.tdclient;
     this.requestId = context.requestId;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -72,7 +81,7 @@ class DirSetConversationTags {
               subtype: "info"
             }
           }
-          this.tdclient.sendSupportMessage(
+          this.tdClient.sendSupportMessage(
             this.requestId,
             message, (err) => {
               if (err) {
@@ -91,7 +100,7 @@ class DirSetConversationTags {
   }
 
   moveToDepartment(requestId, depName, callback) {
-    this.tdclient.getAllDepartments((err, deps) => {
+    this.tdClient.getAllDepartments((err, deps) => {
       if (this.log) {console.log("deps:", JSON.stringify(deps));}
       if (err) {
         console.error("getAllDepartments() error:", err);
@@ -108,7 +117,7 @@ class DirSetConversationTags {
         }
       }
       if (dep) {
-        this.tdclient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
+        this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
             console.error("DirDepartment error:", err);
             callback();

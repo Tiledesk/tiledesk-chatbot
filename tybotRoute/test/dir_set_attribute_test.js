@@ -67,7 +67,7 @@ describe('Testing dir_set_attribute_test', function() {
     });
     
     describe('Testing dir_set_attribute_test with a single const', function() {
-        it('should print Radis: counter; value: 10', async function() {
+        it('should print Redis: counter; value: 10', async function() {
             let keyTest, valueTest;
             TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
                 return {};
@@ -101,6 +101,7 @@ describe('Testing dir_set_attribute_test', function() {
             assert.equal(valueTest, "10");
         });
     });
+
     describe('Testing dir_set_attribute_test with a single variabile', function() {
         it('should print add to: counter the value: 1', async function() {
             let keyTest, valueTest;
@@ -722,6 +723,44 @@ describe('Testing dir_set_attribute_test', function() {
             const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
             await executeAsync({'action': action});
             assert.ok(!failed);
+        });
+    });
+
+    describe('Testing dir_set_attribute_test type settings', function() {
+        it('should print json', async function() {
+            let keyTest, valueTest;
+            TiledeskChatbot.allParametersStatic = async function(tdcache, requestId) {
+                return {};
+            }
+            TiledeskChatbot.addParameterStatic = async function(tdcache, requestId, key, value) {
+                // console.log("Redis: " + key + "; value: " + value);
+                keyTest = key;
+                valueTest = value;
+            }
+            const action = {
+                _tdActionTitle: "Set attribute",
+                _tdActionType: "setattributev2",
+                destination: "obj",
+                operation: {
+                    operands: [
+                        {
+                            value: "{\"val\": \"10\"}",
+                            isVariable: false,
+                            type: "json"
+                        }
+                    ]
+                }
+            };
+            const context = {
+                tdcache: {},
+                requestId: 'buh'
+            }
+            const dirSetAttribute = new DirSetAttributeV2(context);
+            const executeAsync = promisify(dirSetAttribute.execute).bind(dirSetAttribute);
+            await executeAsync({'action': action});
+            assert.equal(keyTest, "obj");
+            console.log("valueTest:", valueTest);
+            assert.equal(typeof valueTest, "object");
         });
     });
 

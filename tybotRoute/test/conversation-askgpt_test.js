@@ -31,7 +31,7 @@ describe('Conversation for AskGPT test', async () => {
       try {
         tybot.startApp(
           {
-            // MONGODB_URI: process.env.mongoUrl,
+            // MONGODB_URI: process.env.MONGODB_URI,
             bots: bots_data,
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
@@ -382,6 +382,8 @@ describe('Conversation for AskGPT test', async () => {
   });
 
   it('/gpt fail - move to false intent if gptkey does not exists (key undefined)', (done) => {
+    
+    process.env.GPTKEY='' // Used to nullify the env variable
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());

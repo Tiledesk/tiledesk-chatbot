@@ -28,9 +28,11 @@ class Directives {
   static CODE = 'code';
   static CODE_V2 = 'codev2';
   static WHATSAPP_ATTRIBUTE = 'whatsapp_attribute';
+  static SEND_WHATSAPP = 'send_whatsapp';
   static FORM = "form";
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
+  static REPLACE_BOT_V3 = "replacebotv3";
   /**** AI ****/
   static ASK_GPT = "askgpt";
   static ASK_GPT_V2 = "askgptv2";
@@ -47,9 +49,15 @@ class Directives {
   static BLIND_TRANSFER = 'blind_transfer';
   static SPEECH_FORM = 'speech_form';
   static PLAY_PROMPT = 'play_prompt';
+  static AUDIO_RECORD = 'audio_record';
   static GPT_ASSISTANT = 'gpt_assistant';
   static REPLY_V2 = 'replyv2';
   static IF_ONLINE_AGENTS_V2 = "ifonlineagentsv2";
+  static CONTACT_UPDATE = "leadupdate";
+  static CLEAR_TRANSCRIPT = "clear_transcript";
+  static MOVE_TO_UNASSIGNED = "move_to_unassigned";
+  static CONNECT_BLOCK = "connect_block";
+  static ADD_TAGS = 'add_tags'
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

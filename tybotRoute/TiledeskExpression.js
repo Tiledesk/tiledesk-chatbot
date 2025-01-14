@@ -218,6 +218,10 @@ class TiledeskExpression {
             name: "roundAsNumber",
             applyPattern: "TiledeskMath.round(Number(#1))"
         },
+        "convertToNumber": {
+            name: "convertToNumber",
+            applyPattern: "Number(#1)"
+        },
         "JSONparse": {
             name: "JSONparse",
             applyPattern: "JSON.parse(String(#1))"
@@ -259,7 +263,7 @@ class TiledeskExpression {
             // console.log("res=", res)
         }
         catch (err) {
-            console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
+            // console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
         }
         return res;
     }
@@ -333,7 +337,7 @@ class TiledeskExpression {
             res = vm.run(`let $data = this;${expression}`);
         }
         catch (err) {
-            console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
+            // console.error("TiledeskExpression.evaluate() error:", err.message, "evaluating expression: '" + expression + "'");
         }
         return res;
     }
@@ -355,7 +359,7 @@ class TiledeskExpression {
             // console.log("operand1_s:", operand1_s);
         }
         else {
-            console.error("Condition evaluation stopped because of invalid operand", condition.operand1);
+            console.error("Condition evaluation stopped because of invalid operand1", condition.operand1);
             return null;
         }
         

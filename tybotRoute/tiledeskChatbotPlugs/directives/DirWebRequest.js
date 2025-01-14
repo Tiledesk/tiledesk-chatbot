@@ -10,7 +10,6 @@ class DirWebRequest {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.log = context.log;
@@ -190,7 +189,7 @@ class DirWebRequest {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", JSON.stringify(error));
+      console.error("(DirWebRequest) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null);
       }

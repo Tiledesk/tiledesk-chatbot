@@ -158,22 +158,6 @@ class TiledeskChatbotUtil {
 
     }
 
-    // static errorMessage(message) {
-    //     return {
-    //         name: "message",
-    //         action: {
-    //             "_tdThenStop": true,
-    //             text: message,
-    //             attributes: {
-    //                 runtimeError: {
-    //                     message: message
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    //static filterOnVariables(commands, variables) {
     static filterOnVariables(message, variables) {
         if (!variables) {
           return;
@@ -435,8 +419,17 @@ class TiledeskChatbotUtil {
             let fullName = message.senderFullname;
             if (fullName.trim() === chatbot_name) {
                 fullName = "bot:" + fullName;
+            } else {
+                fullName = "user:" + fullName;
             }
             return "<" + fullName + ">";
+        }
+    }
+
+    static async clearConversationTranscript(chatbot, callback) {
+        await chatbot.addParameter("transcript", "");
+        if (callback) {
+            callback();
         }
     }
 
@@ -504,7 +497,7 @@ class TiledeskChatbotUtil {
         return message;
     }
 
-    static async updateRequestAttributes(chatbot, message, projectId, requestId) {
+    static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
             if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
@@ -517,12 +510,25 @@ class TiledeskChatbotUtil {
             // TODO add projectName too
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
             if (chatbot.bot) {
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_ID_KEY, chatbot.bot._id);
+            }
+            if (chatbotToken) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
+            }
+            if (process.env.TILEDESK_API) {
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
             }
             
+            if (process.env.API_URL) {
+                await chatbot.addParameter(TiledeskChatbotConst.API_BASE_URL, process.env.API_URL);
+            }
+
             if (message.text && message.sender !== "_tdinternal") {
                 // await chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
-                await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // set userInput
+                await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // user wrote, delete userInput, replyv2 will not trigger timeout action
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
                 if (message.channel) {
@@ -576,6 +582,7 @@ class TiledeskChatbotUtil {
                 //     "uid": "lo68oz8i"
                 // }
                 if (message.metadata.src) {
+                    
                     await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
                     const url_as_attachment = message.metadata.src;
                     await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
@@ -594,45 +601,55 @@ class TiledeskChatbotUtil {
             //     await chatbot.addParameter("lastUserDocumentType", null);
             // }
             if (message && message.request && message.request.lead) {
-                if (message.request.lead.email) {
-                    await chatbot.addParameter("userEmail", message.request.lead.email);
-                }
-                if (message.request.lead.fullname && !message.request.lead.fullname.startsWith("guest#")) {
+                if (chatbot.log) {console.log("lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                let currentLeadEmail = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY);
+                if (chatbot.log) {console.log("You lead email from attributes:", currentLeadEmail, "message.request.lead.email:", message.request.lead.email);}
+                if (message.request.lead.email && !currentLeadEmail) {
                     // worth saving
+                    if (chatbot.log) {console.log("worth saving email. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
                     try {
-                        // const current_userFullname = await chatbot.getParameter("userFullname");
-                        // if (current_userFullname && current_userFullname.startsWith("guest#")) { // replace if exists as guest#
-                        //     await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                        // }
-                        // else if (!current_userFullname) {
-                            await chatbot.addParameter("userFullname", message.request.lead.fullname);
-                        // }
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
+                    }
+                    catch(error) {
+                        console.error("Error on setting userEmail:", error);
+                    }
+                }
+                let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+                if (chatbot.log) {console.log("You lead name from attributes:", currentLeadName, "message.request.lead.fullname:", message.request.lead.fullname)}
+                // if (message.request.lead.fullname && message.request.lead.fullname.startsWith("guest#") && !currentLeadName) {
+                // if (message.request.lead.fullname) {
+                if (message.request.lead.fullname && !currentLeadName) {
+                    // worth saving
+                    if (chatbot.log) {console.log("worth saving fullname. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                    try {
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
                     catch(error) {
                         console.error("Error on setting userFullname:", error);
                     }
-                }
-                else {
-                    // console.log("!lead.fullname");
+                // }
+                // else {
+                //     // console.log("!lead.fullname");
+                // }
                 }
                 // console.log("Getting userPhone:", JSON.stringify(message.request));
                 if (message.request.lead.phone) {
-                    await chatbot.addParameter("userPhone", message.request.lead.phone);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_PHONE_KEY, message.request.lead.phone);
                 }
                 if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
                     const splits = message.request.lead.lead_id.split("-");
                     if (splits && splits.length > 1) {
-                        await chatbot.addParameter("currentPhoneNumber",splits[1]);
+                        await chatbot.addParameter(TiledeskChatbotConst.REQ_CURRENT_PHONE_NUMBER_KEY,splits[1]);
                     }
                 }
                 if (message.request.lead._id) {
-                    await chatbot.addParameter("userLeadId", message.request.lead._id);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY, message.request.lead._id);
                 }
                 if (message.request.lead.company) {
-                    await chatbot.addParameter("userCompany", message.request.lead.company);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_COMPANY_KEY, message.request.lead.company);
                 }
                 if (message.request.ticket_id) {
-                    await chatbot.addParameter("ticketId", message.request.ticket_id);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_TICKET_ID_KEY, message.request.ticket_id);
                 }
             }
             
@@ -682,14 +699,6 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
             }
-            if (message && message.request && message.request.attributes && message.request.attributes.payload) {
-                if (!message.attributes) {
-                    message.attributes = {}
-                }
-                message.attributes.payload = message.request.attributes.payload
-                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-                }
             if (message.attributes) {
                 if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
@@ -702,14 +711,39 @@ class TiledeskChatbotUtil {
                             const value_type = typeof value;
                             //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
                             //await chatbot.addParameter(key, String(value));
+                            // console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
+                        await chatbot.addParameter("payload", message.attributes.payload);
                     }
                     catch(err) {
                         console.error("Error importing message payload in request variables:", err);
                     }
                 }
+
+                // TODO - REMOVE - THEY ARE IN ATTRIBUTES.PAYLOAD
+                // voice-vxml attributes
+                if (message.attributes.dnis) {
+                    await chatbot.addParameter("dnis", message.attributes.dnis);
+                }
+                if (message.attributes.callId) {
+                    await chatbot.addParameter("callId", message.attributes.callId);
+                }
+                if (message.attributes.ani) {
+                    await chatbot.addParameter("ani", message.attributes.ani);
+                }
             }
+
+            /** DEPRECATED */
+            if (message && message.request && message.request.attributes && message.request.attributes.payload) {
+                if (!message.attributes) {
+                    message.attributes = {}
+                }
+                message.attributes.payload = message.request.attributes.payload
+                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+            }
+            
             
             const _bot = chatbot.bot; // aka FaqKB
             if (chatbot.log) {
@@ -777,6 +811,8 @@ class TiledeskChatbotUtil {
         //     "sub": "guest",
         //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
         //   }
+        // let userFullname = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
+        // console.log("userFullname:", userFullname);
     }
 
     static actionsToDirectives(actions) {
@@ -808,7 +844,7 @@ class TiledeskChatbotUtil {
         if (requestId.startsWith("support-group-")) {
             const parts = requestId.split("-");
             // console.log("parts support request:", parts);
-            if (parts.length === 4) {
+            if (parts.length >= 4) {
                 isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
             }
             else {
@@ -865,7 +901,9 @@ class TiledeskChatbotUtil {
             "userLeadId",
             "lastUserText",
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
-            TiledeskChatbotConst.USER_INPUT
+            TiledeskChatbotConst.USER_INPUT,
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN,
+            TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2,
           ]
           let userParams = {};
           if (flowAttributes) {
@@ -881,6 +919,7 @@ class TiledeskChatbotUtil {
     }
 
     /**
+     * DEPRECATED
      * A stub to get the request parameters, hosted by tilebot on:
      * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
      *
@@ -943,7 +982,7 @@ class TiledeskChatbotUtil {
             }
           })
           .catch((error) => {
-            // console.error("An error occurred:", error);
+            console.error("(TiledeskChatbotUtil) Axios error: ", JSON.stringify(error));
             if (callback) {
               callback(error, null, null);
             }

@@ -3,6 +3,8 @@ const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 require('dotenv').config();
 
 class DirGptTask {
@@ -12,9 +14,11 @@ class DirGptTask {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.intentDir = new DirIntent(context);
+    this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
@@ -47,6 +51,7 @@ class DirGptTask {
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
+    let transcript;
 
     if (this.log) {
       console.log("DirGptTask trueIntent", trueIntent)
@@ -62,6 +67,7 @@ class DirGptTask {
     if (!action.question || action.question === '') {
       console.error("Error: DirGptTask question attribute is mandatory. Executing condition false...")
       if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "GPT Error: question attribute is undefined");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
@@ -92,17 +98,28 @@ class DirGptTask {
       console.log("DirGptTask temperature: ", temperature);
     }
 
-    const server_base_url = process.env.API_ENDPOINT || process.env.API_URL;
-    const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
-    if (this.log) {
-      console.log("DirGptTask server_base_url ", server_base_url);
-      console.log("DirGptTask openai_url ", openai_url);
+    if (action.history) {
+      let transcript_string = await TiledeskChatbot.getParameterStatic(
+        this.context.tdcache,
+        this.context.requestId,
+        TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
+      if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
+
+      if (transcript_string) {
+        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+      } else {
+        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+      }
     }
 
-    let key = await this.getKeyFromIntegrations(server_base_url);
+    const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
+    if (this.log) { console.log("DirGptTask openai_url ", openai_url); }
+
+    let key = await this.getKeyFromIntegrations();
     if (!key) {
       if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
-      key = await this.getKeyFromKbSettings(server_base_url);
+      key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
@@ -115,6 +132,7 @@ class DirGptTask {
       console.error("DirGptTask gptkey is mandatory");
       await this.#assignAttributes(action, answer);
       if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "GPT Error: gpt apikey is undefined");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
@@ -124,9 +142,11 @@ class DirGptTask {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability(server_base_url);
+      let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
         if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+        await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback();
         return;
       }
@@ -134,22 +154,35 @@ class DirGptTask {
 
     let json = {
       model: action.model,
-      messages: [
-        {
-          role: "user",
-          content: filled_question
-        }
-      ],
+      messages: [],
       max_tokens: action.max_tokens,
-      temperature: action.temperature
+      temperature: action.temperature,
     }
 
-    let message = { role: "", content: "" };
     if (action.context) {
-      message.role = "system";
-      message.content = filled_context;
-      json.messages.unshift(message);
+      let message = { role: "system", content: filled_context }
+      json.messages.push(message);
     }
+
+    if (transcript) {
+      transcript.forEach(msg => {
+        if (!msg.content.startsWith('/')) {
+          let message = { role: msg.role, content: msg.content }
+          json.messages.push(message)
+        }
+      })
+      json.messages.push({ role: "user", content: filled_question });
+    } else {
+      let message = { role: "user", content: filled_question };
+      json.messages.push(message);
+    } 
+
+    if (action.formatType && action.formatType !== 'none') {
+      json.response_format = {
+        type: action.formatType
+      }
+    }
+    
     if (this.log) { console.log("DirGptTask json: ", json) }
 
     const HTTPREQUEST = {
@@ -167,10 +200,11 @@ class DirGptTask {
         if (err) {
           if (this.log) {
             console.error("(httprequest) DirGptTask openai err:", err);
-            console.error("(httprequest) DirGptTask openai err:", err.response.data);
+            console.error("(httprequest) DirGptTask openai err:", err.response?.data?.error?.message);
           }
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
+            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
@@ -180,16 +214,19 @@ class DirGptTask {
         } else {
           if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
           answer = resbody.choices[0].message.content;
-          // check if answer is a json
-          let answer_json = await this.convertToJson(answer);
-          await this.#assignAttributes(action, answer_json);
+
+          if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
+            answer = await this.convertToJson(answer);
+          }
+        
+          await this.#assignAttributes(action, answer);
 
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.usage.total_tokens,
               model: json.model
             }
-            this.updateQuote(server_base_url, tokens_usage);
+            this.updateQuote(tokens_usage);
           }
 
           if (trueIntent) {
@@ -320,17 +357,18 @@ class DirGptTask {
         }
       })
       .catch((error) => {
+        console.error("(DirGptTask) Axios error: ", JSON.stringify(error));
         if (callback) {
           callback(error, null);
         }
       });
   }
 
-  async getKeyFromIntegrations(server_base_url) {
+  async getKeyFromIntegrations() {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -357,11 +395,11 @@ class DirGptTask {
     })
   }
 
-  async getKeyFromKbSettings(server_base_url) {
+  async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
       const KB_HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/kbsettings",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -390,11 +428,11 @@ class DirGptTask {
     })
   }
 
-  async checkQuoteAvailability(server_base_url) {
+  async checkQuoteAvailability() {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -406,7 +444,6 @@ class DirGptTask {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {
@@ -420,11 +457,11 @@ class DirGptTask {
     })
   }
 
-  async updateQuote(server_base_url, tokens_usage) {
-    return new Promise((resolve) => {
+  async updateQuote(tokens_usage) {
+    return new Promise((resolve, reject) => {
 
       const HTTPREQUEST = {
-        url: server_base_url + "/" + this.context.projectId + "/quotes/incr/tokens",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
@@ -438,9 +475,9 @@ class DirGptTask {
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
-            rejects(false)
+            reject(false)
           } else {
-            console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody);
+            if (this.log) { console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody); }
             resolve(true);
           }
         }

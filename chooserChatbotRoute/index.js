@@ -20,11 +20,11 @@ router.post('/lang_select', (req, res) => {
     if (req && req.body && req.body.payload && req.body.payload.message && req.body.payload.message.request && req.body.payload.message.request.snapshot) {
         delete req.body.payload.message.request.snapshot;
     }
-    console.log("REQ.BODY", JSON.stringify(req.body));
+    // console.log("REQ.BODY", JSON.stringify(req.body));
     let intent = req.body.payload.intent.intent_display_name;
     let user_lang = req.body.payload.message.request.language;
     if (intent === 'start') {
-        console.log("intent start")
+        // console.log("intent start")
         
         const projectId = req.body.payload.bot.id_project;
         const token = req.body.token;

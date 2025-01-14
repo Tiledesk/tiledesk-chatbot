@@ -11,6 +11,8 @@ class DirCodeV2 {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
+    this.tdcache = this.context.tdcache;
+    this.requestId = this.context.requestId;
     this.log = context.log;
   }
 
@@ -42,10 +44,10 @@ class DirCodeV2 {
     }
 
     let attributes = null;
-    if (this.context.tdcache) {
+    if (this.tdcache) {
       attributes =
         await TiledeskChatbot.allParametersStatic(
-          this.context.tdcache, this.context.requestId
+          this.tdcache, this.requestId
         );
       if (this.log) { console.log("Attributes:", JSON.stringify(attributes)) }
     }
@@ -55,7 +57,7 @@ class DirCodeV2 {
       return;
     }
 
-    let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, attributes);
+    let variablesManager = new TiledeskRequestVariables(this.requestId, this.tdcache, attributes);
     try {
       const dto = {
         runnerId: variablesManager.requestId,
@@ -73,7 +75,7 @@ class DirCodeV2 {
       console.log('Response data:', response.data);
 
       for (const [key, value] of Object.entries(response.data.ops.set)) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
+        await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, key, value);
       }
 
       for (const [key, value] of Object.entries(response.data.ops.del)) {

@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -17,7 +17,7 @@ const PROJECT_ID = "projectID"; //const PROJECT_ID = process.env.TEST_PROJECT_ID
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 // // normalize the bot structure for the static intent search
 // let intents = bot.intents;
 // delete bot.intents;
@@ -50,7 +50,7 @@ describe('Conversation1 - Form filling', async () => {
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.mongoUrl,
+          // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
@@ -278,7 +278,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('(intent-to-intent) /move_to => /target_intent', (done) => {
-    // console.log("(intent-to-intent) /move_to => /target_intent");
+    // console.log("ALWAYS PASSES: (intent-to-intent) /move_to => /target_intent");
     try {
       let listener;
       let endpointServer = express();
@@ -327,7 +327,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
-    // console.log("/all_filled (none) =>...");
+    // console.log("SOMETIMES NOT PASSING: /all_filled (none) =>...");
     let request0_uuid = uuidv4();
     let request1_uuid = uuidv4();
     let request2_uuid = uuidv4();
@@ -609,7 +609,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/splitted', (done) => {
-    // console.log("/splitted...");
+    console.log("/splitted...");
     // const message_id = uuidv4();
     // const reply_text = "Andrea";
     let listener;
@@ -692,7 +692,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/assign_params{...}', (done) => {
-    // console.log("/assign_params...");
+    console.log("/assign_params...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -745,7 +745,7 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/assign_params{...} with multi-line JSON', (done) => {
-    // console.log("/assign_params{...} with multi-line JSON");
+    console.log("/assign_params{...} with multi-line JSON");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());

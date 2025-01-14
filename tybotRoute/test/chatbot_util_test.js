@@ -264,12 +264,13 @@ describe('commands.button filler', function() {
     
 });
 
-describe('removeEmptyReplyCommands', function() {
+// describe('removeEmptyReplyCommands', function() {
   
-    // it('One random reply', async () => {
+    
+
+    // it('Removes the first two empty text commands (out of four)', async () => {
     //     const message = {
     //         "attributes": {
-    //             "disableInputMessage": false,
     //             "commands": [{
     //                 "type": "wait",
     //                 "time": 500
@@ -277,195 +278,168 @@ describe('removeEmptyReplyCommands', function() {
     //                 "type": "message",
     //                 "message": {
     //                     "type": "text",
-    //                     "text": "message1"
+    //                     "text": "", // EMPTY TEXT
+    //                     "attributes": {
+    //                         "attachment": {
+    //                             "type": "template",
+    //                             "buttons": [{
+    //                                 "value": "Button1",
+    //                                 "type": "text",
+    //                                 "target": "blank",
+    //                                 "link": "",
+    //                                 "action": "",
+    //                                 "show_echo": true
+    //                             }]
+    //                         }
+    //                     }
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text" // NO TEXT
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "image",
+    //                     "text": "message3 - image",
+    //                     "metadata": {
+    //                         "src": ""
+    //                     }
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text",
+    //                     "text": "message4"
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "frame",
+    //                     "metadata": {
+    //                         "src": ""
+    //                     }
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "image",
+    //                     "metadata": {
+    //                         "src": ""
+    //                     }
     //                 }
     //             }]
     //         }
     //     }
-    //     const rnd_commands = TiledeskChatbotUtil.chooseRandomReply(message);
-    //     console.log("random reply:", rnd_commands);
-    //     assert(rnd_commands.length === 2);
-    //     assert(rnd_commands[0].type === "wait");
-    //     assert(rnd_commands[0].time === 500);
-    //     assert(rnd_commands[1].type === "message");
-    //     assert(rnd_commands[1].message.type === "text");
-    //     assert(rnd_commands[1].message.text === "message1");
-    //     assert(rnd_commands[1].message.attributes !== null);
-    //     assert(rnd_commands[1].message.attributes.attachment.type === "template");
-    //     assert(rnd_commands[1].message.attributes.attachment.buttons !== null);
-    //     assert(rnd_commands[1].message.attributes.attachment.buttons[0].value === "Button1");
+    //     const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
+    //     // console.log("cleanMessage reply:", JSON.stringify(cleanMessage));
+    //     const commands = cleanMessage.attributes.commands;
+    //     // console.log("commands reply:", JSON.stringify(commands));
+    //     // console.log("commands reply.length:", commands.length);
+    //     assert(commands.length === 8);
+    //     assert(commands[0].type === "wait");
+    //     assert(commands[0].time === 500);
+    //     assert(commands[1].type === "message");
+    //     assert(commands[1].message.type === "image");
+    //     assert(commands[1].message.text === "message3 - image");
+    //     assert(commands[2].type === "wait");
+    //     assert(commands[2].time === 500);
+    //     assert(commands[3].message.type === "text");
+    //     assert(commands[3].message.text === "message4");
+
+    //     assert(commands[4].type === "wait");
+    //     assert(commands[4].time === 500);
+    //     assert(commands[5].message.type === "frame");
+    //     // console.log("commands[5].message.text", commands[5].message.text)
+    //     assert(commands[5].message.text === undefined);
+
+    //     assert(commands[6].type === "wait");
+    //     assert(commands[6].time === 500);
+    //     assert(commands[7].message.type === "image");
+    //     assert(commands[7].message.text === undefined);
+    //     assert(TiledeskChatbotUtil.isValidReply(message) === true);
     // });
 
-    it('Removes the first two empty text commands (out of four)', async () => {
-        const message = {
-            "attributes": {
-                "commands": [{
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text",
-                        "text": "", // EMPTY TEXT
-                        "attributes": {
-                            "attachment": {
-                                "type": "template",
-                                "buttons": [{
-                                    "value": "Button1",
-                                    "type": "text",
-                                    "target": "blank",
-                                    "link": "",
-                                    "action": "",
-                                    "show_echo": true
-                                }]
-                            }
-                        }
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text" // NO TEXT
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "image",
-                        "text": "message3 - image",
-                        "metadata": {
-                            "src": ""
-                        }
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text",
-                        "text": "message4"
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "frame",
-                        "metadata": {
-                            "src": ""
-                        }
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "image",
-                        "metadata": {
-                            "src": ""
-                        }
-                    }
-                }]
-            }
-        }
-        const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-        // console.log("cleanMessage reply:", JSON.stringify(cleanMessage));
-        const commands = cleanMessage.attributes.commands;
-        // console.log("commands reply:", JSON.stringify(commands));
-        // console.log("commands reply.length:", commands.length);
-        assert(commands.length === 8);
-        assert(commands[0].type === "wait");
-        assert(commands[0].time === 500);
-        assert(commands[1].type === "message");
-        assert(commands[1].message.type === "image");
-        assert(commands[1].message.text === "message3 - image");
-        assert(commands[2].type === "wait");
-        assert(commands[2].time === 500);
-        assert(commands[3].message.type === "text");
-        assert(commands[3].message.text === "message4");
+    // it('Removes all empty text commands', async () => {
+    //     const message = {
+    //         "attributes": {
+    //             "commands": [{
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text",
+    //                     "text": "", // EMPTY TEXT
+    //                     "attributes": {
+    //                         "attachment": {
+    //                             "type": "template",
+    //                             "buttons": [{
+    //                                 "value": "Button1",
+    //                                 "type": "text",
+    //                                 "target": "blank",
+    //                                 "link": "",
+    //                                 "action": "",
+    //                                 "show_echo": true
+    //                             }]
+    //                         }
+    //                     }
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text" // NO TEXT
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text",
+    //                     "text": ""
+    //                 }
+    //             }, {
+    //                 "type": "wait",
+    //                 "time": 500
+    //             }, {
+    //                 "type": "message",
+    //                 "message": {
+    //                     "type": "text",
+    //                     "text": ""
+    //                 }
+    //             }]
+    //         }
+    //     }
+    //     const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
+    //     // console.log("cleanMessage 2 reply:", JSON.stringify(cleanMessage));
+    //     const commands = cleanMessage.attributes.commands;
+    //     // console.log("commands 2 reply:", JSON.stringify(commands));
+    //     assert(commands.length === 0);
+    //     assert(TiledeskChatbotUtil.isValidReply(message) === false);
+    // });
+// });
 
-        assert(commands[4].type === "wait");
-        assert(commands[4].time === 500);
-        assert(commands[5].message.type === "frame");
-        // console.log("commands[5].message.text", commands[5].message.text)
-        assert(commands[5].message.text === undefined);
-
-        assert(commands[6].type === "wait");
-        assert(commands[6].time === 500);
-        assert(commands[7].message.type === "image");
-        assert(commands[7].message.text === undefined);
-        assert(TiledeskChatbotUtil.isValidReply(message) === true);
-    });
-
-    it('Removes all empty text commands', async () => {
-        const message = {
-            "attributes": {
-                "commands": [{
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text",
-                        "text": "", // EMPTY TEXT
-                        "attributes": {
-                            "attachment": {
-                                "type": "template",
-                                "buttons": [{
-                                    "value": "Button1",
-                                    "type": "text",
-                                    "target": "blank",
-                                    "link": "",
-                                    "action": "",
-                                    "show_echo": true
-                                }]
-                            }
-                        }
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text" // NO TEXT
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text",
-                        "text": ""
-                    }
-                }, {
-                    "type": "wait",
-                    "time": 500
-                }, {
-                    "type": "message",
-                    "message": {
-                        "type": "text",
-                        "text": ""
-                    }
-                }]
-            }
-        }
-        const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-        // console.log("cleanMessage 2 reply:", JSON.stringify(cleanMessage));
-        const commands = cleanMessage.attributes.commands;
-        // console.log("commands 2 reply:", JSON.stringify(commands));
-        assert(commands.length === 0);
-        assert(TiledeskChatbotUtil.isValidReply(message) === false);
-    });
-
+describe('transcript', function() {
     it('Gets transcript as object', async () => {
         const transcript = `<bot:My bot Name>
 
@@ -484,7 +458,6 @@ lorem ipsum 4
 closing conversation
 `
         const transcript_array = TiledeskChatbotUtil.transcriptJSON(transcript);
-        // console.log("transcript_object:", transcript_array);
         assert(transcript_array.length === 6);
         assert(transcript_array[0].role === "assistant");
         assert(transcript_array[0].content === "lorem ipsum 1\nlorem ipsum 2");

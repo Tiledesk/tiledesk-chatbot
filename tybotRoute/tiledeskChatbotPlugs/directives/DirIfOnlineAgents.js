@@ -1,4 +1,5 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const ms = require('minimist-string');
 
@@ -8,33 +9,19 @@ class DirIfOnlineAgents {
     if (!context) {
       throw new Error('context object is mandatory.');
     }
-    this.tdclient = context.tdclient;
-    // this.tdclient = new TiledeskClient({
-    //   projectId: context.projectId,
-    //   token: context.token,
-    //   APIURL: context.TILEDESK_APIURL,
-    //   APIKEY: "___",
-    //   log: context.log
-    // });
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   requestId: supportRequest,
-    //   APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   log: false
-    // }
+
+    this.context = context;
     this.intentDir = new DirIntent(context);
-    //   {
-    //     API_ENDPOINT: context.TILEDESK_APIURL,
-    //     TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
-    //     supportRequest: context.supportRequest,
-    //     token: context.token,
-    //     log: context.log
-    //   }
-    // );
+    this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -83,7 +70,7 @@ class DirIfOnlineAgents {
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = action.stopOnConditionMet;
-    this.tdclient.openNow((err, result) => {
+    this.tdClient.openNow((err, result) => {
       if (this.log) {console.log("openNow():", result);}
       if (err) {
         console.error("IfOnlineAgents:tdclient.openNow Error:", err);
@@ -92,7 +79,7 @@ class DirIfOnlineAgents {
       }
       else {
         if (result && result.isopen) {
-          this.tdclient.getProjectAvailableAgents((err, agents) => {
+          this.tdClient.getProjectAvailableAgents((err, agents) => {
             if (this.log) {console.log("Agents", agents);}
             if (err) {
               console.error("IfOnlineAgents:Error getting available agents:", err);

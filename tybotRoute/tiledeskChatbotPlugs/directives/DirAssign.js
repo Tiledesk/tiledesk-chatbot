@@ -10,17 +10,6 @@ class DirAssign {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   log: false
-    // }
     this.log = context.log;
   }
 

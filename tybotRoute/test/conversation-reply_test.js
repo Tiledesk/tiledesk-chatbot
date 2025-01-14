@@ -31,7 +31,7 @@ describe('Conversation for Reply test', async () => {
       try {
         tybot.startApp(
           {
-            // MONGODB_URI: process.env.mongoUrl,
+            // MONGODB_URI: process.env.MONGODB_URI,
             bots: bots_data,
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
@@ -61,7 +61,7 @@ describe('Conversation for Reply test', async () => {
     });
   });
 
-  it('/reply success (dtmf form)', (done) => {
+  it('/reply success (dtmf-form)', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -78,6 +78,7 @@ describe('Conversation for Reply test', async () => {
       assert(command3.type === "settings");
       assert(command3.settings.maxDigits === "10");
       assert(command3.settings.terminators === "#");
+      assert(command3.settings.transferTo === "+393334455666")
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -101,7 +102,7 @@ describe('Conversation for Reply test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/dtmfform',
+          "text": '/dtmfform{"transfer_to": "+393334455666"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {

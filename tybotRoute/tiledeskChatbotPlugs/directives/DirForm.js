@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const { IntentForm } = require('../../models/IntentForm.js');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirForm {
   constructor(context) {
@@ -9,12 +10,21 @@ class DirForm {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.intentDir = new DirIntent(context);
     this.log = context.log;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
+
   }
 
   execute(directive, callback) {
@@ -83,7 +93,7 @@ class DirForm {
         form_reply.message.attributes.markbot = true;
         // return form_reply.message;
 
-        this.context.tdclient.sendSupportMessage(
+        this.tdClient.sendSupportMessage(
           this.requestId,
           form_reply.message,
           (err) => {

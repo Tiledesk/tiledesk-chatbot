@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirReply {
 
@@ -15,6 +16,15 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+
+    this.API_ENDPOINT = context.API_ENDPOINT;
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -77,6 +87,12 @@ class DirReply {
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
               if (this.log) {console.log("command filled:", command.message.text);}
             }
+            if (command.type === 'settings' && command.settings) {
+              Object.keys(command.settings).forEach(k => {
+                command.settings[k] = filler.fill(command.settings[k], requestAttributes)
+                if (this.log) {console.log("settings command filled:", command.settings[k]);}
+              })
+            }
           }
         }
       }
@@ -94,12 +110,12 @@ class DirReply {
         message.attributes = {}
       }
       // Reserved names: userEmail, userFullname
-      if (requestAttributes['userEmail']) {
-          message.attributes.updateUserEmail = requestAttributes['userEmail'];
-      }
-      if (requestAttributes['userFullname']) {
-        message.attributes.updateUserFullname = requestAttributes['userFullname'];
-      }
+      // if (requestAttributes['userEmail']) {
+      //     message.attributes.updateUserEmail = requestAttributes['userEmail'];
+      // }
+      // if (requestAttributes['userFullname']) {
+      //   message.attributes.updateUserFullname = requestAttributes['userFullname'];
+      // }
       // intent_info
       if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
@@ -119,18 +135,19 @@ class DirReply {
     //   callback(); // cancel reply operation
     //   return;
     // }
-    // console.log("valid message!", cleanMessage);
+    
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
-    this.context.tdclient.sendSupportMessage(
+    // console.log("sending message!", cleanMessage);
+    this.tdClient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {
         if (err) {
           console.error("Error sending reply:", err);
         }
-        if (this.log) {console.log("Reply message sent");}
+        if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays

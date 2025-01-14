@@ -6,38 +6,16 @@ const ms = require('minimist-string');
 
 class DirIntent {
 
-  // constructor(settings) {
-    // if (!settings.API_ENDPOINT) {
-    //   throw new Error("settings.API_ENDPOINT is mandatory!");
-    // }
-    // this.API_ENDPOINT = settings.API_ENDPOINT;
-    // this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
-    // this.log = settings.log;
-    // this.supportRequest = settings.supportRequest;
-    // this.token = settings.token;
-  // }
   constructor(context) {
     if (!context) {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.API_ENDPOINT = context.TILEDESK_APIURL,
+    this.API_ENDPOINT = context.API_ENDPOINT,
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.supportRequest = context.supportRequest;
     this.token = context.token;
     this.log = context.log;
-    // let context =  {
-    //   projectId: projectId,
-    //   token: token,
-    //   supportRequest: supportRequest,
-    //   requestId: supportRequest.request_id,
-    //   TILEDESK_APIURL: API_URL,
-    //   TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
-    //   departmentId: depId,
-    //   tdcache: tdcache,
-    //   tdclient: tdclient,
-    //   log: true
-    // }
   }
 
   execute(directive, callback) {
@@ -78,7 +56,7 @@ class DirIntent {
     //   intent_command = "/#" + intentId;
     // }
     else {
-      console.error("(DirIntent) No intent name found in action");
+      // console.error("(DirIntent) No intent name found in action");
       callback();
       return;
     }
@@ -225,7 +203,7 @@ class DirIntent {
       }
     })
     .catch( (error) => {
-      console.error("An error occurred:", error);
+      console.error("(DirIntent) Axios error: ", JSON.stringify(error));
       if (callback) {
         callback(error, null, null);
       }

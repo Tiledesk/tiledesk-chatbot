@@ -1,7 +1,6 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
-// const { DirOfflineHours } = require('./directives/DirOfflineHours'); // DEPRECATED
 const { DirMoveToAgent } = require('./directives/DirMoveToAgent');
 const { DirMessage } = require('./directives/DirMessage');
 const { DirWait } = require('./directives/DirWait');
@@ -50,6 +49,12 @@ const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirCodeV2 } = require('./directives/DirCodeV2');
+const { DirContactUpdate } = require('./directives/DirContactUpdate');
+const { DirClearTranscript } = require('./directives/DirClearTranscript');
+const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
+const { DirAddTags } = require('./directives/DirAddTags');
+const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
+const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 
 class DirectivesChatbotPlug {
 
@@ -61,7 +66,7 @@ class DirectivesChatbotPlug {
 
   constructor(config) {
     this.supportRequest = config.supportRequest;
-    this.API_URL = config.TILEDESK_API_ENDPOINT;
+    this.API_ENDPOINT = config.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.log = config.log;
@@ -121,7 +126,7 @@ class DirectivesChatbotPlug {
     // console.log("supportRequest is:", JSON.stringify(supportRequest))
     
     const token = this.token;
-    const API_URL = this.API_URL;
+    const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
 
     // const requestId = supportRequest.request_id
@@ -133,13 +138,19 @@ class DirectivesChatbotPlug {
     }
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
-    const tdclient = new TiledeskClient({
-      projectId: projectId,
-      token: token,
-      APIURL: API_URL,
-      APIKEY: "___",
-      log: this.log
-    });
+    let tdclient = null;
+    try {
+      tdclient = new TiledeskClient({
+        projectId: projectId,
+        token: token,
+        APIURL: API_ENDPOINT,
+        APIKEY: "___",
+        log: this.log
+      });
+    }
+    catch(err) {
+      console.log("An error occurred while creating TiledeskClient in DirectivesChatbotPlug:", err);
+    }
 
     this.context =  {
       projectId: projectId,
@@ -149,11 +160,10 @@ class DirectivesChatbotPlug {
       supportRequest: supportRequest,
       reply: this.reply,
       requestId: supportRequest.request_id,
-      TILEDESK_APIURL: API_URL,
+      API_ENDPOINT: API_ENDPOINT,
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      tdclient: tdclient,
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }
@@ -170,13 +180,13 @@ class DirectivesChatbotPlug {
   async nextDirective(directives) {
     if (this.log) {console.log("....nextDirective() checkStep():");}
     const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, TiledeskChatbot.MAX_STEPS, this.log
+      this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME, this.log
     );
     // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
     // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
-    if (go_on == false) {
+    if (go_on.error) {
       if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
-      return this.errorMessage("Request error: anomaly detection. MAX ACTIONS exeeded.");
+      return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
     // else if (go_on == 2) {
     //   return null;
@@ -204,7 +214,8 @@ class DirectivesChatbotPlug {
         attributes: {
           runtimeError: {
             message: message
-          }
+          },
+          subtype: "info"
         }
       }
     }
@@ -240,10 +251,6 @@ class DirectivesChatbotPlug {
           // go on
           // console.log("Going on to next directive...");
         }
-      // }
-      // catch(error) {
-      //   console.error("Error on locks:", error);
-      // }
       
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
@@ -273,8 +280,6 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
-        // let next_dir = await this.nextDirective(this.directives);
-        // this.process(next_dir);
       });
     }
     else if (directive_name === Directives.MESSAGE) {
@@ -344,6 +349,13 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.AUDIO_RECORD) {
+      // console.log("...DirReply");
+      new DirReply(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.RANDOM_REPLY) {
       // console.log("...DirRandomReply");
       new DirRandomReply(context).execute(directive, async () => {
@@ -361,8 +373,6 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
-        // let next_dir = await this.nextDirective(this.directives);
-        // this.process(next_dir);
       });
     }
     else if (directive_name === Directives.IF_ONLINE_AGENTS) {
@@ -449,57 +459,6 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    // else if (directive_name === Directives.WHEN_OPEN) {
-    //   // DEPRECATED
-    //   const whenOpenDir = new DirWhenOpen(
-    //     {
-    //       tdclient: this.context.tdclient, // matches open hours
-    //       log: false
-    //     });
-    //   whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
-    //     let next_dir = await this.nextDirective(this.directives);
-    //     this.process(next_dir);
-    //   });
-    // }
-    // else if (directive_name === Directives.WHEN_CLOSED) {
-    //   // DEPRECATED
-    //   const whenOpenDir = new DirWhenOpen(
-    //     {
-    //       tdclient: this.context.tdclient,
-    //       checkOpen: false, // matches closed hours
-    //       log: false
-    //     });
-    //   whenOpenDir.execute(directive, directives, curr_directive_index, async () => {
-    //     let next_dir = await this.nextDirective(this.directives);
-    //     this.process(next_dir);
-    //   });
-    // }
-    // else if (directive_name === Directives.IF_AGENTS) {
-    //   // DEPRECATED
-    //   const ifNoAgentsDir = new DirIfAvailableAgents(
-    //     {
-    //       tdclient: this.context.tdclient,
-    //       checkAgents: true, // check available agents > 0
-    //       log: false
-    //     });
-    //   ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
-    //     let next_dir = await this.nextDirective(this.directives);
-    //     this.process(next_dir);
-    //   });
-    // }
-    // else if (directive_name === Directives.IF_NO_AGENTS) {
-    //   // DEPRECATED
-    //   const ifNoAgentsDir = new DirIfAvailableAgents(
-    //     {
-    //       tdclient: this.context.tdclient,
-    //       checkAgents: false, // check no available agents 
-    //       log: false
-    //     });
-    //   ifNoAgentsDir.execute(directive, directives, curr_directive_index, async () => {
-    //     let next_dir = await this.nextDirective(this.directives);
-    //     this.process(next_dir);
-    //   });
-    // }
     else if (directive_name === Directives.AGENT) {
       // console.log("...DirMoveToAgent");
       new DirMoveToAgent(context).execute(directive, async () => {
@@ -507,35 +466,6 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
-    // else if (directive_name === Directives.WHEN_ONLINE_MOVE_TO_AGENT) { // DEPRECATED?
-    //   // let depId;
-    //   // if (context.supportRequest && context.supportRequest.department && context.supportRequest.department._id) {
-    //     // depId = context.supportRequest.department._id;
-    //     // console.log("context.supportRequest", JSON.stringify(context.supportRequest));
-    //     // const agentDir = new DirMoveToAgent(
-    //     //   {
-    //     //     tdclient: context.tdclient,
-    //     //     requestId: context.requestId,
-    //     //     depId: depId
-    //     //   }
-    //     // );
-    //     // if (!directive.action) {
-    //     //   directive.action = {}
-    //     //   directive.action = {
-    //     //     whenOnlineOnly: true
-    //     //   }
-    //     // }
-    //     new DirMoveToAgent(context).execute(directive, async () => {
-    //       let next_dir = await this.nextDirective(this.directives);
-    //       this.process(next_dir);
-    //     });
-    //   // }
-    //   // else {
-    //   //   console.log("Warning. DepId null while calling 'WHEN_ONLINE_MOVE_TO_AGENT' directive")
-    //   //   let next_dir = await this.nextDirective(this.directives);
-    //   //   this.process(next_dir);
-    //   // }
-    // }
     else if (directive_name === Directives.CLOSE) {
       // console.log("Exec close()")
       new DirClose(context).execute(directive, async () => {
@@ -557,6 +487,12 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.REPLACE_BOT_V2) {
       new DirReplaceBotV2(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.REPLACE_BOT_V3) {
+      new DirReplaceBotV3(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
@@ -714,6 +650,17 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.SEND_WHATSAPP) {
+      new DirSendWhatsapp(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          if (context.log) { console.log("Stoppin Actions on:", JSON.stringify(directive));}
+          this.theend();
+        } else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else if (directive_name === Directives.QAPLA) {
       new DirQapla(context).execute(directive, async (stop) => {
         if (context.log) { console.log("DirQapla stop?", stop);}
@@ -778,6 +725,46 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.CONTACT_UPDATE) {
+      // console.log("...CONTACT_UPDATE");
+      new DirContactUpdate(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CLEAR_TRANSCRIPT) {
+      new DirClearTranscript(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.MOVE_TO_UNASSIGNED) {
+      new DirMoveToUnassigned(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.CONNECT_BLOCK) {
+      // console.log(".....DirIntent")
+      new DirConnectBlock(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
+    else if (directive_name === Directives.ADD_TAGS) {
+      // console.log(".....DirAddTags")
+      new DirAddTags(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("GPTTask stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
@@ -794,7 +781,7 @@ class DirectivesChatbotPlug {
     }
     const supportRequest = this.supportRequest;
     const token = this.token;
-    const API_URL = this.API_URL;
+    const API_ENDPOINT = this.API_ENDPOINT;
     // const requestId = supportRequest.request_id
     // let depId;
     // if (supportRequest.department && supportRequest.department._id) {
@@ -804,7 +791,7 @@ class DirectivesChatbotPlug {
     const tdclient = new TiledeskClient({
       projectId: projectId,
       token: token,
-      APIURL: API_URL,
+      APIURL: API_ENDPOINT,
       APIKEY: "___",
       log: false
     });

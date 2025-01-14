@@ -19,12 +19,14 @@ class DirMessage {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.API_ENDPOINT = context.TILEDESK_APIURL,
+    this.API_ENDPOINT = context.API_ENDPOINT,
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.projectId = context.projectId;
     this.requestId = context.requestId;
     this.token = context.token;
     this.log = this.context.log;
+    this.supportRequest = this.context.supportRequest
+    this.hMessage = false
   }
 
   execute(directive, callback) {
@@ -69,6 +71,7 @@ class DirMessage {
       }
       if (directive.name === Directives.HMESSAGE) {
         action.attributes.subtype = "info";
+        this.hMessage = true;
       }
       // if (directive.name === Directives.HMESSAGE) {
       //   action.sender = "tiledesk";
@@ -93,6 +96,18 @@ class DirMessage {
     // const message = action.body.message;
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
+
+    if(this.hMessage && this.supportRequest && !this.supportRequest.draft){
+      callback();
+      return;
+    }
+    // if (this.projectId === "656054000410fa00132e5dcc") {
+    //   if (!message.text.startsWith('/')) {
+    //     callback();
+    //     return;
+    //   }
+    // }
+
     let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
     if (this.TILEBOT_ENDPOINT) {
       extEndpoint = `${this.TILEBOT_ENDPOINT}`;

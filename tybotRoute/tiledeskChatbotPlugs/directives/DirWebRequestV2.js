@@ -10,7 +10,6 @@ class DirWebRequestV2 {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.tdclient = context.tdclient;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.intentDir = new DirIntent(context);
@@ -265,15 +264,15 @@ class DirWebRequestV2 {
           return value;
         });
         console.log("** Options:", str_Options);
-
-
       }
       let axios_options = {
         url: options.url,
         method: options.method,
         params: options.params,
         headers: options.headers,
-        timeout: options.timeout
+        timeout: options.timeout,
+        maxContentLength: 10000000, // max 10mb response size
+        maxBodyLength: 10000000 // max 10mb request body size
       }
     
       if (options.json !== null) {

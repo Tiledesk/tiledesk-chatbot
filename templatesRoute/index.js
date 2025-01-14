@@ -34,12 +34,12 @@ router.get('/public/community', async (req, res) => { // ?text=...
     //   search_obj["$language"] = req.query.language;
     // }
     query.$text = search_obj; 
-    console.log("Using query:", query)   
+    // console.log("Using query:", query)   
   }
 
   try {
     bots = await faqKbService.getAll(query);
-    console.log("bots found:", bots.length);
+    // console.log("bots found:", bots.length);
     res.send(bots);
   }
   catch (err) {
@@ -77,7 +77,7 @@ router.get('/public/templates', async (req, res) => {
 router.get('/public/templates/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
-    console.log('FAQ-KB: ', faq_kb);
+    // console.log('FAQ-KB: ', faq_kb);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
@@ -86,14 +86,14 @@ router.get('/public/templates/:botid', (req, res) => {
       return res.status(404).send({ success: false, msg: 'Not found.' });
     }
     else if (faq_kb["public"]) {
-      console.log("public chatbot");
-      console.log('public: ', faq_kb["public"]);
-      console.log('webhook_enabled', faq_kb["webhook_enabled"]);
-      console.log('type', faq_kb["type"]);
-      console.log('language', faq_kb["language"]);
-      console.log('name', faq_kb["name"]);
-      console.log('id_project', faq_kb["id_project"]);
-      console.log('trashed', faq_kb["trashed"]);
+      // console.log("public chatbot");
+      // console.log('public: ', faq_kb["public"]);
+      // console.log('webhook_enabled', faq_kb["webhook_enabled"]);
+      // console.log('type', faq_kb["type"]);
+      // console.log('language', faq_kb["language"]);
+      // console.log('name', faq_kb["name"]);
+      // console.log('id_project', faq_kb["id_project"]);
+      // console.log('trashed', faq_kb["trashed"]);
       let faqs = null;
       try {
         faqs = await faqService.getAll(id_faq_kb); //.then((faqs) => {
@@ -117,7 +117,7 @@ router.get('/public/templates/:botid', (req, res) => {
       }
     }
     else {
-      console.log("private chatbot");
+      // console.log("private chatbot");
       res.status(403).send({success: false, message: "Forbidden"});
     }
   })
@@ -126,8 +126,8 @@ router.get('/public/templates/:botid', (req, res) => {
 router.get('/public/templates/windows/:botid', (req, res) => {
   let id_faq_kb = req.params.botid;
   Faq_kb.findById(id_faq_kb, async (err, faq_kb) => {
-    console.log('FAQ-KB: ', faq_kb);
-    console.log('faq_kb.tags: ', faq_kb.tags);
+    // console.log('FAQ-KB: ', faq_kb);
+    // console.log('faq_kb.tags: ', faq_kb.tags);
     if (err) {
       console.error('GET FAQ-KB ERROR ', err)
       return res.status(500).send({ success: false, msg: 'Error getting bot.' });
@@ -154,7 +154,7 @@ router.get('/public/templates/windows/:botid', (req, res) => {
       return res.send(json);
     }
     else {
-      console.log("private chatbot");
+      // console.log("private chatbot");
       res.status(403).send({success: false, message: "Forbidden"});
     }
   })
