@@ -54,6 +54,7 @@ class DirReplaceBotV3 {
     const filler = new Filler();
     //botId = filler.fill(botId, variables);
     botSlug = filler.fill(botSlug, variables);
+    blockName = filler.fill(blockName, variables);
 
     let data = {};
     if (useSlug && useSlug === true) {
