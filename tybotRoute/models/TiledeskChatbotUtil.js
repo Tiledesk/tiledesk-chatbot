@@ -725,6 +725,7 @@ class TiledeskChatbotUtil {
                             await chatbot.addParameter(key, value);
                         }
                         await chatbot.addParameter("payload", message.attributes.payload);
+                        if (chatbot.log) {console.log("Added webhook payload", JSON.stringify(message.attributes.payload));}
                     }
                     catch(err) {
                         console.error("Error importing message payload in request variables:", err);
