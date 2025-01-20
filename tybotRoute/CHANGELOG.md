@@ -17,8 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.139-rc5
+# v0.2.139
 - Added ReplaceBotV3 action
+- Updated Redis to 4.7.0
 
 # v0.2.138
 - Bug-fixed: hiddenMessage not blocked
