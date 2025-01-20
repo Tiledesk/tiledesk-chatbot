@@ -3,19 +3,26 @@ const redis = require('redis');
 class TdCache {
 
     constructor(config) {
+        console.log("TdCache config: ", config);
         this.redis_host = config.host;
         this.redis_port = config.port;
         this.redis_password = config.password;
+        console.log("TdCache this.redis_host: ", this.redis_host);
+        console.log("TdCache this.redis_port: ", this.redis_port);
+        console.log("TdCache this.redis_password: ", this.redis_password);
         this.client = null;
+        this.redis_sub = null;
     }
 
     async connect(callback) {
-        // client = redis.createClient();
+
         return new Promise( async (resolve, reject) => {
+            /**
+             * Connect redis client
+             */
             this.client = redis.createClient(
                 {
-                    host: this.redis_host,
-                    port: this.redis_port,
+                    url: `redis://${this.redis_host}:${this.redis_port}`,
                     password: this.redis_password
                 });
             this.client.on('error', err => {
@@ -24,17 +31,35 @@ class TdCache {
                     callback(err);
                 }
             });
-            // this.client.on('connect', function() {
-            //     console.log('Redis Connected!');
-            // });
             this.client.on('ready',function() {
-              // console.log("connected")
                 resolve();
                 if (callback) {
                     callback();
                 }
-                //console.log("Redis is ready.");
             });
+            await this.client.connect();
+
+            /**
+             * Connect redis subscription client
+             */
+            this.redis_sub = redis.createClient(
+              {
+                url: `redis://${this.redis_host}:${this.redis_port}`,
+                password: this.redis_password
+              });
+            this.redis_sub.on('error', err => {
+                reject(err);
+                if (callback) {
+                    callback(err);
+                }
+            });
+            this.redis_sub.on('ready',function() {
+                resolve();
+                if (callback) {
+                    callback();
+                }
+            });
+            await this.redis_sub.connect();
         });
     }
 
@@ -43,202 +68,59 @@ class TdCache {
       if (!options) {
         options = {EX: 86400}
       }
-      return new Promise( async (resolve, reject) => {
-        if (options && options.EX) {
-          //console.log("expires:", options.EX)
-          try {
-            this.client.set(
-              key,
-              value,
-              'EX', options.EX,
-              (err) => {
-                if (err) {
-                  reject(err);
-                }
-                else {
-                  return resolve();
-                }
-              }
-            );
-          }
-          catch(error) {
-            reject(error)
-          }
-        }
-        else {
-          try {
-            //console.log("setting here...key", key, value)
-            await this.client.set(
-              key,
-              value,
-              (err) => {
-                if (err) {
-                  reject(err);
-                }
-                else {
-                  return resolve();
-                }
-              }
-            );
-          }
-          catch(error) {
-            console.error("TdCache Error:", error);
-            reject(error)
-          }
-        }
-        // if (options && options.callback) {
-        //     options.callback();
-        // }
-        //console.log("resolving...", key);
-        // return resolve();
-      });
+      await this.client.set(
+        key,
+        value,
+        options);
     }
 
     async incr(key) {
-      // console.log("incr key:", key)
-      return new Promise( async (resolve, reject) => {
-          try {
-            // console.log("incr here...key", key)
-            await this.client.incr(key);
-          }
-          catch(error) {
-            console.error("Error on incr:", error);
-            reject(error)
-          }
-        return resolve();
-      });
+      await this.client.incr(key);
     }
 
     async hset(dict_key, key, value, options) {
-      //console.log("hsetting dict_key key value", dict_key, key, value)
-      return new Promise( async (resolve, reject) => {
-        if (options && options.EX) {
-          //console.log("expires:", options.EX)
-          try {
-            await this.client.hset(
-              dict_key,
-              key,
-              value,
-              'EX', options.EX);
-          }
-          catch(error) {
-            reject(error)
-          }
-        }
-        else {
-          try {
-            //console.log("setting here...key", key, value)
-            await this.client.hset(
-              dict_key,
-              key,
-              value);
-          }
-          catch(error) {
-            console.error("Error", error);
-            reject(error)
-          }
-        }
-        if (options && options.callback) {
-            options.callback();
-        }
-        return resolve();
-      });
+      if (!value) {
+        return;
+      }
+      if (!options) {
+        options = {EX: 86400}
+      }
+      await this.client.HSET(
+        dict_key,
+        key,
+        value,
+        options);
     }
 
-    async hdel(dict_key, key, options) {
-      //console.log("hsetting dict_key key value", dict_key, key, value)
-      return new Promise( async (resolve, reject) => {
-        if (options && options.EX) {
-          //console.log("expires:", options.EX)
-          try {
-            await this.client.hdel(
-              dict_key,
-              key,
-              'EX', options.EX);
-          }
-          catch(error) {
-            reject(error)
-          }
-        }
-        else {
-          try {
-            //console.log("setting here...key", key, value)
-            await this.client.hdel(
-              dict_key,
-              key);
-          }
-          catch(error) {
-            console.error("Error", error);
-            reject(error);
-          }
-        }
-        if (options && options.callback) {
-            options.callback();
-        }
-        return resolve();
-      });
+    async hdel(dict_key, key) {
+      await this.client.HDEL(dict_key, key);
     }
     
     async setJSON(key, value, options) {
+      if (!value) {
+        return;
+      }
+      if (!options) {
+        options = {EX: 86400}
+      }
       const _string = JSON.stringify(value);
       return await this.set(key, _string, options);
     }
     
-    async get(key, callback) {
-      //console.log("getting key", key)
-      return new Promise( async (resolve, reject) => {
-        this.client.get(key, (err, value) => {
-          if (err) {
-            reject(err);
-          }
-          else {
-            if (callback) {
-              callback(value);
-          }
-          return resolve(value);
-          }
-        });
-      });
+    async get(key) {
+      const value = await this.client.GET(key);
+      return value;
     }
 
-    async hgetall(dict_key, callback) {
-      //console.log("hgetting dics", dict_key);
-      return new Promise( async (resolve, reject) => {
-        this.client.hgetall(dict_key, (err, value) => {
-          if (err) {
-            reject(err);
-            if (callback) {
-              callback(err, null);
-            }
-          }
-          else {
-            if (callback) {
-              callback(null, value);
-            }
-            resolve(value);
-          }
-        });
-      });
+    async hgetall(dict_key) {
+      const all = await this.client.HGETALL(dict_key);
+      return all;
     }
 
-    async hget(dict_key, key, callback) {
-      //console.log("hgetting dics", dict_key);
-      return new Promise( async (resolve, reject) => {
-        this.client.hget(dict_key, key, (err, value) => {
-          if (err) {
-            reject(err);
-            if (callback) {
-              callback(err, null);
-            }
-          }
-          else {
-            if (callback) {
-              callback(null, value);
-            }
-            resolve(value);
-          }
-        });
-      });
+    async hget(dict_key, key) {
+      // console.log("hgetting dics", dict_key);
+      const value = await this.client.HGET(dict_key, key);
+      return value;
     }
     
     async getJSON(key, callback) {
@@ -246,16 +128,19 @@ class TdCache {
       return JSON.parse(value);
     }
     
-    async del(key, callback) {
-      return new Promise( async (resolve, reject) => {
-        this.client.del(key, () => {
-          if (callback) {
-            callback();
-          }
-          return resolve();
-        });
-      })
+    async del(key) {
+        await this.client.del(key);
     }
+    
+    async publish(key, value) {
+      await this.redis_sub.publish(key, value);
+    }
+
+    // subscribe(key, callback) {
+    //   this.redis_sub.subscribe(key, (message) => {
+    //     callback(message);
+    //   });
+    // }
 }
 
 module.exports = { TdCache };
