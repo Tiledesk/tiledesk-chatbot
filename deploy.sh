@@ -5,6 +5,12 @@ echo "version $version"
 ## Update package-lock.json
 npm install
 
+## Update tybotRoute/package-lock.json
+cd ./tybotRoute
+npm install
+
+cd ..
+
 ## Push commit to git
 git add .
 git commit -m "version added: ### $version"

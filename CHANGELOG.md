@@ -1,5 +1,7 @@
 # Tiledesk native chatbot
 
+# 1.0.10
+- added: replace-bot-v3 action
 
 # 1.0.2
 - bug-fixed: default engine for DirAskGPTV2
