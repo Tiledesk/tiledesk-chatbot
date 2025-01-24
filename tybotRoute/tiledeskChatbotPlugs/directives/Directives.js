@@ -2,7 +2,7 @@ class Directives {
   static AGENT = 'agent';
   static CLOSE = 'close';
   static DEPARTMENT = 'department';
-  static MESSAGE = 'message';
+  static MESSAGE = 'message'; // DEPRECATED
   static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";

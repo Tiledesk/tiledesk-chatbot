@@ -26,7 +26,6 @@ class DirMessage {
     this.token = context.token;
     this.log = this.context.log;
     this.supportRequest = this.context.supportRequest
-    this.hMessage = false
   }
 
   execute(directive, callback) {
@@ -37,6 +36,7 @@ class DirMessage {
       if (!action.attributes) {
         action.attributes = {}
       }
+
       // action.message.attributes.directives = false;
       // action.message.attributes.splits = false;
       // action.message.attributes.markbot = false;
@@ -58,26 +58,26 @@ class DirMessage {
       // }
       // console.log("final message action:", JSON.stringify(action));
     }
-    else if (directive.parameter) {
-      let text = directive.parameter.trim();
-      action = {
-        text: text,
-        attributes: {
-          directives: false,
-          splits: true,
-          markbot: true,
-          fillParams: true
-        }
-      }
-      if (directive.name === Directives.HMESSAGE) {
-        action.attributes.subtype = "info";
-        console.log("HMESSAGE!!!!!!: ", directive.name)
-        this.hMessage = true;
-      }
-      // if (directive.name === Directives.HMESSAGE) {
-      //   action.sender = "tiledesk";
-      // }
-    }
+    // DEPRECATED
+    // else if (directive.parameter) {
+    //   let text = directive.parameter.trim();
+    //   action = {
+    //     text: text,
+    //     attributes: {
+    //       directives: false,
+    //       splits: true,
+    //       markbot: true,
+    //       fillParams: true
+    //     }
+    //   }
+    //   if (directive.name === Directives.HMESSAGE) {
+    //     action.attributes.subtype = "info";
+    //     this.hMessage = true;
+    //   }
+    //   // if (directive.name === Directives.HMESSAGE) {
+    //   //   action.sender = "tiledesk";
+    //   // }
+    // }
     else {
       console.error("Incorrect directive:", directive);
       callback();
@@ -98,9 +98,7 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    console.log("this.hMessage: ", this.hMessage)
-    console.log("this.supportRequest.draft: ", this.supportRequest.draft)
-    if(this.hMessage && this.supportRequest && !this.supportRequest.draft){
+    if(this.supportRequest && !this.supportRequest.draft){
       callback();
       return;
     }
