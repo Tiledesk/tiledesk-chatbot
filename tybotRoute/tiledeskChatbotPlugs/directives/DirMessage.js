@@ -71,6 +71,7 @@ class DirMessage {
       }
       if (directive.name === Directives.HMESSAGE) {
         action.attributes.subtype = "info";
+        console.log("HMESSAGE!!!!!!: ", directive.name)
         this.hMessage = true;
       }
       // if (directive.name === Directives.HMESSAGE) {
@@ -97,6 +98,8 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
+    console.log("this.hMessage: ", this.hMessage)
+    console.log("this.supportRequest.draft: ", this.supportRequest.draft)
     if(this.hMessage && this.supportRequest && !this.supportRequest.draft){
       callback();
       return;
