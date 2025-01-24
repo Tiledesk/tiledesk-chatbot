@@ -32,8 +32,8 @@ class DirMessage {
   execute(directive, callback) {
     let action;
     if (directive.action) {
-      if (this.log) {console.log("got action:", JSON.stringify(action));}
       action = directive.action;
+      if (this.log) {console.log("got action:", JSON.stringify(action));}
       if (!action.attributes) {
         action.attributes = {}
       }
