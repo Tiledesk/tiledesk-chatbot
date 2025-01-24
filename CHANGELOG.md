@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.11
+- bug-fixed: block hidden message for non-dev conversation
+
 # 1.0.10
 - added: replace-bot-v3 action
 
