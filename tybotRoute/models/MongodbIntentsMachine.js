@@ -20,7 +20,6 @@ class MongodbIntentsMachine {
   async decode(botId, text) {
     return new Promise( (resolve, reject) => {
       if (this.log) {console.log("Mongodb NLP decode intent...");}
-      console.log("[hiddentest] MongodbIntentsMachine decode botId", botId, "text:", text)
       // let query = { "id_project": this.projectId, "id_faq_kb": botId };
       let query = { "id_faq_kb": botId };
       var mongoproject = undefined;

@@ -47,7 +47,6 @@ class TiledeskChatbot {
   async replyToMessage(message, callback) {
     return new Promise( async (resolve, reject) => {
       let lead = null;
-      console.log("[hiddentest] TiledeskChatbot replyToMessage message", message)
       if (message.request) {
         this.request = message.request;
         // lead = message.request.lead;
@@ -297,7 +296,6 @@ class TiledeskChatbot {
         return;
       }
       else { // NLP
-        console.log("[hiddentest] TiledeskChatbot decoding intent", message.text)
         if (this.log) {console.log("Chatbot NLP decoding intent...");}
         let intents;
         try {
