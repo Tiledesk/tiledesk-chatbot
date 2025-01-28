@@ -1,7 +1,7 @@
 name: Publish Docker Community image tags - Tiledesk Chatbot
 
 env:
-  REGISTRY: tiledeskrepo
+  REGISTRY: tiledesk
   IMAGE_NAME: tiledesk-chatbot
 
 on:
