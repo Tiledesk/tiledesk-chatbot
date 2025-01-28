@@ -5,8 +5,6 @@ let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
 
-let logger;
-
 class DirReply {
 
   constructor(context) {
@@ -46,6 +44,7 @@ class DirReply {
       return;
     }
     this.go(action, () => {
+      this.logger.info("Execute action " + directive.action)
       callback();
     });
   }
@@ -136,7 +135,7 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
-    this.logger.info("Sending reply " + cleanMessage.text);
+    this.logger.info("Sending reply (text)" + cleanMessage.text);
     this.logger.info("Sending reply with clean message " + JSON.stringify(cleanMessage));
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
