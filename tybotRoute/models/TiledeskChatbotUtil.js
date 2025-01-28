@@ -700,7 +700,6 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
             }
 
-            /** DEPRECATED */
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
                 if (!message.attributes) {
                     message.attributes = {}
