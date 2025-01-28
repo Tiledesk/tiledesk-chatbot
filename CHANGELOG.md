@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 1.0.13
+ - bug-fixed: message.attributes.payload is not populated on first message
+ - bug-fixed: message.attributes.payload was overwritten by message.request.attributes.payload
+ 
 # 1.0.12
 - changed: repo links
 
