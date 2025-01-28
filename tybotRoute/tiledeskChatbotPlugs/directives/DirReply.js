@@ -44,7 +44,7 @@ class DirReply {
       return;
     }
     this.go(action, () => {
-      this.logger.info("Execute action " + directive.action)
+      this.logger.info("1 Execute action " + JSON.stringify(directive.action))
       callback();
     });
   }
@@ -68,7 +68,7 @@ class DirReply {
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
       console.log("message.text: ", message.text)
-      this.logger.info("Sending reply " + message.text);
+      this.logger.info("2 Sending reply " + message.text);
 
       if (message.metadata) {
         if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
@@ -135,8 +135,8 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
-    this.logger.info("Sending reply (text)" + cleanMessage.text);
-    this.logger.info("Sending reply with clean message " + JSON.stringify(cleanMessage));
+    this.logger.info("3 Sending reply (text)" + cleanMessage.text);
+    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);

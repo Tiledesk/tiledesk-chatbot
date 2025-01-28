@@ -70,8 +70,10 @@ class Logger {
             level: "info"
         }
 
+        console.log("publishing data text: ", data.text);
         publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
+            console.log("published data text: ", data.text);
             return;
         })
     }
