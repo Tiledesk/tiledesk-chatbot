@@ -700,6 +700,15 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
             }
 
+            /** DEPRECATED */
+            if (message && message.request && message.request.attributes && message.request.attributes.payload) {
+                if (!message.attributes) {
+                    message.attributes = {}
+                }
+                message.attributes.payload = message.request.attributes.payload
+                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+            }
             if (message.attributes) {
                 if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
@@ -735,15 +744,7 @@ class TiledeskChatbotUtil {
                 }
             }
 
-            /** DEPRECATED */
-            if (message && message.request && message.request.attributes && message.request.attributes.payload) {
-                if (!message.attributes) {
-                    message.attributes = {}
-                }
-                message.attributes.payload = message.request.attributes.payload
-                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-            }
+            
             
             
             const _bot = chatbot.bot; // aka FaqKB
