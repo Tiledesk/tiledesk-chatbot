@@ -705,7 +705,7 @@ class TiledeskChatbotUtil {
                 if (!message.attributes) {
                     message.attributes = {}
                 }
-                message.attributes.payload = { ...message.request.attributes.payload}
+                message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload}
                 if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
                 // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
             }
