@@ -2,12 +2,6 @@ let axios = require('axios');
 
 class WebhookChatbotPlug {
 
-  /**
-   * @example
-   * const { DirectivesChatbotPlug } = require('./DirectivesChatbotPlug');
-   * 
-   */
-
   constructor(supportRequest, webhookurl, token, log) {
     this.supportRequest = supportRequest;
     this.webhookurl = webhookurl;
