@@ -46,7 +46,8 @@ class Logger {
         let data = {
             request_id: this.request_id,
             text: text,
-            level: "error"
+            level: "error",
+            timestamp: new Date()
         }
         publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
@@ -67,7 +68,8 @@ class Logger {
         let data = {
             request_id: this.request_id,
             text: text,
-            level: "info"
+            level: "info",
+            timestamp: new Date()
         }
 
         console.log("publishing data text: ", data.text);
