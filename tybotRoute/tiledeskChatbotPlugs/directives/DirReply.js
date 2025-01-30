@@ -121,11 +121,11 @@ class DirReply {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
       }
       // userFlowAttributes
-      let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
-      if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
-      if (userFlowAttributes) {
-        message.attributes["flowAttributes"] = userFlowAttributes;
-      }
+      // let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+      // if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
+      // if (userFlowAttributes) {
+      //   message.attributes["flowAttributes"] = userFlowAttributes;
+      // }
     }
     // send!
     let cleanMessage = message;
