@@ -31,8 +31,8 @@ class DirMessage {
   execute(directive, callback) {
     let action;
     if (directive.action) {
-      if (this.log) {console.log("got action:", JSON.stringify(action));}
       action = directive.action;
+      if (this.log) {console.log("got action:", JSON.stringify(action));}
       if (!action.attributes) {
         action.attributes = {}
       }
@@ -58,25 +58,26 @@ class DirMessage {
       // console.log("final message action:", JSON.stringify(action));
     }
     // DEPRECATED
-    // else if (directive.parameter) {
-    //   let text = directive.parameter.trim();
-    //   action = {
-    //     text: text,
-    //     attributes: {
-    //       directives: false,
-    //       splits: true,
-    //       markbot: true,
-    //       fillParams: true
-    //     }
-    //   }
-    //   if (directive.name === Directives.HMESSAGE) {
-    //     action.attributes.subtype = "info";
-    //     this.hMessage = true;
-    //   }
-    //   // if (directive.name === Directives.HMESSAGE) {
-    //   //   action.sender = "tiledesk";
-    //   // }
-    // }
+    else if (directive.parameter) {
+      let text = directive.parameter.trim();
+      action = {
+        text: text,
+        isInfo: true,
+        attributes: {
+          directives: false,
+          splits: true,
+          markbot: true,
+          fillParams: true
+        }
+      }
+      if (directive.name === Directives.HMESSAGE) {
+        action.attributes.subtype = "info";
+        // this.hMessage = true;
+      }
+      // if (directive.name === Directives.HMESSAGE) {
+      //   action.sender = "tiledesk";
+      // }
+    }
     else {
       console.error("Incorrect directive:", directive);
       callback();
@@ -97,10 +98,11 @@ class DirMessage {
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
 
-    if(this.supportRequest && !this.supportRequest.draft){
+    if(!action.isInfo && this.supportRequest && !this.supportRequest.draft){
       callback();
       return;
     }
+    delete action.isInfo
     // if (this.projectId === "656054000410fa00132e5dcc") {
     //   if (!message.text.startsWith('/')) {
     //     callback();
