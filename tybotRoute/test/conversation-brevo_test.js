@@ -409,7 +409,7 @@ function sendMessageToBot(message, botId, callback) {
  */
 // function getChatbotParameters(requestId, callback) {
 //   // const jwt_token = this.fixToken(token);
-//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
 //     headers: {

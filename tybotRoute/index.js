@@ -211,7 +211,7 @@ router.post('/ext/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
-          TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
+          TILEBOT_ENDPOINT:process.env.TILEBOT_ENDPOINT,
           token: token,
           log: log,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
@@ -237,8 +237,8 @@ router.post('/ext/:botid', async (req, res) => {
     reply.attributes.markbot = true;
     reply.attributes.fillParams = true;
     let extEndpoint = `${API_ENDPOINT}/modules/tilebot/`;
-    if (process.env.TYBOT_ENDPOINT) {
-      extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+    if (process.env.TILEBOT_ENDPOINT) {
+      extEndpoint = `${process.env.TILEBOT_ENDPOINT}`;
     }
     const apiext = new ExtApi({
       ENDPOINT: extEndpoint,
@@ -314,9 +314,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (log) {
     console.log("/ext request....", JSON.stringify(request));
     console.log("/ext API_ENDPOINT....", API_ENDPOINT);
-    console.log("/ext process.env.TYBOT_ENDPOINT....", process.env.TYBOT_ENDPOINT);
+    console.log("/ext process.env.TILEBOT_ENDPOINT....", process.env.TILEBOT_ENDPOINT);
   }
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT:process.env.TILEBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // let directivesPlug = null;
   // PIPELINE-EXT
   // if (log) {console.log("answer to process:", JSON.stringify(answer));}
@@ -601,7 +601,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     "token": "NO-TOKEN"
   }
   if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
-  sendMessageToBot(process.env.TYBOT_ENDPOINT, request, bot_id, async () => {
+  sendMessageToBot(process.env.TILEBOT_ENDPOINT, request, bot_id, async () => {
     res.status(200).send({"success":true});
     return;
   });

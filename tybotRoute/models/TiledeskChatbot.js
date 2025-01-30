@@ -387,8 +387,8 @@ class TiledeskChatbot {
     // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
     // THE ALTERNATIVE ROUTE.
     // let extEndpoint = `${this.APIURL}/modules/tilebot/`;
-    // if (process.env.TYBOT_ENDPOINT) {
-    //   extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
+    // if (process.env.TILEBOT_ENDPOINT) {
+    //   extEndpoint = `${process.env.TILEBOT_ENDPOINT}`;
     // }
     // const apiext = new ExtApi({
     //   ENDPOINT: extEndpoint,
