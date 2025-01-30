@@ -2,7 +2,7 @@ let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
 let publisher = new Publisher(AMQP_MANAGER_URL, {
-    debug: true,
+    debug: false,
     queueName: "logs_queue",
     exchange: "tiledesk-multi",
     topic: "logs",
