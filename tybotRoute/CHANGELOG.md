@@ -17,6 +17,12 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.144
+- Removed userFlowAttributes from message.attributes (fix message too long issue)
+
+# v0.2.143
+- Replaced TYBOT_ENDPOINT with TILEBOT_ENDPOINT
+
 # v0.2.142
 - Bug-fix: action.isInfo added in DirMessage fo fix test
 
