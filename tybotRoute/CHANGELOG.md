@@ -17,8 +17,11 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
-# v0.2.142
+# v0.2.143
 - Changed: env var TILEBOT_ENDPOINT replaced with TILEBOT_ENDPOINT
+
+# v0.2.142
+- Bug-fix: action.isInfo added in DirMessage fo fix test
 
 # v0.2.141
 - Bug-fix: message.attributes.payload not not visible on first message
