@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.16
+ - removed: message.attributes["flowAttributes"] from reply
+
 # 1.0.15
 - changed: env var TILEBOT_ENDPOINT replaced with TILEBOT_ENDPOINT
 
