@@ -43,8 +43,9 @@ class DirReply {
       callback();
       return;
     }
+    this.logger.info("1 Execute action " + JSON.stringify(directive.action))
     this.go(action, () => {
-      this.logger.info("1 Execute action " + JSON.stringify(directive.action))
+      this.logger.info("6 End of action reply -> callback")
       callback();
     });
   }
@@ -157,7 +158,7 @@ class DirReply {
           this.logger.error("Error sending reply: " + err);
         }
         if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
-        this.logger.info("Reply message sent");
+        this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
