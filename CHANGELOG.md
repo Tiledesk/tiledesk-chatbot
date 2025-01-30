@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.15
+- changed: env var TILEBOT_ENDPOINT replaced with TILEBOT_ENDPOINT
+
 # 1.0.14
 - bug-fixed: action.isInfo added in DirMessage to fix test
 

@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.142
+- Changed: env var TILEBOT_ENDPOINT replaced with TILEBOT_ENDPOINT
+
 # v0.2.141
 - Bug-fix: message.attributes.payload not not visible on first message
 
