@@ -24,7 +24,7 @@ available on:
 - Bug-fix: action.isInfo added in DirMessage fo fix test
 
 # v0.2.141
-- Bug-fix: message.attributes.payload not not visible on first message
+- Bug-fix: message.attributes.payload not visible on first message
 
 # v0.2.140
 - Bug-fix: block hidden message for non-dev conversation
