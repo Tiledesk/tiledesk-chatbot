@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.17
+- removed userFlowAttributes from message.attributes (fix message too long issue)
+
 # 1.0.16
  - removed: message.attributes["flowAttributes"] from reply
 
