@@ -43,9 +43,10 @@ class DirReply {
       callback();
       return;
     }
-    this.logger.info("1 Execute action " + JSON.stringify(directive.action))
+    this.logger.info("1 Execute action reply for " + directive.action.text)
+
     this.go(action, () => {
-      this.logger.info("6 End of action reply -> callback")
+      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
       callback();
     });
   }
@@ -136,7 +137,7 @@ class DirReply {
     }
     // send!
     let cleanMessage = message;
-    this.logger.info("3 Sending reply (text)" + cleanMessage.text);
+    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
     this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
