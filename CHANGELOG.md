@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.20-rc1
+bug-fixed: message.attributes["flowAttributes"] added only if value size is <= 1kb
+
 # 1.0.19
 - bug-fixed: minor bug fixed
 
