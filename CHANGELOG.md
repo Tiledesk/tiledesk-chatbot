@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.18
+- added: TILEBOT_ENDPOINT env variable to startApp method
+
 # 1.0.17
 - removed userFlowAttributes from message.attributes (fix message too long issue)
 
