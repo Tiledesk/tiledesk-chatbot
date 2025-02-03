@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.145
+- added: TILEBOT_ENDPOINT env variable to startApp method
+
 # v0.2.144
 - Removed userFlowAttributes from message.attributes (fix message too long issue)
 
