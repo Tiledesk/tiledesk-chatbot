@@ -4,9 +4,9 @@ let https = require("https");
 class ExtApi {
 
   constructor(options) {
-    if (!options.ENDPOINT) {
-      throw new Error("options.ENDPOINT is mandatory");
-      //this.extEndpoint = `${options.TYBOT_ENDPOINT}/;
+    if (!options.TILEBOT_ENDPOINT) {
+      throw new Error("options.TILEBOT_ENDPOINT is mandatory");
+      //this.extEndpoint = `${options.TILEBOT_ENDPOINT}/;
     }
     if (options.log) {
       this.log = options.log;
@@ -14,7 +14,7 @@ class ExtApi {
     else {
       this.log = false;
     }
-    this.ENDPOINT = options.ENDPOINT;
+    this.TILEBOT_ENDPOINT = options.TILEBOT_ENDPOINT;
   }
 
   fixToken(token) {
@@ -37,7 +37,7 @@ class ExtApi {
    */
   sendSupportMessageExt(message, projectId, requestId, token, callback) {
     const jwt_token = this.fixToken(token);
-    const url = `${this.ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
+    const url = `${this.TILEBOT_ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
     if (this.log) {console.log("sendSupportMessageExt URL", url);}
     const HTTPREQUEST = {
       url: url,

@@ -3,17 +3,6 @@ const { Directives } = require('./Directives.js');
 
 class DirMessage {
 
-  // constructor(settings) {
-  //   if (!settings.API_ENDPOINT) {
-  //     throw new Error("settings.API_ENDPOINT is mandatory!");
-  //   }
-  //   this.API_ENDPOINT = settings.API_ENDPOINT;
-  //   this.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT;
-  //   this.projectId = settings.projectId;
-  //   this.requestId = settings.requestId;
-  //   this.token = settings.token;
-  // }
-
   constructor(context) {
     if (!context) {
       throw new Error('context object is mandatory.');
@@ -110,12 +99,8 @@ class DirMessage {
     //   }
     // }
 
-    let extEndpoint = `${this.API_ENDPOINT}/modules/tilebot`;
-    if (this.TILEBOT_ENDPOINT) {
-      extEndpoint = `${this.TILEBOT_ENDPOINT}`;
-    }
     const apiext = new ExtApi({
-      ENDPOINT: extEndpoint,
+      TILEBOT_ENDPOINT: this.TILEBOT_ENDPOINT,
       log: false
     });
     if (message.text) {

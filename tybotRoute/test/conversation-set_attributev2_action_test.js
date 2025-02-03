@@ -29,7 +29,7 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.mongoUrl,
+          // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
@@ -299,7 +299,7 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
  */
 function sendMessageToBot(message, botId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
