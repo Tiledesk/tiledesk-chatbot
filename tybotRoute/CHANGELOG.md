@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.146
+- bug-fixed: message.attributes["flowAttributes"]
+
 # v0.2.146-rc1
 - bug-fixed: message.attributes["flowAttributes"] added only if value size is <= 1kb
 
