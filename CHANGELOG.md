@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.19
+- bug-fixed: minor bug fixed
+
 # 1.0.18
 - added: TILEBOT_ENDPOINT env variable to startApp method
 
