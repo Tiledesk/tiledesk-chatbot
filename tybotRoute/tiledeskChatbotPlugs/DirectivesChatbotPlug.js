@@ -209,6 +209,7 @@ class DirectivesChatbotPlug {
       name: "message",
       action: {
         "_tdThenStop": true,
+        isInfo: true,
         text: message,
         attributes: {
           runtimeError: {
