@@ -1,4 +1,3 @@
-//const { ExtApi } = require('../../ExtApi.js');
 let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
@@ -81,14 +80,9 @@ class DirIntent {
       "token": this.token
     }
     if (this.log) {console.log("move to intent message:", intent_command_request);}
-    let TILEBOT_ENDPOINT;
-    if (this.TILEBOT_ENDPOINT) {
-      TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
-    }
-    else {
-      TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
-    }
-    this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
+
+
+    this.sendMessageToBot(this.TILEBOT_ENDPOINT, intent_command_request, botId, () => {
       // console.log("sendMessageToBot() req_body sent:", intent_command_request);
       callback(true);
     });
@@ -138,9 +132,9 @@ class DirIntent {
    * @param {string} botId. Tiledesk botId
    * @param {string} token. User token
    */
-  sendMessageToBot(CHATBOT_ENDPOINT, message, botId, callback) {
+  sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
     // const jwt_token = this.fixToken(token);
-    const url = `${CHATBOT_ENDPOINT}/ext/${botId}`;
+    const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
     // console.log("sendMessageToBot URL", url);
     const HTTPREQUEST = {
       url: url,

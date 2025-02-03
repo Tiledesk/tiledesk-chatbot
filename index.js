@@ -23,6 +23,7 @@ app.use("/chatbots", templatesRoute);
 tybot.startApp(
   {
     MONGODB_URI: process.env.MONGODB_URI,
+    TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
     // bots: bots_data,
     API_ENDPOINT: process.env.API_ENDPOINT,
     REDIS_HOST: process.env.CACHE_REDIS_HOST,

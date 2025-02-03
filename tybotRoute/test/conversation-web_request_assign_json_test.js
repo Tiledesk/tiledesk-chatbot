@@ -31,6 +31,7 @@ describe('Conversation for WebRequest assign test', async () => {
         {
           // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
+          TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
