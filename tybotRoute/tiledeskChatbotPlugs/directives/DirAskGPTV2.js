@@ -181,13 +181,14 @@ class DirAskGPTV2 {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
       ns = await this.getNamespace(filled_namespace, null);
-      namespace = ns.id;
+      namespace = ns?.id;
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     } else {
       ns = await this.getNamespace(null, namespace);
     }
 
     if (!ns) {
+      await this.#assignAttributes(action, answer);
       await this.chatbot.addParameter("flowError", "AskGPT Error: namespace not found");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
