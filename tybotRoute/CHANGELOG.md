@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.147
+- bug-fixed: namespace is undefined and "engine" property cannot be evaluated in DirAskGPTV2
+ 
 # v0.2.146
 - bug-fixed: message.attributes["flowAttributes"]
 
