@@ -188,8 +188,12 @@ class DirAskGPTV2 {
     }
 
     if (!ns) {
-      await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+      await this.chatbot.addParameter("flowError", "AskGPT Error: namespace not found");
+      if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
     }
 
     if (ns.engine) {
