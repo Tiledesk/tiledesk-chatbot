@@ -195,6 +195,8 @@ class DirAskGPTV2 {
         callback(true);
         return;
       }
+      callback();
+      return;
     }
 
     if (ns.engine) {
