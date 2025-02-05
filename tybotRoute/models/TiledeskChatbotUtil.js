@@ -557,19 +557,19 @@ class TiledeskChatbotUtil {
                 //     "width": 1724
                 // }
                 if (message.metadata.src) {
-                    await chatbot.addParameter("lastUserImageURL", message.metadata.src);
-                    await chatbot.addParameter("lastUserImageName", message.metadata.name);
-                    await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
-                    await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-                    await chatbot.addParameter("lastUserImageType", message.metadata.type);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_URL, message.metadata.src);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_NAME, message.metadata.name);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_WIDTH, message.metadata.width);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_HEIGHT, message.metadata.height);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_TYPE, message.metadata.type);
                 }
             }
             // else {
-            //     await chatbot.addParameter("lastUserImageURL", null);
-            //     await chatbot.addParameter("lastUserImageName", null);
-            //     await chatbot.addParameter("lastUserImageWidth", null);
-            //     await chatbot.addParameter("lastUserImageHeight", null);
-            //     await chatbot.addParameter("lastUserImageType", null);
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_URL, null);
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_NAME, null);
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_WIDTH, null);
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_HEIGHT, null);
+            //     await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_TYPE, null);
             // }
             // get document
             if (message.type && message.type === "file" && message.metadata) {
@@ -888,19 +888,18 @@ class TiledeskChatbotUtil {
             TiledeskChatbotConst.REQ_TRANSCRIPT_KEY,
             TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY,
             TiledeskChatbotConst.REQ_DECODED_JWT_KEY,
-            "lastUserImageURL", // image
-            "lastUserImageName", // image
-            "lastUserImageWidth", // image
-            "lastUserImageHeight", // image
-            "lastUserImageType", // image
-            "lastUserDocumentURL", // file
-            "lastUserDocumentName", // file
-            "lastUserDocumentType", // file
-            "ticketId",
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_URL,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_NAME,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_WIDTH,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_HEIGHT,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_TYPE,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_URL,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_NAME,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_TYPE,
+            TiledeskChatbotConst.REQ_TICKET_ID_KEY,
             TiledeskChatbotConst.REQ_CHAT_CHANNEL,
-            "user_lead_id",
-            "userLeadId",
-            "lastUserText",
+            TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY,
+            TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY,
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
             TiledeskChatbotConst.USER_INPUT,
             TiledeskChatbotConst.REQ_CHATBOT_TOKEN,
