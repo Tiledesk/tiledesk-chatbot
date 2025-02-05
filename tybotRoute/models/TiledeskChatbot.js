@@ -1,6 +1,5 @@
 // let Faq = require('./faq');
 // let Faq_kb = require('./faq_kb');
-// const { ExtApi } = require('../ExtApi.js');
 const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 // const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
@@ -390,11 +389,7 @@ class TiledeskChatbot {
     // if (process.env.TILEBOT_ENDPOINT) {
     //   extEndpoint = `${process.env.TILEBOT_ENDPOINT}`;
     // }
-    // const apiext = new ExtApi({
-    //   ENDPOINT: extEndpoint,
-    //   log: this.log
-    // });
-    // console.log("the form...")
+
     
     let intent_name = answerObj.intent_display_name
     // THE FORM
