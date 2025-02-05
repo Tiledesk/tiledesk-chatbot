@@ -1,5 +1,7 @@
-const { ExtApi } = require('../../ExtApi.js');
 const { Directives } = require('./Directives.js');
+const { TiledeskClient } = require("@tiledesk/tiledesk-client");
+const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { Filler } = require("../Filler");
 
 class DirMessage {
 
@@ -8,13 +10,21 @@ class DirMessage {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.API_ENDPOINT = context.API_ENDPOINT,
-    this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
+    this.API_ENDPOINT = context.API_ENDPOINT
     this.projectId = context.projectId;
     this.requestId = context.requestId;
+    this.tdcache = this.context.tdcache;
     this.token = context.token;
     this.log = this.context.log;
     this.supportRequest = this.context.supportRequest
+
+    this.tdClient = new TiledeskClient({
+      projectId: this.context.projectId,
+      token: this.context.token,
+      APIURL: this.API_ENDPOINT,
+      APIKEY: "___",
+      log: this.log
+    });
   }
 
   execute(directive, callback) {
@@ -82,7 +92,7 @@ class DirMessage {
     });
   }
 
-  go(action, callback) {
+  async go(action, callback) {
     // const message = action.body.message;
     const message = action;
     if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
@@ -98,25 +108,29 @@ class DirMessage {
     //     return;
     //   }
     // }
-
-    const apiext = new ExtApi({
-      TILEBOT_ENDPOINT: this.TILEBOT_ENDPOINT,
-      log: false
-    });
     if (message.text) {
       message.text = message.text.replace(/\\n/g, "\n");
+
+      let requestVariables = null;
+      requestVariables = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId)
+
+      const filler = new Filler();
+      message.text = filler.fill(message.text, requestVariables);
     }
     // message.text = "Ciao1\n\nCIao2"
     // console.log("sendSupportMessageExt from dirmessage", message);
-    apiext.sendSupportMessageExt(
-      message,
-      this.projectId,
+
+    this.tdClient.sendSupportMessage(
       this.requestId,
-      this.token,
-      () => {
-        if (this.log) {console.log("Ext message sent.");}
+      message,
+      (err) => {
+        if (err) {
+          console.error("Error sending reply:", err);
+        }
+        if (this.log) {console.log("Reply message sent:", JSON.stringify(message));}
         callback();
     });
+
   }
 
   // static firstMessageInfoFromCommands(commands) {

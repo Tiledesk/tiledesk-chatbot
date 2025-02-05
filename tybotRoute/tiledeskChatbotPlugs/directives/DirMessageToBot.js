@@ -107,8 +107,7 @@ class DirMessageToBot {
       });
       axios_options.httpsAgent = httpsAgent;
     }
-    axios(axios_options)
-    .then((res) => {
+    axios(axios_options).then((res) => {
       if (this.log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
