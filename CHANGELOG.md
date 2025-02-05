@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.22
+- bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
+
 # 1.0.21
 - bug-fixed: namespace is undefined and "engine" property cannot be evaluated in DirAskGPTV2
 
