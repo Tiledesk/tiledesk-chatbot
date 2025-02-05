@@ -894,13 +894,13 @@ describe('Conversation for GptTask test', async () => {
       res.status(http_code).send(reply);
     });
 
-    // endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-    //   let http_code = 200;
-    //   let reply = "Integration not found";
+      let http_code = 200;
+      let reply = "Integration not found";
 
-    //   res.status(http_code).send(reply);
-    // })
+      res.status(http_code).send(reply);
+    })
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -1028,6 +1028,14 @@ describe('Conversation for GptTask test', async () => {
         key: "quotes:tokens:62c3f10152dc7400352bab0d:12/28/2023",
         currentQuote: 528
       }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = "Integration not found";
 
       res.status(http_code).send(reply);
     })
