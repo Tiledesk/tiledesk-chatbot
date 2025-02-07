@@ -1,5 +1,17 @@
 # Tiledesk native chatbot
 
+# 1.0.22
+- bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
+
+# 1.0.21
+- bug-fixed: namespace is undefined and "engine" property cannot be evaluated in DirAskGPTV2
+
+# 1.0.20
+- bug-fixed: message.attributes["flowAttributes"]
+
+# 1.0.20-rc1
+bug-fixed: message.attributes["flowAttributes"] added only if value size is <= 1kb
+
 # 1.0.19
 - bug-fixed: minor bug fixed
 

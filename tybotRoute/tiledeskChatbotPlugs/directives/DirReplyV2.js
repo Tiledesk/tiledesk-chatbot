@@ -255,11 +255,19 @@ class DirReplyV2 {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
       }
       // userFlowAttributes
-      if (this.projectId === "656054000410fa00132e5dcc") { 
-        let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
-        if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
-        if (userFlowAttributes) {
-          message.attributes["flowAttributes"] = userFlowAttributes;
+      let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+      if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
+      if (userFlowAttributes) {
+        message.attributes["flowAttributes"] = {};
+        for (const [key, value] of Object.entries(userFlowAttributes)) {
+          try {
+            if(typeof value === 'string' && value.length <= 1000){
+              message.attributes["flowAttributes"][key] = value;
+            }
+          }
+          catch(err) {
+            console.error("An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
+          }
         }
       }
       
