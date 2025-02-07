@@ -142,11 +142,11 @@ class DirAiPrompt {
         if (err) {
           if (this.log) {
             console.error("(httprequest) DirAiPrompt openai err:", err);
-            console.error("(httprequest) DirAiPrompt openai err:", err.response?.data?.error?.message);
+            console.error("(httprequest) DirAiPrompt openai err:", err.detail[0]?.msg);
           }
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + err.detail[0]?.msg);
+            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + err.response.data.detail[0]?.msg);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;

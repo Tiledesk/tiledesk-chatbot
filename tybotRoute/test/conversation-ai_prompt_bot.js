@@ -17,8 +17,8 @@ const bot = {
 				"_tdActionType": "ai_prompt",
 				"_tdActionTitle": "ai action",
 				"assignReplyTo": "ai_reply",
-				"llm": "deepseek",
-				"model": "pro1",
+				"llm": "myllm",
+				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
 				"trueIntent": "#SUCCESS",
@@ -38,7 +38,7 @@ const bot = {
 				"_tdActionTitle": "ai action",
 				"assignReplyTo": "ai_reply",
 				"question": "this is the question",
-				"model": "pro1",
+				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
 				"trueIntent": "#SUCCESS",
@@ -58,7 +58,7 @@ const bot = {
 				"_tdActionTitle": "ai action",
 				"assignReplyTo": "ai_reply",
 				"question": "this is the question",
-				"llm": "deepseek",
+				"llm": "myllm",
 				"max_tokens": 512,
 				"temperature": 0.7,
 				"trueIntent": "#SUCCESS",
@@ -78,8 +78,8 @@ const bot = {
 				"_tdActionTitle": "ai action",
 				"assignReplyTo": "ai_reply",
 				"question": "this is the question",
-				"llm": "deepseek",
-				"model": "pro1",
+				"llm": "myllm",
+				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
 				"trueIntent": "#SUCCESS",
@@ -101,7 +101,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "TRUE gpt replied: {{gpt_reply}}"
+							"text": "Answer: {{ai_reply}}"
 						}
 					}]
 				}
