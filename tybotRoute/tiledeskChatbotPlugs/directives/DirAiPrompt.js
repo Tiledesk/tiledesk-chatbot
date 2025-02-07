@@ -51,36 +51,23 @@ class DirAiPrompt {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
     let transcript;
+    let answer = "No answer"
 
     if (this.log) {
       console.log("DirAiPrompt trueIntent", trueIntent)
       console.log("DirAiPrompt falseIntent", falseIntent)
     }
 
-    let resp = await this.wait().catch((err) => {
-      console.log("error catched!!!!")
-      callback(true);
-      return;
-    })
-
-    console.log("resp: ", resp);
-
-    this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      console.log("\nmissing_param: ", missing_param)
+    await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
       if (falseIntent) {
-        console.log("\nfalseIntent: ", falseIntent)
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
-        console.log("\nreturn")
-        return;
+        return Promise.reject();
       }
       callback();
-      console.log("\nreturn2")
-      return;
+      return Promise.reject();
     })
-
-    console.log("\n1")
 
     let requestVariables = null;
     requestVariables =
@@ -91,8 +78,6 @@ class DirAiPrompt {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables);
-
-    console.log("\n2")
 
     if (action.history) {
       let transcript_string = await TiledeskChatbot.getParameterStatic(
@@ -108,14 +93,13 @@ class DirAiPrompt {
         if (this.log) { console.log("DirAiPrompt transcript_string is undefined. Skip JSON translation for chat history") }
       }
     }
-    console.log("\n3")
+
     const llm_endpoint = process.env.KB_ENDPOINT_QA;
     if (this.log) { console.log("DirAiPrompt llm_endpoint ", llm_endpoint); }
 
     let key = await this.getKeyFromIntegrations(action.llm);
-    console.log("\n4")
+
     if (!key) {
-      console.log("\n5")
       console.error("Error: DirAiPrompt llm key not found in integrations");
       await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
       if (falseIntent) {
@@ -162,7 +146,7 @@ class DirAiPrompt {
           }
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
+            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + err.detail[0]?.msg);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
@@ -170,12 +154,9 @@ class DirAiPrompt {
           callback();
           return;
         } else {
-          if (this.log) { console.log("DirAiPrompt resbody: ", JSON.stringify(resbody)); }
-          answer = resbody.choices[0].message.content;
 
-          if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
-            answer = await this.convertToJson(answer);
-          }
+          if (this.log) { console.log("DirAiPrompt resbody: ", JSON.stringify(resbody)); }
+          answer = resbody.answer;
         
           await this.#assignAttributes(action, answer);
 
@@ -189,30 +170,6 @@ class DirAiPrompt {
         }
       }
     )
-
-  }
-
-  async wait() {
-    return new Promise((resolve, reject) => {
-      console.log("wait...")
-      setTimeout(() => {
-        console.log("resolve...")
-        reject(false);
-      }, 2000);
-    })
-  }
-
-  async convertToJson(data) {
-
-    return new Promise((resolve) => {
-      let json = null;
-      try {
-        json = JSON.parse(data);
-        resolve(json)
-      } catch (err) {
-        resolve(data)
-      }
-    })
 
   }
 
@@ -384,11 +341,11 @@ class DirAiPrompt {
       });
   }
 
-  async getKeyFromIntegrations() {
+  async getKeyFromIntegrations(model) {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/" +  model,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token

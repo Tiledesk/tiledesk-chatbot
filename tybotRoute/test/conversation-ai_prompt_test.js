@@ -73,12 +73,11 @@ describe('Conversation for AiPrompt test', async () => {
       endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
         res.send({ success: true });
         const message = req.body;
-        console.log("\nmessageee: ", JSON.stringify(message))
         assert(message.attributes.commands !== null);
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        //assert(command2.message.text === "gpt replied: this is the answer");
+        assert(command2.message.text === "Error: AiPrompt Error: 'question' attribute is undefined");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -86,7 +85,6 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            console.log("\n\nattributes['flowError']", attributes["flowError"])
             assert(attributes["flowError"] === "AiPrompt Error: 'question' attribute is undefined");
             listener.close(() => {
               done();
@@ -118,8 +116,259 @@ describe('Conversation for AiPrompt test', async () => {
       });
 
     })
+
+    it('AiPrompt fail - missing llm paramter', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.message.text === "Error: AiPrompt Error: 'llm' attribute is undefined");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["flowError"] === "AiPrompt Error: 'llm' attribute is undefined");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_missing_llm',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        sendMessageToBot(request, BOT_ID, () => {
+          // console.log("Message sent:\n", request);
+        });
+      });
+
+    })
+
+    it('AiPrompt fail - missing model paramter', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Error: AiPrompt Error: 'model' attribute is undefined");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["flowError"] === "AiPrompt Error: 'model' attribute is undefined");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_missing_model',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        sendMessageToBot(request, BOT_ID, () => {
+          // console.log("Message sent:\n", request);
+        });
+      });
+
+    })
+
   })
 
+
+  describe('Missing LLM key', async () => {
+
+    it('AiPrompt fail - missing llm key in integration', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Error: AiPrompt Error: missing key for llm deepseek");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["flowError"] === "AiPrompt Error: missing key for llm deepseek");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'deepseek');
+
+        let http_code = 404;
+        let reply = "Integration not found for model " + req.params.nane
+  
+        res.status(http_code).send(reply);
+
+      })
+
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_missing_llm_key',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        sendMessageToBot(request, BOT_ID, () => {
+          // console.log("Message sent:\n", request);
+        });
+      });
+
+    })
+
+  })
+
+  describe('Success', async () => {
+
+    it('AiPrompt success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Error: AiPrompt Error: 'question' attribute is undefined");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["flowError"] === "AiPrompt Error: 'question' attribute is undefined");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'deepseek');
+
+        let http_code = 200;
+        let reply = {
+          _id: "656728224b45965b69111111",
+          id_project: "62c3f10152dc740035000000",
+          name: "deepseek",
+          value: {
+            apikey: "example_api_key",
+          }
+        }
+  
+        res.status(http_code).send(reply);
+
+      })
+
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_missing_llm_key',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        sendMessageToBot(request, BOT_ID, () => {
+          // console.log("Message sent:\n", request);
+        });
+      });
+
+    })
+
+  })
   // it('/task gpt success (key from integrations) (old action without condition) - invokes the gpt task mockup and test the returning attributes', (done) => {
 
   //   let listener;

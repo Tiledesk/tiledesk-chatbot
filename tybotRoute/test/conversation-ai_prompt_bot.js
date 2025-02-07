@@ -26,6 +26,67 @@ const bot = {
 			}]
 		},
 		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_prompt_missing_llm",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"model": "pro1",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_prompt_missing_model",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"llm": "deepseek",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_prompt_missing_llm_key",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"llm": "deepseek",
+				"model": "pro1",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
 			// TRUE INTENT
 			"webhook_enabled": false,
 			"enabled": true,
@@ -64,7 +125,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "AiPrompt error"
+							"text": "Error: {{flowError}}"
 						}
 					}]
 				}
