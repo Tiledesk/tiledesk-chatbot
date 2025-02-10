@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
+var logger = require('./utils/winston.js')
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
@@ -37,21 +38,26 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const botId = req.params.botid;
+  logger.debug("(tybotRoute) POST /ext/:botid called: " + botId)
+  if(!botId || botId === "null" || botId === "undefined"){
+    return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
+  }
+
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
-    console.log("Removed req.body.payload.request.snapshot field");
+    logger.verbose("(tybotRoute) Removed req.body.payload.request.snapshot field");
   }
-  if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
+  logger.verbose("(tybotRoute) REQUEST BODY:", req.body);
 
-  const botId = req.params.botid;
-  if (log) {console.log(" :", botId);}
+  
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  if (log) {console.log("message.id_project:", message.id_project);}
+  logger.verbose("(tybotRoute) message.id_project:"+ message.id_project)
 
   // adding info for internal context workflow
   message.request.bot_id = botId;
@@ -84,53 +90,47 @@ router.post('/ext/:botid', async (req, res) => {
     {EX: 604800} // 7 days
   );
 
-  // NEXTTTTTTT
-  // const message_context = {
-  //   projectId: projectId,
-  //   requestId: requestId,
-  //   token: token
-  // }
-  // const message_context_key = "tiledesk:messages:context:" + messageId;
-  // await tdcache.set(
-  //   message_context_key,
-  //   JSON.stringify(message_context),
-  //   {EX: 86400}
-  // );
-  // if (log) {console.log("message context saved for messageid:", message_context_key)}
-  // provide a http method for set/get message context, authenticated with tiledesk token and APIKEY.
-  // NEXTTTTTTT
-
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId, log: log});
-    if (log) {console.log("botsDS created with Mongo");}
+    logger.verbose("(tybotRoute) botsDS created with Mongo");
   }
   else {
     botsDS = new MockBotsDataSource(staticBots);
-    // console.log("botDA.data.........", botsDS.data);
   }
+
+
+  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+    Promise.reject(err);
+    res.status(400).send({"success": false, error: "Bot not found with id: "+botId}) 
+    return;
+  });
+  // if(!bot){
+  //   console.log('errrrr', bot)
+  //   return res.status(400).send({"success": false, error: "Required parameters botid not found "})
+  // }
   
   // get the bot metadata
-  let bot = null;
-  try {
-    // bot = await botsDS.getBotById(botId);
-    // bot = await botById(botId, projectId, tdcache, botsDS);
-    bot = await botsDS.getBotByIdCache(botId, tdcache);
-    // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
-  }
-  catch(error) {
-    console.error("Error getting botId:", botId);
-    console.error("Error getting bot was:", error);
-    return;
-  }
-  if (log) {console.log("bot found:", JSON.stringify(bot));}
+  // let bot = await botsDS.getBotByIdCache(botId, tdcache);;
+  // try {
+  //   // bot = await botsDS.getBotById(botId);
+  //   // bot = await botById(botId, projectId, tdcache, botsDS);
+  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
+  //   console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
+  // }catch(error) {
+  //   console.error("Error getting botId:", botId);
+  //   console.error("Error getting bot was:", error);
+  //   return Promise.reject(error)
+  // }
+
+  logger.verbose("(tybotRoute) bot found:", JSON.stringify(bot))
   
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId, log);
-    if (log) {console.log("Created backupMachine:", backupMachine);}
+    logger.verbose("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
     intentsMachine = {}
@@ -172,7 +172,7 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME,
     log: log
   });
-  if (log) {console.log("MESSAGE CONTAINS:", message.text);}
+  logger.verbose("(tybotRoute) MESSAGE CONTAINS:", message.text)
   // if (message.text === "\\\\start") { // patch for the misleading \\start training phrase
   //   if (log) {console.log("forced conversion of \\\\start /start");}
   //   message.text = "/start";
@@ -187,7 +187,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply = await chatbot.replyToMessage(message);
   }
   catch(err) {
-    console.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+    logger.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
   }
   if (!reply) {
     reply = {
@@ -201,9 +201,9 @@ router.post('/ext/:botid', async (req, res) => {
   // }
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
-      if (log) {console.log("the actions:", JSON.stringify(reply.actions));}
+      logger.verbose("(tybotRoute) the actions:", JSON.stringify(reply.actions))
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
-      if (log) {console.log("the directives:", JSON.stringify(directives));}
+      logger.verbose("(tybotRoute) the directives:", JSON.stringify(directives))
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -220,15 +220,16 @@ router.post('/ext/:botid', async (req, res) => {
         }
       );
       directivesPlug.processDirectives( () => {
-        if (log) {console.log("Actions - Directives executed.");}
+        logger.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
     catch (error) {
-      console.error("Error while processing actions:", error);
+      logger.error("(tybotRoute) Error while processing actions:", error);
     }
   }
   else { // text answer (parse text directives to get actions)
-    if (log) {console.log("an answer:", reply.text);}
+    console.log('+++++++++++++++++++++ reply', reply)
+    logger.verbose("an answer:", reply.text)
     reply.triggeredByMessageId = messageId;
     if (!reply.attributes) {
       reply.attributes = {}
@@ -374,51 +375,6 @@ router.get('/ext/reserved/parameters/requests/:requestid', async (req, res) => {
     res.send(parameters);
   }
   else {
-    // const RESERVED = [
-    //   TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
-    //   TiledeskChatbotConst.REQ_CHAT_URL,
-    //   TiledeskChatbotConst.REQ_CITY_KEY,
-    //   TiledeskChatbotConst.REQ_COUNTRY_KEY,
-    //   TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY,
-    //   TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY,
-    //   TiledeskChatbotConst.REQ_END_USER_ID_KEY,
-    //   TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY,
-    //   TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY,
-    //   TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY,
-    //   TiledeskChatbotConst.REQ_PROJECT_ID_KEY,
-    //   TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
-    //   TiledeskChatbotConst.REQ_USER_AGENT_KEY,
-    //   TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
-    //   TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY,
-    //   TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_TYPE_KEY,
-    //   TiledeskChatbotConst.REQ_TRANSCRIPT_KEY,
-    //   TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY,
-    //   TiledeskChatbot.REQ_DECODED_JWT_KEY,
-    //   "lastUserImageURL", // image
-    //   "lastUserImageName", // image
-    //   "lastUserImageWidth", // image
-    //   "lastUserImageHeight", // image
-    //   "lastUserImageType", // image
-    //   "lastUserDocumentURL", // file
-    //   "lastUserDocumentName", // file
-    //   "lastUserDocumentType", // file
-    //   "ticketId",
-    //   TiledeskChatbotConst.REQ_CHAT_CHANNEL,
-    //   "user_lead_id",
-    //   "lastUserText",
-    //   TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
-    //   "userInput"
-    // ]
-    // let userParams = {};
-    // if (parameters) {
-    //   for (const [key, value] of Object.entries(parameters)) {
-    //     // console.log(key, value);
-    //     // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
-    //     if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
-    //       userParams[key] = value;
-    //     }
-    //   }
-    // }
     const userParams = TiledeskChatbotUtil.userFlowAttributes(parameters);
     res.send(userParams);
   }
@@ -469,45 +425,7 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
     res.send(parameters);
   }
   else {
-    const RESERVED = [
-      TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY,
-      TiledeskChatbotConst.REQ_CHATBOT_ID_KEY,
-      TiledeskChatbotConst.REQ_CHAT_URL,
-      TiledeskChatbotConst.REQ_CITY_KEY,
-      TiledeskChatbotConst.REQ_COUNTRY_KEY,
-      TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY,
-      TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY,
-      TiledeskChatbotConst.REQ_END_USER_ID_KEY,
-      TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY,
-      TiledeskChatbotConst.REQ_LAST_MESSAGE_ID_KEY,
-      TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY,
-      TiledeskChatbotConst.REQ_PROJECT_ID_KEY,
-      TiledeskChatbotConst.REQ_REQUEST_ID_KEY,
-      TiledeskChatbotConst.REQ_USER_AGENT_KEY,
-      TiledeskChatbotConst.REQ_USER_LANGUAGE_KEY,
-      TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY,
-      TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_TYPE_KEY,
-      TiledeskChatbotConst.REQ_TRANSCRIPT_KEY,
-      TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY,
-      "lastUserImageURL", // image
-      "lastUserImageName", // image
-      "lastUserImageWidth", // image
-      "lastUserImageHeight", // image
-      "lastUserImageType", // image
-      "lastUserDocumentURL", // file
-      "lastUserDocumentName", // file
-      "lastUserDocumentType" // file
-    ]
-    let userParams = {};
-    if (parameters) {
-      for (const [key, value] of Object.entries(parameters)) {
-        // console.log(key, value);
-        // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
-        if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
-          userParams[key] = value;
-        }
-      }
-    }
+    const userParams = TiledeskChatbotUtil.userFlowAttributes(parameters);
     res.send(userParams);
   }
 });
@@ -521,7 +439,7 @@ router.get('/test/webrequest/get/plain/:username', async (req, res) => {
 });
 
 router.post('/test/webrequest/post/plain', async (req, res) => {
-  console.log("/post/plain req.body:", req.body);
+  logger.debug("(tybotRoute) POST /post/plain req.body:", req.body);
   if (req && req.body && req.body.name) {
     res.send("Your name is " + req.body.name);
   }
@@ -557,7 +475,7 @@ router.post('/echobot', (req, res) => {
   }
   tdclient.sendSupportMessage(requestId, msg, (err, response) => {
     if (err) {
-      console.error("Error sending message:"); //, err);
+      logger.error("(tybotRoute) Error sending message:"); //, err);
     }
     else {
       //console.log("message sent.");
@@ -571,10 +489,9 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const bot_id = req.params['bot_id'];
   const block_id = req.params['block_id'];
   const body = req.body;
-  if (this.log) {
-    console.log("/block/ .heders:", JSON.stringify(req.headers));
-    console.log("/block/ .body:", JSON.stringify(body));
-  }
+  logger.verbose("(tybotRoute) /block/ .heders:", JSON.stringify(req.headers));
+  logger.verbose("(tybotRoute) /block/ .body:", JSON.stringify(body));
+  
   
   // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
   // console.log('/block/:project_id/:bot_id/:block_id.body', body);
@@ -598,7 +515,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     "token": "NO-TOKEN"
   }
-  if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
+  logger.verbose("(tybotRoute) sendMessageToBot()...", JSON.stringify(request))
   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
     res.status(200).send({"success":true});
     return;
@@ -606,7 +523,6 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 });
 
 async function startApp(settings, completionCallback) {
-  console.log("Starting Tilebot...");
   // console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
@@ -781,10 +697,9 @@ function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
 }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
+  logger.verbose("API URL:", options.url);
+  logger.verbose("** Options:", JSON.stringify(options));
+
   axios(
     {
       url: options.url,
@@ -794,11 +709,9 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
+      logger.verbose("Response for url:", options.url);
+      logger.verbose("Response headers:\n", JSON.stringify(res.headers));
+      //console.log("******** Response for url:", res);
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -809,9 +722,8 @@ function myrequest(options, callback, log) {
           callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
         }
       }
-    })
-    .catch((error) => {
-      console.error("(tybotRoute index) An error occurred:", JSON.stringify(error), "url:", options.url);
+    }).catch((error) => {
+      logger.error("(tybotRoute index) An error occurred:", JSON.stringify(error), "url:", options.url);
       if (callback) {
         callback(error, null, null);
       }
