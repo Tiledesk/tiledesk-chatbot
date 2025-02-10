@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.23
+- bug-fixed: botid null or undefined while calling /ext/:boid
+
 # 1.0.22
 - bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
 
