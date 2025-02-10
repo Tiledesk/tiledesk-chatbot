@@ -37,14 +37,18 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const botId = req.params.botid;
+  if (log) {console.log("(tybotRoute) POST /ext/:botid called: ", botId);}
+  if(!botId || botId === "null" || botId === "undefined"){
+    return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
+  }
+
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
     console.log("Removed req.body.payload.request.snapshot field");
   }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
 
-  const botId = req.params.botid;
-  if (log) {console.log(" :", botId);}
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
@@ -111,19 +115,23 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // get the bot metadata
-  let bot = null;
-  try {
-    // bot = await botsDS.getBotById(botId);
-    // bot = await botById(botId, projectId, tdcache, botsDS);
-    bot = await botsDS.getBotByIdCache(botId, tdcache);
-    // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
-  }
-  catch(error) {
-    console.error("Error getting botId:", botId);
-    console.error("Error getting bot was:", error);
+  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+    Promise.reject(err);
     return;
-  }
-  if (log) {console.log("bot found:", JSON.stringify(bot));}
+  });
+  // let bot = null;
+  // try {
+  //   // bot = await botsDS.getBotById(botId);
+  //   // bot = await botById(botId, projectId, tdcache, botsDS);
+  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
+  //   // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
+  // }
+  // catch(error) {
+  //   console.error("Error getting botId:", botId);
+  //   console.error("Error getting bot was:", error);
+  //   return;
+  // }
+  // if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
   let backupMachine;
