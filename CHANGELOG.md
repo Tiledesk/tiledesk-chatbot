@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
-# 1.0.23
+# 1.0.23-rc3
+- changed: context for gpt-40 and gpt-40-mini
+
+# 1.0.23-rc2
 - bug-fixed: botid null or undefined while calling /ext/:boid
 
 # 1.0.22
