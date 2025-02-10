@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.149
+- bug-fixed: botid null or undefined while calling /ext/:boid
+
 # v0.2.148
 - bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
 
