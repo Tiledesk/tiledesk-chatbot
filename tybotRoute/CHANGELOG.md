@@ -17,6 +17,8 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.149
+
 # v0.2.149-rc3
 - changed: context for gpt-40 and gpt-40-mini
 

@@ -1,5 +1,7 @@
 # Tiledesk native chatbot
 
+# 1.0.23
+
 # 1.0.23-rc3
 - changed: context for gpt-40 and gpt-40-mini
 
