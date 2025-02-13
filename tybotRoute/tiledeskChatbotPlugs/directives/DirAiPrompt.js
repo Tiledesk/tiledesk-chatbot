@@ -117,10 +117,12 @@ class DirAiPrompt {
       model: action.model,
       llm_key: key,
       temperature: action.temperature,
-      max_tokens: action.max_tokens,
-      system_context: filled_context,
+      max_tokens: action.max_tokens
     }
 
+    if (action.context) {
+      json.system_context = filled_context;
+    }
     if (transcript) {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
@@ -141,12 +143,19 @@ class DirAiPrompt {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (this.log) {
-            console.error("(httprequest) DirAiPrompt openai err:", err);
-            console.error("(httprequest) DirAiPrompt openai err:", err.detail[0]?.msg);
+            console.error("(httprequest) DirAiPrompt openai err:", err.response.data);
           }
           await this.#assignAttributes(action, answer);
+          let error;
+          if (err.response?.data?.detail[0]) {
+            error = err.response.data.detail[0]?.msg;
+          } else if (err.response?.data?.detail?.answer) {
+            error = err.response.data.detail.answer;
+          } else {
+            error = JSON.stringify(err.response.data);
+          }
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + err.response.data.detail[0]?.msg);
+            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
