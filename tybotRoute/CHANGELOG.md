@@ -17,6 +17,26 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.149
+
+# v0.2.149-rc3
+- changed: context for gpt-40 and gpt-40-mini
+
+# v0.2.149-rc2
+- bug-fixed: botid null or undefined while calling /ext/:boid
+
+# v0.2.148
+- bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
+
+# v0.2.147
+- bug-fixed: namespace is undefined and "engine" property cannot be evaluated in DirAskGPTV2
+ 
+# v0.2.146
+- bug-fixed: message.attributes["flowAttributes"]
+
+# v0.2.146-rc1
+- bug-fixed: message.attributes["flowAttributes"] added only if value size is <= 1kb
+
 # v0.2.145
 - added: TILEBOT_ENDPOINT env variable to startApp method
 

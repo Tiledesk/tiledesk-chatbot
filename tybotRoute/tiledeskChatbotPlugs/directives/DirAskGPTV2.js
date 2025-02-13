@@ -76,8 +76,8 @@ class DirAskGPTV2 {
       "gpt-3.5-turbo":        "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
       "gpt-4":                "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
       "gpt-4-turbo-preview":  "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
-      "gpt-4o":               "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf the context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n####{context}####",
-      "gpt-4o-mini":          "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf the context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n####{context}####"
+      "gpt-4o":               "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n 1. Answer in the same language of the user question, regardless of the retrieved context language\n 2. Use ONLY the pieces of the retrieved context to answer the question.\n 3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n ==Retrieved context start==\n {{context}}\n ==Retrieved context end==",
+      "gpt-4o-mini":          "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n 1. Answer in the same language of the user question, regardless of the retrieved context language\n 2. Use ONLY the pieces of the retrieved context to answer the question.\n 3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n ==Retrieved context start==\n {{context}}\n ==Retrieved context end=="
     }
 
     let source = null;
@@ -181,15 +181,22 @@ class DirAskGPTV2 {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
       ns = await this.getNamespace(filled_namespace, null);
-      namespace = ns.id;
+      namespace = ns?.id;
       if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
     } else {
       ns = await this.getNamespace(null, namespace);
     }
 
     if (!ns) {
-      await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
+      await this.#assignAttributes(action, answer);
+      await this.chatbot.addParameter("flowError", "AskGPT Error: namespace not found");
+      if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
     }
 
     if (ns.engine) {

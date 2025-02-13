@@ -14,7 +14,7 @@ cd ..
 ## Push commit to git
 git add .
 git commit -m "version added: ### $version"
-git push remote master
+git push remote main
 
 ## Create tag and npm 
 if [ "$version" != "" ]; then

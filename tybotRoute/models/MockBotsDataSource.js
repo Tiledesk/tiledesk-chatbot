@@ -12,16 +12,20 @@ class MockBotsDataSource {
   // let intents = await this.intentsFinder.find(message.text);
 
   async getBotById(botId) {
-    const bot = {
-      webhook_enabled: this.data.bots[botId].webhook_enabled,
-      webhook_url: this.data.bots[botId].webhook_url,
-      language: this.data.bots[botId].language,
-      name: this.data.bots[botId].name
-    }
-    if (bot) {
-      return bot;
-    }
-    return null;
+    return new Promise((resolve, reject)=>{
+      try{
+        const bot = {
+          webhook_enabled: this.data.bots[botId].webhook_enabled,
+          webhook_url: this.data.bots[botId].webhook_url,
+          language: this.data.bots[botId].language,
+          name: this.data.bots[botId].name
+        }
+        resolve(bot)
+      }catch(err){
+        reject(err);
+      }
+      
+    })
   }
   
   async getBotByIdCache(botId, tdcache) {
