@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.24
+- changed: AiPrompt action to improves errors management
+
 # 1.0.23
 
 # 1.0.23-rc3

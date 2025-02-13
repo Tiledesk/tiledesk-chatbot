@@ -18,7 +18,7 @@ available on:
 - Added fix on Filler -->
 
 # v0.2.150
-- Updated AiPrompt action to improves errors management
+- changed: AiPrompt action to improves errors management
 
 # v0.2.149
 
