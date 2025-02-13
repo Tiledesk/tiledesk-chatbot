@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.150
+- Updated AiPrompt action to improves errors management
+
 # v0.2.149
 
 # v0.2.149-rc3
