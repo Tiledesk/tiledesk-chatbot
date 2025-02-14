@@ -17,6 +17,9 @@ available on:
 - Added flowError on JSONCondition when result = null
 - Added fix on Filler -->
 
+# v0.2.151
+- bug-fixed: context for gpt-40 and gpt-40-mini
+
 # v0.2.150
 - changed: AiPrompt action to improves errors management
 
