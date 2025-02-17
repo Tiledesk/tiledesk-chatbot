@@ -203,9 +203,7 @@ class TiledeskChatbot {
         let reply;
         if (!intent || (intent && !intent.name)) {
           if (this.log) {console.log("Invalid intent:", explicit_intent_name);}
-          reply = {
-            "text": "Invalid intent: *" + explicit_intent_name + "*"
-          }
+          resolve();
         }
         else {
           if (this.log) {console.log("processing intent:", explicit_intent_name);}
@@ -233,21 +231,12 @@ class TiledeskChatbot {
                 }
                 for (const [key, value] of Object.entries(intent.parameters)) {
                   if (this.log) {console.log(`Adding attribute from intent invocation /intentName{} => ${key}: ${value}`);}
-                  // const parameter_typeof_key = "_tdTypeOf:" + key;
-                  // console.log("intent[parameter_typeof_key]",parameter_typeof_key, intent.parameters[parameter_typeof_key]);
-                  // if (intent.parameters[parameter_typeof_key] === "object") {
-                    // const parameter_value_string = JSON.stringify(value)
-                    // console.log("Adding parameter as string:", parameter_value_string)
                     this.addParameter(key, value);
-                    //this.addParameter(parameter_typeof_key, intent[parameter_typeof_key]);
-                  // }
-                  // else { // TODO: support the other data types
-                  //   this.addParameter(key, value);
-                  // }
-                  
                 }
               }
               reply = await this.execIntent(faq, message, lead);
+              resolve(reply);
+              return;
             }
             catch(error) {
               console.error("error");
@@ -256,13 +245,9 @@ class TiledeskChatbot {
           }
           else {
             if (this.log) {console.log("Intent not found:", explicit_intent_name);}
-            reply = {
-              "text": "Intent not found: " + explicit_intent_name
-            }
+            resolve()
           }
         }
-        resolve(reply);
-        return;
       }
 
       // SEARCH INTENTS
