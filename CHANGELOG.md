@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 1.0.26
+- Restored old default context for AskKB Action
+- Deleted message "Intent not found".
+
 # 1.0.25
 - bug-fixed: context for gpt-40 and gpt-40-mini
 
