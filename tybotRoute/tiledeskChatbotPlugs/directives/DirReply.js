@@ -69,7 +69,6 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      console.log("message.text: ", message.text)
       this.logger.info("2 Sending reply " + message.text);
 
       if (message.metadata) {

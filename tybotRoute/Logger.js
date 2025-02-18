@@ -7,7 +7,6 @@ let publisher = new Publisher(AMQP_MANAGER_URL, {
     exchange: "tiledesk-multi",
     topic: "logs",
 })
-console.log("*** publisher: ", publisher)
 
 class Logger {
 
@@ -22,7 +21,6 @@ class Logger {
             //throw new Error('config.request_id is mandatory');
         }
 
-        console.log("config.request_id: ", config.request_id);
         this.request_id = config.request_id;
         this.dev = config.dev;
 
@@ -36,13 +34,10 @@ class Logger {
 
     error(text) {
         if (!this.request_id || !publisher) {
-            console.log("this.request_id: ", this.request_id);
-            console.log("publisher: ", publisher);
-            console.log("Return");
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
-        console.log("adding error log: ", text)
         let data = {
             request_id: this.request_id,
             text: text,
@@ -56,15 +51,11 @@ class Logger {
     }
 
     info(text) {
-        console.log("config.request_id: ", this.request_id);
         if (!this.request_id || !publisher) {
-            console.log("this.request_id: ", this.request_id);
-            console.log("publisher: ", publisher);
-            console.log("Return");
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
-        console.log("adding info log: ", text)
         let data = {
             request_id: this.request_id,
             text: text,
@@ -72,10 +63,8 @@ class Logger {
             timestamp: new Date()
         }
 
-        console.log("publishing data text: ", data.text);
         publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
-            console.log("published data text: ", data.text);
             return;
         })
     }

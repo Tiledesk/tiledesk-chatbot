@@ -55,7 +55,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
   });
 
   it('/basic assignment', (done) => {
-    console.log("/basic assignment");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -75,7 +74,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
           assert.ok(false);
         }
         else {
-          console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["myvar"] === "string_value");
           listener.close(() => {
@@ -111,13 +109,12 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
   });
 
   it('/json assignment', (done) => {
-    // console.log("/json assignment");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/set attribute v2 ...req.body:", JSON.stringify(req.body));
+
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -125,14 +122,12 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       const command2 = message.attributes.commands[1];
       
       assert(command2.type === "message");
-      console.log("text:", command2.message.text);
       assert(command2.message.text === 'value: {"name":"tiledesk"}');
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
           // console.log("attributes[myvar]:", attributes["myvar"]);
           // console.log("typeof attributes[myvar]:", typeof attributes["myvar"]);
@@ -170,7 +165,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
   });
 
   it('/convert to number', (done) => {
-    console.log("/convert to number");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -184,14 +178,12 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       const command2 = message.attributes.commands[1];
       
       assert(command2.type === "message");
-      console.log("text:", command2.message.text);
       assert(command2.message.text === 'my age: 12');
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
           // console.log("attributes[myvar]:", attributes["age"]);
           // console.log("typeof attributes[age]:", typeof attributes["age"]);
@@ -229,7 +221,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
   });
 
   it('/convert to json', (done) => {
-    console.log("/convert number");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -243,7 +234,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       const command2 = message.attributes.commands[1];
       
       assert(command2.type === "message");
-      console.log("text:", command2.message.text);
       assert(command2.message.text === 'person is: {"name":"tiledesk"}');
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -252,8 +242,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
         else {
           // console.log("final attributes (set attribute v2):", JSON.stringify(attributes));
           assert(attributes);
-          console.log("attributes[person]:", attributes["person"]);
-          console.log("typeof attributes[person]:", typeof attributes["person"]);
           assert(typeof attributes["person"] === "object");
           listener.close(() => {
             done();
