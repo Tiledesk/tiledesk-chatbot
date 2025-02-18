@@ -29,8 +29,9 @@ describe('Conversation for Intent JSON Attributes test', async () => {
       console.log("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.mongoUrl,
+          // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
+          TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
@@ -140,7 +141,7 @@ describe('Conversation for Intent JSON Attributes test', async () => {
  */
 function sendMessageToBot(message, botId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
@@ -175,7 +176,7 @@ function sendMessageToBot(message, botId, callback) {
  */
 function getChatbotParameters(requestId, callback) {
   // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
   const HTTPREQUEST = {
     url: url,
     headers: {

@@ -53,6 +53,8 @@ const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
+const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
+const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 
 class DirectivesChatbotPlug {
 
@@ -208,6 +210,7 @@ class DirectivesChatbotPlug {
       name: "message",
       action: {
         "_tdThenStop": true,
+        isInfo: true,
         text: message,
         attributes: {
           runtimeError: {
@@ -489,6 +492,12 @@ class DirectivesChatbotPlug {
         this.process(next_dir);
       });
     }
+    else if (directive_name === Directives.REPLACE_BOT_V3) {
+      new DirReplaceBotV3(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.WAIT) {
       // console.log("........ DirWait");
       new DirWait(context).execute(directive, async () => {
@@ -619,6 +628,19 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.GPT_TASK) {
       new DirGptTask(context).execute(directive, async (stop) => {
         if (context.log) { console.log("GPTTask stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.AI_PROMPT) {
+      new DirAiPrompt(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("AiPrompt stop?", stop);}
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();

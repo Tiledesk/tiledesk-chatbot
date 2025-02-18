@@ -5,7 +5,7 @@ const { Filler } = require('../Filler');
 const axios = require("axios").default;
 let https = require("https");
 
-class DirReplaceBotV2 {
+class DirReplaceBotV3 {
 
   constructor(context) {
     if (!context) {
@@ -31,14 +31,10 @@ class DirReplaceBotV2 {
     if (directive.action) {
       action = directive.action;
     }
-    else if (directive.parameter) {
-      let botName = directive.parameter.trim();
-      action = {
-        botName: botName
-      }
-    }
     else {
+      console.error("DirReplaceBot Incorrect directive: ", JSON.stringify(directive));
       callback();
+      return;
     }
     this.go(action, () => {
       callback();
@@ -46,7 +42,9 @@ class DirReplaceBotV2 {
   }
 
   async go(action, callback) {
-    let botName = action.botName;
+    let botId = action.botId;
+    let botSlug = action.botSlug;
+    let useSlug = action.useSlug;
     let blockName = action.blockName;
     let variables = null;
     variables = 
@@ -54,13 +52,15 @@ class DirReplaceBotV2 {
       this.context.tdcache, this.context.requestId
     );
     const filler = new Filler();
-    botName = filler.fill(botName, variables);
+    //botId = filler.fill(botId, variables);
+    botSlug = filler.fill(botSlug, variables);
+    blockName = filler.fill(blockName, variables);
 
     let data = {};
-    if (action.nameAsSlug && action.nameAsSlug === true) {
-      data.slug = botName;
+    if (useSlug && useSlug === true) {
+      data.slug = botSlug;
     } else {
-      data.name = botName;
+      data.id = botId;
     }
 
     const HTTPREQUEST = {
@@ -108,31 +108,6 @@ class DirReplaceBotV2 {
         }
       }
     )
-
-    // this.tdClient.replaceBotByName(this.requestId, botName, () => {
-    //   if (blockName) {
-    //     if (this.log) {console.log("Sending hidden /start message to bot in dept");}
-    //     const message = {
-    //       type: "text",
-    //       text: "/" + blockName,
-    //       attributes : {
-    //         subtype: "info"
-    //       }
-    //     }
-    //     this.tdClient.sendSupportMessage(
-    //       this.requestId,
-    //       message, (err) => {
-    //         if (err) {
-    //           console.error("Error sending hidden message:", err.message);
-    //         }
-    //         if (this.log) {console.log("Hidden message sent.");}
-    //         callback();
-    //     });
-    //   }
-    //   else {
-    //     callback();
-    //   }
-    // });
   }
 
   #myrequest(options, callback) {
@@ -182,6 +157,7 @@ class DirReplaceBotV2 {
         }
       });
   }
+
 }
 
-module.exports = { DirReplaceBotV2 };
+module.exports = { DirReplaceBotV3 };

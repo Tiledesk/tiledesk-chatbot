@@ -11,16 +11,17 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-make_bot.js').bots_data;
+const bots_data = require('./conversation-add-tags_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
+const { statSync } = require('fs');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for make test', async () => {
+describe('Api /ext/:boid', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -57,88 +58,36 @@ describe('Conversation for make test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      console.log('ACTIONS app_listener closed.');
+      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
-  it('/make success', (done) => {
+  it('Botid parameter is valid', (done) => {
 
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text === 'make status is: 200');
-
-      const command2 = message.attributes.commands[2];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'make error is: ');
-
-      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(attributes);
-          assert(attributes["make_status"] === 200);
-          assert(attributes["make_error"] === null);
-          listener.close(() => {
-            done();
-          });
-        }
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
+      assert(req.params.projectId)
+      assert(req.params.requestId)
+      assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
+      assert(req.body)
+      let tags = req.body
+      tags.forEach(tag => {
+        if(!tag._id)
+        tag._id = uuidv4().replace(/-/g, '')
       });
-    });
-
-    endpointServer.post('/1.3/make/', function (req, res) {
-      let http_code = 200;
-      //console.log("endpointServer.post/1.3/make/ ")
-      res.status(http_code).send('Accepted');
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      //console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/make#SUCCESS',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          },
-        },
-        "token": "XXX"
+      let reply = {
+        request_id: req.params.requestId,
+        id_project: req.params.projectId,
+        tags: tags,
+        status: 200,
+        channel: {
+          name: 'chat21'
+        }
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        //console.log("Message sent:\n", request);
-      });
-    });
-  });
-  
-  it('/make failure - return code 404', (done) => {
-
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text === 'make status is: 404');
-
-      const command2 = message.attributes.commands[2];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'make error is: Request failed with status code 404');
+      res.status(200).send(reply)
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -146,8 +95,6 @@ describe('Conversation for make test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["make_status"] === 404);
-          assert(attributes["make_error"] === "Request failed with status code 404");
           listener.close(() => {
             done();
           });
@@ -156,21 +103,16 @@ describe('Conversation for make test', async () => {
 
     });
 
-    endpointServer.post('/1.3/make/', function (req, res) {
-
-      let http_code = 404;
-      res.status(http_code).send('Not found');
-    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      //console.log('endpointServer started', listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/make#FAILURE',
+          "text": '/start',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -179,28 +121,42 @@ describe('Conversation for make test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      sendMessageToBot(request, BOT_ID, (err, res) => {
+        assert(res)
+        assert(res.success)
+        assert.equal(res.success, true)
+        listener.close(() => {
+          done();
+        });
       });
     });
   });
-  
-  it('/make failure - return code 422', (done) => {
+
+  it('Botid parameter is undefined', (done) => {
 
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text === 'make status is: 422');
-
-      const command2 = message.attributes.commands[2];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'make error is: Missing make webhook url');
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
+      assert(req.params.projectId)
+      assert(req.params.requestId)
+      assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
+      assert(req.body)
+      let tags = req.body
+      tags.forEach(tag => {
+        if(!tag._id)
+        tag._id = uuidv4().replace(/-/g, '')
+      });
+      let reply = {
+        request_id: req.params.requestId,
+        id_project: req.params.projectId,
+        tags: tags,
+        status: 200,
+        channel: {
+          name: 'chat21'
+        }
+      }
+      res.status(200).send(reply)
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -208,8 +164,6 @@ describe('Conversation for make test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["make_status"] === 422);
-          assert(attributes["make_error"] === "Missing make webhook url");
           listener.close(() => {
             done();
           });
@@ -218,20 +172,16 @@ describe('Conversation for make test', async () => {
 
     });
 
-    endpointServer.post('/1.3/make/', function (req, res) {
-      let http_code = 422;
-      res.status(http_code).send('Missing make webhook url');
-    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      //console.log('endpointServer started', listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/make#FAILUREURL',
+          "text": '/start',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -240,11 +190,101 @@ describe('Conversation for make test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        //console.log("Message sent:\n", request);
+      sendMessageToBot(request, undefined, (err, res) => {
+        if(err){
+          assert(err.status)
+          assert.equal(err.status, 400)
+          assert(err.response.data)
+          assert.equal(err.response.data.success, false)
+          assert(err.response.data.error)
+          console.log("ERROR /ext/:botid undefined --> handled")
+          listener.close(() => {
+            done();
+        });
+        }
       });
     });
   });
+
+  it('Botid parameter is null', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
+      assert(req.params.projectId)
+      assert(req.params.requestId)
+      assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
+      assert(req.body)
+      let tags = req.body
+      tags.forEach(tag => {
+        if(!tag._id)
+        tag._id = uuidv4().replace(/-/g, '')
+      });
+      let reply = {
+        request_id: req.params.requestId,
+        id_project: req.params.projectId,
+        tags: tags,
+        status: 200,
+        channel: {
+          name: 'chat21'
+        }
+      }
+      res.status(200).send(reply)
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/start',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, null, (err, res) => {
+        if(err){
+          assert(err.status)
+          assert.equal(err.status, 400)
+          assert(err.response.data)
+          assert.equal(err.response.data.success, false)
+          assert(err.response.data.error)
+          console.log("ERROR /ext/:botid null --> handled")
+          listener.close(() => {
+            done();
+        });
+        }
+      });
+    });
+  });
+  
+
+
+
+
+
 
 });
 
@@ -285,38 +325,65 @@ function sendMessageToBot(message, botId, callback) {
   );
 }
 
+function getExtBotId(botId, callback) {
+  // const jwt_token = this.fixToken(token);
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
+  const HTTPREQUEST = {
+    url: url,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'post'
+  };
+  myrequest(
+    HTTPREQUEST,
+    function (err, resbody) {
+      if (err) {
+        if (callback) {
+          callback(err);
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, resbody);
+        }
+      }
+    }, false
+  );
+}
+
 /**
  * A stub to get the request parameters, hosted by tilebot on:
  * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-// function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
-//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     method: 'get'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
+function getChatbotParameters(requestId, callback) {
+  // const jwt_token = this.fixToken(token);
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+  const HTTPREQUEST = {
+    url: url,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'get'
+  };
+  myrequest(
+    HTTPREQUEST,
+    function (err, resbody) {
+      if (err) {
+        if (callback) {
+          callback(err);
+        }
+      }
+      else {
+        if (callback) {
+          callback(null, resbody);
+        }
+      }
+    }, false
+  );
+}
 
 function myrequest(options, callback, log) {
   if (log) {
@@ -335,7 +402,7 @@ function myrequest(options, callback, log) {
       if (log) {
         console.log("Response for url:", options.url);
         console.log("Response headers:\n", JSON.stringify(res.headers));
-        console.log("******** Response for url:", res);
+        //console.log("******** Response for url:", res);
       }
       if (res && res.status == 200 && res.data) {
         if (callback) {
