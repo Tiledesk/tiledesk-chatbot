@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.153-rc2
+- added: specchToText function to transcript audio file
+
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
 
