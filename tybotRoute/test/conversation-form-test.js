@@ -1008,7 +1008,6 @@ describe('Conversation1 - Form filling', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, token, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
@@ -1043,7 +1042,6 @@ function sendMessageToBot(message, botId, token, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
 //   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,

@@ -76,7 +76,6 @@ class ExtApi {
    * @param {string} token. User token
    */
   // sendMessageToBot(message, botId, token, callback) {
-  //   const jwt_token = this.fixToken(token);
   //   const url = `${this.ENDPOINT}/ext/${botId}`;
   //   if (this.log) {console.log("sendMessageToBot URL", url);}
   //   const HTTPREQUEST = {
