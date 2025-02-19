@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.153-rc4
+- log added
+
 # v0.2.153-rc3
 - added: specchToText function to transcript audio file
 
