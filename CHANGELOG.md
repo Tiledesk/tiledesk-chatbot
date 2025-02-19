@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
 # 1.0.27-rc2
 - added: specchToText function to transcript audio file
 
