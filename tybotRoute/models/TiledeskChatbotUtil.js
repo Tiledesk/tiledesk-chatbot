@@ -480,6 +480,13 @@ class TiledeskChatbotUtil {
         return false;
     }
 
+    static isAudioMessage(message){
+        if (message && message.type && message.type === 'file' && message.metadata && message.metadata.src && message.metadata.type.includes('audio') ) {
+            return true;
+        }
+        return false;
+    }
+
     static lastUserMessageFrom(msg) {
         let message = {};
         message["senderFullname"] = msg["senderFullname"]; // ex. "Bot"

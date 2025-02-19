@@ -32,6 +32,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
+const AiService = require('./TiledeskServices/AIService.js');
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
@@ -63,13 +64,18 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
-  // let request_check = checkRequest(message.request.request_id, message.id_project);
-  // if (request_check === true) {
-  //   res.status(200).send({ "successs": true });
-  // } else {
-  //   return res.status(400).send({ "success": false, "message": "Invalid request_id"})
-  // }
-  // res.status(200).send({"success":true});
+ /** MANAGE AUDIO FILE MESSAGE */ 
+  let aiService = new AiService({
+    API_ENDPOINT: API_ENDPOINT,
+    JWT_TOKEN: token,
+    PROJECT_ID: projectId
+  })
+  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
+  if(isAudio){
+    message.text = await aiService.speechToText(message.metadata.src).catch(err => {
+      res.send(400).send({"success": false, error: "Unable to translate audio message for request: " + requestId})
+    })
+  }
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
