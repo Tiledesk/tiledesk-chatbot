@@ -5,7 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.2.153-rc5
+# v0.2.153-rc6
 - added: fixToken function in TiledeskService utils class
 
 # v0.2.153-rc4
