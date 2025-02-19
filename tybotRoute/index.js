@@ -73,10 +73,11 @@ router.post('/ext/:botid', async (req, res) => {
   let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
   if(isAudio){
     console.log('(chatbot index) is audio', message.metadata)
-    message.text = await aiService.speechToText(message.metadata.src).catch(err => {
+    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
       console.log('errrr', err)
       return res.status(400).send({"success": false, error: "Unable to translate audio message for request: " + requestId})
     })
+    message.text= responseText.text
   }
 
   // validate reuqestId
