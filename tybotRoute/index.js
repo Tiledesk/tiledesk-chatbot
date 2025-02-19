@@ -67,7 +67,7 @@ router.post('/ext/:botid', async (req, res) => {
  /** MANAGE AUDIO FILE MESSAGE */ 
   let aiService = new AiService({
     API_ENDPOINT: API_ENDPOINT,
-    cTOKEN: token,
+    TOKEN: token,
     PROJECT_ID: projectId
   })
   let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
