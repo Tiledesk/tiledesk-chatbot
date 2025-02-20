@@ -203,12 +203,10 @@ router.post('/ext/:botid', async (req, res) => {
   }
   catch(err) {
     console.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
-    callback();
     return;
   }
   if (!reply) {
     if (log) { console.log("(tybotRoute) No reply. Stop flow.") }
-    callback();
     return;
   }
   
