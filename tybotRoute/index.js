@@ -75,7 +75,8 @@ router.post('/ext/:botid', async (req, res) => {
     let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
       if(log) console.log('(index.js) aiService.speechToText error: ', err)
     })
-    message.text= responseText.text
+    if(responseText && responseText.text)
+      message.text = responseText.text
   }
 
   // validate reuqestId

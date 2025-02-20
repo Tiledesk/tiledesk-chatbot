@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.3.3
+- bug-fixed: text is undefined in responseText while transcript message 
+
 # v0.3.2
 - bug-fixed: minor improvement
 

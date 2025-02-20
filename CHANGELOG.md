@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.1.3
+- bug-fixed: text is undefined in responseText while transcript message
+
 # 1.1.2
 - bug-fixed: minor improvement
 
