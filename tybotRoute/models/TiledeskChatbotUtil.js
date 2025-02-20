@@ -933,7 +933,6 @@ class TiledeskChatbotUtil {
      * @param {string} requestId. Tiledesk chatbot/requestId parameters
      */
     getChatbotParameters(requestId, callback) {
-        // const jwt_token = this.fixToken(token);
         const url = `${process.env.TILEBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
         const HTTPREQUEST = {
             url: url,

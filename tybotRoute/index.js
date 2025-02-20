@@ -65,16 +65,17 @@ router.post('/ext/:botid', async (req, res) => {
   }
 
  /** MANAGE AUDIO FILE MESSAGE */ 
-  let aiService = new AiService({
+ let aiService = new AiService({
     API_ENDPOINT: API_ENDPOINT,
-    JWT_TOKEN: token,
+    TOKEN: token,
     PROJECT_ID: projectId
   })
   let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
   if(isAudio){
-    message.text = await aiService.speechToText(message.metadata.src).catch(err => {
-      res.send(400).send({"success": false, error: "Unable to translate audio message for request: " + requestId})
+    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
+      if(log) console.log('(index.js) aiService.speechToText error: ', err)
     })
+    message.text= responseText.text
   }
 
   // validate reuqestId
@@ -768,7 +769,6 @@ async function checkRequest(request_id, id_project) {
  * @param {string} token. User token
  */
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {

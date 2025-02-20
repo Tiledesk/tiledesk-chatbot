@@ -3,7 +3,7 @@ class AiService {
 
     constructor(options){
         this.APIURL = options.API_ENDPOINT
-        this.JWT_TOKEN = options.JWT_TOKEN
+        this.TOKEN = options.TOKEN
         this.PROJECT_ID = options.PROJECT_ID
     }
 
@@ -13,7 +13,7 @@ class AiService {
               url: `${this.APIURL}/${this.PROJECT_ID}/llm/transcription`,
               headers: {
                 'Content-Type' : 'application/json',
-                'Authorization': this.JWT_TOKEN
+                'Authorization': Utils.fixToken(this.TOKEN)
               },
               json: {
                 url: url

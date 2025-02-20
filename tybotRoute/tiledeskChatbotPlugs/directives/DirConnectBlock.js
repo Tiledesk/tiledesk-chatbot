@@ -108,7 +108,6 @@ class DirConnectBlock {
    * @param {string} token. User token
    */
   sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-    // const jwt_token = this.fixToken(token);
     const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
     // console.log("sendMessageToBot URL", url);
     const HTTPREQUEST = {

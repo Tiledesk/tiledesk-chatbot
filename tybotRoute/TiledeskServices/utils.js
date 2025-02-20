@@ -80,7 +80,18 @@ class Utils {
         res_err.http_request = request;
         res_err.http_response = response;
         return res_err;
-      }
+    }
+
+    static fixToken(token) {
+        if (token.startsWith('JWT ')) {
+            return token;
+        }
+        else {
+            return 'JWT ' + token;
+        }
+    }
+
+
 
 
 }

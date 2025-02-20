@@ -297,7 +297,6 @@ describe('Api /ext/:boid', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
@@ -326,7 +325,6 @@ function sendMessageToBot(message, botId, callback) {
 }
 
 function getExtBotId(botId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   const HTTPREQUEST = {
     url: url,
@@ -359,7 +357,6 @@ function getExtBotId(botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
   const HTTPREQUEST = {
     url: url,
