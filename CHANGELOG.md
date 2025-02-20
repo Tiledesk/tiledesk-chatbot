@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# 1.1.0
+# 1.1.1
 - bug-fixed: callback is not defined
 
 # 1.0.27-rc3

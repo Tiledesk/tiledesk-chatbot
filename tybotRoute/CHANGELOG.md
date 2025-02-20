@@ -5,7 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-# v0.3.0
+# v0.3.1
 - bug-fixed: callback is not defined
 
 # v0.2.153-rc8
