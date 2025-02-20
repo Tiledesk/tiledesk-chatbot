@@ -11,7 +11,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-gpt_assistant-bot.js').bots_data;
+const bots_data = require('./audio-mesage_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
@@ -19,7 +19,7 @@ const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for DirAssistant test', async () => {
+describe('Audio message is sent to chatbot', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -31,6 +31,7 @@ describe('Conversation for DirAssistant test', async () => {
         {
           // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
+          TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
@@ -54,39 +55,24 @@ describe('Conversation for DirAssistant test', async () => {
     });
   });
 
-  it('/gpt_assistant: gets a message from the assistant', (done) => {
-    if (!process.env.TEST_OPENAI_APIKEY) {
-      console.log("Skipping DirAssistant test!");
-      done();
-      return;
-    }
+  it('audio message is sent', (done) => {
+    // console.log('/condition with params{"star_type":"supernova"}');
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      console.log("/DirAssistant...req.body:", JSON.stringify(req.body));
-      res.send({ success: true });
+    endpointServer.post('/:projectId/llm/transcription', function (req, res) {
+      // console.log("...req.body:", JSON.stringify(req.body));
+      // res.send({ success: true });
       const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text.includes("products") );
-      assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(params);
-        //   assert(params["last_message_id"] === message_id);
-          assert(params["assistantReply"] !== null);
-          listener.close(() => {
-            done();
-          });
-        }
+      assert(message.url)
+
+      res.send({text: "this is an audio file example"})
+    
+      listener.close(() => {
+        done();
       });
+
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -95,12 +81,17 @@ describe('Conversation for DirAssistant test', async () => {
         "payload": {
         //   "_id": message_id,
           "senderFullname": "guest#367e",
-          "type": "text",
+          "type": "file",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/GPT Assistant",
+          "text": '',
+          "attributes":{},
           "id_project": PROJECT_ID,
-          "metadata": "",
+          "metadata": {
+              "src":"http://my-audio-url.wav",
+              "type":"audio/wav",
+              "name":"audio.wav"
+          },
           "request": {
             "request_id": REQUEST_ID
           }
@@ -157,31 +148,31 @@ function sendMessageToBot(message, botId, callback) {
  *
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
-function getChatbotParameters(requestId, callback) {
-  const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    method: 'get'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
+// function getChatbotParameters(requestId, callback) {
+//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
 
 function myrequest(options, callback, log) {
   if (log) {

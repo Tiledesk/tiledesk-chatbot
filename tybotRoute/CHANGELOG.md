@@ -8,6 +8,15 @@ available on:
 # v0.3.0
 - bug-fixed: callback is not defined
 
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
+
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
 

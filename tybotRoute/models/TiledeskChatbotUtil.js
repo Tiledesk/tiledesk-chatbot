@@ -480,6 +480,13 @@ class TiledeskChatbotUtil {
         return false;
     }
 
+    static isAudioMessage(message){
+        if (message && message.type && message.type === 'file' && message.metadata && message.metadata.src && message.metadata.type.includes('audio') ) {
+            return true;
+        }
+        return false;
+    }
+
     static lastUserMessageFrom(msg) {
         let message = {};
         message["senderFullname"] = msg["senderFullname"]; // ex. "Bot"
@@ -926,7 +933,6 @@ class TiledeskChatbotUtil {
      * @param {string} requestId. Tiledesk chatbot/requestId parameters
      */
     getChatbotParameters(requestId, callback) {
-        // const jwt_token = this.fixToken(token);
         const url = `${process.env.TILEBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
         const HTTPREQUEST = {
             url: url,
