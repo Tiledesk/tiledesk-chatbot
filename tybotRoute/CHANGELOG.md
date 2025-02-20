@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.3.0
+- bug-fixed: callback is not defined
+
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
 

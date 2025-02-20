@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.1.0
+- bug-fixed: callback is not defined
+
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini
 
