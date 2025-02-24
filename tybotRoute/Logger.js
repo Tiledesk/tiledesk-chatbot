@@ -32,7 +32,27 @@ class Logger {
 
     }
 
-    error(text) {
+    error(...args) {
+        let log = this.formatLog(args);
+        return this.base('error', log);
+    }
+
+    warn(...args) {
+        let log = this.formatLog(args);
+        return this.base('warn', log);
+    }
+
+    info(...args) {
+        let log = this.formatLog(args);
+        return this.base('info', log);
+    }
+
+    debug(...args) {
+        let log = this.formatLog(args);
+        return this.base('debug', log);
+    }
+
+    base(level, text) {
         if (!this.request_id || !publisher) {
             console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
@@ -41,32 +61,20 @@ class Logger {
         let data = {
             request_id: this.request_id,
             text: text,
-            level: "error",
+            level: level,
             timestamp: new Date()
         }
+
         publisher.publish(data, (err, ok) => {
             if (err) console.warn("publish log fail: ", err);
             return;
         })
     }
 
-    info(text) {
-        if (!this.request_id || !publisher) {
-            console.log("Return because request or publisher is undefined", this.request_id, publisher);
-            return;
-        }
-
-        let data = {
-            request_id: this.request_id,
-            text: text,
-            level: "info",
-            timestamp: new Date()
-        }
-
-        publisher.publish(data, (err, ok) => {
-            if (err) console.warn("publish log fail: ", err);
-            return;
-        })
+    formatLog(args) {
+        return args
+            .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg ))
+            .join(" ")
     }
 
 }

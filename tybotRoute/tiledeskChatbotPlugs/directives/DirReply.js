@@ -17,6 +17,7 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+    console.log("is draft request: ", this.context.supportRequest.draft);
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
