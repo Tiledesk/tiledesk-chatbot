@@ -226,7 +226,9 @@ class DirectivesChatbotPlug {
   async process(directive) {
     // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
-    console.log("process with context: ", context);
+    console.log("process with context (request): ", JSON.stringify(context.request));
+    console.log("process with context (support request): ", JSON.stringify(context.supportRequest));
+    console.log("process with context - request: ", JSON.stringify(context.supportRequest.draft));
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
       if (context.log) {
@@ -299,6 +301,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.REPLY) {
       // console.log("...DirReply");
+      console.log("Exec reply with ", JSON.stringify(context.supportRequest))
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
