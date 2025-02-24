@@ -152,7 +152,7 @@ class DirectivesChatbotPlug {
       console.log("An error occurred while creating TiledeskClient in DirectivesChatbotPlug:", err);
     }
 
-    console.log("request: ", supportRequest);
+    console.log("request: ", JSON.stringify(supportRequest));
     this.context =  {
       projectId: projectId,
       chatbot: this.chatbot,
