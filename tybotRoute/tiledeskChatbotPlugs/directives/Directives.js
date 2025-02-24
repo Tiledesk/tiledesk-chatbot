@@ -2,7 +2,7 @@ class Directives {
   static AGENT = 'agent';
   static CLOSE = 'close';
   static DEPARTMENT = 'department';
-  static MESSAGE = 'message';
+  static MESSAGE = 'message'; // DEPRECATED
   static HMESSAGE = 'hmessage';
   static INTENT = 'intent';
   static REMOVE_CURRENT_BOT = "removecurrentbot";
@@ -31,10 +31,12 @@ class Directives {
   static FORM = "form";
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
+  static REPLACE_BOT_V3 = "replacebotv3";
   /**** AI ****/
   static ASK_GPT = "askgpt";
   static ASK_GPT_V2 = "askgptv2";
   static GPT_TASK = "gpt_task";
+  static AI_PROMPT = "ai_prompt";
   /**** INTEGRATIONS ****/
   static QAPLA = 'qapla';
   static MAKE = 'make';

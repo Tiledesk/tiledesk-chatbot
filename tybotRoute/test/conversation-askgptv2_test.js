@@ -31,8 +31,9 @@ describe('Conversation for AskGPTV2 test', async () => {
       try {
         tybot.startApp(
           {
-            // MONGODB_URI: process.env.mongoUrl,
+            // MONGODB_URI: process.env.MONGODB_URI,
             bots: bots_data,
+            TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
@@ -1205,7 +1206,6 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
   });
 
-
   it('/gpt_fail_no_answer - the ask service does not return a relevant answer', (done) => {
     let listener;
     let endpointServer = express();
@@ -1735,6 +1735,229 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
   });
 
+  it('/gpt_fail_missing_namespace - namespace not found with id', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      console.log("message: ", JSON.stringify(message, null, 2))
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: No answers");
+   
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["flowError"] === "AskGPT Error: namespace not found");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        }
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = {};
+      reply.error = "no knowledge base settings found"
+      http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_fail_missing_namespace',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  })
+
+  it('/gpt_fail_missing_namespace - namespace not found with name', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      console.log("message: ", JSON.stringify(message, null, 2))
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "gpt replied: No answers");
+   
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          // console.log("final attributes:", JSON.stringify(attributes));
+          assert(attributes);
+          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["flowError"] === "AskGPT Error: namespace not found");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        }
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kbsettings', function (req, res) {
+
+      let reply = {};
+      reply.error = "no knowledge base settings found"
+      http_code = 404;
+
+      res.status(http_code).send(reply);
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/gpt_fail_missing_namespace_name',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, () => {
+        // console.log("Message sent:\n", request);
+      });
+    });
+  })
 });
 
 /**
@@ -1746,7 +1969,6 @@ describe('Conversation for AskGPTV2 test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
@@ -1781,8 +2003,7 @@ function sendMessageToBot(message, botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
-//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
 //     headers: {

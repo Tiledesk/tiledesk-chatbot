@@ -61,7 +61,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "_tdActionType": "message",
+            "_tdActionType": "reply",
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -82,7 +82,7 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "_tdActionType": "message",  
+            "_tdActionType": "reply",  
             "attributes": {
                 "commands": [{
                     "type": "message",
@@ -103,9 +103,13 @@ const bot = {
         "question": "***",
         "answer": "***",
         "actions": [{
-            "_tdActionType": "message",
+            "_tdActionType": "reply",
             "attributes": {
-                "commands": [{
+                "commands": [
+                    {
+                        "type": "wait",
+                        "time": 500
+                    },{
                     "type": "message",
                     "message": {
                         "text": "Closing...",
@@ -114,7 +118,7 @@ const bot = {
                 }]
             }
         }, {
-            "type": "close"
+            "_tdActionType": "close",
         }],
         "language": "en",
         "intent_display_name": "Message_plus_Close"
@@ -128,7 +132,7 @@ const bot = {
             "_tdActionType": "department",
             "depName": "Support"
         }, {
-            "_tdActionType": "message",
+            "_tdActionType": "reply",
             "text": "/start",
             "attributes": {
                 "subtype": "info"

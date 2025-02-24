@@ -32,18 +32,24 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
+const AiService = require('./TiledeskServices/AIService.js');
 let API_ENDPOINT = null;
+let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const botId = req.params.botid;
+  if (log) {console.log("(tybotRoute) POST /ext/:botid called: ", botId);}
+  if(!botId || botId === "null" || botId === "undefined"){
+    return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
+  }
+
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
     console.log("Removed req.body.payload.request.snapshot field");
   }
   if (log) {console.log("REQUEST BODY:", JSON.stringify(req.body));}
 
-  const botId = req.params.botid;
-  if (log) {console.log(" :", botId);}
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
@@ -58,13 +64,21 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
-  // let request_check = checkRequest(message.request.request_id, message.id_project);
-  // if (request_check === true) {
-  //   res.status(200).send({ "successs": true });
-  // } else {
-  //   return res.status(400).send({ "success": false, "message": "Invalid request_id"})
-  // }
-  // res.status(200).send({"success":true});
+ /** MANAGE AUDIO FILE MESSAGE */ 
+  let aiService = new AiService({
+    API_ENDPOINT: API_ENDPOINT,
+    TOKEN: token,
+    PROJECT_ID: projectId
+  })
+  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
+  if(isAudio){
+    console.log('(chatbot index) is audio', message.metadata)
+    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
+      console.log('errrr', err)
+      return res.status(400).send({"success": false, error: "Unable to translate audio message for request: " + requestId})
+    })
+    message.text= responseText.text
+  }
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
@@ -110,19 +124,23 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // get the bot metadata
-  let bot = null;
-  try {
-    // bot = await botsDS.getBotById(botId);
-    // bot = await botById(botId, projectId, tdcache, botsDS);
-    bot = await botsDS.getBotByIdCache(botId, tdcache);
-    // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
-  }
-  catch(error) {
-    console.error("Error getting botId:", botId);
-    console.error("Error getting bot was:", error);
+  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+    Promise.reject(err);
     return;
-  }
-  if (log) {console.log("bot found:", JSON.stringify(bot));}
+  });
+  // let bot = null;
+  // try {
+  //   // bot = await botsDS.getBotById(botId);
+  //   // bot = await botById(botId, projectId, tdcache, botsDS);
+  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
+  //   // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
+  // }
+  // catch(error) {
+  //   console.error("Error getting botId:", botId);
+  //   console.error("Error getting bot was:", error);
+  //   return;
+  // }
+  // if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
   let backupMachine;
@@ -187,11 +205,13 @@ router.post('/ext/:botid', async (req, res) => {
   }
   catch(err) {
     console.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+    callback();
+    return;
   }
   if (!reply) {
-    reply = {
-      "text": "No messages found. Is 'defaultFallback' intent missing?"
-    }
+    if (log) { console.log("(tybotRoute) No reply. Stop flow.") }
+    callback();
+    return;
   }
   
   // console.log("reply is:", reply);
@@ -211,7 +231,7 @@ router.post('/ext/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
-          TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT,
+          TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           log: log,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
@@ -236,12 +256,9 @@ router.post('/ext/:botid', async (req, res) => {
     reply.attributes.splits = true;
     reply.attributes.markbot = true;
     reply.attributes.fillParams = true;
-    let extEndpoint = `${API_ENDPOINT}/modules/tilebot/`;
-    if (process.env.TYBOT_ENDPOINT) {
-      extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-    }
+    
     const apiext = new ExtApi({
-      ENDPOINT: extEndpoint,
+      TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       log: false
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
@@ -314,9 +331,9 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   if (log) {
     console.log("/ext request....", JSON.stringify(request));
     console.log("/ext API_ENDPOINT....", API_ENDPOINT);
-    console.log("/ext process.env.TYBOT_ENDPOINT....", process.env.TYBOT_ENDPOINT);
+    console.log("/ext process.env.TILEBOT_ENDPOINT....", TILEBOT_ENDPOINT);
   }
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT:process.env.TYBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT: TILEBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
   // let directivesPlug = null;
   // PIPELINE-EXT
   // if (log) {console.log("answer to process:", JSON.stringify(answer));}
@@ -601,7 +618,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     "token": "NO-TOKEN"
   }
   if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
-  sendMessageToBot(process.env.TYBOT_ENDPOINT, request, bot_id, async () => {
+  sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
     res.status(200).send({"success":true});
     return;
   });
@@ -609,6 +626,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
+  // console.log("Starting Tilebot with Settings:", settings);
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
@@ -625,6 +643,15 @@ async function startApp(settings, completionCallback) {
     API_ENDPOINT = settings.API_ENDPOINT;
     console.log("(Tilebot) settings.API_ENDPOINT:", API_ENDPOINT);
   }
+
+  if (!settings.TILEBOT_ENDPOINT) {
+    TILEBOT_ENDPOINT = `${API_ENDPOINT}/modules/tilebot`
+  }
+  else {
+    TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT
+  }
+  console.log("(Tilebot) settings.TILEBOT_ENDPOINT:", TILEBOT_ENDPOINT);
+
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
     tdcache = new TdCache({
@@ -744,10 +771,6 @@ async function checkRequest(request_id, id_project) {
  * @param {string} token. User token
  */
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
-  if (!TILEBOT_ENDPOINT) {
-    TILEBOT_ENDPOINT = `${API_ENDPOINT}/modules/tilebot`
-  }
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
