@@ -18,7 +18,6 @@ class DirReply {
     this.tdcache = context.tdcache;
     this.log = context.log;
     this.supportRequest = this.context.supportRequest;
-    console.log("is draft request: ", this.context.supportRequest.draft);
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
@@ -42,13 +41,14 @@ class DirReply {
     }
     else {
       console.error("Incorrect directive (no action provided):", directive);
+      this.logger.error("Incorrect directive (no action provided):", directive);
       callback();
       return;
     }
-    this.logger.info("1 Execute action reply for " + directive.action.text)
+    this.logger.info("Executing Action Reply ", directive.action)
 
     this.go(action, () => {
-      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
+      this.logger.info("Action Reply terminated")
       callback();
     });
   }
@@ -71,15 +71,16 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.info("2 Sending reply " + message.text);
 
       if (message.metadata) {
         if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.debug("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.debug("Filled metadata.name with ", message.metadata.name);
         }
       }
       if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
@@ -93,6 +94,7 @@ class DirReply {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
+              this.logger.debug("Filled message.text with ", command.message.text)
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
               if (this.log) {console.log("command filled:", command.message.text);}
             }
@@ -142,14 +144,14 @@ class DirReply {
           }
           catch(err) {
             console.error("An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
+            this.logger.error("An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
           }
         }
       }
     }
     // send!
     let cleanMessage = message;
-    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
-    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
+    this.logger.info("Sending reply with text ", cleanMessage.text);
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);
@@ -167,10 +169,10 @@ class DirReply {
       (err) => {
         if (err) {
           console.error("Error sending reply:", err);
-          this.logger.error("Error sending reply: " + err);
+          this.logger.error("Error sending reply ", err.response.data);
         }
         if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
-        this.logger.info("5 Reply message sent");
+        this.logger.info("Reply message sent!", cleanMessage.text);
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays

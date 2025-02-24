@@ -22,12 +22,10 @@ class Logger {
         }
 
         this.request_id = config.request_id;
-        console.log("(Logger) new logger for request_id ", this.request_id, config.request_id)
         this.dev = false;
         if (config.dev && config.dev === true) {
             this.dev = true;
         }
-        console.log("(Logger) is dev conversation", this.dev, config.dev)
 
         if (!AMQP_MANAGER_URL) {
             console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
