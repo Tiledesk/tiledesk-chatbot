@@ -133,8 +133,12 @@ class DirAskGPTV2 {
       )
       if (this.log) { console.log("DirAskGPT transcript string: ", transcript_string) }
 
-      transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-      if (this.log) { console.log("DirAskGPT transcript ", transcript) }
+      if (transcript_string) {
+        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        if (this.log) { console.log("DirAskGPT transcript ", transcript) }
+      } else {
+        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+      }
     }
 
     const kb_endpoint = process.env.KB_ENDPOINT_QA
