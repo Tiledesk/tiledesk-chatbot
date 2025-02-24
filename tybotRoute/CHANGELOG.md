@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
 # v0.2.153-rc8
 - added: fixToken function in TiledeskService utils class
 
