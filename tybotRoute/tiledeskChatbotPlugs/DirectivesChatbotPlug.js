@@ -152,7 +152,7 @@ class DirectivesChatbotPlug {
       console.log("An error occurred while creating TiledeskClient in DirectivesChatbotPlug:", err);
     }
 
-    console.log("request: ", JSON.stringify(supportRequest));
+    console.log("--> request: ", JSON.stringify(supportRequest));
     this.context =  {
       projectId: projectId,
       chatbot: this.chatbot,
@@ -226,6 +226,7 @@ class DirectivesChatbotPlug {
   async process(directive) {
     // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
+    console.log("process with context: ", context);
     // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
       if (context.log) {
