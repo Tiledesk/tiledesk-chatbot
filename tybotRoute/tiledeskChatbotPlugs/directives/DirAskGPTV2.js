@@ -137,7 +137,7 @@ class DirAskGPTV2 {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
         if (this.log) { console.log("DirAskGPT transcript ", transcript) }
       } else {
-        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+        if (this.log) { console.log("DirAskGPT transcript_string is undefined. Skip JSON translation for chat history") }
       }
     }
 
