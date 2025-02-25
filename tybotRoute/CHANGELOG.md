@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.3.4
+-bug-fixed: slit is undefined in TiledeskChatbotUtils
+
 # v0.3.3
 - bug-fixed: text is undefined in responseText while transcript message 
 

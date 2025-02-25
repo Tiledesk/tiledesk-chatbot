@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.1.4
+- bug-fixed: slit is undefined in TiledeskChatbotUtils
+
 # 1.1.3
 - bug-fixed: text is undefined in responseText while transcript message
 
