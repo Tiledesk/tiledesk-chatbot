@@ -26,5 +26,7 @@ if [ "$version" != "" ]; then
 fi
 
 versione_server=`node -e 'console.log(require("./tybotRoute/package.json").version)'`
-echo "Deployed: @tiledesk/tiledesk-tybot-connector:$versione_server"
-echo "Tagged: tiledesk/tiledesk-chatbot:$version"
+echo "*********************************************************"
+echo "    Deployed: @tiledesk/tiledesk-tybot-connector:$versione_server"
+echo "          Tagged: tiledesk/tiledesk-chatbot:$version"
+echo "*********************************************************"
