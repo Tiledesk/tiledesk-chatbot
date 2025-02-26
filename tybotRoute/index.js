@@ -595,7 +595,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   // unique ID for each execution
   const execution_id = uuidv4().replace(/-/g, '');
   const request_id = "automation-request-" + project_id + "-" + execution_id;
-  const command = "/" + block_id;
+  const command = "/#" + block_id;
   let message = {
     payload: {
       recipient: request_id,
@@ -613,10 +613,12 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   if (async) {
     console.log("Async webhook");
-    sendMessageToBot(message, bot_id, async () => {
-      console.log("Async webhook message sent:\n", message);
-      res.status(200).send({ success: true });
-      return;
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
+      if (err) {
+        console.error("Async err:\n", err);
+        return res.status(500).send({ success: false, error: err });
+      }
+      return res.status(200).send({ success: true });
     })
   } else {
     
@@ -642,7 +644,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
       return res.status(500).send({ success: false, error: "Error during cache subscription"})
     }
 
-    sendMessageToBot(message, bot_id, () => {
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
       console.log("Sync webhook message sent: ", message);
     })
   }

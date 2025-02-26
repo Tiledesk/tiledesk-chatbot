@@ -133,7 +133,7 @@ class TdCache {
       await this.client.publish(key, value);
     }
 
-    async subscribe(key, callback) {
+    async subscribe(topic, callback) {
       if (!this.subscriberClient) {
         throw new Error("Redis subscriber not connected");
       }
