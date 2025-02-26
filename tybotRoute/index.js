@@ -595,7 +595,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   // unique ID for each execution
   const execution_id = uuidv4().replace(/-/g, '');
   const request_id = "automation-request-" + project_id + "-" + execution_id;
-  const command = "/" + block_id;
+  const command = "/#" + block_id;
   let message = {
     payload: {
       recipient: request_id,
@@ -622,6 +622,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
         return res.status(500).send({ success: false, error: err });
       }
 
+      console.log("return")
       return res.status(200).send({ success: true });
       
     })
