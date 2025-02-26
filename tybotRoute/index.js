@@ -613,7 +613,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   if (async) {
     console.log("Async webhook");
-    sendMessageToBot(message, bot_id, (err, resbody) => {
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
       console.log("Async resbody:\n", resbody);
       console.log("Async webhook message sent:\n", message);
       if (err) {
@@ -648,7 +648,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
       return res.status(500).send({ success: false, error: "Error during cache subscription"})
     }
 
-    sendMessageToBot(message, bot_id, () => {
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
       console.log("Sync webhook message sent: ", message);
     })
   }
