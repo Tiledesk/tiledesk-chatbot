@@ -613,7 +613,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   if (async) {
     console.log("Async webhook");
-    sendMessageToBot(message, bot_id, async () => {
+    sendMessageToBot(message, bot_id, () => {
       console.log("Async webhook message sent:\n", message);
       res.status(200).send({ success: true });
       return;
