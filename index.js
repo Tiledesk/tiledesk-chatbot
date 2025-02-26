@@ -4,7 +4,6 @@ var app = express();
 var cors = require('cors');
 app.use(cors());
 
-// const tybot = require("@tiledesk/tiledesk-tybot-connector");
 const tybot = require("./tybotRoute");
 const tybotRoute = tybot.router;
 app.use("/", tybotRoute); // /tybot
