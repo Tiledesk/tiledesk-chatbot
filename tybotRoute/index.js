@@ -616,12 +616,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
       console.log("Async resbody:\n", resbody);
       console.log("Async webhook message sent:\n", message);
+      
       if (err) {
         console.error("Async resbody:\n", err);
-        return res.status(200).send({ success: false, error: err });
+        return res.status(500).send({ success: false, error: err });
       }
 
-      return; res.status(200).send({ success: true });
+      return res.status(200).send({ success: true });
       
     })
   } else {
