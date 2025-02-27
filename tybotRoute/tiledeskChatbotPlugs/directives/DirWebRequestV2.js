@@ -12,6 +12,7 @@ class DirWebRequestV2 {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
+    this.chatbot = context.chatbot;
     this.intentDir = new DirIntent(context);
     this.log = context.log;
   }
@@ -34,6 +35,20 @@ class DirWebRequestV2 {
 
   async go(action, callback) {
     if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
+
+    // Condition branches
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    const trueIntentAttributes = action.trueIntentAttributes;
+    const falseIntentAttributes = action.falseIntentAttributes;
+    let stopOnConditionMet = action.stopOnConditionMet;
+    if (trueIntent && trueIntent.trim() === "") {
+      trueIntent = null;
+    }
+    if (falseIntent && falseIntent.trim() === "") {
+      falseIntent = null;
+    }
+
     let requestAttributes = null;
     if (this.tdcache) {
       requestAttributes = 
@@ -65,6 +80,21 @@ class DirWebRequestV2 {
         }
         catch(err) {
           console.error("Error parsing webRequest jsonBody:", jsonBody);
+          if (callback) {
+            if (falseIntent) {
+              await this.chatbot.addParameter("flowError", "Error parsing jsonBody");
+              this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+                console.log('herrrrr 11111' )
+                callback(true); // stop the flow
+                return;
+              });
+            }
+            else {
+              console.log('herrrrr 2222' )
+              callback(false); // continue the flow
+              return;
+            }
+          }
         }
       }
       else if (action.formData && action.bodyType == "form-data") {
@@ -108,20 +138,22 @@ class DirWebRequestV2 {
     }
     catch(error) {
       console.error("Error", error);
+      if (callback) {
+        if (falseIntent) {
+          await this.chatbot.addParameter("flowError", "Error: " + error);
+          this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+            callback(true); // stop the flow
+            return;
+          });
+        }
+        else {
+          callback(false); // continue the flow
+          return;
+        }
+      }
     }
     
-    // Condition branches
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    const trueIntentAttributes = action.trueIntentAttributes;
-    const falseIntentAttributes = action.falseIntentAttributes;
-    let stopOnConditionMet = action.stopOnConditionMet;
-    if (trueIntent && trueIntent.trim() === "") {
-      trueIntent = null;
-    }
-    if (falseIntent && falseIntent.trim() === "") {
-      falseIntent = null;
-    }
+    
 
     let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     
