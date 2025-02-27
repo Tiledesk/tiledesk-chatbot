@@ -589,7 +589,9 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const block_id = req.params.block_id;
   const body = req.body;
   const async = body.async;
+  const token = body.token;
   delete body.async;
+  delete body.token;
   
   // invoke block
   // unique ID for each execution
@@ -608,7 +610,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
         payload: body
       }
     },
-    token: "NO-TOKEN"
+    token: token
   }
 
   if (async) {
