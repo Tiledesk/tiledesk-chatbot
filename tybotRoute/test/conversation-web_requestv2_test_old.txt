@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("..");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -12,7 +12,7 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
-const bots_data = require('./conversation-web_requestv2_bot.js').bots_data;
+const bots_data = require('./conversation-web_requestv2_bot_old.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
@@ -55,11 +55,14 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
   });
 
-  it('webrequestv2: returns a json body, GET, assign result, assign status', (done) => {
+  it('/webrequestv2: returns a json body, GET, assign result, assign status', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -69,11 +72,13 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
       assert(command1.message.text === "result assigned to: [object Object] status assigned to: 200");
       assert(command1.type === "message");
@@ -83,11 +88,8 @@ describe('Conversation for WebRequestV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["reply"] !== null);
-          assert(typeof attributes["reply"] === "object")
-          assert(attributes["reply"]["city"] === "NY");
-          assert(attributes["reply"]["age"] === 50);
-          assert(attributes["status"] === 200);
+          assert(attributes["var1"] !== null);
+          assert(attributes["status1"] === 200);
           listener.close(() => {
             done();
           });
@@ -96,13 +98,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2-nocondition",
+          "text": "/webrequestv2",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -118,11 +122,13 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('webrequestv2 success status condition', (done) => {
-  
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -132,14 +138,15 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-
+      // console.log("/webrequestv2_success_status_condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
-      assert(command1.message.text === "webrequest replied: [object Object] with status 200");
+      assert(command1.message.text === "HTTP GET Success");
       assert(command1.type === "message");
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -155,13 +162,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2-success_condition",
+          "text": "/webrequestv2 - success status condition",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -177,10 +186,13 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('webrequestv2 - failure (404) status condition', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -190,13 +202,15 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - failure status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
-      assert(command1.message.text === "webrequest failed with status 404 and error Request failed with status code 404");
+      assert(command1.message.text === "HTTP GET Failure");
       assert(command1.type === "message");
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -204,8 +218,6 @@ describe('Conversation for WebRequestV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["status"] === 404);
-          assert(attributes["error"] === "Request failed with status code 404");
           listener.close(() => {
             done();
           });
@@ -214,13 +226,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2-failure_404",
+          "text": "/webrequestv2 - failure status condition",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -236,23 +250,28 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('webrequestv2 - failure (300) status condition', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
+      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
       res.sendStatus(300);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
-      assert(command1.message.text === "webrequest failed with status 300 and error Request failed with status code 300");
+      assert(command1.message.text === "HTTP GET Failure with status 300 error Request failed with status code 300");
       assert(command1.type === "message");
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -260,8 +279,8 @@ describe('Conversation for WebRequestV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["status"] === 300);
           assert(attributes["error"] === "Request failed with status code 300");
+          assert(attributes["status"] === 300);
           listener.close(() => {
             done();
           });
@@ -270,13 +289,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2-failure_300",
+          "text": "/webrequestv2 - failure 300 status condition",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -292,10 +313,14 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('/webrequestv2 - post: POST a json body, get result, assign status', (done) => {
+    // console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/test/webrequest/post/json', async (req, res) => {
+      // console.log("/webrequestv2 POST req.headers:", req.headers);
+      // console.log("/webrequestv2 POST req.body:", req.body);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -305,11 +330,13 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP POST Success with status 200. From reply, name: myname, email: myemail");
       assert(command1.type === "message");
@@ -320,8 +347,6 @@ describe('Conversation for WebRequestV2 test', async () => {
         else {
           assert(attributes);
           assert(attributes["status"] === 200);
-          assert(attributes["result"]["replyname"] === "myname");
-          assert(attributes["result"]["replyemail"] === "myemail");
           listener.close(() => {
             done();
           });
@@ -330,13 +355,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2_post",
+          "text": "/webrequestv2 - post",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -352,29 +379,37 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('/webrequestv2 - post: POST a form-data, get result, assign status', (done) => {
+    // console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     var multer = require('multer');
+    // read file contents for testing purposes
     var path = require("path");
     var fs = require('fs');
     const upload = multer({ dest: 'uploads/' })
     endpointServer.post('/test/webrequest/post/form-data', upload.single('file'), async (req, res) => {
+      // console.log("/webrequestv2 POST form-data req.file:", req.file);
       let file_contents = null;
       try {
         file_contents = fs.readFileSync(req.file.path, 'utf8');
+        // console.log("file_data:", file_contents);
       } catch (err) {
         console.error(err);
       }
-      
+
+      // console.log("/webrequestv2 POST form-data req.body:", req.body);
+      // console.log("/webrequestv2 POST form-data req.headers:", req.headers);
+      // console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
       const responseBody = {
         "purpose": req.body.purpose,
         "file_contents": file_contents
       };
-
+      // console.log("Deleting uploaded files...");
       const uploads_folder = "./uploads";
       fs.readdir(uploads_folder, (err, files) => {
-        // Removing files
+        // console.log("Removing files: ", files);
         if (err) throw err;
         for (const file of files) {
           fs.unlink(path.join(uploads_folder, file), (err) => {
@@ -384,17 +419,17 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
       res.send(responseBody);
     });
-
     endpointServer.get('/test/webrequest/post/form-data/simple_file.txt', upload.single('file'), async (req, res) => {
       res.send("This is a simple text file");
     });
-
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+    
       assert(command1.type === "message");
       assert(command1.message.text === "HTTP form-data Success. purpose: assistants file_contents: This is a simple text file");
       assert(command1.type === "message");
@@ -413,13 +448,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2_post_form-data",
+          "text": "/webrequestv2 - post form-data",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -435,10 +472,14 @@ describe('Conversation for WebRequestV2 test', async () => {
   });
 
   it('/webrequestv2 - post: POST a MALFORMED json body ', (done) => {
+    console.log("/webrequestv2");
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/test/webrequest/post/json', async (req, res) => {
+      // console.log("/webrequestv2 POST req.headers:", req.headers);
+      // console.log("/webrequestv2 POST req.body:", req.body);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -448,13 +489,15 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command1 = message.attributes.commands[1];
+      console.log('commmm', command1)
       assert(command1.type === "message");
-      assert(command1.message.text === "webrequest error: Error parsing json body");
+      assert(command1.message.text === "webrequest replied: Error parsing jsonBody");
       assert(command1.type === "message");
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -462,7 +505,7 @@ describe('Conversation for WebRequestV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["flowError"] === "Error parsing json body");
+          assert(attributes["flowErrow"] === 200);
           listener.close(() => {
             done();
           });
@@ -471,13 +514,15 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
   
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/webrequestv2_post-incorrect-body",
+          "text": "/webrequestv2 - post incorrect body",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -509,6 +554,7 @@ describe('Conversation for WebRequestV2 test', async () => {
  */
 function sendMessageToBot(message, botId, callback) {
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
+  console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
     headers: {

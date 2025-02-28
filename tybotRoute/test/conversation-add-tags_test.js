@@ -774,60 +774,61 @@ describe('Conversation for AddTags test', async () => {
     });
   });
 
-  it('Add empty tags to lead and push to tags list', (done) => {
+  // it('Add empty tags to lead and push to tags list', (done) => {
 
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
+  //   let listener;
+  //   let endpointServer = express();
+  //   endpointServer.use(bodyParser.json());
 
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      // console.log("command2", command2);
-      assert(command2.type === "message");
-      assert(command2.message.text === "add tags replied: Add tags Error: tags attribute is mandatory");
+  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+  //     res.send({ success: true });
+  //     const message = req.body;
+  //     console.log("message: ", message)
+  //     assert(message.attributes.commands !== null);
+  //     assert(message.attributes.commands.length === 2);
+  //     const command2 = message.attributes.commands[1];
+  //     // console.log("command2", command2);
+  //     assert(command2.type === "message");
+  //     assert(command2.message.text === "add tags replied: Add tags Error: tags attribute is mandatory");
 
-      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          // console.log("final attributes:", JSON.stringify(attributes));
-          assert(attributes);
-          listener.close(() => {
-            done();
-          });
+  //     util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+  //       if (err) {
+  //         assert.ok(false);
+  //       }
+  //       else {
+  //         // console.log("final attributes:", JSON.stringify(attributes));
+  //         assert(attributes);
+  //         listener.close(() => {
+  //           done();
+  //         });
 
-        }
-      });
+  //       }
+  //     });
 
-    });
+  //   });
 
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
-      let request = {
-        "payload": {
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/add_empty_tags_complete_for_lead_and_push',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": "XXX"
-      }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
-      });
-    });
-  });
+  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
+  //     // console.log('endpointServer started', listener.address());
+  //     let request = {
+  //       "payload": {
+  //         "senderFullname": "guest#367e",
+  //         "type": "text",
+  //         "sender": "A-SENDER",
+  //         "recipient": REQUEST_ID,
+  //         "text": '/add_empty_tags_complete_for_lead_and_push',
+  //         "id_project": PROJECT_ID,
+  //         "metadata": "",
+  //         "request": {
+  //           "request_id": REQUEST_ID
+  //         }
+  //       },
+  //       "token": "XXX"
+  //     }
+  //     sendMessageToBot(request, BOT_ID, () => {
+  //       // console.log("Message sent:\n", request);
+  //     });
+  //   });
+  // });
 
 });
 

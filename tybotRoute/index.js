@@ -20,6 +20,7 @@ router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
+/** @type {TdCache} */
 let tdcache = null;
 let MAX_STEPS = 1000;
 let MAX_EXECUTION_TIME = 1000 * 3600 * 8;
@@ -581,45 +582,116 @@ router.post('/echobot', (req, res) => {
   });
 });
 
-// draft webhook
 router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
-  const project_id = req.params['project_id'];
-  const bot_id = req.params['bot_id'];
-  const block_id = req.params['block_id'];
+
+  const project_id = req.params.project_id;
+  const bot_id = req.params.bot_id;
+  const block_id = req.params.block_id;
   const body = req.body;
-  if (this.log) {
-    console.log("/block/ .heders:", JSON.stringify(req.headers));
-    console.log("/block/ .body:", JSON.stringify(body));
-  }
-  
-  // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
-  // console.log('/block/:project_id/:bot_id/:block_id.body', body);
+  const async = body.async;
+  const token = body.token;
+  delete body.async;
+  delete body.token;
   
   // invoke block
   // unique ID for each execution
   const execution_id = uuidv4().replace(/-/g, '');
   const request_id = "automation-request-" + project_id + "-" + execution_id;
-  const command = "/" + block_id;
-  let request = {
-    "payload": {
-      "recipient": request_id,
-      "text": command,
-      "id_project": project_id,
-      "request": {
-        "request_id": request_id
+  const command = "/#" + block_id;
+  let message = {
+    payload: {
+      recipient: request_id,
+      text: command,
+      id_project: project_id,
+      request: {
+        request_id: request_id
       },
-      "attributes": {
-        "payload": body
+      attributes: {
+        payload: body
       }
     },
-    "token": "NO-TOKEN"
+    token: token
   }
-  if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
-  sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
-    res.status(200).send({"success":true});
-    return;
-  });
+
+  if (async) {
+    console.log("Async webhook");
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
+      if (err) {
+        console.error("Async err:\n", err);
+        return res.status(500).send({ success: false, error: err });
+      }
+      return res.status(200).send({ success: true });
+    })
+  } else {
+    
+    console.log("Sync webhook. Subscribe and await for reply...")
+    const topic = `/webhooks/${request_id}`;
+    
+    try {
+
+      const listener = async (message, topic) => {
+        console.log("Web response is: ", message, "for topic", topic);
+        await tdcache.unsubscribe(topic, listener);
+
+        let json = JSON.parse(message);
+        let status = json.status ? json.status : 200;
+        console.log("Web response status: ", status);
+
+        return res.status(status).send(json.payload);
+      }
+      await tdcache.subscribe(topic, listener);
+
+    } catch(err) {
+      console.error("Error cache subscribe ", err);
+      return res.status(500).send({ success: false, error: "Error during cache subscription"})
+    }
+
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
+      console.log("Sync webhook message sent: ", message);
+    })
+  }
+
 });
+
+// draft webhook
+// router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
+//   const project_id = req.params['project_id'];
+//   const bot_id = req.params['bot_id'];
+//   const block_id = req.params['block_id'];
+//   const body = req.body;
+//   if (this.log) {
+//     console.log("/block/ .heders:", JSON.stringify(req.headers));
+//     console.log("/block/ .body:", JSON.stringify(body));
+//   }
+  
+//   // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
+//   // console.log('/block/:project_id/:bot_id/:block_id.body', body);
+  
+//   // invoke block
+//   // unique ID for each execution
+//   const execution_id = uuidv4().replace(/-/g, '');
+//   const request_id = "automation-request-" + project_id + "-" + execution_id;
+//   const command = "/" + block_id;
+//   let request = {
+//     "payload": {
+//       "recipient": request_id,
+//       "text": command,
+//       "id_project": project_id,
+//       "request": {
+//         "request_id": request_id
+//       },
+//       "attributes": {
+//         "payload": body
+//       }
+//     },
+//     "token": "NO-TOKEN"
+//   }
+//   if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
+//   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
+//     res.status(200).send({"success":true});
+//     return;
+//   });
+// });
 
 async function startApp(settings, completionCallback) {
   console.log("Starting Tilebot...");
