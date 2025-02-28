@@ -540,7 +540,6 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.WEB_REQUEST_V2) {
       // console.log("...DirWebRequestV2");
       new DirWebRequestV2(context).execute(directive, async (stop) => {
-        console.log("stop on condition?", stop)
         if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
