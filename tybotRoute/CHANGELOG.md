@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
 # v0.3.5-rc3
 - bug-fixed: jsonBody parse error in web-request-v2
 
