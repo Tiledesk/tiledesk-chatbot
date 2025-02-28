@@ -204,7 +204,7 @@ const bot = {
 					"Cache-Control": "no-cache",
 					"User-Agent": "TiledeskBotRuntime"
 				},
-				"jsonBody": "{\"name\";\"myname\",\"email\":\"myemail\"}",
+				"jsonBody": "{\"name\":myname,\"email\":\"myemail\"}", // missing "" in myname
 				"bodyType": "json",
 				"method": "POST",
 				"assignErrorTo": "error",

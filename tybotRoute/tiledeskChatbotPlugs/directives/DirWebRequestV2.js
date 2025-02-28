@@ -30,6 +30,8 @@ class DirWebRequestV2 {
     }
     this.go(action, (stop) => {
       callback(stop);
+    }).catch((err) => {
+      // do not nothing
     });
   }
 
