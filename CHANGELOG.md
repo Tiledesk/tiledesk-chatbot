@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
 
+# 1.1.5-rc3
+bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.5-rc2
 bug-fixed: cannot set status of undefined reading res.status in DirAssistant
 
