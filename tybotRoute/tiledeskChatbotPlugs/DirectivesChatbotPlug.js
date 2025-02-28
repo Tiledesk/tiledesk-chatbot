@@ -55,6 +55,7 @@ const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirConnectBlock } = require('./directives/DirConnectBlock');
 
 class DirectivesChatbotPlug {
 
