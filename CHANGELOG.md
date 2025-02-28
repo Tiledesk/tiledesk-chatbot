@@ -1,11 +1,13 @@
 # Tiledesk native chatbot
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
 
 # 1.1.5-rc3
-bug-fixed: jsonBody parse error in web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
 
 # 1.1.5-rc2
-bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
 
 # 1.1.5-rc1
 - changed: refactoring web-request-v2
