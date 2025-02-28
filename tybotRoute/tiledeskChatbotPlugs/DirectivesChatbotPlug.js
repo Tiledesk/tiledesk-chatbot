@@ -773,6 +773,19 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else {
       //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);

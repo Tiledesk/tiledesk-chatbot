@@ -58,6 +58,7 @@ class Directives {
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
   static ADD_TAGS = 'add_tags'
+  static WEBHOOK = 'webhook'
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
