@@ -48,6 +48,9 @@ class DirReply {
 
   async go(action, callback) {
     const message = action;
+
+    TiledeskChatbotUtil.replaceJSONButtons(message);
+    
     // fill
     let requestAttributes = null;
     if (this.tdcache) {

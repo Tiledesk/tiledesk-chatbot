@@ -349,6 +349,79 @@ class TiledeskChatbotUtil {
         return all_buttons;
     }
 
+    static replaceJSONButtons(message) {
+        let all_buttons = [];
+        if (message.attributes && message.attributes.commands) {
+            // console.log("message.attributes ok")
+            let commands = message.attributes.commands;
+            if (commands.length > 0) {
+                // console.log("commands ok", commands.length)
+                for (let i = 0; i < commands.length; i++) {
+                    let command = commands[i];
+                    // console.log("got command:", command)s
+                    if (command.type === 'message' && command.message) {
+                        if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.json_buttons){
+                            // console.log("command with buttons ok:")
+                            const json_buttons_string = command.message.attributes.attachment.json_buttons;
+                            let json_buttons = null;
+                            let final_buttons = [];
+                            try {
+                                json_buttons = JSON.parse(json_buttons_string);
+                                if (Array.isArray(json_buttons)) {
+                                    json_buttons.forEach(button => {
+                                        if (button.value && button.type === "action" && button.action) {
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                        else if (button.value && button.type === "text") {
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                        else if (button.value && button.type === "url" && button.link) {
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                    });
+                                }
+
+                                // "buttons": [
+                                //                 {
+                                //                     "type": "action",
+                                //                     "value": "Button1", // obbligatorio sempre
+                                //                     "action": "#bb347206-d639-4926-94c9-e94930623dce", // mandatory
+                                //                     "show_echo": true, // lo inserisco sempre
+                                //                     "alias": "button1 alias"
+                                //                 },
+                                //                 {
+                                //                     "type": "text",
+                                //                     "value": "Button2 text", // obbligatorio sempre
+                                //                     "show_echo": true // lo inserisco sempre
+                                //                 },
+                                //                 {
+                                //                     "type": "url",
+                                //                     "value": "Button3 link", // obbligatorio sempre
+                                //                     "link": "http://", // obbligatorio
+                                //                     "show_echo": true // lo inserisco sempre
+                                //                 }
+                                //             ]
+                            }
+                            catch(error) {
+                                console.error("Invalid json_buttons:", )
+                            }
+                            if (final_buttons && final_buttons.length > 0) {
+                                command.message.attributes.attachment.buttons = final_buttons;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return all_buttons;
+    }
+
     static buttonByText(text, buttons) {
         if (buttons === null || text === null) {
             return null;
