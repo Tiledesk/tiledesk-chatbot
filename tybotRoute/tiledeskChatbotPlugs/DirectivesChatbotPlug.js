@@ -55,6 +55,7 @@ const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { CustomReplyConverter } = require('../models/CustomReplyConverter');
 
 class DirectivesChatbotPlug {
 
@@ -231,6 +232,23 @@ class DirectivesChatbotPlug {
         console.log("directive['name']:", directive["name"]);
       }
     }
+
+    if (directive && directive.action && directive.name === Directives.CUSTOM_REPLY) {
+      let attributes = null;
+      if (context.tdcache) {
+        attributes =
+          await TiledeskChatbot.allParametersStatic(
+            context.tdcache, context.requestId
+          );
+      }
+      let new_action = await CustomReplyConverter.convertCustomReply(directive.action.custom_json, attributes);
+      // console.log("new_action:", new_action);
+      directive = {
+        name: new_action._tdActionType,
+        action: new_action
+      }
+    }
+
     let directive_name = null;
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
@@ -254,6 +272,7 @@ class DirectivesChatbotPlug {
         }
       
     }
+
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       if (context.log) { console.log("stop process(). directive is (null?):", directive);}
       this.theend();
