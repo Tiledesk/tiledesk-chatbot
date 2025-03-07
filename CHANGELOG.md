@@ -1,5 +1,11 @@
 # Tiledesk native chatbot
 
+# 1.2.0
+- added: DirWebResposne
+- added: management of webhook
+- changed: refactoring of DIrWebRequestv2
+- bug-fixed: erro while parsing webrequestv2 body
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
