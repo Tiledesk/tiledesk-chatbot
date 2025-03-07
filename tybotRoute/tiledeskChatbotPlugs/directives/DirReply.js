@@ -49,8 +49,6 @@ class DirReply {
   async go(action, callback) {
     const message = action;
 
-    TiledeskChatbotUtil.replaceJSONButtons(message);
-    
     // fill
     let requestAttributes = null;
     if (this.tdcache) {
@@ -58,12 +56,9 @@ class DirReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestAttributes)) {
-          const value_type = typeof value;
-          // if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
-        }
-      }
+
+      TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);

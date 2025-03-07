@@ -160,7 +160,7 @@ describe('Convert text reply', function() {
   assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].value === "Original Button2");
 });
 
-  it('text reply with "some" wrong json buttons - original buttons not preserved, only good buttons added', async () => {
+it('text reply with "some" wrong json buttons - original buttons not preserved, only good buttons added', async () => {
     const message = {
       "_tdActionType": "replyv2",
       "text": "I didn't understand. Can you rephrase your question?",
@@ -211,5 +211,191 @@ describe('Convert text reply', function() {
     assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].alias === "button1 alias");
     assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].show_echo === true);
   });
+
+  it('text replyv2 with json buttons built with a liquidjs attributes', async () => {
+
+    const attributes = {
+        "button1_value": "Button1"
+    }
+    const message = {
+      "_tdActionType": "replyv2",
+      "text": "I didn't understand. Can you rephrase your question?",
+      "attributes": {
+          "commands": [
+              {
+                  "type": "wait",
+                  "time": 500
+              },
+              {
+                  "type": "message",
+                  "message": {
+                      "type": "text",
+                      "text": "I didn't understand. Can you rephrase your question?",
+                      "attributes": {
+                          "attachment": {
+                              "type": "template",
+                              "buttons": [],
+                              "json_buttons": '[{"type":"action","value":"{{button1_value}}","action":"#action_id","alias":"button1 alias"},{"type":"text","value":"Button2 text"},{"type":"url","value":"Button3 link","link":"http://"}]'
+                          }
+                      }
+                  }
+              }
+          ]
+      },
+      "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
+  }
+  TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
+  console.log("message liquidjs:", JSON.stringify(message, null, "  "));
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  // button 1
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].value === "Button1");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].action === "#action_id");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].alias === "button1 alias");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].show_echo === true);
+  //button 2
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].type === "text");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].value === "Button2 text");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].action === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].alias === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].show_echo === true);
+  //button 3
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].type === "url");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].value === "Button3 link");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].link === "http://");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].action === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].alias === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].show_echo === true);
+});
+
+it('text replyv2 with json buttons built with a single liquidjs attribute', async () => {
+
+    // used when you generate (i.e. via code action) a complete json structure for the buttons
+
+    const attributes = {
+        "buttons": '[{"type":"action","value":"Button1","action":"#action_id","alias":"button1 alias"},{"type":"text","value":"Button2 text"},{"type":"url","value":"Button3 link","link":"http://"}]'
+    }
+    const message = {
+      "_tdActionType": "replyv2",
+      "text": "I didn't understand. Can you rephrase your question?",
+      "attributes": {
+          "commands": [
+              {
+                  "type": "wait",
+                  "time": 500
+              },
+              {
+                  "type": "message",
+                  "message": {
+                      "type": "text",
+                      "text": "I didn't understand. Can you rephrase your question?",
+                      "attributes": {
+                          "attachment": {
+                              "type": "template",
+                              "buttons": [],
+                              "json_buttons": '{{buttons}}'
+                          }
+                      }
+                  }
+              }
+          ]
+      },
+      "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
+  }
+  TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
+  console.log("message liquidjs:", JSON.stringify(message, null, "  "));
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  // button 1
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].value === "Button1");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].action === "#action_id");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].alias === "button1 alias");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].show_echo === true);
+  //button 2
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].type === "text");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].value === "Button2 text");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].action === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].alias === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[1].show_echo === true);
+  //button 3
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].type === "url");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].value === "Button3 link");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].link === "http://");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].action === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].alias === undefined);
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[2].show_echo === true);
+});
+
+it('text replyv2 with json buttons built iterating an array attribute using liquidjs', async () => {
+
+    // used when you generate (i.e. via code action) a complete json structure for the buttons
+    
+    const attributes = {
+        "buttons": [
+            {
+                "type":"action",
+                "value":"Button1",
+                "action":"#action_id1"
+            },{
+                "type":"action",
+                "value":"Button2",
+                "action":"#action_id2"
+            },{
+                "type":"action",
+                "value":"Button3",
+                "action":"#action_id3"
+            }
+        ]
+    }
+    const message = {
+      "_tdActionType": "replyv2",
+      "text": "I didn't understand. Can you rephrase your question?",
+      "attributes": {
+          "commands": [
+              {
+                  "type": "wait",
+                  "time": 500
+              },
+              {
+                  "type": "message",
+                  "message": {
+                      "type": "text",
+                      "text": "I didn't understand. Can you rephrase your question?",
+                      "attributes": {
+                          "attachment": {
+                              "type": "template",
+                              "buttons": [],
+                              "json_buttons": `
+[
+    {% for b in buttons %}
+    {                          
+       "type": {{b.type | json}},
+       "value": {{b.value | json}},
+       "action": {{b.action | json}}
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+]
+                              `
+                          }
+                      }
+                  }
+              }
+          ]
+      },
+      "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
+  }
+  TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
+  console.log("message liquidjs:", JSON.stringify(message, null, "  "));
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
+  // button 1
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].value === "Button1");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].action === "#action_id1");
+  assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].show_echo === true);
+});
 
 });
