@@ -179,4 +179,4 @@ class DirConnectBlock {
   }
 }
 
-module.exports = { DirIntent };
+module.exports = { DirConnectBlock };
