@@ -1,5 +1,6 @@
 #npm version patch
 version=`node -e 'console.log(require("./package.json").version)'`
+version_server=`node -e 'console.log(require("./tybotRoute/package.json").version)'`
 echo "version $version"
 
 ## Update package-lock.json
@@ -24,3 +25,9 @@ if [ "$version" != "" ]; then
     cd ./tybotRoute
     npm publish --access public
 fi
+
+
+echo "*********************************************************"
+echo "    Deployed: @tiledesk/tiledesk-tybot-connector:$version_server"
+echo "          Tagged: tiledesk/tiledesk-chatbot:$version"
+echo "*********************************************************"
