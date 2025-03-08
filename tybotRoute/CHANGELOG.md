@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.4.1
+- fix: wrong key for web_response
+
 # v0.4.0
 - added: DirWebResposne
 - added: management of webhook

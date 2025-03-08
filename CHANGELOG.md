@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.2.1
+- fix: wrong key for web_response
+
 # 1.2.0
 - added: DirWebResposne
 - added: management of webhook
