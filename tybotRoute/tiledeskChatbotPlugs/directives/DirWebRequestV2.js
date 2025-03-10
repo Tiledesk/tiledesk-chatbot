@@ -359,7 +359,7 @@ class DirWebRequestV2 {
               }
               return value;
             });
-            console.error("An error occurred: ", error_log);
+            console.error("(DirWebRequestv2) An error occurred: ", error_log);
             // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
             // console.error("An error occurred:", JSON.stringify(err));
           }

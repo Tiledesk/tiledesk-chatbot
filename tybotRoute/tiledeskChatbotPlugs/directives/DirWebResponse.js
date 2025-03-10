@@ -63,7 +63,7 @@ class DirWebResponse {
     
     try {
       this.tdcache.publish(topic, JSON.stringify(webResponse));
-      console.log("Published webresponse:",  to_send, "to topic:", topic);
+      console.log("Published webresponse to topic:", topic);
     }
     catch(e) {
       console.error(e)

@@ -243,9 +243,8 @@ class DirMake {
             }
             return value;
           });
-          console.error("An error occurred: ", error_log);
+          console.error("(DirMake) An error occurred: ", error_log);
           // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          // console.error("An error occurred:", JSON.stringify(err));
         }
         if (callback) {
           let status = 1000;
@@ -277,54 +276,6 @@ class DirMake {
         }
       });
   }
-
-  // #myrequest(options, callback) {
-  //   if (this.log) {
-  //     console.log("API URL:", options.url);
-  //     console.log("** Options:", JSON.stringify(options));
-  //   }
-  //   let axios_options = {
-  //     url: options.url,
-  //     method: options.method,
-  //     params: options.params,
-  //     headers: options.headers
-  //   }
-  //   if (options.json !== null) {
-  //     axios_options.data = options.json
-  //   }
-  //   if (this.log) {
-  //     console.log("axios_options:", JSON.stringify(axios_options));
-  //   }
-  //   if (options.url.startsWith("https:")) {
-  //     const httpsAgent = new https.Agent({
-  //       rejectUnauthorized: false,
-  //     });
-  //     axios_options.httpsAgent = httpsAgent;
-  //   }
-  //   axios(axios_options)
-  //     .then((res) => {
-  //       if (this.log) {
-  //         console.log("Response for url:", options.url);
-  //         console.log("Response headers:\n", JSON.stringify(res.headers));
-  //       }
-  //       if (res && res.status == 200 && res.data) {
-  //         if (callback) {
-  //           callback(null, res.data);
-  //         }
-  //       }
-  //       else {
-  //         if (callback) {
-  //           callback(new Error("Response status is not 200"), null);
-  //         }
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       if (this.log) { console.error("An error occurred:", JSON.stringify(error.message)) };
-  //       if (callback) {
-  //         callback(error, null);
-  //       }
-  //     });
-  // }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;

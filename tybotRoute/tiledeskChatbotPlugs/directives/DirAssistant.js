@@ -596,7 +596,6 @@ class DirAssistant {
           });
           console.error("(DirAssistant) An error occurred: ", error_log);
           // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          // console.error("An error occurred:", JSON.stringify(err));
         }
         if (callback) {
           let status = 1000;
