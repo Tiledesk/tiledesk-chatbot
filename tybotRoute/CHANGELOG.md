@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.4.2
+- bug-fixed: minor log fix
+
 # v0.4.1
 - fix: wrong key for web_response
 
