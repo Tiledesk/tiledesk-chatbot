@@ -56,6 +56,7 @@ const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
+const { DirWebResponse } = require('./directives/DirWebResponse');
 
 class DirectivesChatbotPlug {
 
@@ -771,6 +772,25 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.WEB_RESPONSE) {
+      new DirWebResponse(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else {
