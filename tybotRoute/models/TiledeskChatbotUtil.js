@@ -385,6 +385,9 @@ class TiledeskChatbotUtil {
                                             // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
+                                        else {
+                                            console.log("Invalid button. Skipping:", JSON.stringify(button) );
+                                        }
                                     });
                                 }
 
@@ -415,6 +418,9 @@ class TiledeskChatbotUtil {
                             if (final_buttons && final_buttons.length > 0) {
                                 command.message.attributes.attachment.buttons = final_buttons;
                                 delete command.message.attributes.attachment.json_buttons;
+                            }
+                            else {
+                                console.log("Invalid json buttons. Skipped:", JSON.stringify(final_buttons));
                             }
                         }
                     }
