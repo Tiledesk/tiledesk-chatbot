@@ -1,15 +1,16 @@
 const redis = require('redis');
+const winston = require('./utils/winston');
 
 class TdCache {
 
     constructor(config) {
-        console.log("TdCache config: ", config);
+        winston.debug("(TdCache) config: ", config);
         this.redis_host = config.host;
         this.redis_port = config.port;
         this.redis_password = config.password;
-        console.log("TdCache this.redis_host: ", this.redis_host);
-        console.log("TdCache this.redis_port: ", this.redis_port);
-        console.log("TdCache this.redis_password: ", this.redis_password);
+        winston.debug("TdCache redis_host: ", this.redis_host);
+        winston.debug("TdCache redis_port: ", this.redis_port);
+        winston.debug("TdCache redis_password: ", this.redis_password);
         this.client = null;
         this.redis_sub = null;
     }
@@ -64,7 +65,6 @@ class TdCache {
     }
 
     async set(key, value, options) {
-      //console.log("setting key value", key, value)
       if (!options) {
         options = {EX: 86400}
       }
@@ -118,7 +118,6 @@ class TdCache {
     }
 
     async hget(dict_key, key) {
-      // console.log("hgetting dics", dict_key);
       const value = await this.client.HGET(dict_key, key);
       return value;
     }

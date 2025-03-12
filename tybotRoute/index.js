@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-var logger = require('./utils/winston.js')
+const winston = require('./utils/winston.js')
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
@@ -39,16 +39,15 @@ let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
-  logger.debug("(tybotRoute) POST /ext/:botid called: " + botId)
+  winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
 
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
-    logger.verbose("(tybotRoute) Removed req.body.payload.request.snapshot field");
   }
-  logger.verbose("(tybotRoute) REQUEST BODY:", req.body);
+  winston.verbose("(tybotRoute) Request Body: ", req.body);
 
   
   const message = req.body.payload;
@@ -57,7 +56,7 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  logger.verbose("(tybotRoute) message.id_project:"+ message.id_project)
+  winston.verbose("(tybotRoute) message.id_project: " + message.id_project)
 
   // adding info for internal context workflow
   message.request.bot_id = botId;
@@ -93,7 +92,7 @@ router.post('/ext/:botid', async (req, res) => {
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId, log: log});
-    logger.verbose("(tybotRoute) botsDS created with Mongo");
+    winston.verbose("(tybotRoute) botsDS created with Mongo");
   }
   else {
     botsDS = new MockBotsDataSource(staticBots);
@@ -105,57 +104,21 @@ router.post('/ext/:botid', async (req, res) => {
     res.status(400).send({"success": false, error: "Bot not found with id: "+botId}) 
     return;
   });
-  // if(!bot){
-  //   console.log('errrrr', bot)
-  //   return res.status(400).send({"success": false, error: "Required parameters botid not found "})
-  // }
   
-  // get the bot metadata
-  // let bot = await botsDS.getBotByIdCache(botId, tdcache);;
-  // try {
-  //   // bot = await botsDS.getBotById(botId);
-  //   // bot = await botById(botId, projectId, tdcache, botsDS);
-  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
-  //   console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
-  // }catch(error) {
-  //   console.error("Error getting botId:", botId);
-  //   console.error("Error getting bot was:", error);
-  //   return Promise.reject(error)
-  // }
 
-  logger.verbose("(tybotRoute) bot found:", JSON.stringify(bot))
+  winston.debug("(tybotRoute) Bot found:" + JSON.stringify(bot))
   
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId, log);
-    logger.verbose("(tybotRoute) Created backupMachine:", backupMachine)
+    winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
     intentsMachine = {}
   }
 
-  // let intentsMachine;
-  // if (!staticBots) {
-  //   if (log) {console.log("intentsMachine to MongoDB");}
-  //   intentsMachine = new MongodbIntentsMachine({projectId: projectId, language: bot.language, log});
-  //   if (bot.intentsEngine === "tiledesk-ai") {
-  //     if (log) {console.log("intentsMachine to tiledesk-ai");}
-  //     intentsMachine = new TiledeskIntentsMachine(
-  //       {
-  //         //projectId: projectId,
-  //         //language: bot.language,
-  //         botId: botId
-  //         //TILEBOT_AI_ENDPOINT: process.env.TILEBOT_AI_ENDPOINT
-  //       });
-  //   }
-  // }
-  // else {
-  //   intentsMachine = {}
-  // }
-  //const intentsMachine = new TiledeskIntentsMachine({API_ENDPOINT: "https://MockIntentsMachine.tiledesk.repl.co", log: true});
-  // console.log("the bot is:", bot)
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     intentsFinder: intentsMachine,
@@ -172,11 +135,8 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME,
     log: log
   });
-  logger.verbose("(tybotRoute) MESSAGE CONTAINS:", message.text)
-  // if (message.text === "\\\\start") { // patch for the misleading \\start training phrase
-  //   if (log) {console.log("forced conversion of \\\\start /start");}
-  //   message.text = "/start";
-  // }
+  winston.verbose("(tybotRoute) Message text: " + message.text)
+  
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
   if (requestId.startsWith("support-group-")) {
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
@@ -187,7 +147,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply = await chatbot.replyToMessage(message);
   }
   catch(err) {
-    logger.error("(tybotRoute) An error occurred replying to message:", JSON.stringify(message), "\nError:", err );
+    winston.error("(tybotRoute) An error occurred replying to message:" + JSON.stringify(message) + "\nError: ", err);
   }
   if (!reply) {
     reply = {
@@ -195,15 +155,11 @@ router.post('/ext/:botid', async (req, res) => {
     }
   }
   
-  // console.log("reply is:", reply);
-  // if (reply.attributes.intent_info.intent_id) {
-  //   process.exit(1)
-  // }
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
-      logger.verbose("(tybotRoute) the actions:", JSON.stringify(reply.actions))
+      winston.debug("(tybotRoute) Reply actions:" + JSON.stringify(reply.actions))
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
-      logger.verbose("(tybotRoute) the directives:", JSON.stringify(directives))
+      winston.debug("(tybotRoute) the directives:" + JSON.stringify(directives))
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -220,16 +176,15 @@ router.post('/ext/:botid', async (req, res) => {
         }
       );
       directivesPlug.processDirectives( () => {
-        logger.verbose("(tybotRoute) Actions - Directives executed.");
+        winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
     catch (error) {
-      logger.error("(tybotRoute) Error while processing actions:", error);
+      winston.error("(tybotRoute) Error while processing actions:", error);
     }
   }
   else { // text answer (parse text directives to get actions)
-    console.log('+++++++++++++++++++++ reply', reply)
-    logger.verbose("an answer:", reply.text)
+    winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
     reply.triggeredByMessageId = messageId;
     if (!reply.attributes) {
       reply.attributes = {}
@@ -244,9 +199,7 @@ router.post('/ext/:botid', async (req, res) => {
       log: false
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-      if (log) {
-        //console.log("SupportMessageExt() reply sent:", JSON.stringify(reply));
-      }
+      winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: " + JSON.stringify(reply))
     });
   }
   
@@ -257,13 +210,15 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   const projectId = req.params.projectId;
   const requestId = req.params.requestId;
   const token = req.headers["authorization"];
-  if (log) {console.log("/ext projectId:", projectId);}
-  if (log) {console.log("/ext requestId:", requestId);}
-  if (log) {console.log("/ext req.headers:", req.headers);}
-  if (log) {console.log("/ext token:", token);}
+
+  winston.verbose("(tybotRoute) POST /ext/:projectId/requests/:requestId/messages called: " + requestId)
+  winston.debug("(tybotRoute) projectId " + projectId)
+  winston.debug("(tybotRoute) token " + token)
+  winston.debug("(tybotRoute) req.headers " + req.headers)
+  winston.debug("(tybotRoute) projectId " + projectId)
   
   let answer = req.body;
-  if (log) {console.log("/ext => answer on sendSupportMessageExt:", JSON.stringify(answer));}
+  winston.verbose("(tybotRoute) answer on sendSupportMessageExt:" + JSON.stringify(answer));
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -271,81 +226,57 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     APIKEY: "___",
     log: false
   });
+
   let request;
-  // const request_key = "tilebot:" + requestId;
-  // if (log) {console.log("request_key:", request_key);}
-  // if (tdcache) {
-  //   request = await tdcache.getJSON(request_key)
-  //   if (log) {console.log("Request from cache:", JSON.stringify(request));}
-  //   if (!request) {
-  //     if (log) {console.log("!Request from cache", requestId);}
-  //     try {
-  //       request = await tdclient.getRequestById(requestId);
-  //     }
-  //     catch(err) {
-  //       console.error("Error getting the request:", err)
-  //     }
-  //     if (log) {console.log("Got request with APIs (after no cache hit)");}
-  //   }
-  // }
-  // else {
-    // if (log) {console.log("No tdcache. Getting request with APIs", requestId);}
   try {
     request = await tdclient.getRequestById(requestId);
-    // console.log("Cache request found.");
   }
   catch(err) {
-    console.error("/ext => Request not found:", requestId);
+    winston.error("(tybotRoute) request not found with id " +  requestId);
   }
-    // if (log) {console.log("(No tdcache) Got request with APIs");}
-  // }
+
   if (!request) {
-    if (log) {console.log("/ext => Creating new Request. Chatbot-pure directives still work. Tiledesk specific directives don't");}
+    winston.verbose("(tybotRoute) Creating new Request. Chatbot-pure directives still work. Tiledesk specific directives don't")
     const request_botId_key = "tilebot:botId_requests:" + requestId;
     const botId = await tdcache.get(request_botId_key);
-    if (log) {console.log("/ext => current botId [" + request_botId_key + "]:", botId);}
+    winston.verbose("(tybotRoute) current botId [" + request_botId_key + "]:", botId)
     request = {
       request_id: requestId,
       id_project: projectId,
       bot_id: botId
     }
   }
-  if (log) {
-    console.log("/ext request....", JSON.stringify(request));
-    console.log("/ext API_ENDPOINT....", API_ENDPOINT);
-    console.log("/ext process.env.TILEBOT_ENDPOINT....", TILEBOT_ENDPOINT);
-  }
+  winston.debug("(tybotRoute) request: " + JSON.stringify(request));
+  winston.debug("(tybotRoute) API_ENDPOINT: " + API_ENDPOINT);
+  winston.debug("(tybotRoute) request: " + TILEBOT_ENDPOINT);
+
   let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT: TILEBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
-  // let directivesPlug = null;
-  // PIPELINE-EXT
-  // if (log) {console.log("answer to process:", JSON.stringify(answer));}
+
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
-  if (log) {console.log("/ext => bot_answer", JSON.stringify(bot_answer))}
+  winston.debug("(tybotRoute) bot_answer: " + JSON.stringify(bot_answer));
+
   if (bot_answer) {
-    if (log) {console.log("/ext => adding to bot_answer original_answer_text:", JSON.stringify(original_answer_text));}
+    winston.debug("(tybotRoute) adding to bot_answer original_answer_text: " + JSON.stringify(original_answer_text));
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};
     }
-    // if (!bot_answer.text) {
-    //   bot_answer.text = "..."
-    // }
+    
     bot_answer.attributes["_raw_message"] = original_answer_text;
-    // if (log) {console.log("bot_answer", JSON.stringify(bot_answer));}
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
-      if (log) {console.log("/ext => bot_answer sent:", JSON.stringify(bot_answer));}
+      winston.verbose("(tybotRoute) Bot answer sent")
       if (err) {
-        console.error("/ext => Error sending message", JSON.stringify(err));
+        winston.error("(tybotRoute) Error sending message" + JSON.stringify(err));
       }
-      directivesPlug.processDirectives( () => {
-        if (log) {console.log("After message - Directives executed.");}
+      directivesPlug.processDirectives(() => {
+        winston.verbose("(tybotRoute) Directives executed")
       });
     });
   }
   else {
-    if (log) {console.log("/ext => !bot_answer");}
-    directivesPlug.processDirectives( () => {
-      if (log) {console.log("Directives executed.");}
+    winston.verbose("(tybotRoute) No bot_answer")
+    directivesPlug.processDirectives(() => {
+      winston.verbose("(tybotRoute) Directives executed")
     });
   }
   
@@ -381,22 +312,6 @@ router.get('/ext/reserved/parameters/requests/:requestid', async (req, res) => {
 });
 
 router.get('/ext/parameters/requests/:requestid', async (req, res) => {
-  // console.log("Checking authorization...");
-  // const authorization = req.headers["authorization"];
-  // if (!authorization) {
-  //   console.log("No authorization header...");
-  //   res.status(401).send("Unauthorized");
-  //   return;
-  // }
-  // const token = req.headers["authorization"];
-  // const publicKey = process.env.GLOBAL_SECRET_OR_PUB_KEY;
-  // console.log("Got public key:", publicKey);
-  // const _decoded = null;
-  // jwt.verify(token, publicKey, function (err, decoded) {
-  //   _decoded = decoded;
-  // });
-  // console.log("Authorization header field checking", req.headers["authorization"]);
-  
 
   const requestId = req.params.requestid;
   if (!requestId) {
@@ -406,14 +321,13 @@ router.get('/ext/parameters/requests/:requestid', async (req, res) => {
   const request_parts = requestId.split("-");
   if (request_parts && request_parts.length >= 4) {
     const project_id = request_parts[2];
-    // console.log("ProjectId:", project_id);
     if (project_id !== "656054000410fa00132e5dcc") { //&& project_id !== "ANOTHER P_ID"
       res.status(401).send("Unauthorized");
       return;
     }
   }
-  else if (!request_parts || ( request_parts && request_parts.length < 4) ) {
-    res.status(500).send("Invalid request ID");
+  else if (!request_parts || (request_parts && request_parts.length < 4) ) {
+    res.status(500).send("Invalid request id " + requestId);
     return;
   }
   const parameters = await TiledeskChatbot.allParametersStatic(tdcache, requestId);
@@ -439,7 +353,8 @@ router.get('/test/webrequest/get/plain/:username', async (req, res) => {
 });
 
 router.post('/test/webrequest/post/plain', async (req, res) => {
-  logger.debug("(tybotRoute) POST /post/plain req.body:", req.body);
+  winston.verbose("(tybotRoute) POST /test/webrequest/post/plain called");
+  winston.debug("(tybotRoute) POST /test/webrequest/post/plain req.body:", req.body);
   if (req && req.body && req.body.name) {
     res.send("Your name is " + req.body.name);
   }
@@ -449,16 +364,14 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
 });
 
 router.post('/echobot', (req, res) => {
-  //console.log('echobot message body.payload: ', JSON.stringify(req.body.payload));
+  winston.verbose("(tybotRoute) POST /echobot called");
+  winston.debug("(tybotRoute) POST /echobot req.body: " + JSON.stringify(req.body.payload));
+
   const message = req.body.payload;
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
 
-  // console.log("/echobot projectId:", projectId);
-  // console.log("/echobot requestId:", requestId);
-  // console.log("/echobot token:", token);
-  
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -475,10 +388,7 @@ router.post('/echobot', (req, res) => {
   }
   tdclient.sendSupportMessage(requestId, msg, (err, response) => {
     if (err) {
-      logger.error("(tybotRoute) Error sending message:"); //, err);
-    }
-    else {
-      //console.log("message sent.");
+      winston.error("(tybotRoute) Error sending message"); //, err);
     }
   });
 });
@@ -489,13 +399,10 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const bot_id = req.params['bot_id'];
   const block_id = req.params['block_id'];
   const body = req.body;
-  logger.verbose("(tybotRoute) /block/ .heders:", JSON.stringify(req.headers));
-  logger.verbose("(tybotRoute) /block/ .body:", JSON.stringify(body));
-  
-  
-  // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
-  // console.log('/block/:project_id/:bot_id/:block_id.body', body);
-  
+
+  winston.verbose("(tybotRoute) POST /block/:project_id/:bot_id/:block_id called");
+  winston.debug("(tybotRoute) POST /block/:project_id/:bot_id/:block_id req.body: " + JSON.stringify(body));
+
   // invoke block
   // unique ID for each execution
   const execution_id = uuidv4().replace(/-/g, '');
@@ -515,7 +422,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     "token": "NO-TOKEN"
   }
-  logger.verbose("(tybotRoute) sendMessageToBot()...", JSON.stringify(request))
+  winston.verbose("(tybotRoute) sendMessageToBot(): ", JSON.stringify(request))
   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
     res.status(200).send({"success":true});
     return;
@@ -523,7 +430,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 });
 
 async function startApp(settings, completionCallback) {
-  // console.log("Starting Tilebot with Settings:", settings);
+  winston.info("(Tilebot) Starting Tilebot..")
+
   if (settings.bots) { // static bots data source
     staticBots = settings.bots;
   }
@@ -538,7 +446,7 @@ async function startApp(settings, completionCallback) {
   }
   else {
     API_ENDPOINT = settings.API_ENDPOINT;
-    console.log("(Tilebot) settings.API_ENDPOINT:", API_ENDPOINT);
+    winston.info("(Tilebot) settings.API_ENDPOINT:" + API_ENDPOINT);
   }
 
   if (!settings.TILEBOT_ENDPOINT) {
@@ -547,8 +455,7 @@ async function startApp(settings, completionCallback) {
   else {
     TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT
   }
-  console.log("(Tilebot) settings.TILEBOT_ENDPOINT:", TILEBOT_ENDPOINT);
-
+  winston.info("(Tilebot) settings.TILEBOT_ENDPOINT:" + TILEBOT_ENDPOINT);
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
     tdcache = new TdCache({
@@ -564,8 +471,7 @@ async function startApp(settings, completionCallback) {
   else {
     log = true;
   }
-  console.log("(Tilebot) log:", log);
-
+  winston.info("(Tilebot) Log: " + log);
 
   if (process.env.CHATBOT_MAX_STEPS) {
     MAX_STEPS = Number(process.env.CHATBOT_MAX_STEPS);
@@ -575,49 +481,34 @@ async function startApp(settings, completionCallback) {
     MAX_EXECUTION_TIME = Number(process.env.CHATBOT_MAX_EXECUTION_TIME);// test // prod1000 * 3600 * 4; // 4 hours
   }
 
-  console.log("(Tilebot) MAX_STEPS: ", MAX_STEPS)
-  console.log("(Tilebot) MAX_EXECUTION_TIME: ", MAX_EXECUTION_TIME)
-
+  winston.info("(Tilebot) MAX_STEPS: " + MAX_STEPS);
+  winston.info("(Tilebot) MAX_EXECUTION_TIME: " + MAX_EXECUTION_TIME);
+  
   var pjson = require('./package.json');
-  console.log("(Tilebot) Starting Tilebot connector v" + pjson.version);
+  winston.info("(Tilebot) Starting Tilebot connector v" + pjson.version);
 
   if (!staticBots) {
-    console.log("(Tilebot) Connecting to mongodb...");
+    winston.info("(Tilebot) Connecting to MongoDB...");
     // connection = 
     mongoose.connect(settings.MONGODB_URI, { "useNewUrlParser": true, "autoIndex": false }, async (err) => {
       if (err) { 
-        console.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
+        winston.error('(Tilebot) Failed to connect to MongoDB on ' + settings.MONGODB_URI + " ", err);
       }
       else {
-        console.log("(Tilebot) mongodb connection ok.");
+        winston.info("(Tilebot) MongoDB Connected");
         await connectRedis();
-        console.info("Tilebot started.");
+        winston.info("(Tilebot) Tilebot started");
+
         if (completionCallback) {
           completionCallback();
         }
-        // if (tdcache) {
-        //   try {
-        //     console.log("(Tilebot) Connecting Redis...");
-        //     await tdcache.connect();
-        //   }
-        //   catch (error) {
-        //     tdcache = null;
-        //     console.error("(Tilebot) Redis connection error:", error);
-        //     process.exit(1);
-        //   }
-        //   console.log("(Tilebot) Redis connected.");
-        // }
-        // console.info("Tilebot started.");
-        // if (completionCallback) {
-        //   completionCallback();
-        // }
       }
     });
   }
   else {
-    console.log("(Tilebot) Using static bots.");
+    winston.info("(Tilebot) Using static bots");
     await connectRedis();
-    console.info("Tilebot started.");
+    winston.info("(Tilebot) Tilebot started");
     if (completionCallback) {
       completionCallback();
     }
@@ -627,15 +518,15 @@ async function startApp(settings, completionCallback) {
 async function connectRedis() {
   if (tdcache) {
     try {
-      console.log("(Tilebot) Connecting Redis...");
+      winston.info("(Tilebot) Connecting Redis...");
       await tdcache.connect();
     }
     catch (error) {
       tdcache = null;
-      console.error("(Tilebot) Redis connection error:", error);
+      winston.error("(Tilebot) Redis connection error: ", error);
       process.exit(1);
     }
-    console.log("(Tilebot) Redis connected.");
+    winston.info("(Tilebot) Redis connected");
   }
   return;
 }
@@ -670,7 +561,7 @@ async function checkRequest(request_id, id_project) {
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
   // const jwt_token = this.fixToken(token);
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
-  console.log("sendMessageToBot URL", url);
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -697,8 +588,8 @@ function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
 }
 
 function myrequest(options, callback, log) {
-  logger.verbose("API URL:", options.url);
-  logger.verbose("** Options:", JSON.stringify(options));
+  winston.verbose("(tybotRoute) myrequest API URL:" + options.url);
+  winston.debug("(tybotRoute) myrequest Options:", JSON.stringify(options));
 
   axios(
     {
@@ -709,9 +600,8 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      logger.verbose("Response for url:", options.url);
-      logger.verbose("Response headers:\n", JSON.stringify(res.headers));
-      //console.log("******** Response for url:", res);
+      winston.verbose("Response for url:" + options.url);
+      winston.debug("Response headers:\n" + JSON.stringify(res.headers));
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -723,7 +613,7 @@ function myrequest(options, callback, log) {
         }
       }
     }).catch((error) => {
-      logger.error("(tybotRoute index) An error occurred:", JSON.stringify(error), "url:", options.url);
+      winston.error("(tybotRoute index) An error occurred: " + JSON.stringify(error) + " url: " + options.url);
       if (callback) {
         callback(error, null, null);
       }
