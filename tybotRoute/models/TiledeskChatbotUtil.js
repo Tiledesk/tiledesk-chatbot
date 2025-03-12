@@ -368,8 +368,11 @@ class TiledeskChatbotUtil {
                                 json_buttons_string = filler.fill(json_buttons_string, flow_attributes);
                                 console.log("json_buttons_string:", json_buttons_string);
                                 console.log("type json_buttons_string:", typeof json_buttons_string);
-                                json_buttons = JSON.parse(json_buttons_string);
-                                console.log("json_buttons:", typeof json_buttons, json_buttons);
+                                try {
+                                    json_buttons = JSON.parse(json_buttons_string);
+                                } catch(err) {
+                                    console.error("Error parsing json_buttons_string: ", err)
+                                }
                                 
                                 if (Array.isArray(json_buttons)) {
                                     console.log("json_buttons is array");
