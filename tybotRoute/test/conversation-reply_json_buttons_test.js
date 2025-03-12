@@ -70,7 +70,7 @@ describe('Conversation for Reply test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message:", JSON.stringify(message, null, "  "));
+      // console.log("message:", JSON.stringify(message, null, "  "));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'Please select an option');
@@ -141,7 +141,7 @@ describe('Conversation for Reply test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message:", JSON.stringify(message, null, "  "));
+      // console.log("message:", JSON.stringify(message, null, "  "));
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
       assert(command1.message.text === 'Please select an option');
@@ -212,7 +212,7 @@ describe('Conversation for Reply test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message:", JSON.stringify(message, null, "  "));
+      // console.log("message:", JSON.stringify(message, null, "  "));
       assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 2);
       // button 1
       assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -266,7 +266,7 @@ describe('Conversation for Reply test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message:", JSON.stringify(message, null, "  "));
+      // console.log("message:", JSON.stringify(message, null, "  "));
       assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 2);
       // button 1
       assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");

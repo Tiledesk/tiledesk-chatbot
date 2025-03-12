@@ -366,7 +366,7 @@ class TiledeskChatbotUtil {
                                 // fill buttons
                                 const filler = new Filler();
                                 json_buttons_string = filler.fill(json_buttons_string, flow_attributes);
-                                console.log("json_buttons_string:", json_buttons_string);
+                                // console.log("json_buttons_string:", json_buttons_string);
                                 json_buttons = JSON.parse(json_buttons_string);
                                 if (Array.isArray(json_buttons)) {
                                     json_buttons.forEach(button => {
@@ -384,6 +384,9 @@ class TiledeskChatbotUtil {
                                             button.show_echo = true;
                                             // console.log("pushing:", button)
                                             final_buttons.push(button);
+                                        }
+                                        else {
+                                            console.log("Invalid button. Skipping:", JSON.stringify(button) );
                                         }
                                     });
                                 }
@@ -415,6 +418,9 @@ class TiledeskChatbotUtil {
                             if (final_buttons && final_buttons.length > 0) {
                                 command.message.attributes.attachment.buttons = final_buttons;
                                 delete command.message.attributes.attachment.json_buttons;
+                            }
+                            else {
+                                console.log("Invalid json_buttons. Skipping")
                             }
                         }
                     }
