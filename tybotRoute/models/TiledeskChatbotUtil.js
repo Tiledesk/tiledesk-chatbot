@@ -372,17 +372,25 @@ class TiledeskChatbotUtil {
                                 console.log("json_buttons:", json_buttons);
                                 if (Array.isArray(json_buttons)) {
                                     json_buttons.forEach(button => {
+                                        console.log("analyze button:", button);
+                                        console.log("button.value:", typeof button.value, button.value);
+                                        console.log("button.type:", typeof button.type, button.type);
+                                        console.log("button.action:", typeof button.action, button.action);
+                                        console.log("final_buttons:", final_buttons);
                                         if (button.value && button.type === "action" && button.action) {
+                                            console.log("Case 1");
                                             button.show_echo = true;
                                             // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "text") {
+                                            console.log("Case 2");
                                             button.show_echo = true;
                                             // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "url" && button.link) {
+                                            console.log("Case 3");
                                             button.show_echo = true;
                                             // console.log("pushing:", button)
                                             final_buttons.push(button);
