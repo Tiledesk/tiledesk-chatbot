@@ -369,8 +369,10 @@ class TiledeskChatbotUtil {
                                 console.log("json_buttons_string:", json_buttons_string);
                                 console.log("type json_buttons_string:", typeof json_buttons_string);
                                 json_buttons = JSON.parse(json_buttons_string);
-                                console.log("json_buttons:", json_buttons);
+                                console.log("json_buttons:", typeof json_buttons, json_buttons);
+                                
                                 if (Array.isArray(json_buttons)) {
+                                    console.log("json_buttons is array");
                                     json_buttons.forEach(button => {
                                         console.log("analyze button:", button);
                                         console.log("button.value:", typeof button.value, button.value);
