@@ -12,10 +12,13 @@ npm install
 
 cd ..
 
+# Get curent branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 ## Push commit to git
 git add .
 git commit -m "version added: ### $version"
-git push remote main
+git push remote "$current_branch"
 
 ## Create tag and npm 
 if [ "$version" != "" ]; then
