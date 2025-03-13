@@ -34,10 +34,10 @@ class DirWebResponse {
   }
 
   async go(action, callback) {
-    console.log("Web response...");
-    let payload = action.payload;
-    let status = action.status;
-
+    if (this.log) {
+      console.log("(DirWebResponse) action:", action);
+    }
+    
     let requestAttributes = null;
     if (this.tdcache) {
       requestAttributes = 
@@ -45,7 +45,7 @@ class DirWebResponse {
       const filler = new Filler();
 
       try {
-        payload = filler.fill(payload, requestAttributes);
+        let status = action.status;
         status = filler.fill(status, requestAttributes);
       }
       catch(e) {
@@ -54,16 +54,19 @@ class DirWebResponse {
       
     }
 
+    const json = await this.getJsonFromAction(action, filler, requestAttributes)
     let webResponse = {
       status: status,
-      payload: payload
+      payload: json
     }
 
     const topic = `/webhooks/${this.requestId}`;
     
     try {
       this.tdcache.publish(topic, JSON.stringify(webResponse));
-      console.log("Published webresponse to topic:", topic);
+      if (this.log) {
+        console.log("(DirWebResponse) Published webresponse to topic:", topic);
+      }
     }
     catch(e) {
       console.error(e)
@@ -72,7 +75,31 @@ class DirWebResponse {
     callback();
     
   }
+
+  async getJsonFromAction(action, filler, requestAttributes) {
+  
+      return new Promise( async (resolve, reject) => {
+  
+        if (action.payload && action.bodyType == "json") {
+          let jsonBody = filler.fill(action.payload, requestAttributes);
+          try {
+            let json = JSON.parse(jsonBody);
+            resolve(json);
+          }
+          catch (err) {
+            if (this.log) { console.error("Error parsing webRequest jsonBody:", jsonBody, err) };
+            reject("Error parsing jsonBody");
+          }
+        }
+        else {
+          resolve(null);
+        }
+      })
+  }
+
 }
+
+
 
 /**
  * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
