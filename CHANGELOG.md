@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 1.3.0-rc1
+- added: ability to get 'none' as bodytype in webresponse
+
 # 1.2.2
 - bug-fixed: minor log fix
 
