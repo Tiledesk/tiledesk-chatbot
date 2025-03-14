@@ -76,7 +76,7 @@ class DirReplaceBotV3 {
     this.#myrequest(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          console.log("DirReplaceBot error: ", err);
+          console.error("DirReplaceBotv3 error: ", err);
           if (callback) {
             callback();
             return;

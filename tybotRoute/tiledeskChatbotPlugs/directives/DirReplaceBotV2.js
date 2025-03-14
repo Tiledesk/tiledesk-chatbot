@@ -76,7 +76,7 @@ class DirReplaceBotV2 {
     this.#myrequest(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          console.log("DirReplaceBot error: ", err);
+          console.error("DirReplaceBot error: ", err);
           if (callback) {
             callback();
             return;
