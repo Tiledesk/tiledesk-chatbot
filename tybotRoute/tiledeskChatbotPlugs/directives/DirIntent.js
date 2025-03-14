@@ -61,10 +61,12 @@ class DirIntent {
         "recipient": requestId,
         "text": intent_command,
         "id_project": projectId,
-        "request": {
-          "request_id": requestId,
-          "id_project": projectId
-        }
+        "request": this.supportRequest,
+        // "request": {
+        //   "request_id": requestId,
+        //   "id_project": projectId
+        //   // "bot_id": botId
+        // }
       },
       "token": this.token
     }

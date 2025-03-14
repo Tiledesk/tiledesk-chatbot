@@ -1,5 +1,6 @@
 #npm version patch
 version=`node -e 'console.log(require("./package.json").version)'`
+version_server=`node -e 'console.log(require("./tybotRoute/package.json").version)'`
 echo "version $version"
 
 ## Update package-lock.json
@@ -11,10 +12,13 @@ npm install
 
 cd ..
 
+# Get curent branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 ## Push commit to git
 git add .
 git commit -m "version added: ### $version"
-git push remote main
+git push remote "$current_branch"
 
 ## Create tag and npm 
 if [ "$version" != "" ]; then
@@ -24,3 +28,9 @@ if [ "$version" != "" ]; then
     cd ./tybotRoute
     npm publish --access public
 fi
+
+
+echo "*********************************************************"
+echo "    Deployed: @tiledesk/tiledesk-tybot-connector:$version_server"
+echo "          Tagged: tiledesk/tiledesk-chatbot:$version"
+echo "*********************************************************"

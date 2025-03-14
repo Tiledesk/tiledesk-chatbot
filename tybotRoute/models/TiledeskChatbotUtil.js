@@ -296,6 +296,105 @@ class TiledeskChatbotUtil {
         return all_buttons;
     }
 
+    static replaceJSONButtons(message, flow_attributes) {
+        let all_buttons = [];
+        if (message.attributes && message.attributes.commands) {
+            let commands = message.attributes.commands;
+            if (commands.length > 0) {
+                for (let i = 0; i < commands.length; i++) {
+                    let command = commands[i];
+                    if (command.type === 'message' && command.message) {
+                        if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.json_buttons){
+                            // console.log("command with buttons ok:")
+                            let json_buttons_string = command.message.attributes.attachment.json_buttons;
+                            let json_buttons = null;
+                            let final_buttons = [];
+                            try {
+                                // fill buttons
+                                const filler = new Filler();
+                                json_buttons_string = filler.fill(json_buttons_string, flow_attributes);
+                                console.log("json_buttons_string:", json_buttons_string);
+                                console.log("type json_buttons_string:", typeof json_buttons_string);
+                                try {
+                                    json_buttons = JSON.parse(json_buttons_string);
+                                    console.log("json_buttons (parsed): ", json_buttons);
+                                } catch(err) {
+                                    console.error("Error parsing json_buttons_string: ", err)
+                                }
+                                
+                                console.log("after try type json_buttons: ", typeof json_buttons, json_buttons);
+                                console.log("Array.isArray(json_buttons): ", Array.isArray(json_buttons));
+                                if (Array.isArray(json_buttons)) {
+                                    console.log("json_buttons is array");
+                                    json_buttons.forEach(button => {
+                                        console.log("analyze button:", button);
+                                        console.log("button.value:", typeof button.value, button.value);
+                                        console.log("button.type:", typeof button.type, button.type);
+                                        console.log("button.action:", typeof button.action, button.action);
+                                        console.log("final_buttons:", final_buttons);
+                                        if (button.value && button.type === "action" && button.action) {
+                                            console.log("Case 1");
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                        else if (button.value && button.type === "text") {
+                                            console.log("Case 2");
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                        else if (button.value && button.type === "url" && button.link) {
+                                            console.log("Case 3");
+                                            button.show_echo = true;
+                                            // console.log("pushing:", button)
+                                            final_buttons.push(button);
+                                        }
+                                        else {
+                                            console.log("Invalid button. Skipping:", JSON.stringify(button) );
+                                        }
+                                    });
+                                }
+
+                                // "buttons": [
+                                //                 {
+                                //                     "type": "action",
+                                //                     "value": "Button1", // obbligatorio sempre
+                                //                     "action": "#bb347206-d639-4926-94c9-e94930623dce", // mandatory
+                                //                     "show_echo": true, // lo inserisco sempre
+                                //                     "alias": "button1 alias"
+                                //                 },
+                                //                 {
+                                //                     "type": "text",
+                                //                     "value": "Button2 text", // obbligatorio sempre
+                                //                     "show_echo": true // lo inserisco sempre
+                                //                 },
+                                //                 {
+                                //                     "type": "url",
+                                //                     "value": "Button3 link", // obbligatorio sempre
+                                //                     "link": "http://", // obbligatorio
+                                //                     "show_echo": true // lo inserisco sempre
+                                //                 }
+                                //             ]
+                            }
+                            catch(error) {
+                                console.error("Invalid json_buttons:", error)
+                            }
+                            if (final_buttons && final_buttons.length > 0) {
+                                command.message.attributes.attachment.buttons = final_buttons;
+                                delete command.message.attributes.attachment.json_buttons;
+                            }
+                            else {
+                                console.log("Invalid json buttons. Skipped:", JSON.stringify(final_buttons));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return all_buttons;
+    }
+
     static buttonByText(text, buttons) {
         if (buttons === null || text === null) {
             return null;
@@ -407,6 +506,13 @@ class TiledeskChatbotUtil {
 
     static isHiddenMessage(message) {
         if (message && message.attributes && message.attributes.subtype === "info") {
+            return true;
+        }
+        return false;
+    }
+
+    static isAudioMessage(message){
+        if (message && message.type && message.type === 'file' && message.metadata && message.metadata.src && message.metadata.type.includes('audio') ) {
             return true;
         }
         return false;
@@ -775,7 +881,6 @@ class TiledeskChatbotUtil {
      * @param {string} requestId. Tiledesk chatbot/requestId parameters
      */
     getChatbotParameters(requestId, callback) {
-         
         const url = `${process.env.TILEBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
         const HTTPREQUEST = {
             url: url,

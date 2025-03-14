@@ -1,31 +1,32 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
-const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  winston.error("General error", err);
+  console.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-actions_bot.js').bots_data;
+const bots_data = require('./audio-mesage_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for anomaly detection test', async () => {
+describe('Audio message is sent to chatbot', async () => {
 
   let app_listener;
+  let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      winston.info("Starting tilebot server...");
+      console.log("Starting tilebot server...");
       tybot.startApp(
         {
           // MONGODB_URI: process.env.MONGODB_URI,
@@ -37,10 +38,10 @@ describe('Conversation for anomaly detection test', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          winston.info("Tilebot route successfully started.");
+          console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            winston.info('Tilebot connector listening on port... ', port);
+            console.log('Tilebot connector listening on port ', port);
             resolve();
           });
         });
@@ -49,37 +50,48 @@ describe('Conversation for anomaly detection test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
+      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
-  it('/anomaly', (done) => {
-    let message_id = uuidv4();
+  it('audio message is sent', (done) => {
+    // console.log('/condition with params{"star_type":"supernova"}');
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
+    endpointServer.post('/:projectId/llm/transcription', function (req, res) {
+      // console.log("...req.body:", JSON.stringify(req.body));
+      // res.send({ success: true });
       const message = req.body;
-      assert(message.attributes.error !== null);
-      assert(message.attributes.runtimeError.message.startsWith("Anomaly detection. MAX ACTIONS")); // exeeded.");
+      assert(message.url)
+
+      res.send({text: "this is an audio file example"})
+    
       listener.close(() => {
         done();
       });
+
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      winston.verbose('endpointServer started' + listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
-          "_id": message_id,
+        //   "_id": message_id,
           "senderFullname": "guest#367e",
-          "type": "text",
+          "type": "file",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/anomaly",
+          "text": '',
+          "attributes":{},
           "id_project": PROJECT_ID,
-          "metadata": "",
+          "metadata": {
+              "src":"http://my-audio-url.wav",
+              "type":"audio/wav",
+              "name":"audio.wav"
+          },
           "request": {
             "request_id": REQUEST_ID
           }
@@ -87,10 +99,9 @@ describe('Conversation for anomaly detection test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        winston.verbose("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
-
   });
 
 });
@@ -105,7 +116,7 @@ describe('Conversation for anomaly detection test', async () => {
  */
 function sendMessageToBot(message, botId, callback) {
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
+  // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -131,7 +142,43 @@ function sendMessageToBot(message, botId, callback) {
   );
 }
 
+/**
+ * A stub to get the request parameters, hosted by tilebot on:
+ * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
+ *
+ * @param {string} requestId. Tiledesk chatbot/requestId parameters
+ */
+// function getChatbotParameters(requestId, callback) {
+//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const HTTPREQUEST = {
+//     url: url,
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     method: 'get'
+//   };
+//   myrequest(
+//     HTTPREQUEST,
+//     function (err, resbody) {
+//       if (err) {
+//         if (callback) {
+//           callback(err);
+//         }
+//       }
+//       else {
+//         if (callback) {
+//           callback(null, resbody);
+//         }
+//       }
+//     }, false
+//   );
+// }
+
 function myrequest(options, callback, log) {
+  if (log) {
+    console.log("API URL:", options.url);
+    console.log("** Options:", JSON.stringify(options));
+  }
   axios(
     {
       url: options.url,
@@ -141,6 +188,11 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
+      if (log) {
+        console.log("Response for url:", options.url);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
+      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -153,6 +205,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
+      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

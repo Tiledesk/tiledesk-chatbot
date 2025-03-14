@@ -3,7 +3,8 @@ const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const winston = require('../../utils/winston')
+const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirReply {
 
@@ -17,6 +18,8 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+    this.supportRequest = this.context.supportRequest;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
@@ -42,13 +45,17 @@ class DirReply {
       callback();
       return;
     }
+    this.logger.info("Executing Action Reply ", directive.action)
+
     this.go(action, () => {
+      this.logger.info("Action Reply terminated")
       callback();
     });
   }
 
   async go(action, callback) {
     const message = action;
+
     // fill
     let requestAttributes = null;
     if (this.tdcache) {
@@ -56,21 +63,22 @@ class DirReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestAttributes)) {
-          const value_type = typeof value;
-        }
-      }
+
+      TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.debug("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.debug("Filled metadata.name with ", message.metadata.name);
         }
       }
       winston.debug("DirReply filling commands'. Message:", message);
@@ -83,6 +91,7 @@ class DirReply {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
+              this.logger.debug("Filled message.text with ", command.message.text)
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
               winston.debug("DirReply command filled: " + command.message.text);
             }

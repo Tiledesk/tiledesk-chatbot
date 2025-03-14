@@ -26,8 +26,6 @@ class MockBotsDataSource {
       }
       
     })
-
-    
   }
   
   async getBotByIdCache(botId, tdcache) {

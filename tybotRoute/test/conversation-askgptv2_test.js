@@ -1954,7 +1954,6 @@ describe('Conversation for AskGPTV2 test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-
   const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {

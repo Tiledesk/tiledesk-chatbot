@@ -12,7 +12,7 @@ class TdCache {
         winston.debug("TdCache redis_port: ", this.redis_port);
         winston.debug("TdCache redis_password: ", this.redis_password);
         this.client = null;
-        this.redis_sub = null;
+        this.subscriberClient = null;
     }
 
     async connect(callback) {
@@ -43,24 +43,24 @@ class TdCache {
             /**
              * Connect redis subscription client
              */
-            this.redis_sub = redis.createClient(
+            this.subscriberClient = redis.createClient(
               {
                 url: `redis://${this.redis_host}:${this.redis_port}`,
                 password: this.redis_password
               });
-            this.redis_sub.on('error', err => {
+            this.subscriberClient.on('error', err => {
                 reject(err);
                 if (callback) {
                     callback(err);
                 }
             });
-            this.redis_sub.on('ready',function() {
+            this.subscriberClient.on('ready',function() {
                 resolve();
                 if (callback) {
                     callback();
                 }
             });
-            await this.redis_sub.connect();
+            await this.subscriberClient.connect();
         });
     }
 
@@ -132,7 +132,25 @@ class TdCache {
     }
     
     async publish(key, value) {
-      await this.redis_sub.publish(key, value);
+      await this.client.publish(key, value);
+    }
+
+    async subscribe(topic, callback) {
+      if (!this.subscriberClient) {
+        throw new Error("Redis subscriber not connected");
+      }
+
+      if (!callback || typeof callback !== 'function') {
+        throw new Error("Callback is mandatory for subscribe")
+      }
+
+      await this.subscriberClient.subscribe(topic, (message) => {
+        callback(message, topic);
+      })
+    }
+
+    async unsubscribe(topic, listener) {
+      await this.subscriberClient.unsubscribe(topic, listener);
     }
 
     // subscribe(key, callback) {
