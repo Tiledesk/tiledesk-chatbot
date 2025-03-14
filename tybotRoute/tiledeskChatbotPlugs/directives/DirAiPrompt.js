@@ -94,8 +94,8 @@ class DirAiPrompt {
       }
     }
 
-    const llm_endpoint = process.env.KB_ENDPOINT_QA;
-    if (this.log) { console.log("DirAiPrompt llm_endpoint ", llm_endpoint); }
+    const AI_endpoint = process.env.AI_ENDPOINT
+    if (this.log) { console.log("DirAiPrompt AI_endpoint ", AI_endpoint); }
 
     let key = await this.getKeyFromIntegrations(action.llm);
 
@@ -130,7 +130,7 @@ class DirAiPrompt {
     if (this.log) { console.log("DirAiPrompt json: ", json) }
 
     const HTTPREQUEST = {
-      url: llm_endpoint + '/ask',
+      url: AI_endpoint + '/ask',
       headers: {
         'Content-Type': 'application/json'
       },
