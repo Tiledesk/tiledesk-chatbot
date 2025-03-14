@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.5.0
+- added: AI_ENDPOINT env var
+- added: ability to get 'none' as bodytype in webresponse
+
 # v0.4.2
 - bug-fixed: minor log fix
 
