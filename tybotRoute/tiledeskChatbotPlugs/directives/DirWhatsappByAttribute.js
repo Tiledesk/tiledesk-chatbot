@@ -1,5 +1,6 @@
 const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const winston = require('../../utils/winston');
 
 let whatsapp_api_url;
 
@@ -15,13 +16,13 @@ class DirWhatsappByAttribute {
   }
 
   execute(directive, callback) {
-    console.log("\n\nwhatsapp by attribtues action (execute) - directive: ", directive);
+    winston.verbose("Execute WhatsappByAttribute directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirWhatsappByAttribute Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -31,10 +32,7 @@ class DirWhatsappByAttribute {
   }
 
   async go(action, callback) {
-
-    if (this.log) {
-      console.log("whatsapp by attributes action: ", JSON.stringify(action))
-    }
+    winston.debug("(DirWhatsappByAttribute) Action: ", action);
 
     const whatsapp_api_url_pre = process.env.WHATSAPP_ENDPOINT;
 
@@ -43,20 +41,20 @@ class DirWhatsappByAttribute {
     } else {
       whatsapp_api_url = this.API_ENDPOINT + "/modules/whatsapp/api"
     }
-    console.log("DirWhatsappByAttribute whatsapp_api_url: ", whatsapp_api_url);
+    winston.debug("(DirWhatsappByAttribute) whatsapp_api_url: " + whatsapp_api_url);
 
     if (!action.attributeName) {
-      console.error("DirWhatsappByAttribute attributeName is mandatory")
+      winston.error("(DirWhatsappByAttribute) attributeName is mandatory")
       callback();
       return;
     }
-    if (this.log) { console.log("DirWhatsappByAttribute attributeName: ", action.attributeName )};
+    winston.debug("(DirWhatsappByAttribute) attributeName: " + action.attributeName )
 
     const attribute_value = await TiledeskChatbot.getParameterStatic(this.context.tdcache, this.context.requestId, action.attributeName)
-    if (this.log) { console.log("attribute_value:", JSON.stringify(attribute_value)); }
+    winston.debug("(DirWhatsappByAttribute) attribute_value:", attribute_value);
 
     if (attribute_value == null) {
-      console.error("DirWhatsappByAttribute attribute_value is undefined");
+      winston.error("(DirWhatsappByAttribute)  attribute_value is undefined");
       callback();
       return;
     }
@@ -86,7 +84,7 @@ class DirWhatsappByAttribute {
             if (callback) {
               callback(null, resbody);
             }
-            console.log("(tybot) broadcast sent: ", resbody);
+            winston.debug("(DirWhatsappByAttribute) broadcast sent: ", resbody);
             resolve(resbody);
           }
         }, true);
@@ -96,7 +94,6 @@ class DirWhatsappByAttribute {
 
   // HTTP REQUEST
   static async myrequest(options, callback, log) {
-    console.log("my request execution")
     return await axios({
       url: options.url,
       method: options.method,
@@ -115,7 +112,7 @@ class DirWhatsappByAttribute {
         }
       }
     }).catch((err) => {
-      console.error("(tybot request) An error occured: ", err);
+      winston.error("(DirWhatsappByAttribute) An error occured: ", err);
       if (callback) {
         callback(err, null, null);
       }

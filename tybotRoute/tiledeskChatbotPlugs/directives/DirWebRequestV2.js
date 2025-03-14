@@ -3,6 +3,7 @@ let https = require("https");
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
+const winston = require('../../utils/winston');
 
 class DirWebRequestV2 {
   constructor(context) {
@@ -17,23 +18,23 @@ class DirWebRequestV2 {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute WebRequestV2 directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("DirWebRequestV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      if (this.log) {console.log("(webrequestv2, stop?", stop); }
       callback(stop);
     });
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
+    winston.debug("(DirWebRequestV2) Action: ", action);
     let requestAttributes = null;
     if (this.tdcache) {
       requestAttributes = 
@@ -48,7 +49,6 @@ class DirWebRequestV2 {
     if (action.headersString) {
       let headersDict = action.headersString
       for (const [key, value] of Object.entries(headersDict)) {
-        if (this.log) {console.log("header:", key, "value:", value)}
         let filled_value = filler.fill(value, requestAttributes);
         headers[key] = filled_value;
       }
@@ -57,26 +57,23 @@ class DirWebRequestV2 {
     let json = null;
     try {
       if (action.jsonBody && action.bodyType == "json") {
-        if (this.log) {console.log("action.body is:", action.jsonBody);}
         let jsonBody = filler.fill(action.jsonBody, requestAttributes);
         try {
           json = JSON.parse(jsonBody);
-          if (this.log) {console.log("json is:", json);}
         }
         catch(err) {
-          console.error("Error parsing webRequest jsonBody:", jsonBody);
+          winston.error("(DirWebRequestV2) Error parsing webRequest jsonBody: ", jsonBody);
         }
       }
       else if (action.formData && action.bodyType == "form-data") {
         let formData = filler.fill(action.formData, requestAttributes);
-        if (this.log) {console.log("action.body is form-data:", formData);}
+        winston.debug("(DirWebRequestV2) action.body is form-data: ", formData);
         // // fill
         if (formData && formData.length > 0) {
           for (let i = 0; i < formData.length; i++) {
             let field = formData[i];
             if (field.value) {
               field.value = filler.fill(field.value, requestAttributes);
-              if (this.log) {console.log("field filled:", field.value);}
             }
           }
         }
@@ -84,14 +81,12 @@ class DirWebRequestV2 {
         for (let i = 0; i < formData.length; i++) {
           let field = formData[i];
           if (field.enabled && field.value && field.type === "URL") {
-            if (this.log) {console.log("Getting file:", field.value);}
             let response = await axios.get(field.value,
               {
                 responseType: 'stream'
               }
             );
             let stream = response.data;
-            // if (this.log) {console.log("Stream data:", stream);}
             json[field.name] = stream;
             // process.exit(0);
           }
@@ -99,15 +94,15 @@ class DirWebRequestV2 {
             json[field.name] = field.value;
           }
         }
-        if (this.log) {console.log("final json:", json);}
+        winston.debug("(DirWebRequestV2) final json: ", json);
       }
       else {
-        if (this.log) {console.log("no action upload parts");}
+        winston.debug("(DirWebRequestV2) no action upload parts");
       }
 
     }
     catch(error) {
-      console.error("Error", error);
+      winston.error("(DirWebRequestV2) Error: ", error);
     }
     
     // Condition branches
@@ -125,7 +120,7 @@ class DirWebRequestV2 {
 
     let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     
-    if (this.log) {console.log("webRequest URL", url);}
+    winston.debug("(DirWebRequestV2) webRequest URL " + url);
     
     const HTTPREQUEST = {
       url: url,
@@ -135,20 +130,19 @@ class DirWebRequestV2 {
       timeout: timeout
     };
 
-    if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
+    winston.debug("(DirWebRequestV2) HttpRequest: ", HTTPREQUEST);
     this.#myrequest(
       HTTPREQUEST, async (err, res) => {
-        if (this.log && err) {
-          console.log("webRequest error:", err);
-        }
-        if (this.log) {console.log("got res:", res);}
+        winston.debug("(DirWebRequestV2) got res: ", res);
         let resbody = res.data;
         let status = res.status;
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
-        if (this.log) {console.log("webRequest resbody:", resbody);}
+
+        winston.debug("(DirWebRequestV2) resbody:", resbody);
+
         if (err) {
-          if (this.log) {console.error("webRequest error:", err);}
+          winston.error("(DirWebRequestV2)  error:", err);
           if (callback) {
             if (falseIntent) {
               this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
@@ -200,7 +194,7 @@ class DirWebRequestV2 {
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        winston.debug("(DirWebRequestV2) No trueIntentDirective specified");
         callback();
       }
     }
@@ -211,60 +205,29 @@ class DirWebRequestV2 {
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        winston.debug("(DirWebRequestV2) No falseIntentDirective specified");
         callback();
       }
     }
   }
 
   async #assignAttributes(action, resbody, status, error) {
-    if (this.log) {
-      console.log("assignAttributes resbody:", resbody)
-      console.log("assignAttributes error:", error)
-      console.log("assignAttributes status:", status)
-      console.log("assignAttributes action:", action)
-    }
+
     if (this.context.tdcache) {
       if (action.assignResultTo && resbody) {
-        if (this.log) {console.log("assign assignResultTo:", resbody);}
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, resbody);
       }
       if (action.assignErrorTo && error) {
-        if (this.log) {console.log("assign assignResultTo:", error);}
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
       }
       if (action.assignStatusTo && status) {
-        if (this.log) {console.log("assign assignStatusTo:", status);}
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) {console.log("(webRequest) request parameter:", key, "value:", value, "type:", typeof value)}
-        }
       }
     }
   }
 
   #myrequest(options, callback) {
     try {
-      if (this.log) {
-        console.log("API URL:", options.url);
-        //console.log("** Options:", JSON.stringify(options));
-        // Stringify "options". FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-        let cache = [];
-        let str_Options = JSON.stringify(options, function(key, value) { // try to use a separate function
-          if (typeof value === 'object' && value != null) {
-            if (cache.indexOf(value) !== -1) {
-              return;
-            }
-            cache.push(value);
-          }
-          return value;
-        });
-        console.log("** Options:", str_Options);
-      }
       let axios_options = {
         url: options.url,
         method: options.method,
@@ -278,9 +241,6 @@ class DirWebRequestV2 {
       if (options.json !== null) {
         axios_options.data = options.json
       }
-      // if (this.log) {
-      //   console.log("axios_options:", JSON.stringify(axios_options));
-      // }
       if (options.url.startsWith("https:")) {
         const httpsAgent = new https.Agent({
           rejectUnauthorized: false,
@@ -290,35 +250,11 @@ class DirWebRequestV2 {
     
       axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Success Response:", res);
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (callback) {
           callback(null, res);
         }
       })
       .catch( (err) => {
-        if (this.log) {
-          if (err.response) {
-            console.log("Error Response data:", err.response.data);
-          }
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-          let cache = [];
-          let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
-            if (typeof value === 'object' && value != null) {
-              if (cache.indexOf(value) !== -1) {
-                return;
-              }
-              cache.push(value);
-            }
-            return value;
-          });
-          console.error("An error occurred: ", error_log);
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          // console.error("An error occurred:", JSON.stringify(err));
-        }
         if (callback) {
           let status = 1000;
           let cache = [];
@@ -354,7 +290,7 @@ class DirWebRequestV2 {
       });
     }
     catch(error) {
-      console.error("Error:", error);
+      winston.error("Error: ", error);
     }
   }
 
@@ -363,20 +299,13 @@ class DirWebRequestV2 {
     if (!action.settings) {
       return timeout;
     }
-    // console.log("default timeout:", timeout);
-    // console.log("action.settings:", action.settings);
-    // console.log("action.settings.timeout:", action.settings.timeout);
-    // console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
-    // console.log("action.settings.timeout > min", action.settings.timeout > min)
-    // console.log("action.settings.timeout < max", action.settings.timeout < max)  
+   
     
     if (action.settings.timeout) {
       if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.settings.timeout)
-        // console.log("new timeout:", timeout);
       }
     }
-    // console.log("returning timeout:", timeout);
     return timeout
   }
 

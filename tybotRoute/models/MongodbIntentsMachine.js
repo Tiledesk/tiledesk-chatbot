@@ -1,5 +1,6 @@
 let mongoose = require('mongoose');
 let Faq = require('./faq');
+const winston = require('../utils/winston');
 
 class MongodbIntentsMachine {
 
@@ -19,14 +20,14 @@ class MongodbIntentsMachine {
    */
   async decode(botId, text) {
     return new Promise( (resolve, reject) => {
-      if (this.log) {console.log("Mongodb NLP decode intent...");}
+      winston.debug("(MongodbIntentsMachine) Mongodb NLP decode intent...");
       // let query = { "id_project": this.projectId, "id_faq_kb": botId };
       let query = { "id_faq_kb": botId };
       var mongoproject = undefined;
       var sort = undefined;
       var search_obj = { "$search": text };
   
-      if (this.log) {console.log("chatbot lang:", this.language);}
+      winston.debug("(MongodbIntentsMachine) chatbot lang: " + this.language);
       if (this.language) {
           search_obj["$language"] = this.language;
       }
@@ -35,9 +36,9 @@ class MongodbIntentsMachine {
       sort = { score: { $meta: "textScore" } } 
       // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
       Faq.find(query, mongoproject).sort(sort).lean().exec( (err, faqs) => {
-        if (this.log) {console.log("Found:", faqs);}
+        winston.debug("(MongodbIntentsMachine) Found: ", faqs);
         if (err) {
-          console.error("Error:", err);
+          winston.error("(MongodbIntentsMachine) Error:", err);
         }
         if (faqs && faqs.length > 0) {
           resolve(faqs);

@@ -65,7 +65,7 @@ class DirReply {
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
       if (message.metadata) {
-        winston.debug("DirReply filling message 'metadata':" + JSON.stringify(message.metadata));
+        winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
         }
@@ -73,7 +73,7 @@ class DirReply {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
         }
       }
-      winston.debug("DirReply filling commands'. Message:" + JSON.stringify(message));
+      winston.debug("DirReply filling commands'. Message:", message);
       if (message.attributes && message.attributes.commands) {
         let commands = message.attributes.commands;
         winston.debug("DirReply commands: " + JSON.stringify(commands) + " length: " + commands.length);
@@ -97,9 +97,9 @@ class DirReply {
       }
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
-      winston.debug("DirReply message before filters: " + JSON.stringify(message));
+      winston.debug("DirReply message before filters: ", message);
       if (message.attributes && message.attributes.commands) {
-        winston.debug("DirReply filterOnVariables...on commands", JSON.stringify(message.attributes.commands))
+        winston.debug("DirReply filterOnVariables...on commands", message.attributes.commands)
         winston.debug("DirReply filterOnVariables...on attributes", requestAttributes);
         TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }

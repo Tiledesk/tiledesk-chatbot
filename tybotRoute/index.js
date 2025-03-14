@@ -106,7 +106,7 @@ router.post('/ext/:botid', async (req, res) => {
   });
   
 
-  winston.debug("(tybotRoute) Bot found:" + JSON.stringify(bot))
+  winston.debug("(tybotRoute) Bot found:" + bot)
   
   let intentsMachine;
   let backupMachine;
@@ -147,7 +147,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply = await chatbot.replyToMessage(message);
   }
   catch(err) {
-    winston.error("(tybotRoute) An error occurred replying to message:" + JSON.stringify(message) + "\nError: ", err);
+    winston.error("(tybotRoute) An error occurred replying to message: ", err);
   }
   if (!reply) {
     reply = {
@@ -157,9 +157,9 @@ router.post('/ext/:botid', async (req, res) => {
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
-      winston.debug("(tybotRoute) Reply actions:" + JSON.stringify(reply.actions))
+      winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
-      winston.debug("(tybotRoute) the directives:" + JSON.stringify(directives))
+      winston.debug("(tybotRoute) the directives:", directives)
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -199,7 +199,7 @@ router.post('/ext/:botid', async (req, res) => {
       log: false
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-      winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: " + JSON.stringify(reply))
+      winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
   }
   
@@ -218,7 +218,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   winston.debug("(tybotRoute) projectId " + projectId)
   
   let answer = req.body;
-  winston.verbose("(tybotRoute) answer on sendSupportMessageExt:" + JSON.stringify(answer));
+  winston.verbose("(tybotRoute) answer on sendSupportMessageExt: ", answer);
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
@@ -239,14 +239,14 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     winston.verbose("(tybotRoute) Creating new Request. Chatbot-pure directives still work. Tiledesk specific directives don't")
     const request_botId_key = "tilebot:botId_requests:" + requestId;
     const botId = await tdcache.get(request_botId_key);
-    winston.verbose("(tybotRoute) current botId [" + request_botId_key + "]:", botId)
+    winston.verbose("(tybotRoute) current botId [" + request_botId_key + "]:" + botId)
     request = {
       request_id: requestId,
       id_project: projectId,
       bot_id: botId
     }
   }
-  winston.debug("(tybotRoute) request: " + JSON.stringify(request));
+  winston.debug("(tybotRoute) request: ", request);
   winston.debug("(tybotRoute) API_ENDPOINT: " + API_ENDPOINT);
   winston.debug("(tybotRoute) request: " + TILEBOT_ENDPOINT);
 
@@ -254,10 +254,10 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
 
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
-  winston.debug("(tybotRoute) bot_answer: " + JSON.stringify(bot_answer));
+  winston.debug("(tybotRoute) bot_answer: ", bot_answer);
 
   if (bot_answer) {
-    winston.debug("(tybotRoute) adding to bot_answer original_answer_text: " + JSON.stringify(original_answer_text));
+    winston.debug("(tybotRoute) adding to bot_answer original_answer_text: ", original_answer_text);
     if (!bot_answer.attributes) {
       bot_answer.attributes = {};
     }
@@ -266,7 +266,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
       winston.verbose("(tybotRoute) Bot answer sent")
       if (err) {
-        winston.error("(tybotRoute) Error sending message" + JSON.stringify(err));
+        winston.error("(tybotRoute) Error sending message", err);
       }
       directivesPlug.processDirectives(() => {
         winston.verbose("(tybotRoute) Directives executed")
@@ -365,7 +365,7 @@ router.post('/test/webrequest/post/plain', async (req, res) => {
 
 router.post('/echobot', (req, res) => {
   winston.verbose("(tybotRoute) POST /echobot called");
-  winston.debug("(tybotRoute) POST /echobot req.body: " + JSON.stringify(req.body.payload));
+  winston.debug("(tybotRoute) POST /echobot req.body: ", req.body.payload);
 
   const message = req.body.payload;
   const token = req.body.token;
@@ -401,7 +401,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const body = req.body;
 
   winston.verbose("(tybotRoute) POST /block/:project_id/:bot_id/:block_id called");
-  winston.debug("(tybotRoute) POST /block/:project_id/:bot_id/:block_id req.body: " + JSON.stringify(body));
+  winston.debug("(tybotRoute) POST /block/:project_id/:bot_id/:block_id req.body: ", body);
 
   // invoke block
   // unique ID for each execution
@@ -422,7 +422,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     "token": "NO-TOKEN"
   }
-  winston.verbose("(tybotRoute) sendMessageToBot(): ", JSON.stringify(request))
+  winston.verbose("(tybotRoute) sendMessageToBot(): ", request)
   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
     res.status(200).send({"success":true});
     return;
@@ -559,7 +559,7 @@ async function checkRequest(request_id, id_project) {
  * @param {string} token. User token
  */
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
+   
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
@@ -589,7 +589,7 @@ function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
 
 function myrequest(options, callback, log) {
   winston.verbose("(tybotRoute) myrequest API URL:" + options.url);
-  winston.debug("(tybotRoute) myrequest Options:", JSON.stringify(options));
+  winston.debug("(tybotRoute) myrequest Options:", options);
 
   axios(
     {
@@ -601,7 +601,7 @@ function myrequest(options, callback, log) {
     })
     .then((res) => {
       winston.verbose("Response for url:" + options.url);
-      winston.debug("Response headers:\n" + JSON.stringify(res.headers));
+      winston.debug("Response headers:\n", res.headers);
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -613,7 +613,7 @@ function myrequest(options, callback, log) {
         }
       }
     }).catch((error) => {
-      winston.error("(tybotRoute index) An error occurred: " + JSON.stringify(error) + " url: " + options.url);
+      winston.error("(tybotRoute index) An error occurred: ", error);
       if (callback) {
         callback(error, null, null);
       }

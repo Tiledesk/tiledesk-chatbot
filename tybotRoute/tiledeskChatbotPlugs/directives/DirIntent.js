@@ -2,6 +2,7 @@ let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirIntent {
 
@@ -18,10 +19,8 @@ class DirIntent {
   }
 
   execute(directive, callback) {
-    // console.log("exec intent:", JSON.stringify(directive));
     let action;
     if (directive.action) {
-      // console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
@@ -30,7 +29,7 @@ class DirIntent {
       }
     }
     else {
-      console.error("Incorrect directive:", directive);
+      winston.error("DirIntent Incorrect directive:", directive);
       callback();
       return;
     }
@@ -40,10 +39,7 @@ class DirIntent {
   }
 
   go(action, callback) {
-    // console.log("action intent:", action);
     const intentName = action.intentName;
-    // const intentId = action.intentId;
-    //console.log("new_supportRequest", JSON.stringify(this.supportRequest));
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
@@ -51,17 +47,11 @@ class DirIntent {
     if (intentName) {
       intent_command = "/" + intentName;
     }
-    // else if (intentId) {
-    //   intent_command = "/#" + intentId;
-    // }
     else {
-      // console.error("(DirIntent) No intent name found in action");
       callback();
       return;
     }
 
-    // if (intentName) {
-    //   let intent_command = "/" + intentName;
     let intent_command_request = {
       "payload": {
         "_id": uuidv4(),
@@ -74,23 +64,16 @@ class DirIntent {
         "request": {
           "request_id": requestId,
           "id_project": projectId
-          // "bot_id": botId
         }
       },
       "token": this.token
     }
-    if (this.log) {console.log("move to intent message:", intent_command_request);}
-
+    winston.debug("DirIntent move to intent message: ", intent_command_request);
 
     this.sendMessageToBot(this.TILEBOT_ENDPOINT, intent_command_request, botId, () => {
-      // console.log("sendMessageToBot() req_body sent:", intent_command_request);
       callback(true);
     });
 
-    // }
-    // else {
-    //   callback();
-    // }
   }
 
   static intentDirectiveFor(intent, json_params) {
@@ -100,7 +83,7 @@ class DirIntent {
         string_params = JSON.stringify(json_params);
       }
       catch (error) {
-        console.error("Error stringigying JSON PARAMS", json_params);
+        winston.error("(DirIfOpenHours) Error stringing JSON PARAMS ", json_params);
       }
     }
     if (string_params != null) {
@@ -133,9 +116,7 @@ class DirIntent {
    * @param {string} token. User token
    */
   sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-    // const jwt_token = this.fixToken(token);
     const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
-    // console.log("sendMessageToBot URL", url);
     const HTTPREQUEST = {
       url: url,
       headers: {
@@ -162,10 +143,9 @@ class DirIntent {
   }
 
   myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
+    winston.debug("DirIntent API URL:" + options.url);
+    winston.debug("DirIntent Options:", options);
+
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -182,8 +162,8 @@ class DirIntent {
     axios(axios_options)
     .then((res) => {
       if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
+        winston.debug("DirIntent Response for url: " + options.url);
+        winston.debug("DirIntentResponse headers:\n", res.headers);
       }
       if (res && res.status == 200 && res.data) {
         if (callback) {
@@ -197,7 +177,7 @@ class DirIntent {
       }
     })
     .catch( (error) => {
-      console.error("(DirIntent) Axios error: ", JSON.stringify(error));
+      winston.error("(DirIntent) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null, null);
       }

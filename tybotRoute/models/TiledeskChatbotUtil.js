@@ -253,7 +253,7 @@ class TiledeskChatbotUtil {
     }
 
     static fillCommandAttachments(command, variables, log) {
-        if (log) { winston.debug("(TiledeskChatbotUtils) Filling command button: " + JSON.stringify(command)) }
+        if (log) { winston.debug("(TiledeskChatbotUtils) Filling command button: ", command) }
         if (command.message && command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0) {
             let buttons = command.message.attributes.attachment.buttons;
             const filler = new Filler();
@@ -432,7 +432,7 @@ class TiledeskChatbotUtil {
     static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
-            if (chatbot.log) { winston.debug("Updating request variables. Message:" + JSON.stringify(message)); }
+            if (chatbot.log) { winston.debug("Updating request variables. Message:", message); }
             const messageId = message._id;
             const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
 
@@ -597,10 +597,10 @@ class TiledeskChatbotUtil {
                     message.attributes = {}
                 }
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload " + JSON.stringify(message.attributes.payload)); }
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); }
             }
             if (message.attributes) {
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Ok message.attributes " + JSON.stringify(message.attributes)); }
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes); }
 
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
@@ -634,10 +634,10 @@ class TiledeskChatbotUtil {
             
             
             const _bot = chatbot.bot; // aka FaqKB
-            if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", JSON.stringify(_bot)); }
+            if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", _bot); }
             
             if (_bot.attributes && _bot.attributes.globals) {
-                if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Got Globals: ", JSON.stringify(_bot.attributes.globals)); }
+                if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals); }
                 _bot.attributes.globals.forEach(async (global_var) => {
                     if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value); }
                     await chatbot.addParameter(global_var.key, global_var.value);
@@ -775,7 +775,7 @@ class TiledeskChatbotUtil {
      * @param {string} requestId. Tiledesk chatbot/requestId parameters
      */
     getChatbotParameters(requestId, callback) {
-        // const jwt_token = this.fixToken(token);
+         
         const url = `${process.env.TILEBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
         const HTTPREQUEST = {
             url: url,
@@ -804,7 +804,7 @@ class TiledeskChatbotUtil {
     myrequest(options, callback, log) {
         if (log) {
           winston.debug("(TiledeskChatbotUtil) myrequest API URL: " + options.url);
-          winston.debug("(TiledeskChatbotUtil) myrequest Options URL: ", JSON.stringify(options));
+          winston.debug("(TiledeskChatbotUtil) myrequest Options URL: ", options);
         }
         axios(
           {
@@ -817,7 +817,7 @@ class TiledeskChatbotUtil {
           .then((res) => {
             if (log) {
                 winston.debug("(TiledeskChatbotUtil) Response for url: " + options.url);
-                winston.debug("(TiledeskChatbotUtil) Response headers:\n", JSON.stringify(options));
+                winston.debug("(TiledeskChatbotUtil) Response headers:\n", options);
             }
             if (res && res.status == 200 && res.data) {
               if (callback) {
@@ -831,7 +831,7 @@ class TiledeskChatbotUtil {
             }
           })
           .catch((error) => {
-            winston.error("(TiledeskChatbotUtil) Axios error: ", JSON.stringify(error));
+            winston.error("(TiledeskChatbotUtil) Axios error: ", error.response.data);
             if (callback) {
               callback(error, null, null);
             }

@@ -3,6 +3,7 @@ const { Directives } = require('./Directives');
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirMoveToUnassigned {
 
@@ -25,6 +26,7 @@ class DirMoveToUnassigned {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute MoveToUnassigned directive");
     directive.action = {};
     this.go(directive.action, () => {
       callback();
@@ -34,10 +36,10 @@ class DirMoveToUnassigned {
   async go(action, callback) {
     this.moveToUnassigned(this.requestId, (err) => {
       if (err) {
-        console.error("Error moving to unassigned:", err);
+        winston.error("(DirMoveToUnassigned) Error moving to unassigned: ", err);
       }
       else {
-        // console.log("Successfully moved to unassigned");
+        // Successfully moved to unassigned
       }
       callback();
     });

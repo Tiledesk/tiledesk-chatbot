@@ -4,9 +4,10 @@ const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -18,25 +19,6 @@ const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, 
 const BOT_ID = "botID"; //process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
 const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
-// // normalize the bot structure for the static intent search
-// let intents = bot.intents;
-// delete bot.intents;
-// console.log ("bot still is", JSON.stringify(bot));
-// console.log ("bintents still are", intents[0]);
-// intent_dict = {};
-// for (let i = 0; i < intents.length; i++) {
-//   intent_dict[intents[i].intent_display_name] = intents[i];
-// }
-// bot.intents = intent_dict;
-// const bots_data = {
-//   "bots": {}
-// }
-// bots_data.bots[BOT_ID] = bot;
-// console.log("bot:", bot);
-// console.log("Testing conversation setup:");
-// console.log("PROJECT_ID:", PROJECT_ID);
-// console.log("REQUEST_ID:", REQUEST_ID);
-// console.log("BOT_ID:", BOT_ID);
 
 let app_listener;
 
@@ -47,7 +29,7 @@ describe('Conversation1 - Form filling', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       tybot.startApp(
         {
           // MONGODB_URI: process.env.MONGODB_URI,
@@ -59,10 +41,10 @@ describe('Conversation1 - Form filling', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          console.log("Tilebot route successfully started.");
+          winston.info("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port ', port);
+            winston.info('Tilebot connector listening on port ' + port);
             resolve();
           });
         });
@@ -71,19 +53,16 @@ describe('Conversation1 - Form filling', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('CONVERSATION FORM app_listener closed.');
       done();
     });
   });
 
   it('/start', (done) => {
-    // console.log("/start...ing Form story...");
     let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log(".....req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.text === "Hello");
@@ -106,7 +85,6 @@ describe('Conversation1 - Form filling', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("params /start:", params);
           assert(params);
           assert(params["last_message_id"] === message_id);
           assert(params["project_id"] === PROJECT_ID);
@@ -119,7 +97,7 @@ describe('Conversation1 - Form filling', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      //console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "_id": message_id,
@@ -137,18 +115,16 @@ describe('Conversation1 - Form filling', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        //console.log("Message sent.");
+        winston.verbose("Message sent.");
       });
     });
   });
 
   // it('/disable_input', (done) => {
-  //   // console.log("/disable_input...");
   //   let listener;
   //   let endpointServer = express();
   //   endpointServer.use(bodyParser.json());
   //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     // console.log("req.body....:", JSON.stringify(req.body));
   //     res.send({ success: true });
   //     const message = req.body;
 
@@ -157,18 +133,15 @@ describe('Conversation1 - Form filling', async () => {
   //     assert(message["attributes"]["disableInputMessage"] === true);
 
   //     listener.close(() => {
-  //       // console.log('closed.');
   //       done();
   //     });
 
   //   });
 
   //   listener = endpointServer.listen(10002, '0.0.0.0', function () {
-  //     // console.log('endpointServer started', listener.address());
+  //     winston.verbose('endpointServer started' + listener.address());
   //     // const botId = process.env.TEST_BOT_ID;
   //     // const PROJECT_ID = process.env.TEST_PROJECT_ID;
-  //     // console.log("botId:", botId);
-  //     // console.log("REQUEST_ID:", REQUEST_ID);
   //     let request = {
   //       "payload": {
   //         "_id": uuidv4(),
@@ -187,20 +160,18 @@ describe('Conversation1 - Form filling', async () => {
   //       "token": CHATBOT_TOKEN
   //     }
   //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-  //       // console.log("Message sent.");
+  //       winston.verbose("Message sent.");
   //     });
   //   });
   // });
 
   it('/good_form', (done) => {
-    // console.log("/good_form...");
     const message_id = uuidv4();
     const reply_text = "Andrea";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body22222:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
 
@@ -222,7 +193,7 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          winston.verbose("Message sent.", request);
         });
       }
       else if (message.text === "It's a good form Andrea") {
@@ -232,14 +203,12 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            // console.log("params2:", params);
             assert(params);
             assert(params["last_message_id"] === message_id);
           assert(params["project_id"] === PROJECT_ID);
             assert(params["your_fullname"] === reply_text);
             assert(params["_tdTypeOf:your_fullname"]);
             listener.close(() => {
-              // console.log("done2");
               done();
             });
           }
@@ -254,8 +223,7 @@ describe('Conversation1 - Form filling', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "_id": uuidv4(),
@@ -273,13 +241,12 @@ describe('Conversation1 - Form filling', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        winston.verbose("Message sent.");
       });
     });
   });
 
   it('(intent-to-intent) /move_to => /target_intent', (done) => {
-    // console.log("ALWAYS PASSES: (intent-to-intent) /move_to => /target_intent");
     try {
       let listener;
       let endpointServer = express();
@@ -287,9 +254,7 @@ describe('Conversation1 - Form filling', async () => {
       endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
         res.send({ success: true });
         const message = req.body;
-        // console.log("received message33:", JSON.stringify(message));
         if (message.text === "The target!") {
-          // console.log("Got it. End.");
           listener.close(() => {
             done();
           });
@@ -297,8 +262,7 @@ describe('Conversation1 - Form filling', async () => {
       });
   
       listener = endpointServer.listen(10002, '0.0.0.0', function () {
-        // console.log('endpointServer started', listener.address());
-        // console.log("REQUEST_ID:", REQUEST_ID);
+        winston.verbose('endpointServer started' + listener.address());
         let request = {
           "payload": {
             "_id": uuidv4(),
@@ -315,9 +279,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        // console.log("sending message:", request);
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent33.");
         });
       });
     }
@@ -328,7 +290,6 @@ describe('Conversation1 - Form filling', async () => {
   });
 
   it('/all_filled (none) => /form_to_unfill => (fill) => /all_filled (all) /form_to_unfill (bypass because filled) => /delete_fullname => all_filled (no fullname) => /form_to_unfill (verify it asks only for fullname) => all_filled (all, again)', (done) => {
-    // console.log("SOMETIMES NOT PASSING: /all_filled (none) =>...");
     let request0_uuid = uuidv4();
     let request1_uuid = uuidv4();
     let request2_uuid = uuidv4();
@@ -345,12 +306,8 @@ describe('Conversation1 - Form filling', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      // console.log("received message__3:", JSON.stringify(message));
-      // console.log("message.triggeredByMessageId:", message.triggeredByMessageId);
-      // console.log("message.text:", message.text);
       
       if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}" && message.triggeredByMessageId === request0_uuid) {
-        // console.log("got #0 'You filled...' sending #1");
         let request = {
           "payload": {
             "_id": request1_uuid,
@@ -368,11 +325,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          winston.verbose("Message sent.", request);
         });
       }
       else if (message.text === "Your name?" && message.triggeredByMessageId === request1_uuid) {
-        // console.log("got #1 sending #2");
         let request = {
           "payload": {
             "_id": request2_uuid,
@@ -390,14 +346,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent4.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "Your email?" && message.triggeredByMessageId === request2_uuid) {
-        // console.log("got #2 sending #3");
         let request = {
           "payload": {
             "_id": request3_uuid,
@@ -415,14 +367,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent5.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "Thanks Andrea\nYour email test@test.it" && message.triggeredByMessageId === request3_uuid) {
-        // console.log("got #3 sending #4");
         let request = {
           "payload": {
             "_id": request4_uuid,
@@ -440,14 +388,13 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #3 sending #4. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
         // listener.close( () => {
         //   done();
         // });
       }
       else if (message.text === "You filled\nfullname: Andrea\nyouremail: test@test.it" && message.triggeredByMessageId === request4_uuid) {
-        // console.log("got #4 sending #5");
         let request = {
           "payload": {
             "_id": request5_uuid,
@@ -465,14 +412,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #4 sending #5. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "Thanks Andrea\nYour email test@test.it" && message.triggeredByMessageId === request5_uuid) {
-        // console.log("got #5 sending #6");
         let request = {
           "payload": {
             "_id": request6_uuid,
@@ -490,14 +433,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #5 sending #6. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "deleting fullname..." && message.triggeredByMessageId === request6_uuid) {
-        // console.log("got #6 sending #7");
         let request = {
           "payload": {
             "_id": request7_uuid,
@@ -515,14 +454,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #6 sending #7. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "Your name?" && message.triggeredByMessageId === request7_uuid) {
-        // console.log("got #7 sending #8");
         let request = {
           "payload": {
             "_id": request8_uuid,
@@ -540,14 +475,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #7 sending #8. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
-        // listener.close( () => {
-        //   done();
-        // });
       }
       else if (message.text === "Thanks John\nYour email test@test.it" && message.triggeredByMessageId === request8_uuid) {
-        // console.log("got #8 sending #9");
         let request = { // intent-to-intent connection
           "payload": {
             "_id": request9_uuid,
@@ -565,27 +496,19 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("got #8 sending #9. Message sent.", request);
+          winston.verbose("Message sent ", request);
         });
       }
       else if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}") {
-        // console.log("got #9. End.");
         listener.close(() => {
           done();
         });
       }
-      // else {
-      //   console.error("Unexpected message.");
-      //   console.log("message.triggeredByMessageId", message.triggeredByMessageId)
-      //   console.log("request1_uuid", request1_uuid)
-      //   assert.ok(false);
-      // }
 
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "_id": request0_uuid,
@@ -602,42 +525,32 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      // console.log("sending message:", request);
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        winston.verbose("Message sent.");
       });
     });
   });
 
   it('/splitted', (done) => {
-    console.log("/splitted...");
-    // const message_id = uuidv4();
-    // const reply_text = "Andrea";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
-      // console.log("message:", JSON.stringify(message));
       if (message.attributes.commands) {
         assert(message.attributes.commands.length === 5);
         assert(message.attributes.commands[0].type === "message");
         assert(message.attributes.commands[0].message.text === "Row1");
         assert(message.attributes.commands[0].message.type === "text");
-
         assert(message.attributes.commands[1].type === "wait");
         assert(message.attributes.commands[1].time === 500);
-
         assert(message.attributes.commands[2].type === "message");
         assert(message.attributes.commands[2].message.text === "Row2");
         assert(message.attributes.commands[2].message.type === "image");
         assert(message.attributes.commands[2].message.metadata);
-
         assert(message.attributes.commands[3].type === "wait");
         assert(message.attributes.commands[3].time === 500);
-
         assert(message.attributes.commands[4].type === "message");
         assert(message.attributes.commands[4].message.text === "Row4");
         assert(message.attributes.commands[4].message.type === "text");
@@ -668,8 +581,7 @@ describe('Conversation1 - Form filling', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "_id": uuidv4(),
@@ -687,13 +599,12 @@ describe('Conversation1 - Form filling', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        winston.verbose("Message sent.");
       });
     });
   });
 
   it('/assign_params{...}', (done) => {
-    console.log("/assign_params...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -707,7 +618,6 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            // console.log("params /assign_params:", params);
             assert(params);
             assert(params["variableName"] === "places");
             assert(params["myvar"] === "places");
@@ -740,13 +650,12 @@ describe('Conversation1 - Form filling', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.", request);
+        winston.verbose("Message sent.", request);
       });
     });
   });
 
   it('/assign_params{...} with multi-line JSON', (done) => {
-    console.log("/assign_params{...} with multi-line JSON");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -760,7 +669,6 @@ describe('Conversation1 - Form filling', async () => {
             assert.ok(false);
           }
           else {
-            // console.log("params /assign_params:", params);
             assert(params);
             assert(params["var1"] === "value1");
             assert(params["var2"] === "value2");
@@ -796,21 +704,18 @@ describe('Conversation1 - Form filling', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.", request);
+        winston.verbose("Message sent.", request);
       });
     });
   });
 
 //   it('/if_you_live_IT (_tdCondition) TRUE', (done) => {
-//     console.log("/if_you_live_IT (TRUE)...");
 //     let listener;
 //     let endpointServer = express();
 //     endpointServer.use(bodyParser.json());
 //     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-//       // console.log("req.body:", JSON.stringify(req.body));
 //       res.send({ success: true });
 //       const message = req.body;
-//       // console.log("message:", JSON.stringify(message));
 //       if (message.text.startsWith("myvar:")) {
 //         assert(message.text !== null);
 //         getChatbotParameters(REQUEST_ID, (err, params) => {
@@ -818,7 +723,6 @@ describe('Conversation1 - Form filling', async () => {
 //             assert.ok(false);
 //           }
 //           else {
-//             // console.log("params /condition:", params);
 //             assert(params);
 //             // assert(params["city"] === "Milan");
 //             assert(params["tdCountry"] === "IT");
@@ -839,7 +743,7 @@ describe('Conversation1 - Form filling', async () => {
 //               "token": CHATBOT_TOKEN
 //             }
 //             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-//               // console.log("Message sent.", request);
+//               winston.verbose("Message sent.", request);
 //             });
 //           }
 //         });
@@ -872,21 +776,18 @@ describe('Conversation1 - Form filling', async () => {
 //         "token": CHATBOT_TOKEN
 //       }
 //       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-//         // console.log("Message sent.", request);
+//         winston.verbose("Message sent.", request);
 //       });
 //     });
 //   });
 
 //   it('/if_you_live_IT (_tdCondition) FALSE', (done) => {
-//     // console.log("/if_you_live_IT (FALSE)...");
 //     let listener;
 //     let endpointServer = express();
 //     endpointServer.use(bodyParser.json());
 //     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-//       // console.log("req.body:", JSON.stringify(req.body));
 //       res.send({ success: true });
 //       const message = req.body;
-//       // console.log("message:", JSON.stringify(message));
 //       if (message.text.startsWith("myvar:")) {
 //         assert(message.text !== null);
 //         getChatbotParameters(REQUEST_ID, (err, params) => {
@@ -894,7 +795,6 @@ describe('Conversation1 - Form filling', async () => {
 //             assert.ok(false);
 //           }
 //           else {
-//             // console.log("params /if_you_live_IT:", params);
 //             assert(params);
 //             // assert(params["city"] === "Milan");
 //             assert(params["tdCountry"] === "US");
@@ -915,7 +815,7 @@ describe('Conversation1 - Form filling', async () => {
 //               "token": CHATBOT_TOKEN
 //             }
 //             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-//               // console.log("Message sent.", request);
+//               winston.verbose("Message sent.", request);
 //             });
 //           }
 //         });
@@ -948,7 +848,7 @@ describe('Conversation1 - Form filling', async () => {
 //         "token": CHATBOT_TOKEN
 //       }
 //       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-//         // console.log("Message sent.", request);
+//         winston.verbose("Message sent.", request);
 //       });
 //     });
 //   });
@@ -1008,9 +908,8 @@ describe('Conversation1 - Form filling', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, token, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -1043,7 +942,7 @@ function sendMessageToBot(message, botId, token, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
+//    
 //   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
@@ -1070,10 +969,6 @@ function sendMessageToBot(message, botId, token, callback) {
 // }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
   axios(
     {
       url: options.url,
@@ -1083,11 +978,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -1100,7 +990,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

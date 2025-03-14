@@ -4,6 +4,7 @@ const axios = require("axios").default;
 let https = require("https");
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirIfOnlineAgentsV2 {
 
@@ -28,11 +29,13 @@ class DirIfOnlineAgentsV2 {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute IfOnlineAgentsV2 directive");
     let action;
     if (directive.action) {
       action = directive.action
     }
     else {
+      winston.warn("DirIfOnlineAgentsV2 Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -42,22 +45,21 @@ class DirIfOnlineAgentsV2 {
   }
 
   async go(action, callback) {
-    // console.log("(DirIfOnlineAgents) action:", action);
+    winston.debug("(DirIfOnlineAgentsV2) Action: ", action);
+
     if (!action.trueIntent && !action.falseIntent) {
-      if (this.log) {
-        console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");
-      }
+      winston.error("(DirIfOnlineAgentsV2) Error: missing both action.trueIntent & action.falseIntent");
       callback();
       return;
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
-    if (this.log) {
-      console.log("(DirIfOnlineAgents) IfOnlineAgents:trueIntent:", trueIntent);
-      console.log("(DirIfOnlineAgents) IfOnlineAgents:falseIntent:", falseIntent);
-    }
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
+
+    winston.debug("(DirIfOnlineAgentsV2) IfOnlineAgents:trueIntent: " + trueIntent);
+    winston.debug("(DirIfOnlineAgentsV2) IfOnlineAgents:falseIntent: " + falseIntent);
+
     let stopOnConditionMet = true; //action.stopOnConditionMet;
 
     try {
@@ -83,18 +85,15 @@ class DirIfOnlineAgentsV2 {
         
         let agents;
         if (selectedOption === "currentDep") {
-          if (this.log) {console.log("(DirIfOnlineAgents) currentDep"); }
+          winston.debug("(DirIfOnlineAgentsV2) currentDep");
           let departmentId = await this.chatbot.getParameter("department_id");
-          if (this.log) {console.log("this.context.departmentId:", departmentId);}
+          winston.debug("(DirIfOnlineAgentsV2) this.context.departmentId: " + departmentId); 
 
           if (departmentId) {
-            if (this.log) {console.log("(DirIfOnlineAgents) agents = await this.getProjectAvailableAgents(", departmentId, ", true);"); }
             agents = await this.getProjectAvailableAgents(departmentId, true);
-            if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
           } else {
-            console.error("(DirIfOnlineAgents) no departmentId found in attributes");
+            winston.error("(DirIfOnlineAgentsV2) no departmentId found in attributes");
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
-            if (this.log) {console.log("(DirIfOnlineAgents) flowError added in attributes", await this.chatbot.getParameter("flowError") ); }
             if (falseIntent) { // no agents available
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
               this.intentDir.execute(intentDirective, () => {
@@ -108,29 +107,23 @@ class DirIfOnlineAgentsV2 {
             }
           }
         }
-        else if (selectedOption === "selectedDep") {
-          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === selectedDep", action.selectedDepartmentId); }
-          if (this.log) {console.log("(DirIfOnlineAgents) agents = await this.getProjectAvailableAgents(", action.selectedDepartmentId, ", true);"); }
-          
+        else if (selectedOption === "selectedDep") {          
           agents = await this.getProjectAvailableAgents(action.selectedDepartmentId, true);
-          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
         else { // if (checkAll) => go project-wide
-          if (this.log) {console.log("(DirIfOnlineAgents) selectedOption === all | getProjectAvailableAgents(null, true)"); }
           agents = await this.getProjectAvailableAgents(null, true);
-          if (this.log) {console.log("(DirIfOnlineAgents) agents:", agents); }
         }
 
         if (agents && agents.length > 0) {
           if (trueIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-            if (this.log) {console.log("agents (openHours) => trueIntent");}
+            winston.debug("(DirIfOnlineAgentsV2) agents (openHours) => trueIntent");
             this.intentDir.execute(intentDirective, () => {
               callback(stopOnConditionMet);
             });
           }
           else {
-            if (this.log) { console.log("(DirIfOnlineAgents) No IfOnlineAgents trueIntent defined. callback()"); } // prod
+            winston.debug("(DirIfOnlineAgentsV2) No IfOnlineAgents trueIntent defined. callback()"); // prod
             this.chatbot.addParameter("flowError", "(If online Agents) No IfOnlineAgents success path defined.");
             callback();
             return;
@@ -138,20 +131,20 @@ class DirIfOnlineAgentsV2 {
         }
         else if (falseIntent) { // no agents available
           let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-          if (this.log) {console.log("(DirIfOnlineAgents) !agents (openHours) => falseIntent", intentDirective);}
+          winston.debug("(DirIfOnlineAgentsV2) !agents (openHours) => falseIntent", intentDirective);
           this.intentDir.execute(intentDirective, () => {
             callback(stopOnConditionMet);
           });
         }
         else {
-          if (this.log) {console.log("(DirIfOnlineAgents) Error: No falseIntent defined", intentDirective);}
+          winston.error("(DirIfOnlineAgentsV2) Error: No falseIntent defined", intentDirective);
           this.chatbot.addParameter("flowError", "(If online Agents) No path for 'no available agents' defined.");
           callback();
         }
       } else {
         if (falseIntent) {
           let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-          if (this.log) { console.log("!agents (!openHours) => falseIntent"); }
+          winston.debug("(DirIfOnlineAgentsV2) !agents (!openHours) => falseIntent");
           this.intentDir.execute(intentDirective, () => {
             callback();
           });
@@ -162,7 +155,7 @@ class DirIfOnlineAgentsV2 {
       }
     }
     catch(err) {
-      console.error("(DirIfOnlineAgents) An error occurred:" + err);
+      winston.error("(DirIfOnlineAgentsV2) An error occurred: ", err);
       this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + err);
       callback();
     }
@@ -171,7 +164,7 @@ class DirIfOnlineAgentsV2 {
   async openNow() {
     return new Promise( (resolve, reject) => {
       this.tdClient.openNow(async (err, result) => {
-        if (this.log) {console.log("(DirIfOnlineAgents) openNow():", result);}
+        winston.debug("(DirIfOnlineAgentsV2) openNow(): ", result);
         if (err) {
           reject(err);
         }
@@ -218,10 +211,6 @@ class DirIfOnlineAgentsV2 {
   }
 
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -231,9 +220,6 @@ class DirIfOnlineAgentsV2 {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -242,10 +228,6 @@ class DirIfOnlineAgentsV2 {
     }
     axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (res && res.status == 200 && res.data) {
           if (callback) {
             callback(null, res.data);
@@ -258,7 +240,7 @@ class DirIfOnlineAgentsV2 {
         }
       })
       .catch((error) => {
-        console.error("(DirIfOnlineAgents) Axios error: ", JSON.stringify(error));
+        winston.error("(DirIfOnlineAgents) Axios error: ", error.response.data);
         if (callback) {
           callback(error, null);
         }

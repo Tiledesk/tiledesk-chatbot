@@ -4,7 +4,7 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
-
+const winston = require('../../utils/winston');
 
 class DirHubspot {
 
@@ -21,13 +21,13 @@ class DirHubspot {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("DirHubspot directive: ", directive); }
+    winston.verbose("Execute Hubspot directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("DirHubspot Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirHubspot Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -37,9 +37,9 @@ class DirHubspot {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirHubspot action:", JSON.stringify(action)); }
+    winston.debug("(DirHubspot) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirHubspot tdcache is mandatory");
+      winston.error("(DirHubspot) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -49,12 +49,10 @@ class DirHubspot {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("(DirHubspot) trueIntent " + trueIntent)
+    winston.debug("(DirHubspot) falseIntent " + falseIntent)
+    winston.debug("(DirHubspot) trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("(DirHubspot) falseIntentAttributes " + falseIntentAttributes)
 
     let requestVariables = null;
     requestVariables =
@@ -64,20 +62,20 @@ class DirHubspot {
 
     //let token = action.token;
     let bodyParameters = action.bodyParameters;
-    if (this.log) { console.log("DirHubspot bodyParameters: ", bodyParameters); }
+    winston.debug("(DirHubspot) bodyParameters: ", bodyParameters);
 
     if (!bodyParameters || bodyParameters === '') {
-      if (this.log) { console.error("DirHubspot ERROR - bodyParameters is undefined or null or empty string") };
+      winston.error("(DirHubspot) Error: bodyParameters is undefined or null or empty string");
       callback();
       return;
     }
 
     const hubspot_base_url = process.env.HUBSPOT_ENDPOINT || "https://api.hubapi.com/crm/v3/";
-    if (this.log) { console.log("DirHubspot hubspot_base_url ", hubspot_base_url); }
+    winston.debug("(DirHubspot) hubspot_base_url " + hubspot_base_url);
 
     let key = await this.getKeyFromIntegrations();
     if (!key) {
-      if (this.log) { console.log("DirHubspot - Key not found in Integrations."); }
+      winston.debug("(DirHubspot)  - Key not found in Integrations.");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -87,11 +85,10 @@ class DirHubspot {
 
     const filler = new Filler();
     for (const [key, value] of Object.entries(bodyParameters)) {
-      if (this.log) { console.log("bodyParam:", key, "value:", value) }
       let filled_value = filler.fill(value, requestVariables);
       bodyParameters[key] = filled_value;
     }
-    if (this.log) { console.log('DirHubspot bodyParameters filler: ', bodyParameters) }
+    winston.debug("(DirHubspot) bodyParameters filled: ", bodyParameters);
 
     let json = {
       inputs: [
@@ -107,17 +104,13 @@ class DirHubspot {
       json: json,
       method: "POST"
     }
-    if (this.log) { console.log("DirHubspot HUBSPOT_HTTPREQUEST", JSON.stringify(HUBSPOT_HTTPREQUEST)); }
+    winston.debug("(DirHubspot) HttpRequest ", HUBSPOT_HTTPREQUEST);
 
     this.#myrequest(
       HUBSPOT_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            if (this.log) {
-              console.error("(httprequest) DirHubspot err response:", err.response)
-              console.error("(httprequest) DirHubspot err data:", err.response.data)
-            };
-
+            winston.error("(DirHubspot)  err response: ", err.response.data)
             let result = null;
             let status = null;
             let error;
@@ -133,11 +126,9 @@ class DirHubspot {
                   error = err.response.data.message;
             }
 
-            if (this.log) {
-              console.error("(httprequest) DirHubspot err data result:", result);
-              console.error("(httprequest) DirHubspot err data status:", status);
-              console.error("(httprequest) DirHubspot err data error:", error);
-            }
+            winston.debug("(DirHubspot) err data result: " + result);
+            winston.debug("(DirHubspot) err data status: " + status);
+            winston.debug("(DirHubspot) err data error: ", error);
 
             await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
@@ -149,7 +140,7 @@ class DirHubspot {
             return;
           }
         } else if (callback) {
-          if (this.log) { console.log("DirHubspot resbody: ", JSON.stringify(resbody, null, 2)); }
+          winston.debug("(DirHubspot) resbody: ", resbody);
 
           let status = 201;
           let error = null;
@@ -169,12 +160,10 @@ class DirHubspot {
   }
 
   async #assignAttributes(action, status, result, error) {
-    if (this.log) {
-      console.log("DirHubspot assignAttributes action:", action)
-      console.log("DirHubspot assignAttributes status:", status)
-      console.log("DirHubspot assignAttributes result:", result)
-      console.log("DirHubspot assignAttributes error:", error)
-    }
+    winston.debug("(DirHubspot) assignAttributes action: ", action)
+    winston.debug("(DirHubspot) assignAttributes status: " + status)
+    winston.debug("(DirHubspot) assignAttributes result: ", result)
+    winston.debug("(DirHubspot) assignAttributes error: ", error)
     if (this.context.tdcache) {
       if (action.assignStatusTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
@@ -185,22 +174,10 @@ class DirHubspot {
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
       }
-
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("DirHubspot request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
   }
 
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("** API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -210,9 +187,6 @@ class DirHubspot {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -221,10 +195,6 @@ class DirHubspot {
     }
     axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (res && (res.status == 200 || res.status == 201) && res.data) {
           if (callback) {
             callback(null, res.data);
@@ -253,7 +223,6 @@ class DirHubspot {
     if (falseIntent) {
       falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
     }
-    if (this.log) { console.log('DirHubspot executeCondition/result', result) }
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
@@ -263,7 +232,7 @@ class DirHubspot {
         });
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirHubspot) No trueIntentDirective specified"); 
         if (callback) {
           callback();
         }
@@ -278,7 +247,7 @@ class DirHubspot {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirHubspot) No falseIntentDirective specified"); 
         if (callback) {
           callback();
         }
@@ -297,7 +266,7 @@ class DirHubspot {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+      winston.debug("(DirHubspot) Integration HttpRequest ", INTEGRATIONS_HTTPREQUEST)
 
       this.#myrequest(
         INTEGRATIONS_HTTPREQUEST, async (err, integration) => {

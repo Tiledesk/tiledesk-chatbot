@@ -99,7 +99,7 @@ class TiledeskChatbot {
         // it only gets the locked_intent
         // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
         const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
-        winston.debug("(TiledeskChatbot) Locked intent. Got faqs: " + JSON.stringify(faq));
+        winston.debug("(TiledeskChatbot) Locked intent. Got faqs: ", faq);
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, lead);//, bot);
@@ -152,7 +152,7 @@ class TiledeskChatbot {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
           if (faq) {
-            winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:" + JSON.stringify(faq))
+            winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
               if (intent.parameters) {
                 for (const [key, value] of Object.entries(intent.parameters)) {
@@ -183,7 +183,7 @@ class TiledeskChatbot {
         winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
       }
       catch (error) {
-        winston.error("(TiledeskChatbot) An error occurred during exact match: " + JSON.stringify(error));
+        winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
         winston.debug("(TiledeskChatbot) exact match or action faq: ", faqs[0]);
@@ -293,7 +293,7 @@ class TiledeskChatbot {
 
         winston.debug("(TiledeskChatbot) FORM End");
         winston.debug("(TiledeskChatbot) Unlocking intent for request: " + this.requestId);
-        winston.debug("(TiledeskChatbot) Populate data on lead:" + JSON.stringify(lead));
+        winston.debug("(TiledeskChatbot) Populate data on lead:", lead);
 
         this.unlockIntent(this.requestId);
         if (lead) {
@@ -357,7 +357,7 @@ class TiledeskChatbot {
       };
     }
     else {
-      winston.verbose("(TiledeskChatbot) Intent with no actions or answer.", JSON.stringify(answerObj));
+      winston.verbose("(TiledeskChatbot) Intent with no actions or answer.", answerObj);
       return null;
     }
     
@@ -391,9 +391,9 @@ class TiledeskChatbot {
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
     // exec webhook
-    winston.debug("(TiledeskChatbot) exec webhook on bot:" + JSON.stringify(this.bot));
+    winston.debug("(TiledeskChatbot) exec webhook on bot:", this.bot);
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
-    winston.debug("(TiledeskChatbot) bot_answer ready:" + JSON.stringify(bot_answer));
+    winston.debug("(TiledeskChatbot) bot_answer ready:", bot_answer);
     return bot_answer;
   }
 
@@ -475,7 +475,7 @@ class TiledeskChatbot {
           attributes_native_values[key] = JSON.parse(value);
         }
         catch(err) {
-          winston.error("(TiledeskChatbot) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: ", err);
+          winston.error("(TiledeskChatbot) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
         }
       }
     }
@@ -573,7 +573,7 @@ class TiledeskChatbot {
     if (static_bot_answer.attributes && static_bot_answer.attributes.webhook && static_bot_answer.attributes.webhook === true) {
       const variables = await this.allParameters();
       context.variables = variables;
-      winston.debug("(TiledeskChatbot) adding variables to webhook context:" + JSON.stringify(context.variables));
+      winston.debug("(TiledeskChatbot) adding variables to webhook context:", context.variables);
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;

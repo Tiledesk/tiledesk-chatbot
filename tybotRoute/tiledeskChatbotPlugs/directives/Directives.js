@@ -72,13 +72,10 @@ class Directives {
   // static CONDITION = "condition"; // DEPRECATED
 
   static actionToDirective(action) {
-    // console.log("actionToDirective:", action);
     let directive = {
       name: action["_tdActionType"],
       action: action
     }
-    // delete directive.action["_tdActionType"];
-    // console.log("Directive out:", directive);
     return directive;
   }
 }

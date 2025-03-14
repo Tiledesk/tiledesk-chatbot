@@ -2,6 +2,7 @@ const { Directives } = require('./Directives.js');
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
 const { Filler } = require("../Filler");
+const winston = require('../../utils/winston');
 
 class DirMessage {
 
@@ -28,10 +29,10 @@ class DirMessage {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute Message directive");
     let action;
     if (directive.action) {
       action = directive.action;
-      if (this.log) {console.log("got action:", JSON.stringify(action));}
       if (!action.attributes) {
         action.attributes = {}
       }
@@ -54,7 +55,6 @@ class DirMessage {
       //     action.body.message.type = "text";
       //   }
       // }
-      // console.log("final message action:", JSON.stringify(action));
     }
     // DEPRECATED
     else if (directive.parameter) {
@@ -78,7 +78,7 @@ class DirMessage {
       // }
     }
     else {
-      console.error("Incorrect directive:", directive);
+      winston.warn("DirMessage Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -93,9 +93,9 @@ class DirMessage {
   }
 
   async go(action, callback) {
-    // const message = action.body.message;
+    winston.debug("(DirMessage) Action: ", action);
     const message = action;
-    if (this.log) {console.log("Message to extEndpoint:", JSON.stringify(message))};
+    winston.debug("(DirMessage) Message to extEndpoint:", message);
 
     if(!action.isInfo && this.supportRequest && !this.supportRequest.draft){
       callback();
@@ -117,17 +117,15 @@ class DirMessage {
       const filler = new Filler();
       message.text = filler.fill(message.text, requestVariables);
     }
-    // message.text = "Ciao1\n\nCIao2"
-    // console.log("sendSupportMessageExt from dirmessage", message);
 
     this.tdClient.sendSupportMessage(
       this.requestId,
       message,
       (err) => {
         if (err) {
-          console.error("Error sending reply:", err);
+          winston.err("(DirMessage) Error sending reply: ", err);
         }
-        if (this.log) {console.log("Reply message sent:", JSON.stringify(message));}
+        winston.debug("(DirMessage) Reply message sent: ", message);
         callback();
     });
 
@@ -138,12 +136,8 @@ class DirMessage {
   //   let text = "New message";
   //   for (let i = 0; i < commands.length; i++) {
   //     const command = commands[i];
-  //     console.log("cheking command", command)
   //     if (command.type === "message") {
-  //       console.log("command.type: message!")
-  //       console.log("command.message.type!", command.message.type)
-  //       console.log("command.message.text!", command.message.text)
-        
+      
   //       if (command.message.type) {
   //         type = command.message.type;
   //       }
@@ -157,7 +151,6 @@ class DirMessage {
   //     type: type,
   //     text: text
   //   }
-  //   // console.log("message_info:", message_info);
   //   return message_info;
   // }
 

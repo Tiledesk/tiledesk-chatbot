@@ -4,9 +4,10 @@ const tybot = require("../");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -26,7 +27,7 @@ describe('Conversation for WebRequestV2 test', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       tybot.startApp(
         {
           // MONGODB_URI: process.env.MONGODB_URI,
@@ -38,10 +39,10 @@ describe('Conversation for WebRequestV2 test', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          console.log("Tilebot route successfully started.");
+          winston.info("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port ', port);
+            winston.info('Tilebot connector listening on port ' + port);
             resolve();
           });
         });
@@ -50,19 +51,16 @@ describe('Conversation for WebRequestV2 test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
   it('/webrequestv2: returns a json body, GET, assign result, assign status', (done) => {
-    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -72,7 +70,6 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -98,7 +95,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -116,19 +113,17 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('webrequestv2 success status condition', (done) => {
-    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -138,7 +133,6 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2_success_status_condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -162,7 +156,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -180,19 +174,17 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('webrequestv2 - failure (404) status condition', (done) => {
-    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
@@ -202,7 +194,6 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2 - failure status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -226,7 +217,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -244,26 +235,23 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('webrequestv2 - failure (300) status condition', (done) => {
-    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-      // console.log("/webrequestv2 GET req.headers:", req.headers);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "*/*");
       assert(req.headers["cache-control"] === "no-cache");
       res.sendStatus(300);
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2 - failure 300 status condition...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -289,7 +277,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -307,20 +295,17 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('/webrequestv2 - post: POST a json body, get result, assign status', (done) => {
-    // console.log("/webrequestv2");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/test/webrequest/post/json', async (req, res) => {
-      // console.log("/webrequestv2 POST req.headers:", req.headers);
-      // console.log("/webrequestv2 POST req.body:", req.body);
       assert(req.headers["user-agent"] === "TiledeskBotRuntime");
       assert(req.headers["content-type"] === "application/json");
       assert(req.headers["cache-control"] === "no-cache");
@@ -330,7 +315,6 @@ describe('Conversation for WebRequestV2 test', async () => {
       });
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -355,7 +339,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -373,13 +357,12 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('/webrequestv2 - post: POST a form-data, get result, assign status', (done) => {
-    // console.log("/webrequestv2 - post: POST a form-data, get result, assign status");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
@@ -390,26 +373,19 @@ describe('Conversation for WebRequestV2 test', async () => {
     var fs = require('fs');
     const upload = multer({ dest: 'uploads/' })
     endpointServer.post('/test/webrequest/post/form-data', upload.single('file'), async (req, res) => {
-      // console.log("/webrequestv2 POST form-data req.file:", req.file);
       let file_contents = null;
       try {
         file_contents = fs.readFileSync(req.file.path, 'utf8');
-        // console.log("file_data:", file_contents);
       } catch (err) {
-        console.error(err);
+        winston.error(err);
       }
 
-      // console.log("/webrequestv2 POST form-data req.body:", req.body);
-      // console.log("/webrequestv2 POST form-data req.headers:", req.headers);
-      // console.log("/webrequestv2 POST form-data req.body.purpose:", req.body.purpose);
       const responseBody = {
         "purpose": req.body.purpose,
         "file_contents": file_contents
       };
-      // console.log("Deleting uploaded files...");
       const uploads_folder = "./uploads";
       fs.readdir(uploads_folder, (err, files) => {
-        // console.log("Removing files: ", files);
         if (err) throw err;
         for (const file of files) {
           fs.unlink(path.join(uploads_folder, file), (err) => {
@@ -423,7 +399,6 @@ describe('Conversation for WebRequestV2 test', async () => {
       res.send("This is a simple text file");
     });
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/webrequestv2 - post...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -448,7 +423,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -466,7 +441,7 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -482,9 +457,9 @@ describe('Conversation for WebRequestV2 test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
+   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -517,7 +492,7 @@ function sendMessageToBot(message, botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
+//    
 //   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
@@ -544,10 +519,6 @@ function sendMessageToBot(message, botId, callback) {
 // }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
   axios(
     {
       url: options.url,
@@ -557,11 +528,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -574,7 +540,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

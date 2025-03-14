@@ -16,7 +16,7 @@ class WebhookChatbotPlug {
     winston.verbose("(WebhookChatbotPlug) webhook" + answer.attributes.webhook);
     if (answer.attributes && answer.attributes.webhook && answer.attributes.webhook === true) {
       winston.debug("(WebhookChatbotPlug) Executing webhook url " + this.webhookurl);
-      winston.debug("(WebhookChatbotPlug) Executing webhook on context: " + JSON.stringify(context));
+      winston.debug("(WebhookChatbotPlug) Executing webhook on context: ", context);
       if (!this.validWebhookURL(this.webhookurl)) {
         winston.error("(WebhookChatbotPlug) Error. Invalid webhook URL: " + this.webhookurl + " on context: " + JSON.stringify(context));
         pipeline.nextplug();
@@ -31,7 +31,7 @@ class WebhookChatbotPlug {
         else {
           winston.debug("(WebhookChatbotPlug) Webhook successfully end:", message_from_webhook);
           const pipeline_original_message = pipeline.message
-          winston.debug("(WebhookChatbotPlug) pipeline.message before webhook" + JSON.stringify(pipeline.message));
+          winston.debug("(WebhookChatbotPlug) pipeline.message before webhook", pipeline.message);
 
           // **** setting message from webhook,
           // **** MERGING with original not overwritten data, manually
@@ -75,8 +75,8 @@ class WebhookChatbotPlug {
   }
 
   execWebhook(reply_message, context, webhookurl, callback) {
-    winston.debug("(WebhookChatbotPlug) Webhook on context" + JSON.stringify(context));
-    winston.debug("(WebhookChatbotPlug) WEBHOOK on message" + JSON.stringify(reply_message));
+    winston.debug("(WebhookChatbotPlug) Webhook on context ", context);
+    winston.debug("(WebhookChatbotPlug) WEBHOOK on message ", reply_message);
     const HTTPREQUEST = {
       url: webhookurl,
       headers: {
@@ -91,7 +91,7 @@ class WebhookChatbotPlug {
       HTTPREQUEST,
       function(err, res) {
         if (err || (res && res.status >= 400) || (res && !res.data)) {
-          winston.error("(WebhookChatbotPlug) An error occurred calling intent's webhook url:" + webhookurl);
+          winston.error("(WebhookChatbotPlug) An error occurred calling intent's webhook url: " + webhookurl);
           if (callback) {
             callback(reply_message);
           }
@@ -112,7 +112,7 @@ class WebhookChatbotPlug {
   static myrequest(options, callback, log) {
     if (log) {
       winston.debug("(WebhookChatbotPlug) myrequest API URL:" + options.url);
-      winston.debug("(WebhookChatbotPlug) myrequest Options:" + JSON.stringify(options));
+      winston.debug("(WebhookChatbotPlug) myrequest Options:", options);
     }
     axios(
       {
@@ -124,15 +124,15 @@ class WebhookChatbotPlug {
     .then(function (res) {
       if (log) {
         winston.debug("(WebhookChatbotPlug) myrequest Response for url:", options.url);
-        winston.debug("(WebhookChatbotPlug) myrequest Response headers:\n" + JSON.stringify(res.headers));
-        winston.debug("(WebhookChatbotPlug) myrequest Response body:\n" + JSON.stringify(res.data));
+        winston.debug("(WebhookChatbotPlug) myrequest Response headers:\n", res.headers);
+        winston.debug("(WebhookChatbotPlug) myrequest Response body:\n", res.data);
       }
       if (callback) {
         callback(null, res);
       }
     })
     .catch(function (error) {
-      winston.debug("(WebhookChatbotPlug) Axios error: ", JSON.stringify(error));
+      winston.debug("(WebhookChatbotPlug) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null, null);
       }

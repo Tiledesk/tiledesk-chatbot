@@ -7,14 +7,12 @@ describe('Intent name parsing', function() {
     it('parsing ""', async () => {
         const explicit_intent_name = "";
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        // console.log("intent:", intent);
         assert(intent === null);
     });
 
     it('parsing "{}"', async () => {
         const explicit_intent_name = "{}";
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        // console.log("intent:", intent);
         assert(intent.name === "");
         assert(intent.parameters !== null);
     });
@@ -22,7 +20,6 @@ describe('Intent name parsing', function() {
     it('parsing "intent_name"', async () => {
         const explicit_intent_name = "intent_name";
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        // console.log("intent:", intent);
         assert(intent !== null);
         assert(intent.name === "intent_name");
         assert(intent.parameters === undefined);
@@ -31,7 +28,6 @@ describe('Intent name parsing', function() {
     it('parsing "intent_name{}"', async () => {
         const explicit_intent_name = "intent_name{}";
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        // console.log("intent:", intent);
         assert(intent !== null);
         assert(intent.name === "intent_name");
         assert(intent.parameters !== null);
@@ -40,7 +36,6 @@ describe('Intent name parsing', function() {
     it("parsing 'intent_name{valid JSON}'", async () => {
         const explicit_intent_name = 'intent_name{ "name": "myname", "age": 20}';
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        // console.log("intent:", intent);
         assert(intent !== null);
         assert(intent.name === "intent_name");
         assert(intent.parameters !== null);
@@ -135,7 +130,6 @@ describe('Random reply', function() {
     //         }
     //     }
     //     const rnd_commands = TiledeskChatbotUtil.chooseRandomReply(message);
-    //     console.log("random reply:", rnd_commands);
     //     assert(rnd_commands.length === 2);
     //     assert(rnd_commands[0].type === "wait");
     //     assert(rnd_commands[0].time === 500);
@@ -220,7 +214,6 @@ describe('Random reply', function() {
             }
         }
         const rnd_commands = TiledeskChatbotUtil.chooseRandomReply(message);
-        // console.log("random reply:", rnd_commands);
         assert(rnd_commands.length === 2);
         assert(rnd_commands[0].type === "wait");
         assert(rnd_commands[0].time === 500);
@@ -255,7 +248,6 @@ describe('commands.button filler', function() {
             "project_id": "009988"
         }
         TiledeskChatbotUtil.fillCommandAttachments(command, vars);
-        // console.log("command:", JSON.stringify(command))
         assert(command.message.attributes.attachment.buttons[0].value === "button text");
         assert(command.message.attributes.attachment.buttons[0].type === "url");
         assert(command.message.attributes.attachment.buttons[0].target === "blank");
@@ -348,10 +340,7 @@ describe('commands.button filler', function() {
     //         }
     //     }
     //     const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-    //     // console.log("cleanMessage reply:", JSON.stringify(cleanMessage));
     //     const commands = cleanMessage.attributes.commands;
-    //     // console.log("commands reply:", JSON.stringify(commands));
-    //     // console.log("commands reply.length:", commands.length);
     //     assert(commands.length === 8);
     //     assert(commands[0].type === "wait");
     //     assert(commands[0].time === 500);
@@ -366,7 +355,6 @@ describe('commands.button filler', function() {
     //     assert(commands[4].type === "wait");
     //     assert(commands[4].time === 500);
     //     assert(commands[5].message.type === "frame");
-    //     // console.log("commands[5].message.text", commands[5].message.text)
     //     assert(commands[5].message.text === undefined);
 
     //     assert(commands[6].type === "wait");
@@ -431,9 +419,7 @@ describe('commands.button filler', function() {
     //         }
     //     }
     //     const cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-    //     // console.log("cleanMessage 2 reply:", JSON.stringify(cleanMessage));
     //     const commands = cleanMessage.attributes.commands;
-    //     // console.log("commands 2 reply:", JSON.stringify(commands));
     //     assert(commands.length === 0);
     //     assert(TiledeskChatbotUtil.isValidReply(message) === false);
     // });
@@ -510,7 +496,6 @@ describe('commands.button filler', function() {
             "project_id": "009988"
         }
         TiledeskChatbotUtil.fillCommandAttachments(command, vars);
-        // console.log("command:", JSON.stringify(command))
         assert(command.message.attributes.attachment.buttons[0].value === "button text");
         assert(command.message.attributes.attachment.buttons[0].type === "url");
         assert(command.message.attributes.attachment.buttons[0].target === "blank");
@@ -523,13 +508,7 @@ describe('Search buttons by text', function() {
 
     it('strip emojis', async () => {
         const str = "🥰🥰🥰🥰🥰🥰Andrea✅";
-                           
         const stripped = TiledeskChatbotUtil.stripEmoji(str);
-        // console.log("stripped:", stripped);
-        // console.log("length:", stripped.length);
-        // for (let i = 0; i < stripped.length; i++) {
-        //     console.log(">" + stripped.charAt(i));
-        // }
         assert(stripped === "Andrea");
     });
 
@@ -544,7 +523,6 @@ describe('Search buttons by text', function() {
         ];
                            
         const button = TiledeskChatbotUtil.buttonByText("Yes", buttons);
-        // console.log("button:", JSON.stringify(button));
         assert(button !== null);
         assert(button.value === "Yes");
     });
@@ -560,7 +538,6 @@ describe('Search buttons by text', function() {
         ];
                            
         const button = TiledeskChatbotUtil.buttonByText("yes", buttons);
-        // console.log("button:", JSON.stringify(button));
         assert(button !== null);
         assert(button.value === "Yes");
     });
@@ -576,31 +553,24 @@ describe('Search buttons by text', function() {
                 "alias": "nope, nada"
             }
         ];
-        
-        // console.log("alias:",buttons);
 
         const button = TiledeskChatbotUtil.buttonByText("yep", buttons);
-        // console.log("button:", JSON.stringify(button));
         assert(button !== null);
         assert(button.value === "Yes");
 
         const button2 = TiledeskChatbotUtil.buttonByText(" yep ", buttons);
-        // console.log("button2:", JSON.stringify(button2));
         assert(button2 !== null);
         assert(button2.value === "Yes");
 
         const button3 = TiledeskChatbotUtil.buttonByText(" SURE ", buttons);
-        // console.log("button2:", JSON.stringify(button3));
         assert(button3 !== null);
         assert(button3.value === "Yes");
 
         const button4 = TiledeskChatbotUtil.buttonByText(" nope ", buttons);
-        // console.log("button4:", JSON.stringify(button4));
         assert(button4 !== null);
         assert(button4.value === "No");
 
         const button5 = TiledeskChatbotUtil.buttonByText("Nada", buttons);
-        // console.log("button5:", JSON.stringify(button5));
         assert(button5 !== null);
         assert(button5.value === "No");
     });

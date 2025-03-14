@@ -4,9 +4,10 @@ const tybot = require("../");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -24,7 +25,7 @@ describe('Conversation1 - Form filling', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       tybot.startApp(
         {
           // MONGODB_URI: process.env.MONGODB_URI,
@@ -36,10 +37,10 @@ describe('Conversation1 - Form filling', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          console.log("Tilebot route successfully started.");
+          winston.info("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port ', port);
+            winston.info('Tilebot connector listening on port ' + port);
             resolve();
           });
       });
@@ -48,13 +49,11 @@ describe('Conversation1 - Form filling', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('CONVERSATION FORM app_listener closed.');
       done();
     });
   });
 
   it('/locked', (done) => {
-    // console.log("/locked...");
     let request0_uuid = uuidv4();
     let request1_uuid = uuidv4();
     let request2_uuid = uuidv4();
@@ -66,7 +65,6 @@ describe('Conversation1 - Form filling', async () => {
       res.send({ success: true });
       const message = req.body;
       if (message.text.startsWith("Hi welcome to this dialog.")) {
-        // console.log("got #0 sending #1", message.text);
         let request = {
           "payload": {
             "_id": request1_uuid,
@@ -84,11 +82,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent.", request);
+          winston.verbose("Message sent.", request);
         });
       }
       else if (message.text.startsWith("As I told you,")) {
-        // console.log("got #1 sending #2", message.text);
         let request = {
           "payload": {
             "_id": request2_uuid,
@@ -106,11 +103,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent4.", request);
+          winston.verbose("Message sent.", request);
         });
       }
       else if (message.text.startsWith("And now tell me,")) {
-        // console.log("got #2 sending #3", message.text);
         let request = {
           "payload": {
             "_id": request3_uuid,
@@ -128,11 +124,10 @@ describe('Conversation1 - Form filling', async () => {
           "token": CHATBOT_TOKEN
         }
         sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-          // console.log("Message sent5.", request);
+          winston.verbose("Message sent ", request);
         });
       }
       else if (message.text.startsWith("Well, survey completed!")) {
-        // console.log("got #4. End.", message.text);
         listener.close(() => {
           done();
         });
@@ -141,8 +136,7 @@ describe('Conversation1 - Form filling', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', function () {
-      // console.log('endpointServer started', listener.address());
-      // console.log("REQUEST_ID:", REQUEST_ID);
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "_id": request0_uuid,
@@ -159,9 +153,8 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      // console.log("sending message:", request);
       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
-        // console.log("Message sent.");
+        winston.verbose("Message sent.");
       });
     });
   });
@@ -176,9 +169,9 @@ describe('Conversation1 - Form filling', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, token, callback) {
-  // const jwt_token = this.fixToken(token);
+   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -205,10 +198,6 @@ function sendMessageToBot(message, botId, token, callback) {
 }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
   axios(
     {
       url: options.url,
@@ -218,11 +207,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -235,7 +219,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

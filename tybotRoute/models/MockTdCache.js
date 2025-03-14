@@ -15,11 +15,7 @@ class MockTdCache {
   }
 
   async incr(k) {
-    // console.log("incr...", k)
-    // return new Promise( (resolve, reject) => {
-    // console.log("Promise incr...", k)
     let value = await this.get(k);
-    // console.log("value.............", value)
     if (value == undefined || value == null) {
       value = 0;
     }
@@ -27,15 +23,10 @@ class MockTdCache {
       value = Number(value);
     }
     catch(error) {
-      // console.error("Error on value = Number(value);", error);
       value = 0
     }
-    // console.log("got", k, value)
     let v_incr = Number(value) + 1;
     this.db.set(k, "" + v_incr) // saves as string
-    // resolve();
-      
-    // });
   }
 
   async get(k) {
