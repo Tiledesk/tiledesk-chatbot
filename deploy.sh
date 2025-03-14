@@ -14,11 +14,12 @@ cd ..
 
 # Get curent branch name
 current_branch=$(git rev-parse --abbrev-ref HEAD)
+remote_name=$(git config --get branch.$current_branch.remote)
 
 ## Push commit to git
 git add .
 git commit -m "version added: ### $version"
-git push tiledesk-chatbot "$current_branch"
+git push "$remote_name" "$current_branch"
 
 ## Create tag and npm 
 if [ "$version" != "" ]; then
