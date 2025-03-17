@@ -1,5 +1,6 @@
 let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
+const FLOW_LOGS_ENABLED = process.env.FLOW_LOGS_ENABLED;
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
 let publisher = new Publisher(AMQP_MANAGER_URL, {
     debug: false,
@@ -21,16 +22,27 @@ class Logger {
             //throw new Error('config.request_id is mandatory');
         }
 
-        this.request_id = config.request_id;
-        console.log("(Logger) new logger for request_id ", this.request_id, config.request_id)
-        this.dev = config.dev;
-        console.log("(Logger) is dev conversation", this.dev, config.dev)
+        if (!FLOW_LOGS_ENABLED || FLOW_LOGS_ENABLED === false || FLOW_LOGS_ENABLED === 'false') {
+            console.warn("(Logger) Flow logs disabled");
+            this._disableMethods();
+        }
 
         if (!AMQP_MANAGER_URL) {
-            console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
-            return;
-            //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
+            console.warn("(Logger) No AQMP Manager url provided. Flow logs disabled");
+            this._disableMethods();
         }
+
+        this.request_id = config.request_id;
+        this.dev = false;
+        if (config.dev && config.dev === true) {
+            this.dev = true;
+        }
+
+        // if (!AMQP_MANAGER_URL) {
+        //     console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
+        //     return;
+        //     //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
+        // }
 
     }
 
@@ -64,7 +76,8 @@ class Logger {
             request_id: this.request_id,
             text: text,
             level: level,
-            timestamp: new Date()
+            timestamp: new Date(),
+            dev: this.dev
         }
 
         publisher.publish(data, (err, ok) => {
@@ -78,6 +91,14 @@ class Logger {
             .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg ))
             .join(" ")
     }
+
+    // Substitute methods with empty function if flow flogs are disabled
+    _disableMethods() {
+        const methods = ['error', 'warn', 'info', 'debug'];
+        methods.forEach(method => {
+          this[method] = () => {};
+        });
+      }
 
 }
 
