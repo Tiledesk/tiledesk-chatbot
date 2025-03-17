@@ -63,6 +63,75 @@ describe('Api /ext/:boid', async () => {
     });
   });
 
+  it('Botid parameter is valid', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.put('/:projectId/requests/:requestId/tag', function (req, res) {
+      assert(req.params.projectId)
+      assert(req.params.requestId)
+      assert.ok(req.headers.authorization, 'Expect to have "Authorization" header')
+      assert(req.body)
+      let tags = req.body
+      tags.forEach(tag => {
+        if(!tag._id)
+        tag._id = uuidv4().replace(/-/g, '')
+      });
+      let reply = {
+        request_id: req.params.requestId,
+        id_project: req.params.projectId,
+        tags: tags,
+        status: 200,
+        channel: {
+          name: 'chat21'
+        }
+      }
+      res.status(200).send(reply)
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      // console.log('endpointServer started', listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/start',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      sendMessageToBot(request, BOT_ID, (err, res) => {
+        assert(res)
+        assert(res.success)
+        assert.equal(res.success, true)
+        listener.close(() => {
+          done();
+        });
+      });
+    });
+  });
+
   it('Botid parameter is undefined', (done) => {
 
     let listener;
@@ -254,7 +323,6 @@ function sendMessageToBot(message, botId, callback) {
 }
 
 function getExtBotId(botId, callback) {
-   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   const HTTPREQUEST = {
     url: url,
@@ -287,7 +355,6 @@ function getExtBotId(botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 function getChatbotParameters(requestId, callback) {
-   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
   const HTTPREQUEST = {
     url: url,

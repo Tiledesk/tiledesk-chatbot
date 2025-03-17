@@ -21,6 +21,7 @@ router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 let log = false;
+/** @type {TdCache} */
 let tdcache = null;
 let MAX_STEPS = 1000;
 let MAX_EXECUTION_TIME = 1000 * 3600 * 8;
@@ -33,6 +34,7 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
 const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
+const AiService = require('./TiledeskServices/AIService.js');
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
@@ -49,7 +51,6 @@ router.post('/ext/:botid', async (req, res) => {
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
 
-  
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
@@ -64,13 +65,20 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
-  // let request_check = checkRequest(message.request.request_id, message.id_project);
-  // if (request_check === true) {
-  //   res.status(200).send({ "successs": true });
-  // } else {
-  //   return res.status(400).send({ "success": false, "message": "Invalid request_id"})
-  // }
-  // res.status(200).send({"success":true});
+ /** MANAGE AUDIO FILE MESSAGE */ 
+ let aiService = new AiService({
+    API_ENDPOINT: API_ENDPOINT,
+    TOKEN: token,
+    PROJECT_ID: projectId
+  })
+  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
+  if(isAudio){
+    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
+      if(log) console.log('(index.js) aiService.speechToText error: ', err)
+    })
+    if(responseText && responseText.text)
+      message.text = responseText.text
+  }
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
@@ -97,16 +105,25 @@ router.post('/ext/:botid', async (req, res) => {
   else {
     botsDS = new MockBotsDataSource(staticBots);
   }
-
-
+  
+  // get the bot metadata
   let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
     Promise.reject(err);
-    res.status(400).send({"success": false, error: "Bot not found with id: "+botId}) 
     return;
   });
-  
-
-  winston.debug("(tybotRoute) Bot found:" + bot)
+  // let bot = null;
+  // try {
+  //   // bot = await botsDS.getBotById(botId);
+  //   // bot = await botById(botId, projectId, tdcache, botsDS);
+  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
+  //   // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
+  // }
+  // catch(error) {
+  //   console.error("Error getting botId:", botId);
+  //   console.error("Error getting bot was:", error);
+  //   return;
+  // }
+  // if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
   let backupMachine;
@@ -148,11 +165,11 @@ router.post('/ext/:botid', async (req, res) => {
   }
   catch(err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
+    return;
   }
   if (!reply) {
-    reply = {
-      "text": "No messages found. Is 'defaultFallback' intent missing?"
-    }
+    if (log) { console.log("(tybotRoute) No reply. Stop flow.") }
+    return;
   }
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
@@ -393,41 +410,120 @@ router.post('/echobot', (req, res) => {
   });
 });
 
-// draft webhook
 router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
-  const project_id = req.params['project_id'];
-  const bot_id = req.params['bot_id'];
-  const block_id = req.params['block_id'];
+
+  const project_id = req.params.project_id;
+  const bot_id = req.params.bot_id;
+  const block_id = req.params.block_id;
   const body = req.body;
 
   winston.verbose("(tybotRoute) POST /block/:project_id/:bot_id/:block_id called");
   winston.debug("(tybotRoute) POST /block/:project_id/:bot_id/:block_id req.body: ", body);
 
+  const async = body.async;
+  const token = body.token;
+  delete body.async;
+  delete body.token;
+  
   // invoke block
   // unique ID for each execution
   const execution_id = uuidv4().replace(/-/g, '');
   const request_id = "automation-request-" + project_id + "-" + execution_id;
-  const command = "/" + block_id;
-  let request = {
-    "payload": {
-      "recipient": request_id,
-      "text": command,
-      "id_project": project_id,
-      "request": {
-        "request_id": request_id
+  const command = "/#" + block_id;
+  let message = {
+    payload: {
+      recipient: request_id,
+      text: command,
+      id_project: project_id,
+      request: {
+        request_id: request_id
       },
-      "attributes": {
-        "payload": body
+      attributes: {
+        payload: body
       }
     },
-    "token": "NO-TOKEN"
+    token: token
   }
-  winston.verbose("(tybotRoute) sendMessageToBot(): ", request)
-  sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
-    res.status(200).send({"success":true});
-    return;
-  });
+
+  if (async) {
+    console.log("Async webhook");
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
+      if (err) {
+        console.error("Async err:\n", err);
+        return res.status(500).send({ success: false, error: err });
+      }
+      return res.status(200).send({ success: true });
+    })
+  } else {
+    
+    console.log("Sync webhook. Subscribe and await for reply...")
+    const topic = `/webhooks/${request_id}`;
+    
+    try {
+
+      const listener = async (message, topic) => {
+        console.log("Web response is: ", message, "for topic", topic);
+        await tdcache.unsubscribe(topic, listener);
+
+        let json = JSON.parse(message);
+        let status = json.status ? json.status : 200;
+        console.log("Web response status: ", status);
+
+        return res.status(status).send(json.payload);
+      }
+      await tdcache.subscribe(topic, listener);
+
+    } catch(err) {
+      console.error("Error cache subscribe ", err);
+      return res.status(500).send({ success: false, error: "Error during cache subscription"})
+    }
+
+    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
+      console.log("Sync webhook message sent: ", message);
+    })
+  }
+
 });
+
+// draft webhook
+// router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
+//   const project_id = req.params['project_id'];
+//   const bot_id = req.params['bot_id'];
+//   const block_id = req.params['block_id'];
+//   const body = req.body;
+//   if (this.log) {
+//     console.log("/block/ .heders:", JSON.stringify(req.headers));
+//     console.log("/block/ .body:", JSON.stringify(body));
+//   }
+  
+//   // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
+//   // console.log('/block/:project_id/:bot_id/:block_id.body', body);
+  
+//   // invoke block
+//   // unique ID for each execution
+//   const execution_id = uuidv4().replace(/-/g, '');
+//   const request_id = "automation-request-" + project_id + "-" + execution_id;
+//   const command = "/" + block_id;
+//   let request = {
+//     "payload": {
+//       "recipient": request_id,
+//       "text": command,
+//       "id_project": project_id,
+//       "request": {
+//         "request_id": request_id
+//       },
+//       "attributes": {
+//         "payload": body
+//       }
+//     },
+//     "token": "NO-TOKEN"
+//   }
+//   if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
+//   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
+//     res.status(200).send({"success":true});
+//     return;
+//   });
+// });
 
 async function startApp(settings, completionCallback) {
   winston.info("(Tilebot) Starting Tilebot..")
@@ -559,7 +655,6 @@ async function checkRequest(request_id, id_project) {
  * @param {string} token. User token
  */
 function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-   
   const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {

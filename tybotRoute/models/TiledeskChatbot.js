@@ -147,6 +147,7 @@ class TiledeskChatbot {
         if (!intent || (intent && !intent.name)) {
           winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
           reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
+          resolve();
         }
         else {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
@@ -161,6 +162,8 @@ class TiledeskChatbot {
                 }
               }
               reply = await this.execIntent(faq, message, lead);
+              resolve(reply);
+              return;
             }
             catch(error) {
               winston.error("(TiledeskChatbot) Error adding parameter: ", error);
@@ -170,10 +173,9 @@ class TiledeskChatbot {
           else {
             winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
             reply = { "text": "Intent not found: " + explicit_intent_name }
+            resolve()
           }
         }
-        resolve(reply);
-        return;
       }
 
       // SEARCH INTENTS

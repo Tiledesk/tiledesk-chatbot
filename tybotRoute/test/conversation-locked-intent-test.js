@@ -169,7 +169,6 @@ describe('Conversation1 - Form filling', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, token, callback) {
-   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {

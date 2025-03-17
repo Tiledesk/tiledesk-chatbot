@@ -59,7 +59,6 @@ class DirMessageToBot {
    * @param {string} token. User token
    */
   sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-     
     const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
     winston.verbose("sendMessageToBot URL" + url);
     const HTTPREQUEST = {

@@ -273,7 +273,6 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {

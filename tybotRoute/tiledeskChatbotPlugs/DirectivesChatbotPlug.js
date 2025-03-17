@@ -54,6 +54,9 @@ const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
+const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirWebResponse } = require('./directives/DirWebResponse');
+const { DirConnectBlock } = require('./directives/DirConnectBlock');
 
 const winston = require('../utils/winston');
 
@@ -574,6 +577,19 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.AI_PROMPT) {
+      new DirAiPrompt(context).execute(directive, async (stop) => {
+        if (context.log) { console.log("AiPrompt stop?", stop);}
+        if (stop == true) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else if (directive_name === Directives.WHATSAPP_ATTRIBUTE) {
       new DirWhatsappByAttribute(context).execute(directive, async (stop) => {
         let next_dir = await this.nextDirective(this.directives);
@@ -684,6 +700,12 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.WEB_RESPONSE) {
+      new DirWebResponse(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else {

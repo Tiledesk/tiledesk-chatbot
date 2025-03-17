@@ -1,33 +1,32 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
-const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  winston.error("General error", err);
+  console.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-message_metadata-bot.js').bots_data;
+const bots_data = require('./audio-mesage_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
 
-describe('Conversation for message.metadata test', async () => {
+describe('Audio message is sent to chatbot', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      winston.info("Starting tilebot server...");
+      console.log("Starting tilebot server...");
       tybot.startApp(
         {
           // MONGODB_URI: process.env.MONGODB_URI,
@@ -39,10 +38,10 @@ describe('Conversation for message.metadata test', async () => {
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          winston.info("Tilebot route successfully started.");
+          console.log("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            winston.info('Tilebot connector listening on port ' + port);
+            console.log('Tilebot connector listening on port ', port);
             resolve();
           });
         });
@@ -51,118 +50,47 @@ describe('Conversation for message.metadata test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
+      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
-  // it('/basic_reply_showing_metadata: returns a reply with message.metadata', (done) => {
-  //   // let message_id = uuidv4();
-  //   let listener;
-  //   let endpointServer = express();
-  //   endpointServer.use(bodyParser.json());
-  //   endpointServer.get('/test/webrequest/get/json', async (req, res) => {
-  //     assert(req.headers["user-agent"] === "TiledeskBotRuntime");
-  //     assert(req.headers["content-type"] === "*/*");
-  //     assert(req.headers["cache-control"] === "no-cache");
-  //     res.send({
-  //       "city": "NY",
-  //       "age": 50
-  //     });
-  //   });
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      
-  //     res.send({ success: true });
-      
-  //     const message = req.body;
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 2);
-  //     const command1 = message.attributes.commands[1];
-    
-  //     assert(command1.type === "message");
-  //     assert(command1.message.text === "message type: image message text: /basic_reply_showing_metadata message.metadata.src: http://image_src");
-  //     assert(command1.type === "message");
-  //     getChatbotParameters(REQUEST_ID, (err, params) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         assert(params);
-  //         assert(params["lastUserMessage"] !== null);
-  //         assert(params["lastUserMessage"]["metadata"]["src"] === "http://image_src");
-  //         listener.close(() => {
-  //           done();
-  //         });
-  //       }
-  //     });
-  //   });
-
-  //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     winston.verbose('endpointServer started' + listener.address());
-  //     let request = {
-  //       "payload": {
-  //       //   "_id": message_id,
-  //         "senderFullname": "guest#367e",
-  //         "type": "image",
-  //         "sender": "A-SENDER",
-  //         "recipient": REQUEST_ID,
-  //         "text": "/basic_reply_showing_metadata",
-  //         "id_project": PROJECT_ID,
-  //         "metadata": {
-  //           src: "http://image_src"
-  //         },
-  //         "request": {
-  //           "request_id": REQUEST_ID
-  //         }
-  //       },
-  //       "token": CHATBOT_TOKEN
-  //     }
-  //     sendMessageToBot(request, BOT_ID, () => {
-  //        winston.verbose("Message sent:\n", request);
-  //     });
-  //   });
-  // });
-
-  it('/condition with json metadata: evaluates message.metadata', (done) => {
+  it('audio message is sent', (done) => {
+    // console.log('/condition with params{"star_type":"supernova"}');
+    // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
+    endpointServer.post('/:projectId/llm/transcription', function (req, res) {
+      // console.log("...req.body:", JSON.stringify(req.body));
+      // res.send({ success: true });
       const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command1 = message.attributes.commands[1];
-      assert(command1.type === "message");
-      assert(command1.message.text === "it's true");
-      assert(command1.type === "message");
-      util.getChatbotParameters(REQUEST_ID, (err, params) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(params);
-          assert(params["lastUserMessage"] !== null);
-          assert(params["lastUserMessage"]["metadata"]["src"] === "http://image_src");
-          listener.close(() => {
-            done();
-          });
-        }
+      assert(message.url)
+
+      res.send({text: "this is an audio file example"})
+    
+      listener.close(() => {
+        done();
       });
+
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      winston.verbose('endpointServer started' + listener.address());
+      // console.log('endpointServer started', listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
           "senderFullname": "guest#367e",
-          "type": "image",
+          "type": "file",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": "/condition with json metadata",
+          "text": '',
+          "attributes":{},
           "id_project": PROJECT_ID,
           "metadata": {
-            src: "http://image_src"
+              "src":"http://my-audio-url.wav",
+              "type":"audio/wav",
+              "name":"audio.wav"
           },
           "request": {
             "request_id": REQUEST_ID
@@ -171,7 +99,7 @@ describe('Conversation for message.metadata test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
+        // console.log("Message sent:\n", request);
       });
     });
   });
@@ -188,7 +116,7 @@ describe('Conversation for message.metadata test', async () => {
  */
 function sendMessageToBot(message, botId, callback) {
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
+  // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -247,6 +175,10 @@ function sendMessageToBot(message, botId, callback) {
 // }
 
 function myrequest(options, callback, log) {
+  if (log) {
+    console.log("API URL:", options.url);
+    console.log("** Options:", JSON.stringify(options));
+  }
   axios(
     {
       url: options.url,
@@ -256,6 +188,11 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
+      if (log) {
+        console.log("Response for url:", options.url);
+        console.log("Response headers:\n", JSON.stringify(res.headers));
+        //console.log("******** Response for url:", res);
+      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -268,6 +205,7 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
+      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

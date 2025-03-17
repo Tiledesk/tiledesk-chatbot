@@ -281,7 +281,6 @@ describe('Conversation for WebRequest assign test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-   
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
   winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
@@ -316,7 +315,6 @@ function sendMessageToBot(message, botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//    
 //   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
