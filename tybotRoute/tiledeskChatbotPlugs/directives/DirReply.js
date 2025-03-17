@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { Logger } = require('../../Logger');
 const winston = require('../../utils/winston')
 
 class DirReply {
@@ -17,6 +18,8 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
+    console.log("is draft request: ", this.context.supportRequest.draft);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
@@ -42,7 +45,10 @@ class DirReply {
       callback();
       return;
     }
+    this.logger.info("1 Execute action reply for " + directive.action.text)
+
     this.go(action, () => {
+      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
       callback();
     });
   }
@@ -64,6 +70,8 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+      this.logger.info("2 Sending reply " + message.text);
+
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
@@ -137,6 +145,15 @@ class DirReply {
     }
 
     let cleanMessage = message;
+    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
+    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
+    // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
+    // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
+    //   console.log("invalid message", cleanMessage);
+    //   callback(); // cancel reply operation
+    //   return;
+    // }
+    
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
 
@@ -147,8 +164,10 @@ class DirReply {
       (err) => {
         if (err) {
           winston.error("DirReply Error sending reply: ", err);
+          this.logger.error("Error sending reply: " + err);
         }
         winston.verbose("DirReply reply message sent")
+        this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {
