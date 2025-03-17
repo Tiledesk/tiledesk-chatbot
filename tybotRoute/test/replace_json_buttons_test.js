@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
 
 describe('Convert text reply', function() {
   
