@@ -1,4 +1,5 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
+const winston = require('../utils/winston');
 
 class MarkbotChatbotPlug {
 
@@ -15,16 +16,14 @@ class MarkbotChatbotPlug {
 
   exec(pipeline) {
     let message = pipeline.message;
-    // console.log("markbot on message", message)
     if (message.attributes && (message.attributes.markbot == undefined || message.attributes.markbot == false)) { // defaults to disabled
-      if (this.log) {console.log("markbot disabled")}
+      winston.verbose("(MarkbotChatbotPlug) Markbot disabled")
       pipeline.nextplug();
       return;
     }
 
-    // console.log("message.text", message.text)
     if (!message.text) {
-      if (this.log) {console.log("No message.text (no content). Skipping markbot");}
+      winston.verbose("(MarkbotChatbotPlug) No message.text (no content). Skipping markbot");
       pipeline.message = null;
       pipeline.nextplug();
       return;
@@ -34,11 +33,9 @@ class MarkbotChatbotPlug {
     if (message.attributes && message.attributes.commands) {
       commands = message.attributes.commands;
     }
-    // console.log("before taking decision:");
-    // console.log("message.text:", incoming_message_text);
-    // console.log("message commands:", commands)
+    
     if (incoming_message_text === "" && !commands) {
-      console.log("message with no content. Ignoring");
+      winston.verbose("(MarkbotChatbotPlug) Message with no content. Ignoring");
       pipeline.message = null;
       pipeline.nextplug();
       return;
@@ -48,9 +45,9 @@ class MarkbotChatbotPlug {
       message.attributes = {}
     }
     if (incoming_message_text !== "") {
-      if (this.log) {console.log("markbotting main message...");}
+      winston.verbose("(MarkbotChatbotPlug) markbotting main message...");
       let parsed_reply = TiledeskChatbotUtil.parseReply(incoming_message_text);
-      if (this.log) {console.log("parsed", JSON.stringify(parsed_reply));}
+      winston.debug("(MarkbotChatbotPlug) parsed_reply", parsed_reply);
       if (parsed_reply) {
         message.text = parsed_reply.message.text;
         if (!message.type || message.type === "text") {
@@ -61,7 +58,7 @@ class MarkbotChatbotPlug {
           // if already present, do not modify metadata
           message.metadata = parsed_reply.message.metadata;
         }
-        if (this.log) {console.log("parsed_reply.message.attributes", JSON.stringify(parsed_reply.message.attributes));}
+        winston.debug("(MarkbotChatbotPlug) parsed_reply.message.attributes", parsed_reply.message.attributes);
         //this.mergeCurrentMessageButtons(message, parsed_reply);
         if (parsed_reply.message.attributes) {
           for(const [key, value] of Object.entries(parsed_reply.message.attributes)) {
@@ -71,30 +68,25 @@ class MarkbotChatbotPlug {
       }
     }
     else {
-      console.log("no message text:", message.text);
+      winston.verbose("(MarkbotChatbotPlug) no message text: " + message.text);
     }
     
     // let commands = null;
     // if (message.attributes && message.attributes.commands) {
     //   commands = message.attributes.commands;
     if (commands) {
-      if (this.log) {console.log("commands for markbot:", commands);}
+      winston.debug("(MarkbotChatbotPlug) commands for markbot:", commands);
       if (commands.length > 1) {
         for (let i = 0; i < commands.length; i++) {
           if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
             let parsed_reply = TiledeskChatbotUtil.parseReply(commands[i].message.text);
-            //console.log("PARSED***", parsed_reply);
             commands[i].message = parsed_reply.message;
           }
         }
       }
     }
-    // else if (message.attributes && !message.attributes.commands) {
-    //   console.log("no message commands.");
-    // }
-    // if (this.log) {console.log("Message out of Markbot:", JSON.stringify(message));}
-    pipeline.nextplug();
-    
+
+    pipeline.nextplug();    
   }
 
   /*mergeCurrentMessageButtons(message, parsed_reply) {

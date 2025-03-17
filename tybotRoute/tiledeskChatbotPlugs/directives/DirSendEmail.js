@@ -1,6 +1,6 @@
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
@@ -27,6 +27,7 @@ class DirSendEmail {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute SendEmail directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -40,7 +41,7 @@ class DirSendEmail {
       }
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("DirSendEmail Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -50,8 +51,7 @@ class DirSendEmail {
   }
 
   async go(action, completion) {
-      // let params = action.body;
-      if (this.log) {console.log("email action:", JSON.stringify(action));}
+    winston.debug("(DirSendEmail) Action: ", action);
       if (action.subject && action.text && action.to) {
         try {
           let requestVariables = null;
@@ -72,19 +72,18 @@ class DirSendEmail {
             to: filled_to,
             replyto: reply_to
           }
-          // console.log("email message:", JSON.stringify(message));
           const message_echo = await this.tdClient.sendEmail(message);
-          if (this.log) {console.log("email sent. filled_subject:", filled_subject);}
-          if (this.log) {console.log("email sent. filled_text:", filled_text);}
-          if (this.log) {console.log("email sent. filled_to:", filled_to);}
-          if (this.log) {console.log("email sent. reply_to:", reply_to);}
+          winston.debug("(DirSendEmail) filled_subject: " + filled_subject);
+          winston.debug("(DirSendEmail) filled_text: " + filled_text);
+          winston.debug("(DirSendEmail) filled_to: " + filled_to);
+          winston.debug("(DirSendEmail) reply_to: " + reply_to);
           if (completion) {
             completion(null, message_echo);
           }
           return message_echo;
         }
         catch(err) {
-          console.error("sendEmail error:", err);
+          winston.error("(DirSendEmail) sendEmail error: ", err);
           if (completion) {
             completion(err);
           }

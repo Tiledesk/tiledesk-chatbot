@@ -1,3 +1,4 @@
+const winston = require('../../utils/winston');
 
 class DirUnlockIntent {
 
@@ -14,6 +15,7 @@ class DirUnlockIntent {
   }
 
   async execute(directive, callback) {
+    winston.verbose("Execute UnlockIntent directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -21,13 +23,13 @@ class DirUnlockIntent {
     else {
       action = {}
     }
-    if (this.log) {console.log("Unlocking current intent");}
     this.go(action, () => {
       callback();
     });
   }
 
   async go(action, callback) {
+    winston.debug("(DirUnlockIntent) Action: ", action);
     await DirUnlockIntent.unlockIntent(this.tdcache, this.context.requestId);
     if (callback) {
       callback();
@@ -35,7 +37,6 @@ class DirUnlockIntent {
   }
 
   // async execute(requestId, callback) {
-  //   console.log("Unocking intent");
   //   await this.unlockIntent(requestId);
   //   callback();
   // }
@@ -43,7 +44,6 @@ class DirUnlockIntent {
   static async unlockIntent(tdcache, requestId) {
     await tdcache.del("tilebot:requests:"  + requestId + ":locked");
     // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
-    // console.log("unlocked.")
   }
   
 }
