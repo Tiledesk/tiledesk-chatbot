@@ -579,9 +579,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.AI_PROMPT) {
       new DirAiPrompt(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("AiPrompt stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
           this.theend();
         }
         else {

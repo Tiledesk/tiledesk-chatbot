@@ -216,7 +216,7 @@ describe('Conversation1 - Form filling', async () => {
 
       }
       else {
-        console.error("Unexpected message2.");
+        winston.error("Unexpected message2.");
         assert.ok(false);
       }
 
@@ -284,7 +284,7 @@ describe('Conversation1 - Form filling', async () => {
       });
     }
     catch(error) {
-      console.error("Error:", error);
+      winston.error("Error:", error);
       done()
     }
   });
@@ -574,7 +574,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else {
-        console.error("Unexpected message.");
+        winston.error("Unexpected message.");
         assert.ok(false);
       }
 
@@ -628,7 +628,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else {
-        console.error("Unexpected message.");
+        winston.error("Unexpected message.");
         assert.ok(false);
       }
     });
@@ -679,7 +679,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else {
-        console.error("Unexpected message.");
+        winston.error("Unexpected message.");
         assert.ok(false);
       }
     });

@@ -105,7 +105,7 @@ describe('Api /ext/:boid', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",

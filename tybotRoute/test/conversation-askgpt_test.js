@@ -50,7 +50,7 @@ describe('Conversation for AskGPT test', async () => {
           });
       }
       catch (error) {
-        console.error("error:", error)
+        winston.error("error:", error)
       }
 
     })

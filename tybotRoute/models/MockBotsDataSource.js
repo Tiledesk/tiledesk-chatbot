@@ -64,7 +64,7 @@ class MockBotsDataSource {
       }
     }
     catch(err) {
-      console.error("Error is:", err);
+      winston.error("(MockBotsDataSource) Error getByIntentDisplayName: ", err);
     }
     return intent;
   }

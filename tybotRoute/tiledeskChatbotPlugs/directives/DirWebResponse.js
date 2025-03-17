@@ -18,12 +18,13 @@ class DirWebResponse {
   }
 
   execute(directive, callback) {
+    winston.debug("Execute WebResponse directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive (no action provided):", directive);
+      winston.debug("DirWebResponse Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -34,22 +35,20 @@ class DirWebResponse {
   }
 
   async go(action, callback) {
-    if (this.log) {
-      console.log("(DirWebResponse) action:", action);
-    }
+    winston.debug("DirWebResponse action: ", action);
     
     let requestAttributes = null;
+    let status = null;
     if (this.tdcache) {
       requestAttributes = 
       await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
       const filler = new Filler();
 
       try {
-        let status = action.status;
-        status = filler.fill(status, requestAttributes);
+        status = filler.fill(action.status, requestAttributes);
       }
       catch(e) {
-        console.error(e)
+        winston.error("DirWebResponse Error: ", e)
       }
       
     }
@@ -64,12 +63,10 @@ class DirWebResponse {
     
     try {
       this.tdcache.publish(topic, JSON.stringify(webResponse));
-      if (this.log) {
-        console.log("(DirWebResponse) Published webresponse to topic:", topic);
-      }
+      winston.verbose("DirWebResponse Published webresponse to topic: " + topic);
     }
     catch(e) {
-      console.error(e)
+      winston.error("DirWebResponse Error: ", e)
     }
 
     callback();
@@ -87,7 +84,7 @@ class DirWebResponse {
             resolve(json);
           }
           catch (err) {
-            if (this.log) { console.error("Error parsing webRequest jsonBody:", jsonBody, err) };
+            winston.error("Error parsing webRequest jsonBody: " + JSON.stringify(jsonBody) + "\nError: " + JSON.stringify(err));
             reject("Error parsing jsonBody");
           }
         }

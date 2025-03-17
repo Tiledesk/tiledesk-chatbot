@@ -74,7 +74,7 @@ router.post('/ext/:botid', async (req, res) => {
   let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
   if(isAudio){
     let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
-      if(log) console.log('(index.js) aiService.speechToText error: ', err)
+      winston.error('(index.js) aiService.speechToText error: ', err)
     })
     if(responseText && responseText.text)
       message.text = responseText.text
@@ -111,19 +111,6 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
-  // let bot = null;
-  // try {
-  //   // bot = await botsDS.getBotById(botId);
-  //   // bot = await botById(botId, projectId, tdcache, botsDS);
-  //   bot = await botsDS.getBotByIdCache(botId, tdcache);
-  //   // console.log("getBotByIdCache ---> bot: ", JSON.stringify(bot, null, 2))
-  // }
-  // catch(error) {
-  //   console.error("Error getting botId:", botId);
-  //   console.error("Error getting bot was:", error);
-  //   return;
-  // }
-  // if (log) {console.log("bot found:", JSON.stringify(bot));}
   
   let intentsMachine;
   let backupMachine;
@@ -168,7 +155,7 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
   if (!reply) {
-    if (log) { console.log("(tybotRoute) No reply. Stop flow.") }
+    winston.verbose("(tybotRoute) No reply. Stop flow.")
     return;
   }
   
@@ -446,40 +433,40 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   }
 
   if (async) {
-    console.log("Async webhook");
+    winston.verbose("Async webhook");
     sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
       if (err) {
-        console.error("Async err:\n", err);
+        winston.error("Async webhook err:\n", err);
         return res.status(500).send({ success: false, error: err });
       }
       return res.status(200).send({ success: true });
     })
   } else {
     
-    console.log("Sync webhook. Subscribe and await for reply...")
+    winston.verbose("Sync webhook. Subscribe and await for reply...")
     const topic = `/webhooks/${request_id}`;
     
     try {
 
       const listener = async (message, topic) => {
-        console.log("Web response is: ", message, "for topic", topic);
+        winston.debug("Web response is: " + JSON.stringify(message) + " for topic " + topic);
         await tdcache.unsubscribe(topic, listener);
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
-        console.log("Web response status: ", status);
+        winston.debug("Web response status: " + status);
 
         return res.status(status).send(json.payload);
       }
       await tdcache.subscribe(topic, listener);
 
     } catch(err) {
-      console.error("Error cache subscribe ", err);
+      winston.error("Error cache subscribe ", err);
       return res.status(500).send({ success: false, error: "Error during cache subscription"})
     }
 
     sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
-      console.log("Sync webhook message sent: ", message);
+      winston.debug("Sync webhook message sent: ", message);
     })
   }
 
@@ -491,13 +478,6 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 //   const bot_id = req.params['bot_id'];
 //   const block_id = req.params['block_id'];
 //   const body = req.body;
-//   if (this.log) {
-//     console.log("/block/ .heders:", JSON.stringify(req.headers));
-//     console.log("/block/ .body:", JSON.stringify(body));
-//   }
-  
-//   // console.log('/block/:project_id/:bot_id/:block_id:', project_id, "/", bot_id, "/", block_id);
-//   // console.log('/block/:project_id/:bot_id/:block_id.body', body);
   
 //   // invoke block
 //   // unique ID for each execution
@@ -518,7 +498,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 //     },
 //     "token": "NO-TOKEN"
 //   }
-//   if (this.log) {console.log("sendMessageToBot()...", JSON.stringify(request));}
+
 //   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
 //     res.status(200).send({"success":true});
 //     return;

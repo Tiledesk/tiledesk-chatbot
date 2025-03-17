@@ -40,11 +40,10 @@ class TiledeskIntentsMachine {
         HTTPREQUEST,
         (err, resbody) => {
           if (err) {
-            // console.error("An error occurred on /model/parse:", err)
             reject(err);
           }
           else {
-            winston.verbose("(TiledeskIntentsMachine)  Tiledesk AI replied:", resbody)
+            winston.debug("(TiledeskIntentsMachine) Tiledesk AI replied: ", resbody)
             resolve(this.translateForTiledesk(resbody));
           }
         }, false

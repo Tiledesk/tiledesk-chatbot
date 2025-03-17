@@ -38,9 +38,9 @@ class DirWebRequestV2 {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirWebRequest action:", JSON.stringify(action)); }
+    winston.debug("DirWebRequestV2 action:", action);
     if (!this.tdcache) {
-      console.error("Error: DirWebRequest tdcache is mandatory");
+      winston.error("Error: DirWebRequestV2 tdcache is mandatory");
       callback();
       return;
     }
@@ -50,12 +50,10 @@ class DirWebRequestV2 {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirWebRequest trueIntent", trueIntent)
-      console.log("DirWebRequest falseIntent", falseIntent)
-      console.log("DirWebRequest trueIntentAttributes", trueIntentAttributes)
-      console.log("DirWebRequest falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("DirWebRequestV2  trueIntent " + trueIntent)
+    winston.debug("DirWebRequestV2  falseIntent " + falseIntent)
+    winston.debug("DirWebRequestV2  trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("DirWebRequestV2  falseIntentAttributes " + falseIntentAttributes)
 
     let requestAttributes = null;
     requestAttributes =
@@ -90,7 +88,7 @@ class DirWebRequestV2 {
 
     let timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
 
-    if (this.log) {console.log("webRequest URL", url);}
+    winston.debug("DirWebRequestV2 webRequest URL " + url);
 
     const HTTPREQUEST = {
       url: url,
@@ -99,22 +97,19 @@ class DirWebRequestV2 {
       method: action.method,
       timeout: timeout
     };
-    if (this.log) { console.log("webRequest HTTPREQUEST", HTTPREQUEST); }
+    winston.debug("DirWebRequestV2 HttpRequest: ", HTTPREQUEST);
     
     this.#myrequest(
       HTTPREQUEST, async (err, res) => {
-        if (this.log && err) {
-          console.log("webRequest error:", err);
-        }
-        if (this.log) { console.log("DirWebRequest res:", res); }
+
         let resbody = res.data;
         let status = res.status;
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
-        if (this.log) { console.log("webRequest resbody:", resbody); }
+        winston.debug("DirWebRequestV2 resbody:", resbody);
         
         if (err) {
-          if (this.log) { console.error("webRequest error:", err); }
+          winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -179,7 +174,7 @@ class DirWebRequestV2 {
           resolve(json);
         }
         catch (err) {
-          if (this.log) { console.error("Error parsing webRequest jsonBody:", jsonBody, err) };
+          winston.error("DirWebRequestV2 Error parsing webRequest jsonBody: " + JSON.stringify(jsonBody) + "\nError: " + JSON.stringify(err));
           reject("Error parsing jsonBody");
         }
       }
@@ -212,7 +207,7 @@ class DirWebRequestV2 {
           }
           resolve(json);
         } catch (err) {
-          if (this.log) { console.error("Error parsing webRequest formData:", formData, err) };
+          winston.error("DirWebRequestV2 Error parsing webRequest formData: " + JSON.stringify(formData) + "\nError: " + JSON.stringify(err)); 
           reject("Error parsing formData");
         }
       }
@@ -240,7 +235,7 @@ class DirWebRequestV2 {
         });
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("DirWebRequestV2 No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -255,7 +250,7 @@ class DirWebRequestV2 {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("DirWebRequestV2 No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -267,45 +262,19 @@ class DirWebRequestV2 {
 
     if (this.context.tdcache) {
       if (action.assignResultTo && resbody) {
-        if (this.log) { console.log("assign assignResultTo:", resbody); }
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, resbody);
       }
       if (action.assignErrorTo && error) {
-        if (this.log) { console.log("assign assignResultTo:", error); }
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
       }
       if (action.assignStatusTo && status) {
-        if (this.log) { console.log("assign assignStatusTo:", status); }
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(webRequest) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
       }
     }
   }
 
   #myrequest(options, callback) {
     try {
-      if (this.log) {
-        console.log("API URL:", options.url);
-        //console.log("** Options:", JSON.stringify(options));
-        // Stringify "options". FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-        let cache = [];
-        let str_Options = JSON.stringify(options, function (key, value) { // try to use a separate function
-          if (typeof value === 'object' && value != null) {
-            if (cache.indexOf(value) !== -1) {
-              return;
-            }
-            cache.push(value);
-          }
-          return value;
-        });
-        console.log("** Options:", str_Options);
-      }
       let axios_options = {
         url: options.url,
         method: options.method,
@@ -328,20 +297,12 @@ class DirWebRequestV2 {
 
       axios(axios_options)
         .then((res) => {
-          if (this.log) {
-            console.log("Success Response:", res);
-            console.log("Response for url:", options.url);
-            console.log("Response headers:\n", JSON.stringify(res.headers));
-          }
           if (callback) {
             callback(null, res);
           }
         })
         .catch((err) => {
           if (this.log) {
-            if (err.response) {
-              console.log("Error Response data:", err.response.data);
-            }
             // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
             let cache = [];
             let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
@@ -353,9 +314,8 @@ class DirWebRequestV2 {
               }
               return value;
             });
-            console.error("(DirWebRequestv2) An error occurred: ", error_log);
+            winston.error("(DirWebRequestv2) An error occurred: ", error_log);
             // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-            // console.error("An error occurred:", JSON.stringify(err));
           }
           if (callback) {
             let status = 1000;
@@ -392,7 +352,7 @@ class DirWebRequestV2 {
         });
     }
     catch (error) {
-      console.error("Error:", error);
+      winston.error("DirWebRequestV2 Error:", error);
     }
   }
 
@@ -401,13 +361,6 @@ class DirWebRequestV2 {
     if (!action.settings) {
       return timeout;
     }
-    // console.log("default timeout:", timeout);
-    // console.log("action.settings:", action.settings);
-    // console.log("action.settings.timeout:", action.settings.timeout);
-    // console.log("typeof action.settings.timeout:", typeof action.settings.timeout);
-    // console.log("action.settings.timeout > min", action.settings.timeout > min)
-    // console.log("action.settings.timeout < max", action.settings.timeout < max)  
-
     if (action.settings.timeout) {
       if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.settings.timeout)

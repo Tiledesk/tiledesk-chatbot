@@ -476,6 +476,7 @@ describe('Conversation for WebRequestV2 test', async () => {
     });
   
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -492,7 +493,7 @@ describe('Conversation for WebRequestV2 test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });

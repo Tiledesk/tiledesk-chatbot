@@ -18,7 +18,7 @@ class IntentsMachineFactory {
         machine = new MongodbIntentsMachine({projectId: projectId, language: bot.language, log});
       }
       else {
-        console.error("bot is null for:", botId, "on projectId:", projectId);
+        winston.error("bot is null for: " + botId + " on projectId: " + projectId);
       }
       return machine;
     }

@@ -6,6 +6,8 @@ const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 require('dotenv').config();
+const winston = require('../../utils/winston');
+
 
 class DirAiPrompt {
 
@@ -23,13 +25,13 @@ class DirAiPrompt {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("AiPrompt directive: ", directive); }
+    winston.verbose("Execute AiPrompt directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.debug("DirAiPrompt Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -39,9 +41,9 @@ class DirAiPrompt {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirAiPrompt action:", JSON.stringify(action)); }
+    winston.debug("DirAiPrompt action:", action);
     if (!this.tdcache) {
-      console.error("Error: DirAiPrompt tdcache is mandatory");
+      winston.error("Error: DirAiPrompt tdcache is mandatory");
       callback();
       return;
     }
@@ -53,10 +55,8 @@ class DirAiPrompt {
     let transcript;
     let answer = "No answer"
 
-    if (this.log) {
-      console.log("DirAiPrompt trueIntent", trueIntent)
-      console.log("DirAiPrompt falseIntent", falseIntent)
-    }
+    winston.debug("DirAskGPTV2 trueIntent", trueIntent)
+    winston.debug("DirAskGPTV2 falseIntent", falseIntent)
 
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
@@ -84,23 +84,23 @@ class DirAiPrompt {
         this.context.tdcache,
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
-      if (this.log) { console.log("DirAiPrompt transcript string: ", transcript_string) }
+        winston.debug("DirAiPrompt transcript string: " + transcript_string)
 
       if (transcript_string) {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-        if (this.log) { console.log("DirAiPrompt transcript: ", transcript) }
+        winston.debug("DirAiPrompt transcript: ", transcript)
       } else {
-        if (this.log) { console.log("DirAiPrompt transcript_string is undefined. Skip JSON translation for chat history") }
+        winston.verbose("DirAiPrompt transcript_string is undefined. Skip JSON translation for chat history")
       }
     }
 
     const AI_endpoint = process.env.AI_ENDPOINT
-    if (this.log) { console.log("DirAiPrompt AI_endpoint ", AI_endpoint); }
+    winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let key = await this.getKeyFromIntegrations(action.llm);
 
     if (!key) {
-      console.error("Error: DirAiPrompt llm key not found in integrations");
+      winston.error("Error: DirAiPrompt llm key not found in integrations");
       await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -127,7 +127,7 @@ class DirAiPrompt {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
 
-    if (this.log) { console.log("DirAiPrompt json: ", json) }
+    winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
       url: AI_endpoint + '/ask',
@@ -137,14 +137,12 @@ class DirAiPrompt {
       json: json,
       method: 'POST'
     }
-    if (this.log) { console.log("DirAiPrompt HTTPREQUEST: ", HTTPREQUEST); }
+    winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
 
     this.#myrequest(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          if (this.log) {
-            console.error("(httprequest) DirAiPrompt openai err:", err.response.data);
-          }
+          winston.error("DirAiPrompt openai err:", err.response.data);
           await this.#assignAttributes(action, answer);
           let error;
           if (err.response?.data?.detail[0]) {
@@ -164,7 +162,7 @@ class DirAiPrompt {
           return;
         } else {
 
-          if (this.log) { console.log("DirAiPrompt resbody: ", JSON.stringify(resbody)); }
+          winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
         
           await this.#assignAttributes(action, answer);
@@ -260,7 +258,7 @@ class DirAiPrompt {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("DirAiPrompt No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -275,7 +273,7 @@ class DirAiPrompt {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("DirAiPrompt No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -284,29 +282,17 @@ class DirAiPrompt {
   }
 
   async #assignAttributes(action, answer) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-    }
+    winston.debug("DirAiPrompt assignAttributes action: ", action)
+    winston.debug("DirAiPrompt assignAttributes answer: " + answer)
+
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(gpttask) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
       }
     }
   }
 
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -316,9 +302,6 @@ class DirAiPrompt {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -327,10 +310,6 @@ class DirAiPrompt {
     }
     axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (res && res.status == 200 && res.data) {
           if (callback) {
             callback(null, res.data);
@@ -343,7 +322,7 @@ class DirAiPrompt {
         }
       })
       .catch((error) => {
-        console.error("(DirAiPrompt) Axios error: ", JSON.stringify(error));
+        winston.error("(DirAiPrompt) Axios error: ", error);
         if (callback) {
           callback(error, null);
         }
@@ -361,7 +340,7 @@ class DirAiPrompt {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAiPrompt INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+      winston.debug("DirAiPrompt Integration HttpRequest: ", INTEGRATIONS_HTTPREQUEST)
 
       this.#myrequest(
         INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
@@ -392,15 +371,12 @@ class DirAiPrompt {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAiPrompt KB_HTTPREQUEST", KB_HTTPREQUEST); }
+      winston.debug("DirAiPrompt KB HttpRequest", KB_HTTPREQUEST);
 
       this.#myrequest(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAiPrompt Get KnowledgeBase err:", err.message);
-            if (this.log) {
-              console.error("(httprequest) DirAiPrompt Get KnowledgeBase full err", err);
-            }
+            winston.error("(httprequest) DirAiPrompt Get KnowledgeBase err: " + err.message);
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -425,7 +401,7 @@ class DirAiPrompt {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAiPrompt check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("DirAiPrompt check quote availability HttpRequest", HTTPREQUEST);
 
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
@@ -455,15 +431,15 @@ class DirAiPrompt {
         json: tokens_usage,
         method: "POST"
       }
-      if (this.log) { console.log("DirAiPrompt check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("DirAiPrompt update quote HttpRequest", HTTPREQUEST);
 
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);
+            winston.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);
             reject(false)
           } else {
-            if (this.log) { console.log("(httprequest) DirAiPrompt Increment token quote resbody: ", resbody); }
+            winston.debug("(httprequest) DirAiPrompt Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }
