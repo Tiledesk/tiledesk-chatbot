@@ -222,14 +222,13 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-        const action_id = directive.action["_tdActionId"];
-        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        if ( locked_action_id && (locked_action_id !== action_id) ) {
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-          return;
-        }
-      
+      const action_id = directive.action["_tdActionId"];
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      if ( locked_action_id && (locked_action_id !== action_id) ) {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }      
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is (null?): ", directive);
@@ -693,6 +692,19 @@ class DirectivesChatbotPlug {
       new DirAddTags(context).execute(directive, async (stop) => {
         if (stop == true) {
           winston.debug("(DirectivesChatbotPlug) DirAddTags Stopping Actions on: ", directive);
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
         else {
