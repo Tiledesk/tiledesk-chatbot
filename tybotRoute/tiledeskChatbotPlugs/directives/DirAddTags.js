@@ -9,6 +9,7 @@ const req = require("express/lib/request");
 const { update } = require("../../models/faq");
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 require('dotenv').config();
+const winston = require('../../utils/winston');
 
 class DirAddTags {
 
@@ -33,13 +34,13 @@ class DirAddTags {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("AddTags directive: ", directive); }
+    winston.verbose("Execute AddTags directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -49,9 +50,9 @@ class DirAddTags {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("(DirAddTags) action:", JSON.stringify(action)); }
+    winston.debug("(DirAddTags) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: (DirAddTags) tdcache is mandatory");
+      winston.error("(DirAddTags) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -64,7 +65,7 @@ class DirAddTags {
     pushToList = action.pushToList
 
     if (!action.tags || action.tags === '') {
-      console.error("Error: (DirAddTags) tags attribute is mandatory")
+      winston.error("(DirAddTags) Error: tags attribute is mandatory")
       await this.chatbot.addParameter("flowError", "Add tags Error: tags attribute is mandatory");
       callback();
       return;
@@ -78,18 +79,7 @@ class DirAddTags {
 
     const filler = new Filler();
     const filled_tags = filler.fill(action.tags, requestVariables);
-  
-    if (this.log) {
-      console.log("(DirAddTags) tags: ", filled_tags);
-    }
-
-    // let request = await this.tdClient.getRequestById(this.requestId);
-    // if (this.log) { console.log('(DirAddTags) request detail: ', request) }
-    // if(!request){
-    //   if (this.log) { console.log("(DirAddTags) - request not found for request_id:", this.requestId); }
-    //   callback();
-    //   return;
-    // }
+    winston.debug("(DirAddTags) filled_tags: ", filled_tags);
 
     /** use case: CONVERSATION */
     if(target === 'request'){
@@ -106,7 +96,7 @@ class DirAddTags {
         })
       }
 
-      if (this.log) { console.log('(DirAddTags) UPDATE request with newTags', newTags) }
+      winston.debug('(DirAddTags) UPDATE request with newTags', newTags)
       let updatedRequest = await this.updateRequestWithTags(newTags)
       if(!updatedRequest){
         callback();
@@ -120,9 +110,9 @@ class DirAddTags {
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
 
       let request = await this.tdClient.getRequestById(this.requestId);
-      if (this.log) { console.log('(DirAddTags) request detail: ', request) }
+      winston.debug('(DirAddTags) request detail: ', request)
       if(!request){
-        if (this.log) { console.log("(DirAddTags) - request not found for request_id:", this.requestId); }
+        winston.debug("(DirAddTags) - request not found for request_id: " + this.requestId);
         callback();
         return;
       }
@@ -137,7 +127,7 @@ class DirAddTags {
         })
       }
 
-      if (this.log) {  console.log('(DirAddTags) UPDATE lead with newTags', newTags) }
+      winston.debug('(DirAddTags) UPDATE lead with newTags ', newTags)
       let updatedLead = await this.updateLeadWithTags(request.lead._id, newTags)
       if(!updatedLead){
         callback();
@@ -165,71 +155,7 @@ class DirAddTags {
 
   }
 
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-    }
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(DirAddTags) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
-    }
-  }
-
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -239,9 +165,6 @@ class DirAddTags {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -250,10 +173,6 @@ class DirAddTags {
     }
     axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (res && res.status == 200 && res.data) {
           if (callback) {
             callback(null, res.data);
@@ -289,7 +208,7 @@ class DirAddTags {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAddTags add tags to list err: ", err);
+            winston.error("(httprequest) DirAddTags add tags to list err: ", err);
             resolve(true)
           } else {
             if (resbody) {
@@ -309,9 +228,7 @@ class DirAddTags {
       let json = []
       let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
       json.push(...filteredTags)
-      if (this.log) {
-        console.log('(httprequest) DirAddTags updateRequestWithTags tags--> ', json)
-      }
+      winston.debug('(httprequest) DirAddTags updateRequestWithTags tags: ', json)
       const HTTPREQUEST = {
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
         headers: {
@@ -325,7 +242,7 @@ class DirAddTags {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAddTags patch request with new tags err: ", err);
+            winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
             resolve(true)
           } else {
             if (resbody) {
@@ -354,7 +271,7 @@ class DirAddTags {
       this.#myrequest(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAddTags put lead with new tags err: ", err);
+            winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);
             resolve(true)
           } else {
             if (resbody) {

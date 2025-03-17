@@ -1,5 +1,6 @@
 
 const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const winston = require('../../utils/winston');
 
 class DirWait {
 
@@ -16,6 +17,7 @@ class DirWait {
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
+    winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -41,22 +43,19 @@ class DirWait {
         millis: 500
       }
     }
-    // console.log("____-----_", action)
+
     this.go(action, () => {
-      // console.log("YES", callback)
       callback();
     })
   }
 
   async go(action, callback) {
+    winston.debug("(DirWait) Action: ", action);
     // reset step?
     // const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
-    // console.log("step_key:", step_key);
     if (action && action.millis >= 1000) {//2000 * 60) { // at list 2 minutes waiting time to reset the steps counter
       // await this.tdcache.set(step_key, 0);
-      // console.log("resetting steps counter");
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
-      // console.log("step_key after:", await this.tdcache.get( step_key ));
     }
     setTimeout(() => {
       callback();

@@ -1,8 +1,8 @@
-//const { ExtApi } = require('../../ExtApi.js');
 let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirConnectBlock {
   constructor(context) {
@@ -18,12 +18,13 @@ class DirConnectBlock {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute ConnectBlock directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect DirConnectBlock directive:", directive);
+      winston.warn("DirConnectBlock Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -33,6 +34,7 @@ class DirConnectBlock {
   }
 
   go(action, callback) {
+    winston.debug("(DirConnectBlock) Action: ", action);
     const intentName = action.intentName;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
@@ -62,15 +64,9 @@ class DirConnectBlock {
       },
       "token": this.token
     }
-    if (this.log) {console.log("move to intent message:", intent_command_request);}
-    let TILEBOT_ENDPOINT;
-    if (this.TILEBOT_ENDPOINT) {
-      TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
-    }
-    else {
-      TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
-    }
-    this.sendMessageToBot(TILEBOT_ENDPOINT, intent_command_request, botId, () => {
+    winston.debug("(DirConnectBlock) move to intent message: ", intent_command_request);
+
+    this.sendMessageToBot(this.TILEBOT_ENDPOINT, intent_command_request, botId, () => {
       callback();
     });
   }
@@ -82,7 +78,7 @@ class DirConnectBlock {
         string_params = JSON.stringify(json_params);
       }
       catch (error) {
-        console.error("Error stringigying JSON PARAMS", json_params);
+        winston.error("(DirConnectBlock) Error stringing JSON PARAMS: ", json_params);
       }
     }
     if (string_params != null) {
@@ -114,10 +110,9 @@ class DirConnectBlock {
    * @param {string} botId. Tiledesk botId
    * @param {string} token. User token
    */
-  sendMessageToBot(CHATBOT_ENDPOINT, message, botId, callback) {
-    // const jwt_token = this.fixToken(token);
-    const url = `${CHATBOT_ENDPOINT}/ext/${botId}`;
-    // console.log("sendMessageToBot URL", url);
+  sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
+    const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
+    winston.verbose("sendMessageToBot URL" + url);
     const HTTPREQUEST = {
       url: url,
       headers: {
@@ -144,10 +139,6 @@ class DirConnectBlock {
   }
 
   myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -163,10 +154,6 @@ class DirConnectBlock {
     }
     axios(axios_options)
     .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -179,7 +166,7 @@ class DirConnectBlock {
       }
     })
     .catch( (error) => {
-      console.error("(DirConnectBlock) Axios error: ", JSON.stringify(error));
+      winston.error("(DirConnectBlock) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null, null);
       }
@@ -187,4 +174,4 @@ class DirConnectBlock {
   }
 }
 
-module.exports = { DirIntent };
+module.exports = { DirConnectBlock };

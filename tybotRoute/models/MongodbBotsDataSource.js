@@ -1,5 +1,6 @@
 let Faq = require('./faq');
 let Faq_kb = require('./faq_kb');
+const winston = require('../utils/winston');
 
 class MongodbBotsDataSource {
 
@@ -22,51 +23,33 @@ class MongodbBotsDataSource {
   async getBotByIdCache(botId, tdcache) {
     let bot = null;
     if (tdcache) {
-      // console.log("getBotByIdCache cache ok");
       let botCacheKey = "cacheman:cachegoose-cache:faq_kbs:id:" + botId;
       try {
         let _bot_as_string = await tdcache.get(botCacheKey);
         const value_type = typeof _bot_as_string;
-        // console.log("__bot_as_string found in chache:", _bot_as_string);
-        if (this.log) {
-          console.log("__bot_as_string found in chache:", _bot_as_string);
-          console.log("value_type:", value_type);
-        }
+        winston.debug("(MongodbBotsDataSource) _bot_as_string found in chache: " + _bot_as_string);
+        winston.debug("(MongodbBotsDataSource) value_type: " + value_type);
         if (_bot_as_string) {
           bot = JSON.parse(_bot_as_string);
-          // console.log("got bot from cache:", JSON.stringify(bot));
-          if (this.log) {
-            console.log("got bot from cache:", JSON.stringify(bot));
-          }
+          winston.debug("(MongodbBotsDataSource) got bot from cache: ", bot);
         }
         else {
-          // console.log("bot not found, getting from datasource...");
-          if (this.log) {
-            console.log("bot not found, getting from datasource...");
-          }
+          winston.debug("(MongodbBotsDataSource) bot not found, getting from datasource...");
           bot = await this.getBotById(botId);
-          // console.log("bot found in datasource:", JSON.stringify(bot));
-          if (this.log) {
-            console.log("bot found in datasource:", JSON.stringify(bot));
-          }
+          winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
           await tdcache.set(botCacheKey, JSON.stringify(bot));
           // DEBUG CODE REMOVE
           // let bot_ = await tdcache.get(botCacheKey);
-          // console.log("_bot_as_string from cache debug:", bot_)
         }
       }
       catch(err) {
-        console.error("error getting bot by id:", err);
+        winston.error("(MongodbBotsDataSource) Error getting bot by id: ", err);
       }
     }
     else {
-      // if (this.log) {
-        console.log("no chache. getting bot from datasource...");
-      // }
+      winston.verbose("(MongodbBotsDataSource) No chache. getting bot from datasource...");
       bot = await this.getBotById(botId);
-      // if (this.log) {
-        console.log("bot found in datasource:", JSON.stringify(bot));
-      // }
+      winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
     }
     return bot;
   }
@@ -83,11 +66,11 @@ class MongodbBotsDataSource {
       let query = { "id_faq_kb": botId, "question": text };
       Faq.find(query).lean().exec(async (err, faqs) => {
         if (err) {
-          console.error("Error getting faq object.", err);
+          winston.error("(MongodbBotsDataSource) Error getting faq object: ", err);
           reject(err);
         }
         else if (faqs && faqs.length > 0 && faqs[0].answer) {
-          if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs);}
+          winston.debug("(MongodbBotsDataSource) Exact match or action Faq: ", faqs);
           resolve(faqs);
         }
         else {
@@ -103,34 +86,34 @@ class MongodbBotsDataSource {
    * @returns a single Intent
    */
   async getByIntentDisplayName(botId, key) {
-    if (this.log) {console.log("Quering intent by botId:", botId, "key:", key );}
+    winston.debug("(MongodbBotsDataSource) Quering intent by botId: " + botId + " key: " + key );
     return new Promise((resolve, reject) => {
       // var query = { "id_project": this.projectId, "id_faq_kb": botId, "intent_display_name": name};
       let query = null;
       key = key.trim();
       if (key.startsWith("#")) {
         let intent_id = key.substring(key.indexOf("#") + 1);
-        if (this.log) {console.log("Query by intent_id:", intent_id );}
+        winston.debug("(MongodbBotsDataSource)Query by intent_id: " + intent_id );
         query = { "id_faq_kb": botId, "intent_id": intent_id };
       }
       else {
-        if (this.log) {console.log("Query by intent name:", key);}
+        winston.debug("(MongodbBotsDataSource) Query by intent name: " + key);
         query = { "id_faq_kb": botId, "intent_display_name": key };
       }      
-      if (this.log) {console.debug('query', query);}
+      winston.debug("(MongodbBotsDataSource) query", query);
       Faq.find(query).lean().exec( (err, faqs) => {
         if (err) {
-          console.error("error getting faqs", err);
+          winston.error("(MongodbBotsDataSource) Error getting faqs ", err);
           return reject(err);
         }
-        if (this.log) {console.debug("getByIntentDisplayName faqs", JSON.stringify(faqs));}
+        winston.debug("(MongodbBotsDataSource) getByIntentDisplayName faqs ", faqs);
         if (faqs && faqs.length > 0) {
           const intent = faqs[0];
-          if (this.log) {console.debug("intent found:", JSON.stringify(intent));}
+          winston.debug("(MongodbBotsDataSource) intent found: ", intent);
           return resolve(intent);
         }
         else {
-          if (this.log) {console.debug("No intent found");}
+          winston.verbose("(MongodbBotsDataSource) No intent found");
           return resolve(null);
         }
       });
@@ -139,29 +122,23 @@ class MongodbBotsDataSource {
 
   async getByIntentDisplayNameCache(botId, key, tdcache) {
     let faq = null;
-    if (this.log) {
-      console.log("botID: -" + botId + "-");
-      console.log("key: -" + key + "-");
-    }
+    winston.verbose("(MongodbBotsDataSource) botID: -" + botId + "-");
+    winston.verbose("(MongodbBotsDataSource) key: -" + key + "-");
     if (tdcache) {
-      if (this.log) {console.log("in tdcache");}
       let faqCacheKey = "cacheman:cachegoose-cache:faqs:botid:"+ botId + ":faq:id:" + key;
-      if (this.log) {console.log("Looking in cache for: -" + faqCacheKey + "-");}
+      winston.debug("(MongodbBotsDataSource) Looking in cache for: -" + faqCacheKey + "-");
       try {
         let _faq_as_string = await tdcache.get(faqCacheKey);
         const value_type = typeof _faq_as_string;
-        if (this.log) {
-          console.log("_faq_as_string found in chache:", _faq_as_string);
-          console.log("value_type:", value_type);
-        }
+        winston.debug("(MongodbBotsDataSource)_faq_as_string found in chache: " + _faq_as_string);
+        winston.debug("(MongodbBotsDataSource)value_type: " + value_type);
         if (_faq_as_string) {
           faq = JSON.parse(_faq_as_string);
-          if (this.log) {console.log("got faq from cache:", JSON.stringify(faq));}
+          winston.debug("(MongodbBotsDataSource) Got faq from cache: ", faq);
         }
         else {
-          //console.log("faq not found, getting from datasource...");
           faq = await this.getByIntentDisplayName(botId, key);
-          if (this.log) {console.log(".faq found in datasource:", JSON.stringify(faq));}
+          winston.debug("(MongodbBotsDataSource) faq found in datasource:", faq);
           await tdcache.set(
             faqCacheKey,
             JSON.stringify(faq),
@@ -169,17 +146,16 @@ class MongodbBotsDataSource {
           );
           // DEBUG CODE REMOVE
           // let faq_ = await tdcache.get(faqCacheKey);
-          // console.log("_faq_as_string from cache debug:", faq_)
         }
       }
       catch(err) {
-        console.error("error getting faq by id:", err);
+        winston.error("(MongodbBotsDataSource) Error getting faq by id: ", err);
       }
     }
     else {
-      if (this.log) {console.log("no chache. getting faq from datasource...");}
+      winston.debug("(MongodbBotsDataSource) No chache. Getting faq from datasource...");
       faq = await this.getByIntentDisplayName(botId, key);
-      if (this.log) {console.log("faq found in datasource (no-cache):", JSON.stringify(faq));}
+      winston.debug("(MongodbBotsDataSource) Faq found in datasource (no-cache): ", faq);
     }
     return faq;
   }

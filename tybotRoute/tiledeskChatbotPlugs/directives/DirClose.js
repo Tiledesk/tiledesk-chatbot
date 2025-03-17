@@ -1,6 +1,7 @@
 
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const winston = require('../../utils/winston');
 
 class DirClose {
 
@@ -24,9 +25,10 @@ class DirClose {
     }
     
     execute(directive, callback) {
+        winston.verbose("Execute Close directive");
         this.tdClient.closeRequest(this.requestId, async (err) => {
             if (err) {
-                console.error("Error in 'close directive':", err);
+                winston.error("(DirClose) Error: ", err);
             }
             else {
                 await this.chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT);

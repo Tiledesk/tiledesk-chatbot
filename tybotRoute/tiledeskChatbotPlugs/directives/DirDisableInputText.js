@@ -1,4 +1,5 @@
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 // DEPRECATED
 class DirDisableInputText {
@@ -7,7 +8,7 @@ class DirDisableInputText {
   }
 
   execute(directive, pipeline, callback) {
-    // console.log("disable input text...pipeline");
+    winston.verbose("Execute DisableInputText directive");
     let message = pipeline.message
     if (!message.attributes) {
       message.attributes = {}
@@ -15,10 +16,8 @@ class DirDisableInputText {
     message.attributes.disableInputMessage = true;
     if (directive.parameter) {
       const options = this.parseParams(directive.parameter);
-      // console.log("Options", options)
       directive.options = options;
       if (options.label) {
-        // console.log("options.label", options.label)
         message.attributes.inputMessagePlaceholder = options.label;
       }
     }
@@ -28,13 +27,10 @@ class DirDisableInputText {
   parseParams(directive_parameter) {
     let label = null;
     const params = ms(directive_parameter);
-    // console.log("params:", params);
     if (params.l) {
-      // console.log("_param l", params.l);
       label = params.l;
     }
     if (params.label) {
-      // console.log("_param label", params.label);
       label = params.label;
     }
     return {

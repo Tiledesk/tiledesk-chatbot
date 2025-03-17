@@ -1,6 +1,7 @@
 let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
+const winston = require('../../utils/winston')
 
 class DirMessageToBot {
 
@@ -17,14 +18,13 @@ class DirMessageToBot {
   }
 
   execute(directive, callback) {
-    // console.log("exec intent:", JSON.stringify(directive));
+    winston.verbose("Execute MessageToBot directive");
     let action;
     if (directive.action) {
-      // console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", directive);
+      winston.warn("DirMessageToBot Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -34,26 +34,18 @@ class DirMessageToBot {
   }
 
   go(action, callback) {
-    // console.log("message action intent:", action);
+    winston.debug("(DirMessageToBot) Action: ", action);
+    
     const message = action.message;
-    // const projectId = this.supportRequest.id_project;
-    // const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
 
     let outgoing_message = {
       "payload": message,
       "token": this.token
     }
-    if (this.log) {console.log("sending message:", JSON.stringify(outgoing_message));}
-    let TILEBOT_ENDPOINT;
-    if (this.TILEBOT_ENDPOINT) {
-      TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
-    }
-    else {
-      TILEBOT_ENDPOINT = `${this.API_ENDPOINT}/modules/tilebot`
-    }
-    this.sendMessageToBot(TILEBOT_ENDPOINT, outgoing_message, botId, () => {
-      // console.log("(DirMessageToBot) sendMessageToBot() req_body sent");
+    winston.debug("(DirMessageToBot) sending message: ", outgoing_message);
+    
+    this.sendMessageToBot(this.TILEBOT_ENDPOINT, outgoing_message, botId, () => {
       callback(true);
     });
   }
@@ -66,10 +58,9 @@ class DirMessageToBot {
    * @param {string} botId. Tiledesk botId
    * @param {string} token. User token
    */
-  sendMessageToBot(CHATBOT_ENDPOINT, message, botId, callback) {
-    // const jwt_token = this.fixToken(token);
-    const url = `${CHATBOT_ENDPOINT}/ext/${botId}`;
-    // console.log("sendMessageToBot URL", url);
+  sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
+    const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
+    winston.verbose("sendMessageToBot URL" + url);
     const HTTPREQUEST = {
       url: url,
       headers: {
@@ -96,10 +87,6 @@ class DirMessageToBot {
   }
 
   myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -113,12 +100,7 @@ class DirMessageToBot {
       });
       axios_options.httpsAgent = httpsAgent;
     }
-    axios(axios_options)
-    .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
+    axios(axios_options).then((res) => {
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -131,7 +113,7 @@ class DirMessageToBot {
       }
     })
     .catch( (error) => {
-      console.error("(DirMessageToBot) Axios error: ", JSON.stringify(error));
+      winston.error("(DirMessageToBot) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null, null);
       }

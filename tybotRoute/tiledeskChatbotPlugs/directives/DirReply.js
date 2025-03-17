@@ -4,6 +4,7 @@ const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
+const winston = require('../../utils/winston')
 
 class DirReply {
 
@@ -40,7 +41,7 @@ class DirReply {
       action.attributes.fillParams = true;
     }
     else {
-      console.error("Incorrect directive (no action provided):", directive);
+      winston.error("DirReply Incorrect directive (no action provided):", directive);
       callback();
       return;
     }
@@ -64,7 +65,6 @@ class DirReply {
       if (this.log) {
         for (const [key, value] of Object.entries(requestAttributes)) {
           const value_type = typeof value;
-          // if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
         }
       }
       const filler = new Filler();
@@ -73,7 +73,7 @@ class DirReply {
       this.logger.info("2 Sending reply " + message.text);
 
       if (message.metadata) {
-        if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
+        winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
         }
@@ -81,24 +81,23 @@ class DirReply {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
         }
       }
-      if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
+      winston.debug("DirReply filling commands'. Message:", message);
       if (message.attributes && message.attributes.commands) {
-        if (this.log) {console.log("filling commands'. commands found.");}
         let commands = message.attributes.commands;
-        if (this.log) {console.log("commands:", JSON.stringify(commands), commands.length);}
+        winston.debug("DirReply commands: " + JSON.stringify(commands) + " length: " + commands.length);
+        
         if (commands.length > 0) {
-          if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
-              if (this.log) {console.log("command filled:", command.message.text);}
+              winston.debug("DirReply command filled: " + command.message.text);
             }
             if (command.type === 'settings' && command.settings) {
               Object.keys(command.settings).forEach(k => {
                 command.settings[k] = filler.fill(command.settings[k], requestAttributes)
-                if (this.log) {console.log("settings command filled:", command.settings[k]);}
+                winston.debug("DirReply settings command filled: " + command.settings[k]);
               })
             }
           }
@@ -106,11 +105,10 @@ class DirReply {
       }
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
-      if (this.log) {console.log("message before filters:", JSON.stringify(message));}
+      winston.debug("DirReply message before filters: ", message);
       if (message.attributes && message.attributes.commands) {
-        if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
-        if (this.log) {console.log("filterOnVariables...on attributes", requestAttributes);}
-        // TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestAttributes);
+        winston.debug("DirReply filterOnVariables...on commands", message.attributes.commands)
+        winston.debug("DirReply filterOnVariables...on attributes", requestAttributes);
         TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }
       // temporary send back of reserved attributes
@@ -130,12 +128,22 @@ class DirReply {
       }
       // userFlowAttributes
       let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
-      if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
+      winston.debug("DirReply userFlowAttributes:", userFlowAttributes);
       if (userFlowAttributes) {
-        message.attributes["flowAttributes"] = userFlowAttributes;
+        message.attributes["flowAttributes"] = {};
+        for (const [key, value] of Object.entries(userFlowAttributes)) {
+          try {
+            if(typeof value === 'string' && value.length <= 1000){
+              message.attributes["flowAttributes"][key] = value;
+            }
+          }
+          catch(err) {
+            winston.error("DirReply An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
+          }
+        }
       }
     }
-    // send!
+
     let cleanMessage = message;
     this.logger.info("3 Sending reply (text) " + cleanMessage.text);
     this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
@@ -147,29 +155,26 @@ class DirReply {
     // }
     
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
-    if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
+    winston.debug("DirReply reply with clean message: ", cleanMessage);
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
-    // console.log("sending message!", cleanMessage);
     this.tdClient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {
         if (err) {
-          console.error("Error sending reply:", err);
+          winston.error("DirReply Error sending reply: ", err);
           this.logger.error("Error sending reply: " + err);
         }
-        if (this.log) {console.log("Reply message sent:", JSON.stringify(cleanMessage));}
+        winston.verbose("DirReply reply message sent")
         this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
-        // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {
-            // console.log("callback after delay")
             callback();
           }, delay);
         }
         else {
-          // console.log("invalid delay.")
           callback();
         }
     });

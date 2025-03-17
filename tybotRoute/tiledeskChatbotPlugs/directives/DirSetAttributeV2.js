@@ -4,6 +4,7 @@ const { TiledeskMath } = require('../../TiledeskMath');
 const { TiledeskString } = require('../../TiledeskString');
 const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
+const winston = require('../../utils/winston');
 
 const schema = {
     "type": "object",
@@ -81,86 +82,66 @@ class DirSetAttributeV2 {
     }
 
     execute(directive, callback) {
+        winston.verbose("Execute SetAttributeV2 directive");
         let action;
         if (directive.action) {
             action = directive.action
         }
         else {
+            winston.warn("DirSetAttributeV2 Incorrect directive: ", directive);
             callback();
             return;
         }
-        // console.log("go DirAssign with action:", action);
         this.go(action, () => {
             callback();
         });
     }
 
     async go(action, callback) {
-        if (this.log) {console.log("(DirSetAttribute) action before filling:", JSON.stringify(action));}
-        // if (!action) {
-        //     if (this.log) {console.log("(SetAttributeV2) Error 'action' is missing");}
-        //     callback();
-        //     return;
-        // }
+        winston.debug("(DirSetAttributeV2) Action: ", action);
+      
         if (action && !action.operation) {
-            if (this.log) {console.log("(SetAttributeV2) Error operation is mandatory");}
+            winston.error("(DirSetAttributeV2) Error operation is mandatory");
             callback();
+            return;
         }
         if (action && action.operation && action.operation.operands) {
-            if (this.log) {console.log("(SetAttributeV2) filling in setattribute...");}
+            winston.debug("(DirSetAttributeV2) filling in setattribute...");
             await this.fillValues(action.operation.operands);
         }
-        if (this.log) { console.log("action.operation.operands.length", action.operation.operands.length); }
-        if (this.log) { console.log("action.operation.operands[0].type", action.operation.operands[0].type); }
         
         // FUN FACT: THIS TOOK A LOT OF EFFORT BUT IT WAS NEVER USED. YOU CAN SIMPLY CREATE A JSON ATTRIBUTE APPLYING
         // JSONparse FUNCTION TO AN ATTRIBUTE.
         // DEPRECATED because type = json is not available in the UI!
         if (action.operation.operands && action.operation.operands.length === 1 && action.operation.operands[0].type === "json") {
-            if (this.log) {console.log("(SetAttributeV2) setting json value...");}
-            if (this.log) { console.log("(SetAttributeV2) setting json value... destination:", action.destination); }
             const json_value = JSON.parse(action.operation.operands[0].value);
-            if (this.log) { console.log("(SetAttributeV2) json_value:", json_value); }
             await this.saveAttribute(action.destination, json_value);
             // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.destination, json_value);
             callback();
             return; // on json types no operations are permitted beyond assignment
         }
-        if (this.log) {console.log("filled in setattribute:", action.operation);}
-        // let res = validate(action, schema);
-        // if (res.errors) {
-        //     console.log("(DirSetAttribute) failed validation action:", JSON.stringify(action));
-        //     console.log("DirSetAttribute validation errors:", res.errors);
-        // }
-        // if (!res.valid) {
-        //     if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
-        //     callback();
-        //     return;
-        // }
+        winston.debug("(DirSetAttributeV2) filled in setattribute:", action.operation);
+       
         if (action.operation?.operators === undefined && action.operation?.operands?.length !== 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
+            winston.error("(DirSetAttributeV2) Invalid action: operators === undefined && operands.length !== 1")
             callback();
             return;
         }
         if (action.operation?.operators !== undefined && action.operation?.operators?.length !== action.operation?.operands?.length - 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
+            winston.error("(DirSetAttributeV2) Invalid action: operators.length !== operands.length - 1")
             callback();
             return;
         }
         // if (action && action.operation && action.operation.operands) {
-        //     console.log("filling in setattribute...");
         //     await this.fillValues(action.operation.operands);
         // }
-        // console.log("dirsetattribute, action.operation.operands:", action.operation.operands);
         try {
             const expression = TiledeskExpression.JSONOperationToExpression(action.operation?.operators, action.operation?.operands);
             const attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-            // console.log("dirsetattribute, attributes:", attributes);
             if (attributes) {
                 attributes.TiledeskMath = TiledeskMath;
                 attributes.TiledeskString = TiledeskString;
                 const result = new TiledeskExpression().evaluateJavascriptExpression(expression, attributes);
-                // console.log("filling in setattribute, result:", result);
                 // THE GOAL OF ATTRIBUTE-FILLING THE "DESTINATION" FIELD IS TO SUPPORT DYNAMIC ATTRIBUTES
                 // (ATTRS WHOSE NAME IS UNKNOWN AD DESIGN-TIME)
                 // STILL UNSUPPORTED IN UI
@@ -169,7 +150,7 @@ class DirSetAttributeV2 {
             }
         }
         catch(err) {
-            console.error("SetAttributeV2 error:", err);
+            winston.error("(DirSetAttributeV2)  error:", err);
         }
         
         // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, destination, result);
@@ -177,12 +158,9 @@ class DirSetAttributeV2 {
     }
 
     async saveAttribute(key, value, persist) {
-        if (this.log) {
-            console.log("SetAttributeV2 saving attribute:", key, value, persist);
-        }
+        winston.debug("(DirSetAttributeV2) saving attribute: " + key + " " + value + " " + persist);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         // if (persist) {
-        //     console.log("SetAttributeV2 persisting...");
         //     await this.persistOnTiledesk(destination, result);
         // }
         
@@ -216,19 +194,15 @@ class DirSetAttributeV2 {
             json: json,
             method: 'POST'
         }
-        if (this.log) { console.log("SetAttribute. HTTPREQUEST: ", HTTPREQUEST); }
+        winston.debug("(DirSetAttributeV2) HttpRequest: ", HTTPREQUEST);
         this.#myrequest(
             HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                     if (this.log) {
-                        console.error("SetAttribute. persistOnTiledesk() error:", err);
+                        winston.error("(DirSetAttributeV2) persistOnTiledesk() error: ", err);
                     }
-                    // callback();
-                    // return;
                 } else {
-                    if (this.log) { console.log("SetAttribute. Attributes saved.", JSON.stringify(resbody)); }
-                    // callback();
-                    // return;
+                    winston.debug("(DirSetAttributeV2) Attributes saved: ", resbody);
                 }
             }
         );
@@ -237,13 +211,10 @@ class DirSetAttributeV2 {
 
     async fillDestination(destination) {
         if (this.tdcache) {
-            // console.log("tdcache in setattribute...", this.tdcache);
             const requestAttributes = 
                 await TiledeskChatbot.allParametersStatic(this.tdcache, this.context.requestId);
-            // console.log("requestAttributes in setattribute...", requestAttributes);
             const filler = new Filler();
             destination = filler.fill(destination, requestAttributes);
-            // console.log("setattribute, final destination:", destination);
         }
         return destination
     }
@@ -276,27 +247,21 @@ class DirSetAttributeV2 {
         //     ]
         try {
             if (this.tdcache) {
-                // console.log("tdcache in setattribute...", this.tdcache);
                 const requestAttributes = 
                     await TiledeskChatbot.allParametersStatic(this.tdcache, this.context.requestId);
-                // console.log("requestAttributes in setattribute...", requestAttributes);
                 const filler = new Filler();
                 operands.forEach(operand => {
-                    // if (!operand.isVariable) {
-                        // console.log("setattribute, liquid operand:", operand);
-                        operand.value = filler.fill(operand.value, requestAttributes);
-                        // console.log("setattribute, final operand:", operand);
-                    // }
+                    operand.value = filler.fill(operand.value, requestAttributes);
                 });
             }
         }
         catch(error) {
-            console.error("Error while filling operands:", error);
+            winston.error("(DirSetAttributeV2) Error while filling operands: ", error);
         }
     }
 
     convertOperandValues(operands) {
-        console.log("Converting operands:", operands);
+        winston.debug("(DirSetAttributeV2) Converting operands:", operands);
         // operation: {
         //     operators: ["addAsNumber", "subtractAsNumber", "divideAsNumber", "multiplyAsNumber"],
         //     operands: [
@@ -309,35 +274,24 @@ class DirSetAttributeV2 {
         try {
             operands.forEach(operand => {
                 if (operand.type) {
-                    console.log("Converting operands - operand.type:", operand.type.toLowerCase());
                     if (operand.type.toLowerCase() === "number") {
-                        console.log("Converting operands - number");
                         operand.value = Number(operand.value);
-                        console.log("new value:", operand.value);
-                        console.log("new value type:", typeof operand.value);
                     }
                     else if (operand.type.toLowerCase() === "json") {
-                        console.log("Converting operands - json, value =", operand.value);
                         operand.value = JSON.parse(operand.value);
-                        console.log("new value:", operand.value);
-                        console.log("new value type:", typeof operand.value);
                     }
                     else {
-                        console.log("Converting operands - ??");
+                        winston.warn("Converting operands - ??");
                     }
                 }
             });
         }
         catch(error) {
-            console.error("Error while converting operands:", error);
+            winston.error("(DirSetAttributeV2) Error while converting operands: ", error);
         }
     }
 
     #myrequest(options, callback) {
-        if (this.log) {
-          console.log("API URL:", options.url);
-          console.log("** Options:", JSON.stringify(options));
-        }
         let axios_options = {
           url: options.url,
           method: options.method,
@@ -347,9 +301,6 @@ class DirSetAttributeV2 {
         if (options.json !== null) {
           axios_options.data = options.json
         }
-        if (this.log) {
-          console.log("axios_options:", JSON.stringify(axios_options));
-        }
         if (options.url.startsWith("https:")) {
           const httpsAgent = new https.Agent({
             rejectUnauthorized: false,
@@ -358,10 +309,6 @@ class DirSetAttributeV2 {
         }
         axios(axios_options)
         .then((res) => {
-            if (this.log) {
-                console.log("Response for url:", options.url);
-                console.log("Response headers:\n", JSON.stringify(res.headers));
-            }
             if (res && res.status == 200 && res.data) {
                 if (callback) {
                 callback(null, res.data);

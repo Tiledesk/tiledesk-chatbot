@@ -4,9 +4,10 @@ const tybot = require("../");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -26,21 +27,22 @@ describe('Conversation for JSONCondition test', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       tybot.startApp(
         {
-          // MONGODB_URI: process.env.mongoUrl,
+          // MONGODB_URI: process.env.MONGODB_URI,
           bots: bots_data,
+          TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
           API_ENDPOINT: process.env.API_ENDPOINT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
           REDIS_PASSWORD: process.env.REDIS_PASSWORD,
           log: process.env.TILEBOT_LOG
         }, () => {
-          console.log("Tilebot route successfully started.");
+          winston.info("Tilebot route successfully started.");
           var port = process.env.PORT || 10001;
           app_listener = app.listen(port, () => {
-            console.log('Tilebot connector listening on port ', port);
+            winston.info('Tilebot connector listening on port ' + port);
             resolve();
           });
         });
@@ -49,19 +51,16 @@ describe('Conversation for JSONCondition test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
   it('/winning_path', (done) => {
-    // console.log("/winning_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -88,7 +87,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -106,19 +105,17 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('/losing_path', (done) => {
-    // console.log("/losing_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -145,7 +142,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -163,19 +160,17 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
   it('/unknown_path', (done) => {
-    // console.log("/unknown_path");
     // let message_id = uuidv4();
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("...req.body:", JSON.stringify(req.body));
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -202,7 +197,7 @@ describe('Conversation for JSONCondition test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
         //   "_id": message_id,
@@ -220,7 +215,7 @@ describe('Conversation for JSONCondition test', async () => {
         "token": CHATBOT_TOKEN
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -236,9 +231,8 @@ describe('Conversation for JSONCondition test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -271,8 +265,7 @@ function sendMessageToBot(message, botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 function getChatbotParameters(requestId, callback) {
-  // const jwt_token = this.fixToken(token);
-  const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+  const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -298,10 +291,6 @@ function getChatbotParameters(requestId, callback) {
 }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
   axios(
     {
       url: options.url,
@@ -311,11 +300,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -328,7 +312,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

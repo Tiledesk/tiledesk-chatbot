@@ -1,4 +1,5 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
+const winston = require('../../utils/winston');
 
 class DirDepartment {
 
@@ -21,7 +22,7 @@ class DirDepartment {
   }
 
   execute(directive, callback) {
-    // if (this.log) {console.log("DirDepartment:", dep_name);}
+    winston.verbose("Execute Department directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -61,15 +62,15 @@ class DirDepartment {
   // }
 
   go(action, callback) {
-    if (this.log) {console.log("Switching to department:", action.depName);}
+    winston.debug("(DirDepartment) Action: ", action);
     const depName = action.depName;
     this.moveToDepartment(this.requestId, depName, (deps) => {
       if (!deps) {
-        if (this.log) {console.log("Dep not found");}
+        winston.warn("(DirDepartment) Dep not found");
         callback();
         return
       }
-      if (this.log) {console.log("Switched to dept:", depName, "action:", JSON.stringify(action));}
+      winston.debug("(DirDepartment) Switched to dept: " + depName + " action: " + JSON.stringify(action));
       if (action.triggerBot) {
         let dep = null;
         let i;
@@ -81,7 +82,7 @@ class DirDepartment {
           }
         }
         if (dep && dep.hasBot === true && dep.id_bot) {
-          if (this.log) {console.log("Sending hidden /start message to bot in dept");}
+          winston.debug("(DirDepartment) Sending hidden /start message to bot in dept");
           const message = {
             type: "text",
             text: "/start",
@@ -93,15 +94,15 @@ class DirDepartment {
             this.requestId,
             message, (err) => {
               if (err) {
-                console.error("Error sending hidden message:", err.message);
+                winston.error("(DirDepartment) Error sending hidden message: " + err.message)
               }
-              if (this.log) {console.log("Hidden message sent.");}
+              winston.debug("(DirDepartment) Hidden message sent.");
               callback();
           });
         }
       }
       else {
-        if (this.log) {console.log("No action.triggerBot");}
+        winston.debug("(DirDepartment) No action.triggerBot");
         callback();
       }
     });
@@ -109,9 +110,9 @@ class DirDepartment {
 
   moveToDepartment(requestId, depName, callback) {
     this.tdClient.getAllDepartments((err, deps) => {
-      if (this.log) {console.log("deps:", JSON.stringify(deps));}
+      winston.debug("(DirDepartment) deps: ", deps);
       if (err) {
-        console.error("getAllDepartments() error:", err);
+        winston.error("(DirDepartment) getAllDepartments() error: ", err);
         callback();
         return;
       }
@@ -127,11 +128,11 @@ class DirDepartment {
       if (dep) {
         this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
-            console.error("DirDepartment error:", err);
+            winston.error("(DirDepartment) updatedRequestDepartment error: ", err);
             callback();
           }
           else {
-            if (this.log) { console.log("DirDepartment response:",JSON.stringify(res)); }
+            winston.debug("(DirDepartment) response: ", res); 
             callback(deps);
           }
         });

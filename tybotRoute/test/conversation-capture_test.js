@@ -4,9 +4,10 @@ const tybot = require("../");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -24,50 +25,49 @@ describe('Conversation for capture test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
-  
+
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       try {
         tybot.startApp(
           {
-            // MONGODB_URI: process.env.mongoUrl,
+            // MONGODB_URI: process.env.MONGODB_URI,
             bots: bots_data,
+            TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
             log: process.env.TILEBOT_LOG
           }, () => {
-            console.log("Tilebot route successfully started.");
+            winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
-              console.log('Tilebot connector listening on port ', port);
+              winston.info('Tilebot connector listening on port ', port);
               resolve();
             });
-        });
+          });
       }
-      catch(error) {
-        console.error("error:", error)
+      catch (error) {
+        winston.error("error:", error)
       }
-      
+
     })
   });
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
 
   it('/capture1', (done) => {
-    console.log("Wait a little (~1s)...");
+    winston.info("Wait a little (~1s)...");
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      // console.log("/capture1 req.body: ", req.body)
       res.send({ success: true });
       const message = req.body;
       assert(message.attributes.commands !== null);
@@ -75,65 +75,52 @@ describe('Conversation for capture test', async () => {
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
       const message_text = command2.message.text
-      
-
-      
-        if (message_text === "your name?") {
-          let request = {
-            "payload": {
-              "_id": null,
-              "senderFullname": "guest#367e",
-              "type": "text",
-              "sender": "A-SENDER",
-              "recipient": REQUEST_ID,
-              "text": "Andrea",
-              "id_project": PROJECT_ID,
-              "request": {
-                "request_id": REQUEST_ID,
-              }
-            },
-            "token": CHATBOT_TOKEN
-          }
-          // console.log("capturex1. Got reply before locked action.", message_text)
-          setTimeout(() => {
-            sendMessageToBot(request, BOT_ID, () => {
-              // console.log("Message sent.", request);
-            });
-          }, 1000);
+      if (message_text === "your name?") {
+        let request = {
+          "payload": {
+            "_id": null,
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": "Andrea",
+            "id_project": PROJECT_ID,
+            "request": {
+              "request_id": REQUEST_ID,
+            }
+          },
+          "token": CHATBOT_TOKEN
         }
-        else if (message_text === "It's a good form Andrea") {
-          // verify parameters
-          // console.log("capturex2. Got reply after locked action.", message_text)
-          util.getChatbotParameters(REQUEST_ID, (err, params) => {
-            if (err) {
-              assert.ok(false);
-            }
-            else {
-              // console.log("params2:", params);
-              assert(params);
-              assert(params["username"] === "Andrea");
-              listener.close(() => {
-                // console.log("done2");
-                done();
-              });
-            }
+        setTimeout(() => {
+          sendMessageToBot(request, BOT_ID, () => {
+            winston.verbose("Message sent.", request);
           });
-  
-        }
-        else {
-          console.error("Unexpected message2.");
-          assert.ok(false);
-        }
-      
-      
+        }, 1000);
+      }
+      else if (message_text === "It's a good form Andrea") {
+        // verify parameters
+        util.getChatbotParameters(REQUEST_ID, (err, params) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(params);
+            assert(params["username"] === "Andrea");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
 
-
-
-
+      }
+      else {
+        winston.error("Unexpected message2.");
+        assert.ok(false);
+      }
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started', listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -150,7 +137,7 @@ describe('Conversation for capture test', async () => {
         "token": "XXX"
       }
       sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -166,9 +153,8 @@ describe('Conversation for capture test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  // const jwt_token = this.fixToken(token);
   const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
+  winston.verbose("sendMessageToBot URL" + url);
   const HTTPREQUEST = {
     url: url,
     headers: {
@@ -201,8 +187,7 @@ function sendMessageToBot(message, botId, callback) {
  * @param {string} requestId. Tiledesk chatbot/requestId parameters
  */
 // function getChatbotParameters(requestId, callback) {
-//   // const jwt_token = this.fixToken(token);
-//   const url = `${process.env.TYBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
+//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
 //   const HTTPREQUEST = {
 //     url: url,
 //     headers: {
@@ -228,10 +213,7 @@ function sendMessageToBot(message, botId, callback) {
 // }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
+
   axios(
     {
       url: options.url,
@@ -241,11 +223,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -258,7 +235,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

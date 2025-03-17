@@ -1,5 +1,6 @@
 
 let axios = require('axios');
+const winston = require('../utils/winston');
 
 class TiledeskIntentsMachine {
 
@@ -21,9 +22,9 @@ class TiledeskIntentsMachine {
    */
   async decode(botId, text) {
     return new Promise( (resolve, reject) => {
-      if (this.log) {console.log("NLP AI...");}
+      winston.verbose("(TiledeskIntentsMachine) NLP AI...");
       const url = `${this.API_ENDPOINT}/model/parse`;
-      if (this.log) {console.log("AI URL", url);}
+      winston.verbose("(TiledeskIntentsMachine) AI URL " + url);
       const HTTPREQUEST = {
         url: url,
         headers: {
@@ -43,7 +44,7 @@ class TiledeskIntentsMachine {
             reject(err);
           }
           else {
-            console.log("Tiledesk AI replied:", resbody)
+            winston.verbose("(TiledeskIntentsMachine)  Tiledesk AI replied:", resbody)
             resolve(this.translateForTiledesk(resbody));
           }
         }, false
@@ -94,10 +95,6 @@ class TiledeskIntentsMachine {
   }
 
   myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     axios(
       {
         url: options.url,
@@ -107,11 +104,6 @@ class TiledeskIntentsMachine {
         headers: options.headers
       })
     .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -123,8 +115,7 @@ class TiledeskIntentsMachine {
         }
       }
     })
-    .catch( (error) => {
-      console.error("(TiledeskIntentsMachine) Axios error: ", JSON.stringify(error));
+    .catch((error) => {
       if (callback) {
         callback(error, null, null);
       }

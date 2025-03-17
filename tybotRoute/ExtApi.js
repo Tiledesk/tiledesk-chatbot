@@ -1,12 +1,13 @@
 let axios = require('axios');
 let https = require("https");
+const winston = require('./utils/winston');
 
 class ExtApi {
 
   constructor(options) {
-    if (!options.ENDPOINT) {
-      throw new Error("options.ENDPOINT is mandatory");
-      //this.extEndpoint = `${options.TYBOT_ENDPOINT}/;
+    if (!options.TILEBOT_ENDPOINT) {
+      throw new Error("options.TILEBOT_ENDPOINT is mandatory");
+      //this.extEndpoint = `${options.TILEBOT_ENDPOINT}/;
     }
     if (options.log) {
       this.log = options.log;
@@ -14,7 +15,7 @@ class ExtApi {
     else {
       this.log = false;
     }
-    this.ENDPOINT = options.ENDPOINT;
+    this.TILEBOT_ENDPOINT = options.TILEBOT_ENDPOINT;
   }
 
   fixToken(token) {
@@ -37,8 +38,8 @@ class ExtApi {
    */
   sendSupportMessageExt(message, projectId, requestId, token, callback) {
     const jwt_token = this.fixToken(token);
-    const url = `${this.ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
-    if (this.log) {console.log("sendSupportMessageExt URL", url);}
+    const url = `${this.TILEBOT_ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
+    winston.verbose("(ExtApi) sendSupportMessageExt URL" + url);
     const HTTPREQUEST = {
       url: url,
       headers: {
@@ -51,9 +52,7 @@ class ExtApi {
     this.myrequest(
       HTTPREQUEST,
       function(err, resbody) {
-        //console.log("sendSupportMessageExt resbody:", resbody);
         if (err) {
-          //console.error("sendSupportMessageExt error:", err)
           if (callback) {
             callback(err);
           }
@@ -76,9 +75,7 @@ class ExtApi {
    * @param {string} token. User token
    */
   // sendMessageToBot(message, botId, token, callback) {
-  //   const jwt_token = this.fixToken(token);
   //   const url = `${this.ENDPOINT}/ext/${botId}`;
-  //   if (this.log) {console.log("sendMessageToBot URL", url);}
   //   const HTTPREQUEST = {
   //     url: url,
   //     headers: {
@@ -106,10 +103,6 @@ class ExtApi {
   // }
 
   myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -125,10 +118,6 @@ class ExtApi {
     }
     axios(axios_options)
     .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -141,7 +130,7 @@ class ExtApi {
       }
     })
     .catch( (error) => {
-      console.error("(ExtApi) An error occurred:", JSON.stringify(error));
+      winston.error("(ExtApi) An error occurred:", JSON.stringify(error));
       if (callback) {
         callback(error, null, null);
       }

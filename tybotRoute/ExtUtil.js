@@ -23,7 +23,6 @@ class ExtUtil {
     messagePipeline.addPlug(new MarkbotChatbotPlug(log));
     messagePipeline.addPlug(new FillParamsChatbotPlug(request, tdcache, log)); // in splits
     const bot_answer = await messagePipeline.exec();
-    if (this.log) {console.log("End pipeline ext, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
   }
   
