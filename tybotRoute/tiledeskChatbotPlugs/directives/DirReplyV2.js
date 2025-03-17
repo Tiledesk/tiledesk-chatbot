@@ -1,7 +1,7 @@
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
-const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
+const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const { DirIntent } = require("./DirIntent");
 // const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');

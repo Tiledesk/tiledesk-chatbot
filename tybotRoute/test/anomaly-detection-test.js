@@ -12,12 +12,14 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const tilebotService = require('../services/TilebotService');
 const bots_data = require('./conversation-actions_bot.js').bots_data;
 
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
+const TILEBOT_ENDPOINT = `${process.env.TILEBOT_ENDPOINT}/ext/${BOT_ID}`;
 
 describe('Conversation for anomaly detection test', async () => {
 
@@ -86,7 +88,7 @@ describe('Conversation for anomaly detection test', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent:\n", request);
       });
     });
@@ -94,67 +96,3 @@ describe('Conversation for anomaly detection test', async () => {
   });
 
 });
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, callback) {
-  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
-
-function myrequest(options, callback, log) {
-  axios(
-    {
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    })
-    .then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    })
-    .catch((error) => {
-      if (callback) {
-        callback(error, null, null);
-      }
-    });
-}

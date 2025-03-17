@@ -1,13 +1,15 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirAskGPTV2 {
 
@@ -19,6 +21,8 @@ class DirAskGPTV2 {
     this.chatbot = context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
@@ -144,7 +148,7 @@ class DirAskGPTV2 {
     const kb_endpoint = process.env.KB_ENDPOINT_QA
     winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
       winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
@@ -264,7 +268,7 @@ class DirAskGPTV2 {
     }
     winston.debug("DirAskGPTV2 HttpRequest: ", HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         
         if (err) {
@@ -367,79 +371,6 @@ class DirAskGPTV2 {
     }
   }
 
-  #myrequest(options, callback) {
-    winston.debug("DirAskGPTV2 API URL:", options.url);
-    winston.debug("DirAskGPTV2 Options:", options);
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        winston.debug("DirAskGPTV2 Response for url: " + options.url);
-        winston.debug("DirAskGPTV2 Response headers: \n", res.headers);
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        winston.error("DirAskGPTV2 Axios error: ", error.response.data);
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAskGPTV2 Integration HttpRequest ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            winston.error("DirAskGPTV2 Get integrations error ", err); 
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
   async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
@@ -453,7 +384,7 @@ class DirAskGPTV2 {
       }
       winston.debug("DirAskGPTV2 KB HttpRequest", KB_HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("DirAskGPTV2 Get kb settings error ", err?.response?.data);
@@ -483,7 +414,7 @@ class DirAskGPTV2 {
       }
       winston.debug("DirAskGPTV2 check quote availability HttpRequest", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("DirAskGPTV2 Check quote availability err: ", err);
@@ -514,7 +445,7 @@ class DirAskGPTV2 {
       }
       winston.debug("DirAskGPTV2 update quote HttpRequest ", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("DirAskGPTV2 Increment tokens quote err: ", err);
@@ -586,7 +517,7 @@ class DirAskGPTV2 {
         method: "GET"
       }
       winston.debug("DirAskGPTV2 get all namespaces HttpRequest", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, namespaces) => {
           if (err) {
             winston.error("DirAskGPTV2 get all namespaces err: ", err);

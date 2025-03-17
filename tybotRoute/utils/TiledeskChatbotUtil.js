@@ -1,12 +1,12 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
-const { TiledeskChatbotConst } = require('./TiledeskChatbotConst');
-const { TiledeskChatbot } = require('./TiledeskChatbot.js');
+const { TiledeskChatbotConst } = require('../engine/TiledeskChatbotConst');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
 let axios = require('axios');
-const winston = require('../utils/winston');
+const winston = require('./winston');
 
 class TiledeskChatbotUtil {
 

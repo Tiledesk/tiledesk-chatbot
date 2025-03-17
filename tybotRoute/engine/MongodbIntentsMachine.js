@@ -1,5 +1,5 @@
 let mongoose = require('mongoose');
-let Faq = require('./faq');
+let Faq = require('../models/faq');
 const winston = require('../utils/winston');
 
 class MongodbIntentsMachine {

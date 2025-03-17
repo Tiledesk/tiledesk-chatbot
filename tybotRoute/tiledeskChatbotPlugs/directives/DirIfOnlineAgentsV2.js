@@ -2,9 +2,10 @@
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const httpUtils = require('../../utils/HttpUtils');
 
 class DirIfOnlineAgentsV2 {
 
@@ -190,7 +191,7 @@ class DirIfOnlineAgentsV2 {
         // json: true,
         method: 'GET',
       };
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST,
         function(err, resbody) {
           if (err) {
@@ -208,43 +209,6 @@ class DirIfOnlineAgentsV2 {
         }, this.log);
     });
     
-  }
-
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        winston.error("(DirIfOnlineAgents) Axios error: ", error.response.data);
-        if (callback) {
-          callback(error, null);
-        }
-      });
   }
 
   fixToken(token) {

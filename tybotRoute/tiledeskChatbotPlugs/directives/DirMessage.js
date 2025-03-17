@@ -1,6 +1,6 @@
 const { Directives } = require('./Directives.js');
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot.js");
 const { Filler } = require("../Filler");
 const winston = require('../../utils/winston');
 

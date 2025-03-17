@@ -1,5 +1,5 @@
-let Faq = require('./faq');
-let Faq_kb = require('./faq_kb');
+let Faq = require('../models/faq');
+let Faq_kb = require('../models/faq_kb');
 const winston = require('../utils/winston');
 
 class MongodbBotsDataSource {

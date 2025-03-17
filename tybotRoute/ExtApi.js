@@ -1,6 +1,7 @@
 let axios = require('axios');
 let https = require("https");
 const winston = require('./utils/winston');
+const httpUtils = require('./utils/HttpUtils');
 
 class ExtApi {
 
@@ -49,7 +50,7 @@ class ExtApi {
       json: message,
       method: 'POST'
     };
-    this.myrequest(
+    httpUtils.request(
       HTTPREQUEST,
       function(err, resbody) {
         if (err) {
@@ -66,76 +67,6 @@ class ExtApi {
     );
   }
 
-  /**
-   * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
-   * /${TILEBOT_ROUTE}/ext/${botId}
-   *
-   * @param {Object} message. The message to send
-   * @param {string} botId. Tiledesk botId
-   * @param {string} token. User token
-   */
-  // sendMessageToBot(message, botId, token, callback) {
-  //   const url = `${this.ENDPOINT}/ext/${botId}`;
-  //   const HTTPREQUEST = {
-  //     url: url,
-  //     headers: {
-  //       'Content-Type' : 'application/json',
-  //       'Authorization': jwt_token
-  //     },
-  //     json: message,
-  //     method: 'POST'
-  //   };
-  //   this.myrequest(
-  //     HTTPREQUEST,
-  //     function(err, resbody) {
-  //       if (err) {
-  //         if (callback) {
-  //           callback(err);
-  //         }
-  //       }
-  //       else {
-  //         if (callback) {
-  //           callback(null, resbody);
-  //         }
-  //       }
-  //     }, this.log
-  //   );
-  // }
-
-  myrequest(options, callback, log) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-    .then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({message: "Response status not 200"}, options, res), null, null);
-        }
-      }
-    })
-    .catch( (error) => {
-      winston.error("(ExtApi) An error occurred:", JSON.stringify(error));
-      if (callback) {
-        callback(error, null, null);
-      }
-    });
-  }
 }
 
 module.exports = { ExtApi };

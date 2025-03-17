@@ -1,5 +1,5 @@
 
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const winston = require('../../utils/winston');
 
 class DirWait {

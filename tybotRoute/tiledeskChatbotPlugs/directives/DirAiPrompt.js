@@ -1,12 +1,16 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const Utils = require("../../utils/HttpUtils");
+const utils = require("../../utils/HttpUtils");
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 
 class DirAiPrompt {
@@ -19,6 +23,8 @@ class DirAiPrompt {
     this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
@@ -97,7 +103,7 @@ class DirAiPrompt {
     const AI_endpoint = process.env.AI_ENDPOINT
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
-    let key = await this.getKeyFromIntegrations(action.llm);
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
 
     if (!key) {
       winston.error("Error: DirAiPrompt llm key not found in integrations");
@@ -139,7 +145,7 @@ class DirAiPrompt {
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("DirAiPrompt openai err:", err.response.data);
@@ -292,74 +298,6 @@ class DirAiPrompt {
     }
   }
 
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        winston.error("(DirAiPrompt) Axios error: ", error);
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations(model) {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/" +  model,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiPrompt Integration HttpRequest: ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
   async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
@@ -373,7 +311,7 @@ class DirAiPrompt {
       }
       winston.debug("DirAiPrompt KB HttpRequest", KB_HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("(httprequest) DirAiPrompt Get KnowledgeBase err: " + err.message);
@@ -403,7 +341,7 @@ class DirAiPrompt {
       }
       winston.debug("DirAiPrompt check quote availability HttpRequest", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             resolve(true)
@@ -433,7 +371,7 @@ class DirAiPrompt {
       }
       winston.debug("DirAiPrompt update quote HttpRequest", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);

@@ -1,9 +1,11 @@
 let axios = require('axios');
 let https = require("https");
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston')
+const httpUtils = require('../../utils/HttpUtils');
+const integrationService = require('../../services/IntegrationService');
 
 class DirAssistant {
   constructor(context) {
@@ -13,6 +15,8 @@ class DirAssistant {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
@@ -260,7 +264,7 @@ class DirAssistant {
       return process.env.TEST_OPENAI_APIKEY
     }
     else {
-      return await this.getKeyFromIntegrations();
+      return await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     }
   }
 
@@ -280,7 +284,7 @@ class DirAssistant {
         timeout: this.timeout
       };
       winston.debug("(DirAssistant) DirAssistant HttpRequest", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
           let status = res.status;
           if (err) {
@@ -340,7 +344,7 @@ class DirAssistant {
         timeout: this.timeout
       };
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
           let status = res.status;
           if (err) {
@@ -401,7 +405,7 @@ class DirAssistant {
         timeout: this.timeout
       };
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
           if (err) {
             winston.error("(DirAssistant) error: ", err);
@@ -436,7 +440,7 @@ class DirAssistant {
         timeout: this.timeout
       };
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
           if (err) {
             winston.error("(DirAssistant) error: ", err);
@@ -471,7 +475,7 @@ class DirAssistant {
         timeout: this.timeout
       };
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
           if (err) {
             winston.error("(DirAssistant) error: ", err);
@@ -490,105 +494,6 @@ class DirAssistant {
       );
     });
   }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirAssistant) Integrations HttpRequest ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, res) => {
-          if (err) {
-            resolve(null);
-          } else {
-            let integration = res.data;
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
-  #myrequest(options, callback) {
-    try {
-      let axios_options = {
-        url: options.url,
-        method: options.method,
-        params: options.params,
-        headers: options.headers,
-        timeout: options.timeout
-      }
-    
-      if (options.json !== null) {
-        axios_options.data = options.json
-      }
-
-      if (options.url.startsWith("https:")) {
-        const httpsAgent = new https.Agent({
-          rejectUnauthorized: false,
-        });
-        axios_options.httpsAgent = httpsAgent;
-      }
-    
-      axios(axios_options)
-      .then((res) => {
-        if (callback) {
-          callback(null, res);
-        }
-      })
-      .catch( (err) => {
-        if (callback) {
-          let status = 1000;
-          let cache = [];
-          let str_error = JSON.stringify(err, function(key, value) { // try to use a separate function
-            if (typeof value === 'object' && value != null) {
-              if (cache.indexOf(value) !== -1) {
-                return;
-              }
-              cache.push(value);
-            }
-            return value;
-          });
-          let error = JSON.parse(str_error) // "status" disappears without this trick
-          let errorMessage = JSON.stringify(error);
-          if (error.status) {
-            status = error.status;
-          }
-          if (error.message) {
-            errorMessage = error.message;
-          }
-          let data = null;
-          if (err.response) {
-            data =  err.response.data;
-          }
-          callback(
-            {
-              status: status,
-              data: data,
-              error: errorMessage
-            }, data
-          );
-        }
-      });
-    }
-    catch(error) {
-      winston.error("(DirAssistant) Axios error: ", error);
-    }
-  }
-
 }
 
 

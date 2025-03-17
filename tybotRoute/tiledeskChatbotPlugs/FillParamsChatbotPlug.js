@@ -1,5 +1,5 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
-const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 const { Filler } = require('./Filler');
 const winston = require('../utils/winston.js');
 

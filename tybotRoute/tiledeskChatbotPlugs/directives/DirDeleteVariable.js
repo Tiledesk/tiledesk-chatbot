@@ -1,6 +1,6 @@
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
 

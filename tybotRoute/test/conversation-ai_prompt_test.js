@@ -17,7 +17,8 @@ const PROJECT_ID = "projectID";
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID";
 const CHATBOT_TOKEN = "XXX";
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
+const tilebotService = require('../services/TilebotService');
 
 let SERVER_PORT = 10001
 
@@ -111,7 +112,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -164,7 +165,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -218,7 +219,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -289,7 +290,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -385,7 +386,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -485,7 +486,7 @@ describe('Conversation for AiPrompt test', async () => {
           },
           "token": "XXX"
         }
-        sendMessageToBot(request, BOT_ID, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
       });
@@ -495,42 +496,6 @@ describe('Conversation for AiPrompt test', async () => {
   })
   
 });
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, callback) {
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
 
 /**
  * A stub to get the request parameters, hosted by tilebot on:

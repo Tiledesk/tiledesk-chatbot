@@ -32,7 +32,7 @@ const { DirWhatsappByAttribute } = require('./directives/DirWhatsappByAttribute'
 const { DirAskGPT } = require('./directives/DirAskGPT');
 const { DirQapla } = require('./directives/DirQapla');
 
-const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
 const { DirRandomReply } = require('./directives/DirRandomReply');

@@ -1,10 +1,11 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const integrationService = require("../../services/IntegrationService");
 
 class DirCustomerio {
 
@@ -15,6 +16,8 @@ class DirCustomerio {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
@@ -71,7 +74,7 @@ class DirCustomerio {
     const customerio_base_url = process.env.CUSTOMERIO_ENDPOINT || "https://track.customer.io/api/v1";
     winston.debug("(DirCustomerio) customerio_base_url: " + customerio_base_url); 
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'customerio', this.token);
     if (!key) {
       winston.debug("(DirCustomerio) - Key not found in Integrations.");
       let status = 422;
@@ -257,37 +260,6 @@ class DirCustomerio {
       }
     }
   }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/customerio",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirCustomerio) Integration HttpRequest ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            resolve(null);
-          } else {
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
 }
 
 module.exports = { DirCustomerio }

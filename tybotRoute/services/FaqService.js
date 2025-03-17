@@ -1,5 +1,5 @@
-var Faq = require("./faq");
-var Faq_kb = require("./faq_kb");
+var Faq = require("../models/faq");
+var Faq_kb = require("../models/faq_kb");
 const winston = require('../utils/winston');
 
 class FaqService {

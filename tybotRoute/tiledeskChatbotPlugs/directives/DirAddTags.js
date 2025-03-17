@@ -1,15 +1,16 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const req = require("express/lib/request");
 const { update } = require("../../models/faq");
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
 
 class DirAddTags {
 
@@ -155,42 +156,6 @@ class DirAddTags {
 
   }
 
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
   async addNewTag(tag){
     return new Promise((resolve, reject)=> {
       const HTTPREQUEST = {
@@ -205,7 +170,8 @@ class DirAddTags {
           color: '#f0806f'
         }
       }
-      this.#myrequest(
+
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("(httprequest) DirAddTags add tags to list err: ", err);
@@ -239,7 +205,7 @@ class DirAddTags {
         json: json
       }
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
@@ -268,7 +234,7 @@ class DirAddTags {
         json: tags
       }
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);

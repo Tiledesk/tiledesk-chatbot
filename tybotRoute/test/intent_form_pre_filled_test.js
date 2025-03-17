@@ -1,7 +1,7 @@
 var assert = require('assert');
 const { ExtUtil } = require('../ExtUtil');
-const { IntentForm } = require('../models/IntentForm');
-const { MockTdCache } = require('../models/MockTdCache');
+const { IntentForm } = require('../engine/IntentForm');
+const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
 
 const TYPE_PREFIX = "_tdTypeOf:";

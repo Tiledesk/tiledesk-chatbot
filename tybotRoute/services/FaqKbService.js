@@ -1,4 +1,4 @@
-var Faq_kb = require("./faq_kb");
+var Faq_kb = require("../models/faq_kb");
 
 class FaqKbService {
 

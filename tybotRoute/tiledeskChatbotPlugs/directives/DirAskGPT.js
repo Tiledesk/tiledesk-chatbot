@@ -1,10 +1,12 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
-const winston = require('../../utils/winston')
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirAskGPT {
 
@@ -15,6 +17,8 @@ class DirAskGPT {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
@@ -91,7 +95,7 @@ class DirAskGPT {
     const kb_endpoint = process.env.KB_ENDPOINT;
     winston.verbose("DirAskGPT KbEndpoint URL: ", kb_endpoint);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
       winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
@@ -138,7 +142,7 @@ class DirAskGPT {
     }
     winston.debug("(DirAskGPT) HttpRequest", HTTPREQUEST); 
     
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
 
         winston.debug("(DirAskGPT) resbody:", resbody); 
@@ -240,75 +244,6 @@ class DirAskGPT {
     }
   }
 
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        winston.error("(DirAskGPT) Axios error: ", error.response.data);
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirAskGPT) Integrations HttpRequest ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            if (this.log) { winston.error("DirAskGPT Get integrations error ", err); }
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
   async getKeyFromKbSettings() {
     return new Promise((resolve) => {
 
@@ -322,7 +257,7 @@ class DirAskGPT {
       }
       winston.debug("(DirAskGPT) KB HttpRequest ", KB_HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
             winston.error("DirAskGPT Get kb settings error ", err?.response?.data);

@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 
 describe('filter commands()', function() {
   

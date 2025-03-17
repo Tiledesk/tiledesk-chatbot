@@ -1,7 +1,7 @@
  var assert = require('assert');
  const { DirSetAttribute } = require('../tiledeskChatbotPlugs/directives/DirSetAttribute.js');
  const { DirSetAttributeV2 } = require('../tiledeskChatbotPlugs/directives/DirSetAttributeV2.js');
- const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+ const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
  const { promisify } = require('util');
  const winston = require('../utils/winston.js');
  // just a schema remainder

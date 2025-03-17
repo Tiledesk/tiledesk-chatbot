@@ -1,10 +1,11 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const integrationService = require("../../services/IntegrationService");
 
 class DirHubspot {
 
@@ -15,6 +16,8 @@ class DirHubspot {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
@@ -73,7 +76,7 @@ class DirHubspot {
     const hubspot_base_url = process.env.HUBSPOT_ENDPOINT || "https://api.hubapi.com/crm/v3/";
     winston.debug("(DirHubspot) hubspot_base_url " + hubspot_base_url);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'hubspot', this.token);
     if (!key) {
       winston.debug("(DirHubspot)  - Key not found in Integrations.");
       if (falseIntent) {
@@ -254,38 +257,6 @@ class DirHubspot {
       }
     }
   }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/hubspot",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirHubspot) Integration HttpRequest ", INTEGRATIONS_HTTPREQUEST)
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
 }
 
 module.exports = { DirHubspot }

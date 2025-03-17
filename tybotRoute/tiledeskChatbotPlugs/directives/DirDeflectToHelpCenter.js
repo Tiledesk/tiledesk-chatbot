@@ -1,6 +1,6 @@
 const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot.js');
-const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst.js');
 const ms = require('minimist-string');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');

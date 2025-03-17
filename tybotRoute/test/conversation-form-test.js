@@ -18,7 +18,8 @@ const PROJECT_ID = "projectID"; //const PROJECT_ID = process.env.TEST_PROJECT_ID
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_BOT_ID;
 const CHATBOT_TOKEN = process.env.CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
+const tilebotService = require('../services/TilebotService.js');
 
 let app_listener;
 
@@ -114,7 +115,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.");
       });
     });
@@ -159,7 +160,7 @@ describe('Conversation1 - Form filling', async () => {
   //       },
   //       "token": CHATBOT_TOKEN
   //     }
-  //     sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+  //     tilebotService.sendMessageToBot(request, BOT_ID, () => {
   //       winston.verbose("Message sent.");
   //     });
   //   });
@@ -192,7 +193,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent.", request);
         });
       }
@@ -240,7 +241,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.");
       });
     });
@@ -279,7 +280,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
         });
       });
     }
@@ -324,7 +325,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent.", request);
         });
       }
@@ -345,7 +346,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -366,7 +367,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -387,7 +388,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
         // listener.close( () => {
@@ -411,7 +412,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -432,7 +433,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -453,7 +454,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -474,7 +475,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -495,7 +496,7 @@ describe('Conversation1 - Form filling', async () => {
           },
           "token": CHATBOT_TOKEN
         }
-        sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent ", request);
         });
       }
@@ -525,7 +526,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.");
       });
     });
@@ -598,7 +599,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.");
       });
     });
@@ -649,7 +650,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.", request);
       });
     });
@@ -703,7 +704,7 @@ describe('Conversation1 - Form filling', async () => {
         },
         "token": CHATBOT_TOKEN
       }
-      sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
         winston.verbose("Message sent.", request);
       });
     });
@@ -742,7 +743,7 @@ describe('Conversation1 - Form filling', async () => {
 //               },
 //               "token": CHATBOT_TOKEN
 //             }
-//             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//             tilebotService.sendMessageToBot(request, BOT_ID, () => {
 //               winston.verbose("Message sent.", request);
 //             });
 //           }
@@ -775,7 +776,7 @@ describe('Conversation1 - Form filling', async () => {
 //         },
 //         "token": CHATBOT_TOKEN
 //       }
-//       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//       tilebotService.sendMessageToBot(request, BOT_ID, () => {
 //         winston.verbose("Message sent.", request);
 //       });
 //     });
@@ -814,7 +815,7 @@ describe('Conversation1 - Form filling', async () => {
 //               },
 //               "token": CHATBOT_TOKEN
 //             }
-//             sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//             tilebotService.sendMessageToBot(request, BOT_ID, () => {
 //               winston.verbose("Message sent.", request);
 //             });
 //           }
@@ -847,7 +848,7 @@ describe('Conversation1 - Form filling', async () => {
 //         },
 //         "token": CHATBOT_TOKEN
 //       }
-//       sendMessageToBot(request, BOT_ID, CHATBOT_TOKEN, () => {
+//       tilebotService.sendMessageToBot(request, BOT_ID, () => {
 //         winston.verbose("Message sent.", request);
 //       });
 //     });
@@ -898,99 +899,3 @@ describe('Conversation1 - Form filling', async () => {
 //     }
 //   );
 // }
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, token, callback) {
-  const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
-
-/**
- * A stub to get the request parameters, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
- *
- * @param {string} requestId. Tiledesk chatbot/requestId parameters
- */
-// function getChatbotParameters(requestId, callback) {
-//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     method: 'get'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
-
-function myrequest(options, callback, log) {
-  axios(
-    {
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    })
-    .then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    })
-    .catch((error) => {
-      if (callback) {
-        callback(error, null, null);
-      }
-    });
-}

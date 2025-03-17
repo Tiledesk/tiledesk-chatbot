@@ -1,5 +1,6 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const httpUtils = require("../../utils/HttpUtils");
 const winston = require('../../utils/winston');
 
 let whatsapp_api_url;
@@ -71,7 +72,7 @@ class DirWhatsappByAttribute {
     }
 
     return new Promise((resolve, reject) => {
-      DirWhatsappByAttribute.myrequest(
+      httpUtils.request(
         HTTPREQUEST,
         function (err, resbody) {
           if (err) {
@@ -90,33 +91,6 @@ class DirWhatsappByAttribute {
         }, true);
     })
 
-  }
-
-  // HTTP REQUEST
-  static async myrequest(options, callback, log) {
-    return await axios({
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    }).then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    }).catch((err) => {
-      winston.error("(DirWhatsappByAttribute) An error occured: ", err);
-      if (callback) {
-        callback(err, null, null);
-      }
-    })
   }
 }
 

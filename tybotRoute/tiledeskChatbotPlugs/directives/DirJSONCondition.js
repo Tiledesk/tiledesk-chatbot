@@ -1,5 +1,5 @@
 const { DirIntent } = require('./DirIntent');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const winston = require('../../utils/winston');
 

@@ -6,13 +6,11 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
-const { TiledeskChatbot } = require('./models/TiledeskChatbot.js');
-const { MongodbBotsDataSource } = require('./models/MongodbBotsDataSource.js');
-// const { MongodbIntentsMachine } = require('./models/MongodbIntentsMachine.js');
-// const { TiledeskIntentsMachine } = require('./models/TiledeskIntentsMachine.js');
-const { MockBotsDataSource } = require('./models/MockBotsDataSource.js');
-const { TiledeskChatbotConst } = require('./models/TiledeskChatbotConst');
-const { IntentsMachineFactory } = require('./models/IntentsMachineFactory');
+const { TiledeskChatbot } = require('./engine/TiledeskChatbot.js');
+const { MongodbBotsDataSource } = require('./engine/MongodbBotsDataSource.js');
+const { MockBotsDataSource } = require('./engine/mock/MockBotsDataSource.js');
+const { TiledeskChatbotConst } = require('./engine/TiledeskChatbotConst.js');
+const { IntentsMachineFactory } = require('./engine/IntentsMachineFactory.js');
 const { v4: uuidv4 } = require('uuid');
 let axios = require('axios');
 // let parser = require('accept-language-parser');
@@ -33,8 +31,11 @@ const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChat
 // THE IMPORT
 let mongoose = require('mongoose');
 // const { Directives } = require('./tiledeskChatbotPlugs/directives/Directives.js');
-const { TiledeskChatbotUtil } = require('./models/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
-const AiService = require('./TiledeskServices/AIService.js');
+const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //require('@tiledesk/tiledesk-chatbot-util');
+
+const AiService = require('./services/AIService.js');
+const tilebotService = require('./services/TilebotService.js');
+
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
@@ -434,7 +435,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   if (async) {
     winston.verbose("Async webhook");
-    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, (err, resbody) => {
+    tilebotService.sendMessageToBot(message, bot_id, (err, resbody) => {
       if (err) {
         winston.error("Async webhook err:\n", err);
         return res.status(500).send({ success: false, error: err });
@@ -465,45 +466,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
       return res.status(500).send({ success: false, error: "Error during cache subscription"})
     }
 
-    sendMessageToBot(TILEBOT_ENDPOINT, message, bot_id, () => {
+    tilebotService.sendMessageToBot(message, bot_id, () => {
       winston.debug("Sync webhook message sent: ", message);
     })
   }
 
 });
 
-// draft webhook
-// router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
-//   const project_id = req.params['project_id'];
-//   const bot_id = req.params['bot_id'];
-//   const block_id = req.params['block_id'];
-//   const body = req.body;
-  
-//   // invoke block
-//   // unique ID for each execution
-//   const execution_id = uuidv4().replace(/-/g, '');
-//   const request_id = "automation-request-" + project_id + "-" + execution_id;
-//   const command = "/" + block_id;
-//   let request = {
-//     "payload": {
-//       "recipient": request_id,
-//       "text": command,
-//       "id_project": project_id,
-//       "request": {
-//         "request_id": request_id
-//       },
-//       "attributes": {
-//         "payload": body
-//       }
-//     },
-//     "token": "NO-TOKEN"
-//   }
-
-//   sendMessageToBot(TILEBOT_ENDPOINT, request, bot_id, async () => {
-//     res.status(200).send({"success":true});
-//     return;
-//   });
-// });
 
 async function startApp(settings, completionCallback) {
   winston.info("(Tilebot) Starting Tilebot..")
@@ -624,42 +593,6 @@ async function checkRequest(request_id, id_project) {
   //    return (false, motivation);
   
   // WARNING! Move this function in models/TiledeskChatbotUtil.js
-}
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-  const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
 }
 
 function myrequest(options, callback, log) {

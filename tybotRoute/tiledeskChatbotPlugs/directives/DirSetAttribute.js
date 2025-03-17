@@ -1,4 +1,4 @@
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskMath } = require('../../TiledeskMath');
 const { TiledeskString } = require('../../TiledeskString');

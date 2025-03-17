@@ -1,8 +1,9 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
 
 let whatsapp_api_url;
 
@@ -94,7 +95,7 @@ class DirSendWhatsapp {
 
     winston.debug("(DirSendWhatsapp) HttpRequest:  ", HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("(DirSendWhatsapp)  error: ", err)
@@ -214,33 +215,6 @@ class DirSendWhatsapp {
         resolve(null);
       }
 
-    })
-  }
-
-  // HTTP REQUEST
-  async #myrequest(options, callback, log) {
-    return await axios({
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    }).then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    }).catch((err) => {
-      winston.error("(DirSendWhatsapp) Axios errro: ", err);
-      if (callback) {
-        callback(err, null, null);
-      }
     })
   }
 }

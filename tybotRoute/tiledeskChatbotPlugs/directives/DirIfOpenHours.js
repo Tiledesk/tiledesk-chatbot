@@ -4,6 +4,7 @@ const { DirIntent } = require('./DirIntent');
 let https = require("https");
 const ms = require('minimist-string');
 const winston = require('../../utils/winston');
+const httpUtils = require('../../utils/HttpUtils');
 
 class DirIfOpenHours {
 
@@ -89,7 +90,7 @@ class DirIfOpenHours {
     }
     winston.debug("(DirIfOpenHours) HttpRequest ", HTTPREQUEST);
     
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
 
         winston.debug("(DirIfOpenHours) resbody:", resbody);
@@ -158,43 +159,6 @@ class DirIfOpenHours {
     //     callback();
     //   }
     // });
-  }
-
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        winston.error("(DirIfOpenHours) Axios error: ", error);
-        if (callback) {
-          callback(error, null);
-        }
-      });
   }
 
   parseParams(directive_parameter) {

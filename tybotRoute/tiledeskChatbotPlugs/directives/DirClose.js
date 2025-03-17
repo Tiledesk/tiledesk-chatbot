@@ -1,6 +1,6 @@
 
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const winston = require('../../utils/winston');
 
 class DirClose {

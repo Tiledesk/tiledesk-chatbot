@@ -17,8 +17,9 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const { statSync } = require('fs');
+const tilebotService = require('../services/TilebotService.js');
 
 let SERVER_PORT = 10001
 
@@ -121,7 +122,7 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, (err, res) => {
+      tilebotService.sendMessageToBot(request, BOT_ID, (err, res) => {
         assert(res)
         assert(res.success)
         assert.equal(res.success, true)
@@ -190,7 +191,7 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, undefined, (err, res) => {
+      tilebotService.sendMessageToBot(request, undefined, (err, res) => {
         if(err){
           assert(err.status)
           assert.equal(err.status, 400)
@@ -263,7 +264,7 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, null, (err, res) => {
+      tilebotService.sendMessageToBot(request, null, (err, res) => {
         if(err){
           assert(err.status)
           assert.equal(err.status, 400)
@@ -285,42 +286,6 @@ describe('Api /ext/:boid', async () => {
 
 
 });
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, callback) {
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  winston.verbose("sendMessageToBot URL" + url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
 
 function getExtBotId(botId, callback) {
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
