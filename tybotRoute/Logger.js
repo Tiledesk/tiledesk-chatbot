@@ -9,6 +9,8 @@ let publisher = new Publisher(AMQP_MANAGER_URL, {
     topic: "logs",
 })
 
+const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+
 class Logger {
 
     constructor(config) {
@@ -76,8 +78,8 @@ class Logger {
             request_id: this.request_id,
             text: text,
             level: level,
-            timestamp: new Date(),
-            dev: this.dev
+            nlevel: levels[level],
+            timestamp: new Date()
         }
 
         publisher.publish(data, (err, ok) => {
@@ -98,7 +100,12 @@ class Logger {
         methods.forEach(method => {
           this[method] = () => {};
         });
-      }
+    }
+
+    _disableDebugMethod() {
+        const method = 'debug';
+        this[method] = () => {};
+    }
 
 }
 
