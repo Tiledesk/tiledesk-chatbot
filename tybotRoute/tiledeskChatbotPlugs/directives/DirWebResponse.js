@@ -38,25 +38,24 @@ class DirWebResponse {
   async go(action, callback) {
     winston.debug("DirWebResponse action: ", action);
     
-    let requestAttributes = null;
-    let status = null;
-    if (this.tdcache) {
-      requestAttributes = 
-      await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
-      const filler = new Filler();
-
-      try {
-        status = filler.fill(action.status, requestAttributes);
-      }
-      catch(e) {
-        winston.error("DirWebResponse Error: ", e)
-      }
-      
+    if (!this.tdcache) {
+      winston.error("DirWebResponse Error: tdcache is mandatory");
+      callback();
+      return;
     }
-
+    
+    let requestAttributes = null;
+    requestAttributes = 
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+        );
+    
+    const filler = new Filler();
+    const filled_status = filler.fill(action.status, requestAttributes);
     const json = await this.getJsonFromAction(action, filler, requestAttributes)
+
     let webResponse = {
-      status: status,
+      status: filled_status,
       payload: json
     }
 
@@ -96,43 +95,5 @@ class DirWebResponse {
   }
 
 }
-
-
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} webResponse. The webhook response to send back
- * @param {Object} projectId. The projectId
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-// function sendResponse(webResponse, projectId, botId, callback) {
-//   const url = `${WEBHOOK_URL}/${projectId}/${botId}`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     json: webResponse,
-//     method: 'POST'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
 
 module.exports = { DirWebResponse };
