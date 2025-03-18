@@ -79,7 +79,8 @@ class Logger {
             text: text,
             level: level,
             nlevel: levels[level],
-            timestamp: new Date()
+            timestamp: new Date(),
+            dev: this.dev
         }
 
         publisher.publish(data, (err, ok) => {
