@@ -1,5 +1,5 @@
 
-const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 
 class DirClearTranscript {
 

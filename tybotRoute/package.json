@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "0.2.138",
+  "version": "0.5.0-rc2",
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "@tiledesk/tiledesk-client": "^0.10.13",
     "@tiledesk/tiledesk-multi-worker": "^0.2.1-rc2",
     "accept-language-parser": "^1.5.0",
+    "app-root-path": "^3.1.0",
     "axios": "^1.7.7",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
@@ -30,9 +31,10 @@
     "mongoose": "^6.3.5",
     "multer": "^1.4.5-lts.1",
     "nanoid": "^3.1.25",
-    "redis": "^3.1.2",
+    "redis": "^4.7.0",
     "uuid": "^3.3.3",
-    "vm2": "^3.9.13"
+    "vm2": "^3.9.13",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "mocha": "^8.4.0"

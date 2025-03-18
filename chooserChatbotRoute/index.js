@@ -20,12 +20,11 @@ router.post('/lang_select', (req, res) => {
     if (req && req.body && req.body.payload && req.body.payload.message && req.body.payload.message.request && req.body.payload.message.request.snapshot) {
         delete req.body.payload.message.request.snapshot;
     }
-    // console.log("REQ.BODY", JSON.stringify(req.body));
+
     let intent = req.body.payload.intent.intent_display_name;
     let user_lang = req.body.payload.message.request.language;
     if (intent === 'start') {
-        // console.log("intent start")
-        
+
         const projectId = req.body.payload.bot.id_project;
         const token = req.body.token;
         const requestId = req.body.payload.message.request.request_id;
@@ -38,21 +37,12 @@ router.post('/lang_select', (req, res) => {
             }
         );
 
-        // console.log("tdclient:", tdclient);
-
-        
-
         // now searching for a bot supporting the user language
         getBotIdByLang(APIURL, projectId, token, user_lang, (err, bot) => {
             if (err) {
                 res.json({
                     text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
                 });
-                // tdclient.sendSupportMessage(requestId,
-                //     {
-                //         text: "An error occurred while searching a suitable chatbot for your language 🙁 Please contact the Administrator: " + err
-                //     }
-                // );
             }
             else {
                 if (bot && bot.name) {
@@ -60,10 +50,10 @@ router.post('/lang_select', (req, res) => {
                         text: `\\_tdreplacebot ${bot.name}
 \\_tdIntent start`,
                         attributes: {
-                          subtype: 'info'
+                            subtype: 'info'
                         }
-                      }
-                      res.json(message);
+                    }
+                    res.json(message);
                 }
                 else {
                     res.json({
@@ -92,56 +82,11 @@ function getBotIdByLang(API_URL, projectId, token, lang_iso, callback) {
             bot = chooser.findIn(bots, lang_iso);
             callback(null, bot);
         }
-        catch(err) {
+        catch (err) {
             console.error("Error LanguageChooser:", err);
             callback(err, null);
         }
-        
-        // console.log("Searching in lang_iso:", lang_iso);
-        // console.log("bots:", JSON.stringify(bots));
-        // if (err) {
-        //     callback(err, null);
-        //     return;
-        // }
-        // let selected_bot = null;
-        // let pivot_bot = null;
-        // let first_bot = null;
-        // for (i = 0; i < bots.length; i++) {
-        //     const bot = bots[i];
-        //     if (bot.language && bot.name != "_tdLanguageChooser" && bot.description.indexOf("#langbot-ignore") < 0) {
-        //         console.log("bot.language:", bot.language);
-        //         console.log("bot.name:", bot.name);
-        //         console.log("lang_iso:", lang_iso);
-        //         if (bot.language === lang_iso) {
-        //             console.log("Bot found:", bot.name, bot._id);
-        //             selected_bot = bot;
-        //             break;
-        //         }
-        //         if (bot.description && bot.description.indexOf("#langbot-pivot") >= 0) {
-        //             console.log("bot pivot found:", bot);
-        //             pivot_bot = bot;
-        //         }
-        //         if (first_bot === null) {
-        //             first_bot = bot;
-        //         }
-        //     }
-        //     else {
-        //         console.log("Skipping:", bot.name);
-        //     }
-        // }
-        // if (selected_bot) {
-        //     console.log("Using language match bot, found:", selected_bot);
-        //     callback(null, selected_bot);
-        // }
-        // else if (pivot_bot) {
-        //     console.log("Using pivot language bot, found:", pivot_bot);
-        //     callback(null, pivot_bot);
-        // }
-        // else {
-        //     console.log("No match found, using first bot:", first_bot);
-        //     callback(null, first_bot);
-        // }
-        
+
     });
 }
 

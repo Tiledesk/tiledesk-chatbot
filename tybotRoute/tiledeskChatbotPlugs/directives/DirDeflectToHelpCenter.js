@@ -1,8 +1,9 @@
 const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot.js');
-const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst.js');
 const ms = require('minimist-string');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirDeflectToHelpCenter {
 
@@ -24,6 +25,7 @@ class DirDeflectToHelpCenter {
   }
 
   async execute(directive, callback) {
+    winston.verbose("Execute DeflectToHelpCenter directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -60,12 +62,11 @@ class DirDeflectToHelpCenter {
       url_target = action.urlTarget;
     }
     // let message = pipeline.message;
-    //console.log("help center message", JSON.stringify(message));
     const last_user_text = await TiledeskChatbot.getParameterStatic(
       this.context.tdcache,
       this.context.requestId,
       TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY);
-    if (this.log) {console.log("last_user_text", last_user_text);}
+      winston.debug("(DirDeflectToHelpCenter) last_user_text", last_user_text);
     if (last_user_text && last_user_text.trim() !== '') {
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
@@ -76,30 +77,29 @@ class DirDeflectToHelpCenter {
         helpcenter.APIURL = this.helpcenter_api_endpoint
       }
       if (!workspace_id) {
-        if (this.log) {console.log("No workspaces_id. Listing all workspaces to eventually select the first");}
+        winston.debug("(DirDeflectToHelpCenter) No workspaces_id. Listing all workspaces to eventually select the first");
         try {
           // find/select the first workspace
           const workspaces = await helpcenter.allWorkspaces();
           if (workspaces.length > 0) {
             workspace_id = workspaces[0]._id;
-            // console.log("First Workspace selected", workspaces[0]);
           }
           else {
-            if (this.log) {console.log("No Workspaces found");}
+            winston.debug("(DirDeflectToHelpCenter) No Workspaces found");
             callback(false);
           }
         }
         catch(err) {
-          console.error("deflectToHelpCenter Error (search workspaces):", err);
+          winston.error("(DirDeflectToHelpCenter) Error search workspaces: ", err);
           callback(false);
         }
       }
-      if (this.log) {console.log("searching on workspace_id:", workspace_id);}
+      winston.debug("(DirDeflectToHelpCenter) searching on workspace_id: " + workspace_id);
       try {
         const results = await helpcenter.search(workspace_id, last_user_text, maxresults);
         if (results && results.length > 0) {
-          if (this.log) {console.log("Successfully got results", JSON.stringify(results));}
-          if (this.log) {console.log("Sending hcReply", hc_reply);}
+          winston.debug("(DirDeflectToHelpCenter) Successfully got results ", results);
+          winston.debug("(DirDeflectToHelpCenter) Sending hcReply ", hc_reply);
           // pipeline.message.text = hc_reply;
           let buttons = [];
           results.forEach(content => {
@@ -141,26 +141,26 @@ class DirDeflectToHelpCenter {
             }
           }
 
-          if (this.log) {console.log("HC reply:", JSON.stringify(message))};
+          winston.debug("(DirDeflectToHelpCenter) HC reply: ", message)
           this.tdClient.sendSupportMessage(
             this.context.requestId,
             message,
             (err) => {
               if (err) {
-                console.error("Error sending reply:", err.message);
+                winston.error("(DirDeflectToHelpCenter) Error sending reply: " + err.message);
                 callback(false);
               }
-              if (this.log) {console.log("Reply message sent.");}
+              winston.debug("(DirDeflectToHelpCenter) Reply message sent.");
               callback(true);
           });
         }
         else {
-          if (this.log) {console.log("Nothing found in Help Center. projectId:", project_id, "workspaceId:", workspace_id);}
+          winston.debug("(DirDeflectToHelpCenter) Nothing found in Help Center. projectId: " + project_id + " workspaceId: " + workspace_id);
           callback(false);
         }
       }
       catch(err) {
-        console.error("deflectToHelpCenter Error (searching results):", err);
+        winston.error("(DirDeflectToHelpCenter)  Error (searching results): ", err);
         callback(false);
       }
     }
@@ -172,9 +172,8 @@ class DirDeflectToHelpCenter {
   parseParams(directive_parameter) {
     let workspace_id = null;
     let hc_reply = null;
-    // console.log("ms found:", ms)
+    
     const params = ms(directive_parameter);
-    // console.log("ms decoded params:", params)
     if (params.w) {
       workspace_id = params.w
     }
@@ -183,16 +182,12 @@ class DirDeflectToHelpCenter {
     }
     
     if (params.m) {
-      // console.log("_params.m:", params.m)
       //hc_reply = params.m.replaceAll("\\n", "\n");
       hc_reply = params.m.replace(/\\n/g, "\n");
-      // console.log("hc_reply with replaced slash n regex|replaceAll", hc_reply)
     }
     if (params.message) {
-      // console.log("_params.message:", params.message)
       //hc_reply = params.message.replaceAll("\\n", "\n");
       hc_reply = params.message.replace(/\\n/g, "\n");
-      // console.log("hc_reply -message with replaced slash n replace(/\\n/g", hc_reply)
     }
     return {
       workspace_id: workspace_id,

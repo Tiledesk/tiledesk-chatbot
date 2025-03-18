@@ -3,7 +3,7 @@ const { ExtUtil } = require('../ExtUtil');
 const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { DirSendEmail } = require('../tiledeskChatbotPlugs/directives/DirSendEmail');
 const supportRequest = require('./support_request.js').request;
-const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 
 describe('Directive DirSendEmail', function() {
 
