@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 0.5.1-rc1
+- added json_buttons 
+- added winston log with code refactoring
+
 # v0.5.0
 - added: AI_ENDPOINT env var
 
