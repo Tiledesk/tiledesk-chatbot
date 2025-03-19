@@ -1,11 +1,12 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
-const { TiledeskChatbotConst } = require('./TiledeskChatbotConst');
-const { TiledeskChatbot } = require('./TiledeskChatbot.js');
+const { TiledeskChatbotConst } = require('../engine/TiledeskChatbotConst');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
 let axios = require('axios');
+const winston = require('./winston');
 
 class TiledeskChatbotUtil {
 
@@ -26,26 +27,20 @@ class TiledeskChatbotUtil {
         }
         if (parts.length > 1) {
             let json_string = explicit_intent_name.substring(parts[0].length);
-            // console.log("json_string (params)", json_string);
             try {
                 intent.parameters = JSON.parse(json_string);
                 // if (intent.parameters) {
                     // for (const [key, value] of Object.entries(intent.parameters)) {
-                        // console.log("Checking type of:", key, value);
                     //   if (typeof value === "object") {
-                    //     console.log("Checking type of is object:", key);
                     //     intent.parameters["_tdTypeOf:" + key] = "object";
                     //   }
                     //   else if (typeof value === "string") {
-                    //     console.log("Checking type of is string:", key);
                     //     intent.parameters["_tdTypeOf:" + key] = "string";
                     //   }
                     //   else if (typeof value === "number") {
-                    //     console.log("Checking type of is number:", key);
                     //     intent.parameters["_tdTypeOf:" + key] = "number";
                     //   }
                     //   else if (typeof value === "boolean") {
-                    //     console.log("Checking type of is boolean:", key);
                     //     intent.parameters["_tdTypeOf:" + key] = "boolean";
                     //   }
                     // }
@@ -53,7 +48,7 @@ class TiledeskChatbotUtil {
                 
             }
             catch (err) {
-                console.log("error on intent.parameters = JSON.parse(json_string)", err);
+                winston.error("(TiledeskChatbotUtils) Error on parse json_string ", err)
             }
         }
         return intent;
@@ -139,7 +134,7 @@ class TiledeskChatbotUtil {
         if (message && message.attributes && message.attributes.commands) {
             let commands = message.attributes.commands;
             if (commands.length %2 != 0) {
-                console.log("Error. commands.length cannot be an odd number");
+                winston.error("(TiledeskChatbotUtils) Error: commands.length cannot be an odd number")
                 return null;
             }
             const MAX_VALUE = commands.length - 1;
@@ -166,27 +161,15 @@ class TiledeskChatbotUtil {
             let commands = message.attributes.commands;
             message.text = "";
             for (let i = commands.length - 1; i >= 0; i--) {
-                // console.log("...commands[" + i + "]");
                 if (commands[i].type === "message") { // is a message, not wait
-                    // console.log("commands[i]:", commands[i].message.text);
-                    // console.log("commands[i]:", lang, (commands[i].message["lang"] === lang));
-                    
                     // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                     const jsonCondition = commands[i].message["_tdJSONCondition"];
-                    // console.log("jsonCondition:", jsonCondition);
                     if (jsonCondition) {
-                        // const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups);
                         const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
-                        // console.log("full json condition expression eval on command.message:", expression);
                         const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
-                        // console.log("conditionResult:", conditionResult);
-                        // FALSE
-                        // console.log("commands[i]lang:", commands[i]);
                         if (conditionResult === false) {
-                            // console.log("deleting command:", commands[i]);
                             commands.splice(i, 1);
                             if (commands[i-1]) {
-                                // console.log("commands[i-1]?:", commands[i-1]);
                                 if (commands[i-1].type === "wait") {
                                     commands.splice(i-1, 1);
                                     i--;
@@ -194,19 +177,13 @@ class TiledeskChatbotUtil {
                             }
                         }
                         else {
-                            // console.log("comands[i]:", commands[i], commands[i].message, commands[i].message.text)
                             if (commands[i] && commands[i].message && commands[i].message.text) {
-                                // console.log("curr text:", message.text)
                                 if (message.text === "") {
                                     message.text = commands[i].message.text;    
                                 }
                                 else {
                                     message.text = (commands[i].message.text + "\n\n" + message.text).trim();
                                 }
-                                // console.log("new text:", message.text)
-                            }
-                            else {
-                                // console.log("commands@", commands[i])
                             }
                         }
                     }
@@ -215,11 +192,6 @@ class TiledeskChatbotUtil {
                     }
                 }
             }
-          // for (let i = 0; i < commands.length; i++) {
-          //   if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-          //     if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
-          //   }
-          // }
         }
     }
 
@@ -229,20 +201,15 @@ class TiledeskChatbotUtil {
                 let commands = message.attributes.commands;
                 
                 for (let i = commands.length - 1; i >= 0; i--) {
-                    // console.log("...commands[" + i + "]");
                     if (commands[i].type === "message") { // is a message, not a "wait"
-                        // console.log("commands[i]:", commands[i].message.text);
-                        // let textEmpty = false;
                         if (commands[i].message) {
                             if (commands[i].message.type === "text") { // check text commands
                                 if (( commands[i].message.text && commands[i].message.text.trim() === "") || !commands[i].message.text) {
-                                    // console.log("deleting command:", commands[i]);
                                     commands.splice(i, 1);
                                     if (commands[i-1]) {
                                         if (commands[i-1].type === "wait") {
                                             commands.splice(i-1, 1);
                                             i--;
-                                            // console.log("deleted wait");
                                         }
                                     }
                                 }
@@ -250,15 +217,10 @@ class TiledeskChatbotUtil {
                         }
                     }
                 }
-            // for (let i = 0; i < commands.length; i++) {
-            //   if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
-            //     if (this.log) {console.log("[" + commands[i].message.lang + "]commands[i].message.text:", commands[i].message.text);}
-            //   }
-            // }
             }
         }
         catch(error) {
-            log.error("error while checking", error)
+            winston.error("(TiledeskChatbotUtils) Error while checking message ", error)
         }
         return message;
     }
@@ -278,11 +240,8 @@ class TiledeskChatbotUtil {
         if (!message) {
           return;
         }
-        // console.log("compute delay...", message)
         if (message.attributes.commands.length > 0) {
-            // console.log("going on delay")
             let commands = message.attributes.commands;
-            // console.log("got commands", commands)
             let totalWaitTime = 0;
             for (let i = commands.length - 1; i >= 0; i--) {
                 if (commands[i].type === "wait") { // is a wait
@@ -294,50 +253,38 @@ class TiledeskChatbotUtil {
     }
 
     static fillCommandAttachments(command, variables, log) {
-        if (log) {
-            console.log("filling command button:", JSON.stringify(command))
-        }
-        if (command.message && command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0){
+        if (log) { winston.debug("(TiledeskChatbotUtils) Filling command button: ", command) }
+        if (command.message && command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0) {
             let buttons = command.message.attributes.attachment.buttons;
             const filler = new Filler();
             buttons.forEach(button => {
                 if (button.link) {
                     button.link = filler.fill(button.link, variables);
-                    if (log) {
-                        console.log("button.link filled:", button.link)
-                    }
+                    if (log) { winston.debug("(TiledeskChatbotUtils) button.link filled: " + button.link) }
                 }
                 if (button.value) {
                     button.value = filler.fill(button.value, variables);
-                    if (log) {
-                        console.log("button.value filled:", button.value)
-                    }
+                    if (log) { winston.debug("(TiledeskChatbotUtils) button.value filled: " + button.value) }
                 }
             });
         }
-        else if (log) {
-            console.log("No attachments to fill in command")
+        else {
+            if (log) { winston.debug("(TiledeskChatbotUtils) No attachments to fill in command") }
         }
     }
 
     static allReplyButtons(message) {
         let all_buttons = [];
         if (message.attributes && message.attributes.commands) {
-            // console.log("message.attributes ok")
             let commands = message.attributes.commands;
             if (commands.length > 0) {
-                // console.log("commands ok", commands.length)
                 for (let i = 0; i < commands.length; i++) {
                     let command = commands[i];
-                    // console.log("got command:", command)s
                     if (command.type === 'message' && command.message) {
-                        if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0){
-                            // console.log("command with buttons ok:")
+                        if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0) {
                             let buttons = command.message.attributes.attachment.buttons;
-                            
                             buttons.forEach(button => {
                                 if (button.type === "action") {
-                                    // console.log("pushing button:", button);
                                     all_buttons.push(button);
                                 }
                             });
@@ -444,12 +391,10 @@ class TiledeskChatbotUtil {
             }
             else if (button.alias && button.alias.trim() !== "") { // search in button alias
                 let alias = button.alias.split(",");
-                // console.log("alias splitted:", alias);
                 if (alias.length > 0) {
                     for (let ii = 0; ii < alias.length; ii++) {
                         alias[ii] = alias[ii].toLowerCase().trim();
                     }
-                    // console.log("alias proc:", alias);
                     if (alias.indexOf(search_text) > -1) {
                         selected_button = button;
                         break;
@@ -457,12 +402,10 @@ class TiledeskChatbotUtil {
                 }
             }
         }
-
         return selected_button;
     }
 
     static stripEmoji(str) {
-        // console.log("checking:", str);
         if (str === null) {
             return str;
         }
@@ -479,7 +422,6 @@ class TiledeskChatbotUtil {
         const chatbot_name = chatbot.bot.name.trim();
         if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
-            // console.log("transcript got:", transcript);
             const _name_of = name_of(message, chatbot_name);
             if (transcript) {
                 transcript = transcript + "\n" + _name_of + message.text;
@@ -487,10 +429,7 @@ class TiledeskChatbotUtil {
             else {
                 transcript = _name_of + " " + message.text;
             }
-            // console.log("transcript update:", transcript);
             await chatbot.addParameter("transcript", transcript);
-            // let transcript2 = await chatbot.getParameter("transcript");
-            // console.log("transcript updated:", transcript2);
         }
 
         function name_of(message, chatbot_name) {
@@ -517,39 +456,32 @@ class TiledeskChatbotUtil {
     static transcriptJSON(transcript) {
         const regexp = /(<.*>)/gm;
         const parts = transcript.split(regexp);
-        // console.log("parts:", parts);
-        // console.log("typeof parts:", typeof parts);
-        // console.log("length parts:", parts.length);
-        // console.log("Array.isArray(parts):", Array.isArray(parts));
+        winston.debug("(TiledeskChatbotUtils) transcriptJSON parts: ", parts)
+
         let messages = [];
         let current_message;
         try {
             for (let i = 0; i < parts.length; i++) {
                 let row = parts[i];
-                // console.log("row:", row)
                 if (row.startsWith("<bot:")) {
-                    // console.log("start with", row)
                     current_message = {
                         "role": "assistant"
                     }
                 }
                 else if (row.startsWith("<user:")) {
-                    // console.log("start with", row)
                     current_message = {
                         "role": "user"
                     }
                 }
                 else if (current_message) {
-                    // console.log("adding text", row)
                     current_message["content"] = row.trim();
                     messages.push(current_message);
                 }
             };
         }
         catch(error) {
-            console.error("err:", error);
+            winston.error("(TiledeskChatbotUtils) transcriptJSON err: ", error);
         }
-        // console.log("messages:", messages);
         return messages;
     }
 
@@ -570,41 +502,42 @@ class TiledeskChatbotUtil {
 
     static lastUserMessageFrom(msg) {
         let message = {};
-        message["senderFullname"] = msg["senderFullname"]; // ex. "Bot"
-        message["type"] = msg["type"]; // ex. "text",
-        message["channel_type"] = msg["channel_type"]; // ex. "group",
-        message["status"] = msg["status"]; // ex. 0,
-        message["id"] = msg["_id"]; // ex. "6538cda46cb4d8002cf2317a",
-        message["sender"] = msg["sender"]; // ex. "system",
-        message["recipient"] = msg["recipient"]; // ex. "support-group-65203e12f8c0cf002cf4110b-4066a69c8b464646a3ff25f9f41575bb",
-        message["text"] = msg["text"]; // ex. "\\start",
-        message["createdBy"] = msg["createdBy"]; // ex. "system",
-        message["attributes"] = msg["attributes"]; // ex. { "subtype": "info" }
+        message["senderFullname"] = msg["senderFullname"];      // ex. "Bot"
+        message["type"] = msg["type"];                          // ex. "text",
+        message["channel_type"] = msg["channel_type"];          // ex. "group",
+        message["status"] = msg["status"];                      // ex. 0,
+        message["id"] = msg["_id"];                             // ex. "6538cda46cb4d8002cf2317a",
+        message["sender"] = msg["sender"];                      // ex. "system",
+        message["recipient"] = msg["recipient"];                // ex. "support-group-65203e12f8c0cf002cf4110b-4066a69c8b464646a3ff25f9f41575bb",
+        message["text"] = msg["text"];                          // ex. "\\start",
+        message["createdBy"] = msg["createdBy"];                // ex. "system",
+        message["attributes"] = msg["attributes"];              // ex. { "subtype": "info" }
         message["metadata"] = msg["metadata"];
-        message["channel"] = msg["channel"]; // ex. { "name": "chat21" }
+        message["channel"] = msg["channel"];                    // ex. { "name": "chat21" }
         return message;
     }
 
     static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
-            if (chatbot.log) {console.log("Updating request variables. Message:", JSON.stringify(message));}
+            if (chatbot.log) { winston.debug("Updating request variables. Message:", message); }
             const messageId = message._id;
             const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
-            // await chatbot.addParameter("chatbot", chatbot);
+
             await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
-            // console.log("Adding proj_", projectId);
             await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
-            // TODO add projectName too
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
+            
             if (chatbot.bot) {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_NAME_KEY, chatbot.bot.name);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_ID_KEY, chatbot.bot._id);
             }
+            
             if (chatbotToken) {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
             }
+            
             if (process.env.TILEDESK_API) {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN, chatbotToken); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2, "JWT " + chatbotToken);
@@ -615,7 +548,6 @@ class TiledeskChatbotUtil {
             }
 
             if (message.text && message.sender !== "_tdinternal") {
-                // await chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
                 await chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT); // user wrote, delete userInput, replyv2 will not trigger timeout action
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_KEY, message.text); // DEPRECATED
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY, message.text);
@@ -633,44 +565,18 @@ class TiledeskChatbotUtil {
 
             // get image
             if (message.type && message.type === "image" && message.metadata) {
-                // "text": "\nimage text",
-                // "id_project": "65203e12f8c0cf002cf4110b",
-                // "createdBy": "8ac52a30-133f-4ee1-8b4b-96055bb81757",
-                // "metadata": {
-                //     "height": 905,
-                //     "name": "tiledesk_Open graph_general.png",
-                //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2Fda5bbc8d-5174-49a8-a041-3d9355242da5%2Ftiledesk_Open%20graph_general.png?alt=media&token=be82fecb-3cd1-45b9-a135-c2c57a932862",
-                //     "type": "image/png",
-                //     "uid": "lo68iyq5",
-                //     "width": 1724
-                // }
                 if (message.metadata.src) {
-                    await chatbot.addParameter("lastUserImageURL", message.metadata.src);
-                    await chatbot.addParameter("lastUserImageName", message.metadata.name);
-                    await chatbot.addParameter("lastUserImageWidth", message.metadata.width);
-                    await chatbot.addParameter("lastUserImageHeight", message.metadata.height);
-                    await chatbot.addParameter("lastUserImageType", message.metadata.type);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_URL, message.metadata.src);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_NAME, message.metadata.name);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_WIDTH, message.metadata.width);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_HEIGHT, message.metadata.height);
+                    await chatbot.addParameter(TiledeskChatbotConst.REQ_LAST_USER_IMAGE_TYPE, message.metadata.type);
                 }
             }
-            // else {
-            //     await chatbot.addParameter("lastUserImageURL", null);
-            //     await chatbot.addParameter("lastUserImageName", null);
-            //     await chatbot.addParameter("lastUserImageWidth", null);
-            //     await chatbot.addParameter("lastUserImageHeight", null);
-            //     await chatbot.addParameter("lastUserImageType", null);
-            // }
+
             // get document
             if (message.type && message.type === "file" && message.metadata) {
-                // "type": "file",
-                // "text": "[LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf](https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1)\nistruzioni",
-                // "metadata": {
-                //     "name": "LIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf",
-                //     "src": "https://firebasestorage.googleapis.com/v0/b/chat21-pre-01.appspot.com/o/public%2Fimages%2F8ac52a30-133f-4ee1-8b4b-96055bb81757%2F502265ee-4f4a-47a4-9375-172bb0e6bf39%2FLIBRETTO-WEB-ISTRUZIONI-GENITORI.pdf?alt=media&token=a09d065a-9b56-4507-8960-344cc294e4d1",
-                //     "type": "application/pdf",
-                //     "uid": "lo68oz8i"
-                // }
-                if (message.metadata.src) {
-                    
+                if (message.metadata.src) {                    
                     await chatbot.addParameter("lastUserDocumentURL", message.metadata.src); // legacy. will be deprecated
                     const url_as_attachment = message.metadata.src;
                     await chatbot.addParameter("lastUserDocumentAsAttachmentURL", url_as_attachment);
@@ -683,44 +589,34 @@ class TiledeskChatbotUtil {
                     await chatbot.addParameter("lastUserDocumentType", message.metadata.type);
                 }
             }
-            // else {
-            //     await chatbot.addParameter("lastUserDocumentURL", null);
-            //     await chatbot.addParameter("lastUserDocumentName", null);
-            //     await chatbot.addParameter("lastUserDocumentType", null);
-            // }
+            
             if (message && message.request && message.request.lead) {
-                if (chatbot.log) {console.log("lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Lead found with email: " + message.request.lead.email + " and lead.fullname " + message.request.lead.fullname); }
                 let currentLeadEmail = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY);
-                if (chatbot.log) {console.log("You lead email from attributes:", currentLeadEmail, "message.request.lead.email:", message.request.lead.email);}
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail); }
                 if (message.request.lead.email && !currentLeadEmail) {
                     // worth saving
-                    if (chatbot.log) {console.log("worth saving email. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving email"); }
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
                     }
                     catch(error) {
-                        console.error("Error on setting userEmail:", error);
+                        winston.error("(TiledeskChatbotUtil) Error on setting userEmail:", error);
                     }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                if (chatbot.log) {console.log("You lead name from attributes:", currentLeadName, "message.request.lead.fullname:", message.request.lead.fullname)}
-                // if (message.request.lead.fullname && message.request.lead.fullname.startsWith("guest#") && !currentLeadName) {
-                // if (message.request.lead.fullname) {
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail); }
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    if (chatbot.log) {console.log("worth saving fullname. lead found. lead.email:", message.request.lead.email, "lead.fullname:", message.request.lead.fullname)}
+                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving email"); }
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
                     catch(error) {
-                        console.error("Error on setting userFullname:", error);
+                        winston.error("(TiledeskChatbotUtil) Error on setting userFullname: ", error);
                     }
-                // }
-                // else {
-                //     // console.log("!lead.fullname");
-                // }
                 }
-                // console.log("Getting userPhone:", JSON.stringify(message.request));
+
                 if (message.request.lead.phone) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_PHONE_KEY, message.request.lead.phone);
                 }
@@ -748,15 +644,12 @@ class TiledeskChatbotUtil {
             if (message.request && message.request.location && message.request.location.city) {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_CITY_KEY, message.request.location.city);
             }
-            // console.log("message.request.language", message.request["language"]);
             if (message.request) {
                 let user_language = message.request["language"];
                 if (message.request["language"]) {
-                    // console.log("HTTP language:", message.request["language"]);
                     var languages = parser.parse(message.request["language"]);
-                    // console.log("languages:", languages);
                     if (languages && languages.length > 0 && languages[0].code) {
-                    user_language = languages[0].code;
+                        user_language = languages[0].code;
                     }
                 }
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_SOURCE_PAGE_KEY, message.request.sourcePage);
@@ -774,7 +667,6 @@ class TiledeskChatbotUtil {
                     }
                 }
             }
-            // console.log("message.request.language", message.request["language"])
             if (message.request && message.request.department) {
                 // It was an error when getting this from widget message's attributes
                 // await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_ID_KEY, message.attributes.departmentId);
@@ -792,29 +684,24 @@ class TiledeskChatbotUtil {
                 if (!message.attributes) {
                     message.attributes = {}
                 }
-                message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload}
-                if (chatbot.log) {console.log("FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
-                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > FORCED SET message.attributes.payload:", JSON.stringify(message.attributes.payload))}
+                message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); }
             }
             if (message.attributes) {
-                if (chatbot.log) {console.log("Ok message.attributes", JSON.stringify(message.attributes));}
-                // if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > Ok message.attributes", JSON.stringify(message.attributes));}
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes); }
+
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
                 if (message.attributes.payload) {
                     try {
                         for (const [key, value] of Object.entries(message.attributes.payload)) {
-                            // const value = all_parameters[key];
                             const value_type = typeof value;
-                            //if (projectId === "641864da99c1fb00131ba495") {console.log("641864da99c1fb00131ba495 > importing payload parameter:", key, "value:", value, "type:", value_type);}
-                            //await chatbot.addParameter(key, String(value));
-                            // console.log("Adding from message.attributes:", key, "->", value);
                             await chatbot.addParameter(key, value);
                         }
                         await chatbot.addParameter("payload", message.attributes.payload);
                     }
                     catch(err) {
-                        console.error("Error importing message payload in request variables:", err);
+                        winston.error("(TiledeskChatbotUtil) Error importing message payload in request variables: ", err);
                     }
                 }
 
@@ -835,14 +722,12 @@ class TiledeskChatbotUtil {
             
             
             const _bot = chatbot.bot; // aka FaqKB
-            if (chatbot.log) {
-                console.log("Adding Globals to context..., chatbot.attributes?", JSON.stringify(_bot));
-            }
+            if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", _bot); }
             
             if (_bot.attributes && _bot.attributes.globals) {
-                if (chatbot.log) {console.log("Got Globals:", JSON.stringify(_bot.attributes.globals));}
+                if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals); }
                 _bot.attributes.globals.forEach(async (global_var) => {
-                    if (chatbot.log) {console.log("Adding global:", global_var.key, "value:", global_var.value);}
+                    if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value); }
                     await chatbot.addParameter(global_var.key, global_var.value);
                 });
             }
@@ -856,52 +741,23 @@ class TiledeskChatbotUtil {
             // );
             
             if (chatbot.log) {
-                // console.log("tdcache:", chatbot.tdcache);
-                console.log("requestId:", requestId);
-                console.log("KEY:", TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-                //   console.log("TiledeskChatbot:", TiledeskChatbot);
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) requestId: " + requestId); }
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Key: " + TiledeskChatbotConst.REQ_PROJECT_ID_KEY); }
+
                 let proj_ = await chatbot.getParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-                console.log("request parameter proj_:", proj_);
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) request parameter proj_: " + proj_); }
+
                 const all_parameters = await chatbot.allParameters();
                 for (const [key, value] of Object.entries(all_parameters)) {
-                    // const value = all_parameters[key];
                     const value_type = typeof value;
-                    if (chatbot.log) {console.log("REQUEST ATTRIBUTE:", key, "VALUE:", value, "TYPE:", value_type)}
+                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Request Attribute: " + key + " value: " + value + " type: " + value_type); }
+                    
                 }
             }
         } catch(error) {
-            console.error("Error", error)
+            winston.error("(TiledeskChatbotUtil) updateRequestAttributes Error: ", error);
             process.exit(1)
         }
-        // message["attributes"]: {
-        //   "departmentId": "63c980054f857c00350535bc",
-        //   "departmentName": "Default Department",
-        //   "client": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-        //   "sourcePage": "https://tiledesk-html-site.tiledesk.repl.co/custom-attributes.html",
-        //   "projectId": "63c980054f857c00350535b8",
-        //   "payload": {
-        //     "user_country": "Italy",
-        //     "user_code": "E001"
-        //   },
-        //   "userFullname": "guest#7216 ",
-        //   "requester_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-        //   "ipAddress": "79.8.190.172",
-        //   "sourceTitle": "Custom attributes",
-        //   "widgetVer": "v.5.0.53-rc.4",
-        //   "subtype": "info",
-        //   "decoded_jwt": {
-        //     "_id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-        //     "firstname": "guest#7216",
-        //     "id": "7216926a-84c3-4bd5-aa79-8bd763094dc0",
-        //     "fullName": "guest#7216 ",
-        //     "iat": 1674201892,
-        //     "aud": "https://tiledesk.com",
-        //     "iss": "https://tiledesk.com",
-        //     "sub": "guest",
-        //     "jti": "f053af3d-14ca-411b-9903-78bd74e24218"
-        //   }
-        // let userFullname = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-        // console.log("userFullname:", userFullname);
     }
 
     static actionsToDirectives(actions) {
@@ -918,21 +774,17 @@ class TiledeskChatbotUtil {
     }
 
     static addConnectAction(reply) {
-        // console.log("reply foraddConnectAction:", reply);
         if (reply && reply.attributes && reply.attributes.nextBlockAction) {
             if (reply.actions) {
                 reply.actions.push(reply.attributes.nextBlockAction);
-                // console.log("actions are:", reply.actions)
             }
         }
     }
 
     static validateRequestId(requestId, projectId) {
-        // console.log("checking requestId:", requestId, projectId)
         let isValid = false;
         if (requestId.startsWith("support-group-")) {
             const parts = requestId.split("-");
-            // console.log("parts support request:", parts);
             if (parts.length >= 4) {
                 isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
             }
@@ -941,7 +793,6 @@ class TiledeskChatbotUtil {
             }
         } else if (requestId.startsWith("automation-request-")) {
             const parts = requestId.split("-");
-            // console.log("parts automation request:", parts);
             if (parts.length === 4) {
                 isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
             }
@@ -976,19 +827,18 @@ class TiledeskChatbotUtil {
             TiledeskChatbotConst.REQ_TRANSCRIPT_KEY,
             TiledeskChatbotConst.REQ_LAST_USER_MESSAGE_KEY,
             TiledeskChatbotConst.REQ_DECODED_JWT_KEY,
-            "lastUserImageURL", // image
-            "lastUserImageName", // image
-            "lastUserImageWidth", // image
-            "lastUserImageHeight", // image
-            "lastUserImageType", // image
-            "lastUserDocumentURL", // file
-            "lastUserDocumentName", // file
-            "lastUserDocumentType", // file
-            "ticketId",
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_URL,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_NAME,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_WIDTH,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_HEIGHT,
+            TiledeskChatbotConst.REQ_LAST_USER_IMAGE_TYPE,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_URL,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_NAME,
+            TiledeskChatbotConst.REQ_LAST_USER_DOCUMENT_TYPE,
+            TiledeskChatbotConst.REQ_TICKET_ID_KEY,
             TiledeskChatbotConst.REQ_CHAT_CHANNEL,
-            "user_lead_id",
-            "userLeadId",
-            "lastUserText",
+            TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY,
+            TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY,
             TiledeskChatbotConst.REQ_REQUESTER_IS_AUTHENTICATED_KEY,
             TiledeskChatbotConst.USER_INPUT,
             TiledeskChatbotConst.REQ_CHATBOT_TOKEN,
@@ -997,7 +847,6 @@ class TiledeskChatbotUtil {
           let userParams = {};
           if (flowAttributes) {
             for (const [key, value] of Object.entries(flowAttributes)) {
-              // console.log(key, value);
               // There is a bug that moves the requestId as a key in request attributes, so: && !key.startsWith("support-group-")
               if (!key.startsWith("_") && !RESERVED.some(e => e === key) && !key.startsWith("support-group-")) {
                 userParams[key] = value;
@@ -1041,8 +890,8 @@ class TiledeskChatbotUtil {
 
     myrequest(options, callback, log) {
         if (log) {
-          console.log("API URL:", options.url);
-          console.log("** Options:", JSON.stringify(options));
+          winston.debug("(TiledeskChatbotUtil) myrequest API URL: " + options.url);
+          winston.debug("(TiledeskChatbotUtil) myrequest Options URL: ", options);
         }
         axios(
           {
@@ -1054,8 +903,8 @@ class TiledeskChatbotUtil {
           })
           .then((res) => {
             if (log) {
-              console.log("Response for url:", options.url);
-              console.log("Response headers:\n", JSON.stringify(res.headers));
+                winston.debug("(TiledeskChatbotUtil) Response for url: " + options.url);
+                winston.debug("(TiledeskChatbotUtil) Response headers:\n", options);
             }
             if (res && res.status == 200 && res.data) {
               if (callback) {
@@ -1069,7 +918,7 @@ class TiledeskChatbotUtil {
             }
           })
           .catch((error) => {
-            console.error("(TiledeskChatbotUtil) Axios error: ", JSON.stringify(error));
+            winston.error("(TiledeskChatbotUtil) Axios error: ", error.response.data);
             if (callback) {
               callback(error, null, null);
             }

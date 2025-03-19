@@ -5,6 +5,22 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# v0.5.0
+- added: AI_ENDPOINT env var
+- added: ability to get 'none' as bodytype in webresponse
+
+# v0.4.2
+- bug-fixed: minor log fix
+
+# v0.4.1
+- fix: wrong key for web_response
+
+# v0.4.0
+- added: DirWebResposne
+- added: management of webhook
+- changed: refactoring of DIrWebRequestv2
+- bug-fixed: erro while parsing webrequestv2 body
+
 # v0.3.4
 -bug-fixed: slit is undefined in TiledeskChatbotUtils
 

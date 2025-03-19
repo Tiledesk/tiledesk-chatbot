@@ -1,5 +1,21 @@
 # Tiledesk native chatbot
 
+# 1.3.0
+- added: AI_ENDPOINT env var
+- added: ability to get 'none' as bodytype in webresponse
+
+# 1.2.2
+- bug-fixed: minor log fix
+
+# 1.2.1
+- bug-fixed: wrong key for web_response
+
+# 1.2.0
+- added: DirWebResposne
+- added: management of webhook
+- changed: refactoring of DIrWebRequestv2
+- bug-fixed: erro while parsing webrequestv2 body
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 

@@ -4,9 +4,10 @@ const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -16,8 +17,9 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil.js');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const { statSync } = require('fs');
+const tilebotService = require('../services/TilebotService.js');
 
 let SERVER_PORT = 10001
 
@@ -28,7 +30,7 @@ describe('Api /ext/:boid', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       try {
         tybot.startApp(
           {
@@ -41,16 +43,16 @@ describe('Api /ext/:boid', async () => {
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
             log: process.env.TILEBOT_LOG
           }, () => {
-            console.log("Tilebot route successfully started.");
+            winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
-              console.log('Tilebot connector listening on port ', port);
+              winston.info('Tilebot connector listening on port ', port);
               resolve();
             });
           });
       }
       catch (error) {
-        console.error("error:", error)
+        winston.error("error: ", error)
       }
 
     })
@@ -58,7 +60,6 @@ describe('Api /ext/:boid', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
@@ -105,7 +106,7 @@ describe('Api /ext/:boid', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -121,7 +122,7 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, (err, res) => {
+      tilebotService.sendMessageToBot(request, BOT_ID, (err, res) => {
         assert(res)
         assert(res.success)
         assert.equal(res.success, true)
@@ -174,7 +175,7 @@ describe('Api /ext/:boid', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -190,14 +191,13 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, undefined, (err, res) => {
+      tilebotService.sendMessageToBot(request, undefined, (err, res) => {
         if(err){
           assert(err.status)
           assert.equal(err.status, 400)
           assert(err.response.data)
           assert.equal(err.response.data.success, false)
           assert(err.response.data.error)
-          console.log("ERROR /ext/:botid undefined --> handled")
           listener.close(() => {
             done();
         });
@@ -248,7 +248,7 @@ describe('Api /ext/:boid', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -264,14 +264,13 @@ describe('Api /ext/:boid', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, null, (err, res) => {
+      tilebotService.sendMessageToBot(request, null, (err, res) => {
         if(err){
           assert(err.status)
           assert.equal(err.status, 400)
           assert(err.response.data)
           assert.equal(err.response.data.success, false)
           assert(err.response.data.error)
-          console.log("ERROR /ext/:botid null --> handled")
           listener.close(() => {
             done();
         });
@@ -287,42 +286,6 @@ describe('Api /ext/:boid', async () => {
 
 
 });
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, callback) {
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
 
 function getExtBotId(botId, callback) {
   const url = `${process.env.TILEBOT_ENDPOINT}/ext/${botId}`;
@@ -383,10 +346,6 @@ function getChatbotParameters(requestId, callback) {
 }
 
 function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
   axios(
     {
       url: options.url,
@@ -396,11 +355,6 @@ function myrequest(options, callback, log) {
       headers: options.headers
     })
     .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -413,7 +367,6 @@ function myrequest(options, callback, log) {
       }
     })
     .catch((error) => {
-      // console.error("An error occurred:", error);
       if (callback) {
         callback(error, null, null);
       }

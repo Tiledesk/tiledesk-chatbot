@@ -84,7 +84,6 @@ describe('chooser', function() {
         chooser = new LanguageChooser();
         const lang_iso = "it"
         const bot = chooser.findIn(BOTS, lang_iso);    
-        console.log("bot:", bot)    
         assert(bot !== null);
         assert(bot.name === "Ty in Italiano");
     });
@@ -92,8 +91,7 @@ describe('chooser', function() {
     it('user "" language => pivot', async () => {
         chooser = new LanguageChooser();
         const lang_iso = ""
-        const bot = chooser.findIn(BOTS, lang_iso);
-        console.log("bot:", bot)    
+        const bot = chooser.findIn(BOTS, lang_iso);   
         assert(bot !== null);
         assert(bot.name === "Ty");
     });
@@ -102,7 +100,6 @@ describe('chooser', function() {
         chooser = new LanguageChooser();
         const lang_iso = null;
         const bot = chooser.findIn(BOTS, lang_iso);
-        console.log("bot:", bot)
         assert(bot !== null);
         assert(bot.name === "Ty");
     });

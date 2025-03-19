@@ -1,6 +1,6 @@
 var assert = require('assert');
-const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
-const { MockTdCache } = require('../models/MockTdCache');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
+const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
 
 describe('checkStep()', function() {

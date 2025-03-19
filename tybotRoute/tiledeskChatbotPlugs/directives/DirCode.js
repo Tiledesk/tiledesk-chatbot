@@ -1,6 +1,7 @@
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
+const winston = require('../../utils/winston');
 
 class DirCode {
 
@@ -13,11 +14,13 @@ class DirCode {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute Code directive");
     let action;
     if (directive.action) {
       action = directive.action
     }
     else {
+      winston.warn("DirCode Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -28,10 +31,10 @@ class DirCode {
   }
 
   async go(action, callback) {
-    // console.log("action.source:", action.source)
+    winston.debug("(DirCode) Action: ", action);
     const source_code = action.source;
     if (!source_code || source_code.trim() === "") {
-      if (this.log) {console.log("Invalid source_code");}
+      winston.error("(DirCode) Invalid source_code");
       callback();
       return;
     }
@@ -44,44 +47,34 @@ class DirCode {
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      if (this.log) {console.log("Attributes:", JSON.stringify(attributes))}
+      winston.debug("(DirCode) Attributes:", attributes)
     }
     else {
-      console.error("(DirCode) No this.context.tdcache");
+      winston.error("(DirCode) No this.context.tdcache");
       callback();
       return;
     }
-    // console.log("before variables:", variables);
-    // for (const [key, value] of Object.entries(attributes)) {
-    //   script_context[key] = value;
-    // }
+    
     let variablesManager = new TiledeskRequestVariables(this.context.requestId, this.context.tdcache, attributes);
     script_context.context = variablesManager;
-    // console.log("script_context:", script_context);
+
     const tdExpression = new TiledeskExpression();
-    //console.log("tdExpression:", tdExpression.evaluateJavascriptExpression);
+
     try {
       const result = new TiledeskExpression().evaluateJavascriptExpression(source_code, script_context);
-      // console.log("result:", result);
-      // console.log("script_context.tiledeskVars:", script_context.tiledeskVars);
-      for (const [key, value] of Object.entries(script_context.context.ops.set)) {
-        // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
-        // await variablesManager.set(key, value);
+      
+      for (const [key, value] of Object.entries(script_context.context.ops.set)) {;
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
       }
-      // if (this.log) {
-        // let newvars_set = await variablesManager.all();
-        // console.log("newvars_set:", newvars_set);
-      // }
       for (const [key, value] of Object.entries(script_context.context.ops.del)) {
-        // await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
         await variablesManager.delete(key);
       }
+
       const newvars_del = await variablesManager.all();
-      // console.log("newvars_del:", newvars_del);
+
     }
     catch(err) {
-      console.error("(DirCode) An error occurred:", err);
+      winston.error("(DirCode)  An error occurred: ", err);
     }
     callback();
     return;

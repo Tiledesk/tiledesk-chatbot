@@ -1,5 +1,6 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Filler } = require('../Filler');
+const winston = require('../../utils/winston');
 
 class DirSetConversationTags {
 
@@ -22,11 +23,13 @@ class DirSetConversationTags {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute SetConversationTags directive");
     let action;
     if (directive.action) {
         action = directive.action
     }
     else {
+        winston.warn("DirSetAttribute Incorrect directive: ", directive);
         callback();
         return;
     }
@@ -36,11 +39,11 @@ class DirSetConversationTags {
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("(DirSetConversationTags) Adding conversation tags:", action.depName);}
+    winston.debug("(DirSetConversationTags) Action: ", action);
     let tagsString = action.tags;
     tagsString = tagsString.replace(/ /g,"");
     if (tagsString.length === 0) {
-      if (this.log) {console.error("(DirSetConversationTags) Invalid action: tags string is empty")};
+      winston.debug("(DirSetConversationTags) Invalid action: tags string is empty");
       callback();
       return;
     }
@@ -53,15 +56,15 @@ class DirSetConversationTags {
       }
     }
     catch(error) {
-        console.error("Error while filling operands:", error);
+      winston.error("(DirSetConversationTags) Error while filling operands: ", error);
     }
     this.moveToDepartment(this.requestId, depName, (deps) => {
       if (!deps) {
-        if (this.log) {console.log("Dep not found");}
+        winston.debug("(DirSetConversationTags) Dep not found");
         callback();
         return
       }
-      if (this.log) {console.log("Switched to dept:", depName, "action:", JSON.stringify(action));}
+      winston.debug("(DirSetConversationTags) Switched to dept: " + depName + " action: ", JSON.stringify(action));
       if (action.triggerBot) {
         let dep = null;
         let i;
@@ -73,7 +76,7 @@ class DirSetConversationTags {
           }
         }
         if (dep && dep.hasBot === true && dep.id_bot) {
-          if (this.log) {console.log("Sending hidden /start message to bot in dept");}
+          winston.debug("(DirSetConversationTags) Sending hidden /start message to bot in dept");
           const message = {
             type: "text",
             text: "/start",
@@ -85,15 +88,14 @@ class DirSetConversationTags {
             this.requestId,
             message, (err) => {
               if (err) {
-                console.error("Error sending hidden message:", err.message);
+                winston.error("(DirSetConversationTags) Error sending hidden message: " + err.message);
               }
-              if (this.log) {console.log("Hidden message sent.");}
               callback();
           });
         }
       }
       else {
-        if (this.log) {console.log("No action.triggerBot");}
+        winston.debug("(DirSetConversationTags) No action.triggerBot");
         callback();
       }
     });
@@ -101,9 +103,8 @@ class DirSetConversationTags {
 
   moveToDepartment(requestId, depName, callback) {
     this.tdClient.getAllDepartments((err, deps) => {
-      if (this.log) {console.log("deps:", JSON.stringify(deps));}
       if (err) {
-        console.error("getAllDepartments() error:", err);
+        winston.error("(DirSetConversationTags) getAllDepartments() error: ", err);
         callback();
         return;
       }
@@ -119,11 +120,11 @@ class DirSetConversationTags {
       if (dep) {
         this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
-            console.error("DirDepartment error:", err);
+            winston.debug("(DirSetConversationTags) error:", err);
             callback();
           }
           else {
-            console.log("DirDepartment response:",JSON.stringify(res));
+            winston.debug("(DirSetConversationTags) response: ", res);
             callback(deps);
           }
         });

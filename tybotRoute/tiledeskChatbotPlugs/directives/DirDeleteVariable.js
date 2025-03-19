@@ -1,7 +1,8 @@
 const { param } = require('express/lib/request');
 const ms = require('minimist-string');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
+const winston = require('../../utils/winston');
 
 class DirDeleteVariable {
 
@@ -14,6 +15,7 @@ class DirDeleteVariable {
   }
 
   async execute(directive, callback) {
+    winston.verbose("Execute DeleteVariable directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -29,11 +31,11 @@ class DirDeleteVariable {
   }
 
   async go(action, callback) {
-    // let variableName = action.body.variableName;
+    winston.debug("(DirDeleteVariable) Action: ", action);
+
     let variableName = action.variableName;
-    // console.log("DirDeleteVariable:", directive);
     if (!variableName) {
-      if (this.log) {console.log("Error deleting variable. Missing 'variableName' error. Skipping");}
+      winston.error("(DirDeleteVariable) deleting variable. Missing 'variableName' error. Skipping");
       if (callback) {
         callback();
       }
@@ -46,11 +48,9 @@ class DirDeleteVariable {
           await TiledeskChatbot.allParametersStatic(
             this.context.tdcache, this.context.requestId
           );
-          // console.log("All availabe variables before deletion:", variables);
+
           const filler = new Filler();
-          // console.log("delete variable name:", variableName);
           variableName = filler.fill(variableName, variables);
-          // console.log("delete variable name (after filling):", variableName);
           await TiledeskChatbot.deleteParameterStatic(
             this.context.tdcache, this.context.requestId, variableName
           );
@@ -60,7 +60,7 @@ class DirDeleteVariable {
         }
       }
       catch(err) {
-        console.error("DirDeleteVariable error:", err);
+        winston.error("(DirDeleteVariable)  error: ", err);
         if (completion) {
           completion();
         }

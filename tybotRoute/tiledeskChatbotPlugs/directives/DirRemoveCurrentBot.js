@@ -1,4 +1,5 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
+const winston = require('../../utils/winston');
 
 class DirRemoveCurrentBot {
 
@@ -21,6 +22,7 @@ class DirRemoveCurrentBot {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute RemoveCurrentBot directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -29,6 +31,7 @@ class DirRemoveCurrentBot {
       action = {};
     }
     else {
+      winston.warn("DirRemoveCurrentBot Incorrect directive: ", directive);
       callback();
     }
     this.go(action, () => {
@@ -37,6 +40,7 @@ class DirRemoveCurrentBot {
   }
 
   go(action, callback) {
+    winston.debug("(RemoveCurrentBot) Action: ", action);
     this.tdClient.removeCurrentBot(this.requestId, (err) => {
       callback();
     });

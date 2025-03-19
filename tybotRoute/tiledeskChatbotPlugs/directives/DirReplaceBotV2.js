@@ -1,9 +1,11 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 
 const axios = require("axios").default;
 let https = require("https");
+const winston = require('../../utils/winston');
+const httpUtils = require('../../utils/HttpUtils');
 
 class DirReplaceBotV2 {
 
@@ -26,7 +28,7 @@ class DirReplaceBotV2 {
   }
 
   execute(directive, callback) {
-    if (this.log) {console.log("Replacing bot");}
+    winston.verbose("Execute ReplaceBotV2 directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -38,6 +40,7 @@ class DirReplaceBotV2 {
       }
     }
     else {
+      winston.warn("DirReplaceBotV2 Incorrect directive: ", directive);
       callback();
     }
     this.go(action, () => {
@@ -46,6 +49,7 @@ class DirReplaceBotV2 {
   }
 
   async go(action, callback) {
+    winston.debug("(DirReplaceBotV2) Action: ", action);
     let botName = action.botName;
     let blockName = action.blockName;
     let variables = null;
@@ -73,19 +77,19 @@ class DirReplaceBotV2 {
       method: 'PUT'
     }
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          console.log("DirReplaceBot error: ", err);
+          winston.error("(DirReplaceBotV2) DirReplaceBot error: ", err);
           if (callback) {
             callback();
             return;
           }
         }
 
-        if (this.log) { console.log("DirReplaceBot replace resbody: ", resbody) };
+        winston.debug("(DirReplaceBotV2) replace resbody: ", resbody)
         if (blockName) {
-          if (this.log) { console.log("Sending hidden /start message to bot in dept"); }
+          winston.debug("(DirReplaceBotV2) Sending hidden /start message to bot in dept");
           const message = {
             type: "text",
             text: "/" + blockName,
@@ -97,9 +101,8 @@ class DirReplaceBotV2 {
             this.requestId,
             message, (err) => {
               if (err) {
-                console.error("Error sending hidden message:", err.message);
+                winston.debug("(DirReplaceBotV2) Error sending hidden message: " + err.message);
               }
-              if (this.log) { console.log("Hidden message sent."); }
               callback();
             });
         }
@@ -111,7 +114,6 @@ class DirReplaceBotV2 {
 
     // this.tdClient.replaceBotByName(this.requestId, botName, () => {
     //   if (blockName) {
-    //     if (this.log) {console.log("Sending hidden /start message to bot in dept");}
     //     const message = {
     //       type: "text",
     //       text: "/" + blockName,
@@ -123,9 +125,8 @@ class DirReplaceBotV2 {
     //       this.requestId,
     //       message, (err) => {
     //         if (err) {
-    //           console.error("Error sending hidden message:", err.message);
+    //           winston.error("Error sending hidden message:", err.message);
     //         }
-    //         if (this.log) {console.log("Hidden message sent.");}
     //         callback();
     //     });
     //   }
@@ -135,53 +136,6 @@ class DirReplaceBotV2 {
     // });
   }
 
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
 }
 
 module.exports = { DirReplaceBotV2 };

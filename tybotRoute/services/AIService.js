@@ -1,4 +1,5 @@
-const Utils = require('./utils')
+const httpUtils = require("../utils/HttpUtils");
+
 class AiService {
 
     constructor(options){
@@ -13,7 +14,7 @@ class AiService {
               url: `${this.APIURL}/${this.PROJECT_ID}/llm/transcription`,
               headers: {
                 'Content-Type' : 'application/json',
-                'Authorization': Utils.fixToken(this.TOKEN)
+                'Authorization': httpUtils.fixToken(this.TOKEN)
               },
               json: {
                 url: url
@@ -21,7 +22,7 @@ class AiService {
               method: 'POST',
               httpsOptions: this.httpsOptions
           };
-          Utils.myrequest(
+          httpUtils.request(
             HTTPREQUEST,
             function(err, resbody) {
                 if (err) {

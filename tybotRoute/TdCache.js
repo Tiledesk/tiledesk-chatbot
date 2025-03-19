@@ -1,17 +1,18 @@
 const redis = require('redis');
+const winston = require('./utils/winston');
 
 class TdCache {
 
     constructor(config) {
-        console.log("TdCache config: ", config);
+        winston.debug("(TdCache) config: ", config);
         this.redis_host = config.host;
         this.redis_port = config.port;
         this.redis_password = config.password;
-        console.log("TdCache this.redis_host: ", this.redis_host);
-        console.log("TdCache this.redis_port: ", this.redis_port);
-        console.log("TdCache this.redis_password: ", this.redis_password);
+        winston.debug("TdCache redis_host: ", this.redis_host);
+        winston.debug("TdCache redis_port: ", this.redis_port);
+        winston.debug("TdCache redis_password: ", this.redis_password);
         this.client = null;
-        this.redis_sub = null;
+        this.subscriberClient = null;
     }
 
     async connect(callback) {
@@ -42,29 +43,28 @@ class TdCache {
             /**
              * Connect redis subscription client
              */
-            this.redis_sub = redis.createClient(
+            this.subscriberClient = redis.createClient(
               {
                 url: `redis://${this.redis_host}:${this.redis_port}`,
                 password: this.redis_password
               });
-            this.redis_sub.on('error', err => {
+            this.subscriberClient.on('error', err => {
                 reject(err);
                 if (callback) {
                     callback(err);
                 }
             });
-            this.redis_sub.on('ready',function() {
+            this.subscriberClient.on('ready',function() {
                 resolve();
                 if (callback) {
                     callback();
                 }
             });
-            await this.redis_sub.connect();
+            await this.subscriberClient.connect();
         });
     }
 
     async set(key, value, options) {
-      //console.log("setting key value", key, value)
       if (!options) {
         options = {EX: 86400}
       }
@@ -118,7 +118,6 @@ class TdCache {
     }
 
     async hget(dict_key, key) {
-      // console.log("hgetting dics", dict_key);
       const value = await this.client.HGET(dict_key, key);
       return value;
     }
@@ -133,7 +132,25 @@ class TdCache {
     }
     
     async publish(key, value) {
-      await this.redis_sub.publish(key, value);
+      await this.client.publish(key, value);
+    }
+
+    async subscribe(topic, callback) {
+      if (!this.subscriberClient) {
+        throw new Error("Redis subscriber not connected");
+      }
+
+      if (!callback || typeof callback !== 'function') {
+        throw new Error("Callback is mandatory for subscribe")
+      }
+
+      await this.subscriberClient.subscribe(topic, (message) => {
+        callback(message, topic);
+      })
+    }
+
+    async unsubscribe(topic, listener) {
+      await this.subscriberClient.unsubscribe(topic, listener);
     }
 
     // subscribe(key, callback) {

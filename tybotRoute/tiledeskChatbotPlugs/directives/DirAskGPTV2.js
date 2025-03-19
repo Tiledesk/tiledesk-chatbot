@@ -1,12 +1,15 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const assert = require("assert");
 require('dotenv').config();
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirAskGPTV2 {
 
@@ -18,19 +21,21 @@ class DirAskGPTV2 {
     this.chatbot = context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("AskGPT directive: ", directive); }
+    winston.debug("DirAskGPTV2 directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.debug("DirAskGPTV2 Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -40,9 +45,9 @@ class DirAskGPTV2 {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirAskGPT action:", JSON.stringify(action)); }
+    winston.debug("DirAskGPTV2 action:", action);
     if (!this.tdcache) {
-      console.error("Error: DirAskGPT tdcache is mandatory");
+      winston.error("DirAskGPTV2 Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -53,12 +58,11 @@ class DirAskGPTV2 {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("DirAskGPTV2 trueIntent", trueIntent)
+    winston.debug("DirAskGPTV2 falseIntent", falseIntent)
+    winston.debug("DirAskGPTV2 trueIntentAttributes", trueIntentAttributes)
+    winston.debug("DirAskGPTV2 falseIntentAttributes", falseIntentAttributes)
+  
 
     // default values
     let answer = "No answers";
@@ -83,7 +87,7 @@ class DirAskGPTV2 {
     let source = null;
 
     if (!action.question || action.question === '') {
-      console.error("Error: DirAskGPT question attribute is mandatory. Executing condition false...");
+      winston.error("DirAskGPTV2 Error: question attribute is mandatory. Executing condition false...");
       await this.#assignAttributes(action, answer, source);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -131,33 +135,33 @@ class DirAskGPTV2 {
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY
       )
-      if (this.log) { console.log("DirAskGPT transcript string: ", transcript_string) }
+      winston.debug("DirAskGPTV2 transcript string: " + transcript_string)
 
       if (transcript_string) {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-        if (this.log) { console.log("DirAskGPT transcript ", transcript) }
+        winston.debug("DirAskGPTV2 transcript ", transcript)
       } else {
-        if (this.log) { console.log("DirAskGPT transcript_string is undefined. Skip JSON translation for chat history") }
+        winston.verbose("DirAskGPT transcript_string is undefined. Skip JSON translation for chat history")
       }
     }
 
     const kb_endpoint = process.env.KB_ENDPOINT_QA
-    if (this.log) { console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint); }
+    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
+      winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
-      if (this.log) { console.log("DirAskGPT - Retrieve public gptkey")}
+      winston.verbose("DirAskGPTV2 - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
     }
 
     if (!key) {
-      console.error("Error: DirAskGPT gptkey is mandatory");
+      winston.info("DirAskGPTV2 Error: gptkey is mandatory");
       await this.#assignAttributes(action, answer);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -171,7 +175,7 @@ class DirAskGPTV2 {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
-        if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
+        winston.verbose("DirAskGPTV2 - Quota exceeded for tokens. Skip the action")
         await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);  
@@ -186,7 +190,7 @@ class DirAskGPTV2 {
       const filled_namespace = filler.fill(action.namespace, requestVariables)
       ns = await this.getNamespace(filled_namespace, null);
       namespace = ns?.id;
-      if (this.log) { console.log("DirAskGPT - Retrieved namespace id from name ", namespace); }
+      winston.verbose("DirAskGPTV2 - Retrieved namespace id from name " + namespace);
     } else {
       ns = await this.getNamespace(null, namespace);
     }
@@ -210,7 +214,7 @@ class DirAskGPTV2 {
     }
     
     if (!namespace) {
-      console.log("DirAskGPT - Error: namespace is undefined")
+      winston.verbose("DirAskGPTV2 - Error: namespace is undefined")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -251,7 +255,7 @@ class DirAskGPTV2 {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
 
-    if (this.log) { console.log("DirAskGPT json:", json); }
+    winston.debug("DirAskGPTV2 json:", json);
 
     const HTTPREQUEST = {
       url: kb_endpoint + "/qa",
@@ -262,20 +266,13 @@ class DirAskGPTV2 {
       json: json,
       method: "POST"
     }
-    if (this.log) { console.log("DirAskGPT HTTPREQUEST", HTTPREQUEST); }
+    winston.debug("DirAskGPTV2 HttpRequest: ", HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        if (this.log && err) {
-          console.log("DirAskGPT error: ", err);
-        }
-        if (this.log) { console.log("DirAskGPT resbody:", resbody); }
         
-        // let answer = resbody.answer;
-        // let source = resbody.source;
-        // await this.#assignAttributes(action, answer, source);
-
         if (err) {
+          winston.error("DirAskGPTV2 error: ", err?.respose);
           await this.#assignAttributes(action, answer, source);
           if (callback) {
             if (falseIntent) {
@@ -288,7 +285,7 @@ class DirAskGPTV2 {
           }
         }
         else if (resbody.success === true) {
-
+          winston.debug("DirAskGPTV2 resbody: ", resbody);
           await this.#assignAttributes(action, resbody.answer, resbody.source);
           if (publicKey === true) {
             let tokens_usage = {
@@ -337,7 +334,7 @@ class DirAskGPTV2 {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("DirAskGPTV2 No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -352,7 +349,7 @@ class DirAskGPTV2 {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("DirAskGPTV2 No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -361,11 +358,9 @@ class DirAskGPTV2 {
   }
 
   async #assignAttributes(action, answer, source) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-      console.log("assignAttributes source:", source)
-    }
+    winston.debug("DirAskGPTV2assignAttributes action: ", action)
+    winston.debug("DirAskGPTV2assignAttributes answer: ", answer)
+    winston.debug("DirAskGPTV2assignAttributes source: ", source)
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
@@ -373,94 +368,7 @@ class DirAskGPTV2 {
       if (action.assignSourceTo && source) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
-  }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      if (this.log) { console.log("DirAskGPT INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            if (this.log) { console.error("DirAskGPT Get integrations error ", err); }
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
   }
 
   async getKeyFromKbSettings() {
@@ -474,12 +382,12 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAskGPT KB_HTTPREQUEST", KB_HTTPREQUEST); }
+      winston.debug("DirAskGPTV2 KB HttpRequest", KB_HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            if (this.log) { console.error("DirAskGPT Get kb settings error ", err); }
+            winston.error("DirAskGPTV2 Get kb settings error ", err?.response?.data);
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -504,12 +412,12 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("DirAskGPTV2 check quote availability HttpRequest", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAskGPT Check quote availability err: ", err);
+            winston.error("DirAskGPTV2 Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {
@@ -535,15 +443,14 @@ class DirAskGPTV2 {
         json: tokens_usage,
         method: "POST"
       }
-      if (this.log) { console.log("DirAskGPT check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("DirAskGPTV2 update quote HttpRequest ", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirAskGPT Increment tokens quote err: ", err);
+            winston.error("DirAskGPTV2 Increment tokens quote err: ", err);
             reject(false)
           } else {
-            // console.log("(httprequest) DirAskGPT Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }
@@ -609,14 +516,14 @@ class DirAskGPTV2 {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAskGPT get all namespaces HTTPREQUEST", HTTPREQUEST); }
-      this.#myrequest(
+      winston.debug("DirAskGPTV2 get all namespaces HttpRequest", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, namespaces) => {
           if (err) {
-            console.error("(httprequest) DirAskGPT get all namespaces err: ", err);
+            winston.error("DirAskGPTV2 get all namespaces err: ", err);
             resolve(null)
           } else {
-            if (this.log) { console.log("(httprequest) DirAskGPT get all namespaces resbody: ", namespaces); }
+            winston.debug("DirAskGPTV2 get all namespaces resbody: ", namespaces);
             if (name) {
               let namespace = namespaces.find(n => n.name === name);
               resolve(namespace);
