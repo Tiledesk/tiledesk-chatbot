@@ -282,6 +282,71 @@ const bot = {
 			},
 			"text": "HTTP form-data Success"
 		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "webrequestv2 - post incorrect body",
+		"intent_id": "POST200",
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionTitle": "POST",
+			"url": "http://localhost:10002/test/webrequest/post/json",
+			"headersString": {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+				"User-Agent": "TiledeskBotRuntime"
+			},
+			"jsonBody": "{\"name\";\"myname\",\"email\":\"myemail\"}",
+			"bodyType": "json",
+			"assignErrorTo": "error",
+			"assignResultTo": "result",
+			"assignStatusTo": "status",
+			"falseIntent":"#FAILURE",
+			"method": "POST",
+			"_tdActionType": "webrequestv2"
+		}, {
+			"_tdActionTitle": "",
+			"_tdActionType": "reply",
+			"attributes": {
+				"disableInputMessage": false,
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "HTTP POST Success with status {{status}}. From reply, name: {{result.replyname}}, email: {{result.replyemail}}"
+					}
+				}]
+			},
+			"text": "HTTP GET Failure"
+		}]
+	}, {
+		// FALSE INTENT
+		"webhook_enabled": false,
+		"enabled": true,
+		"actions": [{
+			"_tdActionType": "reply",
+			"text": "xxx",
+			"attributes": {
+				"commands": [{
+					"type": "wait",
+					"time": 500
+				}, {
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "webrequest replied: {{flowError}}"
+					}
+				}]
+			}
+		}],
+		"language": "en",
+		"intent_display_name": "gpt intent false",
+		"intent_id": "FAILURE"
 	}]
 }
 

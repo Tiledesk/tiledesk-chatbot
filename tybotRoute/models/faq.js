@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var { nanoid } = require("nanoid");
+const winston = require('../utils/winston')
 //const { v4: uuidv4 } = require('uuid');
 var defaultFullTextLanguage = process.env.DEFAULT_FULLTEXT_INDEX_LANGUAGE || "none";
 
@@ -105,14 +106,10 @@ FaqSchema.index({ id_project: 1, id_faq_kb: 1, intent_display_name: 1  }, { uniq
 
  var faq = mongoose.model('faq', FaqSchema);
 
- //faq.on('index', function(error) {
-  // "_id index cannot be sparse"
-  //console.debug('index:', error);
-//});
 
 if (process.env.MONGOOSE_SYNCINDEX) {
   faq.syncIndexes();
-  console.info("faq syncIndexes")
+  winston.verbose("faq syncIndexes")
 }
 
 

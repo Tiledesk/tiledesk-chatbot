@@ -1,6 +1,8 @@
 let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
+const winston = require('../../utils/winston');
+const tilebotService = require('../../services/TilebotService');
 
 class DirMessageToBot {
 
@@ -17,14 +19,13 @@ class DirMessageToBot {
   }
 
   execute(directive, callback) {
-    // console.log("exec intent:", JSON.stringify(directive));
+    winston.verbose("Execute MessageToBot directive");
     let action;
     if (directive.action) {
-      // console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", directive);
+      winston.warn("DirMessageToBot Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -34,102 +35,22 @@ class DirMessageToBot {
   }
 
   go(action, callback) {
-    // console.log("message action intent:", action);
+    winston.debug("(DirMessageToBot) Action: ", action);
+    
     const message = action.message;
-    // const projectId = this.supportRequest.id_project;
-    // const requestId = this.supportRequest.request_id;
     const botId = this.supportRequest.bot_id;
 
     let outgoing_message = {
       "payload": message,
       "token": this.token
     }
-    if (this.log) {console.log("sending message:", JSON.stringify(outgoing_message));}
+    winston.debug("(DirMessageToBot) sending message: ", outgoing_message);
     
-    this.sendMessageToBot(this.TILEBOT_ENDPOINT, outgoing_message, botId, () => {
-      // console.log("(DirMessageToBot) sendMessageToBot() req_body sent");
+    tilebotService.sendMessageToBot(outgoing_message, botId, () => {
       callback(true);
     });
   }
 
-  /**
-   * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
-   * /${TILEBOT_ROUTE}/ext/${botId}
-   *
-   * @param {Object} message. The message to send
-   * @param {string} botId. Tiledesk botId
-   * @param {string} token. User token
-   */
-  sendMessageToBot(TILEBOT_ENDPOINT, message, botId, callback) {
-    const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
-    // console.log("sendMessageToBot URL", url);
-    const HTTPREQUEST = {
-      url: url,
-      headers: {
-        'Content-Type' : 'application/json'
-      },
-      json: message,
-      method: 'POST'
-    };
-    this.myrequest(
-      HTTPREQUEST,
-      function(err, resbody) {
-        if (err) {
-          if (callback) {
-            callback(err);
-          }
-        }
-        else {
-          if (callback) {
-            callback(null, resbody);
-          }
-        }
-      }, false
-    );
-  }
-
-  myrequest(options, callback, log) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-    .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({message: "Response status not 200"}, options, res), null, null);
-        }
-      }
-    })
-    .catch( (error) => {
-      console.error("(DirMessageToBot) Axios error: ", JSON.stringify(error));
-      if (callback) {
-        callback(error, null, null);
-      }
-    });
-  }
 }
 
 module.exports = { DirMessageToBot };

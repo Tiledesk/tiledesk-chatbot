@@ -32,7 +32,7 @@ const { DirWhatsappByAttribute } = require('./directives/DirWhatsappByAttribute'
 const { DirAskGPT } = require('./directives/DirAskGPT');
 const { DirQapla } = require('./directives/DirQapla');
 
-const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
 const { DirIfOnlineAgents } = require('./directives/DirIfOnlineAgents');
 const { DirReply } = require('./directives/DirReply');
 const { DirRandomReply } = require('./directives/DirRandomReply');
@@ -55,7 +55,10 @@ const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
+
+const winston = require('../utils/winston');
 
 class DirectivesChatbotPlug {
 
@@ -77,7 +80,6 @@ class DirectivesChatbotPlug {
     this.reply = config.reply;
     this.chatbot = config.chatbot;
     this.message = config.message;
-    // console.log("We have the support request:", JSON.stringify(this.supportRequest))
   }
 
   exec(pipeline) {
@@ -87,27 +89,24 @@ class DirectivesChatbotPlug {
       pipeline.nextplug();
       return;
     }
+
     const message_text = message.text;
-    if (this.log) { console.log("processing message:", message_text); }
+    winston.verbose("(DirectivesChatbotPlug) processing message: " + message_text);
+
     let parsed_result = TiledeskChatbotUtil.parseDirectives(message_text);
-    if (this.log) {
-      console.log("Message directives:", JSON.stringify(parsed_result));
-      console.log("Message text ripped from directives:", parsed_result.text);
-    }
+
+    winston.debug("(DirectivesChatbotPlug) Message directives: ", parsed_result);
+    winston.debug("(DirectivesChatbotPlug) Message text ripped from directives: " + parsed_result.text);
+
     if (parsed_result && parsed_result.directives && parsed_result.directives.length > 0) {
-      if (this.log) {console.log("Do not process more intents. Process directives and return");}
+      winston.verbose("(DirectivesChatbotPlug) Do not process more intents. Process directives and return");
       const text = parsed_result.text;
       message.text = text;
       this.directives = parsed_result.directives;
       this.processInlineDirectives(pipeline, () => {
-        if (this.log) { console.log("End process directives."); }
+        winston.verbose("(DirectivesChatbotPlug) End process directives.");
         pipeline.nextplug();
       });
-      //pipeline.nextplug();
-      /*this.processDirectives( () => {
-        console.log("End process directives.");
-        pipeline.nextplug();
-      });*/
     }
     else {
       pipeline.nextplug();
@@ -119,24 +118,22 @@ class DirectivesChatbotPlug {
     this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
-      if (this.log) { console.log("No directives to process."); }
+      winston.verbose("(DirectivesChatbotPlug) No directives to process.");
       this.theend();
       return;
     }
-    const supportRequest = this.supportRequest;
-    // console.log("supportRequest is:", JSON.stringify(supportRequest))
     
+    const supportRequest = this.supportRequest;    
     const token = this.token;
     const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
 
-    // const requestId = supportRequest.request_id
     let depId;
     if (supportRequest.department && supportRequest.department._id) {
-      if (this.log) {console.log("setting depId:", supportRequest.department._id);}
+      winston.debug("(DirectivesChatbotPlug) Setting depId: " + supportRequest.department._id);
       depId = supportRequest.department._id;
-      if (this.log) {console.log("depId is:", depId);}
     }
+
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
     let tdclient = null;
@@ -150,7 +147,7 @@ class DirectivesChatbotPlug {
       });
     }
     catch(err) {
-      console.log("An error occurred while creating TiledeskClient in DirectivesChatbotPlug:", err);
+      winston.error("(DirectivesChatbotPlug) An error occurred while creating TiledeskClient in DirectivesChatbotPlug: ", err);
     }
 
     this.context =  {
@@ -168,37 +165,29 @@ class DirectivesChatbotPlug {
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
       log: this.log
     }
-    if (this.log) {console.log("this.context.departmentId is:", this.context.departmentId);}
+    winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
     this.curr_directive_index = -1;
-    if (this.log) { console.log("processing directives...");}
+    winston.verbose("(DirectivesChatbotPlug) processing directives...");
     
     const next_dir = await this.nextDirective(directives);
-    if (this.log) { console.log("next_dir:", JSON.stringify(next_dir));}
+    winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
   }
 
   async nextDirective(directives) {
-    if (this.log) {console.log("....nextDirective() checkStep():");}
+    winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
     const go_on = await TiledeskChatbot.checkStep(
       this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME, this.log
     );
-    // const current_step = await TiledeskChatbot.currentStep(this.context.tdcache, this.context.requestId);
-    // if (this.log) {console.log("........nextDirective() currentStep:", current_step);}
+
     if (go_on.error) {
-      if (this.log) {console.log("go_on == false! nextDirective() Stopped!");}
+      winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
-    }
-    // else if (go_on == 2) {
-    //   return null;
-    // }
-    else { // continue with the next directive
-      // console.log("Go on!");
     }
     this.curr_directive_index += 1;
     if (this.curr_directive_index < directives.length) {
       let nextd = directives[this.curr_directive_index];
-      // console.log("nextd:", nextd);
       return nextd;
     }
     else {
@@ -224,39 +213,25 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    // console.log(".process(directive):", JSON.stringify(directive));
     let context = this.context;
-    // console.log(".this.context.reply", JSON.stringify(this.context.reply));
     if (directive) {
-      if (context.log) {
-        console.log("directive['name']:", directive["name"]);
-      }
+      winston.verbose("(DirectivesChatbotPlug) directive['name']: " + directive["name"]);
     }
     let directive_name = null;
     if (directive && directive.name) {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-      // console.log("Checking locks", JSON.stringify(directive));
-      // try {
-        const action_id = directive.action["_tdActionId"];
-        // console.log("Checking locked directive:", action_id, "for request:", this.supportRequest.request_id);
-        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        // console.log("locked_action_id:", locked_action_id);
-        if ( locked_action_id && (locked_action_id !== action_id) ) {
-          // console.log("Found locked action:", locked_action_id, "Skipping this action:", action_id);
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-          return;
-        }
-        else {
-          // go on
-          // console.log("Going on to next directive...");
-        }
-      
+      const action_id = directive.action["_tdActionId"];
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      if ( locked_action_id && (locked_action_id !== action_id) ) {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }      
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
-      if (context.log) { console.log("stop process(). directive is (null?):", directive);}
+      winston.debug("(DirectivesChatbotPlug) stop process(). directive is (null?): ", directive);
       this.theend();
     }
     else if (directive_name === Directives.DEPARTMENT) {
@@ -272,10 +247,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.INTENT) {
-      // console.log(".....DirIntent")
       new DirIntent(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIntent Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -287,7 +261,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.MESSAGE) {
       new DirMessage(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIntent Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -297,17 +271,15 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.REPLY) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.REPLY_V2) {
-      // console.log("...DirReplyV2");
       new DirReplyV2(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIntent Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -317,49 +289,42 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.DTMF_FORM) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.DTMF_MENU) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.BLIND_TRANSFER) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.SPEECH_FORM) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.PLAY_PROMPT) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.AUDIO_RECORD) {
-      // console.log("...DirReply");
       new DirReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.RANDOM_REPLY) {
-      // console.log("...DirRandomReply");
       new DirRandomReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -368,7 +333,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.IF_OPEN_HOURS) {
       new DirIfOpenHours(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIfOpenHours Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -378,25 +343,21 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.IF_ONLINE_AGENTS) {
-      // console.log("...DirIfOnlineAgents")
       new DirIfOnlineAgents(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIfOnlineAgents Stopping Actions on: ", directive);
           this.theend();
         }
         else {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
-        // let next_dir = await this.nextDirective(this.directives);
-        // this.process(next_dir);
       });
     }
     else if (directive_name === Directives.IF_ONLINE_AGENTS_V2) {
-      // console.log("...DirIfOnlineAgents")
       new DirIfOnlineAgentsV2(context).execute(directive, async (stop) => {
         if (stop) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirIfOnlineAgentsV2 Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -406,18 +367,15 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.FUNCTION_VALUE) {
-      // console.log("...DirAssignFromFunction")
       new DirAssignFromFunction(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.CONDITION) { // DEPRECATED
-      // console.log("...DirCondition");
       new DirCondition(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirCondition Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -427,11 +385,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.JSON_CONDITION) {
-      // console.log("...DirJSONCondition");
       new DirJSONCondition(context).execute(directive, async (stop) => {
-        // console.log("stop on condition?", stop);
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirJSONCondition Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -441,35 +397,30 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.ASSIGN) {
-      // console.log("...DirAssign", context.log);
       new DirAssign(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.SET_ATTRIBUTE) {
-      // console.log("...DirSetAttribute");
       new DirSetAttribute(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.SET_ATTRIBUTE_V2) {
-      // console.log("...DirSetAttribute");
       new DirSetAttributeV2(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.AGENT) {
-      // console.log("...DirMoveToAgent");
       new DirMoveToAgent(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.CLOSE) {
-      // console.log("Exec close()")
       new DirClose(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -500,7 +451,6 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.WAIT) {
-      // console.log("........ DirWait");
       new DirWait(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -525,25 +475,21 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.SEND_EMAIL) {
-      // console.log("...DirSendEmail");
       new DirSendEmail(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.WEB_REQUEST) {
-      // console.log("...DirWebRequest");
       new DirWebRequest(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.WEB_REQUEST_V2) {
-      // console.log("...DirWebRequestV2");
       new DirWebRequestV2(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirWebRequestV2 Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -553,11 +499,9 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.FORM) {
-      console.log("...DirForm");
       new DirForm(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on form?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirForm Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -567,21 +511,18 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CAPTURE_USER_REPLY) {
-      // console.log("...DirCaptureUserReply");
       new DirCaptureUserReply(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.CODE) {
-      // console.log("...DirCode", directive);
       new DirCode(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.DELETE) {
-      // console.log("got delete dir...")
       new DirDeleteVariable(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -589,9 +530,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_HELP_CENTER) {
       new DirDeflectToHelpCenter(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DeflectToHelpCenter stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirDeflectToHelpCenter Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -602,9 +542,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_GPT) {
       new DirAskGPT(context).execute(directive, async (stop) => {;
-        if (context.log) { console.log("AskGPT stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirAskGPT Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -615,9 +554,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.ASK_GPT_V2) {
       new DirAskGPTV2(context).execute(directive, async (stop) => {;
-        if (context.log) { console.log("AskGPTV2 stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -628,9 +566,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.GPT_TASK) {
       new DirGptTask(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("GPTTask stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirGptTask Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -641,9 +578,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.AI_PROMPT) {
       new DirAiPrompt(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("AiPrompt stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -661,7 +597,7 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.SEND_WHATSAPP) {
       new DirSendWhatsapp(context).execute(directive, async (stop) => {
         if (stop == true) {
-          if (context.log) { console.log("Stoppin Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirSendWhatsapp Stopping Actions on: ", directive);
           this.theend();
         } else {
           let next_dir = await this.nextDirective(this.directives);
@@ -671,9 +607,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.QAPLA) {
       new DirQapla(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DirQapla stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirQapla Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -684,9 +619,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.MAKE) {
       new DirMake(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("DirMake stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirMake Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -697,9 +631,8 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.HUBSPOT) {
       new DirHubspot(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("Hubspot stop?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirHubspot Stopping Actions on: ", directive);
           this.theend();
         } else {
           let next_dir = await this.nextDirective(this.directives);
@@ -720,11 +653,9 @@ class DirectivesChatbotPlug {
       })
     }
     else if (directive_name === Directives.GPT_ASSISTANT) {
-      // console.log("...GPT_ASSISTANT");
       new DirAssistant(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("stop on condition?", stop);}
         if (stop == true) {
-          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          winston.debug("(DirectivesChatbotPlug) DirAssistant Stopping Actions on: ", directive);
           this.theend();
         }
         else {
@@ -734,7 +665,6 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONTACT_UPDATE) {
-      // console.log("...CONTACT_UPDATE");
       new DirContactUpdate(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
@@ -753,17 +683,27 @@ class DirectivesChatbotPlug {
       });
     }
     else if (directive_name === Directives.CONNECT_BLOCK) {
-      // console.log(".....DirIntent")
       new DirConnectBlock(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
     }
     else if (directive_name === Directives.ADD_TAGS) {
-      // console.log(".....DirAddTags")
       new DirAddTags(context).execute(directive, async (stop) => {
-        if (context.log) { console.log("GPTTask stop?", stop);}
         if (stop == true) {
+          winston.debug("(DirectivesChatbotPlug) DirAddTags Stopping Actions on: ", directive);
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
           if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
           this.theend();
         }
@@ -773,8 +713,13 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.WEB_RESPONSE) {
+      new DirWebResponse(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else {
-      //console.log("Unhandled Post-message Directive:", directive_name);
       let next_dir = await this.nextDirective(this.directives);
       this.process(next_dir);
     }
@@ -784,7 +729,7 @@ class DirectivesChatbotPlug {
   processInlineDirectives(pipeline, theend) {
     const directives = this.directives;
     if (!directives || directives.length === 0) {
-      console.log("No directives to process.");
+      winston.verbose("(DirectivesChatbotPlug) No directives to process.");
       return;
     }
     const supportRequest = this.supportRequest;
@@ -804,10 +749,10 @@ class DirectivesChatbotPlug {
       log: false
     });
     let i = -1;
-    if (this.log) { console.log("processing Inline directives:", directives); }
+    winston.debug("(DirectivesChatbotPlug) processing Inline directives: ", directives);
     const process = (directive) => {
       if (directive) {
-        if (this.log) {console.log("__directive.name:", directive.name);}
+        winston.debug("(DirectivesChatbotPlug) __directive.name: " + directive.name);
       }
       let directive_name = null;
       if (directive && directive.name) {
@@ -816,18 +761,6 @@ class DirectivesChatbotPlug {
       if (directive == null) {
         theend();
       }
-      // else if (directive_name === Directives.WHEN_OFFLINE_HOURS) { // DEPRECATED
-      //   const offlineHoursDir = new DirOfflineHours(tdclient);
-      //   offlineHoursDir.execute(directive, pipeline, () => {
-      //     process(nextDirective());
-      //   });
-      // }
-      // else if (directive_name === Directives.DISABLE_INPUT_TEXT) { // DEPRECATED => will change in a "message-option" --disableInput
-      //   const disableInputTextDir = new DirDisableInputText();
-      //   disableInputTextDir.execute(directive, pipeline, () => {
-      //     process(nextDirective());
-      //   });
-      // }
       else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
         const helpDir = new DirDeflectToHelpCenter({HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId});
         helpDir.execute(directive, pipeline, 3, () => {

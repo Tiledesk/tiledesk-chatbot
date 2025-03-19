@@ -4,9 +4,10 @@ const tybot = require("..");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
+const winston = require('../utils/winston');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
-  console.error("General error", err);
+  winston.error("General error", err);
 });
 require('dotenv').config();
 const bodyParser = require('body-parser');
@@ -16,7 +17,8 @@ const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../models/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
+const tilebotService = require('../services/TilebotService');
 
 let SERVER_PORT = 10001
 
@@ -27,7 +29,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
   before(() => {
     return new Promise(async (resolve, reject) => {
-      console.log("Starting tilebot server...");
+      winston.info("Starting tilebot server...");
       try {
         tybot.startApp(
           {
@@ -40,16 +42,16 @@ describe('Conversation for AskGPTV2 test', async () => {
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
             log: process.env.TILEBOT_LOG
           }, () => {
-            console.log("Tilebot route successfully started.");
+            winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
-              console.log('Tilebot connector listening on port ', port);
+              winston.info('Tilebot connector listening on port ' + port);
               resolve();
             });
           });
       }
       catch (error) {
-        console.error("error:", error)
+        winston.error("error:", error)
       }
 
     })
@@ -57,7 +59,6 @@ describe('Conversation for AskGPTV2 test', async () => {
 
   after(function (done) {
     app_listener.close(() => {
-      // console.log('ACTIONS app_listener closed.');
       done();
     });
   });
@@ -80,7 +81,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
@@ -210,7 +210,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     })
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -226,8 +226,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -250,7 +250,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -384,7 +383,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     })
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -400,8 +399,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -424,7 +423,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -558,7 +556,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -574,8 +572,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -599,7 +597,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -717,7 +714,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -733,8 +730,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -758,7 +755,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -876,7 +872,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -892,8 +888,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -916,7 +912,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
@@ -1040,7 +1035,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1056,8 +1051,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1080,7 +1075,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          //console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "this is mock gpt reply");
           listener.close(() => {
@@ -1184,7 +1178,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1200,8 +1194,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        //console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1224,7 +1218,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -1335,7 +1328,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1351,8 +1344,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1490,7 +1483,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1506,8 +1499,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1532,7 +1525,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -1561,7 +1553,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1577,8 +1569,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1603,7 +1595,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -1634,7 +1625,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1650,8 +1641,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1675,7 +1666,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           listener.close(() => {
@@ -1713,7 +1703,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1729,8 +1719,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
@@ -1743,7 +1733,6 @@ describe('Conversation for AskGPTV2 test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", JSON.stringify(message, null, 2))
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
@@ -1755,7 +1744,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           assert(attributes["flowError"] === "AskGPT Error: namespace not found");
@@ -1825,7 +1813,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1841,8 +1829,8 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   })
@@ -1855,7 +1843,6 @@ describe('Conversation for AskGPTV2 test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", JSON.stringify(message, null, 2))
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
@@ -1867,7 +1854,6 @@ describe('Conversation for AskGPTV2 test', async () => {
           assert.ok(false);
         }
         else {
-          // console.log("final attributes:", JSON.stringify(attributes));
           assert(attributes);
           assert(attributes["gpt_reply"] === "No answers");
           assert(attributes["flowError"] === "AskGPT Error: namespace not found");
@@ -1937,7 +1923,7 @@ describe('Conversation for AskGPTV2 test', async () => {
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      // console.log('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
@@ -1953,114 +1939,9 @@ describe('Conversation for AskGPTV2 test', async () => {
         },
         "token": "XXX"
       }
-      sendMessageToBot(request, BOT_ID, () => {
-        // console.log("Message sent:\n", request);
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
       });
     });
   })
 });
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} message. The message to send
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-function sendMessageToBot(message, botId, callback) {
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
-  // console.log("sendMessageToBot URL", url);
-  const HTTPREQUEST = {
-    url: url,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    json: message,
-    method: 'POST'
-  };
-  myrequest(
-    HTTPREQUEST,
-    function (err, resbody) {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-      }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-      }
-    }, false
-  );
-}
-
-/**
- * A stub to get the request parameters, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
- *
- * @param {string} requestId. Tiledesk chatbot/requestId parameters
- */
-// function getChatbotParameters(requestId, callback) {
-//   const url = `${process.env.TILEBOT_ENDPOINT}/ext/parameters/requests/${requestId}?all`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     method: 'get'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
-
-function myrequest(options, callback, log) {
-  if (log) {
-    console.log("API URL:", options.url);
-    console.log("** Options:", JSON.stringify(options));
-  }
-  axios(
-    {
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    })
-    .then((res) => {
-      if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    })
-    .catch((error) => {
-      // console.error("An error occurred:", error);
-      if (callback) {
-        callback(error, null, null);
-      }
-    });
-}

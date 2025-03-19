@@ -1,7 +1,7 @@
 var assert = require('assert');
 const { ExtUtil } = require('../ExtUtil');
-const { IntentForm } = require('../models/IntentForm');
-const { MockTdCache } = require('../models/MockTdCache');
+const { IntentForm } = require('../engine/IntentForm');
+const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
 
 const TYPE_PREFIX = "_tdTypeOf:";
@@ -35,7 +35,6 @@ describe('IntentForm', function() {
     const REQUEST_ID = "support-group-PROJECT_X-" + uuidv4().replace(/-/g, "");
 
     const chatbot = new Chatbot();
-    // console.log("executing intent form...")
     let intentForm = new IntentForm(
       {
         form: form,
@@ -45,7 +44,6 @@ describe('IntentForm', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger form message");
-    // console.log("Got form first field label:", form_reply1)
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     // it replies with the next label (aka question)
@@ -94,7 +92,6 @@ describe('IntentForm', function() {
     const REQUEST_ID = "support-group-PROJECT_X-" + uuidv4().replace(/-/g, "");
 
     const chatbot = new Chatbot();
-    // console.log("executing intent form...")
     let intentForm = new IntentForm(
       {
         form: form,
@@ -104,7 +101,6 @@ describe('IntentForm', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Start");
-    // console.log("got form reply", form_reply1)
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     // it replies with the next label (aka question)

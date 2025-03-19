@@ -1,3 +1,5 @@
+const winston = require('../utils/winston');
+
 class MessagePipeline {
 
   /**
@@ -29,24 +31,18 @@ class MessagePipeline {
   /*
 exec(completionCallback) {
     this.completionPromise = new Promise((resolve, reject) => {
-      console.log("The context", context)
       const plug = this.nextplug();
       if (!plug) {
-        console.log("NO PLUGS!");
         if (completionCallback) {
-            console.log("completionCallback found.");
             completionCallback();
           }
-          console.log("Resolving...", this.message);
           return resolve();
       }
       else {
         plug.exec(this, () => {
           if (completionCallback) {
-            console.log("completionCallback found.");
             completionCallback();
           }
-          console.log("Resolving...", this.message);
           return resolve();
         });
       }
@@ -58,14 +54,10 @@ exec(completionCallback) {
   /*execOn(message, context, completionCallback) {
     return new Promise((resolve, reject) => {
       this.message = message;
-      console.log("The context", context)
       this.process(this.nextplug(), context, (message) => {
-        console.log("All plugs processed.", message)
         if (completionCallback) {
-          console.log("completionCallback found.")
           completionCallback(message);
         }
-        console.log("Resolving...", message)
         return resolve(message);
       });
     });
@@ -84,27 +76,25 @@ exec(completionCallback) {
 
   nextplug() {
     this.counter += 1;
-    if (this.log) {console.log(`processing plug[${this.counter}]`);}
+    winston.verbose("(MessagePipeline) processing plug: " + this.coounter);
     if (this.counter < this.plugs.length) {
-      if (this.log) {console.log("Still plugs...")}
+      winston.verbose("(MessagePipeline) Still plugs...")
       let nextp = this.plugs[this.counter];
       nextp.exec(this);
     }
     else {
-      if (this.log) {console.log("no more plugs");}
+      winston.verbose("(MessagePipeline) no more plugs");
       this.resolve(this.message);
     }
   }
   /*
   nextplug() {
     this.counter += 1;
-    console.log(`processing plug[${this.counter}]`);
     if (this.counter < this.plugs.length) {
       let nextp = this.plugs[this.counter];
       return nextp;
     }
     else {
-      console.log("no more plugs");
       return null;
     }
   }

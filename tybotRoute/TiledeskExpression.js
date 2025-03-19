@@ -1,4 +1,5 @@
 const {VM} = require('vm2');
+const winston = require('./utils/winston');
 
 class TiledeskExpression {
     // rules:
@@ -234,12 +235,8 @@ class TiledeskExpression {
 
     // public
     evaluateExpression(_expression, variables) {
-        // console.log("Original expression:", _expression);
         let expression = String(_expression).replace(/\$/g, "$data.");
-        // console.log("Evaluating expression:", expression);
-        // console.log("With variables:", JSON.stringify(variables));
         const result = new TiledeskExpression().evaluate(expression, variables);
-        // console.log("Expression result:", result);
         return result;
     }
 
@@ -250,8 +247,6 @@ class TiledeskExpression {
     }
 
     evaluateJavascriptExpression(expression, context) {
-        // console.log("(evaluateJavascriptExpression) evaluating:", expression)
-        // console.log("context:", context)
         let res = null;
         try {
             const vm = new VM({
@@ -260,10 +255,9 @@ class TiledeskExpression {
                 sandbox: context
             });
             res = vm.run(`let $data = this;${expression}`);
-            // console.log("res=", res)
         }
         catch (err) {
-            // console.error("(evaluateJavascriptExpression) TiledeskExpression.evaluate() error:", err.message, "- while evaluating the following expression: '" + expression + "'");
+            winston.error("(TiledeskExpression) evaluateJavascriptExpression error: " + err.message + " - while evaluating the following expression: '" + expression + "'");
         }
         return res;
     }
@@ -273,10 +267,8 @@ class TiledeskExpression {
         if(!operands) {
             return null;
         }
-        // console.log("operands are:", JSON.stringify(operands))
         let expression = operands[0].isVariable ? TiledeskExpression.variableOperand(operands[0].value) : TiledeskExpression.quotedString(operands[0].value);
             expression = operands[0].function ? TiledeskExpression.applyFunctionToOperand(expression, operands[0].function) : expression;
-        // console.log("expression is:", expression)
 
         if (operands.length === 1) {        
             return expression;
@@ -286,12 +278,7 @@ class TiledeskExpression {
                 const applyPattern = operator.applyPattern;
                 let operand = operands[i + 1].isVariable ? TiledeskExpression.variableOperand(operands[i + 1].value) : TiledeskExpression.quotedString(operands[i + 1].value);
                 operand = operands[i + 1].function ? TiledeskExpression.applyFunctionToOperand(operand, operands[i + 1].function) : operand;
-                // console.log("1. expression is:", expression)
-                // console.log("operand is:", operand)
-                
                 expression = applyPattern.replace("#1", expression).replace("#2", operand);
-                // console.log("2. expression is:", expression)
-                
             }
             return expression;
         }
@@ -303,8 +290,6 @@ class TiledeskExpression {
         const operator = TiledeskExpression.OPERATORS[function_name];
         const applyPattern = operator.applyPattern;
         expression += applyPattern.replace("#1", operand);
-        // console.log("operand is:", operand);
-        // console.log("expression is:", expression);
         return expression;
     }
 
@@ -325,8 +310,6 @@ class TiledeskExpression {
 
     // DEPRECATED
     evaluate(expression, context) {
-        // console.log("evaluating:", expression)
-        // console.log("context:", context)
         let res;
         try {
             const vm = new VM({
@@ -343,27 +326,19 @@ class TiledeskExpression {
     }
 
     static JSONConditionToExpression(condition, variables) {
-        // console.log("condition:", condition);
-        // console.log("condition.operand1:", condition.operand1);
-        // console.log("condition.operand2:", condition.operand2);
         const operator_name = condition.operator;
         const operator = TiledeskExpression.OPERATORS[operator_name];
-        // console.log("operator:", operator);
         const applyPattern = operator.applyPattern;
-        // console.log("applyPattern:", applyPattern);
         let operand1_s;
         let is_valid_operand1 = TiledeskExpression.validateVariableName(condition.operand1);
-        // console.log("is_valid_operand1:", condition.operand1, is_valid_operand1);
         if (is_valid_operand1) {
             operand1_s = TiledeskExpression.variableOperand(condition.operand1);
-            // console.log("operand1_s:", operand1_s);
         }
         else {
-            console.error("Condition evaluation stopped because of invalid operand1", condition.operand1);
+            winston.error("(TiledeskExpression) Condition evaluation stopped because of invalid operand1 " + condition.operand1);
             return null;
         }
         
-        // console.log("operand1_s:", operand1_s);
         let operand2_s;
         if (condition.operand2 && condition.operand2.type && condition.operand2.type === "const") {
             operand2_s = TiledeskExpression.stringValueOperand(condition.operand2.value, variables);
@@ -374,41 +349,32 @@ class TiledeskExpression {
                 operand2_s = TiledeskExpression.variableOperand(condition.operand2.name);
             }
             else {
-                console.error("Condition evaluation stopped because of invalid operand2", condition.operand2);
+                winston.error("(TiledeskExpression)Condition evaluation stopped because of invalid operand2 " + condition.operand2);
                 return null;
             }
         }
         else {
-            console.error("Condition evaluation stopped because of: No operand2", JSON.stringify(condition));
+            winston.error("(TiledeskExpression) Condition evaluation stopped because of: No operand2 on condition ", condition);
             return null;
         }
         
-        // console.log("operand1_s, operand2_s:",operand1_s, operand2_s);
         const expression = applyPattern.replace("#1", operand1_s).replace("#2", operand2_s);
-        // console.log("operand1_s is:", operand1_s);
-        // console.log("operand2_s is:", operand2_s);
-        // console.log("expression is:", expression);
         return expression;
     }
 
     static JSONGroupToExpression(group, variables) {
-        // console.log("attributes:", variables);
         let conditions = group.conditions;
         let group_expression = "";
-        // console.log("conditions:", conditions)
         for(let i = 0; i < conditions.length; i++) {
             let part = conditions[i];
             if (part.type === "condition") {
                 let expression = TiledeskExpression.JSONConditionToExpression(part, variables);
-                // console.log("returned expression:", expression);
                 if (expression === null) {
-                    // console.error("Invalid JSON expression", JSON.stringify(part));
                     return null;
                 }
                 group_expression += expression;
             }
             else if (part.type === "operator") {
-                // console.log("operator part:", part);
                 const operator = TiledeskExpression.OPERATORS[part.operator];
                 group_expression += operator.applyPattern;
             }
@@ -418,13 +384,12 @@ class TiledeskExpression {
 
     static JSONGroupsToExpression(groups, variables) {
         let full_expression = "";
-        // console.log("groups:", groups)
         for(let i = 0; i < groups.length; i++) {
             let g = groups[i];
             if (g.type === "expression") {
                 let group_expression = TiledeskExpression.JSONGroupToExpression(g, variables);
                 if (group_expression === null) {
-                    console.error("Invalid JSON Group expression", JSON.stringify(g));
+                    winston.error("(TiledeskExpression) Invalid JSON Group expression ", g);
                     return null;
                 }
                 full_expression += group_expression;
@@ -443,11 +408,8 @@ class TiledeskExpression {
     }
 
     static validateVariableName(variableName) {
-        // console.log("variableName", variableName)
-        // console.log("type of variableName:", typeof variableName);
         // let matches = variableName.match(/^[a-zA-Z_]*[a-zA-Z_]+[a-zA-Z0-9_]*$/gm);
         let matches = variableName.match(/^[a-zA-Z_]+.*$/gm);
-        // console.log("matches:", matches)
         if (matches !== null) {
             return true;
         }
@@ -466,13 +428,10 @@ class TiledeskExpression {
             return TiledeskExpression.quotedString(operand);
         }
         else {
-            // console.log("vars!", variables)
             let _operand = operand.trim();
             let operandAsString = TiledeskExpression.quotedString(operand); //"\"" + JSON.stringify(operand) + "\"";
             if (_operand.startsWith("$")) {
-                // console.log("_operand with $", _operand);
                 let varName = _operand.replace(/\$/g, "");
-                // console.log("varName:", varName);
                 let value = variables[varName];
                 if (value) {
                     operandAsString = TiledeskExpression.quotedString(value); //'"' + JSON.stringify(value) + '"';

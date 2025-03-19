@@ -1,5 +1,6 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirFireTiledeskEvent {
 
@@ -22,6 +23,7 @@ class DirFireTiledeskEvent {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute FireTiledeskEvent directive");
     if (directive.parameter) {
       const params = this.parseParams(directive.parameter);
       const event_name = params.name;
@@ -31,15 +33,13 @@ class DirFireTiledeskEvent {
       }
       this.tdClient.fireEvent(event, function(err, result) {
           if (err) {
-              console.error("An error occurred invoking an event:", err);
+              winston.error("(FireTiledeskEvent) An error occurred invoking an event: ", err);
           }
           callback();
       });
     }
     else {
-      if (this.log) {
-        console.log("DirFireTiledeskEvent: no parameter");
-      }
+      winston.verbose("(DirFireTiledeskEvent) no parameter");
       callback();
     }
   }

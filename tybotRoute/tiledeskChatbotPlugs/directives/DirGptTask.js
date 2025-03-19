@@ -1,11 +1,14 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../models/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
+const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
+const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirGptTask {
 
@@ -17,19 +20,21 @@ class DirGptTask {
     this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("GptTask directive: ", directive); }
+    winston.verbose("Execute GptTask directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirGptTask Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -39,9 +44,9 @@ class DirGptTask {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirGptTask action:", JSON.stringify(action)); }
+    winston.debug("(DirGptTask) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirGptTask tdcache is mandatory");
+      winston.error("(DirGptTask) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -53,19 +58,17 @@ class DirGptTask {
     let falseIntentAttributes = action.falseIntentAttributes;
     let transcript;
 
-    if (this.log) {
-      console.log("DirGptTask trueIntent", trueIntent)
-      console.log("DirGptTask falseIntent", falseIntent)
-      console.log("DirGptTask trueIntentAttributes", trueIntentAttributes)
-      console.log("DirGptTask falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("(DirGptTask) trueIntent " + trueIntent)
+    winston.debug("(DirGptTask) falseIntent " + falseIntent)
+    winston.debug("(DirGptTask) trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("(DirGptTask) falseIntentAttributes " + falseIntentAttributes)
 
     // default value
     let answer = "No answer.";
     let model = "gpt-3.5-turbo";
 
     if (!action.question || action.question === '') {
-      console.error("Error: DirGptTask question attribute is mandatory. Executing condition false...")
+      winston.debug("(DirGptTask) Error: question attribute is mandatory. Executing condition false...")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "GPT Error: question attribute is undefined");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -93,43 +96,41 @@ class DirGptTask {
       model = action.model;
     }
 
-    if (this.log) {
-      console.log("DirGptTask max_tokens: ", max_tokens);
-      console.log("DirGptTask temperature: ", temperature);
-    }
+    winston.debug("(DirGptTask) max_tokens: " + max_tokens);
+    winston.debug("(DirGptTask) temperature: " + temperature);
 
     if (action.history) {
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
-      if (this.log) { console.log("DirGptTask transcript string: ", transcript_string) }
+        winston.debug("(DirGptTask)  transcript string: " + transcript_string)
 
       if (transcript_string) {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-        if (this.log) { console.log("DirGptTask transcript: ", transcript) }
+        winston.debug("(DirGptTask)  transcript: ", transcript)
       } else {
-        if (this.log) { console.log("DirGptTask transcript_string is undefined. Skip JSON translation for chat history") }
+        winston.debug("(DirGptTask)  transcript_string is undefined. Skip JSON translation for chat history");
       }
     }
 
     const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
-    if (this.log) { console.log("DirGptTask openai_url ", openai_url); }
+    winston.debug("(DirGptTask)  openai_url " + openai_url);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
+      winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
-      if (this.log) { console.log("DirGptTask - Retrieve public gptkey")}
+      winston.debug("(DirGptTask)  - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
     }
 
     if (!key) {
-      console.error("DirGptTask gptkey is mandatory");
+      winston.error("(DirGptTask) gptkey is mandatory");
       await this.#assignAttributes(action, answer);
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "GPT Error: gpt apikey is undefined");
@@ -144,7 +145,7 @@ class DirGptTask {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
-        if (this.log) { console.log("DirGptTask - Quota exceeded for tokens. Skip the action")}
+
         await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback();
@@ -183,7 +184,7 @@ class DirGptTask {
       }
     }
     
-    if (this.log) { console.log("DirGptTask json: ", json) }
+    winston.debug("(DirGptTask) json: ", json)
 
     const HTTPREQUEST = {
       url: openai_url,
@@ -194,14 +195,13 @@ class DirGptTask {
       json: json,
       method: 'POST'
     }
-    if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
-    this.#myrequest(
+    winston.debug("(DirGptTask) HttpRequest: ", HTTPREQUEST);
+    
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          if (this.log) {
-            console.error("(httprequest) DirGptTask openai err:", err);
-            console.error("(httprequest) DirGptTask openai err:", err.response?.data?.error?.message);
-          }
+          winston.debug("(DirGptTask) openai err: ", err);
+          winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
@@ -212,7 +212,7 @@ class DirGptTask {
           callback();
           return;
         } else {
-          if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
+          winston.debug("(DirGptTask) resbody: ", resbody);
           answer = resbody.choices[0].message.content;
 
           if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
@@ -274,7 +274,7 @@ class DirGptTask {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirGptTask) No trueIntentDirective specified"); 
         if (callback) {
           callback();
         }
@@ -289,7 +289,7 @@ class DirGptTask {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirGptTask) No falseIntentDirective specified"); 
         if (callback) {
           callback();
         }
@@ -298,101 +298,14 @@ class DirGptTask {
   }
 
   async #assignAttributes(action, answer) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-    }
+    winston.debug("(DirGptTask) assignAttributes action: ", action)
+    winston.debug("(DirGptTask) assignAttributes answer: " + answer)
+
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(gpttask) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
-  }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirGptTask) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
   }
 
   async getKeyFromKbSettings() {
@@ -406,15 +319,12 @@ class DirGptTask {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
+      winston.debug("(DirGptTask) KB HttpRequest ", KB_HTTPREQUEST); 
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err.message);
-            if (this.log) {
-              console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
-            }
+            winston.error("(DirGptTask) Get KnowledgeBase err:", err.message);
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -439,9 +349,9 @@ class DirGptTask {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("(DirGptTask) check quote availability HttpRequest ", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
             resolve(true)
@@ -469,15 +379,15 @@ class DirGptTask {
         json: tokens_usage,
         method: "POST"
       }
-      if (this.log) { console.log("DirGptTask check quote availability HTTPREQUEST", HTTPREQUEST); }
+      winston.debug("(DirGptTask) update quote HttpRequest ", HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            console.error("(httprequest) DirGptTask Increment tokens quote err: ", err);
+            winston.debug("(DirGptTask) Increment tokens quote err: ", err);
             reject(false)
           } else {
-            if (this.log) { console.log("(httprequest) DirGptTask Increment token quote resbody: ", resbody); }
+            winston.debug("(DirGptTask)  Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }

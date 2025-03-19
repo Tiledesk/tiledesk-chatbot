@@ -1,4 +1,5 @@
 let axios = require('axios');
+const winston = require('../utils/winston');
 
 class WebhookChatbotPlug {
 
@@ -12,32 +13,32 @@ class WebhookChatbotPlug {
   exec(pipeline) {
     let answer = pipeline.message;
     let context = pipeline.context;
-    if (this.log) {console.log("WEBHOOK?", answer.attributes.webhook);}
+    winston.verbose("(WebhookChatbotPlug) webhook" + answer.attributes.webhook);
     if (answer.attributes && answer.attributes.webhook && answer.attributes.webhook === true) {
-      if (this.log) {console.log("EXECUTING WEBHOOK URL!", this.webhookurl);}
-      if (this.log) {console.log("EXECUTING WEBHOOK ON CONTEXT:", JSON.stringify(context));}
+      winston.debug("(WebhookChatbotPlug) Executing webhook url " + this.webhookurl);
+      winston.debug("(WebhookChatbotPlug) Executing webhook on context: ", context);
       if (!this.validWebhookURL(this.webhookurl)) {
-        if (this.log) {console.error("(WebhookChatbotPlug) Error. Invalid webhook URL:", this.webhookurl, "on context:", JSON.stringify(context));}
+        winston.error("(WebhookChatbotPlug) Error. Invalid webhook URL: " + this.webhookurl + " on context: " + JSON.stringify(context));
         pipeline.nextplug();
         return;
       }
       this.execWebhook(answer, context, this.webhookurl, (err, message_from_webhook) => {
-        if (this.log) {console.log("message_from_webhook:", message_from_webhook);}
+        winston.debug("(WebhookChatbotPlug) message_from_webhook:", message_from_webhook);
         if (err) {
-          console.error("Error calling webhook:", this.webhookurl)
+          winston.error("(WebhookChatbotPlug) Error calling webhook:", this.webhookurl)
           pipeline.nextplug();
         }
         else {
-          if (this.log) {console.log("Webhook successfully end:", message_from_webhook);}
+          winston.debug("(WebhookChatbotPlug) Webhook successfully end:", message_from_webhook);
           const pipeline_original_message = pipeline.message
-          if (this.log) {console.log("pipeline.message before webhook", JSON.stringify(pipeline.message));}
+          winston.debug("(WebhookChatbotPlug) pipeline.message before webhook", pipeline.message);
 
           // **** setting message from webhook,
           // **** MERGING with original not overwritten data, manually
           pipeline.message = message_from_webhook;
           // restore on message the original intent_info, necessary FOR further processING the message in the plugs pipeline
           if (pipeline.message && !pipeline.message.attributes) {
-            if (this.log) {console.log("!pipeline.message.attributes", pipeline.message.attributes);}
+            winston.debug("(WebhookChatbotPlug) !pipeline.message.attributes", pipeline.message.attributes);
             pipeline.message.attributes = {};
           }
           pipeline.message.attributes.intent_info = pipeline_original_message.attributes.intent_info;
@@ -59,11 +60,11 @@ class WebhookChatbotPlug {
       });
     }
     else {
-      if (this.log) {console.log("NO WEBHOOK!");}
+      winston.verbose("(WebhookChatbotPlug) No Webhook!");
       pipeline.nextplug();
       return;
     }
-    if (this.log) {console.log("Start processing webhook...");}
+    winston.verbose("(WebhookChatbotPlug) Start processing webhook...");
   }
   
   validWebhookURL(webhookurl) {
@@ -74,10 +75,8 @@ class WebhookChatbotPlug {
   }
 
   execWebhook(reply_message, context, webhookurl, callback) {
-    if (this.log) {
-      console.log("WEBHOOK. on context", JSON.stringify(context));
-      console.log("WEBHOOK. on message", JSON.stringify(reply_message));
-    }
+    winston.debug("(WebhookChatbotPlug) Webhook on context ", context);
+    winston.debug("(WebhookChatbotPlug) WEBHOOK on message ", reply_message);
     const HTTPREQUEST = {
       url: webhookurl,
       headers: {
@@ -92,7 +91,7 @@ class WebhookChatbotPlug {
       HTTPREQUEST,
       function(err, res) {
         if (err || (res && res.status >= 400) || (res && !res.data)) {
-          console.error("An error occurred calling intent's webhook url:", webhookurl);
+          winston.error("(WebhookChatbotPlug) An error occurred calling intent's webhook url: " + webhookurl);
           if (callback) {
             callback(reply_message);
           }
@@ -104,72 +103,6 @@ class WebhookChatbotPlug {
         }
       }, this.log
     );
-
-    /*
-    return request({                    
-                    uri :  webhookurl,
-                    headers: {
-                        'Content-Type' : 'application/json', 
-                        'User-Agent': 'tiledesk-bot',
-                        'Origin': webhook_origin
-                         //'x-hook-secret': s.secret
-                       },
-                    method: 'POST',
-                    json: true,
-                    body: {payload:{text: text, bot: bot, message: message, intent: faq}, token: token},
-                    // }).then(response => {
-                    }, function(err, response, json){
-                        if (err) {
-                            winston.error("Error from webhook reply of getParsedMessage. Return standard reply", err);
-
-                            return resolve(messageReply);
-
-                            // return error
-                            
-                        }
-                         if (response.statusCode >= 400) {      
-                            winston.verbose("The ChatBot webhook return error http status code. Return standard reply", response);            
-                            return resolve(messageReply);
-                        }
-
-                        if (!json) { //the webhook return empty body
-                            winston.verbose("The ChatBot webhook return no json. Return standard reply", response);
-                            return resolve(messageReply);
-                        }
-                       
-                        winston.debug("webhookurl repl_message ", response);
-
-                        var text = undefined;
-                        if(json && json.text===undefined) {
-                            winston.verbose("webhookurl json is defined but text not. return standard reply",{json:json, response:response});
-                            // text = 'Field text is not defined in the webhook respose of the faq with id: '+ faq._id+ ". Error: " + JSON.stringify(response);
-                            return resolve(messageReply);
-                        }else {
-                            text = json.text;
-                        }
-                        winston.debug("webhookurl text:  "+ text);
-
-                        // // let cloned_message = Object.assign({}, messageReply);
-                        // let cloned_message =  message;
-                        // winston.debug("cloned_message :  ",cloned_message);
-
-                        // if (json.attributes) {
-                        //     if (!cloned_message.attributes) {
-                        //         cloned_message.attributes = {}
-                        //     }
-                        //     winston.debug("ChatBot webhook json.attributes: ",json.attributes);
-                        //     for(const [key, value] of Object.entries(json.attributes)) {
-                        //         cloned_message.attributes[key] = value
-                        //     }
-                        // }
-
-                        // winston.debug("cloned_message after attributes:  ",cloned_message);
-
-                        that.parseMicrolanguage(text, message, bot, faq, true, json).then(function(bot_answer) {
-                            return resolve(bot_answer);
-                        });
-                    });
-    */
   }
 
   // ************************************************
@@ -178,8 +111,8 @@ class WebhookChatbotPlug {
 
   static myrequest(options, callback, log) {
     if (log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
+      winston.debug("(WebhookChatbotPlug) myrequest API URL:" + options.url);
+      winston.debug("(WebhookChatbotPlug) myrequest Options:", options);
     }
     axios(
       {
@@ -190,17 +123,16 @@ class WebhookChatbotPlug {
       })
     .then(function (res) {
       if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        // console.log("******** Response for url:", JSON.stringify(res));
-        console.log("Response body:\n", JSON.stringify(res.data));
+        winston.debug("(WebhookChatbotPlug) myrequest Response for url:", options.url);
+        winston.debug("(WebhookChatbotPlug) myrequest Response headers:\n", res.headers);
+        winston.debug("(WebhookChatbotPlug) myrequest Response body:\n", res.data);
       }
       if (callback) {
         callback(null, res);
       }
     })
     .catch(function (error) {
-      console.error("(WebhookChatbotPlug) Axios error: ", JSON.stringify(error));
+      winston.debug("(WebhookChatbotPlug) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null, null);
       }

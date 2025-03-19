@@ -58,6 +58,8 @@ class Directives {
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
   static ADD_TAGS = 'add_tags'
+  static WEBHOOK = 'webhook';
+  static WEB_RESPONSE = "web_response";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
@@ -73,13 +75,10 @@ class Directives {
   // static CONDITION = "condition"; // DEPRECATED
 
   static actionToDirective(action) {
-    // console.log("actionToDirective:", action);
     let directive = {
       name: action["_tdActionType"],
       action: action
     }
-    // delete directive.action["_tdActionType"];
-    // console.log("Directive out:", directive);
     return directive;
   }
 }

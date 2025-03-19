@@ -1,8 +1,9 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const httpUtils = require("../../utils/HttpUtils");
 require('dotenv').config();
 
 class DirGptTask {
@@ -98,8 +99,8 @@ class DirGptTask {
       method: "GET"
     }
     if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-    this.#myrequest(
+    
+    httpUtils.request(
       INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
         if (err) {
           if (callback) {
@@ -133,7 +134,7 @@ class DirGptTask {
             }
             if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
 
-            this.#myrequest(
+            httpUtils.request(
               KB_HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                   if (callback) {
@@ -199,7 +200,7 @@ class DirGptTask {
                       method: 'POST'
                     }
                     if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
-                    this.#myrequest(
+                    httpUtils.request(
                       HTTPREQUEST, async (err, resbody) => {
                         if (err) {
                           if (this.log) {
@@ -267,7 +268,7 @@ class DirGptTask {
               method: 'POST'
             }
             if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
-            this.#myrequest(
+            httpUtils.request(
               HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                   if (this.log) {
@@ -381,54 +382,7 @@ class DirGptTask {
       }
     }
   }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        // console.error("An error occurred:", JSON.stringify(error.data));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
+  
 }
 
 module.exports = { DirGptTask }
