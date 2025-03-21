@@ -99,7 +99,7 @@ class DirAssistant {
       assistantId = filler.fill(_assistantId, requestAttributes);
     }
     catch(error) {
-      winston.debug("(DirAssistant) Error while filling assistantId:", error);
+      winston.error("(DirAssistant) Error while filling assistantId:", error);
     }
 
     let prompt = _prompt;
@@ -107,7 +107,7 @@ class DirAssistant {
       prompt = filler.fill(_prompt, requestAttributes);
     }
     catch(error) {
-      winston.debug("(DirAssistant) Error while filling prompt:", error);
+      winston.error("(DirAssistant) Error while filling prompt:", error);
     }
 
     winston.debug("(DirAssistant) settings ok");
@@ -129,7 +129,7 @@ class DirAssistant {
     let apikey = await this.getGPT_APIKEY();
     if (!apikey) {
       const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
-      winston.debug("(DirAssistant) Error: " + reply)
+      winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -193,7 +193,7 @@ class DirAssistant {
       }
     }
     catch (error) {
-      winston.debug("(DirAssistant) error:", error);
+      winston.error("(DirAssistant) error:", error);
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, error);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -286,19 +286,14 @@ class DirAssistant {
       winston.debug("(DirAssistant) DirAssistant HttpRequest", HTTPREQUEST);
       httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            winston.debug("(DirAssistant) got threadid res: ", res);
-            let thread = res.data;
-            resolve(thread)
-          }
-          else {
-            reject(new Error("Thread creation status != 200:", status));
-          }
+          let thread = res;
+          winston.debug("(DirAssistant) got threadid res: ", res);
+          resolve(thread)
         }
       );
     });
@@ -346,19 +341,13 @@ class DirAssistant {
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
       httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve();
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAssistant) got response data: ", res.data);
+          resolve();
         }
       );
     });

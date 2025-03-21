@@ -24,19 +24,19 @@ class HttpUtils {
     }
     axios(axios_options)
       .then((res) => {
-        if (res && res.status == 200 && res.data) {
+        if (res && (res.status >= 200 && res.status <= 299) && res.data) {
           if (callback) {
             callback(null, res.data);
           }
         }
         else {
           if (callback) {
-            callback(new Error("Response status is not 200"), null);
+            callback(new Error("Response status is not 2xx"), null);
           }
         }
       })
       .catch((error) => {
-        if (error.response.data) {
+        if (error.response?.data) {
           if (typeof error.response.data === 'string') {
             winston.error("Axios error response data: " + error.response.data);
           } else {
