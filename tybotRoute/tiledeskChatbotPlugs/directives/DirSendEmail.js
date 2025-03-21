@@ -3,6 +3,7 @@ const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirSendEmail {
