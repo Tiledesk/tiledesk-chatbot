@@ -278,13 +278,6 @@ describe('Api /ext/:boid', async () => {
       });
     });
   });
-  
-
-
-
-
-
-
 });
 
 function getExtBotId(botId, callback) {
