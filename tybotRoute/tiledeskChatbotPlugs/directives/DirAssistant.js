@@ -346,7 +346,7 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          winston.debug("(DirAssistant) got response data: ", res.data);
+          winston.debug("(DirAssistant) got response data: ", res);
           resolve();
         }
       );
@@ -400,15 +400,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -435,15 +428,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -470,15 +456,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
