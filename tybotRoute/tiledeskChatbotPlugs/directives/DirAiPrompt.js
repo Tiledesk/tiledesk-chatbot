@@ -100,21 +100,43 @@ class DirAiPrompt {
       }
     }
 
-    const AI_endpoint = process.env.AI_ENDPOINT
+    let AI_endpoint = process.env.AI_ENDPOINT;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
-    let key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
+    let headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    let key;
+    let ollama_integration;
 
-    if (!key) {
-      winston.error("Error: DirAiPrompt llm key not found in integrations");
-      await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
-      if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-        callback(true);
+    if (action.llm === 'ollama') {
+      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
+        winston.error("DirAiPrompt Error getting ollama integration: ", err);
+        await this.chatbot.addParameter("flowError", "Ollama integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      });
+
+    } else {
+      key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
+  
+      if (!key) {
+        winston.error("Error: DirAiPrompt llm key not found in integrations");
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
         return;
       }
-      callback();
-      return;
     }
 
     let json = {
@@ -133,13 +155,22 @@ class DirAiPrompt {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
 
+    if (action.llm === 'ollama') {
+      json.llm_key = "";
+      json.model = {
+        name: action.model,
+        url: ollama_integration.value.url,
+        token: ollama_integration.value.token
+      }
+      json.stream = false
+
+    }
+
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
-      url: AI_endpoint + '/ask',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      url: AI_endpoint + "/ask",
+      headers: headers,
       json: json,
       method: 'POST'
     }
@@ -148,7 +179,7 @@ class DirAiPrompt {
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          winston.error("DirAiPrompt openai err:", err.response.data);
+          winston.error("DirAiPrompt openai err: ", err);
           await this.#assignAttributes(action, answer);
           let error;
           if (err.response?.data?.detail[0]) {
