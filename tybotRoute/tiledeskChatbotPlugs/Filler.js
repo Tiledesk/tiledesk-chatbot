@@ -17,7 +17,6 @@ class Filler {
 
     // legacy parser first
     if (text == null || text == undefined || typeof text !== 'string') {
-      // console.log("Skip filling. 'text' is null or not a string");
       return text;
     }
     if (parameters) {

@@ -5,21 +5,127 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
-<!-- // CHECK IT!!!
-# v0.2.98
-- Added possibility to select namespace by name
-- Added filler to namespace in DirAskGPTv2 
-- Added filler to command.settings in DirReply	
+# 0.5.1-rc1
+- added json_buttons 
+- added winston log with code refactoring
 
-# v0.2.97
-- Added a limit in upload and download for WebRequestV2: maxContentLength: 10000000, // max 10mb response size, maxBodyLength: 10000000 // max 10mb request body size
-- Added jsonCondition test on json objects properties
-- Added flowError on JSONCondition when result = null
-- Added fix on Filler -->
+# v0.5.0
+- added: AI_ENDPOINT env var
+
+# v0.5.0-rc1
+- added: ability to get 'none' as bodytype in webresponse
+
+# v0.4.2
+- bug-fixed: minor log fix
+
+# v0.4.1
+- fix: wrong key for web_response
+
+# v0.4.0
+- added: DirWebResposne
+- added: management of webhook
+- changed: refactoring of DIrWebRequestv2
+- bug-fixed: erro while parsing webrequestv2 body
+
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
+# v0.3.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# v0.3.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.4
+-bug-fixed: slit is undefined in TiledeskChatbotUtils
+
+# v0.3.3
+- bug-fixed: text is undefined in responseText while transcript message 
+
+# v0.3.2
+- bug-fixed: minor improvement
+
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
+
+# v0.2.153-rc1
+- changed: context for gpt-40 and gpt-40-mini
+
+# v0.2.152
+- Restored old default context for AskKB Action
+- Deleted message "Intent not found".
+
+# v0.2.151
+- bug-fixed: context for gpt-40 and gpt-40-mini
+
+# v0.2.150
+- changed: AiPrompt action to improves errors management
+
+# v0.2.149
+
+# v0.2.149-rc3
+- changed: context for gpt-40 and gpt-40-mini
+
+# v0.2.149-rc2
+- bug-fixed: botid null or undefined while calling /ext/:boid
+
+# v0.2.148
+- bug-fixed: namespace is undefined and "engine" property if noIntent is not specified
+
+# v0.2.147
+- bug-fixed: namespace is undefined and "engine" property cannot be evaluated in DirAskGPTV2
+ 
+# v0.2.146
+- bug-fixed: message.attributes["flowAttributes"]
+
+# v0.2.146-rc1
+- bug-fixed: message.attributes["flowAttributes"] added only if value size is <= 1kb
+
+# v0.2.145
+- added: TILEBOT_ENDPOINT env variable to startApp method
+
+# v0.2.144
+- Removed userFlowAttributes from message.attributes (fix message too long issue)
+
+# v0.2.143
+- Changed: env var TILEBOT_ENDPOINT replaced with TILEBOT_ENDPOINT
+
+# v0.2.142
+- Bug-fix: action.isInfo added in DirMessage fo fix test
+
+# v0.2.141
+- Bug-fix: message.attributes.payload not visible on first message
+
+# v0.2.140
+- Bug-fix: block hidden message for non-dev conversation
+
+# v0.2.139
+- Added ReplaceBotV3 action
+- Updated Redis to 4.7.0
 
 # v0.2.138
 - Bug-fixed: hiddenMessage not blocked
 - Bug-fixed: DirAskGPTV2 has hardcoded engine
+
+# v0.2.138-rc8
+- Updated redis to 4.7.0
+- Updated tdCache
+
+# v0.2.138-rc6
+- First deploy external
 
 # v0.2.138-rc1
 - Updated redis to 4.7.0

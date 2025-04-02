@@ -1,9 +1,10 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
+const winston = require('../../utils/winston');
 
 class DirMake {
 
@@ -19,13 +20,13 @@ class DirMake {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("DirMake directive: ", directive); }
+    winston.verbose("Execute Make directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("DirMake Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirMake Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -35,9 +36,9 @@ class DirMake {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirMake action:", JSON.stringify(action)); }
+    winston.debug("(DirMake) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirMake tdcache is mandatory");
+      winston.error("(DirMake) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -46,13 +47,6 @@ class DirMake {
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
-
-    if (this.log) {
-      console.log("DirMake trueIntent", trueIntent)
-      console.log("DirMake falseIntent", falseIntent)
-      console.log("DirMake trueIntentAttributes", trueIntentAttributes)
-      console.log("DirMake falseIntentAttributes", falseIntentAttributes)
-    }
 
     // default values?
     let status = null;
@@ -67,13 +61,10 @@ class DirMake {
     let webhook_url = action.url;
     let bodyParameters = action.bodyParameters;
 
-    if (this.log) {
-      console.log("DirMake webhook_url: ", webhook_url);
-      console.log("DirMake bodyParameters: ", JSON.stringify(bodyParameters));
-    }
+    winston.debug("(DirMake) webhook_url: " + webhook_url);
 
     if (!bodyParameters) {
-      console.error("Error: DirMake bodyParameters is undefined");
+      winston.error("(DirMake) Error: bodyParameters is undefined");
       error = "Missing body parameters";
       await this.#assignAttributes(action, status, error);
       if (falseIntent) {
@@ -86,7 +77,7 @@ class DirMake {
     }
 
     if (!webhook_url || webhook_url === '') {
-      if (this.log) {console.error("DirMake ERROR - webhook_url is undefined or null or empty string:")};
+      winston.error("(DirMake) Error: webhook_url is undefined or null or empty string:")
       let status = 422;   
       let error = 'Missing make webhook url';
       await this.#assignAttributes(action, status, error);
@@ -111,14 +102,12 @@ class DirMake {
     } else {
       url = action.url;
     }
-    if (this.log) { console.log("DirMake MakeEndpoint URL: ", url); }
 
     const filler = new Filler();
     for (const [key, value] of Object.entries(bodyParameters)) {
       let filled_value = filler.fill(value, requestVariables);
       bodyParameters[key] = filled_value;
     }
-    if (this.log) { console.log('DirMake bodyParameters filler: ', bodyParameters) }
 
     const MAKE_HTTPREQUEST = {
       url: url,
@@ -128,12 +117,12 @@ class DirMake {
       json: bodyParameters,
       method: "POST"
     }
-    if (this.log) { console.log("DirMake MAKE_HTTPREQUEST", MAKE_HTTPREQUEST); }
+    winston.debug("(DirMake) Make HttpRequest ", MAKE_HTTPREQUEST);
     this.#myrequest(
       MAKE_HTTPREQUEST, async (err, res) => {
         if (err) {
           if (callback) {
-            console.error("(httprequest) DirMake err:", err);
+            winston.error("(DirMake) err: ", err);
             // let status = 404;
             // let error = 'Make url not found';
             status = res.status;
@@ -148,9 +137,8 @@ class DirMake {
             return;
           }
         } else if (callback) {
-          if (this.log) { console.log("(httprequest) DirMake resbody ", res); }
-          // let status = 200;
-          // let error = null;
+          winston.debug("(DirMake)  resbody ", res);
+
           status = res.status;
           error = null;
           if (res.error) {
@@ -171,11 +159,10 @@ class DirMake {
   }
 
   async #assignAttributes(action, status, error) {
-    if (this.log) {
-      console.log("DirMake assignAttributes action:", action)
-      console.log("DirMake assignAttributes status:", status)
-      console.log("DirMake assignAttributes error:", error)
-    }
+    winston.debug("(DirMake) assignAttributes action: ", action)
+    winston.debug("(DirMake) assignAttributes status: " + status)
+    winston.debug("(DirMake) assignAttributes error: ", error)
+
     if (this.context.tdcache) {
       if (action.assignStatusTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
@@ -183,23 +170,11 @@ class DirMake {
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
       }
-
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("DirMake request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
   }
 
   // Advanced #myrequest function
   #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -210,9 +185,6 @@ class DirMake {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -221,10 +193,6 @@ class DirMake {
     }
     axios(axios_options)
       .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
         if (callback) {
           callback(null, res);
         }
@@ -243,9 +211,8 @@ class DirMake {
             }
             return value;
           });
-          console.error("An error occurred: ", error_log);
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          // console.error("An error occurred:", JSON.stringify(err));
+          winston.error("(DirMake) An error occurred: ", error_log);
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END;
         }
         if (callback) {
           let status = 1000;
@@ -278,54 +245,6 @@ class DirMake {
       });
   }
 
-  // #myrequest(options, callback) {
-  //   if (this.log) {
-  //     console.log("API URL:", options.url);
-  //     console.log("** Options:", JSON.stringify(options));
-  //   }
-  //   let axios_options = {
-  //     url: options.url,
-  //     method: options.method,
-  //     params: options.params,
-  //     headers: options.headers
-  //   }
-  //   if (options.json !== null) {
-  //     axios_options.data = options.json
-  //   }
-  //   if (this.log) {
-  //     console.log("axios_options:", JSON.stringify(axios_options));
-  //   }
-  //   if (options.url.startsWith("https:")) {
-  //     const httpsAgent = new https.Agent({
-  //       rejectUnauthorized: false,
-  //     });
-  //     axios_options.httpsAgent = httpsAgent;
-  //   }
-  //   axios(axios_options)
-  //     .then((res) => {
-  //       if (this.log) {
-  //         console.log("Response for url:", options.url);
-  //         console.log("Response headers:\n", JSON.stringify(res.headers));
-  //       }
-  //       if (res && res.status == 200 && res.data) {
-  //         if (callback) {
-  //           callback(null, res.data);
-  //         }
-  //       }
-  //       else {
-  //         if (callback) {
-  //           callback(new Error("Response status is not 200"), null);
-  //         }
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       if (this.log) { console.error("An error occurred:", JSON.stringify(error.message)) };
-  //       if (callback) {
-  //         callback(error, null);
-  //       }
-  //     });
-  // }
-
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;
     if (trueIntent) {
@@ -344,7 +263,7 @@ class DirMake {
         });
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirMake) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -359,7 +278,7 @@ class DirMake {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirMake) No falseIntentDirective specified");
         if (callback) {
           callback();
         }

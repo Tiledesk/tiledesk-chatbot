@@ -1,9 +1,9 @@
 
 var assert = require('assert');
-const { TiledeskChatbot } = require('../models/TiledeskChatbot.js');
-const { MockBotsDataSource } = require('../models/MockBotsDataSource.js');
-const { MockIntentsMachine } = require('../models/MockIntentsMachine.js');
-const { MockTdCache } = require('../models/MockTdCache');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
+const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
+const { MockIntentsMachine } = require('../engine/mock/MockIntentsMachine.js');
+const { MockTdCache } = require('../engine/mock/MockTdCache');
 
 const testBots = {
   "bots": {

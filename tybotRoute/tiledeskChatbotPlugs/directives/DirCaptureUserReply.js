@@ -1,6 +1,7 @@
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
+const winston = require('../../utils/winston');
 
 class DirCaptureUserReply {
   constructor(context) {
@@ -19,12 +20,13 @@ class DirCaptureUserReply {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute CaptureUserReply directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("DirCaptureUserReply Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -34,34 +36,23 @@ class DirCaptureUserReply {
   }
 
   async go(action, callback) {
+    winston.debug("(DirCaptureUserReply) Action: ", action);
     const goToIntent = action.goToIntent;
-    // console.log("(DirCaptureUserReply) goToIntent:", goToIntent);
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-    // console.log("(DirCaptureUserReply) lockedAction:", lockedAction);
     if (!lockedAction) {
-      // console.log("(DirCaptureUserReply) !lockedAction");
       const intent_name = this.reply.attributes.intent_info.intent_name
-      const actionId = action["_tdActionId"];
-      // console.log("(DirCaptureUserReply) intent_name:", intent_name);
-      // console.log("(DirCaptureUserReply) actionId:", actionId);
+      const actionId = action["_tdActionId"];;
       await this.chatbot.lockIntent(this.requestId, intent_name);
-      // console.log("(DirCaptureUserReply) lockIntent");
       await this.chatbot.lockAction(this.requestId, actionId);
-      // console.log("(DirCaptureUserReply) lockAction");
-      // let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-      // let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
-      // console.log("(DirCaptureUserReply) _lockedAction", _lockedAction)
-      // console.log("(DirCaptureUserReply) _lockedIntent", _lockedIntent)
       callback();
       return;
     } else {
       try {
         await this.chatbot.unlockIntent(this.requestId);
         await this.chatbot.unlockAction(this.requestId);
-        // console.log("unlo")
       }
       catch(e) {
-        console.error("Error", e)
+        winston.error("(DirCaptureUserReply) Error: ", e)
       }
       
     }
@@ -69,13 +60,12 @@ class DirCaptureUserReply {
       const user_reply = this.message.text;
       if (this.context.tdcache) {
         if (action.assignResultTo) {
-          if (this.log) {console.log("assign assignResultTo:", action.assignResultTo);}
+          winston.debug("(DirCaptureUserReply) assign assignResultTo: " + action.assignResultTo);
           await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, user_reply);
         }
       }
   
       if (callback) {
-        // console.log("(DirCaptureUserReply) #executeGoTo(goToIntent)", goToIntent)
         if (goToIntent) {
           this.#executeGoTo(goToIntent, () => {
             callback(); // continue the flow
@@ -88,7 +78,7 @@ class DirCaptureUserReply {
       }
     }
     catch(error) {
-      console.error("error is", error);
+      winston.error("(DirCaptureUserReply) error: ", error);
     }
   }
 
