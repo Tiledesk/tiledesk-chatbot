@@ -34,6 +34,15 @@ class TiledeskChatbotConst {
     static REQ_CHATBOT_TOKEN = "chatbotToken";
     static REQ_CHATBOT_TOKEN_v2 = "chatbot_jwt_token";
     static API_BASE_URL = "api_base_url";
+    static REQ_LAST_USER_IMAGE_URL = 'lastUserImageURL';
+    static REQ_LAST_USER_IMAGE_NAME = 'lastUserImageName';
+    static REQ_LAST_USER_IMAGE_WIDTH = 'lastUserImageWidth';
+    static REQ_LAST_USER_IMAGE_HEIGHT = 'lastUserImageHeight';
+    static REQ_LAST_USER_IMAGE_TYPE = 'lastUserImageType';
+    static REQ_LAST_USER_DOCUMENT_URL = 'lastUserDocumentURL';
+    static REQ_LAST_USER_DOCUMENT_NAME = 'lastUserDocumentName';
+    static REQ_LAST_USER_DOCUMENT_TYPE = 'lastUserDocumentType';
+
 }
 
 module.exports = { TiledeskChatbotConst };

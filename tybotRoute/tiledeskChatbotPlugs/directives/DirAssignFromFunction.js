@@ -1,6 +1,7 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const ms = require('minimist-string');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot.js');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
+const winston = require('../../utils/winston')
 
 class DirAssignFromFunction {
 
@@ -23,6 +24,7 @@ class DirAssignFromFunction {
   }
 
   async execute(directive, callback) {
+    winston.verbose("Execute AssignFromFunction directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -36,29 +38,32 @@ class DirAssignFromFunction {
           functionName: params.functionName,
           assignTo: params.assignTo
       }
+    } else {
+      winston.warn("Incorrect directive: ", directive);
+      callback();
+      return;
     }
-    console.log("execute assign");
     this.go(action, () => {
-      console.log("assign end.");
       callback();
     });
   }
 
   async go(action, callback) {
-    console.log("invoke function => assign action:", action);
+    winston.debug("(DirAssignFromFunction) Action: ", action);
     // const functionName = action.body.functionName;
     // const variableName = action.body.assignTo;
     const functionName = action.functionName;
     const variableName = action.assignTo;
-    console.log("functionName:", functionName)
-    console.log("variableName:", variableName)
+
+    winston.debug("(DirAssignFromFunction) functionName: " + functionName)
+    winston.debug("(DirAssignFromFunction) variableName: " + variableName)
     this.invoke(functionName, async (err, value) => {
       if (!err) {
         await TiledeskChatbot.addParameterStatic(this.tdcache, this.context.requestId, variableName, value);
-        console.log("Assigned:", value, "to", variableName);
+        winston.debug("(DirAssignFromFunction) Assigned: " + value + "to" + variableName);
       }
       else {
-        console.error("invoke() error:", err);
+        winston.error("(DirAssignFromFunction) invoke() error: ", err);
       }
       callback();
     });
@@ -68,7 +73,6 @@ class DirAssignFromFunction {
     switch (functionName) {
       case "openNow":
         this.tdClient.openNow((err, result) => {
-          if (this.log) {console.log("openNow():", result);}
           if (err) {
             callback(err);
           }
@@ -82,13 +86,13 @@ class DirAssignFromFunction {
         break;
       case "availableAgents":
         this.tdClient.getProjectAvailableAgents((err, agents) => {
-          if (this.log) {console.log("Agents on 'open'", agents);}
+          winston.debug("(DirAssignFromFunction) Agents on 'open' ", agents);
           if (err || !agents) {
-            console.error("Error getting available agents in DirWhenAvailableAgents", err);
+            winston.error("(DirAssignFromFunction) Error getting available agents in DirWhenAvailableAgents", err);
             callback(err, 0);
           }
           else {
-            if (this.log) {console.log("Agents count:", agents.length);}
+            winston.debug("(DirAssignFromFunction) Agents count: " + agents.length);
             // if (agents.length === 0) {
             // else if (agents.length > 0 && this.checkAgents) {
             callback(null, agents.length);

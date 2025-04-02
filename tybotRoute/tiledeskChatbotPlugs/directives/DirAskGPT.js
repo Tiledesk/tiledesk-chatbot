@@ -1,9 +1,12 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirAskGPT {
 
@@ -14,19 +17,21 @@ class DirAskGPT {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("AskGPT directive: ", directive); }
+    winston.verbose("Execute AskGPT directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirAskGPT Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -36,9 +41,9 @@ class DirAskGPT {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirAskGPT action:", JSON.stringify(action)); }
+    winston.debug("(DirAskGPT) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirAskGPT tdcache is mandatory");
+      winston.error("Error: DirAskGPT tdcache is mandatory");
       callback();
       return;
     }
@@ -49,19 +54,17 @@ class DirAskGPT {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirAskGPT trueIntent", trueIntent)
-      console.log("DirAskGPT falseIntent", falseIntent)
-      console.log("DirAskGPT trueIntentAttributes", trueIntentAttributes)
-      console.log("DirAskGPT falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("(DirAskGPT) trueIntent " + trueIntent)
+    winston.debug("(DirAskGPT) falseIntent " + falseIntent)
+    winston.debug("(DirAskGPT) trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("(DirAskGPT) falseIntentAttributes " + falseIntentAttributes)
 
     // default values
     let answer = "No answers";
     let source = null;
 
     if (!action.question || action.question === '') {
-      console.error("Error: DirAskGPT question attribute is mandatory. Executing condition false...");
+      winston.error("(DirAskGPT) Error: question attribute is mandatory. Executing condition false...");
       await this.#assignAttributes(action, answer, source);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -71,7 +74,7 @@ class DirAskGPT {
     }
 
     if (!action.kbid) {
-      console.error("Error: DirAskGPT kbid attribute is mandatory. Executing condition false...");
+      winston.error("(DirAskGPT) Error: kbid attribute is mandatory. Executing condition false...");
       await this.#assignAttributes(action, answer, source);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
@@ -90,22 +93,22 @@ class DirAskGPT {
     const filled_question = filler.fill(action.question, requestVariables);
 
     const kb_endpoint = process.env.KB_ENDPOINT;
-    if (this.log) { console.log("DirAskGPT KbEndpoint URL: ", kb_endpoint); }
+    winston.verbose("DirAskGPT KbEndpoint URL: ", kb_endpoint);
 
-    let key = await this.getKeyFromIntegrations();
+    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      if (this.log) { console.log("DirAskGPT - Key not found in Integrations. Searching in kb settings..."); }
+      winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
-      if (this.log) { console.log("DirAskGPT - Retrieve public gptkey")}
+      winston.debug("(DirAskGPT) - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
     }
 
     if (!key) {
-      console.error("Error: DirAskGPT gptkey is mandatory");
+      winston.error("(DirAskGPT) Error: gptkey is mandatory");
       await this.#assignAttributes(action, answer);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -119,7 +122,7 @@ class DirAskGPT {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
-        if (this.log) { console.log("DirAskGPT - Quota exceeded for tokens. Skip the action")}
+        winston.debug("(DirAskGPT) - Quota exceeded for tokens. Skip the action")
         callback();
         return;
       }
@@ -130,26 +133,25 @@ class DirAskGPT {
       kbid: action.kbid,
       gptkey: key
     };
-    if (this.log) { console.log("DirAskGPT json:", json); }
+    winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 
     const HTTPREQUEST = {
       url: kb_endpoint + "/qa",
       json: json,
       method: "POST"
     }
-    if (this.log) { console.log("DirAskGPT HTTPREQUEST", HTTPREQUEST); }
+    winston.debug("(DirAskGPT) HttpRequest", HTTPREQUEST); 
     
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        if (this.log && err) {
-          console.log("DirAskGPT error: ", err);
-        }
-        if (this.log) { console.log("DirAskGPT resbody:", resbody); }
+
+        winston.debug("(DirAskGPT) resbody:", resbody); 
         let answer = resbody.answer;
         let source = resbody.source_url;
         await this.#assignAttributes(action, answer, source);
-
+        
         if (err) {
+          winston.error("(DirAskGPT) error: ", err);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -205,7 +207,7 @@ class DirAskGPT {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirAskGPT) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -220,7 +222,7 @@ class DirAskGPT {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirAskGPT) No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -229,109 +231,17 @@ class DirAskGPT {
   }
 
   async #assignAttributes(action, answer, source) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-      console.log("assignAttributes source:", source)
-    }
+    winston.debug("(DirAskGPT) assignAttributes action:", action)
+    winston.debug("(DirAskGPT) assignAttributes answer:", answer)
+    winston.debug("(DirAskGPT) assignAttributes source:", source)
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
-      // console.log("--> action.assignSourceTo: ", action.assignSourceTo)
-      // console.log("--> source: ", source)
       if (action.assignSourceTo && source) {
-        // console.log("--> source: ", source)
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(askgpt) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
-  }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirAskGPT) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      if (this.log) { console.log("DirAskGPT INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            if (this.log) { console.error("DirAskGPT Get integrations error ", err); }
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
   }
 
   async getKeyFromKbSettings() {
@@ -345,12 +255,12 @@ class DirAskGPT {
         },
         method: "GET"
       }
-      if (this.log) { console.log("DirAskGPT KB_HTTPREQUEST", KB_HTTPREQUEST); }
+      winston.debug("(DirAskGPT) KB HttpRequest ", KB_HTTPREQUEST);
 
-      this.#myrequest(
+      httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            if (this.log) { console.error("DirAskGPT Get kb settings error ", err); }
+            winston.error("DirAskGPT Get kb settings error ", err?.response?.data);
             resolve(null);
           } else {
             if (!resbody.gptkey) {

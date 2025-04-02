@@ -1,4 +1,4 @@
-const { TiledeskChatbot } = require('../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
 
 class TiledeskRequestVariables {
     

@@ -1,7 +1,8 @@
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirRandomReply {
 
@@ -27,18 +28,17 @@ class DirRandomReply {
   }
 
   execute(directive, callback) {
-    // console.log("Reply directive:", JSON.stringify(directive));
+    winston.verbose("Execute RandomReply directive");
     let action;
     if (directive.action) {
       action = directive.action;
-      // console.log("got action:", JSON.stringify(action));
       if (!action.attributes) {
         action.attributes = {}
       }
       action.attributes.fillParams = true;
     }
     else {
-      console.error("Incorrect directive (no action provided):", directive);
+      winston.warn("DirRandomReply Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -48,6 +48,7 @@ class DirRandomReply {
   }
 
   async go(action, callback) {
+    winston.debug("(DirRandomReply) Action: ", action);
     const message = action;
     // fill
     let requestVariables = null;
@@ -56,28 +57,19 @@ class DirRandomReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestVariables)) {
-          const value_type = typeof value;
-          if (this.log) {console.log("(DirReply) request parameter:", key, "value:", value, "type:", value_type)}
-        }
-      }
+
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestVariables);
-      if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
+      winston.debug("(DirRandomReply) filling commands. Message: ", message);
       if (message.attributes && message.attributes.commands) {
         const rnd_commands = TiledeskChatbotUtil.chooseRandomReply(message);
         message.attributes.commands = rnd_commands;
-        if (this.log) {console.log("filling commands'. commands found.");}
         let commands = message.attributes.commands;
-        if (this.log) {console.log("commands:", JSON.stringify(commands), commands.length);}
         if (commands.length > 0) {
-          if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
             if (commands[i].type === 'message' && commands[i].message && commands[i].message.text) {
               commands[i].message.text = filler.fill(commands[i].message.text, requestVariables);
-              if (this.log) {console.log("command filled:", commands[i].message.text);}
             }
           }
         }
@@ -96,15 +88,15 @@ class DirRandomReply {
       // }
     }
     // send!
-    if (this.log) {console.log("Reply:", JSON.stringify(message))};
+    winston.debug("(DirRandomReply) Reply:", message);
     this.tdClient.sendSupportMessage(
       this.requestId,
       message,
       (err) => {
         if (err) {
-          console.error("Error sending reply:", err.message);
+          winston.debug("(DirRandomReply) Error sending reply: " + err.message);
         }
-        if (this.log) {console.log("Reply message sent.");}
+        winston.debug("(DirRandomReply) Reply message sent.")
         callback();
     });
   }

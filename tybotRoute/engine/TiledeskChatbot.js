@@ -1,14 +1,14 @@
 // let Faq = require('./faq');
 // let Faq_kb = require('./faq_kb');
-// const { ExtApi } = require('../ExtApi.js');
-const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 // const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
+const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
-const { TiledeskChatbotUtil } = require('./TiledeskChatbotUtil.js');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
+const winston = require('../utils/winston');
 
 class TiledeskChatbot {
 
@@ -49,86 +49,45 @@ class TiledeskChatbot {
       let lead = null;
       if (message.request) {
         this.request = message.request;
-        // lead = message.request.lead;
-        // if (lead && lead.fullname) {
-        //   if (this.log) {console.log("lead.fullname => params.userFullname:", lead.fullname)}
-        //   await this.addParameter("userFullname", lead.fullname);
-        // }
-        // if (lead && lead.email) {
-        //   if (this.log) {console.log("lead.email => params.userEmail:", lead.email)}
-        //   await this.addParameter("userEmail", lead.email);
-        // }
       }
-      // if (this.log) {
-      //   console.log("replyToMessage() > lead found:", JSON.stringify(lead));
-      // }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
         try {
-          // if (this.log) {console.log("Checking locked intent reset on explicit intent invokation.");}
-          // if (message.text.startsWith("/")) {
-          //   if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with / command...", message.text);}
-          //   await this.unlockIntent(this.requestId);
-          //   await this.unlockAction(this.requestId);
-          //   if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly invoked with / command:", message.text);}
-          // }
-          if (this.log) {console.log("Checking locked intent reset on action invocation.");}
+          winston.verbose("(TiledeskChatbot) Checking locked intent reset on action invocation")
           if (message.attributes && message.attributes.action) {
-            if (this.log) {console.log("Message has action:", message.attributes.action)}
-            if (this.log) {console.log("RESETTING LOCKED INTENT. Intent was explicitly invoked with an action:", message.attributes.action);}
+            winston.debug("(TiledeskChatbot) Message has action: " + message.attributes.action)
             await this.unlockIntent(this.requestId);
             await this.unlockAction(this.requestId);
-            // console.log("RESET LOCKED INTENT.");
-            if (this.log) {console.log("RESET LOCKED INTENT. Intent was explicitly  invoked with an action:", message.attributes.action);}
+            winston.debug("(TiledeskChatbot) Reset locked intent. Intent was explicitly invoked with an action: " + message.attributes.action)
           }
         } catch(error) {
-          console.error("Error resetting locked intent:", error);
+          winston.error("(TiledeskChatbot) Error resetting locked intent: ", error)
         }
       }
-
-      // resetting any noInput timeout setting userInput = true
-      // if (message.sender != "_tdinternal") {
-      //   if (this.log) {console.log("resetting any noInput timeout setting userInput = (false?)", await this.getParameter(TiledeskChatbotConst.USER_INPUT) );}
-      //   try {
-      //     // await this.addParameter(TiledeskChatbotConst.USER_INPUT, true); // set userInput
-      //     await this.deleteParameter(TiledeskChatbotConst.USER_INPUT); // reset userInput
-      //     if (this.log) {console.log("userInput?", await this.getParameter(TiledeskChatbotConst.USER_INPUT) );}
-      //   } catch(error) {
-      //     console.error("Error resetting userInput:", error);
-      //   }
-      // }
 
       // any external invocation restarts the steps counter
       try {
         if (message.sender != "_tdinternal") {
-          if (this.log) {
-            console.log("Resetting current step by request message:", message.text);
-          }
+          winston.verbose("(TiledeskChatbot) Resetting current step by request message: " + message.text);
           await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
           await TiledeskChatbot.resetStarted(this.tdcache, this.requestId);
           if (this.log) {
             if (this.tdcache) {
               let currentStep = 
               await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
-              if (this.log) {console.log("after reset currentStep:", currentStep)}
+              winston.verbose("(TiledeskChatbot) After reset currentStep:" + currentStep);
             }
           }
         }
       } catch(error) {
-        console.error("Error resetting locked intent:", error);
+        winston.error("(TiledeskChatbot) Error resetting locked intent: ", error);
       }
-      // Emergency stop :)
-      // if (message.text === "/anomaly") {
-      //   console.log(".................stop on /anomaly!");
-      //   resolve(null);
-      // }
 
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
-      // if (message.text.startsWith("/") && message.sender != "_tdinternal") {
       const locked_intent = await this.currentLockedIntent(this.requestId);
-      if (this.log) {console.log("got locked intent: -" + locked_intent + "-")}
+      winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
       if (locked_intent) {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
@@ -140,12 +99,10 @@ class TiledeskChatbot {
         // it only gets the locked_intent
         // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
         const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
-        if (this.log) {console.log("locked intent. got faqs", JSON.stringify(faq))}
+        winston.debug("(TiledeskChatbot) Locked intent. Got faqs: ", faq);
         let reply;
         if (faq) {
           reply = await this.execIntent(faq, message, lead);//, bot);
-          // resolve(reply);
-          // return;
         }
         else {
           reply = {
@@ -163,132 +120,82 @@ class TiledeskChatbot {
         resolve(reply);
         return;
       }
-      // }
-      // else if (message.text.startsWith("/")) {
-      //   if (this.log) {
-      //     console.log("Internal intent". message.text, "skips locked intent check");
-      //   }
-      // }
+
 
       let explicit_intent_name = null;
       // Explicit intent invocation
       if (message.text && message.text.startsWith("/")) {
-        if (this.log) {console.log("Intent was explicitly invoked:", message.text);}
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked: " + message.text);
         let intent_name = message.text.substring(message.text.indexOf("/") + 1);
-        if (this.log) {console.log("Invoked Intent:", intent_name);}
+        winston.verbose("(TiledeskChatbot) Invoked Intent: " + intent_name)
         explicit_intent_name = intent_name;
-        // if (!message.attributes) {
-        //   message.attributes = {}
-        // }
-        // message.attributes.action = intent_name;
-        // if (this.log) {console.log("Message action:", message.attributes.action)}
       }
       
       // Intent invocation with action
       if (message.attributes && message.attributes.action) {
-        if (this.log) {console.log("Message has action:", message.attributes.action)}
+        winston.debug("(TiledeskChatbot) Message has action: ", message.attributes.action)
         explicit_intent_name = message.attributes.action;
-        /*let action_parameters_index = action.indexOf("?");
-        if (action_parameters_index > -1) {
-            intent_name = intent_name.substring(0, action_parameters_index);
-        }*/
-        if (this.log) {console.log("Intent was explicitly invoked with an action:", explicit_intent_name);}
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked with an action:", explicit_intent_name)
       }
 
       if (explicit_intent_name) {
-        if (this.log) {console.log("Processing explicit intent:", explicit_intent_name)}
+        winston.verbose("(TiledeskChatbot) Processing explicit intent:", explicit_intent_name)
         // look for parameters
         const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
-        if (this.log) {console.log("parsed intent:", intent);}
+        winston.debug("(TiledeskChatbot) parsed intent:", intent);
         let reply;
         if (!intent || (intent && !intent.name)) {
-          if (this.log) {console.log("Invalid intent:", explicit_intent_name);}
-          reply = {
-            "text": "Invalid intent: *" + explicit_intent_name + "*"
-          }
+          winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
+          reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
+          resolve();
         }
         else {
-          if (this.log) {console.log("processing intent:", explicit_intent_name);}
-          // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intent.name);
-          if (this.log) {
-            console.log("intent this.botId:", this.botId);
-            console.log("intent intent.name:", intent.name);
-            if (this.tdcache) {
-              console.log("intent this.tdcache ok");
-            }
-            else {
-              console.log("no intent this.tdcache");
-            }
-          }
+          winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
           if (faq) {
-            if (this.log) {
-              console.log("Got a reply (faq) by Intent name:", JSON.stringify(faq));}
+            winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
               if (intent.parameters) {
-                if (this.log) {
-                  for (const [key, value] of Object.entries(intent.parameters)) {
-                    console.log(`* Attribute from intent: '${key}' => ${value}`);             
-                  }
-                }
                 for (const [key, value] of Object.entries(intent.parameters)) {
-                  if (this.log) {console.log(`Adding attribute from intent invocation /intentName{} => ${key}: ${value}`);}
-                  // const parameter_typeof_key = "_tdTypeOf:" + key;
-                  // console.log("intent[parameter_typeof_key]",parameter_typeof_key, intent.parameters[parameter_typeof_key]);
-                  // if (intent.parameters[parameter_typeof_key] === "object") {
-                    // const parameter_value_string = JSON.stringify(value)
-                    // console.log("Adding parameter as string:", parameter_value_string)
-                    this.addParameter(key, value);
-                    //this.addParameter(parameter_typeof_key, intent[parameter_typeof_key]);
-                  // }
-                  // else { // TODO: support the other data types
-                  //   this.addParameter(key, value);
-                  // }
-                  
+                  winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
+                  this.addParameter(key, value);                  
                 }
               }
               reply = await this.execIntent(faq, message, lead);
+              resolve(reply);
+              return;
             }
             catch(error) {
-              console.error("error");
+              winston.error("(TiledeskChatbot) Error adding parameter: ", error);
               reject(error);
             }
           }
           else {
-            if (this.log) {console.log("Intent not found:", explicit_intent_name);}
-            reply = {
-              "text": "Intent not found: " + explicit_intent_name
-            }
+            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            reply = { "text": "Intent not found: " + explicit_intent_name }
+            resolve()
           }
         }
-        resolve(reply);
-        return;
       }
 
       // SEARCH INTENTS
       let faqs;
       try {
         faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
-        if (this.log) {console.log("got faq by EXACT MATCH", faqs);}
+        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
       }
       catch (error) {
-        console.error("(TiledeskChatbot) An error occurred during exact match:", JSON.stringify(error));
+        winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
       }
       if (faqs && faqs.length > 0 && faqs[0].answer) {
-        if (this.log) {console.log("EXACT MATCH OR ACTION FAQ:", faqs[0]);}
+        winston.debug("(TiledeskChatbot) exact match or action faq: ", faqs[0]);
         let reply;
         const faq = faqs[0];
         try {
           reply = await this.execIntent(faq, message, lead);//, bot);
-          // if (!reply.attributes) {
-          //   reply.attributes = {}
-          // }
-          // // used by the Clients to get some info about the intent that generated this reply
-          // reply.attributes.intent_display_name = faq.intent_display_name;
-          // reply.attributes.intent_id = faq.intent_id;
         }
         catch(error) {
-          console.error("error during exact match execIntent():", error);
+          winston.error("(TiledeskChatbot) An error occured during exact match execIntent(): ", error);
           reject(error);
           return;
         }
@@ -296,38 +203,30 @@ class TiledeskChatbot {
         return;
       }
       else { // NLP
-        if (this.log) {console.log("Chatbot NLP decoding intent...");}
+        winston.verbose("(TiledeskChatbot) Chatbot NLP decoding intent...");
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
-          if (this.log) {console.log("Tiledesk AI intents found:", intents);}
+          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:", intents);
         }
         catch(error) {
-          console.error("An error occurred on IntentsFinder.decode() (/model/parse error):", error.message);
+          winston.error("(TiledeskChatbot) An error occurred on IntentsFinder.decode() (/model/parse error):" + error.message);
           // recover on fulltext
           if (this.backupIntentsFinder) {
-            if (this.log) {console.log("using backup Finder:", this.backupIntentsFinder);}
+            winston.debug("(TiledeskChatbot) Using backup Finder:", this.backupIntentsFinder);
             intents = await this.backupIntentsFinder.decode(this.botId, message.text);
-            if (this.log) {console.log("Got intents from backup finder:", intents);}
+            winston.debug("(TiledeskChatbot) Got intents from backup finder: ", intents);
           }
         }
-        if (this.log) {console.log("NLP intents found:", intents);}
+        winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
         if (intents && intents.length > 0) {
-          // console.log("Matching intents found.");
-          // let faq = await this.botsDataSource.getByIntentDisplayName(this.botId, intents[0].intent_display_name);
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
           try {
             reply = await this.execIntent(faq, message, lead);//, bot);
-            // if (!reply.attributes) {
-            //   reply.attributes = {}
-            // }
-            // // used by the Clients to get some info about the intent that generated this reply
-            // reply.attributes.intent_display_name = faq.intent_display_name;
-            // reply.attributes.intent_id = faq.intent_id;
           }
           catch(error) {
-            console.error("error during NLP decoding:", error);
+            winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
             reject(error);
             return;
           }
@@ -335,11 +234,8 @@ class TiledeskChatbot {
           return;
         }
         else {
-          // fallback
-          // let fallbackIntent = await this.botsDataSource.getByIntentDisplayName(this.botId, "defaultFallback");
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
           if (!fallbackIntent) {
-            // console.log("No defaultFallback found!");
             resolve(null);
             return;
           }
@@ -347,15 +243,9 @@ class TiledeskChatbot {
             let reply;
             try {
               reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
-              // if (!reply.attributes) {
-              //   reply.attributes = {}
-              // }
-              // // used by the Clients to get some info about the intent that generated this reply
-              // reply.attributes.intent_display_name = fallbackIntent.intent_display_name;
-              // reply.attributes.intent_id = fallbackIntent.intent_id;
             }
             catch(error) {
-              console.error("error during defaultFallback:", error);
+              winston.error("(TiledeskChatbot) An error occurred during defaultFallback: ", error);
               reject(error);
               return;
             }
@@ -370,71 +260,28 @@ class TiledeskChatbot {
   async execIntent(faq, message, lead) {//, bot) {
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
-    // let sender = 'bot_' + botId;
-    //var answerObj;
-    //answerObj.score = 100; // exact search has max score
-    if (this.log) {
-      console.log("requestId:", this.requestId)
-      console.log("token:", this.token)
-      console.log("projectId:", this.projectId)
-    }
+
+    winston.debug("(TiledeskChatbot) execIntent requestId: " + this.requestId)
+    winston.debug("(TiledeskChatbot) execIntent token: " + this.token)
+    winston.debug("(TiledeskChatbot) execIntent projectId: " + this.projectId)
+    
     if (this.tdcache) {
       const requestKey = "tilebot:" + this.requestId
       await this.tdcache.setJSON(requestKey, this.request);
     }
-    // /ext/:projectId/requests/:requestId/messages ENDPOINT COINCIDES
-    // with API_ENDPOINT (APIRURL) ONLY WHEN THE TYBOT ROUTE IS HOSTED
-    // ON THE MAIN SERVER. OTHERWISE WE USE TYBOT_ROUTE TO SPECIFY
-    // THE ALTERNATIVE ROUTE.
-    // let extEndpoint = `${this.APIURL}/modules/tilebot/`;
-    // if (process.env.TYBOT_ENDPOINT) {
-    //   extEndpoint = `${process.env.TYBOT_ENDPOINT}`;
-    // }
-    // const apiext = new ExtApi({
-    //   ENDPOINT: extEndpoint,
-    //   log: this.log
-    // });
-    // console.log("the form...")
     
     let intent_name = answerObj.intent_display_name
-    // THE FORM
-    // if (intent_name === "test_form_intent") {
-    //   answerObj.form = {
-    //     "cancelCommands": ['reset', 'cancel'],
-    //     "cancelReply": "Ok canceled!",
-    //     "fields": [
-    //       {
-    //         "name": "userFullname",
-    //         "type": "text",
-    //         "label": "What is your name?\n* Andrea\n* Marco\n* Mirco\n* Luca Leo"
-    //       },{
-    //         "name": "companyName",
-    //         "type": "text",
-    //         "label": "Thank you ${userFullname}! What is your Company name?\n* Tiledesk\n* Frontiere21"
-    //       },
-    //       {
-    //         "name": "userEmail",
-    //         "type": "text",
-    //         "regex": "/^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+(.[-!#$%&'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
-    //         "label": "Hi ${userFullname} from ${companyName}\n\nJust one last question\n\nYour email 🙂\n* andrea@libero.it\n* andrea@tiledesk.com",
-    //         "errorLabel": "${userFullname} this email address is invalid\n\nCan you insert a correct email address?"
-    //       }
-    //     ]
-    //   };
-    // }
     let intent_form = answerObj.form;
-    if (this.log) {
-      console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(intent_form));
-    }
+
+    winston.debug("(TiledeskChatbot) IntentForm.isValidForm(intent_form)" + IntentForm.isValidForm(intent_form));
+
     let clientUpdateUserFullname = null;
     if (IntentForm.isValidForm(intent_form)) {
       await this.lockIntent(this.requestId, intent_name);
       const user_reply = message.text;
       let form_reply = await this.execIntentForm(user_reply, intent_form);
-      // console.log("got form reply", form_reply)
       if (!form_reply.canceled && form_reply.message) {
-        // console.log("Form replying for next field...");
-        if (this.log) {console.log("Sending form reply...", form_reply.message)}
+        winston.debug("(TiledeskChatbot) Sending form reply...", form_reply.message)
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
           form_reply.message.attributes = {}
@@ -445,29 +292,28 @@ class TiledeskChatbot {
         return form_reply.message;
       }
       else if (form_reply.end) {
-        if (this.log) {
-          console.log("FORM end.", );
-          console.log("unlocking intent for request:", this.requestId);
-          console.log("populate data on lead:", JSON.stringify(lead));
-        }
+
+        winston.debug("(TiledeskChatbot) FORM End");
+        winston.debug("(TiledeskChatbot) Unlocking intent for request: " + this.requestId);
+        winston.debug("(TiledeskChatbot) Populate data on lead:", lead);
+
         this.unlockIntent(this.requestId);
         if (lead) {
           this.populatePrechatFormAndLead(lead._id, this.requestId);
         }
         else {
-          if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
+          winston.debug("(TiledeskChatbot) No lead. Skipping populatePrechatFormAndLead()");
         }
         const all_parameters = await this.allParameters();
-        // if (this.log) {console.log("We have all_parameters:", all_parameters)};
         if (all_parameters && all_parameters["userFullname"]) {
           clientUpdateUserFullname = all_parameters["userFullname"];
         }
       }
       else if (form_reply.canceled) {
-        console.log("Form canceled.");
-        if (this.log) {console.log("unlocking intent due to canceling, for request", this.requestId);}
+        winston.verbose("(TiledeskChatbot) Form canceled");
+        winston.debug("(TiledeskChatbot) Unlocking intent due to canceling, for request", this.requestId);
         this.unlockIntent(this.requestId);
-        if (this.log) {console.log("sending form 'cancel' reply...", form_reply.message)}
+        winston.debug("(TiledeskChatbot) Sending form 'cancel' reply...", form_reply.message)
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
           form_reply.message.attributes = {}
@@ -475,9 +321,7 @@ class TiledeskChatbot {
         form_reply.message.attributes.fillParams = true;
         form_reply.message.attributes.splits = true;
         form_reply.message.attributes.directives = true;
-        // // used by the Clients to get some info about the intent that generated this reply
-        // form_reply.message.attributes.intent_display_name = faq.intent_display_name;
-        // form_reply.message.attributes.intent_id = faq.intent_id;
+        // used by the Clients to get some info about the intent that generated this reply
         return form_reply.message
       }
     }
@@ -497,12 +341,6 @@ class TiledeskChatbot {
     if (answerObj.actions) {
       const actions_length = answerObj.actions.length;
       TiledeskChatbotUtil.addConnectAction(answerObj);
-      if (this.log) {
-        const new_actions_length = answerObj.actions.length;
-        if (new_actions_length > actions_length) {
-          console.log("Added connect to block action. All actions now:", JSON.stringify(answerObj.actions));
-        }
-      }
     }
 
     if (answerObj.actions && answerObj.actions.length > 0) {
@@ -521,7 +359,7 @@ class TiledeskChatbot {
       };
     }
     else {
-      console.error("Intent with no actions or answer.", JSON.stringify(answerObj) );
+      winston.verbose("(TiledeskChatbot) Intent with no actions or answer.", answerObj);
       return null;
     }
     
@@ -548,21 +386,16 @@ class TiledeskChatbot {
       bot: this.bot
     }
     static_bot_answer.attributes.intent_info = intent_info;
-    // console.log("static_bot_answer.attributes.intent_info",)
-    // static_bot_answer.attributes.directives = true;
-    // static_bot_answer.attributes.splits = true;
-    // static_bot_answer.attributes.markbot = true;
-    // static_bot_answer.attributes.fillParams = true;
     static_bot_answer.attributes.webhook = answerObj.webhook_enabled;
 
     if (clientUpdateUserFullname) {
-      if (this.log) {console.log("We must clientUpdateUserFullname with:", clientUpdateUserFullname)};
+      winston.verbose("(TiledeskChatbot) We must clientUpdateUserFullname with:" + clientUpdateUserFullname)
       static_bot_answer.attributes.updateUserFullname = clientUpdateUserFullname;
     }
     // exec webhook
-    if (this.log) {console.log("exec webhook on bot:", JSON.stringify(this.bot));}
+    winston.debug("(TiledeskChatbot) exec webhook on bot:", this.bot);
     const bot_answer = await this.execWebhook(static_bot_answer, message, this.bot, context, this.token);
-    if (this.log) {console.log("bot_answer ready:", JSON.stringify(bot_answer));}
+    winston.debug("(TiledeskChatbot) bot_answer ready:", bot_answer);
     return bot_answer;
   }
 
@@ -589,7 +422,7 @@ class TiledeskChatbot {
       await this.tdcache.set("tilebot:requests:"  + requestId + ":action:locked", action_id);
     }
     else {
-      console.error("lockAction recoverable error, one of requestId:", requestId, "action_id:", action_id, "is null");
+      winston.error("(TiledeskChatbot) lockAction recoverable error, one of requestId: " + requestId + " action_id: " + action_id + " is null");
     }
   }
   
@@ -611,10 +444,6 @@ class TiledeskChatbot {
   }
 
   async getParameter(parameter_name) {
-    // console.log("this.tdcache::", this.tdcache)
-    // console.log("this.requestId::", this.requestId)
-    // console.log("parameter_name::", parameter_name)
-    
     return await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
 
@@ -624,14 +453,11 @@ class TiledeskChatbot {
 
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
     if (parameter_name === null || parameter_name === undefined) {
-      // console.error("Error saving key:", parameter_name, "value:", parameter_value);
       return;
     }
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const parameter_value_s = JSON.stringify(parameter_value);
-    // console.log("saving key:", parameter_name, "value:", parameter_value);
     if (parameter_value_s?.length > 20000000) {
-      // console.log("Error. Attribute size too big (> 20mb):", parameter_value_s);
       return;
     }
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
@@ -644,8 +470,6 @@ class TiledeskChatbot {
   static async allParametersStatic(_tdcache, requestId) {
     const parameters_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
     const attributes__as_string_map = await _tdcache.hgetall(parameters_key);
-    // console.log("** getting parameters for requestId:", requestId);
-    // console.log("** for key:", parameters_key, "parameters:", JSON.stringify(attributes__as_string_map));
     let attributes_native_values = {};
     if (attributes__as_string_map !== null) {
       for (const [key, value] of Object.entries(attributes__as_string_map)) {
@@ -653,31 +477,26 @@ class TiledeskChatbot {
           attributes_native_values[key] = JSON.parse(value);
         }
         catch(err) {
-          console.error("An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
+          winston.error("(TiledeskChatbot) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
         }
       }
     }
-    // else {
-    //   console.error("Warning: 'attributes__as_string_map' is null!");
-    // }
     return attributes_native_values;
   }
 
   async allParametersInstance(_tdcache, requestId) {
-    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     return await _tdcache.hgetall(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
   }
 
   static async getParameterStatic(_tdcache, requestId, key) {
-    // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     let value = await _tdcache.hget(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
     try {
       value = JSON.parse(value);
     }
     catch(error) {
-      console.log("Error parsing to JSON an Attribute:", error);
+      winston.error("(TiledeskChatbot) Error parsing to JSON an Attribute:", error);
     }
     return value;
   }
@@ -688,18 +507,16 @@ class TiledeskChatbot {
   }
 
   static async checkStep(_tdcache, requestId, max_steps, max_execution_time, log) {
-    if (log) {console.log("CHECKING ON MAX_STEPS:", max_steps);}
+    winston.verbose("(TiledeskChatbot) Checking on MAX_STEPS: " + max_steps);
     // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    if (log) {console.log("__parameter_key:", parameter_key);}
+    winston.verbose("(TiledeskChatbot) __parameter_key:", parameter_key);
     await _tdcache.incr(parameter_key);
-    // console.log("incr-ed");
     let _current_step = await _tdcache.get(parameter_key);
     let current_step = Number(_current_step);
     if (current_step > max_steps) {
-      if (log) {console.log("max_steps limit just violated");}
-      if (log) {console.log("CURRENT-STEP > MAX_STEPS!", current_step);}
-      // go_on = false
+      winston.verbose("(TiledeskChatbot) max_steps limit just violated");
+      winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
       return {
         error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded."
       };
@@ -712,19 +529,15 @@ class TiledeskChatbot {
     // const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 // * 60 * 12 // 12 hours
     let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
     let start_time = await _tdcache.get(start_time_key);
-    // console.log("cached start_time is:", start_time, typeof start_time);
     const now = Date.now();
     if (start_time === null || Number(start_time) === 0) {
-      // console.log("start_time is null");
       await _tdcache.set(start_time_key, now);
       return {};
     }
     else {
-      // console.log("start_time:", start_time);
       const execution_time = now - Number(start_time);
-      // console.log("execution_time:", execution_time);
       if (execution_time > max_execution_time) {
-        if (log) {console.log("execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");}
+        winston.verbose("(TiledeskChatbot) execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
         return {
           error: "Anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded."
         };
@@ -735,7 +548,6 @@ class TiledeskChatbot {
 
   static async resetStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    // console.log("resetStep() parameter_key:", parameter_key);
     if (_tdcache) {
       await _tdcache.set(parameter_key, 0);
     }
@@ -743,7 +555,6 @@ class TiledeskChatbot {
 
   static async resetStarted(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
-    // console.log("resetStarted() parameter_key:", parameter_key);
     if (_tdcache) {
       await _tdcache.set(parameter_key, 0);
     }
@@ -751,7 +562,6 @@ class TiledeskChatbot {
 
   static async currentStep(_tdcache, requestId) {
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    // console.log("currentStep() parameter_key:", parameter_key);
     return await _tdcache.get(parameter_key);
   }
 
@@ -761,24 +571,22 @@ class TiledeskChatbot {
   }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
-    if (this.log) {console.log("static_bot_answer.attributes.webhook:", static_bot_answer.attributes.webhook);}
+    winston.verbose("(TiledeskChatbot) static_bot_answer.attributes.webhook:" + static_bot_answer.attributes.webhook);
     if (static_bot_answer.attributes && static_bot_answer.attributes.webhook && static_bot_answer.attributes.webhook === true) {
       const variables = await this.allParameters();
       context.variables = variables;
-      if (this.log) {console.log("adding variables to webhook context:", JSON.stringify(context.variables));}
+      winston.debug("(TiledeskChatbot) adding variables to webhook context:", context.variables);
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
     messagePipeline.addPlug(new WebhookChatbotPlug(userMessage.request, webhookurl, this.token, this.log));
     const bot_answer = await messagePipeline.exec();
-    //if (log) {console.log("End pipeline, bot_answer:", JSON.stringify(bot_answer));}
     return bot_answer;
   }
 
   async execIntentForm(userInputReply, form) {
-    if (this.log) {console.log("executing intent form...")}
+    winston.verbose("(TiledeskChatbot) Executing intent form...")
     let all_parameters = await this.allParameters();
-    // if (this.log) {console.log("allParameters for IntentForm:", all_parameters)}
     let intentForm = new IntentForm(
       {
         form: form,
@@ -792,10 +600,10 @@ class TiledeskChatbot {
   }
 
   async populatePrechatFormAndLead(leadId, requestId) {
-    if (this.log) {console.log("(populatePrechatFormAndLead) leadId:", leadId);}
-    if (this.log) {console.log("(populatePrechatFormAndLead) requestId:", requestId);}
+    winston.verbose("(TiledeskChatbot) (populatePrechatFormAndLead) leadId:" + leadId);
+    winston.verbose("(TiledeskChatbot) (populatePrechatFormAndLead) requestId:" + requestId);
     if (!leadId && !requestId) {
-      if (this.log) {console.log("(populatePrechatFormAndLead) !leadId && !requestId");}
+      winston.verbose("(TiledeskChatbot) (populatePrechatFormAndLead) !leadId && !requestId");
       return;
     }
     const tdclient = new TiledeskClient({
@@ -807,18 +615,18 @@ class TiledeskChatbot {
     });
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.allParameters();//this.tdcache.hgetall(parameters_key);
-    if (this.log) {console.log("(populatePrechatFormAndLead) parameters_key:", JSON.stringify(all_parameters));}
+    winston.debug("(TiledeskChatbot) (populatePrechatFormAndLead) parameters_key:" + JSON.stringify(all_parameters));
     if (all_parameters) {
-      if (this.log) {console.log("(populatePrechatFormAndLead) userEmail:", all_parameters['userEmail']);}
-      if (this.log) {console.log("(populatePrechatFormAndLead) userFullname:", all_parameters['userFullname']);}
-      if (this.log) {console.log("(populatePrechatFormAndLead) userPhone:", all_parameters['userPhone']);}
+      winston.debug("(TiledeskChatbot) (populatePrechatFormAndLead) userEmail:" + all_parameters['userEmail']);
+      winston.debug("(TiledeskChatbot) (populatePrechatFormAndLead) userFullname:" + all_parameters['userFullname']);
+      winston.debug("(TiledeskChatbot) (populatePrechatFormAndLead) userPhone:" + all_parameters['userPhone']);
       let nativeAttributes = {
         email: all_parameters['userEmail'],
         fullname: all_parameters['userFullname'],
         phone: all_parameters['userPhone']
       }
       tdclient.updateLead(leadId, nativeAttributes, null, null, () => {
-        if (this.log) {console.log("Lead updated.")}
+        winston.verbose("(TiledeskChatbot) Lead updated.")
       });
     };
   }

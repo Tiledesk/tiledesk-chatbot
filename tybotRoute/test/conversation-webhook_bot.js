@@ -35,8 +35,6 @@ const bot = {
 // normalize the bot structure for the static intent search
 let intents = bot.intents;
 delete bot.intents;
-// console.log ("bot still is", JSON.stringify(bot));
-// console.log ("bintents still are", intents[0]);
 intent_dict = {};
 for (let i = 0; i < intents.length; i++) {
   intent_dict[intents[i].intent_display_name] = intents[i];
@@ -47,5 +45,4 @@ const bots_data = {
   "bots": {}
 }
 bots_data.bots["botID"] = bot;
-//console.log("bots_data.bots[", bots_data.bots["botID"]);
 module.exports = { bots_data: bots_data };

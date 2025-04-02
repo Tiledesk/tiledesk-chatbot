@@ -1,6 +1,7 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
+const winston = require('../../utils/winston');
 
 class DirReplaceBot {
 
@@ -23,7 +24,7 @@ class DirReplaceBot {
   }
 
   execute(directive, callback) {
-    if (this.log) {console.log("Replacing bot");}
+    winston.verbose("Execute ReplaceBot directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -35,6 +36,7 @@ class DirReplaceBot {
       }
     }
     else {
+      winston.warn("DirReplaceBot Incorrect directive: ", directive);
       callback();
     }
     this.go(action, () => {
@@ -43,6 +45,7 @@ class DirReplaceBot {
   }
 
   async go(action, callback) {
+    winston.debug("(DirReplaceBot) Action: ", action);
     let botName = action.botName;
     let variables = null;
     variables = 

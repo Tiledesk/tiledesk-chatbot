@@ -20,7 +20,6 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.person.cnn) === Number("10")');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -42,7 +41,6 @@ describe('JSON to expression', function() {
       }]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.persons[0].cnn) === Number("10")');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -73,7 +71,6 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.persons[persons.length - 1].cnn) === Number($data.owner.cnn)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -104,7 +101,6 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.persons[persons.length - 1].cnn) === Number($data.owner.cnn)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === false);
@@ -132,7 +128,6 @@ describe('JSON to expression', function() {
       ]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.persons[persons.length - 1].cnn) === Number($data.persons[0].cnn)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -160,7 +155,6 @@ describe('JSON to expression', function() {
       ]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.persons[persons.length - 1].cnn) === Number($data.persons[0].cnn)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === false);
@@ -183,7 +177,6 @@ describe('JSON to expression', function() {
       ]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.persons[0].cnn === undefined');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -206,7 +199,6 @@ describe('JSON to expression', function() {
       ]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.persona === undefined');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -229,7 +221,6 @@ describe('JSON to expression', function() {
       ]
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.persona?.age === undefined');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -248,7 +239,6 @@ describe('JSON to expression', function() {
       persons: null
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.persons === null');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
     assert(result === true);
@@ -264,7 +254,6 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.persons === undefined');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, null);
     assert(result === true);
@@ -280,10 +269,8 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === '$data.andrea[].{ === undefined');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, null);
-    console.log("result:", result);
     assert(result === null);
   });
 
@@ -298,10 +285,8 @@ describe('JSON to expression', function() {
       }
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.varName) === Number($data.var[].{)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, null);
-    console.log("result:", result);
     assert(result === null);
   });
 
@@ -321,10 +306,8 @@ describe('JSON to expression', function() {
       age: 10
     }
     const expression = TiledeskExpression.JSONConditionToExpression(condition);
-    console.log("expression:", expression);
     assert(expression === 'Number($data.varName) === Number($data.age)');
     const result = new TiledeskExpression().evaluateStaticExpression(expression, vars);
-    console.log("result:", result);
     assert(result === true);
   });
 

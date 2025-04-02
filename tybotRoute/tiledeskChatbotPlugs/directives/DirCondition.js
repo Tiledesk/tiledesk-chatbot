@@ -1,7 +1,8 @@
 const { DirIntent } = require('./DirIntent');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirCondition {
 
@@ -15,7 +16,7 @@ class DirCondition {
   }
 
   execute(directive, callback) {
-    // console.log("Condition...")
+    winston.verbose("Execute Condition directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -34,6 +35,7 @@ class DirCondition {
       }
     }
     else {
+      winston.warn("DirCondition Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -44,10 +46,12 @@ class DirCondition {
   }
 
   async go(action, callback) {
+    winston.debug("(DirCondition) Action: ", action);
     const scriptCondition = action.scriptCondition;
     const jsonCondition = action.jsonCondition;
-    if (this.log) {console.log("scriptCondition:", scriptCondition);}
-    if (this.log) {console.log("jsonCondition:", JSON.stringify(jsonCondition));}
+    winston.debug("(DirCondition) scriptCondition:", scriptCondition);
+    winston.debug("(DirCondition) jsonCondition:", jsonCondition);
+
     // const condition = action.condition;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
@@ -58,24 +62,24 @@ class DirCondition {
     if (falseIntent && falseIntent.trim() === "") {
       falseIntent = null;
     }
-    if (this.log) {console.log("condition action:", action);}
+    winston.debug("(DirCondition) condition action: ", action);
     if (!trueIntent && !falseIntent) {
-      if (this.log) {console.log("Invalid condition, no intents specified");}
+      winston.error("(DirCondition) Invalid condition, no intents specified");
       callback();
       return;
     }
     if (scriptCondition === null && jsonCondition === null) {
-      if (this.log) {console.log("Invalid condition, scriptCondition & jsonCondition null");}
+      winston.error("(DirCondition) Invalid condition, scriptCondition & jsonCondition null");
       callback();
       return;
     }
     if (scriptCondition !== null && scriptCondition.trim === "") {
-      if (this.log) {console.log("Invalid condition, scriptCondition is empty");}
+      winston.error("(DirCondition) Invalid condition, scriptCondition is empty");
       callback();
       return;
     }
     else if (jsonCondition && jsonCondition.groups === null) {
-      if (this.log) {console.log("Invalid jsonCondition, no groups:", JSON.stringify(jsonCondition));}
+      winston.error("(DirCondition) Invalid jsonCondition, no groups:", jsonCondition);
       callback();
       return;
     }
@@ -93,12 +97,12 @@ class DirCondition {
       await TiledeskChatbot.allParametersStatic(
         this.context.tdcache, this.context.requestId
       );
-      if (this.log) {console.log("Variables:", JSON.stringify(variables))}
+      winston.debug("(DirCondition) Variables:", variables)
     }
     else {
-      console.error("(DirCondition) No this.context.tdcache");
+      winston.error("(DirCondition) No this.context.tdcache");
     }
-    if (this.log) {console.log("condition:", scriptCondition);}
+    winston.debug("(DirCondition) condition:", scriptCondition);
     // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
     if (scriptCondition) {
@@ -107,19 +111,17 @@ class DirCondition {
     }
     else if (jsonCondition) {
       const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
-      // console.log("full json condition expression:", expression);
       result = new TiledeskExpression().evaluateStaticExpression(expression);
     }
-    if (this.log) {console.log("executed condition:", scriptCondition, "result:", result);}
+    winston.debug("(DirCondition) executed condition: " + JSON.stringify(scriptCondition) + " result: " + JSON.stringify(result));
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
-          // console.log("result === true. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        winston.debug("(DirCondition) No trueIntentDirective specified");
         callback();
         return;
       }
@@ -127,12 +129,11 @@ class DirCondition {
     else {
       if (falseIntentDirective) {
         this.intentDir.execute(falseIntentDirective, () => {
-          // console.log("result === false. stopOnConditionMet?", stopOnConditionMet);
           callback(stopOnConditionMet);
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        winston.debug("(DirCondition) No falseIntentDirective specified");
         callback();
         return;
       }
@@ -141,14 +142,7 @@ class DirCondition {
 
   // async evaluateCondition(_condition, variables) {
   //   let condition = _condition.replace("$", "$data.");
-  //   if (this.log) {
-  //     console.log("Evaluating expression:", condition);
-  //     console.log("With variables:", variables);
-  //   }
   //   const result = new TiledeskExpression().evaluate(condition, variables)
-  //   if (this.log) {
-  //     console.log("Expression result:", result);
-  //   }
   //   return result;
   // }
 

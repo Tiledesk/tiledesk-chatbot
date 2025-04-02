@@ -7,6 +7,7 @@ const { request } = require('express');
 const { v4: uuidv4 } = require('uuid');
 let https = require("https");
 const { Console } = require('console');
+const winston = require("./utils/winston")
 
 /**
  * This class is a NodeJS stub for Tiledesk's REST APIs
@@ -34,7 +35,6 @@ class TiledeskClientTest {
    * @param {boolean} options.log Optional. If true HTTP requests are logged.
    */
   constructor(options) {
-    // console.log("...options:", options)
 
     if (!options) {
       throw new Error('options.APIKEY, options.projectId and options.token are mandatory.');
@@ -2074,9 +2074,7 @@ class TiledeskClientTest {
       TiledeskClientTest.myrequest(
         HTTPREQUEST,
         function(err, resbody) {
-            console.log("myrequest REPL");
           if (err) {
-            console.log("ERRRRRRRRRR");
             if (callback) {
               callback(err);
             }
@@ -2085,7 +2083,6 @@ class TiledeskClientTest {
             }
           }
           else {
-            console.log("REEEEEESOL");
             resolve(resbody);
             if (callback) {
               callback(null, resbody);
@@ -2426,10 +2423,8 @@ class TiledeskClientTest {
   // ************************************************
 
   static myrequest(options, callback, log) {
-    if (log) {
-      console.log("** API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
+    winston.verbose("(TiledeskClientTest) API URL: " + options.url);
+    winston.verbose("(TiledeskClientTest) Options:", options);
     let axios_settings = {
       url: options.url,
       method: options.method,
@@ -2437,47 +2432,29 @@ class TiledeskClientTest {
       params: options.params,
       headers: options.headers
     }
-    // console.log("options.url.startsWith(https:)", options.url.startsWith("https:"))
-    // console.log("this.httpsOptions", this.httpsOptions)
     
     if (options.url.startsWith("https:") && options.httpsOptions) {
-      // console.log("Tiledesk Client v 0.9.x: url.startsWith https: && httpsOptions");
       const httpsAgent = new https.Agent(options.httpsOptions);
       axios_settings.httpsAgent = httpsAgent;
     }
     else if (options.url.startsWith("https:") && !options.httpsOptions) {
       // HTTPS default is rejectUnauthorized: false
-      // console.log("Tiledesk Client v 0.9.x: url.startsWith https: && NOT httpsOptions");
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
       });
       axios_settings.httpsAgent = httpsAgent;
     }
     
-    // console.log("Using axios settings:", axios_settings)
-    // axios(
-    //   {
-    //     url: options.url,
-    //     method: options.method,
-    //     data: options.json,
-    //     params: options.params,
-    //     httpsAgent: httpsAgent,
-    //     headers: options.headers
-    //   })
     axios(axios_settings)
     .then(function (res) {
-    //   if (log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-        //console.log("******** Response for url:", res);
-    //   }
+      winston.verbose("(TiledeskClientTest) Response for url:" + options.url);
+      winston.verbose("(TiledeskClientTest) Response headers:\n", res.headers);
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
         }
       }
       else {
-        console.log("PROBLEMIIIII")
         if (callback) {
           callback(TiledeskClientTest.getErr({message: "Response status not 200"}, options, res), null, null);
         }

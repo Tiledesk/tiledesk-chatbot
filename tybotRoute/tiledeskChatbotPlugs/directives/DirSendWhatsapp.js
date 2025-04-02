@@ -1,7 +1,9 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
 
 let whatsapp_api_url;
 
@@ -21,13 +23,13 @@ class DirSendWhatsapp {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("DirWhatsappStatic directive: ", directive); }
+    winston.verbose("Execute SendWhatsapp directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirSendWhatsapp Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -38,9 +40,9 @@ class DirSendWhatsapp {
 
   async go(action, callback) {
 
-    if (this.log) { console.log("DirWhatsappStatic action: ", JSON.stringify(action)) }
+    winston.debug("(DirSendWhatsapp) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirAskGPT tdcache is mandatory");
+      winston.error("(DirSendWhatsapp) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -80,7 +82,7 @@ class DirSendWhatsapp {
     } else {
       whatsapp_api_url = this.API_ENDPOINT + "/modules/whatsapp/api"
     }
-    if (this.log) { console.log("DirSendWhatsapp whatsapp_api_url: ", whatsapp_api_url); };
+    winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsapp_api_url);
 
     const HTTPREQUEST = {
       url: whatsapp_api_url + "/tiledesk/broadcast",
@@ -91,12 +93,12 @@ class DirSendWhatsapp {
       method: 'POST'
     }
 
-    if (this.log) { console.log("DirSendWhatsapp HTTPREQUEST:  ", HTTPREQUEST); }
+    winston.debug("(DirSendWhatsapp) HttpRequest:  ", HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          console.error("DirSendWhatsapp error: ", err);
+          winston.error("(DirSendWhatsapp)  error: ", err)
           await this.chatbot.addParameter("flowError", "SendWhatsapp Error: " + err);
           if (callback) {
             if (falseIntent) {
@@ -118,7 +120,7 @@ class DirSendWhatsapp {
             return;
           }
         } else {
-          if (this.log) { console.log("DirSendWhatsapp unexpected resbody: ", resbody); }
+          winston.debug("(DirSendWhatsapp) unexpected resbody: ", resbody);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -151,7 +153,7 @@ class DirSendWhatsapp {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirSendWhatsapp) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -166,7 +168,7 @@ class DirSendWhatsapp {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirSendWhatsapp) No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -209,37 +211,10 @@ class DirSendWhatsapp {
         resolve(receiver);
 
       } catch(err) {
-        console.error("DirSendWhatsapp fillWholeReceiver error: ", err)
+        winston.error("(DirSendWhatsapp) fillWholeReceiver error: ", err)
         resolve(null);
       }
 
-    })
-  }
-
-  // HTTP REQUEST
-  async #myrequest(options, callback, log) {
-    return await axios({
-      url: options.url,
-      method: options.method,
-      data: options.json,
-      params: options.params,
-      headers: options.headers
-    }).then((res) => {
-      if (res && res.status == 200 && res.data) {
-        if (callback) {
-          callback(null, res.data);
-        }
-      }
-      else {
-        if (callback) {
-          callback(TiledeskClient.getErr({ message: "Response status not 200" }, options, res), null, null);
-        }
-      }
-    }).catch((err) => {
-      console.error("(tybot request) An error occured: ", err);
-      if (callback) {
-        callback(err, null, null);
-      }
     })
   }
 }

@@ -61,7 +61,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number("2") + Number("1")) - Number("5")');
         });
     
@@ -83,7 +83,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number("5") - Number("3")) / Number("4")');
         });
     
@@ -113,7 +113,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number("5") - Number("3")) / Number("4")) * Number("7")) - Number("3")');
         });
     })
@@ -133,7 +133,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String("hello") + String("world")');
         });
 
@@ -155,7 +155,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String(String("hello") + String("world")) + String("!!!")');
         });
     });
@@ -176,7 +176,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String("hello") + String($data.name)');
         });
 
@@ -199,7 +199,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String(String("hello") + String("world")) + String($data.special)');
         });
     });
@@ -216,7 +216,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'TiledeskString.capitalize(String("hello"))');
         });
 
@@ -229,9 +229,8 @@ describe('JSON operation to expression', function() {
                     function: "JSONparse"
                 }
             ];
-            // console.log("JSONparse value:", operands[0].value);
+
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("JSONparse expression:", expression);
             assert.equal(expression, 'JSON.parse(String("{\\"name\\":\\"Andrea\\"}"))');
         });
 
@@ -244,9 +243,8 @@ describe('JSON operation to expression', function() {
                     function: "JSONparse"
                 }
             ];
-            // console.log("JSONparse value:", operands[0].value);
+
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("JSONparse expression:", expression);
             assert.equal(expression, 'JSON.parse(String($data.json_var))');
         });
 
@@ -270,10 +268,10 @@ describe('JSON operation to expression', function() {
             ];
 
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String(String(TiledeskString.capitalize(String("hello"))) + String(" ")) + String(TiledeskString.capitalize(String("world")))');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {'TiledeskString': TiledeskString});
-            // console.log("result:", result);
+             
             assert.equal(result, 'Hello World');
         });
     });
@@ -300,7 +298,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'String(String(String("HELLO").toLowerCase()) + String(String($data.name).toUpperCase())) + String($data.special)');
         });
     });
@@ -326,9 +324,9 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {name: "Francesco", special: "!!!"});
-            // console.log("result:", result);
+             
             assert.equal(result, 'helloFRANCESCO!!!');
         });
 
@@ -364,9 +362,9 @@ describe('JSON operation to expression', function() {
             ];
 
             const expression = TiledeskExpression.JSONOperationToExpression(operator, operands);
-            // console.log("expression:", expression);
+             
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {name: "Francesco", surname: "Latino", company: "Tiledesk"});
-            // console.log("result:", result);
+             
             assert.equal(result, 'Francesco Latino Tiledesk');
         })
     });
@@ -387,9 +385,9 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {name: "world"});
-            // console.log("result:", result);
+             
             assert.equal(result, 'helloworld');
         });
 
@@ -411,9 +409,9 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {special: "!!!"});
-            // console.log("result:", result);
+             
             assert.equal(result, 'helloworld!!!');
         });
     });
@@ -447,7 +445,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number(TiledeskMath.round(Number("5.5"))) - Number("3")) / Number(TiledeskMath.abs(Number("-4")))) * Number("7")) - Number("3")');
         });
 
@@ -471,7 +469,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(TiledeskMath.floor(Number("1.123"))) + Number("2")) / Number(TiledeskMath.round(Number("2.1")))');
         });
     });
@@ -491,7 +489,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number($data.score) + Number("12")');
         });
     
@@ -513,7 +511,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number($data.score) + Number("12")) - Number("5")');
         });
 
@@ -545,7 +543,7 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number(TiledeskMath.round(Number($data.score))) - Number("3")) / Number(TiledeskMath.abs(Number("-4")))) * Number("7")) - Number($data.tot)');
         });
     });
@@ -564,10 +562,10 @@ describe('JSON operation to expression', function() {
                 }
             ];
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number("5") + Number("3")');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {});
-            // console.log("result:", result);
+             
             assert.equal(result, 8);
         });
         
@@ -597,10 +595,10 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number("5") - Number("3")) / Number("4")) * Number("7")) - Number("3")');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {});
-            // console.log("result:", result);
+             
             assert.equal(result, 0.5);
         });
 
@@ -639,10 +637,10 @@ describe('JSON operation to expression', function() {
             ];
 
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number(Number(Number(TiledeskMath.abs(Number("-3"))) + Number("5")) / Number("6")) - Number("5")) * Number("6")) + Number("7")) / Number("8")');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {'TiledeskMath': TiledeskMath});
-            // console.log("result:", result);
+             
             assert.equal(result, -1.875);
         });
     });
@@ -661,10 +659,10 @@ describe('JSON operation to expression', function() {
                 }
             ];
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number($data.score) + Number("3")');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5});
-            // console.log("result:", result);
+             
             assert.equal(result, 8);
         });
         
@@ -694,10 +692,10 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number($data.score) - Number("3")) / Number("4")) * Number("7")) - Number($data.tot)');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5, tot: 3});
-            // console.log("result:", result);
+             
             assert.equal(result, 0.5);
         });
         it('should be -11.34', function() {
@@ -713,10 +711,10 @@ describe('JSON operation to expression', function() {
                 }
             ];
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number($data.score) - Number($data.tot)');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5, tot: 16.34});
-            // console.log("result:", result);
+             
             assert.equal(result, -11.34);
         });
     });
@@ -736,10 +734,10 @@ describe('JSON operation to expression', function() {
                 }
             ];
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(TiledeskMath.round(Number($data.score))) + Number("3")');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5.2, 'TiledeskMath': TiledeskMath});
-            // console.log("result:", result);
+             
             assert.equal(result, 8);
         });
         it('should be 0.5', function() {
@@ -769,10 +767,10 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number(TiledeskMath.round(Number($data.score))) - Number("3")) / Number("4")) * Number("7")) - Number($data.tot)');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5.2, tot: 3, 'TiledeskMath': TiledeskMath});
-            // console.log("result:", result);
+             
             assert.equal(result, 0.5);
         });
         it('should be 0.5', function() {
@@ -803,10 +801,10 @@ describe('JSON operation to expression', function() {
             ];
     
             const expression = TiledeskExpression.JSONOperationToExpression(operators, operands);
-            // console.log("expression:", expression);
+             
             assert.equal(expression, 'Number(Number(Number(Number(TiledeskMath.round(Number($data.score))) - Number("3")) / Number(TiledeskMath.abs(Number("-4")))) * Number("7")) - Number($data.tot)');
             const result = new TiledeskExpression().evaluateJavascriptExpression(expression, {score: 5.2, tot: 3, 'TiledeskMath': TiledeskMath});
-            // console.log("result:", result);
+             
             assert.equal(result, 0.5);
         });
     });        
