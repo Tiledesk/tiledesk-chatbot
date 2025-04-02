@@ -6,7 +6,7 @@ const LOGS_BASE_ROUTING_KEY = process.env.LOGS_BASE_ROUTING_KEY || "apps.tilecha
 
 const levels = { error: 0, warn: 1, info: 2, debug: 3 };
 
-this.publisher = new Publisher(AMQP_MANAGER_URL, {
+let publisher = new Publisher(AMQP_MANAGER_URL, {
     debug: false,
     queueName: "logs_queue",
     exchange: "amq.topic"
@@ -73,8 +73,8 @@ class Logger {
     }
 
     base(level, text) {
-        if (!this.request_id || !this.publisher) {
-            console.log("Return because request or publisher is undefined", this.request_id, this.publisher);
+        if (!this.request_id || !publisher) {
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
@@ -89,7 +89,7 @@ class Logger {
         }
 
         let topic = LOGS_BASE_ROUTING_KEY + `.${request_id}`;
-        this.publisher.publish(data, topic);
+        publisher.publish(data, topic);
         return;
     }
 
