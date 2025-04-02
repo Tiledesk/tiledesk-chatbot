@@ -1,8 +1,11 @@
 let axios = require('axios');
 let https = require("https");
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
+const winston = require('../../utils/winston')
+const httpUtils = require('../../utils/HttpUtils');
+const integrationService = require('../../services/IntegrationService');
 
 class DirAssistant {
   constructor(context) {
@@ -12,29 +15,31 @@ class DirAssistant {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute Assistant directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      if (this.log) {console.log("(DirAssistant, stop?", stop); }
       callback(stop);
     });
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("DirAssistant action:", JSON.stringify(action));}
+    winston.debug("(DirAssistant) Action: ", action);
     let requestAttributes = null;
     if (this.tdcache) {
       requestAttributes = 
@@ -73,7 +78,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
-      console.error("DirAssistant error: no assistantId.");
+      winston.error("(DirAssistant) Error: no assistantId.");
       callback();
       return;
     }
@@ -84,7 +89,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
-      console.error("DirAssistant error: no prompt.");
+      winston.error("(DirAssistant) Error: no prompt.");
       callback();
       return;
     }
@@ -94,7 +99,7 @@ class DirAssistant {
       assistantId = filler.fill(_assistantId, requestAttributes);
     }
     catch(error) {
-      console.error("Error while filling assistantId:", error);
+      winston.error("(DirAssistant) Error while filling assistantId:", error);
     }
 
     let prompt = _prompt;
@@ -102,14 +107,13 @@ class DirAssistant {
       prompt = filler.fill(_prompt, requestAttributes);
     }
     catch(error) {
-      console.error("Error while filling prompt:", error);
+      winston.error("(DirAssistant) Error while filling prompt:", error);
     }
 
-    if (this.log) {
-      console.log("settings ok");
-      console.log("prompt:", prompt);
-      console.log("assistantId:", assistantId);
-    }
+    winston.debug("(DirAssistant) settings ok");
+    winston.debug("(DirAssistant) prompt: " + prompt);
+    winston.debug("(DirAssistant) assistantId: " + assistantId);
+    
     // Condition branches
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
@@ -123,10 +127,9 @@ class DirAssistant {
     this.timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
     
     let apikey = await this.getGPT_APIKEY();
-    if (this.log) {console.log("apikey:", apikey);}
     if (!apikey) {
       const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
-      if (this.log) { console.error(reply); };
+      winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -142,21 +145,19 @@ class DirAssistant {
       threadId = requestAttributes[threadIdAttribute];
       if (!threadId || (threadId && threadId.trim() === '') ) {
         // create thread if it doesn't exist
-        if (this.log) {console.log("Creating thread");}
+        winston.debug("(DirAssistant) Creating thread");
         const thread = await this.createThread(apikey);
-        if (this.log) {console.log("Thread crated.");}
+        winston.debug("(DirAssistant) Thread crated.");
         threadId = thread.id;
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, threadIdAttribute, threadId);
-        if (this.log) {
-          console.log("thread:", thread);
-          console.log("threadId:", threadId);
-        }
+        winston.debug("(DirAssistant) thread: ", thread);
+        winston.debug("(DirAssistant) threadId: " + threadId);
       }
       else {
-        if (this.log) { console.log("Reusing threadId (used flow attribute:" + threadIdAttribute + "):", threadId); }
+        winston.debug("(DirAssistant) Reusing threadId (used flow attribute: " + threadIdAttribute + "):" + threadId);
       }
       await this.addMessage(prompt, threadId, apikey);
-      if (this.log) {console.log("Message added.");}
+      winston.debug("(DirAssistant) Message added.");
       await this.runThreadOnAssistant(assistantId, threadId, apikey);
       let messages = await this.threadMessages(threadId, apikey);
       let lastMessage = null;
@@ -192,7 +193,7 @@ class DirAssistant {
       }
     }
     catch (error) {
-      if (this.log) { console.error("error:", error); }
+      winston.error("(DirAssistant) error:", error);
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, error);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -221,7 +222,7 @@ class DirAssistant {
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        winston.debug("(DirAssistant) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -236,7 +237,7 @@ class DirAssistant {
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        winston.debug("(DirAssistant) No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -253,7 +254,6 @@ class DirAssistant {
     if (action.settings.timeout) {
       if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
         timeout = Math.round(action.settings.timeout)
-        // console.log("new timeout:", timeout);
       }
     }
     return timeout
@@ -264,12 +264,12 @@ class DirAssistant {
       return process.env.TEST_OPENAI_APIKEY
     }
     else {
-      return await this.getKeyFromIntegrations();
+      return await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     }
   }
 
   async createThread(apikey) {
-    if (this.log) { console.log("creating thread..."); }
+    winston.debug("(DirAssistant) creating thread...");
     return new Promise( async (resolve, reject) => {
       const url = "https://api.openai.com/v1/threads";
       const headers = {
@@ -283,22 +283,17 @@ class DirAssistant {
         method: "POST",
         timeout: this.timeout
       };
-      if (this.log) {console.log("DirAssistant HTTPREQUEST", HTTPREQUEST);}
-      this.#myrequest(
+      winston.debug("(DirAssistant) DirAssistant HttpRequest", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
-            if (this.log) {console.error("DirAssistant error:", err);}
+            winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            if (this.log) {console.log("got threadid res:", res);}
-            let thread = res.data;
-            resolve(thread)
-          }
-          else {
-            reject(new Error("Thread creation status != 200:", status));
-          }
+          let thread = res;
+          winston.debug("(DirAssistant) got threadid res: ", res);
+          resolve(thread)
         }
       );
     });
@@ -343,22 +338,16 @@ class DirAssistant {
         method: "POST",
         timeout: this.timeout
       };
-      if (this.log) {console.log("DirAssistant HTTPREQUEST", HTTPREQUEST);}
-      this.#myrequest(
+      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
-            if (this.log) {console.error("DirAssistant error:", err);}
+            winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            if (this.log) {console.log("got response data:", res.data);}
-            // let return_body = res.data;
-            resolve();
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAssistant) got response data: ", res);
+          resolve();
         }
       );
     });
@@ -366,23 +355,23 @@ class DirAssistant {
   
   async runThreadOnAssistant(assistantId, threadId, apikey) {
     let _run = await this.createRun(threadId, assistantId, apikey);
-    if (this.log) {console.log("Got run:", _run);}
+    winston.debug("(DirAssistant) Got run: ", _run);
     let runId = _run.id;
-    if (this.log) {console.log("runId:", runId);}
+    winston.debug("(DirAssistant) runId: " + runId);
     let status = null;
     do {
-      if (this.log) {console.log("Getting run...");}
+      winston.debug("(DirAssistant) Getting run...");
       const wait_for = 2000;
-      if (this.log) {console.log("Waiting:", wait_for);}
+      winston.debug("(DirAssistant) Waiting: " + wait_for);
       await new Promise(resolve => setTimeout(resolve, wait_for));
       let run = await this.getRun(threadId, runId, apikey);
       status = run.status;
-      if (this.log) {console.log("Run status:", status);}
+      winston.debug("(DirAssistant) Run status: " + status);
     }
     while (status === "queued" || status === "in_progress" || status === "requires_action" && status === "cancelling");
     // while (status != "completed" && status != "cancelled" && status != "failed" && status != "expired");
     // queued, in_progress, requires_action, cancelling
-    if (this.log) {console.log("Run end.");}
+    winston.debug("(DirAssistant) Run end.");
   }
 
   async createRun(threadId, assistantId, apikey) {
@@ -391,7 +380,7 @@ class DirAssistant {
     }
 
     return new Promise( async (resolve, reject) => {
-      if (this.log) {console.log("adding message to thread...");}
+      winston.debug("(DirAssistant) adding message to thread...");
       const url = `https://api.openai.com/v1/threads/${threadId}/runs`;
       const headers = {
         "Authorization": apikey,
@@ -404,22 +393,15 @@ class DirAssistant {
         method: "POST",
         timeout: this.timeout
       };
-      if (this.log) {console.log("DirAssistant HTTPREQUEST", HTTPREQUEST);}
-      this.#myrequest(
+      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
           if (err) {
-            if (this.log) {console.error("DirAssistant error:", err);}
+            winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            if (this.log) {console.log("got response data:", res.data);}
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -439,22 +421,15 @@ class DirAssistant {
         method: "GET",
         timeout: this.timeout
       };
-      if (this.log) {console.log("DirAssistant HTTPREQUEST", HTTPREQUEST);}
-      this.#myrequest(
+      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
           if (err) {
-            if (this.log) {console.error("DirAssistant error:", err);}
+            winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            if (this.log) {console.log("got response data:", res.data);}
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -474,169 +449,19 @@ class DirAssistant {
         method: "GET",
         timeout: this.timeout
       };
-      if (this.log) {console.log("DirAssistant HTTPREQUEST", HTTPREQUEST);}
-      this.#myrequest(
+      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
+      httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
           if (err) {
-            if (this.log) {console.error("DirAssistant error:", err);}
+            winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            if (this.log) {console.log("got response data:", res.data);}
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
   }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      if (this.log) { console.log("DirAssistant INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, res) => {
-          if (err) {
-            resolve(null);
-          } else {
-            let integration = res.data;
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
-  #myrequest(options, callback) {
-    try {
-      if (this.log) {
-        console.log("API URL:", options.url);
-        //console.log("** Options:", JSON.stringify(options));
-        // Stringify "options". FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-        let cache = [];
-        let str_Options = JSON.stringify(options, function(key, value) { // try to use a separate function
-          if (typeof value === 'object' && value != null) {
-            if (cache.indexOf(value) !== -1) {
-              return;
-            }
-            cache.push(value);
-          }
-          return value;
-        });
-        console.log("** Options:", str_Options);
-
-
-      }
-      let axios_options = {
-        url: options.url,
-        method: options.method,
-        params: options.params,
-        headers: options.headers,
-        timeout: options.timeout
-      }
-    
-      if (options.json !== null) {
-        axios_options.data = options.json
-      }
-      // if (this.log) {
-      //   console.log("axios_options:", JSON.stringify(axios_options));
-      // }
-      if (options.url.startsWith("https:")) {
-        const httpsAgent = new https.Agent({
-          rejectUnauthorized: false,
-        });
-        axios_options.httpsAgent = httpsAgent;
-      }
-    
-      axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          // console.log("Success Response:", res);
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (callback) {
-          callback(null, res);
-        }
-      })
-      .catch( (err) => {
-        if (this.log) {
-          if (err.response) {
-            console.log("Error Response data:", err.response.data);
-          }
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-          let cache = [];
-          let error_log = JSON.stringify(err, function(key, value) { // try to use a separate function
-            if (typeof value === 'object' && value != null) {
-              if (cache.indexOf(value) !== -1) {
-                return;
-              }
-              cache.push(value);
-            }
-            return value;
-          });
-          console.error("(DirAssistant) An error occurred: ", error_log);
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          // console.error("An error occurred:", JSON.stringify(err));
-        }
-        if (callback) {
-          let status = 1000;
-          let cache = [];
-          let str_error = JSON.stringify(err, function(key, value) { // try to use a separate function
-            if (typeof value === 'object' && value != null) {
-              if (cache.indexOf(value) !== -1) {
-                return;
-              }
-              cache.push(value);
-            }
-            return value;
-          });
-          let error = JSON.parse(str_error) // "status" disappears without this trick
-          let errorMessage = JSON.stringify(error);
-          if (error.status) {
-            status = error.status;
-          }
-          if (error.message) {
-            errorMessage = error.message;
-          }
-          let data = null;
-          if (err.response) {
-            data =  err.response.data;
-          }
-          callback(
-            {
-              status: status,
-              data: data,
-              error: errorMessage
-            }, data
-          );
-        }
-      });
-    }
-    catch(error) {
-      console.error("Error:", error);
-    }
-  }
-
 }
 
 

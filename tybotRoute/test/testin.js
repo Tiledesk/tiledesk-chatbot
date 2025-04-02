@@ -12,8 +12,6 @@ describe('Conversation1 - Form filling', async () => {
 
 async function unlockIntent(tdcache, requestId) {
   await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
-  // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
-  // console.log("unlocked.")
 }
 
 function pippo(callback) {

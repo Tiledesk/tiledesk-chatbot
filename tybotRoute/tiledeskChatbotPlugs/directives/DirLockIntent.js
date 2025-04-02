@@ -1,4 +1,5 @@
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirLockIntent {
 
@@ -15,23 +16,19 @@ class DirLockIntent {
   }
 
   async execute(directive, callback) {
-    if (this.log) {console.log("Locking intent:", JSON.stringify(directive));}
+    winston.verbose("Execute LockIntent directive");
     let action;
     if (directive.action) {
-      // console.log("got intent action:", JSON.stringify(directive.action));
       action = directive.action;
     }
     else if (directive.parameter && directive.parameter.trim() !== "") {
       const params = this.parseParams(directive.parameter);
       action = {
-        // body: {
-        intentName: params.intentName // directive.parameter.trim()
-          // variableName: params.variableName
-        // }
+        intentName: params.intentName 
       }
     }
     else {
-      console.error("Incorrect directive:", directive);
+      winston.warn("DirLockIntent Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -49,11 +46,11 @@ class DirLockIntent {
   }
 
   async go(action, callback) {
-    // let intent_name = action.body.intentName;
+    winston.debug("(DirLockIntent) Action: ", action);
     let intent_name = action.intentName;
     // let variable_name = action.body.variableName;
     await DirLockIntent.lockIntent(this.tdcache, this.context.requestId, intent_name); //, variable_name);
-    if (this.log) {console.log("Locked intent:", action.intentName);}
+    winston.debug("(DirLockIntent) Locked intent:", action.intentName);
     if (callback) {
       callback();
     }
@@ -64,14 +61,12 @@ class DirLockIntent {
       await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
     }
     else {
-      console.error("lockIntent recoverable error, one of requestId:", requestId, "intent_name:", intent_name, "is not valid");
+      winston.error("(DirLockIntent) lockIntent recoverable error, one of requestId: " + requestId + " intent_name: " + intent_name + " is not valid");
     }
     
     // if (variable_name) {
-    //   console.log("locking intent with variable:", variable_name);
     //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);
     // }
-    // console.log("locked. Intent name:", intent_name, "intent variable:", variable_name);
   }
   
   parseParams(directive_parameter) {

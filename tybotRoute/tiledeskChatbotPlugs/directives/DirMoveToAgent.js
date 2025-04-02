@@ -1,8 +1,9 @@
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Directives } = require('./Directives');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirMoveToAgent {
 
@@ -27,6 +28,7 @@ class DirMoveToAgent {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute MoveToAgent directive");
     directive.action = {};
     this.go(directive.action, () => {
       callback();
@@ -36,10 +38,10 @@ class DirMoveToAgent {
   async go(action, callback) {
     this.tdClient.moveToAgent(this.requestId, (err) => {
       if (err) {
-        console.error("Error moving to agent:", err);
+        winston.error("DirMoveToAgent) Error moving to agent: ", err);
       }
       else {
-        // console.log("Successfully moved to agent");
+        // Successfully moved to agent
       }
       callback();
     });

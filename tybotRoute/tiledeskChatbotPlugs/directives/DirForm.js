@@ -1,8 +1,9 @@
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
-const { IntentForm } = require('../../models/IntentForm.js');
+const { IntentForm } = require('../../engine/IntentForm.js');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirForm {
   constructor(context) {
@@ -28,17 +29,17 @@ class DirForm {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute Form directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("DirForm Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      if (this.log) {console.log("(DirForm, stop?", stop); }
       callback(stop);
     });
   }
@@ -72,18 +73,15 @@ class DirForm {
     const trueIntent = action.trueIntent; // edit-end (success)
     const falseIntent = action.falseIntent; // cancel
     let form = action.form;
-    if (this.log) {
-      console.log("IntentForm.isValidForm(intent_form)", IntentForm.isValidForm(form));
-    }
+    winston.debug("(DirForm) IntentForm.isValidForm(intent_form) " + IntentForm.isValidForm(form));
+    
     let clientUpdateUserFullname = null;
     if (IntentForm.isValidForm(form)) {
       await this.chatbot.lockAction(this.requestId, action.action_id);
       const user_reply = message.text;
       let form_reply = await this.execIntentForm(user_reply, form);
-      // console.log("got form reply", form_reply)
       if (!form_reply.canceled && form_reply.message) {
-        // console.log("Form replying for next field...");
-        if (this.log) {console.log("Sending form reply...", form_reply.message)}
+        winston.debug("(DirForm) Sending form reply...", form_reply.message)
         // reply with this message (ex. please enter your fullname)
         if (!form_reply.message.attributes) {
           form_reply.message.attributes = {}
@@ -98,18 +96,17 @@ class DirForm {
           form_reply.message,
           (err) => {
             if (err) {
-              console.error("Error sending form reply:", err.message);
+              winston.error("(DirForm) Error sending form reply: " + err.message);
             }
-            if (this.log) {console.log("Form reply message sent.");}
+            winston.debug("(DirForm) Form reply message sent.");
             callback(true);
         });
       }
       else if (form_reply.end) {
-        if (this.log) {
-          console.log("FORM end.", );
-          console.log("unlocking intent for request:", this.requestId);
-          console.log("populate data on lead:", JSON.stringify(lead));
-        }
+        winston.debug("(DirForm) FORM end.", );
+        winston.debug("(DirForm) unlocking intent for request: " + this.requestId);
+        winston.debug("(DirForm) populate data on lead: ", lead);
+
         this.chatbot.unlockAction(this.requestId);
 
         if (callback) {
@@ -121,16 +118,13 @@ class DirForm {
         // if (lead) {
         //   this.populatePrechatFormAndLead(lead._id, this.requestId);
         // }
-        // else {
-        //   if (this.log) {console.log("No lead. Skipping populatePrechatFormAndLead()");}
-        // }
         // const all_parameters = await this.chatbot.allParameters();
         // if (all_parameters && all_parameters["userFullname"]) {
         //   clientUpdateUserFullname = all_parameters["userFullname"];
         // }
       }
       else if (form_reply.canceled) {
-        if (this.log) {console.log("unlocking intent due to canceling, for request", this.requestId);}
+        winston.debug("(DirForm) unlocking intent due to canceling, for request " + this.requestId);
         this.unlockAction(this.requestId);
 
         // TODO: INVOKE DIR_INTENT FOR CANCEL.
@@ -140,7 +134,6 @@ class DirForm {
           });
         }
 
-        // if (this.log) {console.log("sending form 'cancel' reply...", form_reply.message)}
         // TODO: REMOVE CANCEL REPLY
         // reply with this message (ex. please enter your fullname)
         // if (!form_reply.message.attributes) {
@@ -174,7 +167,7 @@ class DirForm {
         });
       }
       else {
-        if (this.log) {console.log("No trueIntentDirective specified");}
+        winston.debug("(DirForm) No trueIntentDirective specified");
         callback();
       }
     }
@@ -185,7 +178,7 @@ class DirForm {
         });
       }
       else {
-        if (this.log) {console.log("No falseIntentDirective specified");}
+        winston.debug("(DirForm) No falseIntentDirective specified");
         callback();
       }
     }

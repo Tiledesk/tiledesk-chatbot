@@ -9,7 +9,6 @@ describe('filler with liquidJS syntax {{}}', function() {
         }
         const filler = new Filler();
         const text = filler.fill("project id is {{project_id}}", vars);
-        // console.log("filled:", text)
         assert(text === "project id is 009988");
     });
 
@@ -30,7 +29,6 @@ describe('filler with liquidJS syntax {{}}', function() {
         const template = "${welcome}! Your products: {% for product in collection.products %}title: {{ product.title }},{% endfor %}"
         const filler = new Filler();
         const text = filler.fill(template, vars);
-        // console.log("text:<" + text + ">");
         assert(text === "Hello guys! Your products: title: t1,title: t2,");
     });
 
@@ -80,7 +78,6 @@ describe('filler with liquidJS syntax {{}}', function() {
         const text = filler.fill(template, vars);
         const parts = text.split(":");
         
-        // console.log("text:", text);
         assert(parts[1] != "{{timestamp}}");
     });
 
@@ -92,7 +89,6 @@ describe('filler with liquidJS syntax {{}}', function() {
         const text = filler.fill(template, vars);
         const parts = text.split(":");
         
-        // console.log("text:", text);
         assert(parts[1] != "{{now}}");
     });
 
@@ -104,7 +100,6 @@ describe('filler with liquidJS syntax {{}}', function() {
         const text = filler.fill(template, vars);
         const parts = text.split(":");
         
-        // console.log("text:", text);
         assert(parts[1] != "{{UUID}}");
     });
 
@@ -114,7 +109,7 @@ describe('filler with liquidJS syntax {{}}', function() {
         const template = "{{lastUserText}) Analizza e risolvi il problema"
         const filler = new Filler();
         const text = filler.fill(template, vars);
-        // console.log("text:", text);
+
         assert(text === template);
     });
     

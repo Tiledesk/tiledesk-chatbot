@@ -1,8 +1,9 @@
 let axios = require('axios');
 let https = require("https");
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
+const winston = require('../../utils/winston');
 
 class DirWebRequest {
   constructor(context) {
@@ -16,12 +17,13 @@ class DirWebRequest {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute WebRequest directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive:", JSON.stringify(directive));
+      winston.warn("DirWebRequest Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -31,7 +33,7 @@ class DirWebRequest {
   }
 
   async go(action, callback) {
-    if (this.log) {console.log("webRequest action:", JSON.stringify(action));}
+    winston.debug("(DirWebRequest) Action: ", action);
     let requestVariables = null;
     if (this.tdcache) {
       requestVariables = 
@@ -46,7 +48,6 @@ class DirWebRequest {
     if (action.headersString) {
       let headersDict = action.headersString
       for (const [key, value] of Object.entries(headersDict)) {
-        if (this.log) {console.log("header:", key, "value:", value)}
         let filled_value = filler.fill(value, requestVariables);
         headers[key] = filled_value;
       }
@@ -58,30 +59,29 @@ class DirWebRequest {
         json = JSON.parse(jsonBody);
       }
       catch(err) {
-        console.error("Error parsing webRequest jsonBody:", jsonBody);
+        winston.debug("(DirWebRequest) Error parsing webRequest jsonBody: ", jsonBody);
       }
     }
     
-    if (this.log) {console.log("webRequest URL", url);}
+    winston.verbose("(DirWebRequest) webRequest URL " + url);
     const HTTPREQUEST = {
       url: url,
       headers: headers,
       json: json,
       method: action.method
     };
-    if (this.log) {console.log("webRequest HTTPREQUEST", HTTPREQUEST);}
+    winston.debug("(DirWebRequest) HttpRequest ", HTTPREQUEST);
     this.myrequest(
       HTTPREQUEST, async (err, resbody) => {
-        if (this.log) {console.log("webRequest resbody:", resbody);}
+        winston.debug("(DirWebRequest) resbody: ", resbody);
         if (err) {
-          if (this.log) {console.error("webRequest error:", err);}
+          winston.error("(DirWebRequest)  error:", err);
           if (callback) {
             callback();
           }
         }
         else if (callback) {
           if (action.assignTo && this.context.tdcache && resbody) { // DEPRECATED
-            if (this.log) {console.log("(webRequest) this.requestId:", this.context.requestId);}
             let attributes =
               await TiledeskChatbot.allParametersStatic(
                 this.context.tdcache, this.context.requestId);
@@ -89,18 +89,8 @@ class DirWebRequest {
             let attributeValue;
             const filler = new Filler();
             attributeValue = filler.fill(resbody, attributes);
-            if (this.log) {console.log("(webRequest) Attributes:", JSON.stringify(attributes));}
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignTo, attributeValue);
-            if (this.log) {
-              console.log("(webRequest) Assigned:", action.assignTo, "=", attributeValue);
-              const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-              for (const [key, value] of Object.entries(all_parameters)) {
-                const value_type = typeof value;
-                if (this.log) {console.log("(webRequest) request parameter:", key, "value:", value, "type:", value_type)}
-              }
-            }
           } else if (action.assignments && this.context.tdcache && resbody) {
-            if (this.log) {console.log("(webRequest) action.assignments for request:", this.context.requestId);}
             let json_body;
             if (typeof resbody === "string") {
               json_body = {
@@ -110,35 +100,21 @@ class DirWebRequest {
             else {
               json_body = resbody
             }
-            if (this.log) {console.log("(webRequest) action.assignments json_body:", json_body);}
-            let attributes =
-              await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-              if (this.log) {console.log("(webRequest) action.assignments attributes:", attributes);}
+            let attributes = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
             const assignments = action.assignments;
-            if (this.log) {console.log("(webRequest) assignments:", assignments);}
             for (const [attr_name, attr_eval_expression] of Object.entries(assignments)) {
-              if (this.log) {console.log("", attr_name, attr_eval_expression);}
               let attributeValue;
               try {
                 attributeValue = TiledeskJSONEval.eval(json_body, attr_eval_expression);
-                if (this.log) {console.log("(webRequest) Assigning to:", attr_name, "value:", attributeValue);}
               }
               catch(err) {
-                console.error("Error:", err);
+                winston.error("(DirWebRequest) Error:", err);
               }
               try {
                 await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, attr_name, attributeValue);
               }
               catch(err) {
-                console.error("Error:", err);
-              }
-            }
-            if (this.log) {
-              console.log("(webRequest) All attributes:");
-              const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-              for (const [key, value] of Object.entries(all_parameters)) {
-                const value_type = typeof value;
-                if (this.log) {console.log("(webRequest) request attribute:", key, "value:", value, "type:", value_type)}
+                winston.error("(DirWebRequest) Error: ", err);
               }
             }
           }
@@ -149,10 +125,6 @@ class DirWebRequest {
   }
 
   myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -162,9 +134,6 @@ class DirWebRequest {
     if (options.json !== null) {
       axios_options.data = options.json
     }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,
@@ -173,10 +142,6 @@ class DirWebRequest {
     }
     axios(axios_options)
     .then((res) => {
-      if (this.log) {
-        console.log("Response for url:", options.url);
-        console.log("Response headers:\n", JSON.stringify(res.headers));
-      }
       if (res && res.status == 200 && res.data) {
         if (callback) {
           callback(null, res.data);
@@ -189,7 +154,7 @@ class DirWebRequest {
       }
     })
     .catch( (error) => {
-      console.error("(DirWebRequest) Axios error: ", JSON.stringify(error));
+      winston.error("(DirWebRequest) Axios error: ", error.response.data);
       if (callback) {
         callback(error, null);
       }

@@ -1,7 +1,7 @@
 var assert = require('assert');
 const { ExtUtil } = require('../ExtUtil');
-const { IntentForm } = require('../models/IntentForm');
-const { MockTdCache } = require('../models/MockTdCache');
+const { IntentForm } = require('../engine/IntentForm');
+const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
 
 const TYPE_PREFIX = "_tdTypeOf:";
@@ -24,7 +24,7 @@ describe('IntentForm - pre-filled', function() {
     const chatbot = new Chatbot();
     await chatbot.addParameter('userFullname', "Already Andrea");
     let all_parameters = await chatbot.allParameters();
-    // console.log("executing intent form...")
+
     let intentForm = new IntentForm(
       {
         form: form,
@@ -35,7 +35,7 @@ describe('IntentForm - pre-filled', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
-    // console.log("Got form first field label:", form_reply1)
+
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     assert(form_reply1.end);
@@ -65,7 +65,7 @@ describe('IntentForm - pre-filled', function() {
     await chatbot.addParameter('userFullname', "Already Andrea");
     await chatbot.addParameter('userEmail', "Already Email");
     let all_parameters = await chatbot.allParameters();
-    // console.log("executing intent form...")
+
     let intentForm = new IntentForm(
       {
         form: form,
@@ -76,7 +76,7 @@ describe('IntentForm - pre-filled', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
-    // console.log("Got form first field label:", form_reply1)
+
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     assert(form_reply1.end);
@@ -113,7 +113,7 @@ describe('IntentForm - pre-filled', function() {
     await chatbot.addParameter('userFullname', "Already Andrea");
     await chatbot.addParameter('userEmail', "Already Email");
     let all_parameters = await chatbot.allParameters();
-    // console.log("executing intent form...")
+
     let intentForm = new IntentForm(
       {
         form: form,
@@ -124,13 +124,13 @@ describe('IntentForm - pre-filled', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
-    // console.log("Got form first field label:", form_reply1)
+
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     assert(form_reply1.message.text === form.fields[2].label);
     
     let form_reply2 = await intentForm.getMessage("Tiledesk");
-    // console.log("Got form second field label:", form_reply2)
+
     assert(form_reply2 !== null);
     assert(!form_reply2.canceled);
     assert(form_reply2.end);
@@ -143,7 +143,7 @@ describe('IntentForm - pre-filled', function() {
     assert(all_parameters[TYPE_PREFIX + form.fields[1].name] === form.fields[1].type);
     assert(all_parameters[form.fields[2].name] === "Tiledesk");
     assert(all_parameters[TYPE_PREFIX + form.fields[2].name] === form.fields[2].type);
-    // console.log("All params:", all_parameters);
+
   });
 
   it('basic form with 6 fields, 1st & 2nd pre-filled, 3rd not pre-filled, 4th (tel) pre-filled, 5th not pre-filled, 6th (age) pre-filled', async () => {
@@ -191,7 +191,7 @@ describe('IntentForm - pre-filled', function() {
     await chatbot.addParameter('age', "49");
     
     let all_parameters = await chatbot.allParameters();
-    // console.log("executing intent form...")
+
     let intentForm = new IntentForm(
       {
         form: form,
@@ -202,13 +202,13 @@ describe('IntentForm - pre-filled', function() {
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
-    // console.log("Got form first field label:", form_reply1)
+
     assert(form_reply1 !== null);
     assert(!form_reply1.canceled);
     assert(form_reply1.message.text === form.fields[2].label);
     
     let form_reply2 = await intentForm.getMessage("Tiledesk");
-    // console.log("Got form 'companyName' field label:", form_reply2);
+
     assert(form_reply2 !== null);
     assert(!form_reply2.canceled);
     assert(form_reply2.message);
@@ -217,7 +217,7 @@ describe('IntentForm - pre-filled', function() {
     assert(all_parameters[TYPE_PREFIX + form.fields[2].name] === form.fields[2].type);
 
     let form_reply3 = await intentForm.getMessage("SPNNDR0000");
-    // console.log("Got form 'SSN' field label:", form_reply3);
+
     assert(form_reply3 !== null);
     assert(!form_reply3.canceled);
     assert(form_reply3.end);
@@ -234,7 +234,7 @@ describe('IntentForm - pre-filled', function() {
     assert(all_parameters[TYPE_PREFIX + form.fields[4].name] === form.fields[4].type);
     assert(all_parameters[form.fields[5].name] === "49");
     assert(all_parameters[TYPE_PREFIX + form.fields[5].name] === form.fields[5].type);
-    // console.log("All params:", all_parameters);
+
   });
     
 });
