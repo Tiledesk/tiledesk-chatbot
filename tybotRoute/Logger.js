@@ -88,7 +88,7 @@ class Logger {
             dev: this.dev
         }
 
-        let topic = LOGS_BASE_ROUTING_KEY + `.${request_id}`;
+        let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
         publisher.publish(data, topic);
         return;
     }
