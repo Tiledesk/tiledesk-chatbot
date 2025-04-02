@@ -80,7 +80,7 @@ class Logger {
 
         let data = {
             request_id: this.request_id,
-            id_project: request_id.split("-")[2],
+            id_project: this.request_id.split("-")[2],
             text: text,
             level: level,
             nlevel: levels[level],
