@@ -43,13 +43,7 @@ class Logger {
         } else {
             this._disableDebugMethods()
         }
-
-        // if (!AMQP_MANAGER_URL) {
-        //     console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
-        //     return;
-        //     //throw new Error("Error starting logger: AMQP_MANAGER_URL is undefined.")
-        // }
-
+        
     }
 
     error(...args) {

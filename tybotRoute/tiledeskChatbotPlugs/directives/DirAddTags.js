@@ -8,6 +8,7 @@ const { TiledeskChatbotUtil } = require("../../models/TiledeskChatbotUtil");
 const req = require("express/lib/request");
 const { update } = require("../../models/faq");
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
+const { Logger } = require("../../Logger");
 require('dotenv').config();
 
 class DirAddTags {
@@ -22,6 +23,7 @@ class DirAddTags {
     this.requestId = this.context.requestId;
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
@@ -40,6 +42,7 @@ class DirAddTags {
     }
     else {
       console.error("Incorrect directive: ", JSON.stringify(directive));
+      this.logger.error("Incorrect directive for ", directive.name, directive)
       callback();
       return;
     }
@@ -65,6 +68,7 @@ class DirAddTags {
 
     if (!action.tags || action.tags === '') {
       console.error("Error: (DirAddTags) tags attribute is mandatory")
+      this.logger.error("Add tags Error: tags attribute is mandatory");
       await this.chatbot.addParameter("flowError", "Add tags Error: tags attribute is mandatory");
       callback();
       return;
@@ -95,6 +99,7 @@ class DirAddTags {
     if(target === 'request'){
       
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
+      this.logger.debug("Adding following tags to conversation: ", newTags)
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
@@ -108,6 +113,7 @@ class DirAddTags {
 
       if (this.log) { console.log('(DirAddTags) UPDATE request with newTags', newTags) }
       let updatedRequest = await this.updateRequestWithTags(newTags)
+      this.logger.info("Tags added to conversation")
       if(!updatedRequest){
         callback();
         return;
@@ -118,6 +124,7 @@ class DirAddTags {
     /** use case: LEAD */
     if(target === 'lead'){
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
+      this.logger.debug("Adding following tags to lead: ", newTags)
 
       let request = await this.tdClient.getRequestById(this.requestId);
       if (this.log) { console.log('(DirAddTags) request detail: ', request) }
@@ -139,6 +146,7 @@ class DirAddTags {
 
       if (this.log) {  console.log('(DirAddTags) UPDATE lead with newTags', newTags) }
       let updatedLead = await this.updateLeadWithTags(request.lead._id, newTags)
+      this.logger.info("Tags added to lead")
       if(!updatedLead){
         callback();
         return;
