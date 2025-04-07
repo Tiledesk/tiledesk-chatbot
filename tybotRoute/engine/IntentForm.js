@@ -1,5 +1,6 @@
 //const CURRENT_FIELD_K = "tilebot:requests:forms:currentField"; // form field index
 const CURRENT_FORM_K = "CURRENT_FORM"; // form json
+const winston = require('../utils/winston');
 
 class IntentForm {
 
@@ -18,10 +19,8 @@ class IntentForm {
     if (!this.requestParameters) {
       return null;
     }
-    if (this.log) {
-      console.log("this.requestParameters:", JSON.stringify(this.requestParameters));
-      console.log("this.requestParameters[" + paramKey + "]:", this.requestParameters[paramKey]);
-    }
+    winston.debug("(IntentForm) requestParameters: ", this.requestParameters);
+    winston.debug("(IntentForm) requestParameters[" + paramKey + "]:" + this.requestParameters[paramKey]);
     return this.requestParameters[paramKey];
   }
 
@@ -61,13 +60,11 @@ class IntentForm {
     }
   */
   async getMessage(user_text) {
-    //console.log("get message:", user_text)
     let current_form = null;
     const _current_form = await this.getValue(this.CURRENT_FORM_KEY);
     if (_current_form) {
       current_form = JSON.parse(_current_form);
     }
-    //console.log("CURRENT FORM IS", current_form);
     if (
     current_form &&
     this.form &&
@@ -90,7 +87,7 @@ class IntentForm {
     }
     
     if (current_field == null) {
-      if (this.log) {console.log("current_field is undefined")}
+      winston.debug("(IntentForm) current_field is undefined");
       current_field = 0;
       
       // first "freeze" the currente form, so that eventual form modifications
@@ -105,58 +102,48 @@ class IntentForm {
       // set the first field under the "await the response-value" state (=0)
       await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
       // now look for an already set value for this field in request parameters
-      if (this.log) {console.log("IntentForm parameters", JSON.stringify(this.requestParameters));}
-      if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
+      winston.debug("(IntentForm) parameters ", this.requestParameters);
+      winston.debug("(IntentForm) checking field: " + this.form.fields[current_field].name);
       const is_current_value = this.getParam(this.form.fields[current_field].name);
       if (is_current_value) {
-        if (this.log) {console.log("is_current_value!", is_current_value);}
+        winston.debug("(IntentForm) is_current_value: " + is_current_value);
         return await this.getMessage(is_current_value);
       }
-      if (this.log) {console.log("Form asking fist value. No 'is_current_value' for first form field", is_current_value);}
-      // if (this.log) {console.log("INTENT_FORM:", this.form);}
-      if (this.log) {console.log("CURRENT FIELD:", current_field);}
+      winston.debug("(IntentForm) asking fist value. No 'is_current_value' for first form field" + is_current_value);
+      winston.debug("(IntentForm) current_field: " + current_field);
       let message = {
         text: this.form.fields[current_field].label
       }
-      if (this.log) {console.log("form reply message:", message);}
+      winston.debug("(IntentForm)form reply message: ", message);
       return {
         message: message
       }
     }
     else {
-        // = 0
-        // current++ (1) y? => 
-        // 
-        //inc(current_field)=1 getMessage(null)
-        // == 1?
-        // n => continue => 
-        // param[1] n? => continue
-        // == 2? => set fields[2].name => user_text
-      //console.log("current_form:", current_form);
-      if (this.log) {console.log("current_field:", current_field);}
-      
+
+      winston.debug("(IntentForm) current_field: " + current_field);
       
       if (current_form.fields[current_field].regex) {
         if (!this.validate(user_text, current_form.fields[current_field].regex)) {
-          if (this.log) {console.log("text is invalid");}
+          winston.verbose("(IntentForm) text is invalid");
           // send error message
           let error_reply_text = this.form.fields[current_field].label;
-          if (this.log) {console.log("text is invalid label", error_reply_text);}
+          winston.debug("(IntentForm) text is invalid label: " + error_reply_text);
           if (current_form.fields[current_field].errorLabel) {
-            if (this.log) {console.log("text is invalid errorLabel", current_form.fields[current_field].errorLabel);}
+            winston.debug("(IntentForm) text is invalid errorLabel: " + current_form.fields[current_field].errorLabel);
             error_reply_text = current_form.fields[current_field].errorLabel;
           }
           let message = {
             text: error_reply_text // Error
           }
-          if (this.log) {console.log("IntentForm error message:", message);}
+          winston.debug("(IntentForm) error message: ", message);
           return {
             message: message
           };
         }
       }
       else {
-        if (this.log) {console.log("no regex validation requested. next field...")}
+        winston.verbose("(IntentForm) no regex validation requested. next field...")
       }
       
       // text ok?
@@ -169,12 +156,12 @@ class IntentForm {
       // persist parameter
       const parameter_name = current_form.fields[current_field].name;
       const parameter_value = user_text;
-      if (this.log) {console.log("adding parameters, name:", parameter_name, "value:", parameter_value)}
+      winston.debug("(IntentForm) adding parameters, name: " + parameter_name + " value: " + parameter_value)
       await this.chatbot.addParameter(parameter_name, parameter_value);
       if (current_form.fields[current_field].type) { // adding type
         await this.chatbot.addParameter("_tdTypeOf:" + parameter_name, current_form.fields[current_field].type);
       }
-      if (this.log) {console.log("next field...");}
+      winston.verbose("(IntentForm) next field...");
 
       current_field += 1;
       if (current_field === current_form.fields.length) {
@@ -186,23 +173,22 @@ class IntentForm {
         };
       }
       else {
-        if (this.log) {console.log("Processing next field:", current_field)}
+        winston.debug("(IntentForm) Processing next field: " + current_field);
         await this.setValue(this.CURRENT_FIELD_INDEX_KEY, current_field);
 
-        // if (this.log) {console.log("params", this.requestParameters);}
-        if (this.log) {console.log("checking field:", this.form.fields[current_field].name);}
+        winston.debug("(IntentForm)checking field:", this.form.fields[current_field].name);
         
         const is_current_value = this.getParam(this.form.fields[current_field].name);
         if (is_current_value) {
-          if (this.log) {console.log("is_current_value!", is_current_value);}
-            return await this.getMessage(is_current_value);
+          winston.debug("(IntentForm) is_current_value! " + is_current_value);
+          return await this.getMessage(is_current_value);
         }
         else {
-            return {
-              message: {
-                text: current_form.fields[current_field].label
-              }
-            };
+          return {
+            message: {
+              text: current_form.fields[current_field].label
+            }
+          };
         }
         
       }
@@ -215,13 +201,13 @@ class IntentForm {
       // removing leading and trailing / if regex is sorrounded by (legacy support, to be removed)
       _regex = regex.substring(1, regex.length-1);
     }
-    if (this.log) {console.log("Validating using regex:", _regex);}
+    winston.debug("(IntentForm)Validating using regex: " + _regex);
     try {
       const rg = new RegExp(_regex, "g");
       return rg.test(text);
     }
     catch(error) {
-      console.error("Error, invalid regex:", _regex);
+      winston.error("(IntentForm) Error, invalid regex: " + _regex);
       return true;
     }
     

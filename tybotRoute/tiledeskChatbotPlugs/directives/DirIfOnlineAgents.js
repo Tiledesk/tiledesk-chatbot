@@ -2,6 +2,7 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirIfOnlineAgents {
 
@@ -25,6 +26,7 @@ class DirIfOnlineAgents {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute IfOnlineAgents directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -32,19 +34,13 @@ class DirIfOnlineAgents {
     else if (directive.parameter) {
       let params;
       params = this.parseParams(directive.parameter);
-      // if (!params.trueIntent && !params.falseIntent) {
-      //   if (this.log) {
-      //     console.log("missing both params.trueIntent & params.falseIntent");
-      //   }
-      //   callback();
-      //   return;
-      // }
       action = {
         trueIntent: params.trueIntent,
         falseIntent: params.falseIntent
       }
     }
     else {
+      winston.warn("DirIfOnlineAgents Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -54,56 +50,55 @@ class DirIfOnlineAgents {
   }
 
   go(action, callback) {
+    winston.debug("(DirIfOnlineAgents) Action: ", action);
+
     if (!action.trueIntent && !action.falseIntent) {
-      if (this.log) {
-        console.log("Error DirIfOnlineAgents: missing both action.trueIntent & action.falseIntent");
-      }
+      winston.error("(DirIfOnlineAgents) Error: missing both action.trueIntent & action.falseIntent");
       callback();
       return;
     }
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
-    if (this.log) {
-      console.log("(DirIfOnlineAgents) IfOnlineAgents:trueIntent:", trueIntent);
-      console.log("(DirIfOnlineAgents) IfOnlineAgents:falseIntent:", falseIntent);
-    }
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
+
+    winston.debug("(DirIfOnlineAgents) IfOnlineAgents:trueIntent: " + trueIntent);
+    winston.debug("(DirIfOnlineAgents) IfOnlineAgents:falseIntent: " + falseIntent);
+
     let stopOnConditionMet = action.stopOnConditionMet;
     this.tdClient.openNow((err, result) => {
-      if (this.log) {console.log("openNow():", result);}
+      winston.debug("(DirIfOnlineAgents) openNow(): ", result);
       if (err) {
-        console.error("IfOnlineAgents:tdclient.openNow Error:", err);
+        winston.error("(DirIfOnlineAgents) openNow Error: ", err);
         callback();
         return;
       }
       else {
         if (result && result.isopen) {
           this.tdClient.getProjectAvailableAgents((err, agents) => {
-            if (this.log) {console.log("Agents", agents);}
             if (err) {
-              console.error("IfOnlineAgents:Error getting available agents:", err);
+              winston.error("(DirIfOnlineAgents) Error getting available agents: ", err);
               callback();
             }
             else {
-              if (this.log) {console.log("Agents count:", agents.length);}
+              winston.debug("(DirIfOnlineAgents) Agents count: " + agents.length);
               if (agents.length > 0) {
                 if (trueIntent) {
                   let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-                  if (this.log) {console.log("agents (openHours) => trueIntent");}
+                  winston.debug("(DirIfOnlineAgents) agents (openHours) => trueIntent");
                   this.intentDir.execute(intentDirective, () => {
                     callback(stopOnConditionMet);
                   });
                 }
                 else {
-                  console.log("NO IfOnlineAgents trueIntent defined. callback()") // prod
+                  winston.debug("(DirIfOnlineAgents) NO IfOnlineAgents trueIntent defined. callback()") // prod
                   callback();
                   return;
                 }
               }
               else if (falseIntent) {
                 let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-                if (this.log) {console.log("!agents (openHours) => falseIntent", intentDirective);}
+                winston.debug("(DirIfOnlineAgents) !agents (openHours) => falseIntent: ", intentDirective);
                 this.intentDir.execute(intentDirective, () => {
                   callback(stopOnConditionMet);
                 });
@@ -117,8 +112,7 @@ class DirIfOnlineAgents {
         else if (result && !result.isopen) {
           if (falseIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-            if (this.log) {console.log("!agents (!openHours) => falseIntent");}
-            console.log("!agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
+            winston.debug("(DirIfOnlineAgents) !agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
             this.intentDir.execute(intentDirective, () => {
               callback();
             });
@@ -128,8 +122,7 @@ class DirIfOnlineAgents {
           }
         }
         else {
-          if (this.log) {console.log("undeterminate result.");}
-          console.log("undeterminate result.");
+          winston.verbose("(DirIfOnlineAgents) undeterminate result.");
           callback();
         }
       }

@@ -1,9 +1,12 @@
 const axios = require("axios").default;
-const { TiledeskChatbot } = require("../../models/TiledeskChatbot");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
+const winston = require('../../utils/winston');
+const httpUtils = require("../../utils/HttpUtils");
+const integrationService = require("../../services/IntegrationService");
 
 class DirQapla {
 
@@ -14,19 +17,21 @@ class DirQapla {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    this.projectId = this.context.projectId;
+    this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("DirQapla directive: ", directive); }
+    winston.verbose("Execute Qapla directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("DirQapla Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirQapla Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -36,9 +41,9 @@ class DirQapla {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirQapla action:", JSON.stringify(action)); }
+    winston.debug("(DirQapla) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirQapla tdcache is mandatory");
+      winston.error("(DirQapla) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -48,12 +53,10 @@ class DirQapla {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirQapla trueIntent", trueIntent)
-      console.log("DirQapla falseIntent", falseIntent)
-      console.log("DirQapla trueIntentAttributes", trueIntentAttributes)
-      console.log("DirQapla falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("(DirQapla) trueIntent " + trueIntent)
+    winston.debug("(DirQapla)  falseIntent " + falseIntent)
+    winston.debug("(DirQapla) trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("(DirQapla) falseIntentAttributes " + falseIntentAttributes)
 
     // Set default values
     let status = null;
@@ -68,10 +71,9 @@ class DirQapla {
 
     const filler = new Filler();
     const tracking_number = filler.fill(action.trackingNumber, requestVariables);
-    if (this.log) { console.log("DirQapla tracking number: ", tracking_number); }
 
     if (!tracking_number || tracking_number === '') {
-      console.error("Error: DirQapla tracking number is undefined or null or empty string");
+      winston.debug("(DirQapla) Error: tracking number is undefined or null or empty string");
       error = "Tracking number is not defined";
       await this.#assignAttributes(action, status, result, error);
       if (falseIntent) {
@@ -84,17 +86,17 @@ class DirQapla {
     }
 
     const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    if (this.log) { console.log("DirQapla qapla_base_url: ", qapla_base_url); }
+    winston.debug("(DirQapla) DirQapla qapla_base_url: " + qapla_base_url);
 
     let key = action.apiKey;
 
     if (!key) {
-      if (this.log) { console.log("DirQapla - Key not found into action. Searching in integrations..."); }
-      key = await this.getKeyFromIntegrations();
+      winston.debug("(DirQapla) DirQapla - Key not found into action. Searching in integrations...");
+      key = await integrationService.getKeyFromIntegrations(this.projectId, 'qapla', this.token);
     }
 
     if (!key) {
-      console.error("Error: DirQapla api key is mandatory");
+      winston.debug("(DirQapla) Error: api key is mandatory");
       error = "Invalid or empty ApiKey";
       await this.#assignAttributes(action, status, result, error);
       if (falseIntent) {
@@ -117,16 +119,13 @@ class DirQapla {
       },
       method: "GET"
     }
-    if (this.log) { console.log("DirQapla QAPLA_HTTPREQUEST", QAPLA_HTTPREQUEST); }
+    winston.debug("(DirQapla) HttpRequest ", QAPLA_HTTPREQUEST);
 
-    this.#myrequest(
+    httpUtils.request(
       QAPLA_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
-            console.error("(httprequest) DirQapla getShipment err:", err.message);
-            if (this.log) {
-              console.error("(httprequest) DirQapla getShipment full err:", err);
-            }
+            winston.debug("(DirQapla) getShipment err: " + err.message);
             error = "Unable to get shipment";
             await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
@@ -138,7 +137,7 @@ class DirQapla {
             return;
           }
         } else if (callback) {
-          if (this.log) { console.log("DirQapla getShipment resbody: ", JSON.stringify(resbody, null, 2)); }
+          winston.debug("(DirQapla)  getShipment resbody: ", resbody);
 
           if (resbody.getShipment &&
             resbody.getShipment.shipments &&
@@ -186,7 +185,7 @@ class DirQapla {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirQapla) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -201,7 +200,7 @@ class DirQapla {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirQapla)No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -210,12 +209,7 @@ class DirQapla {
   }
 
   async #assignAttributes(action, status, result, error) {
-    if (this.log) {
-      console.log("DirQapla assignAttributes action:", action)
-      console.log("DirQapla assignAttributes status:", status)
-      console.log("DirQapla assignAttributes result:", result)
-      console.log("DirQapla assignAttributes error:", error)
-    }
+   
     if (this.context.tdcache) {
       if (action.assignStatusTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
@@ -226,96 +220,8 @@ class DirQapla {
       if (action.assignErrorTo) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
       }
-
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("DirQapla request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
   }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirQapla) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async getKeyFromIntegrations() {
-    return new Promise((resolve) => {
-
-      const INTEGRATIONS_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/qapla",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
-
-      this.#myrequest(
-        INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
-          if (err) {
-            resolve(null);
-          } else {
-
-            if (integration &&
-              integration.value) {
-              resolve(integration.value.apikey)
-            }
-            else {
-              resolve(null)
-            }
-          }
-        })
-    })
-  }
-
 }
 
 module.exports = { DirQapla }

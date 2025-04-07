@@ -26,12 +26,12 @@ class Logger {
         }
 
         if (!FLOW_LOGS_ENABLED || FLOW_LOGS_ENABLED === false || FLOW_LOGS_ENABLED === 'false') {
-            console.warn("(Logger) Flow logs disabled");
+            //console.warn("(Logger) Flow logs disabled");
             this._disableMethods();
         }
 
         if (!AMQP_MANAGER_URL) {
-            console.warn("(Logger) No AQMP Manager url provided. Flow logs disabled");
+            //console.warn("(Logger) No AQMP Manager url provided. Flow logs disabled");
             this._disableMethods();
         }
 
@@ -68,7 +68,7 @@ class Logger {
 
     base(level, text) {
         if (!this.request_id || !publisher) {
-            console.log("Return because request or publisher is undefined", this.request_id, publisher);
+            //console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 

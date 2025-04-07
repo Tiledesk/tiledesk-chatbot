@@ -3,6 +3,8 @@ let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
 let https = require("https");
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
+const httpUtils = require('../../utils/HttpUtils');
 
 class DirIfOpenHours {
 
@@ -18,6 +20,7 @@ class DirIfOpenHours {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute IfOpenHours directive");
     let action;
     if (directive.action) {
       action = directive.action
@@ -26,9 +29,7 @@ class DirIfOpenHours {
       let params;
       params = this.parseParams(directive.parameter);
       if (!params.trueIntent && !params.falseIntent) {
-        if (this.log) {
-          console.log("missing both params.trueIntent & params.falseIntent");
-        }
+          winston.warn("DirIfOpenHours both params.trueIntent & params.falseIntent");
         callback();
         return;
       }
@@ -38,6 +39,7 @@ class DirIfOpenHours {
       }
     }
     else {
+      winston.warn("DirIfOpenHours Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -47,6 +49,7 @@ class DirIfOpenHours {
   }
 
   go(action, callback) {
+    winston.debug("(DirIfOpenHours) Action: ", action);
 
     const trueIntent = action.trueIntent;
     const falseIntent = action.falseIntent;
@@ -60,9 +63,9 @@ class DirIfOpenHours {
     if (falseIntent && falseIntent.trim() === "") {
       falseIntent = null;
     }
-    if (this.log) {console.log("condition action:", action);}
+
     if (!trueIntent && !falseIntent) {
-      if (this.log) {console.log("Invalid condition, no intents specified");}
+      winston.error("(DirIfOpenHours) Invalid condition, no intents specified");
       callback();
       return;
     }
@@ -85,20 +88,19 @@ class DirIfOpenHours {
       },
       method: 'GET'
     }
-    if (this.log) { console.log("DirIfOpenHours HTTPREQUEST", HTTPREQUEST); }
+    winston.debug("(DirIfOpenHours) HttpRequest ", HTTPREQUEST);
     
-    this.#myrequest(
+    httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        if (this.log && err) {
-          console.log("DirIfOpenHours error: ", err);
-        }
-        if (this.log) { console.log("DirIfOpenHours resbody:", resbody); }
 
+        winston.debug("(DirIfOpenHours) resbody:", resbody);
+        
         if (err) {
+          winston.debug("(DirIfOpenHours) error: ", err);
           if (callback) {
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-              if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
+              winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
@@ -108,7 +110,7 @@ class DirIfOpenHours {
           if (resbody.isopen && resbody.isopen === true) {
             if (trueIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
-              if (this.log) {console.log("agents (openHours) => trueIntent");}
+              winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
@@ -118,7 +120,7 @@ class DirIfOpenHours {
           } else {
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-              if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
+              winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
@@ -131,17 +133,13 @@ class DirIfOpenHours {
     )
 
     // this.tdClient.openNow(action.slot_id, (err, result) => {
-    //   console.log("openNow():", result);
-    //   if (this.log) {console.log("openNow():", result);}
+
     //   if (err) {
-    //     console.error("*** DirIfOpenHours Error:", err);
     //     callback();
     //   }
     //   else if (result && result.isopen) {
-    //     console.log("yes is open")
     //     if (trueIntent) {
     //       let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
-    //       if (this.log) {console.log("agents (openHours) => trueIntent");}
     //       this.intentDir.execute(intentDirective, () => {
     //         callback(stopOnConditionMet);
     //       });
@@ -153,7 +151,6 @@ class DirIfOpenHours {
     //   }
     //   else if (falseIntent) {
     //     let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-    //     if (this.log) {console.log("!agents (openHours) => falseIntent", falseIntent);}
     //     this.intentDir.execute(intentDirective, () => {
     //       callback(stopOnConditionMet);
     //     });
@@ -162,54 +159,6 @@ class DirIfOpenHours {
     //     callback();
     //   }
     // });
-  }
-
-  #myrequest(options, callback) {
-    if (this.log) {
-      console.log("API URL:", options.url);
-      console.log("** Options:", JSON.stringify(options));
-    }
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (this.log) {
-      console.log("axios_options:", JSON.stringify(axios_options));
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-    .then((res) => {
-      if (this.log) {
-          console.log("Response for url:", options.url);
-          console.log("Response headers:\n", JSON.stringify(res.headers));
-        }
-        if (res && res.status == 200 && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("(DirIfOpenHours) Axios error: ", JSON.stringify(error));
-        if (callback) {
-          callback(error, null);
-        }
-      });
   }
 
   parseParams(directive_parameter) {

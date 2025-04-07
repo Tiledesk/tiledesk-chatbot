@@ -6,7 +6,6 @@ describe('Split vars', function() {
   it('split multiple vars', async () => {
     const str = 'Nome ${nome} Citta: ${city}';
     const splits = new TiledeskVarSplitter().getSplits(str);
-    // console.log("splits:", splits);
     assert(splits != null)
     assert(splits.length == 5);
     assert(splits[0].type === "text");
@@ -19,7 +18,6 @@ describe('Split vars', function() {
   it('split string with one tag', async () => {
     const str2 = '${nome}';
     const splits2 = new TiledeskVarSplitter().getSplits(str2);
-    // console.log("splits2:", splits2);
     assert(splits2 != null)
     assert(splits2.length == 3);
     assert(splits2[0].type === "text");
@@ -30,7 +28,6 @@ describe('Split vars', function() {
   it('split string with one tag', async () => {
     const str3 = '${city}${ip_address}';
     const splits3 = new TiledeskVarSplitter().getSplits(str3);
-    // console.log("splits3:", splits3);
     assert(splits3 != null)
     assert(splits3.length == 5);
     assert(splits3[0].type === "text");
@@ -44,7 +41,6 @@ describe('Split vars', function() {
   it('split empty string', async () => {
     const str3 = '';
     const splits3 = new TiledeskVarSplitter().getSplits(str3);
-    // console.log("splits3:", splits3);
     assert(splits3 != null)
     assert(splits3.length == 1);
     assert(splits3[0].type === "text");
@@ -53,7 +49,6 @@ describe('Split vars', function() {
   it('split multiple tags with the same name', async () => {
     const str3 = '${myname}${myname}${myname}';
     const splits3 = new TiledeskVarSplitter().getSplits(str3);
-    // console.log("splits3:", splits3);
     assert(splits3 != null)
     assert(splits3.length == 7);
     assert(splits3[0].type === "text");

@@ -1,9 +1,10 @@
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskMath } = require('../../TiledeskMath');
 const { TiledeskString } = require('../../TiledeskString');
 const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
+const winston = require('../../utils/winston');
 
 const schema = {
     "type": "object",
@@ -80,37 +81,39 @@ class DirSetAttribute {
     }
 
     execute(directive, callback) {
+        winston.verbose("Execute SetAttribute directive");
         let action;
         if (directive.action) {
             action = directive.action
         }
         else {
+            winston.warn("DirSetAttribute Incorrect directive: ", directive);
             callback();
             return;
         }
-        // console.log("go DirAssign with action:", action);
         this.go(action, () => {
             callback();
         });
     }
 
     async go(action, callback) {
+        winston.debug("(DirSetAttribute) Action: ", action);
         let res = validate(action, schema);
         if (!res.valid) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action:", res.errors)};
+            winston.error("(DirSetAttribute) Invalid action:", res.errors);
             callback();
             return;
         }
 
         if(action.operation.operators === undefined && action.operation.operands.length !== 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1")};
+            winston.error("(DirSetAttribute) Invalid action: operators === undefined && operands.length !== 1");
             callback();
             return;
         }
 
         
         if (action.operation.operators !== undefined && action.operation.operators.length !== action.operation.operands.length - 1) {
-            if (this.log) {console.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1")};
+            winston.error("(DirSetAttribute) Invalid action: operators.length !== operands.length - 1");
             callback();
             return;
         }

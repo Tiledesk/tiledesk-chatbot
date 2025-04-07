@@ -1,12 +1,13 @@
 const { Filler } = require('../Filler');
-const { TiledeskChatbot } = require('../../models/TiledeskChatbot');
-const { TiledeskChatbotConst } = require('../../models/TiledeskChatbotConst');
-const { TiledeskChatbotUtil } = require('../../models/TiledeskChatbotUtil');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
+const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const { DirIntent } = require("./DirIntent");
 // const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 
 class DirReplyV2 {
 
@@ -36,6 +37,7 @@ class DirReplyV2 {
   }
 
   execute(directive, callback) {
+    winston.verbose("Execute ReplyV2 directive");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -45,7 +47,7 @@ class DirReplyV2 {
       action.attributes.fillParams = true;
     }
     else {
-      console.error("Incorrect directive (no action provided):", directive);
+      winston.warn("DirReplyV2 Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -55,7 +57,7 @@ class DirReplyV2 {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("ReplyV2 action!", JSON.stringify(action)); }
+    winston.debug("(DirReplyV2) Action: ", action);
     const message = action;
 
     let current; // debug only
@@ -63,7 +65,6 @@ class DirReplyV2 {
       if (message.attributes.commands[1].message.text) {
         current = message.attributes.commands[1].message.text
       }
-      console.log("current:", current);
     }
     let must_stop = false;
     // fill
@@ -79,114 +80,93 @@ class DirReplyV2 {
         }
       }
 
+      TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+
       try {
         // lock/unlock + no-match
         // get buttons if available
         const buttons = TiledeskChatbotUtil.allReplyButtons(message);
-        if (this.log) { console.log("Action Buttons:", JSON.stringify(buttons)); }
         if (buttons && buttons.length > 0) {
           const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
           if (locked) { // fist execution returns (just) locked
-            if (this.log) { console.log("first time pass!"); }
             must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
-            // console.log("action:", action);
             if (action.noInputIntent) {
-              if (this.log) { console.log("NoInputIntent found:", action.noInputIntent); }
               const noInputIntent = action.noInputIntent;
               const noInputTimeout = action.noInputTimeout;
-              if (this.log) { console.log("noInputTimeout found:", noInputTimeout); }
               if (noInputTimeout > 0 && noInputTimeout < 7776000) {
                 const timeout_id = uuidv4();
                 await this.chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, timeout_id); // control variable. On each user input is removed
-                if (this.log) {  console.log("Set userInput: false, checking...", await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT)); }
                 setTimeout(async () => {
-                  if (this.log) { console.log("noinput timeout triggered!"); }
+                  winston.debug("(DirReplyV2) noinput timeout triggered!");
                   const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
-                  if (this.log) {  console.log("got 'userInput':", userInput); }
                   if (userInput && userInput === timeout_id) {
-                    if (this.log) {  console.log("no 'userInput'. Executing noinput action:", noInputIntent); }
                     await this.chatbot.unlockIntent(this.requestId);
                     await this.chatbot.unlockAction(this.requestId);
-                    if (this.log) {  console.log("unlocked (for noInput) ReplyV2"); }
+                    winston.debug("(DirReplyV2) Unlocked (for noInput) ReplyV2");
                     let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
                     this.intentDir.execute(noinput_action, () => {
-                      if (this.log) {  console.log("noinput action invoked", noinput_action); }
+                      winston.debug("(DirReplyV2) noinput action invoked", noinput_action);
                     });
                   }
                   else {
-                    if (this.log) {  console.log("skipping noinput action because of userInput", userInput); }
+                    winston.debug("(DirReplyV2) Skipping noinput action because of userInput", userInput);
                   }
                 }, noInputTimeout);
               }
             }
           }
           else { // second execution
-            if (this.log) { console.log("second pass! unlocked!"); }
+
             const last_user_text = await this.chatbot.getParameter(TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY);
-            if (this.log) { console.log("got last user text"); }
             const button = TiledeskChatbotUtil.buttonByText(last_user_text, buttons);
-            if (this.log) { console.log("button found", JSON.stringify(button)); }
+
             // invoke button
             if (button && button.action) {
-              if (this.log) { console.log("moving to button action", button.action); }
               let button_action = DirIntent.intentDirectiveFor(button.action, null);
-              if (this.log) { console.log("action with .intentName:", button_action); }
               this.intentDir.execute(button_action, () => {
-                if (this.log) { console.log("action invoked", button_action); }
+                winston.debug("(DirReplyV2) action invoked", button_action);
               });
-              if (this.log) { console.log("callback(true) + return", current); }
               callback(true); // must_stop = true
               return;
             }
             else { // no match (treating text buttons as no-match for the moment)
               // if noMatchIntent invoke
               // const button = TiledeskChatbotUtil.buttonByText("nomatch", buttons);
-              if (this.log) { console.log("nomatch button found", JSON.stringify(button)); }
+              winston.debug("(DirReplyV2) nomatch button found ", button);
               // // invoke button
               // if (button && button.action) {
-              //   console.log("moving to nomatch action", button.action);
               //   let button_action = DirIntent.intentDirectiveFor(button.action, null);
               //   this.intentDir.execute(button_action, () => {
-              //     console.log("nomatch action invoked", button_action);
               //   });
-              //   console.log("callback(true) + return 2", current);
               //   callback(true);
               //   return;
               // }
               if (action.noMatchIntent) {
-                if (this.log) { console.log("moving to nomatch action", action.noMatchIntent); }
                 let nomatch_action = DirIntent.intentDirectiveFor(action.noMatchIntent, null);
                 this.intentDir.execute(nomatch_action, () => {
-                  if (this.log) { console.log("nomatch action invoked", nomatch_action); }
+                  winston.debug("(DirReplyV2) nomatch action invoked", nomatch_action);
                 });
-                if (this.log) { console.log("callback(true) + return no-match", current); }
                 callback(true); // must_stop = true
                 return;
               }
               else {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
 
-                // console.log("re-send original message:",JSON.stringify(this.originalMessage));
                 const messageDir = new DirMessageToBot(this.context);
                 messageDir.execute( { action: { message: this.originalMessage }  }, () => {
-                  if (this.log) { console.log("messageDir invoked"); }
+                  winston.debug("(DirReplyV2) messageDir invoked");
                 });
-                if (this.log) { console.log("callback(true) + return no-match", current); }
                 callback(true); // must_stop = true
                 return;
 
                 // const textAction = { action: { text: last_user_text } };
-                // console.log("textAction invoked:",textAction ); //, defaultFallbackAction);
                 // this.intentDir.execute( textAction, () => {
-                //   if (this.log) { console.log("textAction invoked", textAction); }
                 // });
-                // if (this.log) { console.log("callback(true) + return no-match", current); }
                 // callback(true); // must_stop = true
                 // return;
 
 
                 // // there is no "no-match", go on...
-                // if (this.log) { console.log("callback(false) + return 3", current); }
                 // callback(false);
                 // return;
               }
@@ -195,16 +175,14 @@ class DirReplyV2 {
         }
       }
       catch(error) {
-        console.error("Error in DirReplyV2:", error);
+        winston.error("(DirReplyV2) Error: ", error);
       }
 
-      
-      if (this.log) { console.log("proceding normally to render and send the reply", current); }
       const filler = new Filler();
+    
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
       if (message.metadata) {
-        if (this.log) {console.log("filling message 'metadata':", JSON.stringify(message.metadata));}
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
         }
@@ -212,29 +190,22 @@ class DirReplyV2 {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
         }
       }
-      if (this.log) {console.log("filling commands'. Message:", JSON.stringify(message));}
       if (message.attributes && message.attributes.commands) {
-        if (this.log) {console.log("filling commands'. commands found.");}
         let commands = message.attributes.commands;
-        if (this.log) {console.log("commands:", JSON.stringify(commands), commands.length);}
         if (commands.length > 0) {
-          if (this.log) {console.log("commands' found");}
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
-              if (this.log) {console.log("command filled:", command.message.text);}
             }
           }
         }
       }
 
       // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
-      if (this.log) {console.log("message before filters:", JSON.stringify(message));}
+      winston.debug("(DirReplyV2) message before filters:", message);
       if (message.attributes && message.attributes.commands) {
-        if (this.log) {console.log("filterOnVariables...on commands", JSON.stringify(message.attributes.commands));}
-        if (this.log) {console.log("filterOnVariables...on attributes", requestAttributes);}
         // TiledeskChatbotUtil.filterOnVariables(message.attributes.commands, requestAttributes);
         TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
       }
@@ -256,42 +227,48 @@ class DirReplyV2 {
       }
       // userFlowAttributes
       let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
-      if (this.log) { console.log("userFlowAttributes:", userFlowAttributes); }
       if (userFlowAttributes) {
-        message.attributes["flowAttributes"] = userFlowAttributes;
+        message.attributes["flowAttributes"] = {};
+        for (const [key, value] of Object.entries(userFlowAttributes)) {
+          try {
+            if(typeof value === 'string' && value.length <= 1000){
+              message.attributes["flowAttributes"][key] = value;
+            }
+          }
+          catch(err) {
+            winston.errpr("(DirReplyV2) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
+          }
+        }
       }
+      
     }
     // send!
     let cleanMessage = message;
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
-    //   console.log("invalid message", cleanMessage);
     //   callback(); // cancel reply operation
     //   return;
     // }
-    // console.log("valid message!", cleanMessage);
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
-    if (this.log) {console.log("Reply:", JSON.stringify(cleanMessage))};
+    winston.debug("(DirReplyV2) Reply: ", cleanMessage);
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
       this.requestId,
       cleanMessage,
       (err) => {
         if (err) {
-          console.error("Error sending reply:", err);
+          winston.error("(DirReplyV2) Error sending reply: ", err);
         }
-        if (this.log) {console.log("Reply message sent");}
+        winston.debug("(DirReplyV2) Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
-        // console.log("got total delay:", delay)
         if (delay > 0 && delay <= 30000) { // prevent long delays
-          if (this.log) { console.log("start timeout callback(" + must_stop + ") for:", current); }
+          winston.debug("(DirReplyV2) start timeout callback(" + must_stop + ") for:", current);
           setTimeout(async () => {
-            if (this.log) { console.log("callback(" + must_stop + ") after delay", current); }
+            winston.debug("(DirReplyV2) callback(" + must_stop + ") after delay", current);
             callback(must_stop);
           }, delay);
         }
         else {
-          // console.log("invalid delay.")
           callback(must_stop);
         }
     });
@@ -301,32 +278,24 @@ class DirReplyV2 {
 
   async lockUnlock(action, callback) {
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-    // console.log("(DirReplyV2) lockedAction:", lockedAction);
+
     if (!lockedAction) {
-      // console.log("(DirReplyV2) !lockedAction");
       const intent_name = this.reply.attributes.intent_info.intent_name
       const actionId = action["_tdActionId"];
-      // console.log("(DirReplyV2) intent_name:", intent_name);
-      // console.log("(DirReplyV2) actionId:", actionId);
       await this.chatbot.lockIntent(this.requestId, intent_name);
-      // console.log("(DirReplyV2) lockIntent");
       await this.chatbot.lockAction(this.requestId, actionId);
-      // console.log("(DirReplyV2) lockAction");
       let _lockedAction = await this.chatbot.currentLockedAction(this.requestId);
       let _lockedIntent = await this.chatbot.currentLockedIntent(this.requestId);
-      // console.log("(DirReplyV2) _lockedAction", _lockedAction);
-      // console.log("(DirReplyV2) _lockedIntent", _lockedIntent);
       // callback();
       return true;
     } else {
       try {
         await this.chatbot.unlockIntent(this.requestId);
         await this.chatbot.unlockAction(this.requestId);
-        // console.log("unlocked ReplyV2");
         return false;
       }
       catch(e) {
-        console.error("Error", e);
+        winston.error("(DirReplyV2) Error", e);
       }
     }
   }
