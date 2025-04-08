@@ -12,7 +12,6 @@ class DirWait {
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

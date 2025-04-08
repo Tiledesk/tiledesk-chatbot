@@ -15,7 +15,6 @@ class DirMessageToBot {
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.supportRequest = context.supportRequest;
     this.token = context.token;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

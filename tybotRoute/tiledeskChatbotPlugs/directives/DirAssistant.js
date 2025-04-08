@@ -19,7 +19,6 @@ class DirAssistant {
     this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

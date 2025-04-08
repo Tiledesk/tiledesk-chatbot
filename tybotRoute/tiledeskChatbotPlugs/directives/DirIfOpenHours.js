@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
 let https = require("https");
@@ -16,7 +15,6 @@ class DirIfOpenHours {
     this.context = context;
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
   }
 
   execute(directive, callback) {

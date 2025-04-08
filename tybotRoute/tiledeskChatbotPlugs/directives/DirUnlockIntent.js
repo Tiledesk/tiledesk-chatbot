@@ -11,7 +11,6 @@ class DirUnlockIntent {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
     this.tdcache = context.tdcache;
-    this.log = context.log;
   }
 
   async execute(directive, callback) {

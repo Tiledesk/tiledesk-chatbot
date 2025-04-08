@@ -31,7 +31,7 @@ class AiService {
                 else {
                   resolve(resbody)
                 }
-            }, this.LOG
+            }
           );
         }); 
       }

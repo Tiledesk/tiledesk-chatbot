@@ -17,7 +17,6 @@ class DirReply {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.log = context.log;
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
@@ -25,8 +24,7 @@ class DirReply {
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
@@ -89,7 +87,7 @@ class DirReply {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
               winston.debug("DirReply command filled: " + command.message.text);
             }
             if (command.type === 'settings' && command.settings) {

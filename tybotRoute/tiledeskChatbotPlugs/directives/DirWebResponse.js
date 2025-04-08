@@ -15,7 +15,6 @@ class DirWebResponse {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

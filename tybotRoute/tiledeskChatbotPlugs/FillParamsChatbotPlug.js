@@ -11,8 +11,7 @@ class FillParamsChatbotPlug {
    * 
    */
 
-  constructor(request, tdcache, log) {
-    this.log = log;
+  constructor(request, tdcache) {
     this.tdcache = tdcache;
     this.request = request;
   }
