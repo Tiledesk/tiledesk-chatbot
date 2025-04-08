@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.8-rc1
+- removed: TILEBOT_LOG var 
+
 # 0.5.1-rc1
 - added json_buttons 
 - added winston log with code refactoring

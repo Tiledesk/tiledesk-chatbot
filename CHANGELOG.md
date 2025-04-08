@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.8-rc1
+- removed: TILEBOT_LOG var 
+
 # 1.3.1-rc1
 - added json_buttons 
 - added winston log with code refactoring
