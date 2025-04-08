@@ -5,6 +5,14 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.8
+
+# 2.0.8-rc2
+- added: check on preloaded_request_id in /block
+
+# 2.0.8-rc1
+- removed: TILEBOT_LOG var 
+
 # v0.5.0
 - added: AI_ENDPOINT env var
 - added: ability to get 'none' as bodytype in webresponse
