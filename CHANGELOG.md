@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.8-rc2
+- added: check on preloaded_request_id in /block
+
 # 2.0.8-rc1
 - removed: TILEBOT_LOG var 
 
