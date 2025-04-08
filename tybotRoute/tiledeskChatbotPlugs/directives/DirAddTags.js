@@ -37,18 +37,20 @@ class DirAddTags {
   }
 
   execute(directive, callback) {
-    winston.verbose("Execute AddTags directive");
+    winston.verbose("Execute AddTags action");
+    this.logger.error("Execute AddTags directive")
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      this.logger.error("Incorrect directive for ", directive.name, directive)
-      winston.warn("Incorrect directive: ", directive);
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.debug("Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("Acion AddTag completed");
       callback(stop);
     })
   }
@@ -182,6 +184,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("Add tags to list error ", err?.response?.data)
             winston.error("(httprequest) DirAddTags add tags to list err: ", err);
             resolve(true)
           } else {
@@ -216,6 +219,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("Add tag to conversation error ", err?.response?.data);
             winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
             resolve(true)
           } else {
@@ -245,6 +249,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("Add tag to lead error ", err?.response?.data);
             winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);
             resolve(true)
           } else {
