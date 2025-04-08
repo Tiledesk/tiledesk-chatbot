@@ -73,7 +73,6 @@ class DirectivesChatbotPlug {
     this.API_ENDPOINT = config.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
-    this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
     this.directives = config.directives;
@@ -142,8 +141,7 @@ class DirectivesChatbotPlug {
         projectId: projectId,
         token: token,
         APIURL: API_ENDPOINT,
-        APIKEY: "___",
-        log: this.log
+        APIKEY: "___"
       });
     }
     catch(err) {
@@ -162,8 +160,7 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
-      log: this.log
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
@@ -177,9 +174,7 @@ class DirectivesChatbotPlug {
 
   async nextDirective(directives) {
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
-    const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME, this.log
-    );
+    const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
@@ -745,8 +740,7 @@ class DirectivesChatbotPlug {
       projectId: projectId,
       token: token,
       APIURL: API_ENDPOINT,
-      APIKEY: "___",
-      log: false
+      APIKEY: "___"
     });
     let i = -1;
     winston.debug("(DirectivesChatbotPlug) processing Inline directives: ", directives);

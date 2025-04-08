@@ -20,7 +20,6 @@ class DirCustomerio {
     this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
   }
 
   execute(directive, callback) {
