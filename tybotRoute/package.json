@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-tybot-connector",
-  "version": "2.0.7",
+  "version": "2.0.8-rc1",
   "description": "Tiledesk Tybot connector",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "@tiledesk/tiledesk-chatbot-client": "^0.5.30",
     "@tiledesk/tiledesk-chatbot-util": "^0.8.39",
     "@tiledesk/tiledesk-client": "^0.10.13",
-    "@tiledesk/tiledesk-multi-worker": "^0.2.1-rc2",
+    "@tiledesk/tiledesk-multi-worker": "^0.3.1-rc10",
     "accept-language-parser": "^1.5.0",
     "app-root-path": "^3.1.0",
     "axios": "^1.7.7",
@@ -29,6 +29,7 @@
     "liquidjs": "^10.8.4",
     "minimist-string": "^1.0.2",
     "mongoose": "^6.3.5",
+    "mqtt": "^5.10.4",
     "multer": "^1.4.5-lts.1",
     "nanoid": "^3.1.25",
     "redis": "^4.7.0",

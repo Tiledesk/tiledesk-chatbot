@@ -96,42 +96,4 @@ class DirWebResponse {
 
 }
 
-
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} webResponse. The webhook response to send back
- * @param {Object} projectId. The projectId
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-// function sendResponse(webResponse, projectId, botId, callback) {
-//   const url = `${WEBHOOK_URL}/${projectId}/${botId}`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     json: webResponse,
-//     method: 'POST'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
-
 module.exports = { DirWebResponse };
