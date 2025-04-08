@@ -412,8 +412,14 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   
   // invoke block
   // unique ID for each execution
-  const execution_id = uuidv4().replace(/-/g, '');
-  const request_id = "automation-request-" + project_id + "-" + execution_id;
+  let request_id;
+  if (body.preloaded_request_id) {
+    request_id = body.preloaded_request_id;
+  } else {
+    const execution_id = uuidv4().replace(/-/g, '');
+    request_id = "automation-request-" + project_id + "-" + execution_id;
+    
+  }
   const command = "/#" + block_id;
   let message = {
     payload: {
