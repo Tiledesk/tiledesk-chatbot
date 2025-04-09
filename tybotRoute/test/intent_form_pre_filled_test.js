@@ -1,5 +1,4 @@
 var assert = require('assert');
-const { ExtUtil } = require('../ExtUtil');
 const { IntentForm } = require('../engine/IntentForm');
 const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
@@ -30,8 +29,7 @@ describe('IntentForm - pre-filled', function() {
         form: form,
         requestId: REQUEST_ID,
         chatbot: chatbot,
-        requestParameters: all_parameters,
-        log: false
+        requestParameters: all_parameters
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
@@ -71,8 +69,7 @@ describe('IntentForm - pre-filled', function() {
         form: form,
         requestId: REQUEST_ID,
         chatbot: chatbot,
-        requestParameters: all_parameters,
-        log: false
+        requestParameters: all_parameters
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
@@ -119,8 +116,7 @@ describe('IntentForm - pre-filled', function() {
         form: form,
         requestId: REQUEST_ID,
         chatbot: chatbot,
-        requestParameters: all_parameters,
-        log: false
+        requestParameters: all_parameters
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");
@@ -197,8 +193,7 @@ describe('IntentForm - pre-filled', function() {
         form: form,
         requestId: REQUEST_ID,
         chatbot: chatbot,
-        requestParameters: all_parameters,
-        log: false
+        requestParameters: all_parameters
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger message");

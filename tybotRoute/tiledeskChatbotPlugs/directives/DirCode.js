@@ -10,7 +10,6 @@ class DirCode {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

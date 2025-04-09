@@ -2,12 +2,17 @@ let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
 
 const FLOW_LOGS_ENABLED = process.env.FLOW_LOGS_ENABLED;
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
+const LOGS_BASE_ROUTING_KEY = process.env.LOGS_BASE_ROUTING_KEY || "apps.tilechat.logs";
+
+const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+
 let publisher = new Publisher(AMQP_MANAGER_URL, {
     debug: false,
     queueName: "logs_queue",
-    exchange: "tiledesk-multi",
-    topic: "logs",
+    exchange: "amq.topic"
 })
+
+console.log("LOGGER publisher: ", publisher);
 
 class Logger {
 
@@ -33,10 +38,15 @@ class Logger {
         }
 
         this.request_id = config.request_id;
+        console.log("LOGGER for request ", this.request_id);
+
         this.dev = false;
-        if (config.dev && config.dev === true) {
-            this.dev = true;
-        }
+        console.log("LOGGER is dev conversation ? ", config.dev);
+        // if (config.dev && config.dev === true) {
+        //     this.dev = true;
+        // } else {
+        //     this._disableDebugMethods()
+        // }
 
         // if (!AMQP_MANAGER_URL) {
         //     console.error('AMQP_MANAGER_URL is undefined. Logger not available...');
@@ -68,27 +78,29 @@ class Logger {
 
     base(level, text) {
         if (!this.request_id || !publisher) {
-            //console.log("Return because request or publisher is undefined", this.request_id, publisher);
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
         let data = {
             request_id: this.request_id,
+            id_project: this.request_id.split("-")[2],
             text: text,
             level: level,
+            nlevel: levels[level],
             timestamp: new Date(),
             dev: this.dev
         }
 
-        publisher.publish(data, (err, ok) => {
-            if (err) console.warn("publish log fail: ", err);
-            return;
-        })
+        let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
+        console.log("LOGGER publishing on topic ", topic)
+        publisher.publish(data, topic);
+        return;
     }
 
     formatLog(args) {
         return args
-            .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg ))
+            .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg))
             .join(" ")
     }
 
@@ -96,9 +108,14 @@ class Logger {
     _disableMethods() {
         const methods = ['error', 'warn', 'info', 'debug'];
         methods.forEach(method => {
-          this[method] = () => {};
+            this[method] = () => { };
         });
-      }
+    }
+
+    _disableDebugMethods() {
+        const method = 'debug';
+        this[method] = () => { };
+    }
 
 }
 

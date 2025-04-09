@@ -12,8 +12,7 @@ class DirIfOpenHours {
       projectId: context.projectId,
       token: context.token,
       APIURL: context.TILEDESK_APIURL,
-      APIKEY: "___",
-      log: context.log
+      APIKEY: "___"
     });
     // let context =  {
     //   projectId: projectId,
@@ -22,7 +21,6 @@ class DirIfOpenHours {
     //   APIURL: API_URL,
     //   TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
     //   departmentId: depId,
-    //   log: false
     // }
     this.intentDir = new DirIntent(
       {
@@ -30,10 +28,8 @@ class DirIfOpenHours {
         TILEBOT_ENDPOINT: context.TILEBOT_ENDPOINT,
         supportRequest: context.supportRequest,
         token: context.token,
-        log: context.log
       }
-    );
-    this.log = context.log;
+    )
   }
 
   execute(directive, callback) {
@@ -56,7 +52,6 @@ class DirIfOpenHours {
   go(action, callback) {
     const intentName = action.body.intentName;
     if (!intentName) {
-      if (this.log) {console.log("Invalid intent name for If-open-hours");}
       callback();
     }
     let intentDirective = {
@@ -67,13 +62,11 @@ class DirIfOpenHours {
       }
     }
     this.tdclient.openNow((err, result) => {
-      if (this.log) {console.log("openNow():", result);}
       if (err) {
         console.error("DirIfOpenHours Error:", err);
         callback();
       }
       else if (result && result.isopen) {
-        if (this.log) {console.log("executing the action on 'open'");}
         this.intentDir.execute(intentDirective, () => {
           callback();
         });

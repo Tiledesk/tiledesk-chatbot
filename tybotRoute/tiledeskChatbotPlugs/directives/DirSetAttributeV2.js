@@ -79,7 +79,6 @@ class DirSetAttributeV2 {
         }
         this.context = context;
         this.tdcache = context.tdcache;
-        this.log = context.log;
     }
 
     execute(directive, callback) {
@@ -199,9 +198,7 @@ class DirSetAttributeV2 {
         httpUtils.request(
             HTTPREQUEST, async (err, resbody) => {
                 if (err) {
-                    if (this.log) {
-                        winston.error("(DirSetAttributeV2) persistOnTiledesk() error: ", err);
-                    }
+                    winston.error("(DirSetAttributeV2) persistOnTiledesk() error: ", err);
                 } else {
                     winston.debug("(DirSetAttributeV2) Attributes saved: ", resbody);
                 }
