@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
 let axios = require('axios');
+const { Logger } = require('../../Logger');
 
 class DirWebResponse {
 
@@ -15,6 +16,7 @@ class DirWebResponse {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
   }
 
   execute(directive, callback) {
@@ -28,8 +30,9 @@ class DirWebResponse {
       callback();
       return;
     }
+    this.logger.info("Executing WebResponse action ", directive.action)
     this.go(action, () => {
-        // return stop true?
+      this.logger.info("WebResponse action terminated")
         callback();
     });
   }
@@ -57,6 +60,8 @@ class DirWebResponse {
       status: filled_status,
       payload: json
     }
+
+    this.logger.debug("WebResponse payload: ", webResponse);
 
     const topic = `/webhooks/${this.requestId}`;
     
