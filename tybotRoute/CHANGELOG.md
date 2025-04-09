@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.9
+
+# 2.0.9-rc1
+- removed: speech-to-text management
+
 # 2.0.8
 
 # 2.0.8-rc2
