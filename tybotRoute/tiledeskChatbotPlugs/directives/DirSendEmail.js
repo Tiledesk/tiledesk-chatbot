@@ -3,6 +3,7 @@ const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const winston = require('../../utils/winston');
 // const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 
 class DirSendEmail {
@@ -14,15 +15,13 @@ class DirSendEmail {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;    
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 

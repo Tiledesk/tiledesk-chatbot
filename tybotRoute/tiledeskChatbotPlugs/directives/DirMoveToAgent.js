@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Directives } = require('./Directives');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
@@ -14,15 +13,13 @@ class DirMoveToAgent {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
     
   }

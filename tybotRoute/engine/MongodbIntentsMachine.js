@@ -10,7 +10,6 @@ class MongodbIntentsMachine {
     }
     this.projectId = config.projectId;
     this.language = config.language;
-    this.log = config.log;
   }
 
   /**

@@ -87,6 +87,27 @@ const bot = {
 			}]
 		},
 		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_prompt_ollama_success",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"llm": "ollama",
+				"model": "mymodel",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
 			// TRUE INTENT
 			"webhook_enabled": false,
 			"enabled": true,

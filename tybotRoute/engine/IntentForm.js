@@ -11,7 +11,6 @@ class IntentForm {
     this.form = options.form;
     this.CURRENT_FIELD_INDEX_KEY = "tilebot:requests:" + this.requestId + ":currentFieldIndex"
     this.CURRENT_FORM_KEY = "tilebot:requests:" + this.requestId + ":currentForm"
-    this.log = options.log;
     this.requestParameters = options.requestParameters;
   }
 
