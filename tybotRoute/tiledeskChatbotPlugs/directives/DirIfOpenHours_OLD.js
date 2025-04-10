@@ -1,6 +1,7 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const ms = require('minimist-string');
+const winston = require('../../utils/winston');
 
 class DirIfOpenHours {
 
@@ -11,15 +12,13 @@ class DirIfOpenHours {
 
     this.context = context;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
@@ -32,9 +31,6 @@ class DirIfOpenHours {
       let params;
       params = this.parseParams(directive.parameter);
       if (!params.trueIntent && !params.falseIntent) {
-        if (this.log) {
-          console.log("missing both params.trueIntent & params.falseIntent");
-        }
         callback();
         return;
       }
@@ -66,14 +62,14 @@ class DirIfOpenHours {
     if (falseIntent && falseIntent.trim() === "") {
       falseIntent = null;
     }
-    if (this.log) {console.log("condition action:", action);}
+    winston.verbose("(DirIfOpenHours) Action:", action);
     if (!trueIntent && !falseIntent) {
-      if (this.log) {console.log("Invalid condition, no intents specified");}
-      callback();
+      winston.error("(DirIfOpenHours) Error: missing both action.trueIntent & action.falseIntent");
+            callback();
       return;
     }
     this.tdClient.openNow((err, result) => {
-      if (this.log) {console.log("openNow():", result);}
+      winston.error("(DirIfOpenHours) openNow():", result)
       if (err) {
         console.error("*** DirIfOpenHours Error:", err);
         callback();
@@ -81,7 +77,7 @@ class DirIfOpenHours {
       else if (result && result.isopen) {
         if (trueIntent) {
           let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
-          if (this.log) {console.log("DirIfOpenHours (openHours) => trueIntent");}
+          winston.debug("(DirIfOpenHours) (openHours) => trueIntent ");
           this.intentDir.execute(intentDirective, () => {
             callback(stopOnConditionMet);
           });
@@ -93,7 +89,7 @@ class DirIfOpenHours {
       }
       else if (falseIntent) {
         let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-        if (this.log) {console.log("DirIfOpenHours (openHours) => falseIntent", falseIntent);}
+        winston.debug("(DirIfOpenHours) (openHours) => falseIntent ");
         this.intentDir.execute(intentDirective, () => {
           callback(stopOnConditionMet);
         });

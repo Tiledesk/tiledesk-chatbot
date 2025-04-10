@@ -32,7 +32,6 @@ describe('Convert text reply', function() {
           "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
       }
       TiledeskChatbotUtil.replaceJSONButtons(message);
-    //   console.log("message:", JSON.stringify(message, null, "  "));
       assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
       // button 1
       assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -99,7 +98,6 @@ describe('Convert text reply', function() {
         "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
     }
     TiledeskChatbotUtil.replaceJSONButtons(message);
-    // console.log("message:", JSON.stringify(message, null, "  "));
     assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 2);
     // button 1
     assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -150,7 +148,6 @@ describe('Convert text reply', function() {
         "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
   }
   TiledeskChatbotUtil.replaceJSONButtons(message);
-//   console.log("message:", JSON.stringify(message, null, "  "));
   assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 2);
   // button 1
   assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -202,7 +199,6 @@ it('text reply with "some" wrong json buttons - original buttons not preserved, 
       "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
     }
     TiledeskChatbotUtil.replaceJSONButtons(message);
-    // console.log("message:", JSON.stringify(message, null, "  "));
     assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 1);
     // button 1
     assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -245,7 +241,6 @@ it('text reply with "some" wrong json buttons - original buttons not preserved, 
       "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
   }
   TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
-//   console.log("message liquidjs:", JSON.stringify(message, null, "  "));
   assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
   // button 1
   assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -305,7 +300,6 @@ it('text replyv2 with json buttons built with a single liquidjs attribute', asyn
       "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
   }
   TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
-//   console.log("message liquidjs:", JSON.stringify(message, null, "  "));
   assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
   // button 1
   assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");
@@ -389,7 +383,6 @@ it('text replyv2 with json buttons built iterating an array attribute using liqu
       "_tdActionId": "d23366ee19b74432a9cd3514af028f59"
   }
   TiledeskChatbotUtil.replaceJSONButtons(message, attributes);
-//   console.log("message liquidjs:", JSON.stringify(message, null, "  "));
   assert(message.attributes.commands[1].message.attributes.attachment.buttons.length === 3);
   // button 1
   assert(message.attributes.commands[1].message.attributes.attachment.buttons[0].type === "action");

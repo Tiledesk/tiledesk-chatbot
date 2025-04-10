@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -12,21 +12,22 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-webhook_bot.js').bots_data;
+const bots_data = require('./conversation-flow-logs_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
-const tilebotService = require('../services/TilebotService');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
+const { statSync } = require('fs');
+const tilebotService = require('../services/TilebotService.js');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for Webhook test', async () => {
+describe('Conversation for AddTags test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
-  
+
   before(() => {
     return new Promise(async (resolve, reject) => {
       winston.info("Starting tilebot server...");
@@ -39,20 +40,21 @@ describe('Conversation for Webhook test', async () => {
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
-            REDIS_PASSWORD: process.env.REDIS_PASSWORD
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+            log: process.env.TILEBOT_LOG
           }, () => {
             winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
-              winston.info('Tilebot connector listening on port ' + port);
+              winston.info('Tilebot connector listening on port ', port);
               resolve();
             });
-        });
+          });
       }
-      catch(error) {
-        winston.error("error:", error)
+      catch (error) {
+        winston.error("error: ", error)
       }
-      
+
     })
   });
 
@@ -62,52 +64,35 @@ describe('Conversation for Webhook test', async () => {
     });
   });
 
-  it('/webhook', (done) => {
+  it('Add log', (done) => {
+
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
+      console.log("message: ", JSON.stringify(message, null, 2))
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      assert(command2.type === "message");
-      assert(command2.message.type === "frame");
-      listener.close(() => {
-        done();
+      // assert(command2.type === "message");
+      // assert(command2.message.text === "gpt replied: this is mock gpt reply");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          // assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          // assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
+          listener.close(() => {
+            done();
+          });
+        }
       });
 
-    });
-
-    endpointServer.post('/bot', function (req, res) {
-      // const reply = {
-      //   type: "image",
-      //   metadata: {
-      //     src: `https://img_url`
-      //   }
-      // }
-      const reply = {
-        "actions": [{
-          "_tdActionType": "reply",
-          "attributes": {
-            "commands": [{
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "type": "frame",
-                "metadata": {
-                  src: "http://",
-                  height: 410
-                }
-              }
-            }]
-          }
-        }]
-      }
-      res.send(reply);
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -118,7 +103,7 @@ describe('Conversation for Webhook test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/webhook',
+          "text": '/add_log',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -128,7 +113,7 @@ describe('Conversation for Webhook test', async () => {
         "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });

@@ -12,7 +12,6 @@ class DirCondition {
     }
     this.context = context;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
   }
 
   execute(directive, callback) {

@@ -1,6 +1,5 @@
 var assert = require('assert');
 const { ExtUtil } = require('../ExtUtil');
-const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { DirWhenOpen } = require('../tiledeskChatbotPlugs/directives/DirWhenOpen');
 const supportRequest = require('./support_request.js').request;
 

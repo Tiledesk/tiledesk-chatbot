@@ -315,21 +315,7 @@ class DirWebRequestV2 {
           }
         })
         .catch((err) => {
-          if (this.log) {
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-            let cache = [];
-            let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
-              if (typeof value === 'object' && value != null) {
-                if (cache.indexOf(value) !== -1) {
-                  return;
-                }
-                cache.push(value);
-              }
-              return value;
-            });
-            winston.error("(DirWebRequestv2) An error occurred: ", error_log);
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          }
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
           if (callback) {
             let status = 1000;
             let cache = [];
