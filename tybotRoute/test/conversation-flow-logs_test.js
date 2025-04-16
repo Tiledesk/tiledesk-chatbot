@@ -72,12 +72,8 @@ describe('Conversation for AddTags test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", JSON.stringify(message, null, 2))
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      // assert(command2.type === "message");
-      // assert(command2.message.text === "gpt replied: this is mock gpt reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -85,8 +81,6 @@ describe('Conversation for AddTags test', async () => {
         }
         else {
           assert(attributes);
-          // assert(attributes["gpt_reply"] === "this is mock gpt reply");
-          // assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
           listener.close(() => {
             done();
           });
@@ -104,6 +98,107 @@ describe('Conversation for AddTags test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": '/add_log',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Add log with parameters', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes['payload'] === "Hello from payload");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/add_log_with_payload{"payload":"Hello from payload"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('Add log with object parameters', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes['payload'].name === "John");
+          assert(attributes['payload'].age === 30);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/add_log_with_object_payload{"payload": {"name": "John", "age": 30 }}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {

@@ -1,7 +1,10 @@
 
 
 const { Logger } = require('../../Logger');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
+
 let levels = ['error', 'warn', 'info', 'debug'];
 
 class DirFlowLog {
@@ -38,7 +41,6 @@ class DirFlowLog {
 
   async go(action, callback) {
     winston.debug("(DirFlowLog) Action: ", action);
-    console.log("(DirFlowLog) Action: ", action);
 
     let level = action.level || 'info';
     if (!levels.includes(level)) {
@@ -52,21 +54,31 @@ class DirFlowLog {
       callback();
     }
 
+    let requestVariables = null;
+    requestVariables =
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+      );
+
+    const filler = new Filler();
+    const filled_log = filler.fill(action.log, requestVariables);
+    winston.debug("(DirFlowLog) fille log: ", filled_log);
+
     if (level === 'error') {
-      winston.info("Adding log " + action.log + " with level " + level);
-      this.logger.error(action.log);
+      winston.info("Adding log '" + filled_log + "' with level " + level);
+      this.logger.error(filled_log);
     }
     else if (level === 'warn') {
-      winston.info("Adding log " + action.log + " with level " + level);
-      this.logger.warn(action.log);
+      winston.info("Adding log '" + filled_log + "' with level " + level);
+      this.logger.warn(filled_log);
     }
     else if (level === 'info') {
-      winston.info("Adding log " + action.log + " with level " + level);
-      this.logger.info(action.log);
+      winston.info("Adding log '" + filled_log + "' with level " + level);
+      this.logger.info(filled_log);
     }
     else if (level === 'debug') {
-      winston.info("Adding log " + action.log + " with level " + level);
-      this.logger.debug(action.log);
+      winston.info("Adding log '" + filled_log + "' with level " + level);
+      this.logger.debug(filled_log);
     }
 
     callback();

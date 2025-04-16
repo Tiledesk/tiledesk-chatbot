@@ -35,6 +35,70 @@ const bot = {
       "language": "en",
       "intent_display_name": "add_log",
       "intent_id": "0445119a-8a7e-46ff-9cb2-d7d698fc8b64",
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "actions": [
+        {
+          "_tdActionTitle": "",
+          "_tdActionId": "b826bd1f-782f-48e2-9cda-cc2869d3b597",
+          "_tdActionType": "flow_log",
+          "level": "info",
+          "log": "This is a log: {{payload}}"
+        },
+        {
+          "_tdActionType": "reply",
+          "text": "xxx",
+          "attributes": {
+            "commands": [{
+              "type": "wait",
+              "time": 500
+            }, {
+              "type": "message",
+              "message": {
+                "type": "text",
+                "text": "Log published"
+              }
+            }]
+          }
+        }
+      ],
+      "language": "en",
+      "intent_display_name": "add_log_with_payload",
+      "intent_id": "0445119a-8a7e-46ff-9cb2-d7d698fc8b64",
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "actions": [
+        {
+          "_tdActionTitle": "",
+          "_tdActionId": "b826bd1f-782f-48e2-9cda-cc2869d3b597",
+          "_tdActionType": "flow_log",
+          "level": "info",
+          "log": "This is a log: {{payload | json}}"
+        },
+        {
+          "_tdActionType": "reply",
+          "text": "xxx",
+          "attributes": {
+            "commands": [{
+              "type": "wait",
+              "time": 500
+            }, {
+              "type": "message",
+              "message": {
+                "type": "text",
+                "text": "Log published"
+              }
+            }]
+          }
+        }
+      ],
+      "language": "en",
+      "intent_display_name": "add_log_with_object_payload",
+      "intent_id": "0445119a-8a7e-46ff-9cb2-d7d698fc8b64",
     }
   ]
 }
