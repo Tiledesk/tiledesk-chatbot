@@ -74,7 +74,6 @@ class DirectivesChatbotPlug {
     this.API_ENDPOINT = config.API_ENDPOINT;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
-    this.log = config.log;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
     this.tdcache = config.cache;
     this.directives = config.directives;
@@ -143,8 +142,7 @@ class DirectivesChatbotPlug {
         projectId: projectId,
         token: token,
         APIURL: API_ENDPOINT,
-        APIKEY: "___",
-        log: this.log
+        APIKEY: "___"
       });
     }
     catch(err) {
@@ -163,8 +161,7 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
-      log: this.log
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
@@ -178,9 +175,7 @@ class DirectivesChatbotPlug {
 
   async nextDirective(directives) {
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
-    const go_on = await TiledeskChatbot.checkStep(
-      this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME, this.log
-    );
+    const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
@@ -223,14 +218,13 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-        const action_id = directive.action["_tdActionId"];
-        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        if ( locked_action_id && (locked_action_id !== action_id) ) {
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-          return;
-        }
-      
+      const action_id = directive.action["_tdActionId"];
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      if ( locked_action_id && (locked_action_id !== action_id) ) {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }      
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is (null?): ", directive);
@@ -702,6 +696,19 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else if (directive_name === Directives.WEB_RESPONSE) {
       new DirWebResponse(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
@@ -740,8 +747,7 @@ class DirectivesChatbotPlug {
       projectId: projectId,
       token: token,
       APIURL: API_ENDPOINT,
-      APIKEY: "___",
-      log: false
+      APIKEY: "___"
     });
     let i = -1;
     winston.debug("(DirectivesChatbotPlug) processing Inline directives: ", directives);

@@ -1,7 +1,9 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const winston = require('../../utils/winston');
 let axios = require('axios');
+const { Logger } = require('../../Logger');
 
 class DirWebResponse {
 
@@ -14,7 +16,7 @@ class DirWebResponse {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
   }
 
   execute(directive, callback) {
@@ -28,8 +30,9 @@ class DirWebResponse {
       callback();
       return;
     }
+    this.logger.info("Executing WebResponse action ", directive.action)
     this.go(action, () => {
-        // return stop true?
+      this.logger.info("WebResponse action terminated")
         callback();
     });
   }
@@ -37,27 +40,28 @@ class DirWebResponse {
   async go(action, callback) {
     winston.debug("DirWebResponse action: ", action);
     
-    let requestAttributes = null;
-    let status = null;
-    if (this.tdcache) {
-      requestAttributes = 
-      await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
-      const filler = new Filler();
-
-      try {
-        status = filler.fill(action.status, requestAttributes);
-      }
-      catch(e) {
-        winston.error("DirWebResponse Error: ", e)
-      }
-      
+    if (!this.tdcache) {
+      winston.error("DirWebResponse Error: tdcache is mandatory");
+      callback();
+      return;
     }
-
+    
+    let requestAttributes = null;
+    requestAttributes = 
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+        );
+    
+    const filler = new Filler();
+    const filled_status = filler.fill(action.status, requestAttributes);
     const json = await this.getJsonFromAction(action, filler, requestAttributes)
+
     let webResponse = {
-      status: status,
+      status: filled_status,
       payload: json
     }
+
+    this.logger.debug("WebResponse payload: ", webResponse);
 
     const topic = `/webhooks/${this.requestId}`;
     
@@ -95,43 +99,5 @@ class DirWebResponse {
   }
 
 }
-
-
-
-/**
- * A stub to send message to the "ext/botId" endpoint, hosted by tilebot on:
- * /${TILEBOT_ROUTE}/ext/${botId}
- *
- * @param {Object} webResponse. The webhook response to send back
- * @param {Object} projectId. The projectId
- * @param {string} botId. Tiledesk botId
- * @param {string} token. User token
- */
-// function sendResponse(webResponse, projectId, botId, callback) {
-//   const url = `${WEBHOOK_URL}/${projectId}/${botId}`;
-//   const HTTPREQUEST = {
-//     url: url,
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     json: webResponse,
-//     method: 'POST'
-//   };
-//   myrequest(
-//     HTTPREQUEST,
-//     function (err, resbody) {
-//       if (err) {
-//         if (callback) {
-//           callback(err);
-//         }
-//       }
-//       else {
-//         if (callback) {
-//           callback(null, resbody);
-//         }
-//       }
-//     }, false
-//   );
-// }
 
 module.exports = { DirWebResponse };

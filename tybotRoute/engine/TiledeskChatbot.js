@@ -1,6 +1,5 @@
 // let Faq = require('./faq');
 // let Faq_kb = require('./faq_kb');
-// const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
 const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
@@ -41,7 +40,6 @@ class TiledeskChatbot {
     this.projectId = config.projectId;
     this.MAX_STEPS = config.MAX_STEPS;
     this.MAX_EXECUTION_TIME = config.MAX_EXECUTION_TIME;
-    this.log = config.log;
   }
 
   async replyToMessage(message, callback) {
@@ -72,13 +70,13 @@ class TiledeskChatbot {
           winston.verbose("(TiledeskChatbot) Resetting current step by request message: " + message.text);
           await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
           await TiledeskChatbot.resetStarted(this.tdcache, this.requestId);
-          if (this.log) {
-            if (this.tdcache) {
-              let currentStep = 
-              await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
-              winston.verbose("(TiledeskChatbot) After reset currentStep:" + currentStep);
-            }
+
+          if (this.tdcache) {
+            let currentStep = 
+            await TiledeskChatbot.currentStep(this.tdcache, this.requestId);
+            winston.verbose("(TiledeskChatbot) After reset currentStep:" + currentStep);
           }
+          
         }
       } catch(error) {
         winston.error("(TiledeskChatbot) Error resetting locked intent: ", error);
@@ -93,8 +91,7 @@ class TiledeskChatbot {
         //   projectId: this.projectId,
         //   token: this.token,
         //   APIURL: this.APIURL,
-        //   APIKEY: this.APIKEY,
-        //   log: false
+        //   APIKEY: this.APIKEY
         // });
         // it only gets the locked_intent
         // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
@@ -506,7 +503,7 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
   }
 
-  static async checkStep(_tdcache, requestId, max_steps, max_execution_time, log) {
+  static async checkStep(_tdcache, requestId, max_steps, max_execution_time) {
     winston.verbose("(TiledeskChatbot) Checking on MAX_STEPS: " + max_steps);
     // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
@@ -579,7 +576,7 @@ class TiledeskChatbot {
     }
     const messagePipeline = new MessagePipeline(static_bot_answer, context);
     const webhookurl = bot.webhook_url;
-    messagePipeline.addPlug(new WebhookChatbotPlug(userMessage.request, webhookurl, this.token, this.log));
+    messagePipeline.addPlug(new WebhookChatbotPlug(userMessage.request, webhookurl, this.token));
     const bot_answer = await messagePipeline.exec();
     return bot_answer;
   }
@@ -592,8 +589,7 @@ class TiledeskChatbot {
         form: form,
         requestId: this.requestId,
         chatbot: this,
-        requestParameters: all_parameters,
-        log: this.log
+        requestParameters: all_parameters
       });
     let message = await intentForm.getMessage(userInputReply);
     return message;
@@ -610,8 +606,7 @@ class TiledeskChatbot {
       projectId: this.projectId,
       token: this.token,
       APIURL: this.APIURL,
-      APIKEY: this.APIKEY,
-      log: this.log
+      APIKEY: this.APIKEY
     });
     // const parameters_key = "tilebot:requests:" + requestId + ":parameters";
     const all_parameters = await this.allParameters();//this.tdcache.hgetall(parameters_key);

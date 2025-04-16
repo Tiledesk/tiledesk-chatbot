@@ -12,7 +12,6 @@ class TiledeskIntentsMachine {
     else {
       this.API_ENDPOINT = config.API_ENDPOINT;
     }
-    this.log = config.log;
   }
 
   /**
@@ -93,7 +92,7 @@ class TiledeskIntentsMachine {
     return tiledesk_intents;
   }
 
-  myrequest(options, callback, log) {
+  myrequest(options, callback) {
     axios(
       {
         url: options.url,

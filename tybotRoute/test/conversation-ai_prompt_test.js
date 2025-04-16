@@ -40,7 +40,6 @@ describe('Conversation for AiPrompt test', async () => {
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-            log: process.env.TILEBOT_LOG
           }, () => {
             winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
@@ -65,7 +64,7 @@ describe('Conversation for AiPrompt test', async () => {
 
   describe('Missing parameters tests', async () => {
 
-    it('AiPrompt fail - missing question paramter', (done) => {
+    it('AiPrompt fail - missing question parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -119,7 +118,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt fail - missing llm paramter', (done) => {
+    it('AiPrompt fail - missing llm parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -172,7 +171,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt fail - missing model paramter', (done) => {
+    it('AiPrompt fail - missing model parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -393,6 +392,121 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: this is the answer");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "this is the answer");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'ollama');
+
+        let http_code = 200;
+        let reply = {
+          _id: "656728224b45965b69111111",
+          id_project: "62c3f10152dc740035000000",
+          name: "ollama",
+          value: {
+            url: "http://localhost:10002/ollama/",
+            token: "customtoken",
+            models: [ 'mymodel1', 'mymodel2' ]
+          }
+        } 
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "ollama");
+        assert(req.body.llm_key === "");
+        assert(req.body.model.name === "mymodel");
+        assert(req.body.model.url === "http://localhost:10002/ollama/")
+  
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "this is the answer",
+          chat_history_dict: {
+            additionalProp1: { question: "string", answer: "string" },
+            additionalProp2: { question: "string", answer: "string" },
+            additionalProp3: { question: "string", answer: "string" }
+          }
+        }
+
+        res.status(http_code).send(reply);
+      });     
+
+      // endpointServer.post('/api/ask', function (req, res) {
+
+      //   assert(req.body.llm === "myllm");
+      //   assert(req.body.model === "llmmodel");
+      //   assert(req.body.llm_key === "example_api_key");
+  
+      //   let reply = {}
+      //   let http_code = 200;
+      //   reply = {
+      //     answer: "this is the answer",
+      //     chat_history_dict: {
+      //       additionalProp1: { question: "string", answer: "string" },
+      //       additionalProp2: { question: "string", answer: "string" },
+      //       additionalProp3: { question: "string", answer: "string" }
+      //     }
+      //   }
+
+      //   res.status(http_code).send(reply);
+      // });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_ollama_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
   })
 
   describe('Ask Fail', async () => {
@@ -525,11 +639,11 @@ function getChatbotParameters(requestId, callback) {
           callback(null, resbody);
         }
       }
-    }, false
+    }
   );
 }
 
-function myrequest(options, callback, log) {
+function myrequest(options, callback) {
   axios(
     {
       url: options.url,
