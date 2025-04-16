@@ -38,7 +38,6 @@ class Logger {
         }
 
         this.request_id = config.request_id;
-        console.log("LOGGER for request ", this.request_id);
 
         this.dev = false;
         if (config.dev && config.dev === true) {
