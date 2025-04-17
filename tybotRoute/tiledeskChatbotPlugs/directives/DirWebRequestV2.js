@@ -54,10 +54,10 @@ class DirWebRequestV2 {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    winston.debug("DirWebRequestV2  trueIntent " + trueIntent)
-    winston.debug("DirWebRequestV2  falseIntent " + falseIntent)
-    winston.debug("DirWebRequestV2  trueIntentAttributes " + trueIntentAttributes)
-    winston.debug("DirWebRequestV2  falseIntentAttributes " + falseIntentAttributes)
+    winston.debug("DirWebRequestV2 trueIntent " + trueIntent)
+    winston.debug("DirWebRequestV2 falseIntent " + falseIntent)
+    winston.debug("DirWebRequestV2 trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("DirWebRequestV2 falseIntentAttributes " + falseIntentAttributes)
 
     let requestAttributes = null;
     requestAttributes =
@@ -139,6 +139,7 @@ class DirWebRequestV2 {
         }
         else {
           this.logger.warn("WebRequest status ", status);
+          this.logger.error("WebRequest error ", error);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);

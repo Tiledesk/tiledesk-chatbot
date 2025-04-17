@@ -31,7 +31,7 @@ class DirAskGPTV2 {
   }
 
   execute(directive, callback) {
-    this.logger.error("Execute AskKnowledgeBase action")
+    this.logger.info("Execute AskKnowledgeBase action")
     winston.debug("DirAskGPTV2 directive: ", directive);
     let action;
     if (directive.action) {
