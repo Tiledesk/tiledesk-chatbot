@@ -73,7 +73,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -81,7 +81,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
           listener.close(() => {
             done();
@@ -110,7 +110,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           id: "123456789",
           ids: ["9876543210", "0123456789"],
@@ -242,7 +242,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -250,7 +250,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           listener.close(() => {
             done();
           });
@@ -279,7 +279,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           source_url: "http://test"
         }
@@ -415,7 +415,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -423,7 +423,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           listener.close(() => {
             done();
           });
@@ -452,7 +452,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           source_url: "http://test"
         }
@@ -589,7 +589,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -597,7 +597,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           listener.close(() => {
             done();
           });
@@ -626,7 +626,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           source_url: "http://test"
         }
@@ -747,7 +747,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -755,7 +755,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           listener.close(() => {
             done();
           });
@@ -784,7 +784,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           source_url: "http://test"
         }
@@ -904,7 +904,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -912,7 +912,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
           listener.close(() => {
             done();
@@ -935,7 +935,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           id: "123456789",
           ids: ["9876543210", "0123456789"],
@@ -1067,7 +1067,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock gpt reply");
+      assert(command2.message.text === "gpt replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1075,7 +1075,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "this is mock gpt reply");
+          assert(attributes["kb_reply"] === "this is mock kb reply");
           listener.close(() => {
             done();
           });
@@ -1097,7 +1097,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       }
       else {
         reply = {
-          answer: "this is mock gpt reply",
+          answer: "this is mock kb reply",
           success: true,
           source_url: "http://test"
         }
@@ -1218,7 +1218,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           listener.close(() => {
             done();
           });
@@ -1368,7 +1368,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           listener.close(() => {
             done();
           });
@@ -1525,7 +1525,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           listener.close(() => {
             done();
           });
@@ -1595,7 +1595,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           listener.close(() => {
             done();
           });
@@ -1666,7 +1666,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           listener.close(() => {
             done();
           });
@@ -1744,7 +1744,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           assert(attributes["flowError"] === "AskGPT Error: namespace not found");
           listener.close(() => {
             done();
@@ -1854,7 +1854,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         }
         else {
           assert(attributes);
-          assert(attributes["gpt_reply"] === "No answers");
+          assert(attributes["kb_reply"] === "No answers");
           assert(attributes["flowError"] === "AskGPT Error: namespace not found");
           listener.close(() => {
             done();
