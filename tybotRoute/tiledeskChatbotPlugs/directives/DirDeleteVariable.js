@@ -11,7 +11,6 @@ class DirDeleteVariable {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
   }
 
   async execute(directive, callback) {

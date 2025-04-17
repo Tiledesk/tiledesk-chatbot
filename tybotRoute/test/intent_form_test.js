@@ -1,5 +1,4 @@
 var assert = require('assert');
-const { ExtUtil } = require('../ExtUtil');
 const { IntentForm } = require('../engine/IntentForm');
 const { MockTdCache } = require('../engine/mock/MockTdCache');
 const { v4: uuidv4 } = require('uuid');
@@ -39,8 +38,7 @@ describe('IntentForm', function() {
       {
         form: form,
         requestId: REQUEST_ID,
-        chatbot: chatbot,
-        log: false
+        chatbot: chatbot
       }
     );
     let form_reply1 = await intentForm.getMessage("Trigger form message");
@@ -96,8 +94,7 @@ describe('IntentForm', function() {
       {
         form: form,
         requestId: REQUEST_ID,
-        chatbot: chatbot,
-        log: false
+        chatbot: chatbot
       }
     );
     let form_reply1 = await intentForm.getMessage("Start");
@@ -145,8 +142,7 @@ describe('IntentForm', function() {
       {
         form: form,
         requestId: REQUEST_ID,
-        chatbot: chatbot,
-        log: false
+        chatbot: chatbot
       }
     );
     let form_reply1 = await intentForm.getMessage("Start");
@@ -194,8 +190,7 @@ describe('IntentForm', function() {
       {
         form: form,
         requestId: REQUEST_ID,
-        chatbot: chatbot,
-        log: false
+        chatbot: chatbot
       }
     );
     let form_reply1 = await intentForm.getMessage("Start");

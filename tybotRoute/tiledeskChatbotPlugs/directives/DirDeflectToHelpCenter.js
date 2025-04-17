@@ -13,14 +13,12 @@ class DirDeflectToHelpCenter {
     }
     this.context = context;
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
 
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
@@ -70,8 +68,7 @@ class DirDeflectToHelpCenter {
     if (last_user_text && last_user_text.trim() !== '') {
       const helpcenter = new HelpCenterQuery({
         APIKEY: "__",
-        projectId: project_id,
-        log: false
+        projectId: project_id
       });
       if (this.helpcenter_api_endpoint) {
         helpcenter.APIURL = this.helpcenter_api_endpoint

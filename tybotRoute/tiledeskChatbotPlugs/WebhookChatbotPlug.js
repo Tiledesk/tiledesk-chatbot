@@ -3,11 +3,10 @@ const winston = require('../utils/winston');
 
 class WebhookChatbotPlug {
 
-  constructor(supportRequest, webhookurl, token, log) {
+  constructor(supportRequest, webhookurl, token) {
     this.supportRequest = supportRequest;
     this.webhookurl = webhookurl;
     this.token = token;
-    this.log = log;
   }
 
   exec(pipeline) {
@@ -101,19 +100,18 @@ class WebhookChatbotPlug {
             callback(null, res.data);
           }
         }
-      }, this.log
-    );
+      });
   }
 
   // ************************************************
   // ****************** HTTP REQUEST ****************
   // ************************************************
 
-  static myrequest(options, callback, log) {
-    if (log) {
+  static myrequest(options, callback) {
+
       winston.debug("(WebhookChatbotPlug) myrequest API URL:" + options.url);
       winston.debug("(WebhookChatbotPlug) myrequest Options:", options);
-    }
+
     axios(
       {
         url: options.url,
@@ -122,11 +120,11 @@ class WebhookChatbotPlug {
         headers: options.headers
       })
     .then(function (res) {
-      if (log) {
+
         winston.debug("(WebhookChatbotPlug) myrequest Response for url:", options.url);
         winston.debug("(WebhookChatbotPlug) myrequest Response headers:\n", res.headers);
         winston.debug("(WebhookChatbotPlug) myrequest Response body:\n", res.data);
-      }
+
       if (callback) {
         callback(null, res);
       }

@@ -40,8 +40,7 @@ describe('Conversation for AddTags test', async () => {
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
-            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-            log: process.env.TILEBOT_LOG
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD
           }, () => {
             winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
@@ -781,27 +780,24 @@ describe('Conversation for AddTags test', async () => {
   //   let endpointServer = express();
   //   endpointServer.use(bodyParser.json());
 
-  //   endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-  //     res.send({ success: true });
-  //     const message = req.body;
-  //     console.log("message: ", message)
-  //     assert(message.attributes.commands !== null);
-  //     assert(message.attributes.commands.length === 2);
-  //     const command2 = message.attributes.commands[1];
-  //     // console.log("command2", command2);
-  //     assert(command2.type === "message");
-  //     assert(command2.message.text === "add tags replied: Add tags Error: tags attribute is mandatory");
+    // endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+    //   res.send({ success: true });
+    //   const message = req.body;
+    //   assert(message.attributes.commands !== null);
+    //   assert(message.attributes.commands.length === 2);
+    //   const command2 = message.attributes.commands[1];
+    //   assert(command2.type === "message");
+    //   assert(command2.message.text === "add tags replied: Add tags Error: tags attribute is mandatory");
 
-  //     util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-  //       if (err) {
-  //         assert.ok(false);
-  //       }
-  //       else {
-  //         // console.log("final attributes:", JSON.stringify(attributes));
-  //         assert(attributes);
-  //         listener.close(() => {
-  //           done();
-  //         });
+    //   util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+    //     if (err) {
+    //       assert.ok(false);
+    //     }
+    //     else {
+    //       assert(attributes);
+    //       listener.close(() => {
+    //         done();
+    //       });
 
   //       }
   //     });
@@ -809,7 +805,7 @@ describe('Conversation for AddTags test', async () => {
   //   });
 
   //   listener = endpointServer.listen(10002, '0.0.0.0', () => {
-  //     // console.log('endpointServer started', listener.address());
+  //     winston.verbose('endpointServer started' + listener.address());
   //     let request = {
   //       "payload": {
   //         "senderFullname": "guest#367e",
@@ -826,9 +822,8 @@ describe('Conversation for AddTags test', async () => {
   //       "token": "XXX"
   //     }
   //     sendMessageToBot(request, BOT_ID, () => {
-  //       // console.log("Message sent:\n", request);
+  //       winston.verbose("Message sent:\n", request);
   //     });
   //   });
   // });
-
 });

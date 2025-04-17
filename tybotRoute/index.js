@@ -18,7 +18,6 @@ let axios = require('axios');
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
-let log = false;
 /** @type {TdCache} */
 let tdcache = null;
 let MAX_STEPS = 1000;
@@ -66,20 +65,7 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
- /** MANAGE AUDIO FILE MESSAGE */ 
- let aiService = new AiService({
-    API_ENDPOINT: API_ENDPOINT,
-    TOKEN: token,
-    PROJECT_ID: projectId
-  })
-  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
-  if(isAudio){
-    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
-      winston.error('(index.js) aiService.speechToText error: ', err)
-    })
-    if(responseText && responseText.text)
-      message.text = responseText.text
-  }
+
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
@@ -100,7 +86,7 @@ router.post('/ext/:botid', async (req, res) => {
 
   let botsDS;
   if (!staticBots) {
-    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId, log: log});
+    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
     winston.verbose("(tybotRoute) botsDS created with Mongo");
   }
   else {
@@ -112,12 +98,15 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+
+  winston.debug("(tybotRoute) Bot found: ", bot)
+  
   
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
-    intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId, log);
-    backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId, log);
+    intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId);
+    backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId);
     winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
@@ -137,8 +126,7 @@ router.post('/ext/:botid', async (req, res) => {
     requestId: requestId,
     projectId: projectId,
     MAX_STEPS: MAX_STEPS,
-    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME,
-    log: log
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
   
@@ -175,7 +163,6 @@ router.post('/ext/:botid', async (req, res) => {
           API_ENDPOINT: API_ENDPOINT,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
-          log: log,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
@@ -200,8 +187,7 @@ router.post('/ext/:botid', async (req, res) => {
     reply.attributes.fillParams = true;
     
     const apiext = new ExtApi({
-      TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
-      log: false
+      TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
@@ -228,8 +214,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     projectId: projectId,
     token: token,
     APIURL: API_ENDPOINT,
-    APIKEY: "___",
-    log: false
+    APIKEY: "___"
   });
 
   let request;
@@ -255,10 +240,10 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   winston.debug("(tybotRoute) API_ENDPOINT: " + API_ENDPOINT);
   winston.debug("(tybotRoute) request: " + TILEBOT_ENDPOINT);
 
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT: TILEBOT_ENDPOINT, token: token, log: log, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: API_ENDPOINT, TILEBOT_ENDPOINT: TILEBOT_ENDPOINT, token: token, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: tdcache});
 
   const original_answer_text = answer.text;
-  const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache, log);
+  const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, tdcache);
   winston.debug("(tybotRoute) bot_answer: ", bot_answer);
 
   if (bot_answer) {
@@ -381,8 +366,7 @@ router.post('/echobot', (req, res) => {
     projectId: projectId,
     token: token,
     APIURL: API_ENDPOINT,
-    APIKEY: "___",
-    log: false
+    APIKEY: "___"
   });
 
   // instantly reply "success" to TILEDESK
@@ -415,8 +399,14 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   
   // invoke block
   // unique ID for each execution
-  const execution_id = uuidv4().replace(/-/g, '');
-  const request_id = "automation-request-" + project_id + "-" + execution_id;
+  let request_id;
+  if (body.preloaded_request_id) {
+    request_id = body.preloaded_request_id;
+  } else {
+    const execution_id = uuidv4().replace(/-/g, '');
+    request_id = "automation-request-" + project_id + "-" + execution_id;
+    
+  }
   const command = "/#" + block_id;
   let message = {
     payload: {
@@ -510,13 +500,7 @@ async function startApp(settings, completionCallback) {
     });
   }
   
-  if (!settings.log) {
-    log = false;
-  }
-  else {
-    log = true;
-  }
-  winston.info("(Tilebot) Log: " + log);
+  winston.info("(Tilebot) Log Level: " + process.env.LOG_LEVEL);
 
   if (process.env.CHATBOT_MAX_STEPS) {
     MAX_STEPS = Number(process.env.CHATBOT_MAX_STEPS);
@@ -595,7 +579,7 @@ async function checkRequest(request_id, id_project) {
   // WARNING! Move this function in models/TiledeskChatbotUtil.js
 }
 
-function myrequest(options, callback, log) {
+function myrequest(options, callback) {
   winston.verbose("(tybotRoute) myrequest API URL:" + options.url);
   winston.debug("(tybotRoute) myrequest Options:", options);
 
