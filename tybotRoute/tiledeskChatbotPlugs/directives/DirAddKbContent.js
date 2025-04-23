@@ -78,6 +78,7 @@ class DirAddKbContent {
 
     const filler = new Filler();
     const filled_content = filler.fill(content, requestVariables);
+    const filled_name = filler.fill(name, requestVariables);
 
     const kb_endpoint = process.env.API_ENDPOINT;
     winston.verbose("[DirAddKbContent] KbEndpoint URL: " + kb_endpoint);
@@ -154,8 +155,8 @@ class DirAddKbContent {
       content: filled_content,
       namespace: namespace,
       type: type,
-      name: name,
-      source: name
+      name: filled_name,
+      source: filled_name
     };
     
     winston.debug("[DirAddKbContent] json:", json);
