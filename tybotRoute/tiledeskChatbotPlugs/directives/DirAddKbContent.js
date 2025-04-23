@@ -61,6 +61,7 @@ class DirAddKbContent {
     let type = action.type;
     let name = action.name;
     let content = action.content;
+    let engine;
 
     // default values
     let namespace = this.context.projectId;
