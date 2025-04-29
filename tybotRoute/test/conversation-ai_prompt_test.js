@@ -40,7 +40,6 @@ describe('Conversation for AiPrompt test', async () => {
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-            log: process.env.TILEBOT_LOG
           }, () => {
             winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
@@ -640,11 +639,11 @@ function getChatbotParameters(requestId, callback) {
           callback(null, resbody);
         }
       }
-    }, false
+    }
   );
 }
 
-function myrequest(options, callback, log) {
+function myrequest(options, callback) {
   axios(
     {
       url: options.url,

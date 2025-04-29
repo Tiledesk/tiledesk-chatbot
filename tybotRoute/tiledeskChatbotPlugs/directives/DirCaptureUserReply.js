@@ -16,7 +16,6 @@ class DirCaptureUserReply {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
   }
 
   execute(directive, callback) {

@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -12,39 +12,49 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-set_attributev2_action_bot.js').bots_data;
-
+const bots_data = require('./conversation-flow-logs_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
-const tilebotService = require('../services/TilebotService');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
+const { statSync } = require('fs');
+const tilebotService = require('../services/TilebotService.js');
 
-describe('Conversation for Set Attribute (v2) Action test', async () => {
+let SERVER_PORT = 10001
+
+describe('Conversation for AddTags test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
-  
+
   before(() => {
     return new Promise(async (resolve, reject) => {
       winston.info("Starting tilebot server...");
-      tybot.startApp(
-        {
-          // MONGODB_URI: process.env.MONGODB_URI,
-          bots: bots_data,
-          API_ENDPOINT: process.env.API_ENDPOINT,
-          REDIS_HOST: process.env.REDIS_HOST,
-          REDIS_PORT: process.env.REDIS_PORT,
-          REDIS_PASSWORD: process.env.REDIS_PASSWORD
-        }, () => {
-          winston.info("Tilebot route successfully started.");
-          var port = process.env.PORT || 10001;
-          app_listener = app.listen(port, () => {
-            winston.info('Tilebot connector listening on port ' + port);
-            resolve();
+      try {
+        tybot.startApp(
+          {
+            // MONGODB_URI: process.env.MONGODB_URI,
+            bots: bots_data,
+            TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
+            API_ENDPOINT: process.env.API_ENDPOINT,
+            REDIS_HOST: process.env.REDIS_HOST,
+            REDIS_PORT: process.env.REDIS_PORT,
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+            log: process.env.TILEBOT_LOG
+          }, () => {
+            winston.info("Tilebot route successfully started.");
+            var port = SERVER_PORT;
+            app_listener = app.listen(port, () => {
+              winston.info('Tilebot connector listening on port ', port);
+              resolve();
+            });
           });
-        });
+      }
+      catch (error) {
+        winston.error("error: ", error)
+      }
+
     })
   });
 
@@ -54,7 +64,8 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
     });
   });
 
-  it('/basic assignment', (done) => {
+  it('Add log', (done) => {
+
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -63,17 +74,13 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      
-      assert(command2.type === "message");
-      assert(command2.message.text === "value: string_value");
+
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(attributes);
-          assert(attributes["myvar"] === "string_value");
           listener.close(() => {
             done();
           });
@@ -86,45 +93,45 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
-        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/basic assignment',
+          "text": '/add_log',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
           }
         },
-        "token": CHATBOT_TOKEN
+        "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
 
-  it('/json assignment', (done) => {
+  it('Add log with parameters', (done) => {
+
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
+
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'value: {"name":"tiledesk"}');
+
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(attributes);
-          assert(typeof attributes["myvar"] === "object");
+          assert(attributes['payload'] === "Hello from payload");
           listener.close(() => {
             done();
           });
@@ -137,28 +144,27 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
-        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/json assignment',
+          "text": '/add_log_with_payload{"payload":"Hello from payload"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
           }
         },
-        "token": CHATBOT_TOKEN
+        "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });
 
-  it('/convert to number', (done) => {
-    // let message_id = uuidv4();
+  it('Add log with object parameters', (done) => {
+
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -167,17 +173,15 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       const message = req.body;
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      
-      assert(command2.type === "message");
-      assert(command2.message.text === 'my age: 12');
+
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
           assert(attributes);
-          assert(typeof attributes["age"] === "number");
+          assert(attributes['payload'].name === "John");
+          assert(attributes['payload'].age === 30);
           listener.close(() => {
             done();
           });
@@ -190,74 +194,21 @@ describe('Conversation for Set Attribute (v2) Action test', async () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
-        //   "_id": message_id,
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/convert to number',
+          "text": '/add_log_with_object_payload{"payload": {"name": "John", "age": 30 }}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
             "request_id": REQUEST_ID
           }
         },
-        "token": CHATBOT_TOKEN
+        "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
-      });
-    });
-  });
-
-  it('/convert to json', (done) => {
-    // let message_id = uuidv4();
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      assert(message.attributes.commands !== null);
-      assert(message.attributes.commands.length === 2);
-      const command2 = message.attributes.commands[1];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'person is: {"name":"tiledesk"}');
-      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(attributes);
-          assert(typeof attributes["person"] === "object");
-          listener.close(() => {
-            done();
-          });
-        }
-      });
-
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      winston.verbose('endpointServer started' + listener.address());
-      let request = {
-        "payload": {
-        //   "_id": message_id,
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/convert to json',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          }
-        },
-        "token": CHATBOT_TOKEN
-      }
-      tilebotService.sendMessageToBot(request, BOT_ID, () => {
-         winston.verbose("Message sent:\n", request);
+        winston.verbose("Message sent:\n", request);
       });
     });
   });

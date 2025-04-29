@@ -9,7 +9,6 @@ class MongodbBotsDataSource {
       throw new Error("config.projectId is mandatory");
     }
     this.projectId = config.projectId;
-    this.log = config.log;
   }
   
   async getBotById(botId) {

@@ -20,7 +20,6 @@ class DirBrevo {
     this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -158,11 +157,10 @@ class DirBrevo {
                   error = err.response.data.message;
             }
 
-            if (this.log) {
-              winston.error("(DirBrevo)  DirBrevo err data result:", result); // CONTROLLA IL VALORE
-              winston.error("(DirBrevo) DirBrevo err data status:", status);
-              winston.error("(DirBrevo) DirBrevo err data error:", error);
-            }
+            winston.error("(DirBrevo)  DirBrevo err data result:", result); // CONTROLLA IL VALORE
+            winston.error("(DirBrevo) DirBrevo err data status:", status);
+            winston.error("(DirBrevo) DirBrevo err data error:", error);
+
 
             await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {

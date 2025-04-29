@@ -12,6 +12,8 @@ let publisher = new Publisher(AMQP_MANAGER_URL, {
     exchange: "amq.topic"
 })
 
+console.log("LOGGER publisher: ", publisher);
+
 class Logger {
 
     constructor(config) {
@@ -69,7 +71,7 @@ class Logger {
 
     base(level, text) {
         if (!this.request_id || !publisher) {
-            //console.log("Return because request or publisher is undefined", this.request_id, publisher);
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
@@ -85,6 +87,7 @@ class Logger {
         }
 
         let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
+        console.log("LOGGER publishing on topic ", topic)
         publisher.publish(data, topic);
         return;
     }
