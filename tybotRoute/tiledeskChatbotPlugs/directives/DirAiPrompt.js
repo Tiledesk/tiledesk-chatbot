@@ -29,7 +29,7 @@ class DirAiPrompt {
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {

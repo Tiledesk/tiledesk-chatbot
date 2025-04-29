@@ -16,7 +16,7 @@ class DirWebResponse {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {

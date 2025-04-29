@@ -18,7 +18,7 @@ class DirWebRequestV2 {
     this.chatbot = context.chatbot;
     this.intentDir = new DirIntent(context);
     this.log = context.log;
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {

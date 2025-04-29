@@ -36,6 +36,7 @@ class Logger {
         }
 
         this.request_id = config.request_id;
+        this.intent_id = config.intent_id;
 
         this.dev = false;
         if (config.dev && config.dev === true) {
@@ -75,6 +76,7 @@ class Logger {
         let data = {
             request_id: this.request_id,
             id_project: this.request_id.split("-")[2],
+            intent_id: this.intent_id,
             text: text,
             level: level,
             nlevel: levels[level],
