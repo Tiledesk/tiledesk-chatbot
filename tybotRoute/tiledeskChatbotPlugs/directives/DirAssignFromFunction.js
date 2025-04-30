@@ -10,7 +10,6 @@ class DirAssignFromFunction {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
     this.tdcache = context.tdcache;
     this.API_ENDPOINT = context.API_ENDPOINT;
 
@@ -18,8 +17,7 @@ class DirAssignFromFunction {
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 

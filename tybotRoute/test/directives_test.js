@@ -19,8 +19,8 @@ message2
           markbot: true
       }
     }
-    let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, API_ENDPOINT: "APIURL", token: "token", log: false, HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});
-    const bot_answer = await ExtUtil.execPipelineExt(supportRequest, answer, directivesPlug, null, false);
+    let directivesPlug = new DirectivesChatbotPlug({supportRequest: supportRequest, API_ENDPOINT: "APIURL", token: "token", HELP_CENTER_API_ENDPOINT: "HELP_CENTER_API_ENDPOINT"});
+    const bot_answer = await ExtUtil.execPipelineExt(supportRequest, answer, directivesPlug, null);
     assert.strictEqual(bot_answer.text, "message1\n\nmessage2");
     assert(bot_answer.attributes.commands != null);
     assert(bot_answer.attributes.commands.length == 3);

@@ -39,8 +39,7 @@ describe('Conversation for capture test', async () => {
             API_ENDPOINT: process.env.API_ENDPOINT,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
-            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-            log: process.env.TILEBOT_LOG
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD
           }, () => {
             winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;

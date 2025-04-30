@@ -13,7 +13,6 @@ class DirWhatsappByAttribute {
     }
     this.context = context;
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

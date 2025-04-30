@@ -11,7 +11,6 @@ class DirAssign {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
   }
 
   execute(directive, callback) {
@@ -63,13 +62,11 @@ class DirAssign {
       const value = new TiledeskExpression().evaluateExpression(expression, variables);
       winston.debug("(DirAssign) executed expression: " + expression + " value: " + value);
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, variableName, value);
-      if (this.log) {
-        winston.debug("(DirAssign) Assigned: " + variableName + " = " + value);
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          const value_type = typeof value;
-          winston.debug("(DirAssign) request parameter: " + key + " value: " + value + " type: " + value_type)
-        }
+      winston.debug("(DirAssign) Assigned: " + variableName + " = " + value);
+      const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
+      for (const [key, value] of Object.entries(all_parameters)) {
+        const value_type = typeof value;
+        winston.debug("(DirAssign) request parameter: " + key + " value: " + value + " type: " + value_type)
       }
 
       callback();
