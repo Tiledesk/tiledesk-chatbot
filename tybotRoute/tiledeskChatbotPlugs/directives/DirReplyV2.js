@@ -64,11 +64,10 @@ class DirReplyV2 {
     const message = action;
 
     let current; // debug only
-    if (this.log) {
-      if (message.attributes.commands[1].message.text) {
-        current = message.attributes.commands[1].message.text
-      }
+    if (message.attributes.commands[1].message.text) {
+      current = message.attributes.commands[1].message.text
     }
+    
     let must_stop = false;
     // fill
     let requestAttributes = null;
@@ -77,11 +76,9 @@ class DirReplyV2 {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestAttributes)) {
-          const value_type = typeof value;
-        }
-      }
+      // for (const [key, value] of Object.entries(requestAttributes)) {
+      //   const value_type = typeof value;
+      // }
 
       TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
 
@@ -200,7 +197,7 @@ class DirReplyV2 {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
             }
           }
         }

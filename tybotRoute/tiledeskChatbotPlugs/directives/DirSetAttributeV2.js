@@ -207,9 +207,7 @@ class DirSetAttributeV2 {
         httpUtils.request(
             HTTPREQUEST, async (err, resbody) => {
                 if (err) {
-                    if (this.log) {
-                        winston.error("(DirSetAttributeV2) persistOnTiledesk() error: ", err);
-                    }
+                    winston.error("(DirSetAttributeV2) persistOnTiledesk() error: ", err);
                 } else {
                     winston.debug("(DirSetAttributeV2) Attributes saved: ", resbody);
                 }

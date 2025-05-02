@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
 let https = require("https");

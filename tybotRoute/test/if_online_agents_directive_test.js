@@ -1,5 +1,4 @@
 var assert = require('assert');
-const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { DirIfOnlineAgents } = require('../tiledeskChatbotPlugs/directives/DirIfOnlineAgents');
 
 describe('Directive DirIfOnlineAgents', function() {

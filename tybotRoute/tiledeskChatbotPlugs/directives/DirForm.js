@@ -15,7 +15,6 @@ class DirForm {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
 
     console.log("\n\n\nDIR FORMmmm")
     this.API_ENDPOINT = context.API_ENDPOINT;
@@ -23,8 +22,7 @@ class DirForm {
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
 
   }

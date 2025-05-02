@@ -10,9 +10,7 @@ class MarkbotChatbotPlug {
    * 
    */
 
-  constructor(log) {
-    this.log = log;
-  }
+  constructor() {}
 
   exec(pipeline) {
     let message = pipeline.message;

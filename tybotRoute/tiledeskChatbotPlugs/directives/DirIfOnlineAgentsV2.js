@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
@@ -213,7 +212,7 @@ class DirIfOnlineAgentsV2 {
             }
             resolve(resbody);
           }
-        }, this.log);
+        });
     });
     
   }
