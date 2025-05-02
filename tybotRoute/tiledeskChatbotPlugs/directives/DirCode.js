@@ -2,6 +2,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirCode {
 
@@ -10,21 +11,25 @@ class DirCode {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
+    this.requestId = this.context.requestId;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Code] Executing action");
     winston.verbose("Execute Code directive");
     let action;
     if (directive.action) {
       action = directive.action
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirCode Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Code] Action completed");
       callback(stop);
     });
     
@@ -34,6 +39,7 @@ class DirCode {
     winston.debug("(DirCode) Action: ", action);
     const source_code = action.source;
     if (!source_code || source_code.trim() === "") {
+      this.logger.warn("[Code] Invalid source_code");
       winston.error("(DirCode) Invalid source_code");
       callback();
       return;
@@ -74,6 +80,7 @@ class DirCode {
 
     }
     catch(err) {
+      this.logger.error("[Code] An error occurred: ", err);
       winston.error("(DirCode)  An error occurred: ", err);
     }
     callback();

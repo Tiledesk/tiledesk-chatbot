@@ -28,25 +28,24 @@ class DirAiPrompt {
     this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[AI Prompt] Executing action");
     winston.verbose("Execute AiPrompt directive");
-    this.logger.error("AiPrompt: executing action");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      this.logger.error("AiPrompt incorrect action ", directive)
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.debug("DirAiPrompt Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("AiPrompt: action completed");
+      this.logger.info("[AI Prompt] Action completed");
       callback(stop);
     })
   }
@@ -70,7 +69,7 @@ class DirAiPrompt {
     winston.debug("DirAskGPTV2 falseIntent", falseIntent)
 
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      this.logger.error(`AiPrompt: missing attribute '${missing_param}'`);
+      this.logger.error(`[AI Prompt] missing attribute '${missing_param}'`);
       await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -92,7 +91,7 @@ class DirAiPrompt {
     const filled_context = filler.fill(action.context, requestVariables);
 
     if (action.history) {
-      this.logger.info("AiPrompt: using chat transcript");
+      this.logger.info("[AI Prompt] using chat transcript");
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
@@ -103,7 +102,7 @@ class DirAiPrompt {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
         winston.debug("DirAiPrompt transcript: ", transcript)
       } else {
-        this.logger.warn("AiPrompt: no chat transcript found, skipping history translation");
+        this.logger.warn("[AI Prompt] no chat transcript found, skipping history translation");
         winston.verbose("DirAiPrompt transcript_string is undefined. Skip JSON translation for chat history")
       }
     }
@@ -120,7 +119,7 @@ class DirAiPrompt {
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("AiPrompt: Error getting ollama integration.")
+        this.logger.error("[AI Prompt] Error getting ollama integration.")
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (falseIntent) {
@@ -136,7 +135,7 @@ class DirAiPrompt {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key) {
-        this.logger.error("AiPrompt: llm key not found in integrations");
+        this.logger.error("[AI Prompt] llm key not found in integrations");
         winston.error("Error: DirAiPrompt llm key not found in integrations");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
         if (falseIntent) {
@@ -199,7 +198,7 @@ class DirAiPrompt {
           } else {
             error = JSON.stringify(err.response.data);
           }
-          this.logger.error("AiPrompt: error executing action: ", error);
+          this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -212,7 +211,7 @@ class DirAiPrompt {
 
           winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
-          this.logger.info("AiPrompt: answer: ", answer);
+          this.logger.info("[AI Prompt] answer: ", answer);
         
           await this.#assignAttributes(action, answer);
 
@@ -300,7 +299,7 @@ class DirAiPrompt {
     }
     if (result === true) {
       if (trueIntentDirective) {
-        this.logger.info("AiPrompt: executing true condition");
+        this.logger.info("[AI Prompt] executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -308,7 +307,7 @@ class DirAiPrompt {
         })
       }
       else {
-        this.logger.info("AiPrompt: no block connected to true condition");
+        this.logger.info("[AI Prompt] no block connected to true condition");
         winston.debug("DirAiPrompt No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -317,7 +316,7 @@ class DirAiPrompt {
     }
     else {
       if (falseIntentDirective) {
-        this.logger.info("AiPrompt: executing false condition");
+        this.logger.info("[AI Prompt] executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -325,7 +324,7 @@ class DirAiPrompt {
         });
       }
       else {
-        this.logger.info("AiPrompt: no block connected to false condition");
+        this.logger.info("[AI Prompt] no block connected to false condition");
         winston.debug("DirAiPrompt No falseIntentDirective specified");
         if (callback) {
           callback();

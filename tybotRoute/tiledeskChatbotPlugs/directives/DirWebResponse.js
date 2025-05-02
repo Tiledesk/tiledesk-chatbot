@@ -20,19 +20,20 @@ class DirWebResponse {
   }
 
   execute(directive, callback) {
+    this.logger.info("[Web Response] Executing action");
     winston.debug("Execute WebResponse directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.debug("DirWebResponse Incorrect directive: ", directive);
       callback();
       return;
     }
-    this.logger.info("Executing WebResponse action ", directive.action)
     this.go(action, () => {
-      this.logger.info("WebResponse action terminated")
+      this.logger.info("[Web Response] Action completed");
         callback();
     });
   }
@@ -61,7 +62,7 @@ class DirWebResponse {
       payload: json
     }
 
-    this.logger.debug("WebResponse payload: ", webResponse);
+    this.logger.debug("[Web Response] payload: ", webResponse);
 
     const topic = `/webhooks/${this.requestId}`;
     

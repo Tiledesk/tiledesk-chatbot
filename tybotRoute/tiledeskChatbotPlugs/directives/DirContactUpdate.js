@@ -5,6 +5,7 @@ let axios = require('axios');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirContactUpdate {
 
@@ -19,18 +20,18 @@ class DirContactUpdate {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
 
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Lead Update] Executing action");
     winston.verbose("Execute ContactUpdate directive")
     let action;
     if (directive.action) {
@@ -41,11 +42,13 @@ class DirContactUpdate {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirContactUpdate Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, () => {
+      this.logger.info("[Lead Update] Action completed");
       callback();
     });
   }

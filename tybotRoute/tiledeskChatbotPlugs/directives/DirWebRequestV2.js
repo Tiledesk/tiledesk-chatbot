@@ -22,19 +22,20 @@ class DirWebRequestV2 {
   }
 
   execute(directive, callback) {
+    this.logger.info("[Web Request] Executing action");
     winston.verbose("Execute WebRequestV2 directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirWebRequestV2 Incorrect directive: ", directive);
       callback();
       return;
     }
-    this.logger.info("Executing WebRequest action ", directive.action)
     this.go(action, (stop) => {
-      this.logger.info("WebRequest action terminated")
+      this.logger.info("[Web Request] Action completed");
       callback(stop);
     }).catch((err) => {
       // do not nothing
@@ -69,7 +70,7 @@ class DirWebRequestV2 {
     const url = filler.fill(action.url, requestAttributes);
 
     let headers = await this.getHeadersFromAction(action, filler, requestAttributes).catch( async (err) => {
-      this.logger.error("WebRequest: error getting headers");
+      this.logger.error("[Web Request] Error getting headers");
       await this.chatbot.addParameter("flowError", "Error getting headers");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -81,7 +82,7 @@ class DirWebRequestV2 {
     });
 
     let json = await this.getJsonFromAction(action, filler, requestAttributes).catch( async (err) => {
-      this.logger.error("WebRequest: error parsing json body");
+      this.logger.error("[Web Request] Error parsing json body");
       await this.chatbot.addParameter("flowError", "Error parsing json body");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -113,10 +114,10 @@ class DirWebRequestV2 {
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
         winston.debug("DirWebRequestV2 resbody:", resbody);
-        this.logger.info("WebRequest resbody: ", resbody);
+        this.logger.debug("[Web Request] resbody: ", resbody);
         
         if (err) {
-          this.logger.error("WebRequest error: ", err);
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {
@@ -138,8 +139,8 @@ class DirWebRequestV2 {
           return;
         }
         else {
-          this.logger.warn("WebRequest status ", status);
-          this.logger.error("WebRequest error ", error);
+          this.logger.warn("[Web Request] status ", status);
+          this.logger.error("[Web Request] error ", error);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -316,21 +317,7 @@ class DirWebRequestV2 {
           }
         })
         .catch((err) => {
-          if (this.log) {
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-            let cache = [];
-            let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
-              if (typeof value === 'object' && value != null) {
-                if (cache.indexOf(value) !== -1) {
-                  return;
-                }
-                cache.push(value);
-              }
-              return value;
-            });
-            winston.error("(DirWebRequestv2) An error occurred: ", error_log);
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          }
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
           if (callback) {
             let status = 1000;
             let cache = [];

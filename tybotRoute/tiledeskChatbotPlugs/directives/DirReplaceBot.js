@@ -2,6 +2,7 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirReplaceBot {
 
@@ -11,19 +12,19 @@ class DirReplaceBot {
     }
     this.context = context;
     this.requestId = context.requestId;
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Replace Bot] Executing action");
     winston.verbose("Execute ReplaceBot directive");
     let action;
     if (directive.action) {
@@ -36,10 +37,12 @@ class DirReplaceBot {
       }
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplaceBot Incorrect directive: ", directive);
       callback();
     }
     this.go(action, () => {
+      this.logger.info("[Replace Bot] Action completed");
       callback();
     })
   }

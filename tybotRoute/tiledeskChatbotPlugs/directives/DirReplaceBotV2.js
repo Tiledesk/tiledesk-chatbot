@@ -15,19 +15,19 @@ class DirReplaceBotV2 {
     }
     this.context = context;
     this.requestId = context.requestId;
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
 
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
       token: this.context.token,
       APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
+      APIKEY: "___"
     });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Replace Bot] Executing action");
     winston.verbose("Execute ReplaceBotV2 directive");
     let action;
     if (directive.action) {
@@ -40,10 +40,12 @@ class DirReplaceBotV2 {
       }
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplaceBotV2 Incorrect directive: ", directive);
       callback();
     }
     this.go(action, () => {
+      this.logger.info("[Replace Bot] Action completed");
       callback();
     })
   }

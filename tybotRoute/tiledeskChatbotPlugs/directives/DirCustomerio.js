@@ -6,6 +6,7 @@ let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
+const { Logger } = require("../../Logger");
 
 class DirCustomerio {
 
@@ -20,21 +21,24 @@ class DirCustomerio {
     this.token = this.context.token;
     this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Customer.io] Executing action");
     winston.verbose("Execute Customerio directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirCustomerio Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Customer.io] Action completed");
       callback(stop);
     })
   }
@@ -66,6 +70,7 @@ class DirCustomerio {
     winston.debug("(DirCustomerio) bodyParameters: ", bodyParameters);
 
     if (!bodyParameters || bodyParameters === '') {
+      this.logger.error("[Customer.io] bodyParameters is undefined or null or empty string");
       winston.debug("(DirCustomerio) Error: bodyParameters is undefined or null or empty string");
       callback();
       return;
@@ -76,6 +81,7 @@ class DirCustomerio {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'customerio', this.token);
     if (!key) {
+      this.logger.error("[Customer.io] Key not found in Integrations");
       winston.debug("(DirCustomerio) - Key not found in Integrations.");
       let status = 422;
       let error = 'Missing customerio access token';
@@ -117,6 +123,7 @@ class DirCustomerio {
       CUSTOMERIO_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
+            this.logger.error("[Customer.io] Error response: ", err.response);
             winston.debug("(DirCustomerio) err response:", err.response)
             winston.debug("(DirCustomerio) err data:", err.response.data)
 
@@ -151,6 +158,7 @@ class DirCustomerio {
 
           let status = 204;
           let error = null;
+          this.logger.error("[Customer.io] Response status: ", status);
           await this.#assignAttributes(action, status, error);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, null, falseIntent, null);

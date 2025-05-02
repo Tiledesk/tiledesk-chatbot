@@ -5,6 +5,7 @@ let https = require("https");
 const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
+const { Logger } = require('../../Logger');
 
 class DirIfOpenHours {
 
@@ -14,12 +15,14 @@ class DirIfOpenHours {
     }
 
     this.context = context;
+    this.requestId = this.context.requestId;
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[If Operating Hours] Executing action");
     winston.verbose("Execute IfOpenHours directive");
     let action;
     if (directive.action) {
@@ -39,11 +42,13 @@ class DirIfOpenHours {
       }
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirIfOpenHours Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[If Operating Hours] Action complteted");
       callback(stop);
     });
   }
@@ -65,6 +70,7 @@ class DirIfOpenHours {
     }
 
     if (!trueIntent && !falseIntent) {
+      this.logger.error("[If Operating Hours] Invalid condition, no intents specified");
       winston.error("(DirIfOpenHours) Invalid condition, no intents specified");
       callback();
       return;
@@ -96,6 +102,7 @@ class DirIfOpenHours {
         winston.debug("(DirIfOpenHours) resbody:", resbody);
         
         if (err) {
+          this.logger.error("[If Operating Hours] Error response: ", err.response);
           winston.debug("(DirIfOpenHours) error: ", err);
           if (callback) {
             if (falseIntent) {
@@ -108,6 +115,7 @@ class DirIfOpenHours {
           }
         } else {
           if (resbody.isopen && resbody.isopen === true) {
+            this.logger.debug("[If Operating Hours] is open: true")
             if (trueIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
               winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
@@ -118,6 +126,7 @@ class DirIfOpenHours {
             callback();
             return;
           } else {
+            this.logger.debug("[If Operating Hours] is open: false")
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
