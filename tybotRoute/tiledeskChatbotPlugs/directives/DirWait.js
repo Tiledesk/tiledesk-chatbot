@@ -60,7 +60,7 @@ class DirWait {
       // await this.tdcache.set(step_key, 0);
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
-    this.logger.verbose("[Wait] Waiting for ", action.millis, "[ms]")
+    this.logger.debug("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       callback();
     }, action.millis);
