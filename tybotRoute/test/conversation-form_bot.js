@@ -541,7 +541,7 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"question": "***",
-		"answer": "Thanks ${fullname}\nYour email ${youremail}",
+		"answer": "AAAThanks ${fullname}\nYour email ${youremail}",
 		"form": {
 			"cancelCommands": ["cancel"],
 			"cancelReply": "Form deleted",

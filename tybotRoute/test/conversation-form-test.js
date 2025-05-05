@@ -301,6 +301,16 @@ describe('Conversation1 - Form filling', async () => {
     let request7_uuid = uuidv4();
     let request8_uuid = uuidv4();
     let request9_uuid = uuidv4();
+    console.log("request0_uuid: ", request0_uuid)
+    console.log("request1_uuid: ", request1_uuid)
+    console.log("request2_uuid: ", request2_uuid)
+    console.log("request3_uuid: ", request3_uuid)
+    console.log("request4_uuid: ", request4_uuid)
+    console.log("request5_uuid: ", request5_uuid)
+    console.log("request6_uuid: ", request6_uuid)
+    console.log("request7_uuid: ", request7_uuid)
+    console.log("request8_uuid: ", request8_uuid)
+    console.log("request9_uuid: ", request9_uuid)
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -308,6 +318,8 @@ describe('Conversation1 - Form filling', async () => {
       res.send({ success: true });
       const message = req.body;
       
+      console.log("\nmessage.text:", message.text)
+      console.log("message.triggeredByMessageId: ", message.triggeredByMessageId)
       if (message.text === "You filled\nfullname: ${fullname}\nyouremail: ${youremail}" && message.triggeredByMessageId === request0_uuid) {
         let request = {
           "payload": {
@@ -438,6 +450,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else if (message.text === "deleting fullname..." && message.triggeredByMessageId === request6_uuid) {
+        console.log("request7")
         let request = {
           "payload": {
             "_id": request7_uuid,
@@ -459,6 +472,7 @@ describe('Conversation1 - Form filling', async () => {
         });
       }
       else if (message.text === "Your name?" && message.triggeredByMessageId === request7_uuid) {
+        console.log("request7")
         let request = {
           "payload": {
             "_id": request8_uuid,
