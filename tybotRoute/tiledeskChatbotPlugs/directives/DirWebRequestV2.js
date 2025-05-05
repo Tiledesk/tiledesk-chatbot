@@ -16,9 +16,10 @@ class DirWebRequestV2 {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.chatbot = context.chatbot;
-    this.intentDir = new DirIntent(context);
     this.log = context.log;
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft, intent_id: this.context.reply.attributes.intent_info.intent_id });
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {

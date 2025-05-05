@@ -13,10 +13,8 @@ class DirDeleteVariable {
     }
     this.context = context;
     this.requestId = this.context.requestId;
-    
-    let draft = this.context.supportRequest?.draft || false;
-    let intent_id = this.context.reply?.attributes?.intent_info?.intent_id || undefined;
-    this.logger = new Logger({ request_id: this.requestId, dev: draft, intent_id: intent_id });
+
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   async execute(directive, callback) {

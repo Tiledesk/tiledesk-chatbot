@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirCaptureUserReply {
   constructor(context) {
@@ -15,22 +16,26 @@ class DirCaptureUserReply {
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
+    
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Capture User Reply] Executing action");
     winston.verbose("Execute CaptureUserReply directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirCaptureUserReply Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, () => {
+      this.logger.info("[Capture User Reply] Action completed");
       callback();
     });
   }
