@@ -17,6 +17,7 @@ class DirForm {
     this.intentDir = new DirIntent(context);
     this.log = context.log;
 
+    console.log("\n\n\nDIR FORMmmm")
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.tdClient = new TiledeskClient({
       projectId: this.context.projectId,
