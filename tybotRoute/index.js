@@ -66,20 +66,7 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
- /** MANAGE AUDIO FILE MESSAGE */ 
- let aiService = new AiService({
-    API_ENDPOINT: API_ENDPOINT,
-    TOKEN: token,
-    PROJECT_ID: projectId
-  })
-  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
-  if(isAudio){
-    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
-      winston.error('(index.js) aiService.speechToText error: ', err)
-    })
-    if(responseText && responseText.text)
-      message.text = responseText.text
-  }
+
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);

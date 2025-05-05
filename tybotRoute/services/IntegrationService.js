@@ -1,6 +1,6 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
-let API_ENDPOINT = process.env.API_ENDPOINT;
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
 class IntegrationService {
 

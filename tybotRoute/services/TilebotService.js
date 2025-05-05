@@ -1,6 +1,6 @@
 const httpUtils = require("../utils/HttpUtils");
 const winston = require('../utils/winston');
-const TILEBOT_ENDPOINT = process.env.TILEBOT_ENDPOINT;
+const TILEBOT_ENDPOINT = process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`
 
 class TilebotService {
 
