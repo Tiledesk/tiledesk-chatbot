@@ -9,7 +9,6 @@ class DirSetConversationTags {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
     this.requestId = context.requestId;
     this.API_ENDPOINT = context.API_ENDPOINT;
     

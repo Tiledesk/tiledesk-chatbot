@@ -13,7 +13,6 @@ class DirWebRequest {
     this.context = context;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;
   }
 
   execute(directive, callback) {

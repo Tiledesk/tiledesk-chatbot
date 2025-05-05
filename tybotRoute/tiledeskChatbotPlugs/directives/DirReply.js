@@ -38,10 +38,10 @@ class DirReply {
       callback();
       return;
     }
-    this.logger.info("1 Execute action reply for " + directive.action.text)
+    this.logger.info("Executing Action Reply ", directive.action)
 
     this.go(action, () => {
-      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
+      this.logger.info("Action Reply terminated")
       callback();
     });
   }
@@ -62,15 +62,16 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.info("2 Sending reply " + message.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.debug("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.debug("Filled metadata.name with ", message.metadata.name);
         }
       }
       winston.debug("DirReply filling commands'. Message:", message);
@@ -83,7 +84,7 @@ class DirReply {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
               winston.debug("DirReply command filled: " + command.message.text);
             }
             if (command.type === 'settings' && command.settings) {
@@ -137,15 +138,6 @@ class DirReply {
     }
 
     let cleanMessage = message;
-    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
-    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
-    // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-    // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
-    //   console.log("invalid message", cleanMessage);
-    //   callback(); // cancel reply operation
-    //   return;
-    // }
-    
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
 
@@ -156,10 +148,8 @@ class DirReply {
       (err) => {
         if (err) {
           winston.error("DirReply Error sending reply: ", err);
-          this.logger.error("Error sending reply: " + err);
         }
         winston.verbose("DirReply reply message sent")
-        this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {
