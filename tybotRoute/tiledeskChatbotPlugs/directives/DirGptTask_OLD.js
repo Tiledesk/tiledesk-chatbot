@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 let https = require("https");
 const { DirIntent } = require("./DirIntent");
+const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 require('dotenv').config();
 
@@ -22,13 +23,13 @@ class DirGptTask {
   }
 
   execute(directive, callback) {
-    if (this.log) { console.log("GptTask directive: ", directive); }
+     winston.verbose("Execute GptTask directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      console.error("Incorrect directive: ", JSON.stringify(directive));
+      winston.warn("DirGptTask Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -38,9 +39,9 @@ class DirGptTask {
   }
 
   async go(action, callback) {
-    if (this.log) { console.log("DirGptTask action:", JSON.stringify(action)); }
+    winston.debug("(DirGptTask) Action: ", action);
     if (!this.tdcache) {
-      console.error("Error: DirGptTask tdcache is mandatory");
+      winston.error("(DirGptTask) Error: tdcache is mandatory");
       callback();
       return;
     }
@@ -50,18 +51,16 @@ class DirGptTask {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    if (this.log) {
-      console.log("DirGptTask trueIntent", trueIntent)
-      console.log("DirGptTask falseIntent", falseIntent)
-      console.log("DirGptTask trueIntentAttributes", trueIntentAttributes)
-      console.log("DirGptTask falseIntentAttributes", falseIntentAttributes)
-    }
+    winston.debug("(DirGptTask) trueIntent " + trueIntent)
+        winston.debug("(DirGptTask) falseIntent " + falseIntent)
+        winston.debug("(DirGptTask) trueIntentAttributes " + trueIntentAttributes)
+        winston.debug("(DirGptTask) falseIntentAttributes " + falseIntentAttributes)
 
     // default value
     let answer = "No answer.";
 
     if (!action.question || action.question === '') {
-      console.error("Error: DirGptTask question attribute is mandatory. Executing condition false...")
+      winston.debug("(DirGptTask) Error: question attribute is mandatory. Executing condition false...")
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -83,13 +82,11 @@ class DirGptTask {
     let max_tokens = action.max_tokens;
     let temperature = action.temperature;
 
-    if (this.log) {
-      console.log("DirGptTask max_tokens: ", max_tokens);
-      console.log("DirGptTask temperature: ", temperature);
-    }
+    winston.debug("(DirGptTask) max_tokens: " + max_tokens);
+    winston.debug("(DirGptTask) temperature: " + temperature);
 
     const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
-    if (this.log) { console.log("DirGptTask openai_url ", openai_url); }
+    winston.debug("(DirGptTask) openai_url ", openai_url);
 
     const INTEGRATIONS_HTTPREQUEST = {
       url: this.API_ENDPOINT + "/" + this.context.projectId + "/integration/name/openai",
@@ -99,7 +96,7 @@ class DirGptTask {
       },
       method: "GET"
     }
-    if (this.log) { console.log("DirGptTask INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST) }
+    winston.debug("(DirGptTask) INTEGRATIONS_HTTPREQUEST ", INTEGRATIONS_HTTPREQUEST);
     
     httpUtils.request(
       INTEGRATIONS_HTTPREQUEST, async (err, integration) => {
@@ -111,7 +108,7 @@ class DirGptTask {
             // return;
           }
         } else if (callback) {
-          if (this.log) { console.log("DirGptTask get integration resbody: ", integration); }
+          winston.debug("(DirGptTask) get integration resbody: ", integration);
 
           let key;
           if (integration &&
@@ -122,8 +119,7 @@ class DirGptTask {
           // key not present in integrations - for retro compatibility search in kbsettings
           if (!key) {
 
-            // if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings...")}
-            if (this.log) { console.log("DirGptTask - Key not found in Integrations. Searching in kb settings..."); }
+            winston.debug("(DirGptTask) Key not found in Integrations. Searching in kb settings...");
 
             const KB_HTTPREQUEST = {
               url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
@@ -133,16 +129,15 @@ class DirGptTask {
               },
               method: "GET"
             }
-            if (this.log) { console.log("DirGptTask KB_HTTPREQUEST", KB_HTTPREQUEST); }
+            winston.debug("(DirGptTask) KB_HTTPREQUEST", KB_HTTPREQUEST);
 
             httpUtils.request(
               KB_HTTPREQUEST, async (err, resbody) => {
                 if (err) {
                   if (callback) {
                     console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err.message);
-                    if (this.log) {
-                      console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
-                    }
+                    console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
+
                     await this.#assignAttributes(action, answer);
                     if (falseIntent) {
                       await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -153,7 +148,7 @@ class DirGptTask {
                     return;
                   }
                 } else if (callback) {
-                  if (this.log) { console.log("DirGptTask Get KnowledgeBase settings resbody:", resbody); }
+                  winston.debug("(DirGptTask) Get KnowledgeBase settings resbody:", resbody);
 
                   if (!resbody.gptkey) {
                     await this.#assignAttributes(action, answer);
@@ -167,7 +162,7 @@ class DirGptTask {
 
                   } else {
 
-                    if (this.log) { console.log("DirGptTask - Key found in KbSettings") };
+                    winston.debug("(DirGptTask) Key found in KbSettings");
 
                     key = resbody.gptkey;
 
@@ -189,7 +184,7 @@ class DirGptTask {
                       message.content = action.context;
                       json.messages.unshift(message);
                     }
-                    if (this.log) { console.log("DirGptTask json: ", json) }
+                    winston.debug("(DirGptTask) json: ", json);
 
                     const HTTPREQUEST = {
                       url: openai_url,
@@ -200,14 +195,12 @@ class DirGptTask {
                       json: json,
                       method: 'POST'
                     }
-                    if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
+                    winston.debug("(DirGptTask) HTTPREQUEST: ", HTTPREQUEST);
                     httpUtils.request(
                       HTTPREQUEST, async (err, resbody) => {
                         if (err) {
-                          if (this.log) {
-                            console.error("(httprequest) DirGptTask openai err:", err);
-                            console.error("(httprequest) DirGptTask openai err:", err.response.data);
-                          }
+                          console.error("(httprequest) DirGptTask openai err:", err);
+                          console.error("(httprequest) DirGptTask openai err:", err.response.data);
                           await this.#assignAttributes(action, answer);
                           if (falseIntent) {
                             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -217,7 +210,7 @@ class DirGptTask {
                           callback();
                           return;
                         } else {
-                          if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
+                          winston.debug("(DirGptTask) resbody: ", JSON.stringify(resbody));
                           answer = resbody.choices[0].message.content;
                           let answer_json = await this.convertToJson(answer);
                           await this.#assignAttributes(action, answer_json);
@@ -237,7 +230,7 @@ class DirGptTask {
             )
           } else {
 
-            if (this.log) { console.log("DirGptTask - Key found in Integrations") };
+            winston.debug("(DirGptTask) Key found in Integrations");
 
             let json = {
               "model": action.model,
@@ -257,7 +250,7 @@ class DirGptTask {
               message.content = action.context;
               json.messages.unshift(message);
             }
-            if (this.log) { console.log("DirGptTask json: ", json) }
+            winston.debug("(DirGptTask) json: ", json);
 
             const HTTPREQUEST = {
               url: openai_url,
@@ -268,14 +261,12 @@ class DirGptTask {
               json: json,
               method: 'POST'
             }
-            if (this.log) { console.log("DirGptTask HTTPREQUEST: ", HTTPREQUEST); }
+            winston.debug("(DirGptTask) HTTPREQUEST: ", HTTPREQUEST);
             httpUtils.request(
               HTTPREQUEST, async (err, resbody) => {
                 if (err) {
-                  if (this.log) {
-                    console.error("(httprequest) DirGptTask openai err:", err);
-                    console.error("(httprequest) DirGptTask openai err:", err.response.data);
-                  }
+                  console.error("(httprequest) DirGptTask openai err:", err);
+                  console.error("(httprequest) DirGptTask openai err:", err.response.data);
                   await this.#assignAttributes(action, answer);
                   if (falseIntent) {
                     await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -285,7 +276,7 @@ class DirGptTask {
                   callback();
                   return;
                 } else {
-                  if (this.log) { console.log("DirGptTask resbody: ", JSON.stringify(resbody)); }
+                  winston.debug("(DirGptTask) resbody: ", JSON.stringify(resbody));
                   answer = resbody.choices[0].message.content;
                   // check if answer is a json
                   let answer_json = await this.convertToJson(answer);
@@ -339,7 +330,7 @@ class DirGptTask {
         })
       }
       else {
-        if (this.log) { console.log("No trueIntentDirective specified"); }
+        winston.debug("(DirGptTask) No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -354,7 +345,7 @@ class DirGptTask {
         });
       }
       else {
-        if (this.log) { console.log("No falseIntentDirective specified"); }
+        winston.debug("(DirGptTask) No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -363,10 +354,8 @@ class DirGptTask {
   }
 
   async #assignAttributes(action, answer) {
-    if (this.log) {
-      console.log("assignAttributes action:", action)
-      console.log("assignAttributes answer:", answer)
-    }
+    winston.debug("(DirGptTask) assignAttributes action:", action)
+    winston.debug("(DirGptTask) assignAttributes answer:", answer)
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
@@ -374,13 +363,6 @@ class DirGptTask {
       // if (action.assignSourceTo && source) {
       //   await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       // }
-      // Debug log
-      if (this.log) {
-        const all_parameters = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.context.requestId);
-        for (const [key, value] of Object.entries(all_parameters)) {
-          if (this.log) { console.log("(gpttask) request parameter:", key, "value:", value, "type:", typeof value) }
-        }
-      }
     }
   }
   

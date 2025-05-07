@@ -16,7 +16,6 @@ class DirMessage {
     this.requestId = context.requestId;
     this.tdcache = this.context.tdcache;
     this.token = context.token;
-    this.log = this.context.log;
     this.supportRequest = this.context.supportRequest
 
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });

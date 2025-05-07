@@ -28,7 +28,7 @@ class DirClose {
                 winston.error("(DirClose) Error: ", err);
             }
             else {
-                this.logger.verbose("[Close] Request closed");
+                this.logger.info("[Close] Request closed");
                 await this.chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT);
             }
             this.logger.info("[Close] Action completed");
