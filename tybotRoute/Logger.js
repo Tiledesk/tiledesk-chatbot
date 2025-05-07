@@ -84,6 +84,10 @@ class Logger {
             dev: this.dev
         }
 
+        if (this.request_id.startsWith('automation') && this.request_id.split("-")[4]) {
+            data.webhook_id = this.request_id.split("-")[4];
+        }
+        
         let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
         publisher.publish(data, topic);
         return;
