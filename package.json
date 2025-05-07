@@ -1,6 +1,6 @@
 {
   "name": "@tiledesk/tiledesk-chatbot",
-  "version": "2.0.10-rc14",
+  "version": "2.0.10-rc15",
   "description": "",
   "main": "index.js",
   "scripts": {
