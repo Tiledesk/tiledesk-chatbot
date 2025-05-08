@@ -755,7 +755,7 @@ class TiledeskChatbotUtil {
             }
         } else if (requestId.startsWith("automation-request-")) {
             const parts = requestId.split("-");
-            if (parts.length === 4) {
+            if (parts.length === 4 || parts.length === 5) {
                 isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
             }
             else {
