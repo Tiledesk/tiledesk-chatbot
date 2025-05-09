@@ -1,5 +1,6 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const winston = require('../../utils/winston');
+const { Logger } = require("../../Logger");
 
 class DirDepartment {
 
@@ -11,17 +12,13 @@ class DirDepartment {
     this.requestId = context.requestId;
     this.API_ENDPOINT = context.API_ENDPOINT;
     this.log = context.log;
-
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Change Department] Executing action");
     winston.verbose("Execute Department directive");
     let action;
     if (directive.action) {
@@ -37,6 +34,7 @@ class DirDepartment {
       }
     }
     this.go(action, () => {
+      this.logger.info("[Change Department] Action executed");
       callback();
     });
     
@@ -66,6 +64,7 @@ class DirDepartment {
     const depName = action.depName;
     this.moveToDepartment(this.requestId, depName, (deps) => {
       if (!deps) {
+        this.logger.warn("[Change Department] Department not found");
         winston.warn("(DirDepartment) Dep not found");
         callback();
         return
@@ -94,14 +93,19 @@ class DirDepartment {
             this.requestId,
             message, (err) => {
               if (err) {
+                this.logger.error("[Change Department] Unable to trigger bot");
                 winston.error("(DirDepartment) Error sending hidden message: " + err.message)
+              } else {
+                this.logger.debug("[Change Department] Bot triggered");
+                winston.debug("(DirDepartment) Hidden message sent.");
+
               }
-              winston.debug("(DirDepartment) Hidden message sent.");
               callback();
           });
         }
       }
       else {
+        this.logger.debug("[Change Department] No triggering bot");
         winston.debug("(DirDepartment) No action.triggerBot");
         callback();
       }

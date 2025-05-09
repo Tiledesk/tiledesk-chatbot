@@ -5,6 +5,7 @@ const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const { Logger } = require("../../Logger");
 
 class DirMake {
 
@@ -15,22 +16,26 @@ class DirMake {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Make] Executing action");
     winston.verbose("Execute Make directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirMake Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Make] Action completed");
       callback(stop);
     })
   }
@@ -199,21 +204,7 @@ class DirMake {
 
       })
       .catch((err) => {
-        if (this.log) {
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-          let cache = [];
-          let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
-            if (typeof value === 'object' && value != null) {
-              if (cache.indexOf(value) !== -1) {
-                return;
-              }
-              cache.push(value);
-            }
-            return value;
-          });
-          winston.error("(DirMake) An error occurred: ", error_log);
-          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END;
-        }
+        // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END;
         if (callback) {
           let status = 1000;
           let cache = [];

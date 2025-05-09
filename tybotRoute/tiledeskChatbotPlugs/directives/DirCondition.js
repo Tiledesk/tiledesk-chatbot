@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const ms = require('minimist-string');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirCondition {
 
@@ -11,11 +12,14 @@ class DirCondition {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
+    this.requestId = this.context.requestId;
+    
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Condition] Executing action");
     winston.verbose("Execute Condition directive");
     let action;
     if (directive.action) {
@@ -35,11 +39,13 @@ class DirCondition {
       }
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirCondition Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Condition] Action completed");
       callback(stop);
     });
     
@@ -64,21 +70,25 @@ class DirCondition {
     }
     winston.debug("(DirCondition) condition action: ", action);
     if (!trueIntent && !falseIntent) {
+      this.logger.error("[Condition] Invalid condition, no intents specified");
       winston.error("(DirCondition) Invalid condition, no intents specified");
       callback();
       return;
     }
     if (scriptCondition === null && jsonCondition === null) {
+      this.logger.error("[Condition] Invalid condition, scriptCondition & jsonCondition null");
       winston.error("(DirCondition) Invalid condition, scriptCondition & jsonCondition null");
       callback();
       return;
     }
     if (scriptCondition !== null && scriptCondition.trim === "") {
+      this.logger.error("[Condition] Invalid condition, scriptCondition is empty");
       winston.error("(DirCondition) Invalid condition, scriptCondition is empty");
       callback();
       return;
     }
     else if (jsonCondition && jsonCondition.groups === null) {
+      this.logger.error("[Condition] Invalid jsonCondition, no groups");
       winston.error("(DirCondition) Invalid jsonCondition, no groups:", jsonCondition);
       callback();
       return;
@@ -121,6 +131,7 @@ class DirCondition {
         });
       }
       else {
+        this.logger.debug("[Condition] No trueIntentDirective specified");
         winston.debug("(DirCondition) No trueIntentDirective specified");
         callback();
         return;
@@ -133,6 +144,7 @@ class DirCondition {
         });
       }
       else {
+        this.logger.debug("[Condition] No falseIntentDirective specified");
         winston.debug("(DirCondition) No falseIntentDirective specified");
         callback();
         return;

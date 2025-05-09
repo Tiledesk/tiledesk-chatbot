@@ -1,4 +1,5 @@
 
+const { Logger } = require('../../Logger');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const winston = require('../../utils/winston');
 
@@ -12,11 +13,13 @@ class DirWait {
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.log = context.log;
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
+    this.logger.info("[Wait] Executing action");
     winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
@@ -45,6 +48,7 @@ class DirWait {
     }
 
     this.go(action, () => {
+      this.logger.info("[Wait] Action completed");
       callback();
     })
   }
@@ -57,6 +61,7 @@ class DirWait {
       // await this.tdcache.set(step_key, 0);
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
+    this.logger.debug("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       callback();
     }, action.millis);

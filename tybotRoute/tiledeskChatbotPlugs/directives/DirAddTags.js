@@ -8,6 +8,7 @@ const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const req = require("express/lib/request");
 const { update } = require("../../models/faq");
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
+const { Logger } = require("../../Logger");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
@@ -23,29 +24,26 @@ class DirAddTags {
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
-
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
-    winston.verbose("Execute AddTags directive");
+    this.logger.info("[Add Tag] Executing action")
+    winston.verbose("Execute AddTags action");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      winston.warn("Incorrect directive: ", directive);
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.debug("Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Add Tag] Action completed");
       callback(stop);
     })
   }
@@ -66,6 +64,7 @@ class DirAddTags {
     pushToList = action.pushToList
 
     if (!action.tags || action.tags === '') {
+      this.logger.error("[Add Tag] tags attribute is mandatory");
       winston.error("(DirAddTags) Error: tags attribute is mandatory")
       await this.chatbot.addParameter("flowError", "Add tags Error: tags attribute is mandatory");
       callback();
@@ -86,6 +85,7 @@ class DirAddTags {
     if(target === 'request'){
       
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
+      this.logger.debug("[Add Tag] Adding following tags to conversation: ", newTags)
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
@@ -99,6 +99,7 @@ class DirAddTags {
 
       winston.debug('(DirAddTags) UPDATE request with newTags', newTags)
       let updatedRequest = await this.updateRequestWithTags(newTags)
+      this.logger.info("[Add Tag] Tags added to conversation")
       if(!updatedRequest){
         callback();
         return;
@@ -109,6 +110,7 @@ class DirAddTags {
     /** use case: LEAD */
     if(target === 'lead'){
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
+      this.logger.debug("[Add Tag] Adding following tags to lead: ", newTags)
 
       let request = await this.tdClient.getRequestById(this.requestId);
       winston.debug('(DirAddTags) request detail: ', request)
@@ -130,6 +132,7 @@ class DirAddTags {
 
       winston.debug('(DirAddTags) UPDATE lead with newTags ', newTags)
       let updatedLead = await this.updateLeadWithTags(request.lead._id, newTags)
+      this.logger.info("[Add Tag] Tags added to lead")
       if(!updatedLead){
         callback();
         return;
@@ -174,6 +177,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("[Add Tag] Add tags to list error ", err?.response?.data)
             winston.error("(httprequest) DirAddTags add tags to list err: ", err);
             resolve(true)
           } else {
@@ -208,6 +212,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("[Add Tag] Add tag to conversation error ", err?.response?.data);
             winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
             resolve(true)
           } else {
@@ -237,6 +242,7 @@ class DirAddTags {
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
+            this.logger.error("[Add Tag] Add tag to lead error ", err?.response?.data);
             winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);
             resolve(true)
           } else {

@@ -10,6 +10,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const { Logger } = require("../../Logger");
 
 class DirAskGPTV2 {
 
@@ -23,23 +24,27 @@ class DirAskGPTV2 {
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Ask Knowledge Base] Executing action");
     winston.debug("DirAskGPTV2 directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.debug("DirAskGPTV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Ask Knowledge Base] Action completed");
       callback(stop);
     })
   }
@@ -90,6 +95,7 @@ class DirAskGPTV2 {
     let source = null;
 
     if (!action.question || action.question === '') {
+      this.logger.error("[Ask Knowledge Base] question attribute is mandatory");
       winston.error("DirAskGPTV2 Error: question attribute is mandatory. Executing condition false...");
       await this.#assignAttributes(action, answer, source);
       if (falseIntent) {
@@ -133,6 +139,7 @@ class DirAskGPTV2 {
     const filled_context = filler.fill(action.context, requestVariables)
 
     if (action.history) {
+      this.logger.info("[Ask Knowledge Base] use chat transcript")
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
@@ -144,6 +151,7 @@ class DirAskGPTV2 {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
         winston.debug("DirAskGPTV2 transcript ", transcript)
       } else {
+        this.logger.warn("[Ask Knowledge Base] chat transcript is undefined. Skip JSON translation for chat history.");
         winston.verbose("DirAskGPT transcript_string is undefined. Skip JSON translation for chat history")
       }
     }
@@ -153,6 +161,7 @@ class DirAskGPTV2 {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
+      this.logger.debug("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
       winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
@@ -161,6 +170,8 @@ class DirAskGPTV2 {
       winston.verbose("DirAskGPTV2 - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
+    } else {
+      this.logger.debug("[Ask Knowledge Base] use your own OpenAI key")
     }
 
     if (!key) {
@@ -178,6 +189,7 @@ class DirAskGPTV2 {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
+        this.logger.warn("[Ask Knowledge Base] Tokens quota exceeded. Skip the action")
         winston.verbose("DirAskGPTV2 - Quota exceeded for tokens. Skip the action")
         await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -191,14 +203,17 @@ class DirAskGPTV2 {
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
+      this.logger.debug("[Ask Knowledge Base] Searching namespace by name ", filled_namespace);
       ns = await this.getNamespace(filled_namespace, null);
       namespace = ns?.id;
       winston.verbose("DirAskGPTV2 - Retrieved namespace id from name " + namespace);
     } else {
+      this.logger.debug("[Ask Knowledge Base] Searching namespace by id ", namespace);
       ns = await this.getNamespace(null, namespace);
     }
 
     if (!ns) {
+      this.logger.error("[Ask Knowledge Base] Namespace not found")
       await this.#assignAttributes(action, answer);
       await this.chatbot.addParameter("flowError", "AskGPT Error: namespace not found");
       if (falseIntent) {
@@ -217,6 +232,7 @@ class DirAskGPTV2 {
     }
     
     if (!namespace) {
+      this.logger.error("[Ask Knowledge Base] Namespace is undefined")
       winston.verbose("DirAskGPTV2 - Error: namespace is undefined")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");

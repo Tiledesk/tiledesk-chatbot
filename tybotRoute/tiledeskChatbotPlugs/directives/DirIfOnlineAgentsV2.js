@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const axios = require("axios").default;
 let https = require("https");
@@ -6,6 +5,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
+const { Logger } = require('../../Logger');
 
 class DirIfOnlineAgentsV2 {
 
@@ -15,32 +15,30 @@ class DirIfOnlineAgentsV2 {
     }
     this.context = context;
     this.chatbot = context.chatbot;
-    this.intentDir = new DirIntent(context);
+    this.requestId = this.context.requestId;
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
-
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
 
   }
 
   execute(directive, callback) {
+    this.logger.info("[If Online Agents] Executing action");
     winston.verbose("Execute IfOnlineAgentsV2 directive");
     let action;
     if (directive.action) {
       action = directive.action
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirIfOnlineAgentsV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[If Online Agents] Action completed");
       callback(stop);
     });
   }
@@ -49,6 +47,7 @@ class DirIfOnlineAgentsV2 {
     winston.debug("(DirIfOnlineAgentsV2) Action: ", action);
 
     if (!action.trueIntent && !action.falseIntent) {
+      this.logger.error("[If Online Agents] missing both action.trueIntent & action.falseIntent");
       winston.error("(DirIfOnlineAgentsV2) Error: missing both action.trueIntent & action.falseIntent");
       callback();
       return;
@@ -93,6 +92,7 @@ class DirIfOnlineAgentsV2 {
           if (departmentId) {
             agents = await this.getProjectAvailableAgents(departmentId, true);
           } else {
+            this.logger.error("[If Online Agents] No departmentId found in attributes");
             winston.error("(DirIfOnlineAgentsV2) no departmentId found in attributes");
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
             if (falseIntent) { // no agents available
@@ -156,6 +156,7 @@ class DirIfOnlineAgentsV2 {
       }
     }
     catch(err) {
+      this.logger.error("[If Online Agents] An error occurred: ", err);
       winston.error("(DirIfOnlineAgentsV2) An error occurred: ", err);
       this.chatbot.addParameter("flowError", "(If online Agents) An error occurred: " + err);
       callback();
@@ -206,7 +207,7 @@ class DirIfOnlineAgentsV2 {
             }
             resolve(resbody);
           }
-        }, this.log);
+        });
     });
     
   }

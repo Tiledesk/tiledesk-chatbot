@@ -8,6 +8,7 @@ const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirReplyV2 {
 
@@ -20,23 +21,18 @@ class DirReplyV2 {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.log = context.log;
-    this.intentDir = new DirIntent(context);
     this.chatbot = context.chatbot;
     this.reply = context.reply;
     this.originalMessage = context.message;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Reply] Executing action");
     winston.verbose("Execute ReplyV2 directive");
     let action;
     if (directive.action) {
@@ -47,11 +43,13 @@ class DirReplyV2 {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplyV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Reply] Action completed");
       callback(stop);
     });
   }
@@ -61,11 +59,10 @@ class DirReplyV2 {
     const message = action;
 
     let current; // debug only
-    if (this.log) {
-      if (message.attributes.commands[1].message.text) {
-        current = message.attributes.commands[1].message.text
-      }
+    if (message.attributes.commands[1].message.text) {
+      current = message.attributes.commands[1].message.text
     }
+    
     let must_stop = false;
     // fill
     let requestAttributes = null;
@@ -74,11 +71,9 @@ class DirReplyV2 {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestAttributes)) {
-          const value_type = typeof value;
-        }
-      }
+      // for (const [key, value] of Object.entries(requestAttributes)) {
+      //   const value_type = typeof value;
+      // }
 
       TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
 
@@ -197,7 +192,7 @@ class DirReplyV2 {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
             }
           }
         }

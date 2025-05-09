@@ -4,6 +4,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirWebRequestV2 {
 
@@ -15,22 +16,27 @@ class DirWebRequestV2 {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.chatbot = context.chatbot;
-    this.intentDir = new DirIntent(context);
     this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Web Request] Executing action");
     winston.verbose("Execute WebRequestV2 directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirWebRequestV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Web Request] Action completed");
       callback(stop);
     }).catch((err) => {
       // do not nothing
@@ -50,10 +56,10 @@ class DirWebRequestV2 {
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
 
-    winston.debug("DirWebRequestV2  trueIntent " + trueIntent)
-    winston.debug("DirWebRequestV2  falseIntent " + falseIntent)
-    winston.debug("DirWebRequestV2  trueIntentAttributes " + trueIntentAttributes)
-    winston.debug("DirWebRequestV2  falseIntentAttributes " + falseIntentAttributes)
+    winston.debug("DirWebRequestV2 trueIntent " + trueIntent)
+    winston.debug("DirWebRequestV2 falseIntent " + falseIntent)
+    winston.debug("DirWebRequestV2 trueIntentAttributes " + trueIntentAttributes)
+    winston.debug("DirWebRequestV2 falseIntentAttributes " + falseIntentAttributes)
 
     let requestAttributes = null;
     requestAttributes =
@@ -65,6 +71,7 @@ class DirWebRequestV2 {
     const url = filler.fill(action.url, requestAttributes);
 
     let headers = await this.getHeadersFromAction(action, filler, requestAttributes).catch( async (err) => {
+      this.logger.error("[Web Request] Error getting headers");
       await this.chatbot.addParameter("flowError", "Error getting headers");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -76,6 +83,7 @@ class DirWebRequestV2 {
     });
 
     let json = await this.getJsonFromAction(action, filler, requestAttributes).catch( async (err) => {
+      this.logger.error("[Web Request] Error parsing json body");
       await this.chatbot.addParameter("flowError", "Error parsing json body");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -107,8 +115,10 @@ class DirWebRequestV2 {
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
         winston.debug("DirWebRequestV2 resbody:", resbody);
+        this.logger.debug("[Web Request] resbody: ", resbody);
         
         if (err) {
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {
@@ -130,6 +140,8 @@ class DirWebRequestV2 {
           return;
         }
         else {
+          this.logger.warn("[Web Request] status ", status);
+          this.logger.error("[Web Request] error ", error);
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -228,6 +240,7 @@ class DirWebRequestV2 {
     }
     if (result === true) {
       if (trueIntentDirective) {
+        this.logger.info("WebRequest: executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -235,6 +248,7 @@ class DirWebRequestV2 {
         });
       }
       else {
+        this.logger.info("WebRequest: no block connected to true condition");
         winston.debug("DirWebRequestV2 No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -243,6 +257,7 @@ class DirWebRequestV2 {
     }
     else {
       if (falseIntentDirective) {
+        this.logger.info("WebRequest: executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -250,6 +265,7 @@ class DirWebRequestV2 {
         });
       }
       else {
+        this.logger.info("WebRequest: no block connected to false condition");
         winston.debug("DirWebRequestV2 No falseIntentDirective specified");
         if (callback) {
           callback();
@@ -302,21 +318,7 @@ class DirWebRequestV2 {
           }
         })
         .catch((err) => {
-          if (this.log) {
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - START
-            let cache = [];
-            let error_log = JSON.stringify(err, function (key, value) { // try to use a separate function
-              if (typeof value === 'object' && value != null) {
-                if (cache.indexOf(value) !== -1) {
-                  return;
-                }
-                cache.push(value);
-              }
-              return value;
-            });
-            winston.error("(DirWebRequestv2) An error occurred: ", error_log);
-            // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
-          }
+          // FIX THE STRINGIFY OF CIRCULAR STRUCTURE BUG - END
           if (callback) {
             let status = 1000;
             let cache = [];
