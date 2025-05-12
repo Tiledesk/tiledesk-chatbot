@@ -1,6 +1,7 @@
 # Tiledesk native chatbot
 
-# 2.0.9
+# 2.0.10
+- added: missing default contexts for gpt-4.1 models causing error with an user defined context
 
 # 2.0.9-rc1
 - removed: speech-to-text management
