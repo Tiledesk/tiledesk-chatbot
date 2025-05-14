@@ -25,6 +25,7 @@ class DirReply {
   }
 
   execute(directive, callback) {
+    this.logger.info("[Reply] Executing action");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -34,14 +35,14 @@ class DirReply {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.error("DirReply Incorrect directive (no action provided):", directive);
       callback();
       return;
     }
-    this.logger.info("1 Execute action reply for " + directive.action.text)
 
     this.go(action, () => {
-      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
+      this.logger.info("[Reply] Action completed");
       callback();
     });
   }
@@ -62,7 +63,7 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.info("2 Sending reply " + message.text);
+      this.logger.debug("[Reply] Reply with: " + cleanMessage.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
@@ -137,8 +138,7 @@ class DirReply {
     }
 
     let cleanMessage = message;
-    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
-    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
+    
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);
@@ -156,10 +156,9 @@ class DirReply {
       (err) => {
         if (err) {
           winston.error("DirReply Error sending reply: ", err);
-          this.logger.error("Error sending reply: " + err);
+          this.logger.error("[Reply] Error sending reply: " + err);
         }
         winston.verbose("DirReply reply message sent")
-        this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {
