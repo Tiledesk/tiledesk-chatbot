@@ -1,4 +1,3 @@
-// const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Directives } = require('./Directives');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');

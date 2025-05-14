@@ -10,12 +10,6 @@ class ExtApi {
       throw new Error("options.TILEBOT_ENDPOINT is mandatory");
       //this.extEndpoint = `${options.TILEBOT_ENDPOINT}/;
     }
-    if (options.log) {
-      this.log = options.log;
-    }
-    else {
-      this.log = false;
-    }
     this.TILEBOT_ENDPOINT = options.TILEBOT_ENDPOINT;
   }
 
@@ -63,8 +57,7 @@ class ExtApi {
             callback(null, resbody);
           }
         }
-      }, this.log
-    );
+      });
   }
 
 }

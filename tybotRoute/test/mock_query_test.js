@@ -73,8 +73,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "request1",
-      projectId: "project1",
-      log: false
+      projectId: "project1"
     });
     assert(chatbot != null);
   });
@@ -93,8 +92,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: new MockTdCache(),
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {
@@ -125,8 +123,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {
@@ -155,8 +152,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {
@@ -186,8 +182,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {
@@ -227,8 +222,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {
@@ -257,8 +251,7 @@ describe('Basic Tilebot', function() {
       APIKEY: "___",
       tdcache: null,
       requestId: "requestId",
-      projectId: "projectId",
-      log: false
+      projectId: "projectId"
     });
     assert(chatbot != null);
     const message = {

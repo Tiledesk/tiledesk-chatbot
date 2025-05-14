@@ -63,15 +63,17 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.debug("[Reply] Reply with: " + cleanMessage.text);
+      this.logger.debug("[Reply] Reply with: " + message.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.debug("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.debug("Filled metadata.name with ", message.metadata.name);
         }
       }
       winston.debug("DirReply filling commands'. Message:", message);
@@ -84,7 +86,7 @@ class DirReply {
             let command = commands[i];
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes, this.log);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
               winston.debug("DirReply command filled: " + command.message.text);
             }
             if (command.type === 'settings' && command.settings) {
@@ -138,14 +140,6 @@ class DirReply {
     }
 
     let cleanMessage = message;
-    
-    // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-    // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
-    //   console.log("invalid message", cleanMessage);
-    //   callback(); // cancel reply operation
-    //   return;
-    // }
-    
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
 

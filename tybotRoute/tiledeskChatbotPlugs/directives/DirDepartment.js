@@ -96,7 +96,7 @@ class DirDepartment {
                 this.logger.error("[Change Department] Unable to trigger bot");
                 winston.error("(DirDepartment) Error sending hidden message: " + err.message)
               } else {
-                this.logger.verbose("[Change Department] Bot triggered");
+                this.logger.debug("[Change Department] Bot triggered");
                 winston.debug("(DirDepartment) Hidden message sent.");
 
               }
@@ -105,7 +105,7 @@ class DirDepartment {
         }
       }
       else {
-        this.logger.verbose("[Change Department] No triggering bot");
+        this.logger.debug("[Change Department] No triggering bot");
         winston.debug("(DirDepartment) No action.triggerBot");
         callback();
       }

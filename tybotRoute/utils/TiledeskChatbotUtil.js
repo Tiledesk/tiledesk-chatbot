@@ -252,24 +252,24 @@ class TiledeskChatbotUtil {
         }
     }
 
-    static fillCommandAttachments(command, variables, log) {
-        if (log) { winston.debug("(TiledeskChatbotUtils) Filling command button: ", command) }
+    static fillCommandAttachments(command, variables) {
+        winston.debug("(TiledeskChatbotUtils) Filling command button: ", command)
         if (command.message && command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.buttons && command.message.attributes.attachment.buttons.length > 0) {
             let buttons = command.message.attributes.attachment.buttons;
             const filler = new Filler();
             buttons.forEach(button => {
                 if (button.link) {
                     button.link = filler.fill(button.link, variables);
-                    if (log) { winston.debug("(TiledeskChatbotUtils) button.link filled: " + button.link) }
+                    winston.debug("(TiledeskChatbotUtils) button.link filled: " + button.link)
                 }
                 if (button.value) {
                     button.value = filler.fill(button.value, variables);
-                    if (log) { winston.debug("(TiledeskChatbotUtils) button.value filled: " + button.value) }
+                    winston.debug("(TiledeskChatbotUtils) button.value filled: " + button.value)
                 }
             });
         }
         else {
-            if (log) { winston.debug("(TiledeskChatbotUtils) No attachments to fill in command") }
+            winston.debug("(TiledeskChatbotUtils) No attachments to fill in command")
         }
     }
 
@@ -319,55 +319,31 @@ class TiledeskChatbotUtil {
                                     json_buttons.forEach(button => {
                                         if (button.value && button.type === "action" && button.action) {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "text") {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "url" && button.link) {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else {
-                                            console.log("Invalid button. Skipping:", JSON.stringify(button) );
+                                            winston.verbose("Invalid button. Skipping:", button);
                                         }
                                     });
                                 }
-
-                                // "buttons": [
-                                //                 {
-                                //                     "type": "action",
-                                //                     "value": "Button1", // obbligatorio sempre
-                                //                     "action": "#bb347206-d639-4926-94c9-e94930623dce", // mandatory
-                                //                     "show_echo": true, // lo inserisco sempre
-                                //                     "alias": "button1 alias"
-                                //                 },
-                                //                 {
-                                //                     "type": "text",
-                                //                     "value": "Button2 text", // obbligatorio sempre
-                                //                     "show_echo": true // lo inserisco sempre
-                                //                 },
-                                //                 {
-                                //                     "type": "url",
-                                //                     "value": "Button3 link", // obbligatorio sempre
-                                //                     "link": "http://", // obbligatorio
-                                //                     "show_echo": true // lo inserisco sempre
-                                //                 }
-                                //             ]
                             }
                             catch(error) {
-                                console.error("Invalid json_buttons:", error)
+                                winston.warn("Invalid json_buttons:", error)
                             }
                             if (final_buttons && final_buttons.length > 0) {
                                 command.message.attributes.attachment.buttons = final_buttons;
                                 delete command.message.attributes.attachment.json_buttons;
                             }
                             else {
-                                console.log("Invalid json_buttons. Skipping")
+                                winston.verbose("Invalid json_buttons. Skipping...")
                             }
                         }
                     }
@@ -520,7 +496,7 @@ class TiledeskChatbotUtil {
     static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
-            if (chatbot.log) { winston.debug("Updating request variables. Message:", message); }
+            winston.debug("Updating request variables. Message:", message);
             const messageId = message._id;
             const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
 
@@ -591,12 +567,12 @@ class TiledeskChatbotUtil {
             }
             
             if (message && message.request && message.request.lead) {
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Lead found with email: " + message.request.lead.email + " and lead.fullname " + message.request.lead.fullname); }
+                winston.debug("(TiledeskChatbotUtil) Lead found with email: " + message.request.lead.email + " and lead.fullname " + message.request.lead.fullname);
                 let currentLeadEmail = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY);
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail); }
+                winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
                 if (message.request.lead.email && !currentLeadEmail) {
                     // worth saving
-                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving email"); }
+                    winston.debug("(TiledeskChatbotUtil) worth saving email");
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, message.request.lead.email);
                     }
@@ -605,10 +581,10 @@ class TiledeskChatbotUtil {
                     }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail); }
+                winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving email"); }
+                    winston.debug("(TiledeskChatbotUtil) worth saving email");
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
@@ -685,10 +661,10 @@ class TiledeskChatbotUtil {
                     message.attributes = {}
                 }
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); }
+                winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); 
             }
             if (message.attributes) {
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes); }
+                winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes);
 
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_ID_KEY, message.attributes.requester_id);
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_END_USER_IP_ADDRESS_KEY, message.attributes.ipAddress);
@@ -722,12 +698,12 @@ class TiledeskChatbotUtil {
             
             
             const _bot = chatbot.bot; // aka FaqKB
-            if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", _bot); }
+            winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", _bot); 
             
             if (_bot.attributes && _bot.attributes.globals) {
-                if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals); }
+                winston.error("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals);
                 _bot.attributes.globals.forEach(async (global_var) => {
-                    if (chatbot.log) { winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value); }
+                    winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
                     await chatbot.addParameter(global_var.key, global_var.value);
                 });
             }
@@ -740,20 +716,6 @@ class TiledeskChatbotUtil {
             //     }
             // );
             
-            if (chatbot.log) {
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) requestId: " + requestId); }
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Key: " + TiledeskChatbotConst.REQ_PROJECT_ID_KEY); }
-
-                let proj_ = await chatbot.getParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY);
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) request parameter proj_: " + proj_); }
-
-                const all_parameters = await chatbot.allParameters();
-                for (const [key, value] of Object.entries(all_parameters)) {
-                    const value_type = typeof value;
-                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) Request Attribute: " + key + " value: " + value + " type: " + value_type); }
-                    
-                }
-            }
         } catch(error) {
             winston.error("(TiledeskChatbotUtil) updateRequestAttributes Error: ", error);
             process.exit(1)
@@ -793,7 +755,7 @@ class TiledeskChatbotUtil {
             }
         } else if (requestId.startsWith("automation-request-")) {
             const parts = requestId.split("-");
-            if (parts.length === 4) {
+            if (parts.length === 4 || parts.length === 5) {
                 isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
             }
             else {

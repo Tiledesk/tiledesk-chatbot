@@ -15,7 +15,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"trueIntent": "#SUCCESS",
@@ -35,7 +35,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -59,7 +59,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"trueIntent": "#SUCCESS",
@@ -80,7 +80,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -107,7 +107,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -134,7 +134,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -161,7 +161,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -188,7 +188,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
@@ -208,7 +208,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"model": "gpt-4",
 				"question": "this is the question: {{last_user_message}}",
@@ -228,7 +228,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"kbid": "kb1",
 				"question": "",
@@ -248,7 +248,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
-				"assignReplyTo": "gpt_reply",
+				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "gpt_source",
 				"kbid": "",
 				"question": "this is the question: {{last_user_message}}",
@@ -277,7 +277,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: {{gpt_reply}}"
+							"text": "gpt replied: {{kb_reply}}"
 						}
 					}]
 				}
@@ -301,7 +301,7 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: {{gpt_reply}}"
+							"text": "gpt replied: {{kb_reply}}"
 						}
 					}]
 				}
