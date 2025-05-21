@@ -1,5 +1,12 @@
 # Tiledesk native chatbot
 
+# 2.0.12
+- added flow logs
+- added log action
+
+# 2.0.11
+(missing)
+
 # 2.0.10
 - added: missing default contexts for gpt-4.1 models causing error with an user defined context
 
