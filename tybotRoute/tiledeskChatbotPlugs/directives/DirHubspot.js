@@ -6,6 +6,7 @@ let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
+const { Logger } = require("../../Logger");
 
 class DirHubspot {
 
@@ -18,23 +19,27 @@ class DirHubspot {
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Hubspot] Executing action");
     winston.verbose("Execute Hubspot directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirHubspot Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Hubspot] Action completed");
       callback(stop);
     })
   }
@@ -68,6 +73,7 @@ class DirHubspot {
     winston.debug("(DirHubspot) bodyParameters: ", bodyParameters);
 
     if (!bodyParameters || bodyParameters === '') {
+      this.logger.error("[Hubspot] bodyParameters is undefined or null or empty string");
       winston.error("(DirHubspot) Error: bodyParameters is undefined or null or empty string");
       callback();
       return;
@@ -78,7 +84,8 @@ class DirHubspot {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'hubspot', this.token);
     if (!key) {
-      winston.debug("(DirHubspot)  - Key not found in Integrations.");
+      this.logger.error("[Hubspot] Key not found in Integrations");
+      winston.debug("(DirHubspot) - Key not found in Integrations.");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -113,6 +120,7 @@ class DirHubspot {
       HUBSPOT_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
+            this.logger.error("[Hubspot] Error response: ", err.response);
             winston.error("(DirHubspot)  err response: ", err.response.data)
             let result = null;
             let status = null;
@@ -148,6 +156,7 @@ class DirHubspot {
           let status = 201;
           let error = null;
           let result = resbody;
+          this.logger.error("[Hubspot] Result: ", result);
           await this.#assignAttributes(action, status, result, error);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)

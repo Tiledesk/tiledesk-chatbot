@@ -14,18 +14,11 @@ class DirForm {
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
-    this.intentDir = new DirIntent(context);
     this.log = context.log;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
-
+    
+    this.intentDir = new DirIntent(context);
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   execute(directive, callback) {

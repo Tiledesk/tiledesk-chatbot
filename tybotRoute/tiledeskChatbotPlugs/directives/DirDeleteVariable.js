@@ -3,6 +3,7 @@ const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirDeleteVariable {
 
@@ -11,10 +12,13 @@ class DirDeleteVariable {
       throw new Error('context object is mandatory.');
     }
     this.context = context;
-    this.log = context.log;
+    this.requestId = this.context.requestId;
+
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   async execute(directive, callback) {
+    this.logger.info("[Delete Attribute] Executing action");
     winston.verbose("Execute DeleteVariable directive");
     let action;
     if (directive.action) {
@@ -25,7 +29,14 @@ class DirDeleteVariable {
         variableName: directive.parameter
       }
     }
+    else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.warn("(DirDeleteVariable) Incorrect directive: ", directive);
+      callback();
+      return;
+    }
     this.go(action, () => {
+      this.logger.info("[Delete Attribute] Action completed");
       callback();
     });
   }
@@ -35,6 +46,7 @@ class DirDeleteVariable {
 
     let variableName = action.variableName;
     if (!variableName) {
+      this.logger.warn("[Delete Attribute] Missing 'variableName'. Skip")
       winston.error("(DirDeleteVariable) deleting variable. Missing 'variableName' error. Skipping");
       if (callback) {
         callback();
@@ -60,6 +72,7 @@ class DirDeleteVariable {
         }
       }
       catch(err) {
+        this.logger.error("[Delete Attribute] Error deleting attribute");
         winston.error("(DirDeleteVariable)  error: ", err);
         if (completion) {
           completion();
