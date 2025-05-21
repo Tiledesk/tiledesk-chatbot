@@ -605,10 +605,10 @@ class TiledeskChatbotUtil {
                     }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail); }
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead name from attributes: " + currentLeadName); }
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving email"); }
+                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving name"); }
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
