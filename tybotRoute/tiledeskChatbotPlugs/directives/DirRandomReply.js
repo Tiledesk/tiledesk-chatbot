@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirRandomReply {
 
@@ -15,17 +16,14 @@ class DirRandomReply {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Random Reply] Executing action");
     winston.verbose("Execute RandomReply directive");
     let action;
     if (directive.action) {
@@ -36,11 +34,13 @@ class DirRandomReply {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirRandomReply Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, () => {
+      this.logger.info("[Random Reply] Action completed");
       callback();
     });
   }

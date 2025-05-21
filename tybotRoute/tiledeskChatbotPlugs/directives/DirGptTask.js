@@ -9,6 +9,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const { Logger } = require("../../Logger");
 
 class DirGptTask {
 
@@ -22,22 +23,27 @@ class DirGptTask {
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[ChatGPT Task] Executing action");
     winston.verbose("Execute GptTask directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirGptTask Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[ChatGPT Task] Action completed");
       callback(stop);
     })
   }
@@ -67,6 +73,7 @@ class DirGptTask {
     let model = "gpt-3.5-turbo";
 
     if (!action.question || action.question === '') {
+      this.logger.warn("[ChatGPT Task] question attribute is mandatory");
       winston.debug("(DirGptTask) Error: question attribute is mandatory. Executing condition false...")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "GPT Error: question attribute is undefined");
@@ -103,13 +110,13 @@ class DirGptTask {
         this.context.tdcache,
         this.context.requestId,
         TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
-        winston.debug("(DirGptTask)  transcript string: " + transcript_string)
+        winston.debug("(DirGptTask) transcript string: " + transcript_string)
 
       if (transcript_string) {
         transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-        winston.debug("(DirGptTask)  transcript: ", transcript)
+        winston.debug("(DirGptTask) transcript: ", transcript)
       } else {
-        winston.debug("(DirGptTask)  transcript_string is undefined. Skip JSON translation for chat history");
+        winston.debug("(DirGptTask) transcript_string is undefined. Skip JSON translation for chat history");
       }
     }
 
@@ -118,17 +125,20 @@ class DirGptTask {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
+      this.logger.debug("[ChatGPT Task] Key not found in Integrations.");
       winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
-      winston.debug("(DirGptTask)  - Retrieve public gptkey")
+      this.logger.debug("[ChatGPT Task] Retrieve shared gptkey.");
+      winston.debug("(DirGptTask) - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
     }
 
     if (!key) {
+      this.logger.error("[ChatGPT Task] OpenAI key is mandatory");
       winston.error("(DirGptTask) gptkey is mandatory");
       await this.#assignAttributes(action, answer);
       if (falseIntent) {
@@ -144,7 +154,7 @@ class DirGptTask {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
-
+        this.logger.warn("[ChatGPT Task] OpenAI tokens quota exceeded");
         await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback();
@@ -201,6 +211,7 @@ class DirGptTask {
         if (err) {
           winston.debug("(DirGptTask) openai err: ", err);
           winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
+          this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
           await this.#assignAttributes(action, answer);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
@@ -218,6 +229,8 @@ class DirGptTask {
             answer = await this.convertToJson(answer);
           }
         
+          this.logger.debug("[ChatGPT Task] Completions answer: ", answer);
+          
           await this.#assignAttributes(action, answer);
 
           if (publicKey === true) {

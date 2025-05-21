@@ -59,6 +59,7 @@ const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 
 const winston = require('../utils/winston');
+const { DirFlowLog } = require('./directives/DirFlowLog');
 
 class DirectivesChatbotPlug {
 
@@ -560,6 +561,12 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.ADD_KB_CONTENT) {
+      new DirAddKbContent(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
+    }
     else if (directive_name === Directives.GPT_TASK) {
       new DirGptTask(context).execute(directive, async (stop) => {
         if (stop == true) {
@@ -701,6 +708,12 @@ class DirectivesChatbotPlug {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
+    }
+    else if (directive_name === Directives.FLOW_LOG) {
+      new DirFlowLog(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      })
     }
     else {
       let next_dir = await this.nextDirective(this.directives);

@@ -19,8 +19,9 @@ class DirAskGPT {
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
+    
+    this.intentDir = new DirIntent(context);
   }
 
   execute(directive, callback) {

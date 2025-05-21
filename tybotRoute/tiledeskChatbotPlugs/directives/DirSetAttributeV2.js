@@ -6,6 +6,7 @@ const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
+const { Logger } = require('../../Logger');
 
 const schema = {
     "type": "object",
@@ -79,20 +80,26 @@ class DirSetAttributeV2 {
         }
         this.context = context;
         this.tdcache = context.tdcache;
+        this.requestId = context.requestId;
+
+        this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
     }
 
     execute(directive, callback) {
+        this.logger.info("[Set Attribute] Executing action");
         winston.verbose("Execute SetAttributeV2 directive");
         let action;
         if (directive.action) {
             action = directive.action
         }
         else {
+            this.logger.error("Incorrect action for ", directive.name, directive)
             winston.warn("DirSetAttributeV2 Incorrect directive: ", directive);
             callback();
             return;
         }
         this.go(action, () => {
+            this.logger.info("[Set Attribute] Action completed");
             callback();
         });
     }

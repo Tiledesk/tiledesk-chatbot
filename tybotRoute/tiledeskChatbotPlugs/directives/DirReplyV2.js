@@ -8,6 +8,7 @@ const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirReplyV2 {
 
@@ -24,17 +25,15 @@ class DirReplyV2 {
     this.chatbot = context.chatbot;
     this.reply = context.reply;
     this.originalMessage = context.message;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Advanced Reply] Executing action");
     winston.verbose("Execute ReplyV2 directive");
     let action;
     if (directive.action) {
@@ -45,11 +44,13 @@ class DirReplyV2 {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplyV2 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Advanced Reply] Action completed");
       callback(stop);
     });
   }

@@ -5,6 +5,7 @@ const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
+const { Logger } = require("../../Logger");
 
 class DirMake {
 
@@ -15,21 +16,26 @@ class DirMake {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
+    
     this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Make] Executing action");
     winston.verbose("Execute Make directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirMake Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Make] Action completed");
       callback(stop);
     })
   }

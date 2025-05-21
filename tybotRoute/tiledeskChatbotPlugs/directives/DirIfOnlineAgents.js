@@ -11,15 +11,11 @@ class DirIfOnlineAgents {
     }
 
     this.context = context;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
-
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   execute(directive, callback) {

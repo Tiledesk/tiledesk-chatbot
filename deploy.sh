@@ -30,7 +30,7 @@ if [ "$version" != "" ]; then
     npm publish --access public
 fi
 
-
+echo "\n"
 echo "*********************************************************"
 echo "    Deployed: @tiledesk/tiledesk-tybot-connector:$version_server"
 echo "          Tagged: tiledesk/tiledesk-chatbot:$version"

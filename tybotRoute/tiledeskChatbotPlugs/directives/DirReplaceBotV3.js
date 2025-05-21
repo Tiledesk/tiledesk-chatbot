@@ -6,6 +6,7 @@ const axios = require("axios").default;
 let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
+const { Logger } = require('../../Logger');
 
 class DirReplaceBotV3 {
 
@@ -15,28 +16,27 @@ class DirReplaceBotV3 {
     }
     this.context = context;
     this.requestId = context.requestId;
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Replace Bot] Executing action");
     winston.verbose("Execute ReplaceBotV3 directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplaceBotV3 Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, () => {
+      this.logger.info("[Replace Bot] Action completed");
       callback();
     })
   }

@@ -65,20 +65,7 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
- /** MANAGE AUDIO FILE MESSAGE */ 
- let aiService = new AiService({
-    API_ENDPOINT: API_ENDPOINT,
-    TOKEN: token,
-    PROJECT_ID: projectId
-  })
-  let isAudio = TiledeskChatbotUtil.isAudioMessage(message)
-  if(isAudio){
-    let responseText = await aiService.speechToText(message.metadata.src).catch(err => {
-      winston.error('(index.js) aiService.speechToText error: ', err)
-    })
-    if(responseText && responseText.text)
-      message.text = responseText.text
-  }
+
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
@@ -409,8 +396,14 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   
   // invoke block
   // unique ID for each execution
-  const execution_id = uuidv4().replace(/-/g, '');
-  const request_id = "automation-request-" + project_id + "-" + execution_id;
+  let request_id;
+  if (body.preloaded_request_id) {
+    request_id = body.preloaded_request_id;
+  } else {
+    const execution_id = uuidv4().replace(/-/g, '');
+    request_id = "automation-request-" + project_id + "-" + execution_id;
+    
+  }
   const command = "/#" + block_id;
   let message = {
     payload: {

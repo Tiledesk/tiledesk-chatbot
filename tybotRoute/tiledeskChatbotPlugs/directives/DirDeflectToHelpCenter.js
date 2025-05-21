@@ -14,12 +14,7 @@ class DirDeflectToHelpCenter {
     this.context = context;
     this.API_ENDPOINT = context.API_ENDPOINT;
 
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   async execute(directive, callback) {

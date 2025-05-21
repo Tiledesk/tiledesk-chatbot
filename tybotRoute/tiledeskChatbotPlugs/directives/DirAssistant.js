@@ -6,6 +6,7 @@ const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston')
 const httpUtils = require('../../utils/HttpUtils');
 const integrationService = require('../../services/IntegrationService');
+const { Logger } = require('../../Logger');
 
 class DirAssistant {
   constructor(context) {
@@ -17,22 +18,27 @@ class DirAssistant {
     this.requestId = context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[ChatGPT Assistant] Executing action");
     winston.verbose("Execute Assistant directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      winston.warn("Incorrect directive: ", directive);
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.debug("Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[ChatGPT Assistant] Action completed");
       callback(stop);
     });
   }
@@ -77,6 +83,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No assistantId provided");
       winston.error("(DirAssistant) Error: no assistantId.");
       callback();
       return;
@@ -88,6 +95,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No prompt provided");
       winston.error("(DirAssistant) Error: no prompt.");
       callback();
       return;
@@ -98,6 +106,7 @@ class DirAssistant {
       assistantId = filler.fill(_assistantId, requestAttributes);
     }
     catch(error) {
+      this.logger.error("[ChatGPT Assistant] Error while filling assistantId");
       winston.error("(DirAssistant) Error while filling assistantId:", error);
     }
 
@@ -106,6 +115,7 @@ class DirAssistant {
       prompt = filler.fill(_prompt, requestAttributes);
     }
     catch(error) {
+      this.logger.error("[ChatGPT Assistant] Error while filling prompt");
       winston.error("(DirAssistant) Error while filling prompt:", error);
     }
 
@@ -128,6 +138,7 @@ class DirAssistant {
     let apikey = await this.getGPT_APIKEY();
     if (!apikey) {
       const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
+      this.logger.error("[ChatGPT Assistant] OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations");
       winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {

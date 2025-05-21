@@ -605,10 +605,10 @@ class TiledeskChatbotUtil {
                     }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
+                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead name from attributes: " + currentLeadName); }
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    winston.debug("(TiledeskChatbotUtil) worth saving email");
+                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving name"); }
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }
@@ -779,7 +779,7 @@ class TiledeskChatbotUtil {
             }
         } else if (requestId.startsWith("automation-request-")) {
             const parts = requestId.split("-");
-            if (parts.length === 4) {
+            if (parts.length === 4 || parts.length === 5) {
                 isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
             }
             else {

@@ -13,12 +13,7 @@ class DirAssignFromFunction {
     this.tdcache = context.tdcache;
     this.API_ENDPOINT = context.API_ENDPOINT;
 
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___"
-    });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   async execute(directive, callback) {

@@ -1,5 +1,27 @@
 # Tiledesk native chatbot
 
+# 2.0.12
+- added flow logs
+- added log action
+- added dev webhook management
+
+# 2.0.11
+(missing)
+
+# 2.0.10
+- added: missing default contexts for gpt-4.1 models causing error with an user defined context
+
+# 2.0.9-rc1
+- removed: speech-to-text management
+
+# 2.0.8
+
+# 2.0.8-rc2
+- added: check on preloaded_request_id in /block
+
+# 2.0.8-rc1
+- removed: TILEBOT_LOG var 
+
 # 1.3.0
 - added: AI_ENDPOINT env var
 - added: ability to get 'none' as bodytype in webresponse
