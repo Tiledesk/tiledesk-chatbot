@@ -15,9 +15,10 @@ class DirGptTask {
     this.context = context;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
   }
 
   execute(directive, callback) {

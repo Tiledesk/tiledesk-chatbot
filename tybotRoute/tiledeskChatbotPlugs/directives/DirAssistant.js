@@ -6,6 +6,7 @@ const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston')
 const httpUtils = require('../../utils/HttpUtils');
 const integrationService = require('../../services/IntegrationService');
+const { Logger } = require('../../Logger');
 
 class DirAssistant {
   constructor(context) {
@@ -17,23 +18,27 @@ class DirAssistant {
     this.requestId = context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[ChatGPT Assistant] Executing action");
     winston.verbose("Execute Assistant directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
-      winston.warn("Incorrect directive: ", directive);
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.debug("Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[ChatGPT Assistant] Action completed");
       callback(stop);
     });
   }
@@ -78,6 +83,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No assistantId provided");
       winston.error("(DirAssistant) Error: no assistantId.");
       callback();
       return;
@@ -89,6 +95,7 @@ class DirAssistant {
     }
     else {
       // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No prompt provided");
       winston.error("(DirAssistant) Error: no prompt.");
       callback();
       return;
@@ -99,7 +106,8 @@ class DirAssistant {
       assistantId = filler.fill(_assistantId, requestAttributes);
     }
     catch(error) {
-      winston.debug("(DirAssistant) Error while filling assistantId:", error);
+      this.logger.error("[ChatGPT Assistant] Error while filling assistantId");
+      winston.error("(DirAssistant) Error while filling assistantId:", error);
     }
 
     let prompt = _prompt;
@@ -107,7 +115,8 @@ class DirAssistant {
       prompt = filler.fill(_prompt, requestAttributes);
     }
     catch(error) {
-      winston.debug("(DirAssistant) Error while filling prompt:", error);
+      this.logger.error("[ChatGPT Assistant] Error while filling prompt");
+      winston.error("(DirAssistant) Error while filling prompt:", error);
     }
 
     winston.debug("(DirAssistant) settings ok");
@@ -129,7 +138,8 @@ class DirAssistant {
     let apikey = await this.getGPT_APIKEY();
     if (!apikey) {
       const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
-      winston.debug("(DirAssistant) Error: " + reply)
+      this.logger.error("[ChatGPT Assistant] OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations");
+      winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -193,7 +203,7 @@ class DirAssistant {
       }
     }
     catch (error) {
-      winston.debug("(DirAssistant) error:", error);
+      winston.error("(DirAssistant) error:", error);
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, error);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, null, falseIntent, null);
@@ -286,19 +296,14 @@ class DirAssistant {
       winston.debug("(DirAssistant) DirAssistant HttpRequest", HTTPREQUEST);
       httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            winston.debug("(DirAssistant) got threadid res: ", res);
-            let thread = res.data;
-            resolve(thread)
-          }
-          else {
-            reject(new Error("Thread creation status != 200:", status));
-          }
+          let thread = res;
+          winston.debug("(DirAssistant) got threadid res: ", res);
+          resolve(thread)
         }
       );
     });
@@ -346,19 +351,13 @@ class DirAssistant {
       winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
       httpUtils.request(
         HTTPREQUEST, async (err, res) => {
-          let status = res.status;
+
           if (err) {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res.status >= 200 && res.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve();
-          }
-          else {
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAssistant) got response data: ", res);
+          resolve();
         }
       );
     });
@@ -411,15 +410,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -446,15 +438,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });
@@ -481,15 +466,8 @@ class DirAssistant {
             winston.error("(DirAssistant) error: ", err);
             reject(err);
           }
-          else if(res?.status >= 200 && res?.status <= 299) {
-            winston.debug("(DirAddTags) got response data: ", res.data);
-            // let return_body = res.data;
-            resolve(res.data);
-          }
-          else {
-            let status = res?.status;
-            reject(new Error("Message add status != 200:", status));
-          }
+          winston.debug("(DirAddTags) got response data: ", res);
+          resolve(res);
         }
       );
     });

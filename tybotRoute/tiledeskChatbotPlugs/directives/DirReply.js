@@ -18,20 +18,14 @@ class DirReply {
     this.token = context.token;
     this.tdcache = context.tdcache;
     this.log = context.log;
-    console.log("is draft request: ", this.context.supportRequest.draft);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest.draft });
-
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.tdClient = new TiledeskClient({
-      projectId: this.context.projectId,
-      token: this.context.token,
-      APIURL: this.API_ENDPOINT,
-      APIKEY: "___",
-      log: this.log
-    });
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Reply] Executing action");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -41,20 +35,21 @@ class DirReply {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.error("DirReply Incorrect directive (no action provided):", directive);
       callback();
       return;
     }
-    this.logger.info("1 Execute action reply for " + directive.action.text)
 
     this.go(action, () => {
-      this.logger.info("6 End of action reply " + directive.action.text + " -> callback")
+      this.logger.info("[Reply] Action completed");
       callback();
     });
   }
 
   async go(action, callback) {
     const message = action;
+
     // fill
     let requestAttributes = null;
     if (this.tdcache) {
@@ -62,15 +57,13 @@ class DirReply {
       await TiledeskChatbot.allParametersStatic(
         this.tdcache, this.requestId
       );
-      if (this.log) {
-        for (const [key, value] of Object.entries(requestAttributes)) {
-          const value_type = typeof value;
-        }
-      }
+
+      TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.info("2 Sending reply " + message.text);
+      this.logger.debug("[Reply] Reply with: " + cleanMessage.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
@@ -145,8 +138,7 @@ class DirReply {
     }
 
     let cleanMessage = message;
-    this.logger.info("3 Sending reply (text) " + cleanMessage.text);
-    this.logger.info("4 Sending reply with clean message " + JSON.stringify(cleanMessage));
+    
     // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
     // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
     //   console.log("invalid message", cleanMessage);
@@ -164,10 +156,9 @@ class DirReply {
       (err) => {
         if (err) {
           winston.error("DirReply Error sending reply: ", err);
-          this.logger.error("Error sending reply: " + err);
+          this.logger.error("[Reply] Error sending reply: " + err);
         }
         winston.verbose("DirReply reply message sent")
-        this.logger.info("5 Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
         if (delay > 0 && delay <= 30000) { // prevent long delays
           setTimeout(() => {

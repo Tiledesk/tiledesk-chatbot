@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
+const { Logger } = require('../../Logger');
 
 class DirCaptureUserReply {
   constructor(context) {
@@ -15,17 +16,20 @@ class DirCaptureUserReply {
     this.chatbot = context.chatbot;
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
+    
     this.intentDir = new DirIntent(context);
-    this.log = context.log;
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Capture User Reply] Executing action");
     winston.verbose("Execute CaptureUserReply directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirCaptureUserReply Incorrect directive: ", directive);
       callback();
       return;
@@ -44,6 +48,7 @@ class DirCaptureUserReply {
       const actionId = action["_tdActionId"];;
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
+      this.logger.info("[Capture User Reply] Waiting for user reply...");
       callback();
       return;
     } else {
@@ -58,6 +63,7 @@ class DirCaptureUserReply {
     }
     try {
       const user_reply = this.message.text;
+      this.logger.info("[Capture User Reply] User replied with: ", user_reply);
       if (this.context.tdcache) {
         if (action.assignResultTo) {
           winston.debug("(DirCaptureUserReply) assign assignResultTo: " + action.assignResultTo);
@@ -68,16 +74,19 @@ class DirCaptureUserReply {
       if (callback) {
         if (goToIntent) {
           this.#executeGoTo(goToIntent, () => {
+            this.logger.info("[Capture User Reply] Action completed");
             callback(); // continue the flow
           });
         }
         else {
+          this.logger.info("[Capture User Reply] Action completed");
           callback(); // continue the flow
         }
         
       }
     }
     catch(error) {
+      this.logger.error("[Capture User Reply] Error: ", error);
       winston.error("(DirCaptureUserReply) error: ", error);
     }
   }

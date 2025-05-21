@@ -1,4 +1,5 @@
 const axios = require("axios").default;
+const { Logger } = require("../../Logger");
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const httpUtils = require("../../utils/HttpUtils");
 const winston = require('../../utils/winston');
@@ -12,22 +13,27 @@ class DirWhatsappByAttribute {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.requestId = this.context.requestId;
     this.API_ENDPOINT = context.API_ENDPOINT;
-    this.log = context.log;
+    
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Whatsapp by Attribute] Executing action");
     winston.verbose("Execute WhatsappByAttribute directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirWhatsappByAttribute Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, () => {
+      this.logger.info("[Whatsapp by Attribute] Action completed");
       callback();
     })
   }

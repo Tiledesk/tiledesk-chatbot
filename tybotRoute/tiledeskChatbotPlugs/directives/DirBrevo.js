@@ -6,6 +6,7 @@ let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
+const { Logger } = require("../../Logger");
 
 class DirBrevo {
 
@@ -18,23 +19,27 @@ class DirBrevo {
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
     this.token = this.context.token;
-    this.intentDir = new DirIntent(context);
     this.API_ENDPOINT = this.context.API_ENDPOINT;
-    this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
+    this.logger.info("[Brevo] Executing action");
     winston.verbose("Execute DirBrevo directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("(DirBrevo) Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
+      this.logger.info("[Brevo] Action completed");
       callback(stop);
     })
   }
@@ -69,6 +74,7 @@ class DirBrevo {
     winston.debug("(DirBrevo)  bodyParameters: ", bodyParameters);
 
     if (!bodyParameters || bodyParameters === '') {
+      this.logger.error("[Brevo] bodyParameters is undefined or null or empty string");
       winston.error("(DirBrevo) Error: bodyParameters is undefined or null or empty string");
       callback();
       return;
@@ -80,6 +86,7 @@ class DirBrevo {
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'Brevo', this.token);
     winston.debug("(DirBrevo) key: ", key)
     if (!key) {
+      this.logger.error("[Brevo] Key not found in Integrations");
       winston.debug("(DirBrevo)  - Key not found in Integrations.");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -140,6 +147,7 @@ class DirBrevo {
       BREVO_HTTPREQUEST, async (err, resbody) => {
         if (err) {
           if (callback) {
+            this.logger.error("[Brevo] Error response: ", err.response);
             winston.debug("(DirBrevo) err response: ", err.response)
             winston.debug("(DirBrevo)  err data:", err.response.data)
 
@@ -158,12 +166,6 @@ class DirBrevo {
                   error = err.response.data.message;
             }
 
-            if (this.log) {
-              winston.error("(DirBrevo)  DirBrevo err data result:", result); // CONTROLLA IL VALORE
-              winston.error("(DirBrevo) DirBrevo err data status:", status);
-              winston.error("(DirBrevo) DirBrevo err data error:", error);
-            }
-
             await this.#assignAttributes(action, status, result, error);
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -179,6 +181,7 @@ class DirBrevo {
           let status = 201;
           let error = null;
           let result = JSON.stringify(resbody, null, 2).slice(2, -1);
+          this.logger.error("[Brevo] Result: ", result);
           await this.#assignAttributes(action, status, result, error);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)

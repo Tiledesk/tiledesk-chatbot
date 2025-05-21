@@ -13,8 +13,9 @@ class DirWebRequestV2 {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     this.chatbot = context.chatbot;
-    this.intentDir = new DirIntent(context);
     this.log = context.log;
+    
+    this.intentDir = new DirIntent(context);
   }
 
   execute(directive, callback) {
