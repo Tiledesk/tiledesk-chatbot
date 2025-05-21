@@ -63,7 +63,7 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.debug("[Reply] Reply with: " + cleanMessage.text);
+      this.logger.debug("[Reply] Reply with: " + message.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
