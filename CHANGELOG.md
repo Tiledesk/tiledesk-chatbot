@@ -3,6 +3,7 @@
 # 2.0.12
 - added flow logs
 - added log action
+- added dev webhook management
 
 # 2.0.11
 (missing)
