@@ -60,6 +60,7 @@ const { DirConnectBlock } = require('./directives/DirConnectBlock');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
+const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 class DirectivesChatbotPlug {
 
