@@ -1,5 +1,4 @@
 let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
-const winston = require('../tybotRoute/utils/winston');
 
 const FLOW_LOGS_ENABLED = process.env.FLOW_LOGS_ENABLED;
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
@@ -22,7 +21,7 @@ class Logger {
         }
 
         if (!config.request_id) {
-            winston.error('(Logger) config.request_id is mandatory');
+            console.error('(Logger) config.request_id is mandatory');
             this._disableMethods();
         }
 
@@ -68,7 +67,7 @@ class Logger {
 
     base(level, text) {
         if (!this.request_id || !publisher) {
-            winston.verbose("Return because request or publisher is undefined", this.request_id, publisher);
+            console.log("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
