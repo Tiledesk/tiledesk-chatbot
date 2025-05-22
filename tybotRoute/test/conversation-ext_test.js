@@ -277,12 +277,6 @@ describe('Api /ext/:boid', async () => {
       });
     });
   });
-  
-
-
-
-
-
 
 });
 

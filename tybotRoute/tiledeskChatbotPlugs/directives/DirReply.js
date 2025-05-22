@@ -69,9 +69,11 @@ class DirReply {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.debug("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.debug("Filled metadata.name with ", message.metadata.name);
         }
       }
       winston.debug("DirReply filling commands'. Message:", message);
@@ -138,14 +140,7 @@ class DirReply {
     }
 
     let cleanMessage = message;
-    
-    // cleanMessage = TiledeskChatbotUtil.removeEmptyReplyCommands(message);
-    // if (!TiledeskChatbotUtil.isValidReply(cleanMessage)) {
-    //   console.log("invalid message", cleanMessage);
-    //   callback(); // cancel reply operation
-    //   return;
-    // }
-    
+      
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
 

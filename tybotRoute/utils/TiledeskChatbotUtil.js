@@ -313,27 +313,23 @@ class TiledeskChatbotUtil {
                                 // fill buttons
                                 const filler = new Filler();
                                 json_buttons_string = filler.fill(json_buttons_string, flow_attributes);
-                                // console.log("json_buttons_string:", json_buttons_string);
                                 json_buttons = JSON.parse(json_buttons_string);
                                 if (Array.isArray(json_buttons)) {
                                     json_buttons.forEach(button => {
                                         if (button.value && button.type === "action" && button.action) {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "text") {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else if (button.value && button.type === "url" && button.link) {
                                             button.show_echo = true;
-                                            // console.log("pushing:", button)
                                             final_buttons.push(button);
                                         }
                                         else {
-                                            console.log("Invalid button. Skipping:", JSON.stringify(button) );
+                                            winston.verbose("Invalid button. Skipping:", button);
                                         }
                                     });
                                 }
@@ -360,14 +356,14 @@ class TiledeskChatbotUtil {
                                 //             ]
                             }
                             catch(error) {
-                                console.error("Invalid json_buttons:", error)
+                                winston.warn("Invalid json_buttons:", error)
                             }
                             if (final_buttons && final_buttons.length > 0) {
                                 command.message.attributes.attachment.buttons = final_buttons;
                                 delete command.message.attributes.attachment.json_buttons;
                             }
                             else {
-                                console.log("Invalid json_buttons. Skipping")
+                                winston.verbose("Invalid json_buttons. Skipping...")
                             }
                         }
                     }
@@ -605,10 +601,10 @@ class TiledeskChatbotUtil {
                     }
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
-                if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) You lead name from attributes: " + currentLeadName); }
+                winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
-                    if (chatbot.log) { winston.debug("(TiledeskChatbotUtil) worth saving name"); }
+                    winston.debug("(TiledeskChatbotUtil) worth saving email");
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
                     }

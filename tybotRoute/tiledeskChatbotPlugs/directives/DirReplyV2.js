@@ -21,7 +21,6 @@ class DirReplyV2 {
     this.requestId = context.requestId;
     this.token = context.token;
     this.tdcache = context.tdcache;
-    this.intentDir = new DirIntent(context);
     this.chatbot = context.chatbot;
     this.reply = context.reply;
     this.originalMessage = context.message;

@@ -1,4 +1,5 @@
 let { Publisher } = require("@tiledesk/tiledesk-multi-worker");
+const winston = require('../tybotRoute/utils/winston');
 
 const FLOW_LOGS_ENABLED = process.env.FLOW_LOGS_ENABLED;
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
@@ -21,17 +22,15 @@ class Logger {
         }
 
         if (!config.request_id) {
-            console.error('config.request_id is mandatory');
-            //throw new Error('config.request_id is mandatory');
+            winston.error('(Logger) config.request_id is mandatory');
+            this._disableMethods();
         }
 
         if (!FLOW_LOGS_ENABLED || FLOW_LOGS_ENABLED === false || FLOW_LOGS_ENABLED === 'false') {
-            //console.warn("(Logger) Flow logs disabled");
             this._disableMethods();
         }
 
         if (!AMQP_MANAGER_URL) {
-            //console.warn("(Logger) No AQMP Manager url provided. Flow logs disabled");
             this._disableMethods();
         }
 
@@ -69,7 +68,7 @@ class Logger {
 
     base(level, text) {
         if (!this.request_id || !publisher) {
-            //console.log("Return because request or publisher is undefined", this.request_id, publisher);
+            winston.verbose("Return because request or publisher is undefined", this.request_id, publisher);
             return;
         }
 
