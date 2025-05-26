@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.15
+- added kb_chunks attribute in AskGptV2 action
+
 # 2.0.12
 - added flow logs
 - added log action
