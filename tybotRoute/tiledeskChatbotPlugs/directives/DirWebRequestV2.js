@@ -35,7 +35,6 @@ class DirWebRequestV2 {
       callback();
       return;
     }
-    this.logger.info("Executing WebRequest action ", directive.action)
     this.go(action, (stop) => {
       this.logger.info("[Web Request] Action completed");
       callback(stop);
@@ -119,7 +118,7 @@ class DirWebRequestV2 {
         this.logger.debug("[Web Request] resbody: ", resbody);
         
         if (err) {
-          this.logger.error("WebRequest error: ", err);
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {

@@ -64,6 +64,7 @@ class DirIntent {
         "request": {
           "request_id": requestId,
           "id_project": projectId
+          // "bot_id": botId
         }
       },
       "token": this.token
