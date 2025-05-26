@@ -8,7 +8,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success",
+			"intent_display_name": "kb_success",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -16,7 +16,8 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
+				"assignChunksTo": "kb_chunks",
 				"model": "gpt-4",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
@@ -28,7 +29,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success_custom_context",
+			"intent_display_name": "kb_success_custom_context",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -36,7 +37,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -52,7 +53,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success_citations_on",
+			"intent_display_name": "kb_success_citations_on",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -60,7 +61,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
@@ -73,7 +74,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success_namespace_as_name",
+			"intent_display_name": "kb_success_namespace_as_name",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -81,7 +82,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -100,7 +101,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success_namespace_as_name_custom_attribute",
+			"intent_display_name": "kb_success_namespace_as_name_custom_attribute",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -108,7 +109,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -127,7 +128,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_fail_missing_namespace",
+			"intent_display_name": "kb_fail_missing_namespace",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -135,7 +136,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -154,7 +155,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_fail_missing_namespace_name",
+			"intent_display_name": "kb_fail_missing_namespace_name",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -162,7 +163,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -181,7 +182,7 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "gpt_success_advanced_context",
+			"intent_display_name": "kb_success_advanced_context",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
@@ -189,7 +190,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,
@@ -209,7 +210,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"model": "gpt-4",
 				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
@@ -217,7 +218,7 @@ const bot = {
 				"history": true
 			}],
 			"language": "en",
-			"intent_display_name": "gpt_fail",
+			"intent_display_name": "kb_fail",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": ""
@@ -229,7 +230,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"kbid": "kb1",
 				"question": "",
 				"trueIntent": "#SUCCESS",
@@ -237,7 +238,7 @@ const bot = {
 				"history": true
 			}],
 			"language": "en",
-			"intent_display_name": "gpt_fail_noquestion",
+			"intent_display_name": "kb_fail_noquestion",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": ""
@@ -249,7 +250,7 @@ const bot = {
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
 				"assignReplyTo": "kb_reply",
-				"assignSourceTo": "gpt_source",
+				"assignSourceTo": "kb_source",
 				"kbid": "",
 				"question": "this is the question: {{last_user_message}}",
 				"trueIntent": "#SUCCESS",
@@ -257,7 +258,7 @@ const bot = {
 				"history": true
 			}],
 			"language": "en",
-			"intent_display_name": "gpt_fail_nokbid",
+			"intent_display_name": "kb_fail_nokbid",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": ""
@@ -277,13 +278,13 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: {{kb_reply}}"
+							"text": "kb replied: {{kb_reply}}"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "gpt intent true",
+			"intent_display_name": "kb intent true",
 			"intent_id": "SUCCESS"
 		},
 		{
@@ -301,13 +302,13 @@ const bot = {
 						"type": "message",
 						"message": {
 							"type": "text",
-							"text": "gpt replied: {{kb_reply}}"
+							"text": "kb replied: {{kb_reply}}"
 						}
 					}]
 				}
 			}],
 			"language": "en",
-			"intent_display_name": "gpt intent false",
+			"intent_display_name": "kb intent false",
 			"intent_id": "FAILURE"
 		}
 	]

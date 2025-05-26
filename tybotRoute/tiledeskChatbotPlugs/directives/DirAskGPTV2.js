@@ -248,7 +248,8 @@ class DirAskGPTV2 {
       namespace: namespace,
       model: model,
       citations: citations,
-      engine: engine
+      engine: engine,
+      debug: true
     };
     if (top_k) {
       json.top_k = top_k;
@@ -305,7 +306,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
-          await this.#assignAttributes(action, resbody.answer, resbody.source);
+          await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_size,
@@ -376,7 +377,7 @@ class DirAskGPTV2 {
     }
   }
 
-  async #assignAttributes(action, answer, source) {
+  async #assignAttributes(action, answer, source, chunks) {
     winston.debug("DirAskGPTV2assignAttributes action: ", action)
     winston.debug("DirAskGPTV2assignAttributes answer: ", answer)
     winston.debug("DirAskGPTV2assignAttributes source: ", source)
@@ -386,6 +387,9 @@ class DirAskGPTV2 {
       }
       if (action.assignSourceTo && source) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
+      }
+      if (action.assignChunksTo && chunks) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignChunksTo, chunks);
       }
     }
   }

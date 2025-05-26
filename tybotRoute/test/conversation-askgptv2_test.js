@@ -73,7 +73,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -82,7 +82,10 @@ describe('Conversation for AskGPTV2 test', async () => {
         else {
           assert(attributes);
           assert(attributes["kb_reply"] === "this is mock kb reply");
-          assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
+          assert(attributes["kb_source"] === "http://gethelp.test.com/article");
+          assert(attributes["kb_chunks"].length === 2);
+          assert(attributes["kb_chunks"][0] === "this is the chunk 1")
+          assert(attributes["kb_chunks"][1] === "this is the chunk 2")
           listener.close(() => {
             done();
           });
@@ -116,7 +119,8 @@ describe('Conversation for AskGPTV2 test', async () => {
           ids: ["9876543210", "0123456789"],
           source: "http://gethelp.test.com/article",
           sources: [ "TextArticle", "http://gethelp.test.com/article"],
-          prompt_token_size: 762
+          prompt_token_size: 762,
+          content_chunks: ["this is the chunk 1", "this is the chunk 2"]
         }
       }
 
@@ -216,7 +220,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success{"last_user_message":"come ti chiami"}',
+          "text": '/kb_success{"last_user_message":"come ti chiami"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -242,7 +246,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -389,7 +393,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success_custom_context{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "text": '/kb_success_custom_context{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -415,7 +419,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -562,7 +566,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success_advanced_context{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "text": '/kb_success_advanced_context{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -589,7 +593,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -720,7 +724,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success_namespace_as_name{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "text": '/kb_success_namespace_as_name{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -747,7 +751,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -878,7 +882,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success_namespace_as_name_custom_attribute{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico", "ns_name": "Namespace" }',
+          "text": '/kb_success_namespace_as_name_custom_attribute{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico", "ns_name": "Namespace" }',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -904,7 +908,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -913,7 +917,7 @@ describe('Conversation for AskGPTV2 test', async () => {
         else {
           assert(attributes);
           assert(attributes["kb_reply"] === "this is mock kb reply");
-          assert(attributes["gpt_source"] === "http://gethelp.test.com/article");
+          assert(attributes["kb_source"] === "http://gethelp.test.com/article");
           listener.close(() => {
             done();
           });
@@ -1041,7 +1045,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success_citations_on{"last_user_message":"come ti chiami"}',
+          "text": '/kb_success_citations_on{"last_user_message":"come ti chiami"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1067,7 +1071,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: this is mock kb reply");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1184,7 +1188,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_success{"last_user_message":"come ti chiami"}',
+          "text": '/kb_success{"last_user_message":"come ti chiami"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1210,7 +1214,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1334,7 +1338,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail',
+          "text": '/kb_fail',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1360,7 +1364,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1489,7 +1493,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail',
+          "text": '/kb_fail',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1517,7 +1521,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1559,7 +1563,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail',
+          "text": '/kb_fail',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1587,7 +1591,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1631,7 +1635,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail',
+          "text": '/kb_fail',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1658,7 +1662,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
    
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1709,7 +1713,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail_noquestion',
+          "text": '/kb_fail_noquestion',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1736,7 +1740,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
    
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1819,7 +1823,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail_missing_namespace',
+          "text": '/kb_fail_missing_namespace',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -1846,7 +1850,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.text === "gpt replied: No answers");
+      assert(command2.message.text === "kb replied: No answers");
    
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
@@ -1929,7 +1933,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/gpt_fail_missing_namespace_name',
+          "text": '/kb_fail_missing_namespace_name',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
