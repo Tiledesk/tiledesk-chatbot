@@ -54,14 +54,13 @@ const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
-const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirFlowLog } = require('./directives/DirFlowLog');
 
 const winston = require('../utils/winston');
-const { DirFlowLog } = require('./directives/DirFlowLog');
-const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 class DirectivesChatbotPlug {
 
