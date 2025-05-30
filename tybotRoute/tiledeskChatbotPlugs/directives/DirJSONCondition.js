@@ -19,7 +19,6 @@ class DirJSONCondition {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Condition] Executing action");
     winston.verbose("Execute JSONCondition directive");
     let action;
     if (directive.action) {
@@ -32,7 +31,7 @@ class DirJSONCondition {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Condition] Action completed");
+      this.logger.native("[Condition] Executed");
       callback(stop);
     });
     
@@ -88,7 +87,7 @@ class DirJSONCondition {
     // const result = await this.evaluateCondition(scriptCondition, variables);
     let result;
     const expression = TiledeskExpression.JSONGroupsToExpression(groups, variables);
-    this.logger.debug("[Condition] Evaluating expression: ", expression);
+    this.logger.native("[Condition] Evaluating expression: ", expression);
     result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
     winston.debug("(DirJSONCondition) Evaluation result: ", result);
     if (result === true) {
@@ -98,7 +97,7 @@ class DirJSONCondition {
         });
       }
       else {
-        this.logger.debug("[Condition] No trueIntentDirective specified");
+        this.logger.native("[Condition] No trueIntentDirective specified");
         winston.debug("(DirJSONCondition) No trueIntentDirective specified");
         callback();
         return;
@@ -115,7 +114,7 @@ class DirJSONCondition {
         });
       }
       else {
-        this.logger.debug("[Condition] No falseIntentDirective specified");
+        this.logger.native("[Condition] No falseIntentDirective specified");
         winston.debug("(DirJSONCondition) No falseIntentDirective specified");
         callback();
         return;

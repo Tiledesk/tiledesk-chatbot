@@ -18,7 +18,6 @@ class DirDeleteVariable {
   }
 
   async execute(directive, callback) {
-    this.logger.info("[Delete Attribute] Executing action");
     winston.verbose("Execute DeleteVariable directive");
     let action;
     if (directive.action) {
@@ -36,7 +35,7 @@ class DirDeleteVariable {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Delete Attribute] Action completed");
+      this.logger.native("[Delete Attribute] Executed");
       callback();
     });
   }

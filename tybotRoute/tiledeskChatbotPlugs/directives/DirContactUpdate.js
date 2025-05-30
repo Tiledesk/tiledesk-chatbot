@@ -26,7 +26,6 @@ class DirContactUpdate {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Lead Update] Executing action");
     winston.verbose("Execute ContactUpdate directive")
     let action;
     if (directive.action) {
@@ -43,7 +42,7 @@ class DirContactUpdate {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Lead Update] Action completed");
+      this.logger.native("[Lead Update] Executed");
       callback();
     });
   }

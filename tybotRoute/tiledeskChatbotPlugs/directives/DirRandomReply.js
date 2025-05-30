@@ -23,7 +23,6 @@ class DirRandomReply {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Random Reply] Executing action");
     winston.verbose("Execute RandomReply directive");
     let action;
     if (directive.action) {
@@ -40,7 +39,7 @@ class DirRandomReply {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Random Reply] Action completed");
+      this.logger.native("[Random Reply] Executed");
       callback();
     });
   }

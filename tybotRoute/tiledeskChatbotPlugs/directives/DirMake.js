@@ -22,7 +22,6 @@ class DirMake {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Make] Executing action");
     winston.verbose("Execute Make directive");
     let action;
     if (directive.action) {
@@ -35,7 +34,7 @@ class DirMake {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Make] Action completed");
+      this.logger.native("[Make] Executed");
       callback(stop);
     })
   }

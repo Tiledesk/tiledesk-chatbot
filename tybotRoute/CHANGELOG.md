@@ -466,7 +466,7 @@ available on:
 - Added AskGPTV2 action
 
 # v0.2.49
-- resplacebotv2, added "/" + blockName (so the blockname will be implicitly executed), removing the need to specify the "/" in the body of the replacebot editor
+- resplacebotv2, added "/" + blockName (so the blockname will be implicitly Executed"), removing the need to specify the "/" in the body of the replacebot editor
 - Never add "guest#" as lead userFullname
 
 # v0.2.48

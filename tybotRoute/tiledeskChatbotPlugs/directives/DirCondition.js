@@ -19,7 +19,6 @@ class DirCondition {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Condition] Executing action");
     winston.verbose("Execute Condition directive");
     let action;
     if (directive.action) {
@@ -45,7 +44,7 @@ class DirCondition {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Condition] Action completed");
+      this.logger.native("[Condition] Executed");
       callback(stop);
     });
     
@@ -131,7 +130,7 @@ class DirCondition {
         });
       }
       else {
-        this.logger.debug("[Condition] No trueIntentDirective specified");
+        this.logger.native("[Condition] No trueIntentDirective specified");
         winston.debug("(DirCondition) No trueIntentDirective specified");
         callback();
         return;
@@ -144,7 +143,7 @@ class DirCondition {
         });
       }
       else {
-        this.logger.debug("[Condition] No falseIntentDirective specified");
+        this.logger.native("[Condition] No falseIntentDirective specified");
         winston.debug("(DirCondition) No falseIntentDirective specified");
         callback();
         return;

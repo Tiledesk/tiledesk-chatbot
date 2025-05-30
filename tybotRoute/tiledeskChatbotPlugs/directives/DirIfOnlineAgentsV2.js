@@ -25,7 +25,6 @@ class DirIfOnlineAgentsV2 {
   }
 
   execute(directive, callback) {
-    this.logger.info("[If Online Agents] Executing action");
     winston.verbose("Execute IfOnlineAgentsV2 directive");
     let action;
     if (directive.action) {
@@ -38,7 +37,7 @@ class DirIfOnlineAgentsV2 {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[If Online Agents] Action completed");
+      this.logger.native("[If Online Agents] Executed");
       callback(stop);
     });
   }

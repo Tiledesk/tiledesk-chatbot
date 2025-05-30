@@ -21,7 +21,6 @@ class DirWebResponse {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Web Response] Executing action");
     winston.debug("Execute WebResponse directive: ", directive);
     let action;
     if (directive.action) {
@@ -34,7 +33,7 @@ class DirWebResponse {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Web Response] Action completed");
+      this.logger.native("[Web Response] Executed");
         callback();
     });
   }
@@ -63,7 +62,7 @@ class DirWebResponse {
       payload: json
     }
 
-    this.logger.debug("[Web Response] payload: ", webResponse);
+    this.logger.native("[Web Response] payload: ", webResponse);
 
     const topic = `/webhooks/${this.requestId}`;
     

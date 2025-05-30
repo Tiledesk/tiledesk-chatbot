@@ -26,7 +26,6 @@ class DirBrevo {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Brevo] Executing action");
     winston.verbose("Execute DirBrevo directive");
     let action;
     if (directive.action) {
@@ -39,7 +38,7 @@ class DirBrevo {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Brevo] Action completed");
+      this.logger.native("[Brevo] Executed");
       callback(stop);
     })
   }

@@ -23,7 +23,6 @@ class DirWebRequestV2 {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Web Request] Executing action");
     winston.verbose("Execute WebRequestV2 directive");
     let action;
     if (directive.action) {
@@ -35,9 +34,9 @@ class DirWebRequestV2 {
       callback();
       return;
     }
-    this.logger.info("Executing WebRequest action ", directive.action)
+    this.logger.native("Executing WebRequest action ", directive.action)
     this.go(action, (stop) => {
-      this.logger.info("[Web Request] Action completed");
+      this.logger.native("[Web Request] Executed");
       callback(stop);
     }).catch((err) => {
       // do not nothing
@@ -116,7 +115,7 @@ class DirWebRequestV2 {
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
         winston.debug("DirWebRequestV2 resbody:", resbody);
-        this.logger.debug("[Web Request] resbody: ", resbody);
+        this.logger.native("[Web Request] resbody: ", resbody);
         
         if (err) {
           this.logger.error("WebRequest error: ", err);
@@ -241,7 +240,7 @@ class DirWebRequestV2 {
     }
     if (result === true) {
       if (trueIntentDirective) {
-        this.logger.info("WebRequest: executing true condition");
+        this.logger.native("WebRequest: executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -249,7 +248,7 @@ class DirWebRequestV2 {
         });
       }
       else {
-        this.logger.info("WebRequest: no block connected to true condition");
+        this.logger.native("WebRequest: no block connected to true condition");
         winston.debug("DirWebRequestV2 No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -258,7 +257,7 @@ class DirWebRequestV2 {
     }
     else {
       if (falseIntentDirective) {
-        this.logger.info("WebRequest: executing false condition");
+        this.logger.native("WebRequest: executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -266,7 +265,7 @@ class DirWebRequestV2 {
         });
       }
       else {
-        this.logger.info("WebRequest: no block connected to false condition");
+        this.logger.native("WebRequest: no block connected to false condition");
         winston.debug("DirWebRequestV2 No falseIntentDirective specified");
         if (callback) {
           callback();

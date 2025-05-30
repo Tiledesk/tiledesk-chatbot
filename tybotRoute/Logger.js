@@ -65,6 +65,11 @@ class Logger {
         return this.base('debug', log);
     }
 
+    native(...args) {
+        let log = this.formatLog(args);
+        return this.base('native', log);
+    }
+
     base(level, text) {
         if (!this.request_id || !publisher) {
             console.log("Return because request or publisher is undefined", this.request_id, publisher);
@@ -99,15 +104,17 @@ class Logger {
 
     // Substitute methods with empty function if flow flogs are disabled
     _disableMethods() {
-        const methods = ['error', 'warn', 'info', 'debug'];
+        const methods = ['error', 'warn', 'info', 'debug', 'native'];
         methods.forEach(method => {
             this[method] = () => { };
         });
     }
 
     _disableDebugMethods() {
-        const method = 'debug';
-        this[method] = () => { };
+        const methods = ['debug', 'native'];
+        methods.forEach(method => {
+            this[method] = () => { };
+        });
     }
 
 }

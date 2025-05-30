@@ -26,7 +26,6 @@ class DirHubspot {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Hubspot] Executing action");
     winston.verbose("Execute Hubspot directive");
     let action;
     if (directive.action) {
@@ -39,7 +38,7 @@ class DirHubspot {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Hubspot] Action completed");
+      this.logger.native("[Hubspot] Executed");
       callback(stop);
     })
   }

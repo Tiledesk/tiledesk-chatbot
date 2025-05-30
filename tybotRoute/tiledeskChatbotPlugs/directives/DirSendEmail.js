@@ -23,7 +23,6 @@ class DirSendEmail {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Send Email] Executing action");
     winston.verbose("Execute SendEmail directive");
     let action;
     if (directive.action) {
@@ -44,7 +43,7 @@ class DirSendEmail {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Send Email] Action completed");
+      this.logger.native("[Send Email] Executed");
       callback();
     });
   }
