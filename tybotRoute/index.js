@@ -98,6 +98,9 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+
+  winston.debug("(tybotRoute) Bot found: ", bot)
+  
   
   let intentsMachine;
   let backupMachine;
