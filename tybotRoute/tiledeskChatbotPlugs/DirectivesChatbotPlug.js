@@ -58,10 +58,8 @@ const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
-
-const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
-const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const winston = require('../utils/winston');
 
 class DirectivesChatbotPlug {
 
