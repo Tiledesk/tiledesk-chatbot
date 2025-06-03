@@ -61,6 +61,7 @@ const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
+const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 class DirectivesChatbotPlug {
 
@@ -559,6 +560,12 @@ class DirectivesChatbotPlug {
           let next_dir = await this.nextDirective(this.directives);
           this.process(next_dir);
         }
+      });
+    }
+    else if (directive_name === Directives.ADD_KB_CONTENT) {
+      new DirAddKbContent(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
       });
     }
     else if (directive_name === Directives.GPT_TASK) {

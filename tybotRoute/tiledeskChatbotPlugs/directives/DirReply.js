@@ -25,6 +25,7 @@ class DirReply {
   }
 
   execute(directive, callback) {
+    this.logger.info("[Reply] Executing action");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -34,14 +35,14 @@ class DirReply {
       action.attributes.fillParams = true;
     }
     else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
       winston.error("DirReply Incorrect directive (no action provided):", directive);
       callback();
       return;
     }
-    this.logger.info("Executing Action Reply ", directive.action)
 
     this.go(action, () => {
-      this.logger.info("Action Reply terminated")
+      this.logger.info("[Reply] Action completed");
       callback();
     });
   }
@@ -62,6 +63,7 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
+      this.logger.debug("[Reply] Reply with: " + message.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
@@ -138,6 +140,7 @@ class DirReply {
     }
 
     let cleanMessage = message;
+      
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
 
@@ -148,6 +151,7 @@ class DirReply {
       (err) => {
         if (err) {
           winston.error("DirReply Error sending reply: ", err);
+          this.logger.error("[Reply] Error sending reply: " + err);
         }
         winston.verbose("DirReply reply message sent")
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);

@@ -313,7 +313,6 @@ class TiledeskChatbotUtil {
                                 // fill buttons
                                 const filler = new Filler();
                                 json_buttons_string = filler.fill(json_buttons_string, flow_attributes);
-                                // console.log("json_buttons_string:", json_buttons_string);
                                 json_buttons = JSON.parse(json_buttons_string);
                                 if (Array.isArray(json_buttons)) {
                                     json_buttons.forEach(button => {

@@ -23,17 +23,15 @@ class Logger {
         }
 
         if (!config.request_id) {
-            console.error('config.request_id is mandatory');
-            //throw new Error('config.request_id is mandatory');
+            console.error('(Logger) config.request_id is mandatory');
+            this._disableMethods();
         }
 
         if (!FLOW_LOGS_ENABLED || FLOW_LOGS_ENABLED === false || FLOW_LOGS_ENABLED === 'false') {
-            //console.warn("(Logger) Flow logs disabled");
             this._disableMethods();
         }
 
         if (!AMQP_MANAGER_URL) {
-            //console.warn("(Logger) No AQMP Manager url provided. Flow logs disabled");
             this._disableMethods();
         }
 

@@ -32,7 +32,7 @@ class DirReplyV2 {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Reply] Executing action");
+    this.logger.info("[Advanced Reply] Executing action");
     winston.verbose("Execute ReplyV2 directive");
     let action;
     if (directive.action) {
@@ -49,7 +49,7 @@ class DirReplyV2 {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Reply] Action completed");
+      this.logger.info("[Advanced Reply] Action completed");
       callback(stop);
     });
   }
