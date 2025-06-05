@@ -76,8 +76,10 @@ class DirAskGPTV2 {
     let temperature;
     let max_tokens;
     let top_k;
+    let alpha;
     let transcript;
     let citations = false;
+    let chunks_only = false;
     let engine;
     //let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
 
@@ -124,8 +126,16 @@ class DirAskGPTV2 {
       max_tokens = action.max_tokens;
     }
 
+    if (action.alpha) {
+      alpha = action.alpha;
+    }
+
     if (action.citations) {
       citations = action.citations;
+    }
+
+    if (action.chunks_only) {
+      chunks_only = action.chunks_only;
     }
 
     let requestVariables = null;
@@ -186,7 +196,7 @@ class DirAskGPTV2 {
       return;
     }
 
-    if (publicKey === true) {
+    if (publicKey === true && !chunks_only) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
         this.logger.warn("[Ask Knowledge Base] Tokens quota exceeded. Skip the action")
@@ -200,6 +210,7 @@ class DirAskGPTV2 {
 
     let ns;
 
+    console.log("namespace: ", namespace)
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
@@ -210,6 +221,7 @@ class DirAskGPTV2 {
     } else {
       this.logger.debug("[Ask Knowledge Base] Searching namespace by id ", namespace);
       ns = await this.getNamespace(null, namespace);
+      console.log("ns ?: ", ns)
     }
 
     if (!ns) {
@@ -260,7 +272,16 @@ class DirAskGPTV2 {
     if (max_tokens) {
       json.max_tokens = max_tokens;
     }
-    
+
+    if (engine.type === 'serverless') {
+      json.search_type = 'hybrid';
+      json.alpha = alpha;
+    }
+
+    if (chunks_only && chunks_only === true) {
+      json.search_type = 'chunks';
+    }
+
     if (!action.advancedPrompt) {
       if (filled_context) {
         json.system_context = filled_context + "\n" + contexts[model];
@@ -306,22 +327,34 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
-          await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.prompt_token_size,
-              model: json.model
+          if (chunks_only) {
+            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
+            if (trueIntent) {
+              await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
             }
-            this.updateQuote(tokens_usage);
-          }
+            callback();
+            return;
 
-          if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
+          } else {
+            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
+            if (publicKey === true) {
+              let tokens_usage = {
+                tokens: resbody.prompt_token_size,
+                model: json.model
+              }
+              this.updateQuote(tokens_usage);
+            }
+  
+            if (trueIntent) {
+              await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              callback(true);
+              return;
+            }
+            callback();
             return;
           }
-          callback();
-          return;
         } else {
           await this.#assignAttributes(action, answer, source);
           if (falseIntent) {
