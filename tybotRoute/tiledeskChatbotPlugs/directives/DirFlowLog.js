@@ -62,23 +62,23 @@ class DirFlowLog {
 
     const filler = new Filler();
     const filled_log = filler.fill(action.log, requestVariables);
-    winston.debug("(DirFlowLog) fille log: ", filled_log);
+    winston.debug("(DirFlowLog) filled log: ", filled_log);
 
     if (level === 'error') {
-      winston.info("Adding log '" + filled_log + "' with level " + level);
+      winston.verbose("Adding log '" + filled_log + "' with level " + level);
       this.logger.error(filled_log);
     }
     else if (level === 'warn') {
-      winston.info("Adding log '" + filled_log + "' with level " + level);
+      winston.verbose("Adding log '" + filled_log + "' with level " + level);
       this.logger.warn(filled_log);
     }
     else if (level === 'info') {
-      winston.info("Adding log '" + filled_log + "' with level " + level);
-      this.logger.info(filled_log);
+      winston.verbose("Adding log '" + filled_log + "' with level " + level);
+      this.logger.native(filled_log);
     }
     else if (level === 'debug') {
-      winston.info("Adding log '" + filled_log + "' with level " + level);
-      this.logger.debug(filled_log);
+      winston.verbose("Adding log '" + filled_log + "' with level " + level);
+      this.logger.native(filled_log);
     }
 
     callback();

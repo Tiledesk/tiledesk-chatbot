@@ -20,7 +20,6 @@ class DirWhatsappByAttribute {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Whatsapp by Attribute] Executing action");
     winston.verbose("Execute WhatsappByAttribute directive");
     let action;
     if (directive.action) {
@@ -33,7 +32,7 @@ class DirWhatsappByAttribute {
       return;
     }
     this.go(action, () => {
-      this.logger.info("[Whatsapp by Attribute] Action completed");
+      this.logger.native("[Whatsapp by Attribute] Executed");
       callback();
     })
   }

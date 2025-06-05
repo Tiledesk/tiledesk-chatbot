@@ -17,7 +17,6 @@ class DirCode {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Code] Executing action");
     winston.verbose("Execute Code directive");
     let action;
     if (directive.action) {
@@ -30,7 +29,7 @@ class DirCode {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Code] Action completed");
+      this.logger.native("[Code] Executed");
       callback(stop);
     });
     

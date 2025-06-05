@@ -25,7 +25,6 @@ class DirSendWhatsapp {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Send Whatsapp] Executing action");
     winston.verbose("Execute SendWhatsapp directive");
     let action;
     if (directive.action) {
@@ -38,7 +37,7 @@ class DirSendWhatsapp {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Send Whatsapp] Action completed");
+      this.logger.native("[Send Whatsapp] Executed");
       callback(stop);
     })
   }

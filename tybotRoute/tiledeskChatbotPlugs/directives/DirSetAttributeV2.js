@@ -86,7 +86,6 @@ class DirSetAttributeV2 {
     }
 
     execute(directive, callback) {
-        this.logger.info("[Set Attribute] Executing action");
         winston.verbose("Execute SetAttributeV2 directive");
         let action;
         if (directive.action) {
@@ -99,7 +98,7 @@ class DirSetAttributeV2 {
             return;
         }
         this.go(action, () => {
-            this.logger.info("[Set Attribute] Action completed");
+            this.logger.native("[Set Attribute] Executed");
             callback();
         });
     }

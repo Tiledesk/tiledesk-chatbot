@@ -22,7 +22,6 @@ class DirCaptureUserReply {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Capture User Reply] Executing action");
     winston.verbose("Execute CaptureUserReply directive");
     let action;
     if (directive.action) {
@@ -48,7 +47,7 @@ class DirCaptureUserReply {
       const actionId = action["_tdActionId"];;
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
-      this.logger.info("[Capture User Reply] Waiting for user reply...");
+      this.logger.native("[Capture User Reply] Waiting for user reply...");
       callback();
       return;
     } else {
@@ -63,7 +62,7 @@ class DirCaptureUserReply {
     }
     try {
       const user_reply = this.message.text;
-      this.logger.info("[Capture User Reply] User replied with: ", user_reply);
+      this.logger.native("[Capture User Reply] User replied with: ", user_reply);
       if (this.context.tdcache) {
         if (action.assignResultTo) {
           winston.debug("(DirCaptureUserReply) assign assignResultTo: " + action.assignResultTo);
@@ -74,12 +73,12 @@ class DirCaptureUserReply {
       if (callback) {
         if (goToIntent) {
           this.#executeGoTo(goToIntent, () => {
-            this.logger.info("[Capture User Reply] Action completed");
+            this.logger.native("[Capture User Reply] Executed");
             callback(); // continue the flow
           });
         }
         else {
-          this.logger.info("[Capture User Reply] Action completed");
+          this.logger.native("[Capture User Reply] Executed");
           callback(); // continue the flow
         }
         

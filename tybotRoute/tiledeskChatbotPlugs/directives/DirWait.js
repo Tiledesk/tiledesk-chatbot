@@ -19,7 +19,6 @@ class DirWait {
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
-    this.logger.info("[Wait] Executing action");
     winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
@@ -48,7 +47,7 @@ class DirWait {
     }
 
     this.go(action, () => {
-      this.logger.info("[Wait] Action completed");
+      this.logger.native("[Wait] Executed");
       callback();
     })
   }
@@ -61,7 +60,7 @@ class DirWait {
       // await this.tdcache.set(step_key, 0);
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
-    this.logger.info("[Wait] Waiting for ", action.millis, "[ms]")
+    this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       callback();
     }, action.millis);

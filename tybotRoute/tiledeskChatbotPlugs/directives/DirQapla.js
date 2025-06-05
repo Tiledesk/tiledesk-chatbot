@@ -27,7 +27,6 @@ class DirQapla {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Qapla] Executing action");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -39,7 +38,7 @@ class DirQapla {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Qapla] Action completed");
+      this.logger.native("[Qapla] Executed");
       callback(stop);
     })
   }

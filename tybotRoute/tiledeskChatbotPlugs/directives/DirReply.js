@@ -25,7 +25,6 @@ class DirReply {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Reply] Executing action");
     let action;
     if (directive.action) {
       action = directive.action;
@@ -42,7 +41,7 @@ class DirReply {
     }
 
     this.go(action, () => {
-      this.logger.info("[Reply] Action completed");
+      this.logger.native("[Reply] Executed");
       callback();
     });
   }
@@ -63,17 +62,17 @@ class DirReply {
       const filler = new Filler();
       // fill text attribute
       message.text = filler.fill(message.text, requestAttributes);
-      this.logger.debug("[Reply] Reply with: " + message.text);
+      this.logger.native("[Reply] Reply with: " + message.text);
 
       if (message.metadata) {
         winston.debug("DirReply filling message 'metadata':", message.metadata);
         if (message.metadata.src) {
           message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
-          this.logger.debug("Filled metadata.src with ", message.metadata.src);
+          this.logger.native("Filled metadata.src with ", message.metadata.src);
         }
         if (message.metadata.name) {
           message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
-          this.logger.debug("Filled metadata.name with ", message.metadata.name);
+          this.logger.native("Filled metadata.name with ", message.metadata.name);
         }
       }
       winston.debug("DirReply filling commands'. Message:", message);

@@ -20,7 +20,6 @@ class DirClose {
     }
     
     execute(directive, callback) {
-        this.logger.info("[Close] Executing action");
         winston.verbose("Execute Close directive");
         this.tdClient.closeRequest(this.requestId, async (err) => {
             if (err) {
@@ -28,10 +27,10 @@ class DirClose {
                 winston.error("(DirClose) Error: ", err);
             }
             else {
-                this.logger.info("[Close] Request closed");
+                this.logger.native("[Close] Request closed");
                 await this.chatbot.deleteParameter(TiledeskChatbotConst.USER_INPUT);
             }
-            this.logger.info("[Close] Action completed");
+            this.logger.native("[Close] Executed");
             callback();
         });
     }

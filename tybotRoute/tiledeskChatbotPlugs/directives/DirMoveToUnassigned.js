@@ -20,11 +20,10 @@ class DirMoveToUnassigned {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Move to Unassigned] Executing action");
     winston.verbose("Execute MoveToUnassigned directive");
     directive.action = {};
     this.go(directive.action, () => {
-      this.logger.info("[Move to Unassigned] Action completed");
+      this.logger.native("[Move to Unassigned] Executed");
       callback();
     });
   }
