@@ -307,22 +307,6 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-
-      let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "openai",
-        value: {
-          apikey: "example_api_key",
-          organization: "TIledesk"
-        }
-      }
-
-      res.status(http_code).send(reply);
-    })
-
     // no longer used in this test --> key retrieved from integrations
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
 
@@ -1059,7 +1043,304 @@ describe('Conversation for AskGPTV2 test', async () => {
       });
     });
   });
+
+  it('/gpt_success_chunks_only - invokes the askgpt mockup and test the returning attributes', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "kb replied: This is the first chunkThis is the second chunk");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(typeof attributes["kb_chunks"] === "object");
+          assert(attributes["kb_chunks"].length === 2);
+          assert(attributes["kb_chunks"][0] === "This is the first chunk");
+          assert(attributes["kb_chunks"][1] === "This is the second chunk");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+
+      assert(req.body.search_type === "chunks");
+
+      let reply = {}
+      let http_code = 200;
+      if (!req.body.question) {
+        reply.error = "question field is mandatory"
+        http_code = 400;
+      }
+      else if (!req.body.model) {
+        reply.error = "model field is mandatory"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          success: true,
+          namespace: null, //set
+          chunks: [
+              "This is the first chunk",
+              "This is the second chunk"
+          ],
+          error_message: null,
+          duration: 0.834
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "666708c13d20c7002d68fa90",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        }
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/kb_success_chunks_only{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+
+  })
   
+  it('/gpt_success_hybrid_search - invokes the askgpt mockup and test the returning attributes', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      console.log("message: ", message)
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      console.log("command2: ", command2)
+      assert(command2.type === "message");
+      assert(command2.message.text === "kb replied: this is mock kb reply with hybrid search");
+
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["kb_reply"] === "this is mock kb reply with hybrid search")
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+      let reply = {}
+      let http_code = 200;
+      if (!req.body.question) {
+        reply.error = "question field is mandatory"
+        http_code = 400;
+      }
+      else if (!req.body.model) {
+        reply.error = "model field is mandatory"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          answer: "this is mock kb reply with hybrid search",
+          success: true,
+          id: "123456789",
+          ids: ["9876543210", "0123456789"],
+          source: "http://gethelp.test.com/article",
+          sources: [ "TextArticle", "http://gethelp.test.com/article"],
+          prompt_token_size: 762,
+          citations: [
+            {
+              source_id: 0,
+              source_name: "TextArticle"
+            }
+          ],
+          
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "12345678",
+          name: "Second Namespace",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        }
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/kb_success_hybrid_search{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+
+  })
+
   it('/gpt_success (key from kbsettings) - invokes the askgpt mockup and test the returning attributes', (done) => {
     let listener;
     let endpointServer = express();
