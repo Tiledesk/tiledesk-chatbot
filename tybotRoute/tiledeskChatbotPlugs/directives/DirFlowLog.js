@@ -74,11 +74,11 @@ class DirFlowLog {
     }
     else if (level === 'info') {
       winston.verbose("Adding log '" + filled_log + "' with level " + level);
-      this.logger.native(filled_log);
+      this.logger.info(filled_log);
     }
     else if (level === 'debug') {
       winston.verbose("Adding log '" + filled_log + "' with level " + level);
-      this.logger.native(filled_log);
+      this.logger.debug(filled_log);
     }
 
     callback();
