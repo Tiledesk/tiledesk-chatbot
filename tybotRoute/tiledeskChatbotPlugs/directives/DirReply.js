@@ -19,6 +19,8 @@ class DirReply {
     this.tdcache = context.tdcache;
     this.log = context.log;
     this.API_ENDPOINT = context.API_ENDPOINT;
+
+    console.log("context.supportRequest: ", context.supportRequest);
     
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
