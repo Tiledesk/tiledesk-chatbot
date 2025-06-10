@@ -1223,6 +1223,10 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
 
     endpointServer.post('/api/qa', function (req, res) {
+
+      assert(req.body.search_type === "hybrid");
+      assert(req.body.alpha === 0.8);
+
       let reply = {}
       let http_code = 200;
       if (!req.body.question) {

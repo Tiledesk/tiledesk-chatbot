@@ -249,7 +249,7 @@ const bot = {
 				"temperature": 0.7,
 				"max_tokens": 1000,
 				"top_k": 2,
-				"alpha": 0.5,
+				"alpha": 0.8,
 				"context": "this is the context: {{custom_context}}",
 				"advancedPrompt": true,
 				"trueIntent": "#SUCCESS",
