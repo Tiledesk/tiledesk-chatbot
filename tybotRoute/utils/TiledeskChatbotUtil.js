@@ -520,7 +520,7 @@ class TiledeskChatbotUtil {
             const messageId = message._id;
 
             if(process.env.BASE_URL){
-                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, `${BASE_URL}/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`);
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, `${process.env.BASE_URL}/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`);
             }
             
             await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
