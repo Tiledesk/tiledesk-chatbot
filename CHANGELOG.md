@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 2.0.17
+# 2.0.16
+- added: BASE_URL env var
+
 # 2.0.15
 - added kb_chunks attribute in AskGptV2 action
 
