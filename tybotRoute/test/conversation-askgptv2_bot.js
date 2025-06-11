@@ -206,6 +206,62 @@ const bot = {
 		{
 			"webhook_enabled": false,
 			"enabled": true,
+			"language": "en",
+			"intent_display_name": "kb_success_chunks_only",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "askgptv2",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "kb_reply",
+				"assignSourceTo": "kb_source",
+				"assignChunksTo": "kb_chunks",
+				"namespace": "666708c13d20c7002d68fa90",
+				"model": "gpt-4",
+				"temperature": 0.7,
+				"max_tokens": 1000,
+				"top_k": 2,
+				"chunks_only": true,
+				"context": "this is the context: {{custom_context}}",
+				"advancedPrompt": true,
+				"trueIntent": "#SUCCESS_CHUNKS",
+				"falseIntent": "#FAILURE",
+				"question": "this is the question: {{last_user_message}}",
+				"history": true
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "kb_success_hybrid_search",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "askgptv2",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "kb_reply",
+				"assignSourceTo": "kb_source",
+				"assignChunksTo": "kb_chunks",
+				"namespace": "12345678",
+				"model": "gpt-4",
+				"temperature": 0.7,
+				"max_tokens": 1000,
+				"top_k": 2,
+				"alpha": 0.8,
+				"context": "this is the context: {{custom_context}}",
+				"advancedPrompt": true,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+				"question": "this is the question: {{last_user_message}}",
+				"history": true
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
 			"actions": [{
 				"_tdActionType": "askgptv2",
 				"_tdActionTitle": "gpt action failed",
@@ -286,6 +342,30 @@ const bot = {
 			"language": "en",
 			"intent_display_name": "kb intent true",
 			"intent_id": "SUCCESS"
+		},
+		{
+			// TRUE INTENT
+			"webhook_enabled": false,
+			"enabled": true,
+			"actions": [{
+				"_tdActionType": "reply",
+				"text": "xxx",
+				"attributes": {
+					"commands": [{
+						"type": "wait",
+						"time": 500
+					}, {
+						"type": "message",
+						"message": {
+							"type": "text",
+							"text": "kb replied: {{kb_chunks}}"
+						}
+					}]
+				}
+			}],
+			"language": "en",
+			"intent_display_name": "kb intent chunks true",
+			"intent_id": "SUCCESS_CHUNKS"
 		},
 		{
 			// FALSE INTENT

@@ -518,9 +518,11 @@ class TiledeskChatbotUtil {
         try {
             winston.debug("Updating request variables. Message:", message);
             const messageId = message._id;
-            const chat_url = `https://panel.tiledesk.com/v3/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`
 
-            await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, chat_url);
+            if(process.env.BASE_URL){
+                await chatbot.addParameter(TiledeskChatbotConst.REQ_CHAT_URL, `${process.env.BASE_URL}/dashboard/#/project/${projectId}/wsrequest/${requestId}/messages`);
+            }
+            
             await chatbot.addParameter(TiledeskChatbotConst.REQ_PROJECT_ID_KEY, projectId);
             await chatbot.addParameter(TiledeskChatbotConst.REQ_REQUEST_ID_KEY, requestId);
             
