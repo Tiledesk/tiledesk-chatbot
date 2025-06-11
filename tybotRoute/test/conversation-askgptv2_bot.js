@@ -217,6 +217,7 @@ const bot = {
 				"assignReplyTo": "kb_reply",
 				"assignSourceTo": "kb_source",
 				"assignChunksTo": "kb_chunks",
+				"namespace": "666708c13d20c7002d68fa90",
 				"model": "gpt-4",
 				"temperature": 0.7,
 				"max_tokens": 1000,

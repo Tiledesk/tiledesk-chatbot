@@ -210,7 +210,6 @@ class DirAskGPTV2 {
 
     let ns;
 
-    console.log("namespace: ", namespace)
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
@@ -221,7 +220,6 @@ class DirAskGPTV2 {
     } else {
       this.logger.debug("[Ask Knowledge Base] Searching namespace by id ", namespace);
       ns = await this.getNamespace(null, namespace);
-      console.log("ns ?: ", ns)
     }
 
     if (!ns) {
@@ -272,14 +270,13 @@ class DirAskGPTV2 {
     if (max_tokens) {
       json.max_tokens = max_tokens;
     }
+    if (chunks_only) {
+      json.chunks_only = chunks_only;
+    }
 
     if (engine.type === 'serverless') {
       json.search_type = 'hybrid';
       json.alpha = alpha;
-    }
-
-    if (chunks_only && chunks_only === true) {
-      json.search_type = 'chunks';
     }
 
     if (!action.advancedPrompt) {
