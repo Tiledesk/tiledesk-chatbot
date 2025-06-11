@@ -23,7 +23,6 @@ class DirReplaceBotV2 {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Replace Bot] Executing action");
     winston.verbose("Execute ReplaceBotV2 directive");
     let action;
     if (directive.action) {
@@ -41,7 +40,7 @@ class DirReplaceBotV2 {
       callback();
     }
     this.go(action, () => {
-      this.logger.info("[Replace Bot] Action completed");
+      this.logger.native("[Replace Bot] Executed");
       callback();
     })
   }

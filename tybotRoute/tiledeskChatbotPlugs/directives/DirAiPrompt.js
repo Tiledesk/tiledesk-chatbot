@@ -33,7 +33,6 @@ class DirAiPrompt {
   }
 
   execute(directive, callback) {
-    this.logger.info("[AI Prompt] Executing action");
     winston.verbose("Execute AiPrompt directive");
     let action;
     if (directive.action) {
@@ -46,7 +45,7 @@ class DirAiPrompt {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[AI Prompt] Action completed");
+      this.logger.native("[AI Prompt] Executed");
       callback(stop);
     })
   }
@@ -92,7 +91,7 @@ class DirAiPrompt {
     const filled_context = filler.fill(action.context, requestVariables);
 
     if (action.history) {
-      this.logger.info("[AI Prompt] using chat transcript");
+      this.logger.native("[AI Prompt] using chat transcript");
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
@@ -212,7 +211,7 @@ class DirAiPrompt {
 
           winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
-          this.logger.info("[AI Prompt] answer: ", answer);
+          this.logger.native("[AI Prompt] answer: ", answer);
         
           await this.#assignAttributes(action, answer);
 
@@ -300,7 +299,7 @@ class DirAiPrompt {
     }
     if (result === true) {
       if (trueIntentDirective) {
-        this.logger.info("[AI Prompt] executing true condition");
+        this.logger.native("[AI Prompt] executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -308,7 +307,7 @@ class DirAiPrompt {
         })
       }
       else {
-        this.logger.info("[AI Prompt] no block connected to true condition");
+        this.logger.native("[AI Prompt] no block connected to true condition");
         winston.debug("DirAiPrompt No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -317,7 +316,7 @@ class DirAiPrompt {
     }
     else {
       if (falseIntentDirective) {
-        this.logger.info("[AI Prompt] executing false condition");
+        this.logger.native("[AI Prompt] executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -325,7 +324,7 @@ class DirAiPrompt {
         });
       }
       else {
-        this.logger.info("[AI Prompt] no block connected to false condition");
+        this.logger.native("[AI Prompt] no block connected to false condition");
         winston.debug("DirAiPrompt No falseIntentDirective specified");
         if (callback) {
           callback();

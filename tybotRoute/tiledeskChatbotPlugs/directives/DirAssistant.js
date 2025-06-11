@@ -25,7 +25,6 @@ class DirAssistant {
   }
 
   execute(directive, callback) {
-    this.logger.info("[ChatGPT Assistant] Executing action");
     winston.verbose("Execute Assistant directive");
     let action;
     if (directive.action) {
@@ -38,7 +37,7 @@ class DirAssistant {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[ChatGPT Assistant] Action completed");
+      this.logger.native("[ChatGPT Assistant] Executed");
       callback(stop);
     });
   }

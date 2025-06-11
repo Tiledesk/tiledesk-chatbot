@@ -26,7 +26,6 @@ class DirCustomerio {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Customer.io] Executing action");
     winston.verbose("Execute Customerio directive");
     let action;
     if (directive.action) {
@@ -39,7 +38,7 @@ class DirCustomerio {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Customer.io] Action completed");
+      this.logger.native("[Customer.io] Executed");
       callback(stop);
     })
   }

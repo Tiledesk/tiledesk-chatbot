@@ -15,9 +15,8 @@ class DirClearTranscript {
     }
     
     execute(directive, callback) {
-        this.logger.info("[Clear Transcript] Executing action");
         TiledeskChatbotUtil.clearConversationTranscript(this.context.chatbot, () => {
-            this.logger.info("[Clear Transcript] Action completed");
+            this.logger.native("[Clear Transcript] Executed");
             callback();
         });
     }

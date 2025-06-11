@@ -32,20 +32,19 @@ class DirAddKbContent {
   }
 
   execute(directive, callback) {
-    this.logger.info("Execute AskKnowledgeBase action")
-    winston.debug("DirAskGPTV2 directive: ", directive);
+    winston.debug("DirAddKbContent directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.debug("DirAskGPTV2 Incorrect directive: ", directive);
+      winston.debug("DirAddKbContent Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("Acion AskKnowledgeBase completed");
+      this.logger.native("[Add to KnwoledgeBase] Executed");
       callback(stop);
     })
   }
@@ -86,7 +85,7 @@ class DirAddKbContent {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      this.logger.debug("[DirAddKbContent] OpenAI key not found in Integration. Using shared OpenAI key");
+      this.logger.native("[Add to KnwoledgeBase] OpenAI key not found in Integration. Using shared OpenAI key");
       winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
@@ -96,7 +95,7 @@ class DirAddKbContent {
       key = process.env.GPTKEY;
       publicKey = true;
     } else {
-      this.logger.debug("[DirAddKbContent] use your own OpenAI key")
+      this.logger.native("[Add to KnwoledgeBase] Use your own OpenAI key")
     }
 
     if (!key) {
@@ -109,7 +108,7 @@ class DirAddKbContent {
     if (publicKey === true) {
       let keep_going = await this.checkQuoteAvailability();
       if (keep_going === false) {
-        this.logger.warn("[DirAddKbContent] Tokens quota exceeded. Skip the action")
+        this.logger.warn("[Add to KnwoledgeBase] Tokens quota exceeded. Skip the action")
         winston.verbose("[DirAddKbContent] - Quota exceeded for tokens. Skip the action")
         await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: tokens quota exceeded");
         callback(true);  
@@ -122,17 +121,17 @@ class DirAddKbContent {
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
-      this.logger.debug("[DirAddKbContent] Searching namespace by name ", filled_namespace);
+      this.logger.native("[Add to KnwoledgeBase] Searching namespace by name ", filled_namespace);
       ns = await this.getNamespace(filled_namespace, null);
       namespace = ns?.id;
       winston.verbose("[DirAddKbContent] - Retrieved namespace id from name " + namespace);
     } else {
-      this.logger.debug("[DirAddKbContent] Searching namespace by id ", namespace);
+      this.logger.native("[Add to KnwoledgeBase] Searching namespace by id ", namespace);
       ns = await this.getNamespace(null, namespace);
     }
 
     if (!ns) {
-      this.logger.error("[DirAddKbContent] Namespace not found");
+      this.logger.error("[Add to KnwoledgeBase] Namespace not found");
       await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: namespace not found");
       callback();
       return;
@@ -145,7 +144,7 @@ class DirAddKbContent {
     }
     
     if (!namespace) {
-      this.logger.error("[DirAddKbContent] Namespace is undefined")
+      this.logger.error("[Add to KnwoledgeBase] Namespace is undefined")
       winston.verbose("[DirAddKbContent] - Error: namespace is undefined")
       await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: namespace is undefined");
       callback(true);
@@ -177,7 +176,7 @@ class DirAddKbContent {
       HTTPREQUEST, async (err, resbody) => {
         
         if (err) {
-          this.logger.error("[DirAddKbContent] error: " + JSON.stringify(err?.response));
+          this.logger.error("[Add to KnwoledgeBase] error: " + JSON.stringify(err?.response));
           winston.error("[DirAddKbContent] error: ", err?.response);
           if (callback) {
             callback();
@@ -207,12 +206,12 @@ class DirAddKbContent {
         },
         method: "GET"
       }
-      winston.debug("DirAskGPTV2 KB HttpRequest", KB_HTTPREQUEST);
+      winston.debug("DirAddKbContent KB HttpRequest", KB_HTTPREQUEST);
 
       httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("DirAskGPTV2 Get kb settings error ", err?.response?.data);
+            winston.error("DirAddKbContent Get kb settings error ", err?.response?.data);
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -237,12 +236,12 @@ class DirAddKbContent {
         },
         method: "GET"
       }
-      winston.debug("DirAskGPTV2 check quote availability HttpRequest", HTTPREQUEST);
+      winston.debug("DirAddKbContent check quote availability HttpRequest", HTTPREQUEST);
 
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("DirAskGPTV2 Check quote availability err: ", err);
+            winston.error("DirAddKbContent Check quote availability err: ", err);
             resolve(true)
           } else {
             if (resbody.isAvailable === true) {
@@ -268,12 +267,12 @@ class DirAddKbContent {
         json: tokens_usage,
         method: "POST"
       }
-      winston.debug("DirAskGPTV2 update quote HttpRequest ", HTTPREQUEST);
+      winston.debug("DirAddKbContent update quote HttpRequest ", HTTPREQUEST);
 
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("DirAskGPTV2 Increment tokens quote err: ", err);
+            winston.error("DirAddKbContent Increment tokens quote err: ", err);
             reject(false)
           } else {
             resolve(true);
@@ -293,14 +292,14 @@ class DirAddKbContent {
         },
         method: "GET"
       }
-      winston.debug("DirAskGPTV2 get all namespaces HttpRequest", HTTPREQUEST);
+      winston.debug("DirAddKbContent get all namespaces HttpRequest", HTTPREQUEST);
       httpUtils.request(
         HTTPREQUEST, async (err, namespaces) => {
           if (err) {
-            winston.error("DirAskGPTV2 get all namespaces err: ", err);
+            winston.error("DirAddKbContent get all namespaces err: ", err);
             resolve(null)
           } else {
-            winston.debug("DirAskGPTV2 get all namespaces resbody: ", namespaces);
+            winston.debug("DirAddKbContent get all namespaces resbody: ", namespaces);
             if (name) {
               let namespace = namespaces.find(n => n.name === name);
               resolve(namespace);

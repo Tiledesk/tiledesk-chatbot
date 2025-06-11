@@ -30,7 +30,6 @@ class DirGptTask {
   }
 
   execute(directive, callback) {
-    this.logger.info("[ChatGPT Task] Executing action");
     winston.verbose("Execute GptTask directive");
     let action;
     if (directive.action) {
@@ -43,7 +42,7 @@ class DirGptTask {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[ChatGPT Task] Action completed");
+      this.logger.native("[ChatGPT Task] Executed");
       callback(stop);
     })
   }
@@ -125,13 +124,13 @@ class DirGptTask {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      this.logger.debug("[ChatGPT Task] Key not found in Integrations.");
+      this.logger.native("[ChatGPT Task] Key not found in Integrations.");
       winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
 
     if (!key) {
-      this.logger.debug("[ChatGPT Task] Retrieve shared gptkey.");
+      this.logger.native("[ChatGPT Task] Retrieve shared gptkey.");
       winston.debug("(DirGptTask) - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
@@ -229,7 +228,7 @@ class DirGptTask {
             answer = await this.convertToJson(answer);
           }
         
-          this.logger.debug("[ChatGPT Task] Completions answer: ", answer);
+          this.logger.native("[ChatGPT Task] Completions answer: ", answer);
           
           await this.#assignAttributes(action, answer);
 

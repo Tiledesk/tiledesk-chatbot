@@ -21,11 +21,10 @@ class DirMoveToAgent {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Transfer to a Human] Executing action");
     winston.verbose("Execute MoveToAgent directive");
     directive.action = {};
     this.go(directive.action, () => {
-      this.logger.info("[Transfer to a Human] Action completed");
+      this.logger.native("[Transfer to a Human] Executed");
       callback();
     });
   }

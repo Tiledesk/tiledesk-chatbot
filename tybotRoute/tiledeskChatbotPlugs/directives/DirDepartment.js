@@ -18,7 +18,6 @@ class DirDepartment {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Change Department] Executing action");
     winston.verbose("Execute Department directive");
     let action;
     if (directive.action) {
@@ -34,7 +33,7 @@ class DirDepartment {
       }
     }
     this.go(action, () => {
-      this.logger.info("[Change Department] Action executed");
+      this.logger.native("[Change Department] Action executed");
       callback();
     });
     
@@ -96,7 +95,7 @@ class DirDepartment {
                 this.logger.error("[Change Department] Unable to trigger bot");
                 winston.error("(DirDepartment) Error sending hidden message: " + err.message)
               } else {
-                this.logger.debug("[Change Department] Bot triggered");
+                this.logger.native("[Change Department] Bot triggered");
                 winston.debug("(DirDepartment) Hidden message sent.");
 
               }
@@ -105,7 +104,7 @@ class DirDepartment {
         }
       }
       else {
-        this.logger.debug("[Change Department] No triggering bot");
+        this.logger.native("[Change Department] No triggering bot");
         winston.debug("(DirDepartment) No action.triggerBot");
         callback();
       }

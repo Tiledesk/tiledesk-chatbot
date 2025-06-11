@@ -4,13 +4,15 @@ const FLOW_LOGS_ENABLED = process.env.FLOW_LOGS_ENABLED;
 const AMQP_MANAGER_URL = process.env.AMQP_MANAGER_URL;
 const LOGS_BASE_ROUTING_KEY = process.env.LOGS_BASE_ROUTING_KEY || "apps.tilechat.logs";
 
-const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+const levels = { error: 0, warn: 1, info: 2, debug: 3, native: 4 };
 
 let publisher = new Publisher(AMQP_MANAGER_URL, {
     debug: false,
     queueName: "logs_queue",
     exchange: "amq.topic"
 })
+
+console.log("LOGGER publisher: ", publisher);
 
 class Logger {
 
@@ -65,6 +67,11 @@ class Logger {
         return this.base('debug', log);
     }
 
+    native(...args) {
+        let log = this.formatLog(args);
+        return this.base('native', log);
+    }
+
     base(level, text) {
         if (!this.request_id || !publisher) {
             console.log("Return because request or publisher is undefined", this.request_id, publisher);
@@ -87,6 +94,7 @@ class Logger {
         }
         
         let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
+        console.log("LOGGER publishing on topic ", topic)
         publisher.publish(data, topic);
         return;
     }
@@ -99,15 +107,17 @@ class Logger {
 
     // Substitute methods with empty function if flow flogs are disabled
     _disableMethods() {
-        const methods = ['error', 'warn', 'info', 'debug'];
+        const methods = ['error', 'warn', 'info', 'debug', 'native'];
         methods.forEach(method => {
             this[method] = () => { };
         });
     }
 
     _disableDebugMethods() {
-        const method = 'debug';
-        this[method] = () => { };
+        const methods = ['debug', 'native'];
+        methods.forEach(method => {
+            this[method] = () => { };
+        });
     }
 
 }

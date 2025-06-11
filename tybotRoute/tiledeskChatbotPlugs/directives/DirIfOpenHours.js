@@ -22,7 +22,6 @@ class DirIfOpenHours {
   }
 
   execute(directive, callback) {
-    this.logger.info("[If Operating Hours] Executing action");
     winston.verbose("Execute IfOpenHours directive");
     let action;
     if (directive.action) {
@@ -48,7 +47,7 @@ class DirIfOpenHours {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[If Operating Hours] Action complteted");
+      this.logger.native("[If Operating Hours] Action complteted");
       callback(stop);
     });
   }
@@ -115,7 +114,7 @@ class DirIfOpenHours {
           }
         } else {
           if (resbody.isopen && resbody.isopen === true) {
-            this.logger.debug("[If Operating Hours] is open: true")
+            this.logger.native("[If Operating Hours] is open: true")
             if (trueIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
               winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
@@ -126,7 +125,7 @@ class DirIfOpenHours {
             callback();
             return;
           } else {
-            this.logger.debug("[If Operating Hours] is open: false")
+            this.logger.native("[If Operating Hours] is open: false")
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);

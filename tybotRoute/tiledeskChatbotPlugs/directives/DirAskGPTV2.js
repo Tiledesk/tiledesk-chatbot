@@ -31,7 +31,6 @@ class DirAskGPTV2 {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Ask Knowledge Base] Executing action");
     winston.debug("DirAskGPTV2 directive: ", directive);
     let action;
     if (directive.action) {
@@ -44,7 +43,7 @@ class DirAskGPTV2 {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Ask Knowledge Base] Action completed");
+      this.logger.native("[Ask Knowledge Base] Executed");
       callback(stop);
     })
   }
@@ -149,7 +148,7 @@ class DirAskGPTV2 {
     const filled_context = filler.fill(action.context, requestVariables)
 
     if (action.history) {
-      this.logger.info("[Ask Knowledge Base] use chat transcript")
+      this.logger.native("[Ask Knowledge Base] use chat transcript")
       let transcript_string = await TiledeskChatbot.getParameterStatic(
         this.context.tdcache,
         this.context.requestId,
@@ -171,7 +170,7 @@ class DirAskGPTV2 {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      this.logger.debug("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
+      this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
       winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }
@@ -181,7 +180,7 @@ class DirAskGPTV2 {
       key = process.env.GPTKEY;
       publicKey = true;
     } else {
-      this.logger.debug("[Ask Knowledge Base] use your own OpenAI key")
+      this.logger.native("[Ask Knowledge Base] use your own OpenAI key")
     }
 
     if (!key) {
@@ -213,12 +212,12 @@ class DirAskGPTV2 {
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
-      this.logger.debug("[Ask Knowledge Base] Searching namespace by name ", filled_namespace);
+      this.logger.native("[Ask Knowledge Base] Searching namespace by name ", filled_namespace);
       ns = await this.getNamespace(filled_namespace, null);
       namespace = ns?.id;
       winston.verbose("DirAskGPTV2 - Retrieved namespace id from name " + namespace);
     } else {
-      this.logger.debug("[Ask Knowledge Base] Searching namespace by id ", namespace);
+      this.logger.native("[Ask Knowledge Base] Searching namespace by id ", namespace);
       ns = await this.getNamespace(null, namespace);
     }
 

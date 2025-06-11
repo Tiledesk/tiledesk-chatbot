@@ -42,6 +42,7 @@ class DirIntent {
     const intentName = action.intentName;
     const projectId = this.supportRequest.id_project;
     const requestId = this.supportRequest.request_id;
+    const draft = this.supportRequest.draft;
     const botId = this.supportRequest.bot_id;
     let intent_command;
     if (intentName) {
@@ -63,7 +64,9 @@ class DirIntent {
         "id_project": projectId,
         "request": {
           "request_id": requestId,
-          "id_project": projectId
+          "id_project": projectId,
+          "draft": draft
+          // "bot_id": botId
         }
       },
       "token": this.token

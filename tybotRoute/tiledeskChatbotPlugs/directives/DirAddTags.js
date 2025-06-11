@@ -30,7 +30,6 @@ class DirAddTags {
   }
 
   execute(directive, callback) {
-    this.logger.info("[Add Tag] Executing action")
     winston.verbose("Execute AddTags action");
     let action;
     if (directive.action) {
@@ -43,7 +42,7 @@ class DirAddTags {
       return;
     }
     this.go(action, (stop) => {
-      this.logger.info("[Add Tag] Action completed");
+      this.logger.native("[Add Tag] Executed");
       callback(stop);
     })
   }
@@ -85,7 +84,7 @@ class DirAddTags {
     if(target === 'request'){
       
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
-      this.logger.debug("[Add Tag] Adding following tags to conversation: ", newTags)
+      this.logger.native("[Add Tag] Adding following tags to conversation: ", newTags)
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
@@ -99,7 +98,7 @@ class DirAddTags {
 
       winston.debug('(DirAddTags) UPDATE request with newTags', newTags)
       let updatedRequest = await this.updateRequestWithTags(newTags)
-      this.logger.info("[Add Tag] Tags added to conversation")
+      this.logger.native("[Add Tag] Tags added to conversation")
       if(!updatedRequest){
         callback();
         return;
@@ -110,7 +109,7 @@ class DirAddTags {
     /** use case: LEAD */
     if(target === 'lead'){
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
-      this.logger.debug("[Add Tag] Adding following tags to lead: ", newTags)
+      this.logger.native("[Add Tag] Adding following tags to lead: ", newTags)
 
       let request = await this.tdClient.getRequestById(this.requestId);
       winston.debug('(DirAddTags) request detail: ', request)
@@ -132,7 +131,7 @@ class DirAddTags {
 
       winston.debug('(DirAddTags) UPDATE lead with newTags ', newTags)
       let updatedLead = await this.updateLeadWithTags(request.lead._id, newTags)
-      this.logger.info("[Add Tag] Tags added to lead")
+      this.logger.native("[Add Tag] Tags added to lead")
       if(!updatedLead){
         callback();
         return;
