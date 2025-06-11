@@ -1,6 +1,10 @@
 # Tiledesk native chatbot
 
-# 2.0.17
+# 2.0.18
+- added: hybrid search support in AskGPTV2
+- added: chunks_only option in AskGPTV2
+- removed: hard-coded chat_url
+
 # 2.0.16
 - added: BASE_URL env var
 
