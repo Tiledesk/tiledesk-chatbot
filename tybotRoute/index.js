@@ -13,6 +13,8 @@ const { TiledeskChatbotConst } = require('./engine/TiledeskChatbotConst.js');
 const { IntentsMachineFactory } = require('./engine/IntentsMachineFactory.js');
 const { v4: uuidv4 } = require('uuid');
 let axios = require('axios');
+const { customAlphabet } = require('nanoid');
+const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 10);
 // let parser = require('accept-language-parser');
 
 router.use(bodyParser.json({limit: '50mb'}));
@@ -434,7 +436,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   } else {
     
     winston.verbose("Sync webhook. Subscribe and await for reply...")
-    const topic = `/webhooks/${request_id}`;
+    let uniqueid = nanoid();
+    const topic = `/webhooks/${request_id}/${uniqueid}`;
     
     try {
 
