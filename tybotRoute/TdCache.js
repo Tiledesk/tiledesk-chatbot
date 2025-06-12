@@ -149,9 +149,23 @@ class TdCache {
       })
     }
 
-    async unsubscribe(topic, listener) {
-      await this.subscriberClient.unsubscribe(topic, listener);
+    async unsubscribe(topic) {
+      if (!this.subscriberClient) {
+        winston.warn("Redis subscriberClient not initialized, cannot unsubscribe.");
+        return;
+      }
+    
+      try {
+        const result = await this.subscriberClient.unsubscribe(topic);
+        winston.debug(`Unsubscribed from topic "${topic}". Current subscription count: ${result}`);
+      } catch (err) {
+        winston.error(`Error unsubscribing from topic "${topic}":`, err);
+      }
     }
+    
+    // async unsubscribe(topic, listener) {
+    //   await this.subscriberClient.unsubscribe(topic, listener);
+    // }
 
     // subscribe(key, callback) {
     //   this.redis_sub.subscribe(key, (message) => {

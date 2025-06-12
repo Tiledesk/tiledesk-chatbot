@@ -437,13 +437,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     
     winston.verbose("Sync webhook. Subscribe and await for reply...")
     let uniqueid = nanoid();
-    const topic = `/webhooks/${request_id}/${uniqueid}`;
+    const topic = `/webhooks/${request_id}`;
     
     try {
 
       const listener = async (message, topic) => {
         winston.debug("Web response is: " + JSON.stringify(message) + " for topic " + topic);
-        await tdcache.unsubscribe(topic, listener);
+        await tdcache.unsubscribe(topic);
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
