@@ -393,6 +393,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   const token = body.token;
   delete body.async;
   delete body.token;
+
+  let draft = req.body.draft || false;
   
   // invoke block
   // unique ID for each execution
@@ -402,7 +404,6 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
   } else {
     const execution_id = uuidv4().replace(/-/g, '');
     request_id = "automation-request-" + project_id + "-" + execution_id;
-    
   }
   const command = "/#" + block_id;
   let message = {
@@ -411,7 +412,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
       text: command,
       id_project: project_id,
       request: {
-        request_id: request_id
+        request_id: request_id,
+        draft: draft
       },
       attributes: {
         payload: body
