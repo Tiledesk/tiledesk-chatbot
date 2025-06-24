@@ -333,27 +333,6 @@ class TiledeskChatbotUtil {
                                         }
                                     });
                                 }
-
-                                // "buttons": [
-                                //                 {
-                                //                     "type": "action",
-                                //                     "value": "Button1", // obbligatorio sempre
-                                //                     "action": "#bb347206-d639-4926-94c9-e94930623dce", // mandatory
-                                //                     "show_echo": true, // lo inserisco sempre
-                                //                     "alias": "button1 alias"
-                                //                 },
-                                //                 {
-                                //                     "type": "text",
-                                //                     "value": "Button2 text", // obbligatorio sempre
-                                //                     "show_echo": true // lo inserisco sempre
-                                //                 },
-                                //                 {
-                                //                     "type": "url",
-                                //                     "value": "Button3 link", // obbligatorio sempre
-                                //                     "link": "http://", // obbligatorio
-                                //                     "show_echo": true // lo inserisco sempre
-                                //                 }
-                                //             ]
                             }
                             catch(error) {
                                 winston.warn("Invalid json_buttons:", error)
@@ -604,8 +583,10 @@ class TiledeskChatbotUtil {
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
                 winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
+                console.log("currentLeadName: ", currentLeadName)
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
+                    console.log("inside if")
                     winston.debug("(TiledeskChatbotUtil) worth saving email");
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
