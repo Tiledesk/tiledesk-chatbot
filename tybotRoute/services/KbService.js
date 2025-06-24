@@ -2,7 +2,7 @@ const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
-class KbService {
+class KBService {
 
   constructor() { }
 
@@ -101,5 +101,5 @@ class KbService {
   }
 }
 
-const kbService = new KbService();
+const kbService = new KBService();
 module.exports = kbService;

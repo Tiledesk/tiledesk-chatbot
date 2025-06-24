@@ -11,8 +11,9 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KBService");
 const quotasService = require("../../services/QuotasService");
+const kbService = require("../../services/KBService");
+
 
 class DirAskGPTV2 {
 
