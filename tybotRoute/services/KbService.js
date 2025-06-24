@@ -59,7 +59,7 @@ class KbService {
       httpUtils.request(
         http_request, async (err, resbody) => {
           if (err) {
-            winston.error("Error getting kb settings:", err);
+            winston.error("Error getting kb settings:", err?.response?.data);
             resolve(null);
           } else {
             if (!resbody || !resbody.gptkey) {
