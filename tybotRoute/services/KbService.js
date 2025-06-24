@@ -45,7 +45,7 @@ class KbService {
 
   async getKeyFromKbSettings(id_project, token) {
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const http_request = {
         url: API_ENDPOINT + "/" + id_project + "/kbsettings",
         headers: {
@@ -60,7 +60,7 @@ class KbService {
         http_request, async (err, resbody) => {
           if (err) {
             winston.error("Error getting kb settings:", err);
-            reject(err);
+            resolve(null);
           } else {
             if (!resbody || !resbody.gptkey) {
               resolve(null);
