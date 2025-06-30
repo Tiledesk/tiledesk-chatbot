@@ -774,8 +774,10 @@ class TiledeskChatbotUtil {
                 }
                 let currentLeadName = await chatbot.getParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY);
                 winston.debug("(TiledeskChatbotUtil) You lead email from attributes: " + currentLeadEmail);
+                console.log("currentLeadName: ", currentLeadName)
                 if (message.request.lead.fullname && !currentLeadName) {
                     // worth saving
+                    console.log("inside if")
                     winston.debug("(TiledeskChatbotUtil) worth saving email");
                     try {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, message.request.lead.fullname);
