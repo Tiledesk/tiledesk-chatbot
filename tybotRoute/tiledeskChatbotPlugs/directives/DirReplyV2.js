@@ -75,6 +75,7 @@ class DirReplyV2 {
       // }
 
       TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+      TiledeskChatbotUtil.replaceJSONGalleries(message, requestAttributes);
 
       try {
         // lock/unlock + no-match
