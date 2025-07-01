@@ -12,6 +12,8 @@ let publisher = new Publisher(AMQP_MANAGER_URL, {
     exchange: "amq.topic"
 })
 
+console.log("LOGGER publisher: ", publisher);
+
 class Logger {
 
     constructor(config) {
@@ -92,6 +94,7 @@ class Logger {
         }
         
         let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
+        console.log("LOGGER publishing on topic ", topic)
         publisher.publish(data, topic);
         return;
     }
