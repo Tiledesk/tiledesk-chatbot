@@ -430,21 +430,25 @@ class TiledeskChatbotUtil {
     }
 
     static replaceJSONGalleries(message, flow_attributes) {
-        let all_buttons = [];
+        console.log("replaceJSONGalleries...");
         if (message.attributes && message.attributes.commands) {
+            console.log("message.attributes && message.attributes.commands...");
             let commands = message.attributes.commands;
             if (commands.length > 0) {
+                console.log("commands.length > 0");
                 for (let i = 0; i < commands.length; i++) {
                     let command = commands[i];
+                    console.log("command:", JSON.stringify(command));
                     if (command.type === 'message' && command.message) {
+                        console.log("command.type === 'message' && command.message");
                         if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.json_gallery){
-                            // console.log("command with galley ok:")
+                            console.log("command with json_galley")
                             let final_gallery = [];
                             try {
                                 // fill previews
                                 const filler = new Filler();
                                 let json_gallery_string = command.message.attributes.attachment.json_gallery;
-                                console.log("string is:", json_gallery_string)
+                                console.log("gallerystring is:", json_gallery_string)
                                 json_gallery_string = filler.fill(json_gallery_string, flow_attributes);
                                 let json_gallery = JSON.parse(json_gallery_string);
                                 if (Array.isArray(json_gallery)) {
