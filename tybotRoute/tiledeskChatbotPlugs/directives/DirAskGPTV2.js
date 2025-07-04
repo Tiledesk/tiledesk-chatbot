@@ -207,6 +207,17 @@ class DirAskGPTV2 {
       }
     }
 
+    if (!namespace) {
+      this.logger.error("[Ask Knowledge Base] Namespace is undefined")
+      winston.verbose("DirAskGPTV2 - Error: namespace is undefined")
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+    }
+
     let ns;
 
     if (action.namespaceAsName) {
@@ -237,18 +248,7 @@ class DirAskGPTV2 {
     if (ns.engine) {
       engine = ns.engine;
     } else {
-      engine = await this.setDefaultEngine()
-    }
-    
-    if (!namespace) {
-      this.logger.error("[Ask Knowledge Base] Namespace is undefined")
-      winston.verbose("DirAskGPTV2 - Error: namespace is undefined")
-      if (falseIntent) {
-        await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-        callback(true);
-        return;
-      }
+      engine = await this.setDefaultEngine(ns.hybrid);
     }
 
     let json = {
@@ -273,7 +273,8 @@ class DirAskGPTV2 {
       json.chunks_only = chunks_only;
     }
 
-    if (engine.type === 'serverless') {
+
+    if (ns.hybrid === true) {
       json.search_type = 'hybrid';
       json.alpha = alpha;
     }
@@ -590,14 +591,15 @@ class DirAskGPTV2 {
     })
   }
 
-  async setDefaultEngine() {
+  async setDefaultEngine(hybrid = false) {
+    let isHybrid = hybrid === true;
     return new Promise((resolve) => {
       let engine = {
         name: "pinecone",
-        type: process.env.PINECONE_TYPE,
+        type: isHybrid ? "serverless" : "pod",
         apikey: "",
         vector_size: 1536,
-        index_name: process.env.PINECONE_INDEX
+        index_name: isHybrid ? "hybrid_index" : "standard_index"
       }
       resolve(engine);
     })
