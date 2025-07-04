@@ -1146,6 +1146,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           id_project: "62c3f10152dc7400352b0000",
           id: "666708c13d20c7002d68fa90",
           name: "Second Namespace",
+          hybrid: true,
           preview_settings: {
             model: "gpt-3.5-turbo",
             max_tokens: 512,
@@ -1300,6 +1301,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           id_project: "62c3f10152dc7400352b0000",
           id: "12345678",
           name: "Second Namespace",
+          hybrid: true,
           preview_settings: {
             model: "gpt-3.5-turbo",
             max_tokens: 512,
