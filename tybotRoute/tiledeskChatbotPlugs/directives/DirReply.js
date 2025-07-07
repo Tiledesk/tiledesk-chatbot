@@ -58,6 +58,7 @@ class DirReply {
       );
 
       TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+      TiledeskChatbotUtil.replaceJSONGalleries(message, requestAttributes);
 
       const filler = new Filler();
       // fill text attribute
