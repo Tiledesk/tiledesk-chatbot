@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.22
+- hotfix: wrong pinecone index name
+
 # 2.0.21
 - added: support for standard/hybrid search and indexing
 

@@ -602,7 +602,7 @@ class DirAskGPTV2 {
         type: isHybrid ? "serverless" : "pod",
         apikey: "",
         vector_size: 1536,
-        index_name: isHybrid ? "hybrid_index" : "standard_index"
+        index_name: isHybrid ? process.env.PINECONE_INDEX_HYBRID : process.env.PINECONE_INDEX
       }
       resolve(engine);
     })
