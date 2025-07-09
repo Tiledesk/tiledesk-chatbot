@@ -165,9 +165,6 @@ class DirAskGPTV2 {
       }
     }
 
-    const kb_endpoint = process.env.KB_ENDPOINT_QA
-    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
-
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
       this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
@@ -294,6 +291,12 @@ class DirAskGPTV2 {
     }
 
     winston.debug("DirAskGPTV2 json:", json);
+
+    let kb_endpoint = process.env.KB_ENDPOINT_QA;
+    if (ns.hybrid === true) {
+      kb_endpoint = process.env.KB_ENDPOINT_QA_GPU;
+    }
+    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
     const HTTPREQUEST = {
       url: kb_endpoint + "/qa",
