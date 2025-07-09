@@ -11,6 +11,10 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
+const quotasService = require("../../services/QuotasService");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -169,7 +173,7 @@ class DirAskGPTV2 {
     if (!key) {
       this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
       winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
-      key = await this.getKeyFromKbSettings();
+      key = await llmService.getKeyFromKbSettings(this.projectId, this.token);
     }
 
     if (!key) {
@@ -193,7 +197,7 @@ class DirAskGPTV2 {
     }
 
     if (publicKey === true && !chunks_only) {
-      let keep_going = await this.checkQuoteAvailability();
+      let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token);
       if (keep_going === false) {
         this.logger.warn("[Ask Knowledge Base] Tokens quota exceeded. Skip the action")
         winston.verbose("DirAskGPTV2 - Quota exceeded for tokens. Skip the action")
@@ -344,7 +348,9 @@ class DirAskGPTV2 {
                 tokens: resbody.prompt_token_size,
                 model: json.model
               }
-              this.updateQuote(tokens_usage);
+              quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
+                winston.error("Error updating quota: ", err);
+              })
             }
   
             if (trueIntent) {
@@ -357,6 +363,10 @@ class DirAskGPTV2 {
           }
         } else {
           await this.#assignAttributes(action, answer, source);
+          llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+            winston.error("DirAskGPTV2 - Error adding unanswered question: ", err);
+            this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
+          })
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -425,93 +435,6 @@ class DirAskGPTV2 {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignChunksTo, chunks);
       }
     }
-  }
-
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAskGPTV2 KB HttpRequest", KB_HTTPREQUEST);
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAskGPTV2 Get kb settings error ", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAskGPTV2 check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAskGPTV2 Check quote availability err: ", err);
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAskGPTV2 update quote HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAskGPTV2 Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            resolve(true);
-          }
-        }
-      )
-    })
   }
 
   /**
