@@ -8,6 +8,8 @@ require('dotenv').config();
 let axios = require('axios');
 const winston = require('./winston');
 
+const { CHANNEL_NAME } = require('./constants.js')
+
 class TiledeskChatbotUtil {
 
     static parseIntent(explicit_intent_name) {
@@ -618,7 +620,10 @@ class TiledeskChatbotUtil {
                 if (message.request.lead.phone) {
                     await chatbot.addParameter(TiledeskChatbotConst.REQ_USER_PHONE_KEY, message.request.lead.phone);
                 }
-                if (message.request.lead.lead_id && message.request.lead.lead_id.startsWith("wab-")) {
+                if (message.request.lead.lead_id && (message.request.lead.lead_id.startsWith("wab-") || 
+                                                    message.request.lead.lead_id.startsWith("vxml-") ||
+                                                    message.request.lead.lead_id.startsWith(CHANNEL_NAME.VOICE_TWILIO) || 
+                                                    message.request.lead.lead_id.startsWith(CHANNEL_NAME.SMS))) {
                     const splits = message.request.lead.lead_id.split("-");
                     if (splits && splits.length > 1) {
                         await chatbot.addParameter(TiledeskChatbotConst.REQ_CURRENT_PHONE_NUMBER_KEY,splits[1]);
