@@ -94,7 +94,6 @@ class Logger {
         }
         
         let topic = LOGS_BASE_ROUTING_KEY + `.${this.request_id}`;
-        console.log("LOGGER publishing on topic ", topic)
         publisher.publish(data, topic);
         return;
     }
