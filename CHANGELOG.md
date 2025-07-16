@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 2.0.23
+- update: setDefaultEngine method on DirAskGPTV2
+- added: json gallery
+
 # 2.0.22
 - hotfix: wrong pinecone index name
 
