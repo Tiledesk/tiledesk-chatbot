@@ -599,7 +599,7 @@ class DirAskGPTV2 {
     return new Promise((resolve) => {
       let engine = {
         name: "pinecone",
-        type: isHybrid ? "serverless" : "pod",
+        type: isHybrid ? "serverless" : process.env.PINECONE_TYPE,
         apikey: "",
         vector_size: 1536,
         index_name: isHybrid ? process.env.PINECONE_INDEX_HYBRID : process.env.PINECONE_INDEX
