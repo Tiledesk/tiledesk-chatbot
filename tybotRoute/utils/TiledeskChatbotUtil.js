@@ -305,9 +305,7 @@ class TiledeskChatbotUtil {
                     let command = commands[i];
                     if (command.type === 'message' && command.message) {
                         if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.json_buttons){
-                            // console.log("command with buttons ok:")
                             let json_buttons_string = command.message.attributes.attachment.json_buttons;
-                            console.log("json_buttons_string:", json_buttons_string)
                             let final_buttons = this.renderJSONButtons(json_buttons_string, flow_attributes);
                             // let final_buttons = [];
                             // try {
@@ -430,36 +428,27 @@ class TiledeskChatbotUtil {
     }
 
     static replaceJSONGalleries(message, flow_attributes) {
-        console.log("replaceJSONGalleries...");
         if (message.attributes && message.attributes.commands) {
-            console.log("message.attributes && message.attributes.commands...");
             let commands = message.attributes.commands;
             if (commands.length > 0) {
-                console.log("commands.length > 0");
                 for (let i = 0; i < commands.length; i++) {
                     let command = commands[i];
-                    console.log("command:", JSON.stringify(command));
                     if (command.type === 'message' && command.message) {
-                        console.log("command.type === 'message' && command.message");
                         if (command.message.attributes && command.message.attributes.attachment && command.message.attributes.attachment.json_gallery){
-                            console.log("command with json_galley")
                             let final_gallery = [];
                             try {
                                 // fill previews
                                 const filler = new Filler();
                                 let json_gallery_string = command.message.attributes.attachment.json_gallery;
-                                console.log("gallerystring is:", json_gallery_string)
                                 json_gallery_string = filler.fill(json_gallery_string, flow_attributes);
                                 let json_gallery = JSON.parse(json_gallery_string);
                                 if (Array.isArray(json_gallery)) {
-                                    console.log("is gallery")
                                     json_gallery.forEach(el => {
                                         if (el.buttons) {
                                             el.buttons = TiledeskChatbotUtil.renderJSONButtons(JSON.stringify(el.buttons));
                                         }
                                         final_gallery.push(el);
                                     });
-                                    console.log("final: ", final_gallery)
                                 }
                                 else {
                                     winston.verbose("Invalid json_gallery.");
@@ -530,9 +519,7 @@ class TiledeskChatbotUtil {
                             catch(error) {
                                 winston.warn("Error on JSON gallery parsing:", error);
                             }
-                            console.log("final gallery...", final_gallery)
                             if (final_gallery && final_gallery.length > 0) {
-                                console.log("updating with final gallery...", final_gallery)
                                 command.message.attributes.attachment.gallery = final_gallery;
                                 delete command.message.attributes.attachment.json_gallery;
                             }
