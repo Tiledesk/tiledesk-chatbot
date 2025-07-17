@@ -1,5 +1,22 @@
 # Tiledesk native chatbot
 
+# 2.0.23
+- update: setDefaultEngine method on DirAskGPTV2
+- added: json gallery
+
+# 2.0.22
+- hotfix: wrong pinecone index name
+
+# 2.0.21
+- added: support for standard/hybrid search and indexing
+
+# 2.0.20
+- minor fixes to webhook endpoint
+
+# 2.0.19
+- updated: multi-worker to 0.3.2
+- updated: DirIntent to propagate draft field
+
 # 2.0.18
 - added: hybrid search support in AskGPTV2
 - added: chunks_only option in AskGPTV2
