@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.24
+- updated: AskGPTV2 action to add unanswered questions
+
 # 2.0.23
 - update: setDefaultEngine method on DirAskGPTV2
 - added: json gallery
