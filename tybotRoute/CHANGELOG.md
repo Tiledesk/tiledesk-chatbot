@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.26-rc1
+- added: check and skip private message from internal-notes
+
 # 2.0.9-rc1
 - removed: speech-to-text management
 
