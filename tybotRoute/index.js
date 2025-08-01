@@ -67,7 +67,11 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
-
+  //skip internal note messages
+  if(message && message.attributes && message.attributes.subtype === 'private') {
+    winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
+    return res.status(200).send({"success":true});
+  }
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
