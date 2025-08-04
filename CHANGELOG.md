@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.26
+- added: check and skip private message from internal-notes
+
 # 2.0.25
 - updated: AskGPTV2 action to add unanswered questions
 

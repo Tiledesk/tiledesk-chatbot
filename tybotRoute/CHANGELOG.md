@@ -5,6 +5,8 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.26
+
 # 2.0.9
 
 # 2.0.9-rc1
