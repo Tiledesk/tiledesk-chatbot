@@ -54,13 +54,13 @@ const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
-const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
+const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirFlowLog } = require('./directives/DirFlowLog');
 
 const winston = require('../utils/winston');
-const { DirFlowLog } = require('./directives/DirFlowLog');
-const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 class DirectivesChatbotPlug {
 
@@ -219,14 +219,13 @@ class DirectivesChatbotPlug {
       directive_name = directive.name.toLowerCase();
     }
     if (directive && directive.action) {
-        const action_id = directive.action["_tdActionId"];
-        const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
-        if ( locked_action_id && (locked_action_id !== action_id) ) {
-          let next_dir = await this.nextDirective(this.directives);
-          this.process(next_dir);
-          return;
-        }
-      
+      const action_id = directive.action["_tdActionId"];
+      const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+      if ( locked_action_id && (locked_action_id !== action_id) ) {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+        return;
+      }      
     }
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is (null?): ", directive);
@@ -704,6 +703,19 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.WEBHOOK) {
+      // console.log(".....DirIntent")
+      new DirIntent(context).execute(directive, async (stop) => {
+        if (stop) {
+          if (context.log) { console.log("Stopping Actions on:", JSON.stringify(directive));}
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else if (directive_name === Directives.WEB_RESPONSE) {
       new DirWebResponse(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
@@ -715,6 +727,12 @@ class DirectivesChatbotPlug {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       })
+    }
+    else if (directive_name === Directives.ADD_KB_CONTENT) {
+      new DirAddKbContent(context).execute(directive, async () => {
+        let next_dir = await this.nextDirective(this.directives);
+        this.process(next_dir);
+      });
     }
     else {
       let next_dir = await this.nextDirective(this.directives);

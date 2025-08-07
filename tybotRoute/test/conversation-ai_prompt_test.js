@@ -432,7 +432,7 @@ describe('Conversation for AiPrompt test', async () => {
           id_project: "62c3f10152dc740035000000",
           name: "ollama",
           value: {
-            url: "http://localhost:10002/ollama/",
+            url: "http://127.0.0.1:10002/ollama/",
             token: "customtoken",
             models: [ 'mymodel1', 'mymodel2' ]
           }
@@ -447,7 +447,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.llm === "ollama");
         assert(req.body.llm_key === "");
         assert(req.body.model.name === "mymodel");
-        assert(req.body.model.url === "http://localhost:10002/ollama/")
+        assert(req.body.model.url === "http://127.0.0.1:10002/ollama/")
   
         let reply = {}
         let http_code = 200;

@@ -7,6 +7,9 @@ available on:
 
 # 2.0.26
 
+# 2.0.26-rc1
+- added: check and skip private message from internal-notes
+
 # 2.0.9
 
 # 2.0.9-rc1
@@ -22,6 +25,8 @@ available on:
 
 # v0.5.0
 - added: AI_ENDPOINT env var
+
+# v0.5.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # v0.4.2
@@ -36,6 +41,19 @@ available on:
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
+# v0.3.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# v0.3.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # v0.3.4
 -bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -44,6 +62,18 @@ available on:
 
 # v0.3.2
 - bug-fixed: minor improvement
+
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
 
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
