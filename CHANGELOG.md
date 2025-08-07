@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.27
+- bug-fixed: not all chatbot variable are updated with leadUpdate action
+
 # 2.0.26
 - added: check and skip private message from internal-notes
 
