@@ -519,11 +519,14 @@ class DirAskGPTV2 {
     let isHybrid = hybrid === true;
     return new Promise((resolve) => {
       let engine = {
-        name: "pinecone",
-        type: isHybrid ? "serverless" : process.env.PINECONE_TYPE,
+        name: process.env.VECTOR_STORE_NAME || "pinecone",
+        type: isHybrid ? process.env.INDEX_TYPE_HYBRID || "serverless" : process.env.INDEX_TYPE || process.env.PINECONE_TYPE || 'serverless',
         apikey: "",
-        vector_size: 1536,
-        index_name: isHybrid ? process.env.PINECONE_INDEX_HYBRID : process.env.PINECONE_INDEX
+        vector_size: process.env.VECTOR_SIZE || 1536,
+        index_name: isHybrid ? process.env.INDEX_NAME_HYBRID || process.env.PINECONE_INDEX_HYBRID || "llm-sample-index-hybrid" : process.env.INDEX_NAME || process.env.PINECONE_INDEX || "llm-sample-index",
+        ...(process.env.VECTOR_STORE_HOST && { host: process.env.VECTOR_STORE_HOST }),
+        ...(process.env.VECTOR_STORE_PORT && { port: process.env.VECTOR_STORE_PORT }),
+        ...(process.env.VECTOR_STORE_DEPLOYMENT && { deployment: process.env.VECTOR_STORE_DEPLOYMENT })
       }
       resolve(engine);
     })
