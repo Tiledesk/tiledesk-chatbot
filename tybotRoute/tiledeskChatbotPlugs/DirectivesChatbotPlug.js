@@ -592,6 +592,18 @@ class DirectivesChatbotPlug {
         }
       });
     }
+    else if (directive_name === Directives.AI_CONDITION) {
+      new DirAiCondition(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
     else if (directive_name === Directives.WHATSAPP_ATTRIBUTE) {
       new DirWhatsappByAttribute(context).execute(directive, async (stop) => {
         let next_dir = await this.nextDirective(this.directives);
