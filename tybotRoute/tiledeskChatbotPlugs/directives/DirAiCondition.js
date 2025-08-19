@@ -64,13 +64,13 @@ class DirAiCondition {
       {
         "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
         "prompt": "user asking for medical information",
-        "intentId": "9b1c29c1-6718-47db-a6db-561f771a142e"
+        "intentId": "#9b1c29c1671847dba6db561f771a142e"
       }
     ]
     let falllbackIntent = action.falllbackIntent; // non condition met block
     let falseIntent = action.falllbackIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      this.logger.error(`[AI Prompt] missing attribute '${missing_param}'`);
+      this.logger.error(`[AI Condition] missing attribute '${missing_param}'`);
       await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -81,14 +81,13 @@ class DirAiCondition {
       return Promise.reject();
     })
     
-
     let conditions = "";
     intents.forEach( function(intent) {
       conditions += `- label: ${intent.label} when: ${intent.prompt}`
     });
 
-    let raw_condition_prompt = `Reply with the code satisfying the corresponding condition or with “fallback” if no condition is met.
-    If more than one condition is true, answer with the first one that satisfies it, following the order.
+    let raw_condition_prompt = `Reply with the label satisfying the corresponding condition or with “fallback” if no condition is met.
+    If more than one condition is true, answer with the first label that satisfies it, following the order.
     ${conditions}
     User question: {{last_user_text}}`
 
@@ -105,7 +104,7 @@ class DirAiCondition {
     const filled_context = filler.fill(action.context, requestVariables);
 
     // evaluate
-    
+
     let AI_endpoint = process.env.AI_ENDPOINT;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
@@ -118,7 +117,7 @@ class DirAiCondition {
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[AI Prompt] Error getting ollama integration.")
+        this.logger.error("[AI Condition] Error getting ollama integration.")
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (falseIntent) {
@@ -134,7 +133,7 @@ class DirAiCondition {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key) {
-        this.logger.error("[AI Prompt] llm key not found in integrations");
+        this.logger.error("[AI Condition] llm key not found in integrations");
         winston.error("Error: DirAiPrompt llm key not found in integrations");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
         if (falseIntent) {
@@ -197,7 +196,7 @@ class DirAiCondition {
           } else {
             error = JSON.stringify(err.response.data);
           }
-          this.logger.error("[AI Prompt] error executing action: ", error);
+          this.logger.error("[AI Condition] error executing action: ", error);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -210,12 +209,36 @@ class DirAiCondition {
 
           winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
-          this.logger.native("[AI Prompt] answer: ", answer);
+          this.logger.native("[AI Condition] answer: ", answer);
         
           await this.#assignAttributes(action, answer);
 
-          if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (answer === "fallback") {
+            if (falllbackIntent) {
+              this.#executeIntent(falllbackIntent, () => {
+                if (callback) {
+                    callback(true);
+                    return;
+                  }
+              });
+            }
+          }
+          else {
+            intents.forEach( i => {
+              if (i.label === answer) {
+                this.#executeIntent(i.intentId, () => {
+                if (callback) {
+                    callback(true);
+                    return;
+                  }
+              });
+              }
+            });
+          }
+          this.logger.error("[AI Condition] error executing action: condition label not found in intents list");
+          if (falseIntent) {
+            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -224,7 +247,6 @@ class DirAiCondition {
         }
       }
     )
-
   }
 
   async checkMandatoryParameters(action) {
@@ -298,7 +320,7 @@ class DirAiCondition {
     }
     if (result === true) {
       if (trueIntentDirective) {
-        this.logger.native("[AI Prompt] executing true condition");
+        this.logger.native("[AI Condition] executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -306,7 +328,7 @@ class DirAiCondition {
         })
       }
       else {
-        this.logger.native("[AI Prompt] no block connected to true condition");
+        this.logger.native("[AI Condition] no block connected to true condition");
         winston.debug("DirAiPrompt No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -315,7 +337,7 @@ class DirAiCondition {
     }
     else {
       if (falseIntentDirective) {
-        this.logger.native("[AI Prompt] executing false condition");
+        this.logger.native("[AI Condition] executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -323,7 +345,7 @@ class DirAiCondition {
         });
       }
       else {
-        this.logger.native("[AI Prompt] no block connected to false condition");
+        this.logger.native("[AI Condition] no block connected to false condition");
         winston.debug("DirAiPrompt No falseIntentDirective specified");
         if (callback) {
           callback();
@@ -339,6 +361,28 @@ class DirAiCondition {
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
+      }
+    }
+  }
+
+  async #executeIntent(destinationIntentId, callback) {
+    let intentDirective = null;
+    if (destinationIntentId) {
+      intentDirective = DirIntent.intentDirectiveFor(destinationIntentId, null);
+    }
+    if (intentDirective) {
+      this.logger.native("[AI Condition] executing destinationIntentId");
+      this.intentDir.execute(intentDirective, () => {
+        if (callback) {
+          callback();
+        }
+      })
+    }
+    else {
+      this.logger.native("[AI Condition] no block connected to intentId:", destinationIntentId);
+      winston.debug("[AI Condition] no block connected to intentId:" + destinationIntentId);
+      if (callback) {
+        callback();
       }
     }
   }
