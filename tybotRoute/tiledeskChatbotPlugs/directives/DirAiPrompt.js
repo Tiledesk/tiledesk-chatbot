@@ -12,6 +12,7 @@ const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
+const assert = require("assert");
 
 
 class DirAiPrompt {
