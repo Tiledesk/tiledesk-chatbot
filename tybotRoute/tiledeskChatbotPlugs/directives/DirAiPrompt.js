@@ -90,7 +90,8 @@ class DirAiPrompt {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables);
-
+    const filled_model = filler.fill(action.model, requestVariables);
+    
     if (action.history) {
       this.logger.native("[AI Prompt] using chat transcript");
       let transcript_string = await TiledeskChatbot.getParameterStatic(
@@ -152,7 +153,7 @@ class DirAiPrompt {
     let json = {
       question: filled_question,
       llm: action.llm,
-      model: action.model,
+      model: filled_model,
       llm_key: key,
       temperature: action.temperature,
       max_tokens: action.max_tokens
