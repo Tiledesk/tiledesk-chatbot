@@ -5,6 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.28
 
 # 2.0.28-rc1
 - bug-fixed: action-model not filled in dirAiPrompt

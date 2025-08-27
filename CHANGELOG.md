@@ -1,5 +1,7 @@
 # Tiledesk native chatbot
 
+# 2.0.28
+
 # 2.0.28-rc1
 - bug-fixed: action-model not filled in dirAiPrompt
 
