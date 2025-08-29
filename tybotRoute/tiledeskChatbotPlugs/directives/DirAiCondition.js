@@ -60,13 +60,13 @@ class DirAiCondition {
     }
 
     let intents = action.intents;
-    intents = [
-      {
-        "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
-        "prompt": "user asking for medical information",
-        "intentId": "#9b1c29c1671847dba6db561f771a142e"
-      }
-    ]
+    // intents = [
+    //   {
+    //     "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
+    //     "prompt": "user asking for medical information",
+    //     "intentId": "#9b1c29c1671847dba6db561f771a142e"
+    //   }
+    // ]
     let falllbackIntent = action.falllbackIntent; // non condition met block
     let falseIntent = action.falllbackIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
@@ -81,16 +81,6 @@ class DirAiCondition {
       return Promise.reject();
     })
     
-    let conditions = "";
-    intents.forEach( function(intent) {
-      conditions += `- label: ${intent.label} when: ${intent.prompt}`
-    });
-
-    let raw_condition_prompt = `Reply with the label satisfying the corresponding condition or with “fallback” if no condition is met.
-    If more than one condition is true, answer with the first label that satisfies it, following the order.
-    ${conditions}
-    User question: {{last_user_text}}`
-
     // fill attributes
     let requestVariables = null;
     requestVariables =
@@ -98,9 +88,22 @@ class DirAiCondition {
       this.tdcache, this.requestId
     )
     const filler = new Filler();
-    const condition_prompt = filler.fill(raw_condition_prompt, requestVariables);
+
+    let conditions = "";
+    intents.forEach( function(intent) {
+      let filled_prompt = filler.fill(intent.prompt, requestVariables);
+      conditions += `- label: ${intent.label} when: ${filled_prompt}\n`
+    });
+
+    let instructions = filler.fill(action.instructions, requestVariables);
+    let condition_prompt = TiledeskChatbotUtil.AiConditionPromptBuilder(prompt_header, intents, instructions)
+
+    // let raw_condition_prompt = `Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.
+    // If more than one condition is true, answer with the first label corresponding to the true condition, following the order from top to bottom.
+    // ${conditions}
+    // ${instructions}`
     
-    const filled_question = filler.fill(action.question, requestVariables);
+    // const filled_question = condition_prompt; //filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables);
 
     // evaluate
@@ -147,7 +150,7 @@ class DirAiCondition {
     }
 
     let json = {
-      question: filled_question,
+      question: condition_prompt,
       llm: action.llm,
       model: action.model,
       llm_key: key,
@@ -158,9 +161,9 @@ class DirAiCondition {
     if (action.context) {
       json.system_context = filled_context;
     }
-    if (transcript) {
-      json.chat_history_dict = await this.transcriptToLLM(transcript);
-    }
+    // if (transcript) {
+    //   json.chat_history_dict = await this.transcriptToLLM(transcript);
+    // }
 
     if (action.llm === 'ollama') {
       json.llm_key = "";
@@ -266,48 +269,48 @@ class DirAiCondition {
    * merging consecutive messages with the same role in a single question or answer.
    * If the first message was sent from assistant, this will be deleted.
    */
-  async transcriptToLLM(transcript) {
+  // async transcriptToLLM(transcript) {
     
-    let objectTranscript = {};
+  //   let objectTranscript = {};
 
-    if (transcript.length === 0) {
-      return objectTranscript;
-    }
+  //   if (transcript.length === 0) {
+  //     return objectTranscript;
+  //   }
 
-    let mergedTranscript = [];
-    let current = transcript[0];
+  //   let mergedTranscript = [];
+  //   let current = transcript[0];
 
-    for (let i = 1; i < transcript.length; i++) {
-      if (transcript[i].role === current.role) {
-        current.content += '\n' + transcript[i].content;
-      } else {
-        mergedTranscript.push(current);
-        current = transcript[i]
-      }
-    }
-    mergedTranscript.push(current);
+  //   for (let i = 1; i < transcript.length; i++) {
+  //     if (transcript[i].role === current.role) {
+  //       current.content += '\n' + transcript[i].content;
+  //     } else {
+  //       mergedTranscript.push(current);
+  //       current = transcript[i]
+  //     }
+  //   }
+  //   mergedTranscript.push(current);
 
-    if (mergedTranscript[0].role === 'assistant') {
-      mergedTranscript.splice(0, 1)
-    }
+  //   if (mergedTranscript[0].role === 'assistant') {
+  //     mergedTranscript.splice(0, 1)
+  //   }
 
-    let counter = 0;
-    for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
-      // Check if [i] is role user and [i+1] is role assistant??
-      assert(mergedTranscript[i].role === 'user');
-      assert(mergedTranscript[i+1].role === 'assistant');
+  //   let counter = 0;
+  //   for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
+  //     // Check if [i] is role user and [i+1] is role assistant??
+  //     assert(mergedTranscript[i].role === 'user');
+  //     assert(mergedTranscript[i+1].role === 'assistant');
 
-      if (!mergedTranscript[i].content.startsWith('/')) {
-        objectTranscript[counter] = {
-          question: mergedTranscript[i].content,
-          answer: mergedTranscript[i+1].content
-        }
-        counter++;
-      }
-    }
+  //     if (!mergedTranscript[i].content.startsWith('/')) {
+  //       objectTranscript[counter] = {
+  //         question: mergedTranscript[i].content,
+  //         answer: mergedTranscript[i+1].content
+  //       }
+  //       counter++;
+  //     }
+  //   }
 
-    return objectTranscript;
-  }
+  //   return objectTranscript;
+  // }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;

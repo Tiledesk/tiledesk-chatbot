@@ -1014,6 +1014,22 @@ class TiledeskChatbotUtil {
           return userParams;
     }
 
+    static AiConditionPromptBuilder(prompt_header, intents, instructions) {
+        let conditions = "";
+        intents.forEach( function(intent) {
+            if (intent.label != "fallback") {
+                conditions += `- label: ${intent.label} When: ${intent.prompt}\n`
+            }
+        });
+
+        instructions = instructions;
+        let raw_condition_prompt = `${prompt_header}
+
+${conditions}
+${instructions}`
+        return raw_condition_prompt;
+    }
+
     /**
      * A stub to get the request parameters, hosted by tilebot on:
      * /${TILEBOT_ROUTE}/ext/parameters/requests/${requestId}?all
@@ -1082,6 +1098,8 @@ class TiledeskChatbotUtil {
             }
           });
       }
+
+    
       
 
 }
