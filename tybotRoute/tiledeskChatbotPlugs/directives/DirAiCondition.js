@@ -64,7 +64,7 @@ class DirAiCondition {
     //   {
     //     "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
     //     "prompt": "user asking for medical information",
-    //     "intentId": "#9b1c29c1671847dba6db561f771a142e"
+    //     "conditionIntentId": "#9b1c29c1671847dba6db561f771a142e"
     //   }
     // ]
     let falllbackIntent = action.falllbackIntent; // non condition met block
@@ -229,7 +229,7 @@ class DirAiCondition {
           else {
             intents.forEach( i => {
               if (i.label === answer) {
-                this.#executeIntent(i.intentId, () => {
+                this.#executeIntent(i.conditionIntentId, () => {
                 if (callback) {
                     callback(true);
                     return;

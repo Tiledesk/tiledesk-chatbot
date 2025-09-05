@@ -122,17 +122,17 @@ const bot = {
 					{
 						"label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
 						"prompt": "user asking for medical information",
-						"intentId": "#MEDICAL"
+						"conditionIntentId": "#MEDICAL"
 					},
 					{
 						"label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
 						"prompt": "user asking to buy a product",
-						"intentId": "#BUY"
+						"conditionIntentId": "#BUY"
 					},
 					{
 						"label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
 						"prompt": "{{price}} > 300 dollars",
-						"intentId": "#TOOMUCH"
+						"conditionIntentId": "#TOOMUCH"
 					}
 			    ],
 				"instructions": "User question: {{last_user_text}}",
