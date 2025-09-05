@@ -1017,9 +1017,7 @@ class TiledeskChatbotUtil {
     static AiConditionPromptBuilder(prompt_header, intents, instructions) {
         let conditions = "";
         intents.forEach( function(intent) {
-            if (intent.label != "fallback") {
-                conditions += `- label: ${intent.label} When: ${intent.prompt}\n`
-            }
+            conditions += `- label: ${intent.label} When: ${intent.prompt}\n`
         });
 
         instructions = instructions;

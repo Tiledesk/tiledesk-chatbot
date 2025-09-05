@@ -70,8 +70,9 @@ class DirAiCondition {
     let falllbackIntent = action.falllbackIntent; // non condition met block
     let falseIntent = action.falllbackIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      this.logger.error(`[AI Condition] missing attribute '${missing_param}'`);
-      await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
+      const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
+      this.logger.error(error);
+      await this.chatbot.addParameter("flowError", error);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
