@@ -176,11 +176,9 @@ router.post('/ext/:botid', async (req, res) => {
         }
       );
       const t1e = Date.now();
-      console.log(`[TIMER] Preparation phase in ${t1e - t1}ms ------ ${requestId}`);
       const t2 = Date.now();
       directivesPlug.processDirectives( () => {
         const t2e = Date.now();
-        console.log(`[TIMER] Directives executed in ${t2e - t2}ms ------ ${requestId}`);
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
@@ -204,7 +202,6 @@ router.post('/ext/:botid', async (req, res) => {
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       const ttotale = Date.now()
-      console.log(`[TIMER] Directives executed in ${ttotal - ttotale}ms ------ ${requestId}`);
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
   }

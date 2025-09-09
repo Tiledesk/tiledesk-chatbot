@@ -32,7 +32,6 @@ class ExtApi {
    * @param {string} token. User token
    */
   sendSupportMessageExt(message, projectId, requestId, token, callback) {
-    const t4 = Date.now();
     const jwt_token = this.fixToken(token);
     const url = `${this.TILEBOT_ENDPOINT}/ext/${projectId}/requests/${requestId}/messages`;
     winston.verbose("(ExtApi) sendSupportMessageExt URL" + url);
@@ -54,8 +53,6 @@ class ExtApi {
           }
         }
         else {
-          const t4e = Date.now();
-          console.log(`[TIMER] sendSupportMessageExt in ${t4e - t4}ms ------ ${requestId}`);
           if (callback) {
             callback(null, resbody);
           }

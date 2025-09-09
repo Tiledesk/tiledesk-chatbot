@@ -401,7 +401,6 @@ describe('Conversation for AiPrompt test', async () => {
       endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
         res.send({ success: true });
         const message = req.body;
-        console.log("message: ", message);
         assert(message.attributes.commands !== null);
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];

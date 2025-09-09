@@ -12,8 +12,6 @@ let publisher = new Publisher(AMQP_MANAGER_URL, {
     exchange: "amq.topic"
 })
 
-console.log("LOGGER publisher: ", publisher);
-
 class Logger {
 
     constructor(config) {
