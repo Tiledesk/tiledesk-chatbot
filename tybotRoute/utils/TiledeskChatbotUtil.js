@@ -844,6 +844,25 @@ class TiledeskChatbotUtil {
                 await chatbot.addParameter(TiledeskChatbotConst.REQ_DEPARTMENT_NAME_KEY, message.attributes.departmentName);
             }
 
+            if (message.attributes) {
+                const attrFields = [
+                    { key: TiledeskChatbotConst.REQ_EMAIL_SUBJECT, attr:  "email_subject" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_TO, attr: "email_toEmail" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_FROM, attr: "email_fromEmail" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_MESSAGE_ID, attr: "email_messageId" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_REPLY_TO, attr: "email_replyTo" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_EML, attr: "email_eml" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_ATTACHMENTS_LINK, attr: "link" },
+                    { key: TiledeskChatbotConst.REQ_EMAIL_ATTACHMENTS_FILES, attr: "attachments" },
+                    // aggiungi qui altri campi se necessario
+                ];
+                for (const field of attrFields) {
+                    if (message.attributes[field.attr] !== undefined && message.attributes[field.attr] !== null) {
+                        await chatbot.addParameter(field.key, message.attributes[field.attr]);
+                    }
+                }
+            }
+
             if (message && message.request && message.request.attributes && message.request.attributes.payload) {
                 if (!message.attributes) {
                     message.attributes = {}

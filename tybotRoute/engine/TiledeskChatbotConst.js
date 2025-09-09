@@ -42,7 +42,14 @@ class TiledeskChatbotConst {
     static REQ_LAST_USER_DOCUMENT_URL = 'lastUserDocumentURL';
     static REQ_LAST_USER_DOCUMENT_NAME = 'lastUserDocumentName';
     static REQ_LAST_USER_DOCUMENT_TYPE = 'lastUserDocumentType';
-
+    static REQ_EMAIL_ATTACHMENTS_LINK = 'link';
+    static REQ_EMAIL_SUBJECT = 'email_subject';
+    static REQ_EMAIL_TO = 'email_toEmail';
+    static REQ_EMAIL_FROM = 'email_fromEmail';
+    static REQ_EMAIL_MESSAGE_ID = 'email_messageId';
+    static REQ_EMAIL_REPLY_TO = 'email_replyTo';
+    static REQ_EMAIL_EML = 'email_eml';
+    static REQ_EMAIL_ATTACHMENTS_FILES = 'attachments'
 }
 
 module.exports = { TiledeskChatbotConst };
