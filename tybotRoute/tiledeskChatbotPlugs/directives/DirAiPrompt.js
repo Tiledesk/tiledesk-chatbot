@@ -121,6 +121,7 @@ class DirAiPrompt {
     let publicKey = false;
     let ollama_integration;
 
+    console.log("\n\naction llm: ", action.llm);
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
         this.logger.error("[AI Prompt] Error getting ollama integration.")
@@ -138,7 +139,9 @@ class DirAiPrompt {
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
       
+      console.log("\n\nKey not found (?): ", key);
       if (!key && action.llm === "openai") {
+        console.log("\n\naction llm is openai: ", action.llm);
         this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
@@ -193,6 +196,7 @@ class DirAiPrompt {
       temperature: action.temperature,
       max_tokens: action.max_tokens
     }
+    console.log("\n\njson: ", json)
 
     if (action.context) {
       json.system_context = filled_context;
@@ -250,13 +254,13 @@ class DirAiPrompt {
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
 
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.usage.total_token,
-              model: json.model
-            }
-            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          }
+          // if (publicKey === true) {
+          //   let tokens_usage = {
+          //     tokens: resbody.usage.total_token,
+          //     model: json.model
+          //   }
+          //   quotasService.updateQuote(this.projectId, this.token, tokens_usage);
+          // }
         
           await this.#assignAttributes(action, answer);
 

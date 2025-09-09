@@ -392,6 +392,100 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt openai success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        console.log("message: ", message);
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: this is the answer");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "this is the answer");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'openai');
+
+        let http_code = 404;
+        let reply = "Integration not found for model " + req.params.nane
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+
+        let reply = { isAvailable: true };
+        let http_code = 200;
+  
+        res.status(http_code).send(reply);
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "openai");
+        assert(req.body.model === "gpt-5");
+        assert(req.body.llm_key === "example_api_key");
+  
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "this is the answer",
+          chat_history_dict: {
+            additionalProp1: { question: "string", answer: "string" },
+            additionalProp2: { question: "string", answer: "string" },
+            additionalProp3: { question: "string", answer: "string" }
+          }
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_openai',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
     it('AiPrompt ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
