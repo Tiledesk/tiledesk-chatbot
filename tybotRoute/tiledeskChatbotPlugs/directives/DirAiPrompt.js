@@ -13,6 +13,7 @@ const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
+const quotasService = require("../../services/QuotasService");
 
 
 class DirAiPrompt {
@@ -117,6 +118,7 @@ class DirAiPrompt {
     }
     
     let key;
+    let publicKey = false;
     let ollama_integration;
 
     if (action.llm === 'ollama') {
@@ -135,7 +137,13 @@ class DirAiPrompt {
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-  
+      
+      if (!key && action.llm === "openai") {
+        this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        key = process.env.GPTKEY;
+        publicKey = true;
+      }
+
       if (!key) {
         this.logger.error("[AI Prompt] llm key not found in integrations");
         winston.error("Error: DirAiPrompt llm key not found in integrations");
@@ -143,6 +151,33 @@ class DirAiPrompt {
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+    }
+
+    if (publicKey === true) {
+      try {
+        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
+        if (keep_going === false) {
+          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
+          await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback();
+            return;
+          }
+          callback();
+          return;
+        }
+      } catch (err) {
+        this.logger.error("An error occured on checking token quota availability");
+        await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback();
           return;
         }
         callback();
@@ -214,6 +249,14 @@ class DirAiPrompt {
           winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
+
+          if (publicKey === true) {
+            let tokens_usage = {
+              tokens: resbody.usage.total_token,
+              model: json.model
+            }
+            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
+          }
         
           await this.#assignAttributes(action, answer);
 
