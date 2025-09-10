@@ -1146,6 +1146,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           id_project: "62c3f10152dc7400352b0000",
           id: "666708c13d20c7002d68fa90",
           name: "Second Namespace",
+          hybrid: true,
           preview_settings: {
             model: "gpt-3.5-turbo",
             max_tokens: 512,
@@ -1199,11 +1200,9 @@ describe('Conversation for AskGPTV2 test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", message)
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      console.log("command2: ", command2)
       assert(command2.type === "message");
       assert(command2.message.text === "kb replied: this is mock kb reply with hybrid search");
 
@@ -1300,6 +1299,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           id_project: "62c3f10152dc7400352b0000",
           id: "12345678",
           name: "Second Namespace",
+          hybrid: true,
           preview_settings: {
             model: "gpt-3.5-turbo",
             max_tokens: 512,

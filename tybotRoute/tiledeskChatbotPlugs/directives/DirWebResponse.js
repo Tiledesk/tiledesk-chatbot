@@ -90,6 +90,7 @@ class DirWebResponse {
           }
           catch (err) {
             winston.error("Error parsing webRequest jsonBody: " + JSON.stringify(jsonBody) + "\nError: " + JSON.stringify(err));
+            this.logger.error("[Web Response] Error parsing webRequest jsonBody ", jsonBody)
             reject("Error parsing jsonBody");
           }
         }

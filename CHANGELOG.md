@@ -1,5 +1,36 @@
 # Tiledesk native chatbot
 
+# 2.0.28
+
+# 2.0.28-rc1
+- bug-fixed: action-model not filled in dirAiPrompt
+
+# 2.0.27
+- bug-fixed: not all chatbot variable are updated with leadUpdate action
+
+# 2.0.26
+- added: check and skip private message from internal-notes
+
+# 2.0.25
+- updated: AskGPTV2 action to add unanswered questions
+
+# 2.0.23
+- update: setDefaultEngine method on DirAskGPTV2
+- added: json gallery
+
+# 2.0.22
+- hotfix: wrong pinecone index name
+
+# 2.0.21
+- added: support for standard/hybrid search and indexing
+
+# 2.0.20
+- minor fixes to webhook endpoint
+
+# 2.0.19
+- updated: multi-worker to 0.3.2
+- updated: DirIntent to propagate draft field
+
 # 2.0.18
 - added: hybrid search support in AskGPTV2
 - added: chunks_only option in AskGPTV2
@@ -35,6 +66,8 @@
 
 # 1.3.0
 - added: AI_ENDPOINT env var
+
+# 1.3.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # 1.2.2
@@ -49,6 +82,19 @@
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
+
+# 1.1.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# 1.1.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# 1.1.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -57,6 +103,12 @@
 
 # 1.1.2
 - bug-fixed: minor improvement
+
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
+# 1.0.27-rc2
+- added: specchToText function to transcript audio file
 
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini
