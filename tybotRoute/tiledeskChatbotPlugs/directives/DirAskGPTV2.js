@@ -30,6 +30,11 @@ class DirAskGPTV2 {
     
     this.intentDir = new DirIntent(context);
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+
+    this.rerankingOff = false;
+    if (process.env.RERANKING_OFF && (process.env.RERANKING_OFF === "true" || process.env.RERANKING_OFF === true)) {
+      this.rerankingOff = true;
+    }
   }
 
   execute(directive, callback) {
@@ -291,6 +296,13 @@ class DirAskGPTV2 {
     if (transcript) {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
+
+    if (!this.rerankingOff) {
+      json.reranking = true;
+      json.reranking_multiplier = 3;
+      json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
+    }
+
 
     winston.debug("DirAskGPTV2 json:", json);
 
