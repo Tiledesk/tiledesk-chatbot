@@ -576,3 +576,30 @@ describe('Search buttons by text', function() {
     });
 
 });
+
+describe('Ai Condition Prompt', function() {
+
+    it('basic prompt', async () => {
+        let prompt_header = `Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.
+If more than one condition is true, answer with the first label corresponding to the true condition, following the order from top to bottom.`
+        let intents = [
+            {
+                "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
+                "prompt": "user asking for medical information",
+                "intentId": "#9b1c29c1671847dba6db561f771a142e"
+            },
+            {
+                "label": "fallback",
+                "intentId": "#9b1c29c1671847dba6db561f771a142e"
+            }
+        ];
+        let instructions = "User question: {{last_user_text}}"
+        let raw_condition_prompt = TiledeskChatbotUtil.AiConditionPromptBuilder(prompt_header, intents, instructions);
+        console.log("raw_condition_prompt: ", raw_condition_prompt);
+        assert(raw_condition_prompt !== null);
+        assert(raw_condition_prompt.includes(prompt_header));
+        assert(raw_condition_prompt.includes("- label: " + intents[0].label) + " When: " + intents[0].prompt);
+        assert(raw_condition_prompt.includes(instructions));
+    });
+
+});

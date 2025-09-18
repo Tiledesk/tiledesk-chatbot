@@ -11,8 +11,10 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -176,7 +178,7 @@ class DirAskGPTV2 {
     if (!key) {
       this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
       winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
-      key = await kbService.getKeyFromKbSettings(this.projectId, this.token);
+      key = await llmService.getKeyFromKbSettings(this.projectId, this.token);
     }
 
     if (!key) {
@@ -373,7 +375,7 @@ class DirAskGPTV2 {
           }
         } else {
           await this.#assignAttributes(action, answer, source);
-          kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+          llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
             winston.error("DirAskGPTV2 - Error adding unanswered question: ", err);
             this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
           })
