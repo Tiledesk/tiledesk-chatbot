@@ -61,15 +61,24 @@ class DirContactUpdate {
     }
     const filler = new Filler();
     let updateProperties = {}
+
+    //map the key from the action to the chatbot const variable key
+    const keyToChatbotConstMap = {
+      fullname: TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY,
+      email: TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY,
+      phone: TiledeskChatbotConst.REQ_USER_PHONE_KEY,
+      currentPhoneNumber: TiledeskChatbotConst.REQ_CURRENT_PHONE_NUMBER_KEY,
+      userLeadId: TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY,
+      company: TiledeskChatbotConst.REQ_USER_COMPANY_KEY
+    };
+
     for (const [key, value] of Object.entries(contactProperties)) {
       let filled_value = filler.fill(value, requestAttributes);
       updateProperties[key] = filled_value;
       // it's important that all the lead's properties are immediatly updated in the current flow invocation so the updated values will be available in the next actions
-      if (key === "fullname") {
-        await this.context.chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY, filled_value);
-      }
-      else if ( key === "email") {
-        await this.context.chatbot.addParameter(TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY, filled_value);
+      const chatbotKey = keyToChatbotConstMap[key];
+      if (chatbotKey) {
+        await this.context.chatbot.addParameter(chatbotKey, filled_value);
       }
     }
     const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
