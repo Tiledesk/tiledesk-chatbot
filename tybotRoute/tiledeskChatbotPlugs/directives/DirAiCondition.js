@@ -117,6 +117,7 @@ class DirAiCondition {
       'Content-Type': 'application/json'
     }
     
+    let answer = "";
     let key;
     let publicKey = false;
     let ollama_integration;
@@ -160,7 +161,7 @@ class DirAiCondition {
 
     if (publicKey === true) {
       try {
-        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
+        let keep_going = await this.checkQuoteAvailability(this.projectId, this.token)
         if (keep_going === false) {
           this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
