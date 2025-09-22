@@ -68,13 +68,13 @@ class DirAiCondition {
     //   }
     // ]
     let fallbackIntent = action.fallbackIntent; // non condition met block
-    let falseIntent = action.falllbackIntent; // On error block
+    let errorIntent = action.errorIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
       this.logger.error(error);
       await this.chatbot.addParameter("flowError", error);
-      if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      if (errorIntent) {
+        await this.#executeIntent(errorIntent);
         callback(true);
         return Promise.reject();
       }
@@ -127,8 +127,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] Error getting ollama integration.")
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -149,8 +149,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] llm key not found");
         winston.error("Error: DirAiPrompt llm key not found");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -165,8 +165,8 @@ class DirAiCondition {
         if (keep_going === false) {
           this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback();
             return;
           }
@@ -176,8 +176,8 @@ class DirAiCondition {
       } catch (err) {
         this.logger.error("An error occured on checking token quota availability");
         await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback();
           return;
         }
@@ -237,9 +237,9 @@ class DirAiCondition {
             error = JSON.stringify(err.response.data);
           }
           this.logger.error("[AI Condition] error executing action: ", error);
-          if (falseIntent) {
+          if (errorIntent) {
             await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
-            await this.#executeCondition(false, null, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -263,12 +263,11 @@ class DirAiCondition {
 
           if (answer === "fallback") {
             if (fallbackIntent) {
-              this.#executeIntent(fallbackIntent, () => {
-                if (callback) {
-                    callback(true);
-                    return;
-                  }
-              });
+              await this.#executeIntent(fallbackIntent) 
+              if (callback) {
+                callback(true);
+                return;
+              }
             }
           }
           else {
@@ -279,21 +278,19 @@ class DirAiCondition {
               }
             });
             if (answer_found) {
-              this.#executeIntent(answer_found.conditionIntentId, () => {
+              await this.#executeIntent(answer_found.conditionIntentId) 
+              if (callback) {
+                callback(true);
+                return;
+              }
+            }
+            else { // if (answer === "fallback") {
+              if (fallbackIntent) {
+                await this.#executeIntent(fallbackIntent) 
                 if (callback) {
                   callback(true);
                   return;
                 }
-              });
-            }
-            else { // if (answer === "fallback") {
-              if (fallbackIntent) {
-                this.#executeIntent(fallbackIntent, () => {
-                  if (callback) {
-                      callback(true);
-                      return;
-                    }
-                });
               }
               else {
                 this.logger.error("[AI Condition] Fallback connector not found");
