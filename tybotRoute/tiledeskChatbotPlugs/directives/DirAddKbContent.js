@@ -116,6 +116,14 @@ class DirAddKbContent {
       }
     }
 
+    if (!namespace) {
+      this.logger.error("[Add to KnwoledgeBase] Namespace is undefined")
+      winston.verbose("[DirAddKbContent] - Error: namespace is undefined")
+      await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: namespace is undefined");
+      callback(true);
+      return;
+    }
+
     let ns;
 
     if (action.namespaceAsName) {
@@ -137,20 +145,12 @@ class DirAddKbContent {
       return;
     }
 
-    if (ns.engine) {
-      engine = ns.engine;
-    } else {
-      engine = await this.setDefaultEngine()
-    }
+    // if (ns.engine) {
+    //   engine = ns.engine;
+    // } else {
+    //   engine = await this.setDefaultEngine(ns.hybrid);
+    // }
     
-    if (!namespace) {
-      this.logger.error("[Add to KnwoledgeBase] Namespace is undefined")
-      winston.verbose("[DirAddKbContent] - Error: namespace is undefined")
-      await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: namespace is undefined");
-      callback(true);
-      return;
-    }
-
     let json = {
       content: filled_content,
       namespace: namespace,
@@ -314,18 +314,19 @@ class DirAddKbContent {
     })
   }
 
-  async setDefaultEngine() {
-    return new Promise((resolve) => {
-      let engine = {
-        name: "pinecone",
-        type: process.env.PINECONE_TYPE,
-        apikey: "",
-        vector_size: 1536,
-        index_name: process.env.PINECONE_INDEX
-      }
-      resolve(engine);
-    })
-  }
+  // async setDefaultEngine() {
+  //   let isHybrid = hybrid === true;
+  //   return new Promise((resolve) => {
+  //     let engine = {
+  //       name: "pinecone",
+  //       type: isHybrid ? "serverless" : "pod",
+  //       apikey: "",
+  //       vector_size: 1536,
+  //       index_name: isHybrid ? "hybrid_index" : "standard_index"
+  //     }
+  //     resolve(engine);
+  //   })
+  // }
 
 }
 
