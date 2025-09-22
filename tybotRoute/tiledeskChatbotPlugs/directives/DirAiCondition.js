@@ -97,6 +97,7 @@ class DirAiCondition {
     });
 
     let instructions = filler.fill(action.instructions, requestVariables);
+    let prompt_header = "Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.\nIf more than one condition is true, answer with the first label corresponding to the true condition, following the order from top to bottom."
     let condition_prompt = TiledeskChatbotUtil.AiConditionPromptBuilder(prompt_header, intents, instructions)
 
     // let raw_condition_prompt = `Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.
