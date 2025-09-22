@@ -67,7 +67,11 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
-
+  //skip internal note messages
+  if(message && message.attributes && message.attributes.subtype === 'private') {
+    winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
+    return res.status(200).send({"success":true});
+  }
 
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
@@ -100,6 +104,9 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+
+  winston.debug("(tybotRoute) Bot found: ", bot)
+  
   
   let intentsMachine;
   let backupMachine;
@@ -166,7 +173,10 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+
+
       directivesPlug.processDirectives( () => {
+
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
@@ -189,6 +199,7 @@ router.post('/ext/:botid', async (req, res) => {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
+
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
   }
