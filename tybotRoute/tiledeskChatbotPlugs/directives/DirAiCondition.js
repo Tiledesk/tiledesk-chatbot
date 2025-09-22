@@ -118,6 +118,7 @@ class DirAiCondition {
       'Content-Type': 'application/json'
     }
     
+    let answer = "";
     let key;
     let publicKey = false;
     let ollama_integration;
