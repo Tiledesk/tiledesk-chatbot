@@ -255,7 +255,7 @@ class DirAiCondition {
 
   async checkMandatoryParameters(action) {
     return new Promise((resolve, reject) => {
-      let params = ['question', 'llm', 'model']; // mandatory params
+      let params = ['llm', 'model']; // mandatory params
       params.forEach((p) => {
         if (!action[p]) {
           reject(p)
