@@ -69,7 +69,7 @@ class DirAiCondition {
     //   }
     // ]
     let fallbackIntent = action.fallbackIntent; // non condition met block
-    let falseIntent = action.falllbackIntent; // On error block
+    let falseIntent = action.errorIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
       this.logger.error(error);
