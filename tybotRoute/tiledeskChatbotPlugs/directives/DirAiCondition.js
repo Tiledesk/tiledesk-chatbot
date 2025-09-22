@@ -67,7 +67,7 @@ class DirAiCondition {
     //     "conditionIntentId": "#9b1c29c1671847dba6db561f771a142e"
     //   }
     // ]
-    let falllbackIntent = action.falllbackIntent; // non condition met block
+    let fallbackIntent = action.fallbackIntent; // non condition met block
     let falseIntent = action.falllbackIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
@@ -140,7 +140,7 @@ class DirAiCondition {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Condition] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }
@@ -163,7 +163,7 @@ class DirAiCondition {
       try {
         let keep_going = await this.checkQuoteAvailability(this.projectId, this.token)
         if (keep_going === false) {
-          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
+          this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
           if (falseIntent) {
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -238,8 +238,8 @@ class DirAiCondition {
           }
           this.logger.error("[AI Condition] error executing action: ", error);
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+            await this.#executeCondition(false, null, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -262,8 +262,8 @@ class DirAiCondition {
           await this.#assignAttributes(action, answer);
 
           if (answer === "fallback") {
-            if (falllbackIntent) {
-              this.#executeIntent(falllbackIntent, () => {
+            if (fallbackIntent) {
+              this.#executeIntent(fallbackIntent, () => {
                 if (callback) {
                     callback(true);
                     return;
@@ -272,24 +272,35 @@ class DirAiCondition {
             }
           }
           else {
+            let answer_found = null;
             intents.forEach( i => {
               if (i.label === answer) {
-                this.#executeIntent(i.conditionIntentId, () => {
-                if (callback) {
-                    callback(true);
-                    return;
-                  }
-              });
+                answer_found = i;
               }
             });
+            if (answer_found) {
+              this.#executeIntent(answer_found.conditionIntentId, () => {
+                if (callback) {
+                  callback(true);
+                  return;
+                }
+              });
+            }
+            else { // if (answer === "fallback") {
+              if (fallbackIntent) {
+                this.#executeIntent(fallbackIntent, () => {
+                  if (callback) {
+                      callback(true);
+                      return;
+                    }
+                });
+              }
+              else {
+                this.logger.error("[AI Condition] Fallback connector not found");
+              }
+            }
           }
           this.logger.error("[AI Condition] error executing action: condition label not found in intents list");
-          if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
           callback();
           return;
         }
