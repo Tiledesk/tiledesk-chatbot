@@ -19,7 +19,8 @@ class DirWait {
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
-    console.log("Start at: ", Date.now())
+    let t1 = Date.now();
+    console.log("Start at: ", t1)
     winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
@@ -48,6 +49,7 @@ class DirWait {
     }
 
     this.go(action, () => {
+      console.log("Wait executed in ", Date.now() - t1)
       this.logger.native("[Wait] Executed");
       callback();
     })
