@@ -42,6 +42,8 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  let t1 = Date.now();
+  console.log("/ext start at: ", t1);
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
@@ -176,7 +178,7 @@ router.post('/ext/:botid', async (req, res) => {
 
 
       directivesPlug.processDirectives( () => {
-
+        console.log("/ext executed in ", Date.now() - t1);
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
