@@ -177,8 +177,8 @@ router.post('/ext/:botid', async (req, res) => {
       );
 
 
+      console.log("/ext executed in ", Date.now() - t1);
       directivesPlug.processDirectives( () => {
-        console.log("/ext executed in ", Date.now() - t1);
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
