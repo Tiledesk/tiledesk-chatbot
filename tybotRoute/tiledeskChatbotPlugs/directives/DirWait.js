@@ -19,6 +19,7 @@ class DirWait {
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
+    console.log("Start at: ", Date.now())
     winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
