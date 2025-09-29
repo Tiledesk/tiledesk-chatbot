@@ -171,7 +171,9 @@ class DirectivesChatbotPlug {
     
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
+    const t10 = Date.now();
     await this.process(next_dir);
+    console.log("[Performance] Time to process directives ", Date.now() - t10, "[ms]")
   }
 
   async nextDirective(directives) {

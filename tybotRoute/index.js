@@ -165,10 +165,12 @@ router.post('/ext/:botid', async (req, res) => {
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
-      const t8 = Date.now();
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
+      const t8 = Date.now();
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
+      console.log("[Performance] Time to transform actions to directives ", Date.now() - t8, "[ms]")
       winston.debug("(tybotRoute) the directives:", directives)
+      const t9 = Date.now();
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -185,7 +187,7 @@ router.post('/ext/:botid', async (req, res) => {
       );
 
       directivesPlug.processDirectives( () => {
-        console.log("[Performance] Time to execute directives ", Date.now() - t8, "[ms]")
+        console.log("[Performance] Time to execute directives ", Date.now() - t9, "[ms]")
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
