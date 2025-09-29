@@ -11,12 +11,12 @@ const Utils = require("../../utils/HttpUtils");
 const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
-const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
+const { Logger } = require("../../Logger");
+const { randomUUID } = require("crypto");
 
 
-class DirAiPrompt {
+class DirAiCondition {
 
   constructor(context) {
     if (!context) {
@@ -35,80 +35,81 @@ class DirAiPrompt {
   }
 
   execute(directive, callback) {
-    winston.verbose("Execute AiPrompt directive");
+    winston.verbose("Execute AiAiCondition directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.debug("DirAiPrompt Incorrect directive: ", directive);
+      winston.debug("DirAiAiCondition Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      this.logger.native("[AI Prompt] Executed");
+      this.logger.native("[Ai Condition] Executed");
       callback(stop);
     })
   }
 
   async go(action, callback) {
-    winston.debug("DirAiPrompt action:", action);
+    winston.debug("DirAiCondition action:", action);
     if (!this.tdcache) {
-      winston.error("Error: DirAiPrompt tdcache is mandatory");
+      winston.error("Error: DirAiCondition tdcache is mandatory");
       callback();
       return;
     }
 
-    let trueIntent = action.trueIntent;
-    let falseIntent = action.falseIntent;
-    let trueIntentAttributes = action.trueIntentAttributes;
-    let falseIntentAttributes = action.falseIntentAttributes;
-    let transcript;
-    let answer = "No answer"
-
-    winston.debug("DirAskGPTV2 trueIntent", trueIntent)
-    winston.debug("DirAskGPTV2 falseIntent", falseIntent)
-
+    let intents = action.intents;
+    // intents = [
+    //   {
+    //     "label": "26efa629-686e-4a23-a2f8-38c8f5beb408",
+    //     "prompt": "user asking for medical information",
+    //     "conditionIntentId": "#9b1c29c1671847dba6db561f771a142e"
+    //   }
+    // ]
+    let fallbackIntent = action.fallbackIntent; // non condition met block
+    let errorIntent = action.errorIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      this.logger.error(`[AI Prompt] missing attribute '${missing_param}'`);
-      await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
-      if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
+      this.logger.error(error);
+      await this.chatbot.addParameter("flowError", error);
+      if (errorIntent) {
+        await this.#executeIntent(errorIntent);
         callback(true);
         return Promise.reject();
       }
       callback();
       return Promise.reject();
     })
-
+    
+    // fill attributes
     let requestVariables = null;
     requestVariables =
-      await TiledeskChatbot.allParametersStatic(
-        this.tdcache, this.requestId
-      )
-
+    await TiledeskChatbot.allParametersStatic(
+      this.tdcache, this.requestId
+    )
     const filler = new Filler();
-    const filled_question = filler.fill(action.question, requestVariables);
-    const filled_context = filler.fill(action.context, requestVariables);
-    const filled_model = filler.fill(action.model, requestVariables);
-    
-    if (action.history) {
-      this.logger.native("[AI Prompt] using chat transcript");
-      let transcript_string = await TiledeskChatbot.getParameterStatic(
-        this.context.tdcache,
-        this.context.requestId,
-        TiledeskChatbotConst.REQ_TRANSCRIPT_KEY);
-        winston.debug("DirAiPrompt transcript string: " + transcript_string)
 
-      if (transcript_string) {
-        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
-        winston.debug("DirAiPrompt transcript: ", transcript)
-      } else {
-        this.logger.warn("[AI Prompt] no chat transcript found, skipping history translation");
-        winston.verbose("DirAiPrompt transcript_string is undefined. Skip JSON translation for chat history")
-      }
-    }
+    let conditions = "";
+    intents.forEach( function(intent) {
+      let filled_prompt = filler.fill(intent.prompt, requestVariables);
+      conditions += `- label: ${intent.label} when: ${filled_prompt}\n`
+    });
+
+    let instructions = filler.fill(action.instructions, requestVariables);
+    let prompt_header = "Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.\nIf more than one condition is true, answer with the first label corresponding to the true condition, following the order from top to bottom."
+    let condition_prompt = TiledeskChatbotUtil.AiConditionPromptBuilder(prompt_header, intents, instructions)
+
+    // let raw_condition_prompt = `Reply with the label satisfying the corresponding condition or with “fallback” if all conditions are false.
+    // If more than one condition is true, answer with the first label corresponding to the true condition, following the order from top to bottom.
+    // ${conditions}
+    // ${instructions}`
+    
+    // const filled_question = condition_prompt; //filler.fill(action.question, requestVariables);
+    const filled_context = filler.fill(action.context, requestVariables);
+
+    // evaluate
 
     let AI_endpoint = process.env.AI_ENDPOINT;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
@@ -117,17 +118,18 @@ class DirAiPrompt {
       'Content-Type': 'application/json'
     }
     
+    let answer = "";
     let key;
     let publicKey = false;
     let ollama_integration;
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[AI Prompt] Error getting ollama integration.")
+        this.logger.error("[AI Condition] Error getting ollama integration.")
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -137,19 +139,19 @@ class DirAiPrompt {
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-      
+  
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Condition] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }
 
       if (!key) {
-        this.logger.error("[AI Prompt] llm key not found in integrations");
-        winston.error("Error: DirAiPrompt llm key not found in integrations");
+        this.logger.error("[AI Condition] llm key not found");
+        winston.error("Error: DirAiPrompt llm key not found");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -160,12 +162,12 @@ class DirAiPrompt {
 
     if (publicKey === true) {
       try {
-        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
+        let keep_going = await this.checkQuoteAvailability(this.projectId, this.token)
         if (keep_going === false) {
-          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
+          this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback();
             return;
           }
@@ -175,8 +177,8 @@ class DirAiPrompt {
       } catch (err) {
         this.logger.error("An error occured on checking token quota availability");
         await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback();
           return;
         }
@@ -186,9 +188,9 @@ class DirAiPrompt {
     }
 
     let json = {
-      question: filled_question,
+      question: condition_prompt,
       llm: action.llm,
-      model: filled_model,
+      model: action.model,
       llm_key: key,
       temperature: action.temperature,
       max_tokens: action.max_tokens
@@ -197,9 +199,9 @@ class DirAiPrompt {
     if (action.context) {
       json.system_context = filled_context;
     }
-    if (transcript) {
-      json.chat_history_dict = await this.transcriptToLLM(transcript);
-    }
+    // if (transcript) {
+    //   json.chat_history_dict = await this.transcriptToLLM(transcript);
+    // }
 
     if (action.llm === 'ollama') {
       json.llm_key = "";
@@ -235,10 +237,10 @@ class DirAiPrompt {
           } else {
             error = JSON.stringify(err.response.data);
           }
-          this.logger.error("[AI Prompt] error executing action: ", error);
-          if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          this.logger.error("[AI Condition] error executing action: ", error);
+          if (errorIntent) {
+            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -248,7 +250,7 @@ class DirAiPrompt {
 
           winston.debug("DirAiPrompt resbody: ", resbody);
           answer = resbody.answer;
-          this.logger.native("[AI Prompt] answer: ", answer);
+          this.logger.native("[AI Condition] answer: ", answer);
 
           // if (publicKey === true) {
           //   let tokens_usage = {
@@ -260,22 +262,53 @@ class DirAiPrompt {
         
           await this.#assignAttributes(action, answer);
 
-          if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
+          if (answer === "fallback") {
+            if (fallbackIntent) {
+              await this.#executeIntent(fallbackIntent) 
+              if (callback) {
+                callback(true);
+                return;
+              }
+            }
           }
+          else {
+            let answer_found = null;
+            intents.forEach( i => {
+              if (i.label === answer) {
+                answer_found = i;
+              }
+            });
+            if (answer_found) {
+              await this.#executeIntent(answer_found.conditionIntentId) 
+              if (callback) {
+                callback(true);
+                return;
+              }
+            }
+            else { // if (answer === "fallback") {
+              if (fallbackIntent) {
+                await this.#executeIntent(fallbackIntent) 
+                if (callback) {
+                  callback(true);
+                  return;
+                }
+              }
+              else {
+                this.logger.error("[AI Condition] Fallback connector not found");
+              }
+            }
+          }
+          this.logger.error("[AI Condition] error executing action: condition label not found in intents list");
           callback();
           return;
         }
       }
     )
-
   }
 
   async checkMandatoryParameters(action) {
     return new Promise((resolve, reject) => {
-      let params = ['question', 'llm', 'model']; // mandatory params
+      let params = ['llm', 'model']; // mandatory params
       params.forEach((p) => {
         if (!action[p]) {
           reject(p)
@@ -290,48 +323,48 @@ class DirAiPrompt {
    * merging consecutive messages with the same role in a single question or answer.
    * If the first message was sent from assistant, this will be deleted.
    */
-  async transcriptToLLM(transcript) {
+  // async transcriptToLLM(transcript) {
     
-    let objectTranscript = {};
+  //   let objectTranscript = {};
 
-    if (transcript.length === 0) {
-      return objectTranscript;
-    }
+  //   if (transcript.length === 0) {
+  //     return objectTranscript;
+  //   }
 
-    let mergedTranscript = [];
-    let current = transcript[0];
+  //   let mergedTranscript = [];
+  //   let current = transcript[0];
 
-    for (let i = 1; i < transcript.length; i++) {
-      if (transcript[i].role === current.role) {
-        current.content += '\n' + transcript[i].content;
-      } else {
-        mergedTranscript.push(current);
-        current = transcript[i]
-      }
-    }
-    mergedTranscript.push(current);
+  //   for (let i = 1; i < transcript.length; i++) {
+  //     if (transcript[i].role === current.role) {
+  //       current.content += '\n' + transcript[i].content;
+  //     } else {
+  //       mergedTranscript.push(current);
+  //       current = transcript[i]
+  //     }
+  //   }
+  //   mergedTranscript.push(current);
 
-    if (mergedTranscript[0].role === 'assistant') {
-      mergedTranscript.splice(0, 1)
-    }
+  //   if (mergedTranscript[0].role === 'assistant') {
+  //     mergedTranscript.splice(0, 1)
+  //   }
 
-    let counter = 0;
-    for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
-      // Check if [i] is role user and [i+1] is role assistant??
-      assert(mergedTranscript[i].role === 'user');
-      assert(mergedTranscript[i+1].role === 'assistant');
+  //   let counter = 0;
+  //   for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
+  //     // Check if [i] is role user and [i+1] is role assistant??
+  //     assert(mergedTranscript[i].role === 'user');
+  //     assert(mergedTranscript[i+1].role === 'assistant');
 
-      if (!mergedTranscript[i].content.startsWith('/')) {
-        objectTranscript[counter] = {
-          question: mergedTranscript[i].content,
-          answer: mergedTranscript[i+1].content
-        }
-        counter++;
-      }
-    }
+  //     if (!mergedTranscript[i].content.startsWith('/')) {
+  //       objectTranscript[counter] = {
+  //         question: mergedTranscript[i].content,
+  //         answer: mergedTranscript[i+1].content
+  //       }
+  //       counter++;
+  //     }
+  //   }
 
-    return objectTranscript;
-  }
+  //   return objectTranscript;
+  // }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     let trueIntentDirective = null;
@@ -344,7 +377,7 @@ class DirAiPrompt {
     }
     if (result === true) {
       if (trueIntentDirective) {
-        this.logger.native("[AI Prompt] executing true condition");
+        this.logger.native("[AI Condition] executing true condition");
         this.intentDir.execute(trueIntentDirective, () => {
           if (callback) {
             callback();
@@ -352,7 +385,7 @@ class DirAiPrompt {
         })
       }
       else {
-        this.logger.native("[AI Prompt] no block connected to true condition");
+        this.logger.native("[AI Condition] no block connected to true condition");
         winston.debug("DirAiPrompt No trueIntentDirective specified");
         if (callback) {
           callback();
@@ -361,7 +394,7 @@ class DirAiPrompt {
     }
     else {
       if (falseIntentDirective) {
-        this.logger.native("[AI Prompt] executing false condition");
+        this.logger.native("[AI Condition] executing false condition");
         this.intentDir.execute(falseIntentDirective, () => {
           if (callback) {
             callback();
@@ -369,7 +402,7 @@ class DirAiPrompt {
         });
       }
       else {
-        this.logger.native("[AI Prompt] no block connected to false condition");
+        this.logger.native("[AI Condition] no block connected to false condition");
         winston.debug("DirAiPrompt No falseIntentDirective specified");
         if (callback) {
           callback();
@@ -385,6 +418,28 @@ class DirAiPrompt {
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
+      }
+    }
+  }
+
+  async #executeIntent(destinationIntentId, callback) {
+    let intentDirective = null;
+    if (destinationIntentId) {
+      intentDirective = DirIntent.intentDirectiveFor(destinationIntentId, null);
+    }
+    if (intentDirective) {
+      this.logger.native("[AI Condition] executing destinationIntentId");
+      this.intentDir.execute(intentDirective, () => {
+        if (callback) {
+          callback();
+        }
+      })
+    }
+    else {
+      this.logger.native("[AI Condition] no block connected to intentId:", destinationIntentId);
+      winston.debug("[AI Condition] no block connected to intentId:" + destinationIntentId);
+      if (callback) {
+        callback();
       }
     }
   }
@@ -478,4 +533,4 @@ class DirAiPrompt {
 
 }
 
-module.exports = { DirAiPrompt }
+module.exports = { DirAiCondition }
