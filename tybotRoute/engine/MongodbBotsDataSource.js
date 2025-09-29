@@ -38,7 +38,7 @@ class MongodbBotsDataSource {
           winston.debug("(MongodbBotsDataSource) bot not found, getting from datasource...");
           const t4 = Date.now();
           bot = await this.getBotById(botId);
-          console.log("[Performance] Time to get bot from db after cache miss " + Date.now() - t4 + "[ms]")
+          console.log("[Performance] Time to get bot from db after cache miss ", Date.now() - t4, "[ms]")
           winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
           await tdcache.set(botCacheKey, JSON.stringify(bot));
 

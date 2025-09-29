@@ -73,13 +73,13 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
-  console.log("[Performance] Initialitation time: " + Date.now() - t1 + "[ms]")
+  console.log("[Performance] Initialitation time: ", Date.now() - t1, "[ms]")
 
   const t2 = Date.now();
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
-    console.log("[Performance] Time to validate request " + Date.now() - t2 + "[ms]")
+    console.log("[Performance] Time to validate request ", Date.now() - t2, "[ms]")
     res.status(200).send({"success":true});
   }
   else {
@@ -109,7 +109,7 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
-  console.log("[Performance] Time to get bot from cache " + Date.now() - t3 + "[ms]")
+  console.log("[Performance] Time to get bot from cache ", Date.now() - t3, "[ms]")
   
   let intentsMachine;
   let backupMachine;
@@ -117,7 +117,7 @@ router.post('/ext/:botid', async (req, res) => {
     const t5 = Date.now();
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId);
-    console.log("[Performance] Time to get Machine " + Date.now() - t5 + "[ms]")
+    console.log("[Performance] Time to get Machine ", Date.now() - t5, "[ms]")
     winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
@@ -143,17 +143,16 @@ router.post('/ext/:botid', async (req, res) => {
   
   const t6 = Date.now();
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
-  console.log("[Performance] Time to update request attributes " + Date.now() - t6 + "[ms]")
+  console.log("[Performance] Time to update request attributes ", Date.now() - t6, "[ms]")
   if (requestId.startsWith("support-group-")) {
     const t7 = Date.now();
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
-    console.log("[Performance] Time to update conversation transcript " + Date.now() - t7 + "[ms]")
+    console.log("[Performance] Time to update conversation transcript ", Date.now() - t7, "[ms]")
   }
 
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
-    console.log("reply ? ", reply);
   }
   catch(err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
@@ -186,7 +185,7 @@ router.post('/ext/:botid', async (req, res) => {
       );
 
       directivesPlug.processDirectives( () => {
-        console.log("[Performance] Time to execute directives " + Date.now() - t8 + "[ms]")
+        console.log("[Performance] Time to execute directives ", Date.now() - t8, "[ms]")
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
