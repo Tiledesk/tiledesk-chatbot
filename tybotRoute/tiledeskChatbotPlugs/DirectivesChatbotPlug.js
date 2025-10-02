@@ -57,6 +57,7 @@ const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
 const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
+const { DirAiCondition } = require('./directives/DirAiCondition');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
@@ -452,8 +453,6 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.WAIT) {
       new DirWait(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
-        const t3e = Date.now();
-        console.log(`[TIMER] Single wait executed in ${t3e - t3}ms`);
         this.process(next_dir);
       });
     }
@@ -585,6 +584,18 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.AI_PROMPT) {
       new DirAiPrompt(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.AI_CONDITION) {
+      new DirAiCondition(context).execute(directive, async (stop) => {
         if (stop == true) {
           winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
           this.theend();
