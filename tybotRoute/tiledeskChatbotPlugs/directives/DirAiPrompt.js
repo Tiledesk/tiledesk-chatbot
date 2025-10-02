@@ -252,7 +252,7 @@ class DirAiPrompt {
 
           if (publicKey === true) {
             let tokens_usage = {
-              tokens: resbody.usage.total_token,
+              tokens: resbody.prompt_token_info?.total_tokens || 0,
               model: json.model
             }
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
