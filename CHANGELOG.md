@@ -1,9 +1,11 @@
 # Tiledesk native chatbot
 
-# 2.0.28
-
-# 2.0.28-rc1
-- bug-fixed: action-model not filled in dirAiPrompt
+# 2.0.30
+- Added AiCondition action
+- Improved AiPrompt action to support openai models
+- Added contexts for gpt-5 in AskKB action
+- Added new attributes parameter for email
+- Fixed bug: action-model not filled in dirAiPrompt
 
 # 2.0.27
 - bug-fixed: not all chatbot variable are updated with leadUpdate action
