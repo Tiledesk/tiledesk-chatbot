@@ -453,8 +453,6 @@ class DirectivesChatbotPlug {
     else if (directive_name === Directives.WAIT) {
       new DirWait(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
-        const t3e = Date.now();
-        console.log(`[TIMER] Single wait executed in ${t3e - t3}ms`);
         this.process(next_dir);
       });
     }

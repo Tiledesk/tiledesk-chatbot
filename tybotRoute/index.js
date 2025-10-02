@@ -42,8 +42,6 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
-  const ttotal = Date.now()
-  const t1 = Date.now();
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
@@ -172,12 +170,7 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
-      const t1e = Date.now();
-      console.log(`[TIMER] Preparation phase in ${t1e - t1}ms ------ ${requestId}`);
-      const t2 = Date.now();
       directivesPlug.processDirectives( () => {
-        const t2e = Date.now();
-        console.log(`[TIMER] Directives executed in ${t2e - t2}ms ------ ${requestId}`);
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }
@@ -200,8 +193,6 @@ router.post('/ext/:botid', async (req, res) => {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
-      const ttotale = Date.now()
-      console.log(`[TIMER] Directives executed in ${ttotal - ttotale}ms ------ ${requestId}`);
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
   }
