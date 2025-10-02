@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# 2.0.30
+# 2.0.31
 - Added AiCondition action
 - Improved AiPrompt action to support openai models
 - Added contexts for gpt-5 in AskKB action
