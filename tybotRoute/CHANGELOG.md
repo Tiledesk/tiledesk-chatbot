@@ -5,6 +5,17 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.0.29
+- added: support for reranking in DirAskKBV2
+
+# 2.0.28
+- bug-fixed: action-model not filled in dirAiPrompt
+
+# 2.0.27
+- bug-fixed: not all chatbot variable are updated with leadUpdate action
+
+# 2.0.26
+
 # 2.0.9
 
 # 2.0.9-rc1
