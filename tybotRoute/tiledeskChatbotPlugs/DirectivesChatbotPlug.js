@@ -211,7 +211,6 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    const t3 = Date.now();
     let context = this.context;
     if (directive) {
       winston.verbose("(DirectivesChatbotPlug) directive['name']: " + directive["name"]);
