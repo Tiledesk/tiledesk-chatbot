@@ -176,6 +176,7 @@ class DirAskGPTV2 {
     let ollama_integration;
 
     if (action.llm === 'ollama') {
+      key = process.env.GPTKEY;
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
         this.logger.error("[Ask Knowledge Base] Error getting ollama integration.");
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
