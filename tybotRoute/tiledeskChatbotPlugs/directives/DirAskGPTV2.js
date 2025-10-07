@@ -309,7 +309,8 @@ class DirAskGPTV2 {
       json.model = {
         name: action.model,
         url: ollama_integration.value.url,
-        token: ollama_integration.value.token
+        provider: 'ollama'
+        //token: ollama_integration.value.token
       }
       json.stream = false;
     }
