@@ -118,6 +118,9 @@ class DirAskGPTV2 {
     if (action.namespace) {
       namespace = action.namespace;
     }
+    if (action.llm) {
+      llm = action.llm;
+    }
     if (action.model) {
       model = action.model;
     }
