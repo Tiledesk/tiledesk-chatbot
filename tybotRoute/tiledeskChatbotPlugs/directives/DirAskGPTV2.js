@@ -308,7 +308,7 @@ class DirAskGPTV2 {
     }
 
     if (llm === 'ollama') {
-      json.gptkey = "";
+      //json.gptkey = "";
       json.model = {
         name: action.model,
         url: ollama_integration.value.url,
