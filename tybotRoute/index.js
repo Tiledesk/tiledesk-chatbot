@@ -42,6 +42,7 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const t1 = Date.now();
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
