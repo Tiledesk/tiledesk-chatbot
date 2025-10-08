@@ -177,6 +177,7 @@ class DirAskGPTV2 {
     let key;
     let publicKey = false;
     let ollama_integration;
+    let vllm_integration;
 
     if (action.llm === 'ollama') {
       key = process.env.GPTKEY;
@@ -191,7 +192,22 @@ class DirAskGPTV2 {
         callback();
         return;
       })
-    } else {
+    }
+    else if (action.llm === 'vllm')  {
+      key = process.env.GPTKEY;
+      vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
+        this.logger.error("[Ask Knowledge Base] Error getting vllm integration.");
+        await this.chatbot.addParameter("flowError", "vLLM integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      })
+    }
+    else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
 
       if (!key && action.llm === 'openai') {
@@ -315,6 +331,19 @@ class DirAskGPTV2 {
         provider: 'ollama'
         //token: ollama_integration.value.token
       }
+
+      json.stream = false;
+    }
+
+    if (llm === 'vllm') {
+      //json.gptkey = "";
+      json.model = {
+        name: action.model,
+        url: vllm_integration.value.url,
+        provider: 'vllm'
+        //token: ollama_integration.value.token
+      }
+      
       json.stream = false;
     }
 
