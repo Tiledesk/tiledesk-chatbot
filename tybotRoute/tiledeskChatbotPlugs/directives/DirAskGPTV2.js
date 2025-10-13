@@ -286,6 +286,10 @@ class DirAskGPTV2 {
       json.alpha = alpha;
     }
 
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
+    }
+
     if (!action.advancedPrompt) {
       if (filled_context) {
         json.system_context = filled_context + "\n" + contexts[model];
