@@ -62,6 +62,7 @@ const { DirAiCondition } = require('./directives/DirAiCondition');
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirIteration } = require('./directives/Diriteration');
 
 class DirectivesChatbotPlug {
 
@@ -727,6 +728,17 @@ class DirectivesChatbotPlug {
       new DirFlowLog(context).execute(directive, async () => {
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
+      })
+    }
+    else if (directive_name === Directives.ITERATION) {
+      new DirIteration(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          winston.debug("(DirectivesChatbotPlug) DirIteration Stopping Actions on: ", directive);
+          this.theend();
+        } else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
       })
     }
     else {
