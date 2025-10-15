@@ -60,7 +60,7 @@ const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirFlowLog } = require('./directives/DirFlowLog');
-const { DirIteration } = require('./directives/Diriteration');
+const { DirIteration } = require('./directives/DirIteration');
 
 const winston = require('../utils/winston');
 
