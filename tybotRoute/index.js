@@ -73,11 +73,13 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
+  console.log("[Performance] Initialitation time: ", Date.now() - t1, "[ms]")
 
   // validate reuqestId
   let t1 = Date.now();
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
+    console.log("[Performance] Time to validate request ", Date.now() - t2, "[ms]")
     res.status(200).send({"success":true});
   }
   else {
@@ -115,8 +117,10 @@ router.post('/ext/:botid', async (req, res) => {
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
+    const t5 = Date.now();
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId);
+    console.log("[Performance] Time to get Machine ", Date.now() - t5, "[ms]")
     winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
@@ -166,8 +170,11 @@ router.post('/ext/:botid', async (req, res) => {
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
+      const t8 = Date.now();
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
+      console.log("[Performance] Time to transform actions to directives ", Date.now() - t8, "[ms]")
       winston.debug("(tybotRoute) the directives:", directives)
+      const t9 = Date.now();
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
