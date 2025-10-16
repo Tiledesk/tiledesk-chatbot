@@ -42,6 +42,7 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  console.log("\n /ext called at ", Date.now());
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
@@ -74,6 +75,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
 
   // validate reuqestId
+  let t1 = Date.now();
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
     res.status(200).send({"success":true});
@@ -82,6 +84,7 @@ router.post('/ext/:botid', async (req, res) => {
     res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
     return;
   }
+  console.log("[PERF] time to validate request id: ", Date.now() - t1);
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
   await tdcache.set(
@@ -90,6 +93,7 @@ router.post('/ext/:botid', async (req, res) => {
     {EX: 604800} // 7 days
   );
 
+  let t2 = Date.now();
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
@@ -104,7 +108,10 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+  console.log("[PERF] time to get bot from cache: ", Date.now() - t2);
   
+  
+  let t3 = Date.now();
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
@@ -115,6 +122,7 @@ router.post('/ext/:botid', async (req, res) => {
   else {
     intentsMachine = {}
   }
+  console.log("[PERF] time to get machine: ", Date.now() - t3);
 
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
@@ -133,9 +141,13 @@ router.post('/ext/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
   
+  let t4 = Date.now();
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  console.log("[PERF] time to update request attributes: ", Date.now() - t4);
   if (requestId.startsWith("support-group-")) {
+    let t5 = Date.now();
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    console.log("[PERF] time to updated conversationt transcript: ", Date.now() - t5);
   }
 
   let reply = null;
@@ -170,7 +182,9 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+      let t6 = Date.now();
       directivesPlug.processDirectives( () => {
+        console.log("[PERF] time to process directives: ", Date.now() - t6);
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }

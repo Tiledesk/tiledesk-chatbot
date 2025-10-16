@@ -29,10 +29,12 @@ class MongodbBotsDataSource {
         winston.debug("(MongodbBotsDataSource) _bot_as_string found in chache: " + _bot_as_string);
         winston.debug("(MongodbBotsDataSource) value_type: " + value_type);
         if (_bot_as_string) {
+          console.log("[PERF] cache HIT");
           bot = JSON.parse(_bot_as_string);
           winston.debug("(MongodbBotsDataSource) got bot from cache: ", bot);
         }
         else {
+          console.log("[PERF] cache MISS");
           winston.debug("(MongodbBotsDataSource) bot not found, getting from datasource...");
           bot = await this.getBotById(botId);
           winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
