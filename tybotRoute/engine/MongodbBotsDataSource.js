@@ -29,14 +29,19 @@ class MongodbBotsDataSource {
         winston.debug("(MongodbBotsDataSource) _bot_as_string found in chache: " + _bot_as_string);
         winston.debug("(MongodbBotsDataSource) value_type: " + value_type);
         if (_bot_as_string) {
+          console.log("[Performance] Cache hit")
           bot = JSON.parse(_bot_as_string);
           winston.debug("(MongodbBotsDataSource) got bot from cache: ", bot);
         }
         else {
+          console.log("[Performance] Cache miss")
           winston.debug("(MongodbBotsDataSource) bot not found, getting from datasource...");
+          const t4 = Date.now();
           bot = await this.getBotById(botId);
+          console.log("[Performance] Time to get bot from db after cache miss ", Date.now() - t4, "[ms]")
           winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
           await tdcache.set(botCacheKey, JSON.stringify(bot));
+
           // DEBUG CODE REMOVE
           // let bot_ = await tdcache.get(botCacheKey);
         }
