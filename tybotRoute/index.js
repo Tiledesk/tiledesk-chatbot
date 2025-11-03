@@ -43,6 +43,7 @@ let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   const t1 = Date.now();
+  console.log("[Performance] ext called on: ", t1);
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
