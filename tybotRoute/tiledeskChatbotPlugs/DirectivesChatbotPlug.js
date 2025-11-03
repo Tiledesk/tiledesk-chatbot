@@ -62,6 +62,7 @@ const { DirAiCondition } = require('./directives/DirAiCondition');
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirAiTool } = require('./directives/DirAiTool');
 
 class DirectivesChatbotPlug {
 
@@ -597,6 +598,18 @@ class DirectivesChatbotPlug {
       new DirAiCondition(context).execute(directive, async (stop) => {
         if (stop == true) {
           winston.debug("(DirectivesChatbotPlug) DirAskGPTV2 Stopping Actions on: ", directive);
+          this.theend();
+        }
+        else {
+          let next_dir = await this.nextDirective(this.directives);
+          this.process(next_dir);
+        }
+      });
+    }
+    else if (directive_name === Directives.AI_TOOL) {
+      new DirAiTool(context).execute(directive, async (stop) => {
+        if (stop == true) {
+          winston.debug("(DirectivesChatbotPlug) DirAiTool Stopping Actions on: ", directive);
           this.theend();
         }
         else {

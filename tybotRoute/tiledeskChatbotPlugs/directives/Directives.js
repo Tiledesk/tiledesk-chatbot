@@ -38,6 +38,7 @@ class Directives {
   static GPT_TASK = "gpt_task";
   static AI_PROMPT = "ai_prompt";
   static AI_CONDITION = "ai_condition";
+  static AI_TOOL = "ai_tool";
   /**** INTEGRATIONS ****/
   static QAPLA = 'qapla';
   static MAKE = 'make';
