@@ -252,8 +252,10 @@ class DirAiPrompt {
             error = err.response.data.detail[0]?.msg;
           } else if (err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
-          } else {
+          } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
+          } else {
+            error = err.message || "General error executing action" // String(err);
           }
           this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
