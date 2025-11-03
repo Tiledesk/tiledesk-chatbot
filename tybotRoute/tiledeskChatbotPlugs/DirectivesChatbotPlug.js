@@ -249,7 +249,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.INTENT) {
       new DirIntent(context).execute(directive, async (stop) => {
-        console.log("[Performance] DirIntent finish execution on ", Date.now() - t1, "[ms]")
+        console.log("[Performance] DirIntent finish execution on ", Date.now())
         if (stop) {
           winston.debug("(DirectivesChatbotPlug) DirIntent Stopping Actions on: ", directive);
           this.theend();
