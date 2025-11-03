@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.32
+- Improved AiPrompt to support MCP Servers
+
 # 2.0.31
 - Added AiCondition action
 - Improved AiPrompt action to support openai models
