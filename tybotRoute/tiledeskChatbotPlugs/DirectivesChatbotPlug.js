@@ -574,8 +574,10 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.GPT_TASK) {
       new DirGptTask(context).execute(directive, async (stop) => {
+        console.log("stop ? ", stop);
         if (stop == true) {
           winston.debug("(DirectivesChatbotPlug) DirGptTask Stopping Actions on: ", directive);
+          console.log("the end")
           this.theend();
         }
         else {

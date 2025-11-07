@@ -209,7 +209,7 @@ class DirGptTask {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.debug("(DirGptTask) openai err: ", err);
-          console.log("(DirGptTask) openai err: ", err);
+          console.log("(DirGptTask) openai err.data: ", JSON.stringify(err.data));
           winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
           this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
           await this.#assignAttributes(action, answer);
@@ -218,7 +218,10 @@ class DirGptTask {
             console.log("false intent");
             try {
               await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
+              console.log("addParamter ok")
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              console.log("executeCondition ok")
+              console.log("callback")
               callback(true);
               return;
             } catch (e) {
