@@ -287,10 +287,11 @@ class DirAskGPTV2 {
     }
 
     if (!action.advancedPrompt) {
+      const contextTemplate = contexts[model] || contexts["general"];
       if (filled_context) {
-        json.system_context = filled_context + "\n" + contexts[model];
+        json.system_context = filled_context + "\n" + contextTemplate;
       } else {
-        json.system_context = contexts[model];
+        json.system_context = contextTemplate;
       }
     } else {
       json.system_context = filled_context;
