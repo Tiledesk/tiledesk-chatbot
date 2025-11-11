@@ -42,6 +42,8 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const t1 = Date.now();
+  console.log("[Performance] ext called on: ", t1);
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
@@ -72,10 +74,13 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
+  console.log("[Performance] Initialitation time: ", Date.now() - t1, "[ms]")
 
+  const t2 = Date.now();
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
+    console.log("[Performance] Time to validate request ", Date.now() - t2, "[ms]")
     res.status(200).send({"success":true});
   }
   else {
@@ -99,17 +104,21 @@ router.post('/ext/:botid', async (req, res) => {
     botsDS = new MockBotsDataSource(staticBots);
   }
   
+  const t3 = Date.now();
   // get the bot metadata
   let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
     Promise.reject(err);
     return;
   });
+  console.log("[Performance] Time to get bot from cache ", Date.now() - t3, "[ms]")
   
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
+    const t5 = Date.now();
     intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId);
     backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId);
+    console.log("[Performance] Time to get Machine ", Date.now() - t5, "[ms]")
     winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
   }
   else {
@@ -133,9 +142,13 @@ router.post('/ext/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
   
+  const t6 = Date.now();
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  console.log("[Performance] Time to update request attributes ", Date.now() - t6, "[ms]")
   if (requestId.startsWith("support-group-")) {
+    const t7 = Date.now();
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    console.log("[Performance] Time to update conversation transcript ", Date.now() - t7, "[ms]")
   }
 
   let reply = null;
@@ -154,8 +167,11 @@ router.post('/ext/:botid', async (req, res) => {
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
+      const t8 = Date.now();
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
+      console.log("[Performance] Time to transform actions to directives ", Date.now() - t8, "[ms]")
       winston.debug("(tybotRoute) the directives:", directives)
+      const t9 = Date.now();
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -451,6 +467,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
+        console.log("listener response json: ", json);
+        console.log("listener response status: ", status);
         winston.debug("Web response status: " + status);
 
         return res.status(status).send(json.payload);

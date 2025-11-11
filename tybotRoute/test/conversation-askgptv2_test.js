@@ -1200,11 +1200,9 @@ describe('Conversation for AskGPTV2 test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", message)
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
-      console.log("command2: ", command2)
       assert(command2.type === "message");
       assert(command2.message.text === "kb replied: this is mock kb reply with hybrid search");
 
