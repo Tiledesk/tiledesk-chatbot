@@ -71,7 +71,7 @@ class DirAskGPTV2 {
     // default values
     let answer = "No answers";
     let namespace = this.context.projectId;
-    let llm;
+    let llm = "openai";
     let model;
     let temperature;
     let max_tokens;
@@ -99,6 +99,9 @@ class DirAskGPTV2 {
     }
 
     let source = null;
+    if (!action.llm) {
+      action.llm = "openai";
+    }
 
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       this.logger.error(`[Ask Knowledge Base] missing attribute '${missing_param}'`);
@@ -115,6 +118,9 @@ class DirAskGPTV2 {
 
     if (action.namespace) {
       namespace = action.namespace;
+    }
+    if (action.llm) {
+      llm = action.llm;
     }
     if (action.model) {
       model = action.model;
@@ -172,8 +178,10 @@ class DirAskGPTV2 {
     let key;
     let publicKey = false;
     let ollama_integration;
+    let vllm_integration;
 
     if (action.llm === 'ollama') {
+      key = process.env.GPTKEY;
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
         this.logger.error("[Ask Knowledge Base] Error getting ollama integration.");
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
@@ -185,7 +193,22 @@ class DirAskGPTV2 {
         callback();
         return;
       })
-    } else {
+    }
+    else if (action.llm === 'vllm')  {
+      key = process.env.GPTKEY;
+      vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
+        this.logger.error("[Ask Knowledge Base] Error getting vllm integration.");
+        await this.chatbot.addParameter("flowError", "vLLM integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      })
+    }
+    else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
 
       if (!key && action.llm === 'openai') {
