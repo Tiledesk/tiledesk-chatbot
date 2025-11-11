@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.34
+- Improved AskGPTV2 action with support for multi LLMs
+
 # 2.0.33
 - Added default context for general LLMs in AskKBV2
 
