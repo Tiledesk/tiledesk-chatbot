@@ -908,7 +908,7 @@ class TiledeskChatbotUtil {
             winston.debug("(TiledeskChatbotUtil) Adding Globals to context: ", _bot); 
             
             if (_bot.attributes && _bot.attributes.globals) {
-                winston.error("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals);
+                winston.debug("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals);
                 _bot.attributes.globals.forEach(async (global_var) => {
                     winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
                     await chatbot.addParameter(global_var.key, global_var.value);

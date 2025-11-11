@@ -14,6 +14,8 @@ const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
+const path = require("path");
+const mime = require("mime-types");
 
 
 class DirAiPrompt {
@@ -102,7 +104,7 @@ class DirAiPrompt {
         winston.debug("DirAiPrompt transcript string: " + transcript_string)
 
       if (transcript_string) {
-        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        transcript = TiledeskChatbotUtil.transcriptJSON(transcript_string);
         winston.debug("DirAiPrompt transcript: ", transcript)
       } else {
         this.logger.warn("[AI Prompt] no chat transcript found, skipping history translation");
@@ -212,6 +214,24 @@ class DirAiPrompt {
 
     }
 
+    if (action.attach) {
+      json.attach = await this.detectAttach(action.attach);
+    }
+
+    if (action.servers) {
+      json.servers = this.arrayToObject(action.servers);
+      if (!json.servers) {
+        await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback();
+          return;
+        }
+        callback();
+        return;
+      }
+    }
+
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
@@ -232,8 +252,10 @@ class DirAiPrompt {
             error = err.response.data.detail[0]?.msg;
           } else if (err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
-          } else {
+          } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
+          } else {
+            error = err.message || "General error executing action" // String(err);
           }
           this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
@@ -476,6 +498,51 @@ class DirAiPrompt {
     })
   }
 
+  arrayToObject(arr) {
+    if (!Array.isArray(arr)) {
+      winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
+      this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
+      return null;
+    }
+    return arr.reduce((acc, item) => {
+      const { name, ...rest } = item;
+      acc[name] = rest;
+      return acc;
+    }, {});
+  }
+
+  async detectAttach(source) {
+    let mime_type;
+    let type;
+  
+    const ext = path.extname(source);
+    mime_type = mime.lookup(ext) || "application/octet-stream";
+
+    if (mime_type === "application/octet-stream") {
+      try {
+        const res = await axios.head(source);
+        if (res.headers["content-type"]) {
+          mime_type = res.headers["content-type"];
+        }
+      } catch (err) {
+        mime_type = "application/octet-stream";
+      }
+    }
+  
+    if (mime_type.startsWith("image/")) type = "image";
+    else if (mime_type.startsWith("video/")) type = "video";
+    else if (mime_type.startsWith("audio/")) type = "audio";
+    else type = "file";
+
+    return {
+      type: type,
+      source: source,
+      mime_type: mime_type,
+      detail: "auto"
+    }
+
+  }
+  
 }
 
 module.exports = { DirAiPrompt }
