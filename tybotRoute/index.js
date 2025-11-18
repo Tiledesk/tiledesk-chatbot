@@ -102,14 +102,14 @@ router.post('/ext/:botid', async (req, res) => {
   
   // get the bot metadata
   let start1 = new Date()
-  console.log(`(GAB) /ext/${botId} before get botsDS.getBotByIdCache at : ${start1} - ${start1.getDate()}`)
   let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
     Promise.reject(err);
     return;
   });
   let end1 = new Date()
-  console.log(`(GAB) /ext/${botId} after get botsDS.getBotByIdCache at : ${end1} - ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+  console.log(`(GAB) /ext/${botId} after get botsDS.getBotByIdCache at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
   
+  let start2 = new Date()
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
@@ -120,6 +120,8 @@ router.post('/ext/:botid', async (req, res) => {
   else {
     intentsMachine = {}
   }
+  let end2 = new Date()
+  console.log(`(GAB) /ext/${botId} after get IntentsMachineFactory.getMachine at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
 
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
@@ -138,10 +140,17 @@ router.post('/ext/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
   
+  let start3 = new Date()
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  let end3 = new Date()
+  console.log(`(GAB) /ext/${botId} after get TiledeskChatbotUtil.updateRequestAttributes at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
   if (requestId.startsWith("support-group-")) {
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
   }
+  let end4 = new Date()
+  console.log(`(GAB) /ext/${botId} after get TiledeskChatbotUtil.updateConversationTranscript at :  ${end4.getTime()}, diff: ${end4-end3}[ms]`)
+  
+
 
   let reply = null;
   try {
