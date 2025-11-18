@@ -39,8 +39,5 @@
   },
   "devDependencies": {
     "mocha": "^8.4.0"
-  },
-  "overrides": {
-    "minimist": "1.2.8"
   }
 }
