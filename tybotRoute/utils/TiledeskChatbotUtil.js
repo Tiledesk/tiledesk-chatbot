@@ -684,7 +684,7 @@ class TiledeskChatbotUtil {
 
             const addQueue = [];
             const deleteQueue = [];
-            const add = (k, v) => { if (v !== undefined && v !== null && k !== undefined && K !== null) addQueue.push([k, v]); };
+            const add = (k, v) => { if (v !== undefined && v !== null && k !== undefined && k !== null) addQueue.push([k, v]); };
             const remove = (k) => { if(k) deleteQueue.push(k);}
 
             // --- BASE ATTRIBUTES ---
