@@ -117,7 +117,7 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    console.log(`(GAB) DirectivesChatbotPlug 0--> after processDirectives at :  ${new Date()}`)
+    console.log(`(GAB) DirectivesChatbotPlug 0--> after processDirectives at :  ${new Date().getTime()}`)
     this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
@@ -174,7 +174,7 @@ class DirectivesChatbotPlug {
     let start1 = new Date()
     const next_dir = await this.nextDirective(directives);
     let end1 = new Date()
-    console.log(`(GAB) DirectivesChatbotPlug 1--> after processDirectives at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+    console.log(`(GAB) DirectivesChatbotPlug 1--> after processDirectives nextDirective at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
   
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
@@ -216,7 +216,7 @@ class DirectivesChatbotPlug {
   }
 
   async process(directive) {
-    console.log(`(GAB) DirectivesChatbotPlug process 0--> after process at :  ${new Date()}`)
+    console.log(`(GAB) DirectivesChatbotPlug process 0--> after process at :  ${new Date().getTime()}`)
     let context = this.context;
     if (directive) {
       winston.verbose("(DirectivesChatbotPlug) directive['name']: " + directive["name"]);
@@ -229,15 +229,18 @@ class DirectivesChatbotPlug {
     if (directive && directive.action) {
         const action_id = directive.action["_tdActionId"];
         const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
+        let end1 = new Date()
+        console.log(`(GAB) DirectivesChatbotPlug process 1--> after chatbot.currentLockedAction at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
         if ( locked_action_id && (locked_action_id !== action_id) ) {
+          let start2 = new Date();
           let next_dir = await this.nextDirective(this.directives);
+          let end2 = new Date()
+          console.log(`(GAB) DirectivesChatbotPlug process 2--> after chatbot.currentLockedAction at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
           this.process(next_dir);
           return;
         }
       
     }
-    let end1 = new Date()
-    console.log(`(GAB) DirectivesChatbotPlug process 1--> after chatbot.currentLockedAction at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
     let start2 = new Date()
     if (directive == null || (directive !== null && directive["name"] === undefined)) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is (null?): ", directive);
@@ -461,10 +464,10 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.WAIT) {
       let end2 = new Date();
-      console.log(`(GAB) DirectivesChatbotPlug process 2--> before DirWait execute at :  ${end2.getTime()}`)
+      console.log(`(GAB) DirectivesChatbotPlug process 3--> before DirWait execute at :  ${end2.getTime()}`)
       new DirWait(context).execute(directive, async () => {
         let endWait = new Date()
-        console.log(`(GAB) DirectivesChatbotPlug process 2--> after DirWait executed callback at :  ${endWait.getTime()}, diff: ${endWait-end2}[ms]`)
+        console.log(`(GAB) DirectivesChatbotPlug process 3--> after DirWait executed callback at :  ${endWait.getTime()}, diff: ${endWait-end2}[ms]`)
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });
