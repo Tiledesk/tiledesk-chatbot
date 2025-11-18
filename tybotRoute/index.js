@@ -43,7 +43,7 @@ let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
-  console.log(`(GAB) /ext/${botId} called at : ${new Date()} - ${new Date().getTime()}`)
+  console.log(`(GAB) /ext/${botId} 0--> called at : ${new Date().getTime()}`)
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
@@ -107,7 +107,7 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   });
   let end1 = new Date()
-  console.log(`(GAB) /ext/${botId} after get botsDS.getBotByIdCache at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+  console.log(`(GAB) /ext/${botId} 1--> after get botsDS.getBotByIdCache at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
   
   let start2 = new Date()
   let intentsMachine;
@@ -121,7 +121,7 @@ router.post('/ext/:botid', async (req, res) => {
     intentsMachine = {}
   }
   let end2 = new Date()
-  console.log(`(GAB) /ext/${botId} after get IntentsMachineFactory.getMachine at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
+  console.log(`(GAB) /ext/${botId} 2--> after get IntentsMachineFactory.getMachine at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
 
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
@@ -143,15 +143,15 @@ router.post('/ext/:botid', async (req, res) => {
   let start3 = new Date()
   await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
   let end3 = new Date()
-  console.log(`(GAB) /ext/${botId} after get TiledeskChatbotUtil.updateRequestAttributes at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
+  console.log(`(GAB) /ext/${botId} 3--> after get TiledeskChatbotUtil.updateRequestAttributes at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
   if (requestId.startsWith("support-group-")) {
     await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
   }
   let end4 = new Date()
-  console.log(`(GAB) /ext/${botId} after get TiledeskChatbotUtil.updateConversationTranscript at :  ${end4.getTime()}, diff: ${end4-end3}[ms]`)
+  console.log(`(GAB) /ext/${botId} 4--> after get TiledeskChatbotUtil.updateConversationTranscript at :  ${end4.getTime()}, diff: ${end4-end3}[ms]`)
   
 
-
+  let start5 = new Date()
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
@@ -164,12 +164,19 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) No reply. Stop flow.")
     return;
   }
+  let end5 = new Date()
+  console.log(`(GAB) /ext/${botId} 5--> after chatbot.replyToMessage at :  ${end5.getTime()}, diff: ${end5-start5}[ms]`)
+  
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     try {
+      let start6 = new Date()
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
       winston.debug("(tybotRoute) the directives:", directives)
+      let end6 = new Date()
+      console.log(`(GAB) /ext/${botId} 6--> after TiledeskChatbotUtil.actionsToDirectives at :  ${end6.getTime()}, diff: ${end6-start6}[ms]`)
+  
       let directivesPlug = new DirectivesChatbotPlug(
         {
           message: message,
@@ -184,6 +191,7 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+      console.log(`(GAB) /ext/${botId} 7--> directivesPlug.processDirectives at :  ${end6.getTime()}`)
       directivesPlug.processDirectives( () => {
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
