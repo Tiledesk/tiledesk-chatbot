@@ -49,7 +49,7 @@ class DirWait {
 
     this.go(action, () => {
       console.log('(DirWait)  go callback exit...')
-      this.logger.native("[Wait] Executed");
+      // this.logger.native("[Wait] Executed");
       callback();
     })
   }
@@ -64,7 +64,7 @@ class DirWait {
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
     console.log(`(GAB) called DirWait go() at :${new Date().getTime()}, millis: ${action.millis}`)
-    this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
+    // this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       console.log(`(GAB) called DirWait go() settimeout at : ${new Date().getTime()}`)
       callback();
