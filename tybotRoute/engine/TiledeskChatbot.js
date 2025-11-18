@@ -95,11 +95,18 @@ class TiledeskChatbot {
         // });
         // it only gets the locked_intent
         // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
+        let start0 = new Date()
         const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
+        let end0 = new Date()
+        console.log(`(GAB) TiledeskChatbot replyToMessage 0--> after botsDataSource.getByIntentDisplayNameCache at :  ${end0.getTime()}, diff: ${end0-start0}[ms]`)
         winston.debug("(TiledeskChatbot) Locked intent. Got faqs: ", faq);
         let reply;
         if (faq) {
+          let start1 = new Date()
           reply = await this.execIntent(faq, message, lead);//, bot);
+          let end1 = new Date()
+          console.log(`(GAB) TiledeskChatbot replyToMessage 0--> after execIntent at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+        
         }
         else {
           reply = {
@@ -217,10 +224,18 @@ class TiledeskChatbot {
         }
         winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
         if (intents && intents.length > 0) {
+          let start2 = new Date();
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
+          let end2 = new Date()
+          console.log(`(GAB) TiledeskChatbot replyToMessage 0--> after botsDataSource.getByIntentDisplayNameCache in if at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
+        
           let reply;
           try {
+            let start3 = new Date();
             reply = await this.execIntent(faq, message, lead);//, bot);
+            let end3 = new Date()
+            console.log(`(GAB) TiledeskChatbot replyToMessage 0--> after execIntent in if at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
+        
           }
           catch(error) {
             winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
