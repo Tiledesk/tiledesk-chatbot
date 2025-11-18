@@ -18,6 +18,7 @@ class DirWait {
   }
 
   execute(directive, callback) {
+    console.log(`(GAB) called DirWait executed at : ${new Date()} - ${new Date().getTime()}, directive: ${directive}`)
     //  500ms < wait-time < 10.000ms
     winston.verbose("Execute Wait directive");
     let action;
@@ -55,17 +56,18 @@ class DirWait {
 
   async go(action, callback) {
     winston.debug("(DirWait) Action: ", action);
-    console.log('(DirWait) exec goooooo', action)
+    console.log(`(GAB) called DirWait go() at : ${new Date()} - ${new Date().getTime()}, action: ${action}`)
     // reset step?
     // const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
     if (action && action.millis >= 1000) {//2000 * 60) { // at list 2 minutes waiting time to reset the steps counter
       // await this.tdcache.set(step_key, 0);
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
-    console.log("(DirWait) [Wait] Waiting for ", action.millis, "[ms]")
+    console.log(`(GAB) called DirWait go() at : ${new Date()} - ${new Date().getTime()}, millis: ${action.millis}`)
     this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       console.log('(DirWait) exec setTimeout', action)
+      console.log(`(GAB) called DirWait go() settimeout at : ${new Date()} - ${new Date().getTime()}`)
       callback();
     }, action.millis);
   }

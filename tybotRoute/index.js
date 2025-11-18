@@ -43,6 +43,7 @@ let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
+  console.log(`(GAB) /ext/${botId} called at : ${new Date()} - ${new Date().getTime()}`)
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
@@ -100,10 +101,14 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // get the bot metadata
+  let start1 = new Date()
+  console.log(`(GAB) /ext/${botId} before get botsDS.getBotByIdCache at : ${start1} - ${start1.getDate()}`)
   let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
     Promise.reject(err);
     return;
   });
+  let end1 = new Date()
+  console.log(`(GAB) /ext/${botId} after get botsDS.getBotByIdCache at : ${end1} - ${end1.getTime()}, diff: ${end1-start1}[ms]`)
   
   let intentsMachine;
   let backupMachine;

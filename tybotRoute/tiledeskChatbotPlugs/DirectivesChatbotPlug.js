@@ -451,6 +451,7 @@ class DirectivesChatbotPlug {
     }
     else if (directive_name === Directives.WAIT) {
       new DirWait(context).execute(directive, async () => {
+        console.log(`(GAB) callback DirWait execute in  DirectivesChatbotPlug at : ${new Date()} - ${new Date().getTime()}`)
         let next_dir = await this.nextDirective(this.directives);
         this.process(next_dir);
       });

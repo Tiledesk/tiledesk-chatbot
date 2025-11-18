@@ -951,28 +951,14 @@ class TiledeskChatbotUtil {
     }
 
     static validateRequestId(requestId, projectId) {
-        let isValid = false;
-        if (requestId.startsWith("support-group-")) {
-            const parts = requestId.split("-");
-            if (parts.length >= 4) {
-                isValid = (parts[0] === "support" && parts[1] === "group" && parts[2] === projectId && parts[3].length > 0);
-            }
-            else {
-                isValid = false;
-            }
-        } else if (requestId.startsWith("automation-request-")) {
-            const parts = requestId.split("-");
-            if (parts.length === 4 || parts.length === 5) {
-                isValid = (parts[0] === "automation" && parts[1] === "request" && parts[2] === projectId && parts[3].length > 0);
-            }
-            else {
-                isValid = false;
-            }
-        }
-        else {
-            isValid = false;
-        }
-        return isValid;
+        if (!requestId || !projectId) return false;
+
+        // Pattern for support-group-{projectId}-{id}
+        const supportPattern = new RegExp(`^support-group-${projectId}-\\S+$`);
+        // Pattern for automation-request-{projectId}-{id} or automation-request-{projectId}-{id}-something
+        const automationPattern = new RegExp(`^automation-request-${projectId}-\\S+(-\\S+)?$`);
+
+        return supportPattern.test(requestId) || automationPattern.test(requestId);
     }
 
     static userFlowAttributes(flowAttributes) {
