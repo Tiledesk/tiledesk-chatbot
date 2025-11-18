@@ -47,6 +47,7 @@ class DirWait {
     }
 
     this.go(action, () => {
+      console.log('(DirWait)  go callback exit...')
       this.logger.native("[Wait] Executed");
       callback();
     })
@@ -54,6 +55,7 @@ class DirWait {
 
   async go(action, callback) {
     winston.debug("(DirWait) Action: ", action);
+    console.log('(DirWait) exec goooooo', action)
     // reset step?
     // const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
     if (action && action.millis >= 1000) {//2000 * 60) { // at list 2 minutes waiting time to reset the steps counter
@@ -62,6 +64,7 @@ class DirWait {
     }
     this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
+      console.log('(DirWait) exec setTimeout', action)
       callback();
     }, action.millis);
   }
