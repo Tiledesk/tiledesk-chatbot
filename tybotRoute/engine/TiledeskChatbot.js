@@ -43,7 +43,7 @@ class TiledeskChatbot {
   }
 
   async replyToMessage(message, callback) {
-    console.log(`(GAB) TiledeskChatbot replyToMessage start -->  at : ${new Date().getTime()} for message.sender: ${message.sender}`)
+    console.log(`(GAB) TiledeskChatbot replyToMessage start -->  at : ${new Date().getTime()} for message.sender: ${message.sender} with text: ${message.text}`)
     return new Promise( async (resolve, reject) => {
       let lead = null;
       if (message.request) {
@@ -51,6 +51,7 @@ class TiledeskChatbot {
       }
       
 
+      let start00 = new Date();
       if (message.sender != "_tdinternal") {
         try {
           winston.verbose("(TiledeskChatbot) External user message, running reset operations…");
@@ -84,6 +85,9 @@ class TiledeskChatbot {
           winston.error("(TiledeskChatbot) Error resetting locked intent: ", error)
         }
       }
+      let end00 = new Date()
+      console.log(`(GAB) TiledeskChatbot replyToMessage 00--> after reset lockedIntent at :  ${end00.getTime()}, diff: ${end00-start00}[ms]`)
+       
 
 
       // Checking locked intent (for non-internal intents)

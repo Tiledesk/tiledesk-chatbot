@@ -155,10 +155,12 @@ router.post('/ext/:botid', async (req, res) => {
   console.log(`(GAB) /ext/${botId} 5--> after get TiledeskChatbotUtil.updateConversationTranscript at :  ${end4.getTime()}, diff: ${end4-end3}[ms]`)
   
 
-  let start5 = new Date()
   let reply = null;
   try {
+    let start5 = new Date()
     reply = await chatbot.replyToMessage(message);
+    let end5 = new Date()
+    console.log(`(GAB) /ext/${botId} 6--> after chatbot.replyToMessage at :  ${end5.getTime()}, diff: ${end5-start5}[ms]`)
   }
   catch(err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
@@ -168,8 +170,6 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) No reply. Stop flow.")
     return;
   }
-  let end5 = new Date()
-  console.log(`(GAB) /ext/${botId} 6--> after chatbot.replyToMessage at :  ${end5.getTime()}, diff: ${end5-start5}[ms]`)
   
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)

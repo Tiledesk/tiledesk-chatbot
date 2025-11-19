@@ -14,7 +14,7 @@ class DirWait {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     
-    // this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -49,22 +49,25 @@ class DirWait {
 
     this.go(action, () => {
       console.log(`(DirWait)  go callback exit at: ${new Date().getTime()} . . .` )
-      // this.logger.native("[Wait] Executed");
+      this.logger.native("[Wait] Executed");
       callback();
     })
   }
 
   async go(action, callback) {
     winston.debug("(DirWait) Action: ", action);
-    console.log(`(GAB) called DirWait go() at : ${new Date().getTime()}, action:`, action)
     // reset step?
     // const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
     if (action && action.millis >= 1000) {//2000 * 60) { // at list 2 minutes waiting time to reset the steps counter
       // await this.tdcache.set(step_key, 0);
+      let start1= new Date()
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
+      let end1 = new Date()
+      console.log(`(GAB) called DirWait go() 1-> after TiledeskChatbot.resetStep at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+       
     }
     console.log(`(GAB) called DirWait go() at :${new Date().getTime()}, millis: ${action.millis}`)
-    // this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
+    this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
     setTimeout(() => {
       console.log(`(GAB) called DirWait go() settimeout at : ${new Date().getTime()}`)
       callback();

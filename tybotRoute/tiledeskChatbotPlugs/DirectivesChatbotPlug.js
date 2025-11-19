@@ -181,9 +181,13 @@ class DirectivesChatbotPlug {
   }
 
   async nextDirective(directives) {
+    console.log(`(GAB) DirectivesChatbotPlug 0--> nextDirective at :  ${new Date().getTime()}`)
+    let start1 = new Date()
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
-
+    let end1 = new Date()
+    console.log(`(GAB) DirectivesChatbotPlug 1--> nextDirective at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
+  
     if (go_on.error) {
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
