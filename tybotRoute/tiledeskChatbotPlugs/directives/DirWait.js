@@ -14,7 +14,7 @@ class DirWait {
     this.tdcache = context.tdcache;
     this.requestId = context.requestId;
     
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    // this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -48,7 +48,7 @@ class DirWait {
     }
 
     this.go(action, () => {
-      console.log('(DirWait)  go callback exit...')
+      console.log(`(DirWait)  go callback exit at: ${new Date().getTime()} . . .` )
       // this.logger.native("[Wait] Executed");
       callback();
     })
