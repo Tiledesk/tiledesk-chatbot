@@ -1,5 +1,6 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const ms = require('minimist-string');
+const { parseArgsStringToArgv } = require('string-argv');
+const minimist = require('minimist');
 const winston = require('../../utils/winston');
 
 class DirFireTiledeskEvent {
@@ -41,7 +42,8 @@ class DirFireTiledeskEvent {
   parseParams(directive_parameter) {
     let name = null;
     let payload = null;
-    const params = ms(directive_parameter);
+    const argv = parseArgsStringToArgv(directive_parameter); // trasforma in array come process.argv
+    const params = minimist(argv); 
     if (params.n) {
       name = params.n;
     }

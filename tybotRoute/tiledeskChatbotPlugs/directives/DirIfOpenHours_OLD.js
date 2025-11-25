@@ -1,6 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 
 class DirIfOpenHours {
@@ -22,18 +21,6 @@ class DirIfOpenHours {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      if (!params.trueIntent && !params.falseIntent) {
-        callback();
-        return;
-      }
-      action = {
-        trueIntent: params.trueIntent,
-        falseIntent: params.falseIntent
-      }
     }
     else {
       callback();
@@ -94,22 +81,6 @@ class DirIfOpenHours {
         callback();
       }
     });
-  }
-
-  parseParams(directive_parameter) {
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
   }
 
 }

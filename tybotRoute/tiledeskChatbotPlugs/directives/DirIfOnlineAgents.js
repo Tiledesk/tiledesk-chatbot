@@ -1,6 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 
 class DirIfOnlineAgents {
@@ -23,14 +22,6 @@ class DirIfOnlineAgents {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      action = {
-        trueIntent: params.trueIntent,
-        falseIntent: params.falseIntent
-      }
     }
     else {
       winston.warn("DirIfOnlineAgents Incorrect directive: ", directive);
@@ -122,21 +113,6 @@ class DirIfOnlineAgents {
     });
   }
 
-  parseParams(directive_parameter) {
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
-  }
 }
 
 module.exports = { DirIfOnlineAgents };

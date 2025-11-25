@@ -1,5 +1,4 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
 const winston = require('../../utils/winston')
 
@@ -21,16 +20,6 @@ class DirAssignFromFunction {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      if (directive.parameter) {
-        params = this.parseParams(directive.parameter);
-      }
-      action = {
-          functionName: params.functionName,
-          assignTo: params.assignTo
-      }
     } else {
       winston.warn("Incorrect directive: ", directive);
       callback();
@@ -97,21 +86,6 @@ class DirAssignFromFunction {
         callback(new Error("No function: " + functionName));
         break;
 
-    }
-  }
-  parseParams(directive_parameter) {
-    let functionName = null;
-    let assignTo = null;
-    const params = ms(directive_parameter);
-    if (params.functionName) {
-      functionName = params.functionName
-    }
-    if (params.assignTo) {
-      assignTo = params.assignTo;
-    }
-    return {
-      functionName: functionName,
-      assignTo: assignTo
     }
   }
 
