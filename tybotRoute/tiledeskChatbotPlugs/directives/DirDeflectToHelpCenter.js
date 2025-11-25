@@ -1,7 +1,6 @@
 const { HelpCenterQuery } = require('@tiledesk/helpcenter-query-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst.js');
-const ms = require('minimist-string');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 
@@ -22,13 +21,6 @@ class DirDeflectToHelpCenter {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      const params = this.parseParams(directive.parameter);
-      workspace_id = params.workspace_id;
-      if (params.hc_reply) {
-        hc_reply = params.hc_reply;
-      }
     }
     this.go(action, (stop) => {
       callback(stop);
@@ -158,32 +150,6 @@ class DirDeflectToHelpCenter {
     }
     else {
       callback(false);
-    }
-  }
-
-  parseParams(directive_parameter) {
-    let workspace_id = null;
-    let hc_reply = null;
-    
-    const params = ms(directive_parameter);
-    if (params.w) {
-      workspace_id = params.w
-    }
-    if (params.workspace) {
-      workspace_id = params.workspace
-    }
-    
-    if (params.m) {
-      //hc_reply = params.m.replaceAll("\\n", "\n");
-      hc_reply = params.m.replace(/\\n/g, "\n");
-    }
-    if (params.message) {
-      //hc_reply = params.message.replaceAll("\\n", "\n");
-      hc_reply = params.message.replace(/\\n/g, "\n");
-    }
-    return {
-      workspace_id: workspace_id,
-      hc_reply: hc_reply
     }
   }
 }

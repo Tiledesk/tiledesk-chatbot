@@ -1,7 +1,6 @@
 let axios = require('axios');
 let https = require("https");
 const { v4: uuidv4 } = require('uuid');
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');
 

@@ -1,5 +1,5 @@
-const ms = require('minimist-string');
-
+const { parseArgsStringToArgv } = require('string-argv');
+const minimist = require('minimist');
 // DEPRECATED
 class DirOfflineHours {
 
@@ -79,7 +79,8 @@ class DirOfflineHours {
     let intentreply = null;
     let message = null;
     let replace = false;
-    const params = ms(directive_parameter);
+    const argv = parseArgsStringToArgv(directive_parameter); // trasforma in array come process.argv
+    const params = minimist(argv); 
     // console.log("params:", params)
     
     if (params.m) {

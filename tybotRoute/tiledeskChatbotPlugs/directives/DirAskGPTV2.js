@@ -73,7 +73,7 @@ class DirAskGPTV2 {
     // default values
     let answer = "No answers";
     let namespace = this.context.projectId;
-    let llm;
+    let llm = "openai";
     let model;
     let temperature;
     let max_tokens;
@@ -101,6 +101,9 @@ class DirAskGPTV2 {
     }
 
     let source = null;
+    if (!action.llm) {
+      action.llm = "openai";
+    }
 
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       this.logger.error(`[Ask Knowledge Base] missing attribute '${missing_param}'`);
