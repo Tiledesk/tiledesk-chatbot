@@ -1,5 +1,4 @@
 const { param } = require('express/lib/request');
-const ms = require('minimist-string');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
@@ -27,16 +26,7 @@ class DirSendEmail {
     let action;
     if (directive.action) {
       action = directive.action;
-    }
-    else if (directive.parameter && directive.parameter.trim() !== "") {
-      const params = this.parseParams(directive.parameter);
-      action = {
-        subject: params.subject,
-        text: params.text,
-        to: params.to
-      }
-    }
-    else {
+    } else {
       this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirSendEmail Incorrect directive: ", directive);
       callback();
@@ -93,27 +83,6 @@ class DirSendEmail {
           completion(error);
         }
       }
-  }
-
-  parseParams(directive_parameter) {
-    let subject = null;
-    let text = null;
-    let to = null
-    const params = ms(directive_parameter);
-    if (params.subject) {
-      subject = params.subject
-    }
-    if (params.text) {
-      text = params.text.replace(/\\n/g, "\n");
-    }
-    if (params.to) {
-      to = params.to;
-    }
-    return {
-      subject: subject,
-      to: to,
-      text: text
-    }
   }
 }
 

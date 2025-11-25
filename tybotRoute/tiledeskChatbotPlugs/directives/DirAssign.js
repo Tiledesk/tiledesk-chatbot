@@ -1,7 +1,8 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
-const ms = require('minimist-string');
 const { Filler } = require('../Filler');
+const { parseArgsStringToArgv } = require('string-argv');
+const minimist = require('minimist');
 const winston = require('../../utils/winston')
 
 class DirAssign {
@@ -80,7 +81,8 @@ class DirAssign {
   parseParams(directive_parameter) {
     let expression = null;
     let assignTo = null;
-    const params = ms(directive_parameter);
+    const argv = parseArgsStringToArgv(directive_parameter); // trasforma in array come process.argv
+    const params = minimist(argv); 
     if (params.expression !== null) {
       expression = params.expression
     }
@@ -88,9 +90,9 @@ class DirAssign {
       assignTo = params.assignTo;
     }
     return {
-      expression: expression,
-      assignTo: assignTo
-    }
+      expression: params.expression,
+      assignTo: params.assignTo
+    };
   }
 
 }

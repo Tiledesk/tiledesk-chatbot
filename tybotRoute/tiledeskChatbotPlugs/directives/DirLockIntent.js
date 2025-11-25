@@ -1,4 +1,3 @@
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 
 class DirLockIntent {
@@ -19,14 +18,7 @@ class DirLockIntent {
     let action;
     if (directive.action) {
       action = directive.action;
-    }
-    else if (directive.parameter && directive.parameter.trim() !== "") {
-      const params = this.parseParams(directive.parameter);
-      action = {
-        intentName: params.intentName 
-      }
-    }
-    else {
+    } else {
       winston.warn("DirLockIntent Incorrect directive: ", directive);
       callback();
       return;
@@ -66,22 +58,6 @@ class DirLockIntent {
     // if (variable_name) {
     //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);
     // }
-  }
-  
-  parseParams(directive_parameter) {
-    let intentName = null;
-    let variableName = null;
-    const params = ms(directive_parameter);
-    if (params.intentName) {
-      intentName = params.intentName
-    }
-    if (params.variableName) {
-      variableName = params.variableName.replace(/[$]/g, ""); // $ sign not permitted. Silently removing if present
-    }
-    return {
-      intentName: intentName,
-      variableName: variableName
-    }
   }
 
 }
