@@ -18,28 +18,33 @@ class TiledeskChatbot {
     if (!config.botsDataSource) {
       throw new Error("config.botsDataSource is mandatory");
     }
-    if (!config.intentsFinder) {
-      throw new Error("config.intentsFinder is mandatory");
-    }
+    // if (!config.intentsFinder) {
+    //   throw new Error("config.intentsFinder is mandatory");
+    // }
     if (!config.botId) {
       throw new Error("config.botId is mandatory");
     }
     if (!config.bot) {
       throw new Error("config.bot is mandatory");
     }
-    this.botsDataSource = config.botsDataSource;
-    this.intentsFinder = config.intentsFinder;
-    this.backupIntentsFinder = config.backupIntentsFinder;
-    this.botId = config.botId;
-    this.bot = config.bot;
-    this.token = config.token;
-    this.tdcache = config.tdcache;
-    this.APIURL = config.APIURL;
-    this.APIKEY = config.APIKEY;
-    this.requestId = config.requestId;
-    this.projectId = config.projectId;
-    this.MAX_STEPS = config.MAX_STEPS;
-    this.MAX_EXECUTION_TIME = config.MAX_EXECUTION_TIME;
+
+    try {
+      this.botsDataSource = config.botsDataSource;
+      this.intentsFinder = config.intentsFinder;
+      this.backupIntentsFinder = config.backupIntentsFinder;
+      this.botId = config.botId;
+      this.bot = config.bot;
+      this.token = config.token;
+      this.tdcache = config.tdcache;
+      this.APIURL = config.APIURL;
+      this.APIKEY = config.APIKEY;
+      this.requestId = config.requestId;
+      this.projectId = config.projectId;
+      this.MAX_STEPS = config.MAX_STEPS;
+      this.MAX_EXECUTION_TIME = config.MAX_EXECUTION_TIME;
+    } catch (e) {
+      console.error("catch e: ", e);
+    }
   }
 
   async replyToMessage(message, callback) {
@@ -251,6 +256,148 @@ class TiledeskChatbot {
           }
         }
       }
+    });
+  }
+
+  async findBlock(message, callback) {
+    return new Promise( async (resolve, reject) => {
+      let lead = null;
+      if (message.request) {
+        this.request = message.request;
+      }
+      
+      let explicit_intent_name = null;
+      // Explicit intent invocation
+      if (message.text && message.text.startsWith("/")) {
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked: " + message.text);
+        let intent_name = message.text.substring(message.text.indexOf("/") + 1);
+        winston.verbose("(TiledeskChatbot) Invoked Intent: " + intent_name)
+        explicit_intent_name = intent_name;
+      }
+      
+      // Intent invocation with action
+      if (message.attributes && message.attributes.action) {
+        winston.debug("(TiledeskChatbot) Message has action: ", message.attributes.action)
+        explicit_intent_name = message.attributes.action;
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked with an action:", explicit_intent_name)
+      }
+
+      if (explicit_intent_name) {
+        winston.verbose("(TiledeskChatbot) Processing explicit intent:", explicit_intent_name)
+        // look for parameters
+        const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
+        winston.debug("(TiledeskChatbot) parsed intent:", intent);
+        let reply;
+        if (!intent || (intent && !intent.name)) {
+          winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
+          reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
+          resolve();
+        }
+        else {
+          winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
+          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
+          if (faq) {
+            winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
+            try {
+              if (intent.parameters) {
+                for (const [key, value] of Object.entries(intent.parameters)) {
+                  winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
+                  this.addParameter(key, value);                  
+                }
+              }
+              reply = await this.execIntent(faq, message, lead);
+              resolve(reply);
+              return;
+            }
+            catch(error) {
+              winston.error("(TiledeskChatbot) Error adding parameter: ", error);
+              reject(error);
+            }
+          }
+          else {
+            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            reply = { "text": "Intent not found: " + explicit_intent_name }
+            resolve()
+          }
+        }
+      }
+
+      // SEARCH INTENTS
+      // let faqs;
+      // try {
+      //   faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
+      //   winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
+      // }
+      // catch (error) {
+      //   winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
+      // }
+      // if (faqs && faqs.length > 0 && faqs[0].answer) {
+      //   winston.debug("(TiledeskChatbot) exact match or action faq: ", faqs[0]);
+      //   let reply;
+      //   const faq = faqs[0];
+      //   try {
+      //     reply = await this.execIntent(faq, message, lead);//, bot);
+      //   }
+      //   catch(error) {
+      //     winston.error("(TiledeskChatbot) An error occured during exact match execIntent(): ", error);
+      //     reject(error);
+      //     return;
+      //   }
+      //   resolve(reply);
+      //   return;
+      // }
+      // else { // NLP
+      //   winston.verbose("(TiledeskChatbot) Chatbot NLP decoding intent...");
+      //   let intents;
+      //   try {
+      //     intents = await this.intentsFinder.decode(this.botId, message.text);
+      //     winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:", intents);
+      //   }
+      //   catch(error) {
+      //     winston.error("(TiledeskChatbot) An error occurred on IntentsFinder.decode() (/model/parse error):" + error.message);
+      //     // recover on fulltext
+      //     if (this.backupIntentsFinder) {
+      //       winston.debug("(TiledeskChatbot) Using backup Finder:", this.backupIntentsFinder);
+      //       intents = await this.backupIntentsFinder.decode(this.botId, message.text);
+      //       winston.debug("(TiledeskChatbot) Got intents from backup finder: ", intents);
+      //     }
+      //   }
+      //   winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
+      //   if (intents && intents.length > 0) {
+      //     let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
+      //     let reply;
+      //     try {
+      //       reply = await this.execIntent(faq, message, lead);//, bot);
+      //     }
+      //     catch(error) {
+      //       winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
+      //       reject(error);
+      //       return;
+      //     }
+      //     resolve(reply);
+      //     return;
+      //   }
+      //   else {
+      //     let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
+      //     if (!fallbackIntent) {
+      //       resolve(null);
+      //       return;
+      //     }
+      //     else {
+      //       let reply;
+      //       try {
+      //         reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
+      //       }
+      //       catch(error) {
+      //         winston.error("(TiledeskChatbot) An error occurred during defaultFallback: ", error);
+      //         reject(error);
+      //         return;
+      //       }
+      //       resolve(reply);
+      //       return;
+      //     }
+      //   }
+      // }
     });
   }
   

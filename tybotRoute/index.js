@@ -42,6 +42,8 @@ let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
+  const t1 = Date.now();
+  console.log("/ext called at ", t1)
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
   if(!botId || botId === "null" || botId === "undefined"){
@@ -170,7 +172,180 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+      const t2 = Date.now();
+      console.log("ext setup ", t2 - t1)
       directivesPlug.processDirectives( () => {
+        const t3 = Date.now();
+        console.log("directive execution time ", t3 - t2)
+        console.log("\n\n")
+        winston.verbose("(tybotRoute) Actions - Directives executed.");
+      });
+    }
+    catch (error) {
+      winston.error("(tybotRoute) Error while processing actions:", error);
+    }
+  }
+  else { // text answer (parse text directives to get actions)
+    winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
+    reply.triggeredByMessageId = messageId;
+    if (!reply.attributes) {
+      reply.attributes = {}
+    }
+    reply.attributes.directives = true;
+    reply.attributes.splits = true;
+    reply.attributes.markbot = true;
+    reply.attributes.fillParams = true;
+    
+    const apiext = new ExtApi({
+      TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
+    });
+    apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
+      winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
+    });
+  }
+  
+});
+
+router.post('/exec/:botid', async (req, res) => {
+  const t1 = Date.now();
+  console.log("/exec called at ", t1)
+  const botId = req.params.botid;
+  winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
+  if(!botId || botId === "null" || botId === "undefined"){
+    return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
+  }
+
+  if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
+    delete req.body.payload.request.snapshot;
+  }
+  winston.verbose("(tybotRoute) Request Body: ", req.body);
+
+  const message = req.body.payload;
+  const messageId = message._id;
+  //const faq_kb = req.body.hook; now it is "bot"
+  const token = req.body.token;
+  const requestId = message.request.request_id;
+  const projectId = message.id_project;
+  winston.verbose("(tybotRoute) message.id_project: " + message.id_project)
+
+  // adding info for internal context workflow
+  message.request.bot_id = botId;
+  if (message.request.id_project === null || message.request.id_project === undefined) {
+    message.request.id_project = projectId;
+  }
+
+  //skip internal note messages
+  if(message && message.attributes && message.attributes.subtype === 'private') {
+    winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
+    return res.status(200).send({"success":true});
+  }
+
+
+  // validate reuqestId
+  let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
+  if (isValid) {
+    res.status(200).send({"success":true});
+  }
+  else {
+    res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
+    return;
+  }
+
+  const request_botId_key = "tilebot:botId_requests:" + requestId;
+  await tdcache.set(
+    request_botId_key,
+    botId,
+    {EX: 604800} // 7 days
+  );
+
+
+  let botsDS;
+  if (!staticBots) {
+    botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
+    winston.verbose("(tybotRoute) botsDS created with Mongo");
+  }
+  else {
+    botsDS = new MockBotsDataSource(staticBots);
+  }
+
+  // get the bot metadata
+  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+    Promise.reject(err);
+    return;
+  });
+  
+  let intentsMachine;
+  let backupMachine;
+  // if (!staticBots) {
+  //   intentsMachine = IntentsMachineFactory.getMachine(bot, botId, projectId);
+  //   backupMachine = IntentsMachineFactory.getBackupMachine(bot, botId, projectId);
+  //   winston.debug("(tybotRoute) Created backupMachine:", backupMachine)
+  // }
+  // else {
+  //   intentsMachine = {}
+  // }
+
+  const chatbot = new TiledeskChatbot({
+    botsDataSource: botsDS,
+    intentsFinder: intentsMachine,
+    backupIntentsFinder: backupMachine,
+    botId: botId,
+    bot: bot,
+    token: token,
+    APIURL: API_ENDPOINT,
+    APIKEY: "___",
+    tdcache: tdcache,
+    requestId: requestId,
+    projectId: projectId,
+    MAX_STEPS: MAX_STEPS,
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
+  });
+  winston.verbose("(tybotRoute) Message text: " + message.text)
+
+  // await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  // if (requestId.startsWith("support-group-")) {
+  //   await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+  // }
+
+  let reply = null;
+  try {
+    //reply = await chatbot.replyToMessage(message);
+    reply = await chatbot.findBlock(message);
+  }
+  catch(err) {
+    winston.error("(tybotRoute) An error occurred replying to message: ", err);
+    return;
+  }
+  if (!reply) {
+    winston.verbose("(tybotRoute) No reply. Stop flow.")
+    return;
+  }
+  
+  if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    try {
+      winston.debug("(tybotRoute) Reply actions: ", reply.actions)
+      let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
+      winston.debug("(tybotRoute) the directives:", directives)
+      let directivesPlug = new DirectivesChatbotPlug(
+        {
+          message: message,
+          reply: reply,
+          directives: directives,
+          chatbot: chatbot,
+          supportRequest: message.request,
+          API_ENDPOINT: API_ENDPOINT,
+          TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
+          token: token,
+          // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
+          cache: tdcache
+        }
+      );
+      const t2 = Date.now();
+      console.log("ext setup ", t2 - t1)
+      directivesPlug.processDirectives( () => {
+        const t3 = Date.now();
+        console.log("directive execution time ", t3 - t2)
+        console.log("\n\n")
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });
     }

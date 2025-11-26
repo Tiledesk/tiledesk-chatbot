@@ -71,9 +71,14 @@ class DirIntent {
     }
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
-    tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    // TODO - richiamare endpoint differente (executeBlock)
+    tilebotService.executeBlock(intent_command_request, botId, () => {
       callback(true);
     });
+
+    // tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    //   callback(true);
+    // });
 
   }
 
