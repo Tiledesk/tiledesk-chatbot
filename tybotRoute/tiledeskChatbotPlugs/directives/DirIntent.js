@@ -72,7 +72,9 @@ class DirIntent {
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
     // TODO - richiamare endpoint differente (executeBlock)
+    const t1 = Date.now();
     tilebotService.executeBlock(intent_command_request, botId, () => {
+      console.log("(intent) executeBlock completed in ", Date.now() - t1);
       callback(true);
     });
 

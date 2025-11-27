@@ -276,10 +276,12 @@ router.post('/exec/:botid', async (req, res) => {
   }
 
   // get the bot metadata
+  const t5 = Date.now();
   let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
     Promise.reject(err);
     return;
   });
+  console.log("/ext get bot in ", Date.now() - t5)
   
   let intentsMachine;
   let backupMachine;

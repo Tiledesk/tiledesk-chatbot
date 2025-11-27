@@ -165,7 +165,9 @@ class DirSetAttributeV2 {
 
     async saveAttribute(key, value, persist) {
         winston.debug("(DirSetAttributeV2) saving attribute: " + key + " " + value + " " + persist);
+        const t1 = Date.now();
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, key, value);
+        console.log("(setattribute) saving on redis on: ", Date.now() - t1)
         // if (persist) {
         //     await this.persistOnTiledesk(destination, result);
         // }
