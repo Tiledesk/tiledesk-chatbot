@@ -48,15 +48,12 @@ class TiledeskChatbot {
   }
 
   async replyToMessage(message, callback) {
-    console.log(`(GAB) TiledeskChatbot replyToMessage start -->  at : ${new Date().getTime()} for message.sender: ${message.sender} with text: ${message.text}`)
     return new Promise( async (resolve, reject) => {
       let lead = null;
       if (message.request) {
         this.request = message.request;
       }
       
-
-      let start00 = new Date();
       if (message.sender != "_tdinternal") {
         try {
           winston.verbose("(TiledeskChatbot) External user message, running reset operations…");
@@ -90,17 +87,10 @@ class TiledeskChatbot {
           winston.error("(TiledeskChatbot) Error resetting locked intent: ", error)
         }
       }
-      let end00 = new Date()
-      console.log(`(GAB) TiledeskChatbot replyToMessage 00--> after reset lockedIntent at :  ${end00.getTime()}, diff: ${end00-start00}[ms]`)
-       
-
 
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
-      let start0 = new Date()
       const locked_intent = await this.currentLockedIntent(this.requestId);
-      let end0 = new Date()
-      console.log(`(GAB) TiledeskChatbot replyToMessage 0--> after currentLockedIntent at :  ${end0.getTime()}, diff: ${end0-start0}[ms]`)
         
       winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
       if (locked_intent) {
@@ -112,18 +102,12 @@ class TiledeskChatbot {
         // });
         // it only gets the locked_intent
         // const faq = await this.botsDataSource.getByIntentDisplayName(this.botId, locked_intent);
-        let start0 = new Date()
         const faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, locked_intent, this.tdcache);
-        let end0 = new Date()
-        console.log(`(GAB) TiledeskChatbot replyToMessage 1-> after botsDataSource.getByIntentDisplayNameCache at :  ${end0.getTime()}, diff: ${end0-start0}[ms]`)
+
         winston.debug("(TiledeskChatbot) Locked intent. Got faqs: ", faq);
         let reply;
         if (faq) {
-          let start1 = new Date()
           reply = await this.execIntent(faq, message, lead);//, bot);
-          let end1 = new Date()
-          console.log(`(GAB) TiledeskChatbot replyToMessage 1--> after execIntent at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
-        
         }
         else {
           reply = {
@@ -172,10 +156,7 @@ class TiledeskChatbot {
         }
         else {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
-          let start2 = new Date()
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
-          let end2 = new Date()
-          console.log(`(GAB) TiledeskChatbot replyToMessage 2--> after botsDataSource.getByIntentDisplayNameCache at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
           if (faq) {
             winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
@@ -185,11 +166,7 @@ class TiledeskChatbot {
                   this.addParameter(key, value);                  
                 }
               }
-              let start2 = new Date();
               reply = await this.execIntent(faq, message, lead);
-              let end2 = new Date()
-              console.log(`(GAB) TiledeskChatbot replyToMessage 2--> after execIntent at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
-        
               resolve(reply);
               return;
             }
@@ -220,11 +197,7 @@ class TiledeskChatbot {
         let reply;
         const faq = faqs[0];
         try {
-          let start3 = new Date();
           reply = await this.execIntent(faq, message, lead);//, bot);
-          let end3 = new Date()
-          console.log(`(GAB) TiledeskChatbot replyToMessage 3--> after execIntent at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
-        
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occured during exact match execIntent(): ", error);
@@ -252,18 +225,11 @@ class TiledeskChatbot {
         }
         winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
         if (intents && intents.length > 0) {
-          let start2 = new Date();
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
-          let end2 = new Date()
-          console.log(`(GAB) TiledeskChatbot replyToMessage 4--> after botsDataSource.getByIntentDisplayNameCache in if at :  ${end2.getTime()}, diff: ${end2-start2}[ms]`)
         
           let reply;
           try {
-            let start3 = new Date();
-            reply = await this.execIntent(faq, message, lead);//, bot);
-            let end3 = new Date()
-            console.log(`(GAB) TiledeskChatbot replyToMessage 4--> after execIntent in if at :  ${end3.getTime()}, diff: ${end3-start3}[ms]`)
-        
+            reply = await this.execIntent(faq, message, lead);//, bot);        
           }
           catch(error) {
             winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
@@ -274,11 +240,7 @@ class TiledeskChatbot {
           return;
         }
         else {
-          let start4 = new Date();
-          let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
-          let end4 = new Date()
-          console.log(`(GAB) TiledeskChatbot replyToMessage 5--> after execIntent in else at :  ${end4.getTime()}, diff: ${end4-start4}[ms]`)
-        
+          let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);        
           if (!fallbackIntent) {
             resolve(null);
             return;
@@ -286,11 +248,7 @@ class TiledeskChatbot {
           else {
             let reply;
             try {
-              let start5 = new Date()
               reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
-              let end5 = new Date()
-              console.log(`(GAB) TiledeskChatbot replyToMessage 5--> after execIntent  at :  ${end5.getTime()}, diff: ${end5-start5}[ms]`)
-        
             }
             catch(error) {
               winston.error("(TiledeskChatbot) An error occurred during defaultFallback: ", error);

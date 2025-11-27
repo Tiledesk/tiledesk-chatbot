@@ -119,7 +119,6 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    // console.log(`(GAB) DirectivesChatbotPlug 0--> after processDirectives at :  ${new Date().getTime()}`)
     tpd = Date.now();
     this.theend = theend;
     const directives = this.directives;
@@ -173,16 +172,10 @@ class DirectivesChatbotPlug {
     
     this.curr_directive_index = -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
-    
-    // let start1 = new Date()
-    // const next_dir = await this.nextDirective(directives);
-    // let end1 = new Date()
-    // console.log(`(GAB) DirectivesChatbotPlug 1--> after processDirectives nextDirective at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
-  
-    const t5 = Date.now();
-    //console.log("(processDirectives) pre-process directive execution time ", t5 - t4);
+      
+    console.log("(processDirectives) pre-process directive execution time ", Date.now() - tpd);
     const next_dir = await this.nextDirective(directives);
-    const t6 = Date.now();
+    console.log("(processDirectives) next directive search", Date.now() - tpd);
    // console.log("(processDirectives) found next directive execution time ", t6 - t5);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
@@ -191,13 +184,9 @@ class DirectivesChatbotPlug {
   }
 
   async nextDirective(directives) {
-    console.log(`(GAB) DirectivesChatbotPlug 0--> nextDirective at :  ${new Date().getTime()}`)
-    let start1 = new Date()
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
     const t12 = Date.now();
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
-    // let end1 = new Date()
-    // console.log(`(GAB) DirectivesChatbotPlug 1--> nextDirective at :  ${end1.getTime()}, diff: ${end1-start1}[ms]`)
   
     //console.log("check step execution time ", Date.now() - t12)
     if (go_on.error) {
@@ -236,7 +225,6 @@ class DirectivesChatbotPlug {
     const t7 = Date.now();
     const context = this.context;
 
-    console.log("directive: ", directive);
     if (!directive || !directive.name) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is null", directive);
       console.log("Stop")
@@ -316,37 +304,30 @@ class DirectivesChatbotPlug {
     };
 
     const HandlerClass = handlers[directive_name];
-    console.log("HandlerClass: ", HandlerClass)
     if (!HandlerClass) {
       const next_dir = await this.nextDirective(this.directives);
       return this.process(next_dir);
     }
 
     const handler = new HandlerClass(context);
-    const t8 = Date.now();
-    //if (log) { console.log("(processDirectives) create handler instance execution time: ", t8 - t7) }
 
     // Esegue l'handler e chiama next se non stop
 
-    const t9 = Date.now();
     handler.execute(directive, async (stop) => {
-      const t10 = Date.now();
-      //if (log) { console.log("(processDirectives)  handler execution time: ", t10 - t9) }
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
-        console.log("THEEND")
+        console.log(directive_name + " - directive process execution ", Date.now() - t7);
+        console.log("total intent process time ", Date.now() - tpd)
+        console.log("THEEND\n")
         return this.theend();
       }
-      const t11 = Date.now();
-      //console.log("clear directive process execution time ", t11 - t7)
+      const t8 = Date.now();
+      console.log(directive_name + " - directive process execution ", t8 - t7)
       const next_dir = await this.nextDirective(this.directives);
-      const t12 = Date.now();
-      //if (log) { console.log("searching next directive ", t12 - t11) }
-      console.log(directive_name + " total process time ", t12 - tpd)
-      //if (log) { console.log("\n\n") }
-      console.log(directive_name + " next_dir: ", next_dir)
+      console.log(directive_name + " - next directive search", Date.now() - t8)
+      // const t12 = Date.now();
+      // console.log(directive_name + " - total process time ", t12 - tpd)
       let process_next_dir = await this.process(next_dir);
-      console.log("process_next_dir ", process_next_dir)
       return process_next_dir;
     });
   }
