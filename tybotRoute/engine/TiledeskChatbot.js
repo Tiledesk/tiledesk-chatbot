@@ -659,8 +659,12 @@ class TiledeskChatbot {
     // let go_on = true; // continue
     const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
     winston.verbose("(TiledeskChatbot) __parameter_key:", parameter_key);
+    const t1 = Date.now();
     await _tdcache.incr(parameter_key);
+    console.log("(Redis OP) checkStep incr in ", Date.now() - t1);
+    const t2 = Date.now();
     let _current_step = await _tdcache.get(parameter_key);
+    console.log("(Redis OP) checkStep get steps in ", Date.now() - t2);
     let current_step = Number(_current_step);
     if (current_step > max_steps) {
       winston.verbose("(TiledeskChatbot) max_steps limit just violated");
