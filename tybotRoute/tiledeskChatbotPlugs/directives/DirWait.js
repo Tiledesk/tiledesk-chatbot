@@ -19,6 +19,7 @@ class DirWait {
 
   execute(directive, callback) {
     //  500ms < wait-time < 10.000ms
+    const t1 = Date.now();
     winston.verbose("Execute Wait directive");
     let action;
     if (directive.action) {
@@ -47,6 +48,7 @@ class DirWait {
     }
 
     this.go(action, () => {
+      console.log("[Performance] DirWait executed in ", Date.now() - t1, "[ms]");
       this.logger.native("[Wait] Executed");
       callback();
     })

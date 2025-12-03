@@ -11,8 +11,10 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -328,12 +330,26 @@ class DirAskGPTV2 {
     }
 
     if (llm === 'ollama') {
-      json.gptkey = "";
+      //json.gptkey = "";
       json.model = {
         name: action.model,
         url: ollama_integration.value.url,
-        token: ollama_integration.value.token
+        provider: 'ollama'
+        //token: ollama_integration.value.token
       }
+
+      json.stream = false;
+    }
+
+    if (llm === 'vllm') {
+      //json.gptkey = "";
+      json.model = {
+        name: action.model,
+        url: vllm_integration.value.url,
+        provider: 'vllm'
+        //token: ollama_integration.value.token
+      }
+      
       json.stream = false;
     }
 
@@ -341,6 +357,10 @@ class DirAskGPTV2 {
     if (ns.hybrid === true) {
       json.search_type = 'hybrid';
       json.alpha = alpha;
+    }
+
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
     }
 
     if (!action.advancedPrompt) {
@@ -439,7 +459,7 @@ class DirAskGPTV2 {
         } else {
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
-            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
