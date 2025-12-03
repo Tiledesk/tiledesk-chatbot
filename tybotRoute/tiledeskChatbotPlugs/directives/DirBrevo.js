@@ -22,7 +22,7 @@ class DirBrevo {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
