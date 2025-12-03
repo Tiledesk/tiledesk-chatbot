@@ -64,8 +64,6 @@ const { DirIteration } = require('./directives/DirIteration');
 
 const winston = require('../utils/winston');
 
-let tpd;
-
 class DirectivesChatbotPlug {
 
   /**
@@ -120,7 +118,6 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    tpd = Date.now();
     this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
@@ -176,9 +173,7 @@ class DirectivesChatbotPlug {
     
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
-    const t10 = Date.now();
     await this.process(next_dir);
-    console.log("[Performance] Time to process directives ", Date.now() - t10, "[ms]")
   }
 
   async nextDirective(directives) {
@@ -315,8 +310,6 @@ class DirectivesChatbotPlug {
     handler.execute(directive, async (stop) => {
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
-        console.log(directive_name + " - directive process execution ", Date.now() - t7);
-        console.log("THEEND\n")
         return this.theend();
       }
       const next_dir = await this.nextDirective(this.directives);
