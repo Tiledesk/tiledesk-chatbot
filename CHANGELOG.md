@@ -1,5 +1,7 @@
 # Tiledesk native chatbot
 
+# 2.0.38
+- Improved AskGPTV2 action to support skip_unanswered option and use reranking only with hybrid namespaces
 
 # 2.0.34
 - Improved AskGPTV2 action with support for multi LLMs

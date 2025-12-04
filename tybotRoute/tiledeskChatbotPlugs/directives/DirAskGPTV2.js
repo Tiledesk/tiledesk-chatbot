@@ -388,7 +388,11 @@ class DirAskGPTV2 {
       HTTPREQUEST, async (err, resbody) => {
         
         if (err) {
-          winston.error("DirAskGPTV2 error: ", err?.response);
+          winston.error("DirAskGPTV2 error: ", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+          });
           this.logger.error(`[Ask Knowledge Base] Error getting answer`);
           await this.#assignAttributes(action, answer, source);
           if (callback) {
@@ -437,7 +441,11 @@ class DirAskGPTV2 {
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
             kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
-              winston.error("DirAskGPTV2 - Error adding unanswered question: ", err);
+              winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data,
+              });
               this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
             })
           }
