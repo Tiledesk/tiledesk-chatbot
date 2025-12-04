@@ -11,8 +11,10 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -29,7 +31,7 @@ class DirAskGPTV2 {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -82,7 +84,7 @@ class DirAskGPTV2 {
     let chunks_only = false;
     let engine;
     let reranking;
-    let skip_unanswered;
+    let skip_unanswered = false;
 
     let contexts = {
       "gpt-3.5-turbo":        process.env.GPT_3_5_CONTEXT       || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
@@ -329,12 +331,26 @@ class DirAskGPTV2 {
     }
 
     if (llm === 'ollama') {
-      json.gptkey = "";
+      //json.gptkey = "";
       json.model = {
         name: action.model,
         url: ollama_integration.value.url,
-        token: ollama_integration.value.token
+        provider: 'ollama'
+        //token: ollama_integration.value.token
       }
+
+      json.stream = false;
+    }
+
+    if (llm === 'vllm') {
+      //json.gptkey = "";
+      json.model = {
+        name: action.model,
+        url: vllm_integration.value.url,
+        provider: 'vllm'
+        //token: ollama_integration.value.token
+      }
+      
       json.stream = false;
     }
 
@@ -348,6 +364,10 @@ class DirAskGPTV2 {
         json.reranking_multiplier = 3;
         json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
       }
+    }
+
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
     }
 
     if (!action.advancedPrompt) {
@@ -388,7 +408,11 @@ class DirAskGPTV2 {
       HTTPREQUEST, async (err, resbody) => {
         
         if (err) {
-          winston.error("DirAskGPTV2 error: ", err?.response);
+          winston.error("DirAskGPTV2 error: ", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+          });
           this.logger.error(`[Ask Knowledge Base] Error getting answer`);
           await this.#assignAttributes(action, answer, source);
           if (callback) {
@@ -436,8 +460,12 @@ class DirAskGPTV2 {
         } else {
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
-            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
-              winston.error("DirAskGPTV2 - Error adding unanswered question: ", err);
+            llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+              winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data,
+              });
               this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
             })
           }

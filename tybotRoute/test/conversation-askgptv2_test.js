@@ -1786,6 +1786,20 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     });
 
+    endpointServer.post('/:project_id/kb/unanswered/', (req, res) => {
+
+      assert(req.body.question === "this is the question: Come ti chiami?")
+
+      let reply = { 
+        id_project: req.params.project_id,
+        namespace: req.body.namespace,
+        question: req.body.question 
+      };
+      let http_code = 200;
+
+      res.status(http_code).send(reply);
+    })
+
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
@@ -1795,7 +1809,7 @@ describe('Conversation for AskGPTV2 test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/kb_fail',
+          "text": '/kb_fail{"last_user_message":"Come ti chiami?"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {

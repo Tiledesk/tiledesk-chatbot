@@ -19,7 +19,7 @@ class DirWebRequestV2 {
     this.log = context.log;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -118,7 +118,7 @@ class DirWebRequestV2 {
         this.logger.native("[Web Request] resbody: ", resbody);
         
         if (err) {
-          this.logger.error("WebRequest error: ", err);
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {

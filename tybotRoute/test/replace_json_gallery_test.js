@@ -46,7 +46,6 @@ describe('Convert json gallery', function() {
       assert(message.attributes.commands[1].message.attributes.attachment.gallery);
       assert(message.attributes.commands[1].message.attributes.attachment.json_gallery === undefined);
       assert(message.attributes.commands[1].message.attributes.attachment.type === "gallery");
-      console.log("gallery:", JSON.stringify(message.attributes.commands[1].message.attributes.attachment.gallery, null, 4) );
       assert(message.attributes.commands[1].message.attributes.attachment.gallery[0]);
       assert(message.attributes.commands[1].message.attributes.attachment.gallery[0].preview);
       assert(message.attributes.commands[1].message.attributes.attachment.gallery[0].preview.src === "https://img1.png");

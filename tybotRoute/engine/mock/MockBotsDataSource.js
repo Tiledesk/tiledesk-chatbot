@@ -24,8 +24,7 @@ class MockBotsDataSource {
       }catch(err){
         reject(err);
       }
-      
-    }) 
+    })
   }
   
   async getBotByIdCache(botId, tdcache) {
@@ -38,7 +37,7 @@ class MockBotsDataSource {
    * @returns an Array of matches
    */
   async getByExactMatch(botId, text) {
-    const intent_display_name = this.data.bots[botId].questions_intent[text];
+    const intent_display_name = this.data.bots[botId].questions_intent?.[text];
     if (intent_display_name) {
       return [this.data.bots[botId].intents[intent_display_name]];
     }

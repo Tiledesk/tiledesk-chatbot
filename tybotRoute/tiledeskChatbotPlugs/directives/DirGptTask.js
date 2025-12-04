@@ -26,7 +26,7 @@ class DirGptTask {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -209,14 +209,26 @@ class DirGptTask {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.debug("(DirGptTask) openai err: ", err);
+          console.log("(DirGptTask) openai err.data: ", JSON.stringify(err.data));
           winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
           this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
           await this.#assignAttributes(action, answer);
+          console.log("attributes assigned with answer: ", answer)
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
+            console.log("false intent");
+            try {
+              await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
+              console.log("addParamter ok")
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              console.log("executeCondition ok")
+              console.log("callback")
+              callback(true);
+              return;
+            } catch (e) {
+              console.error("error on false intent: ", e);
+              callback(true);
+              return;
+            }
           }
           callback();
           return;

@@ -18,9 +18,9 @@ class TiledeskChatbot {
     if (!config.botsDataSource) {
       throw new Error("config.botsDataSource is mandatory");
     }
-    if (!config.intentsFinder) {
-      throw new Error("config.intentsFinder is mandatory");
-    }
+    // if (!config.intentsFinder) {
+    //   throw new Error("config.intentsFinder is mandatory");
+    // }
     if (!config.botId) {
       throw new Error("config.botId is mandatory");
     }
@@ -248,6 +248,63 @@ class TiledeskChatbot {
             }
             resolve(reply);
             return;
+          }
+        }
+      }
+    });
+  }
+
+  async findBlock(message, callback) {
+    return new Promise( async (resolve, reject) => {
+      let lead = null;
+      if (message.request) {
+        this.request = message.request;
+      }
+      
+      let explicit_intent_name = null;
+      // Explicit intent invocation
+      if (message.text && message.text.startsWith("/")) {
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked: " + message.text);
+        let intent_name = message.text.substring(message.text.indexOf("/") + 1);
+        winston.verbose("(TiledeskChatbot) Invoked Intent: " + intent_name)
+        explicit_intent_name = intent_name;
+      }
+      
+      // Intent invocation with action
+      if (message.attributes && message.attributes.action) {
+        winston.debug("(TiledeskChatbot) Message has action: ", message.attributes.action)
+        explicit_intent_name = message.attributes.action;
+        winston.verbose("(TiledeskChatbot) Intent was explicitly invoked with an action:", explicit_intent_name)
+      }
+
+      if (explicit_intent_name) {
+        winston.verbose("(TiledeskChatbot) Processing explicit intent:", explicit_intent_name)
+        // look for parameters
+        const intent = TiledeskChatbotUtil.parseIntent(explicit_intent_name);
+        winston.debug("(TiledeskChatbot) parsed intent:", intent);
+        let reply;
+        if (!intent || (intent && !intent.name)) {
+          winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
+          reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
+          resolve();
+        }
+        else {
+          winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
+          let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intent.name, this.tdcache);
+          // console.log("faq: ", JSON.stringify(faq, null, 2))
+
+          if (faq) {
+            if (faq.actions) {
+              // Qui viene aggiornata faq perchè l'oggetto in js viene passato per riferimento. Viene modificato l'oggetto originale anche senza un return.
+              TiledeskChatbotUtil.addConnectAction(faq);
+            }
+            resolve(faq)
+            return;
+          }
+          else {
+            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            reply = { "text": "Intent not found: " + explicit_intent_name }
+            resolve()
           }
         }
       }

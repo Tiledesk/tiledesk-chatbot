@@ -2,7 +2,7 @@ const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
-class KBService {
+class LLMService {
 
   constructor() { }
 
@@ -91,7 +91,6 @@ class KBService {
 
       httpUtils.request(http_request, (err, response) => {
         if (err) {
-          winston.error("Error adding unanswered question:", err);
           reject(err);
         } else {
           resolve(response);
@@ -101,5 +100,5 @@ class KBService {
   }
 }
 
-const kbService = new KBService();
-module.exports = kbService;
+const llmService = new LLMService();
+module.exports = llmService;
