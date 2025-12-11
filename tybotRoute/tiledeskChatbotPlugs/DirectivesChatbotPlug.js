@@ -63,8 +63,6 @@ const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
-let tpd;
-
 class DirectivesChatbotPlug {
 
   /**
@@ -119,7 +117,6 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    tpd = Date.now();
     this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
@@ -311,8 +308,6 @@ class DirectivesChatbotPlug {
     handler.execute(directive, async (stop) => {
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
-        console.log(directive_name + " - directive process execution ", Date.now() - t7);
-        console.log("THEEND\n")
         return this.theend();
       }
       const next_dir = await this.nextDirective(this.directives);
