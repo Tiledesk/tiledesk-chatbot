@@ -383,6 +383,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
+          console.log("Answer: ", resbody.answer);
           if (chunks_only) {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
             if (trueIntent) {
@@ -394,6 +395,7 @@ class DirAskGPTV2 {
             return;
 
           } else {
+            console.log("assign answer to ", action.assignReplyTo)
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
             if (publicKey === true && !chunks_only) {
               let tokens_usage = {
@@ -406,6 +408,7 @@ class DirAskGPTV2 {
             }
   
             if (trueIntent) {
+              console.log("execute true intent");
               await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
@@ -414,6 +417,7 @@ class DirAskGPTV2 {
             return;
           }
         } else {
+          console.log("else case. Assign answer: ", answer);
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
             kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
@@ -426,6 +430,7 @@ class DirAskGPTV2 {
             })
           }
           if (falseIntent) {
+            console.log("execute false intent");
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
