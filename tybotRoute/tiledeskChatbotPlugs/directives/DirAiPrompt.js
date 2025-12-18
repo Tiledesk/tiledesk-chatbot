@@ -141,7 +141,7 @@ class DirAiPrompt {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
       
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Prompt] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }

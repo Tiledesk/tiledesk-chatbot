@@ -140,7 +140,7 @@ class DirAiCondition {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Condition] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Condition] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }
