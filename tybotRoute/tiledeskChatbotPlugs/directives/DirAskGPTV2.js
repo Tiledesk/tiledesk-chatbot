@@ -290,6 +290,7 @@ class DirAskGPTV2 {
     }
 
     embedding = ns.embedding || default_embedding;
+    embedding.api_key = process.env.EMBEDDING_API_KEY || process.env.GPTKEY;
 
     let json = {
       question: filled_question,

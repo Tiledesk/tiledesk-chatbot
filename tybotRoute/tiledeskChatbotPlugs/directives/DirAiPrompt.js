@@ -112,7 +112,7 @@ class DirAiPrompt {
       }
     }
 
-    let AI_endpoint = process.env.AI_ENDPOINT;
+    let AI_endpoint = process.env.KB_ENDPOINT_QA;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let headers = {
