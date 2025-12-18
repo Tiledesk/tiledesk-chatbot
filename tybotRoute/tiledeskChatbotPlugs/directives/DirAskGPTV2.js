@@ -362,7 +362,7 @@ class DirAskGPTV2 {
 
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        console.log("resbody: ", resbody);
+        console.log("resbody: ", JSON.stringify(resbody));
         if (err) {
           winston.error("DirAskGPTV2 error: ", {
             status: err.response?.status,
