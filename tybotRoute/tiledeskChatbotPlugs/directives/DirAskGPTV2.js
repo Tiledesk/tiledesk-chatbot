@@ -11,12 +11,14 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -326,6 +328,10 @@ class DirAskGPTV2 {
       }
     }
 
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
+    }
+
     if (!action.advancedPrompt) {
       const contextTemplate = contexts[model.name] || contexts["general"];
       if (filled_context) {
@@ -420,7 +426,7 @@ class DirAskGPTV2 {
           console.log("else case. Assign answer: ", answer);
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
-            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
