@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.41
+- Updated DirReply in order to fill actions metadata
+
 # 2.0.38
 - Improved AskGPTV2 action to support skip_unanswered option and use reranking only with hybrid namespaces
 
