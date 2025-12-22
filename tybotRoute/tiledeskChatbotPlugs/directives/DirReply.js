@@ -160,6 +160,7 @@ class DirReply {
       
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
+    this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(

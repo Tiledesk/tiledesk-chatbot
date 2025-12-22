@@ -11,8 +11,14 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const aiController = require("../../services/AIController");
+const default_engine = require('../../config/kb/engine');
+const default_engine_hybrid = require('../../config/kb/engine.hybrid');
+const default_embedding = require("../../config/kb/embedding");
+const llmService = require("../../services/LLMService");
+
+
 
 class DirAskGPTV2 {
 
@@ -81,6 +87,7 @@ class DirAskGPTV2 {
     let citations = false;
     let chunks_only = false;
     let engine;
+    let embedding;
     let reranking;
     let skip_unanswered = false;
 
@@ -181,57 +188,36 @@ class DirAskGPTV2 {
 
     let key;
     let publicKey = false;
-    let ollama_integration;
-    let vllm_integration;
 
-    if (action.llm === 'ollama') {
-      key = process.env.GPTKEY;
-      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[Ask Knowledge Base] Error getting ollama integration.");
-        await this.chatbot.addParameter("flowError", "Ollama integration not found");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback(true);
-          return;
-        }
-        callback();
-        return;
-      })
-    }
-    else if (action.llm === 'vllm')  {
-      key = process.env.GPTKEY;
-      vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[Ask Knowledge Base] Error getting vllm integration.");
-        await this.chatbot.addParameter("flowError", "vLLM integration not found");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback(true);
-          return;
-        }
-        callback();
-        return;
-      })
-    }
-    else {
-      key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-
-      if (!key && action.llm === 'openai') {
-        this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Retrieve shared OpenAI key.");
-        key = process.env.GPTKEY;
-        publicKey = true;
-      }
-
-      if (!key) {
-        this.logger.error(`[Ask Knowledge Base] llm key for ${action.llm} not found in integrations`);
-        await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: missing key for llm ${action.llm}`);
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback(true);
-          return;
-        }
-        callback();
+    try {
+      model = await aiController.resolveLLMConfig(this.projectId, llm, model, this.token);
+    } catch (err) {
+      this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration.`);
+      await this.chatbot.addParameter("flowError", `${llm} integration not found`);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
         return;
       }
+      callback();
+      return;
+    }
+
+    if (!model.api_key && model.provider === 'openai') {
+      model.api_key = process.env.GPTKEY;
+      publicKey = true;
+    }
+
+    if (!model.api_key) {
+      this.logger.error(`[Ask Knowledge Base] llm key for ${llm} not found in integrations`);
+      await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: missing key for llm ${llm}`);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
     }
 
     if (publicKey === true && !chunks_only) {
@@ -305,15 +291,18 @@ class DirAskGPTV2 {
       engine = await this.setDefaultEngine(ns.hybrid);
     }
 
+    embedding = ns.embedding || default_embedding;
+    embedding.api_key = process.env.EMBEDDING_API_KEY || process.env.GPTKEY;
+
     let json = {
       question: filled_question,
-      gptkey: key,
       namespace: namespace,
-      llm: llm,
       model: model,
+      embedding: embedding,
       citations: citations,
       engine: engine,
-      debug: true
+      debug: true,
+      stream: false
     };
     if (top_k) {
       json.top_k = top_k;
@@ -328,17 +317,6 @@ class DirAskGPTV2 {
       json.chunks_only = chunks_only;
     }
 
-    if (llm === 'ollama') {
-      json.gptkey = "";
-      json.model = {
-        name: action.model,
-        url: ollama_integration.value.url,
-        token: ollama_integration.value.token
-      }
-      json.stream = false;
-    }
-
-
     if (ns.hybrid === true) {
       json.search_type = 'hybrid';
       json.alpha = alpha;
@@ -350,8 +328,12 @@ class DirAskGPTV2 {
       }
     }
 
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
+    }
+
     if (!action.advancedPrompt) {
-      const contextTemplate = contexts[model] || contexts["general"];
+      const contextTemplate = contexts[model.name] || contexts["general"];
       if (filled_context) {
         json.system_context = filled_context + "\n" + contextTemplate;
       } else {
@@ -386,7 +368,7 @@ class DirAskGPTV2 {
 
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        
+        console.log("resbody: ", JSON.stringify(resbody));
         if (err) {
           winston.error("DirAskGPTV2 error: ", {
             status: err.response?.status,
@@ -407,6 +389,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
+          console.log("Answer: ", resbody.answer);
           if (chunks_only) {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
             if (trueIntent) {
@@ -418,6 +401,7 @@ class DirAskGPTV2 {
             return;
 
           } else {
+            console.log("assign answer to ", action.assignReplyTo)
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
             if (publicKey === true && !chunks_only) {
               let tokens_usage = {
@@ -430,6 +414,7 @@ class DirAskGPTV2 {
             }
   
             if (trueIntent) {
+              console.log("execute true intent");
               await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
@@ -438,9 +423,10 @@ class DirAskGPTV2 {
             return;
           }
         } else {
+          console.log("else case. Assign answer: ", answer);
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
-            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
@@ -450,6 +436,7 @@ class DirAskGPTV2 {
             })
           }
           if (falseIntent) {
+            console.log("execute false intent");
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
@@ -612,20 +599,10 @@ class DirAskGPTV2 {
   }
 
   async setDefaultEngine(hybrid = false) {
-    let isHybrid = hybrid === true;
-    return new Promise((resolve) => {
-      let engine = {
-        name: process.env.VECTOR_STORE_NAME || "pinecone",
-        type: isHybrid ? process.env.INDEX_TYPE_HYBRID || "serverless" : process.env.INDEX_TYPE || process.env.PINECONE_TYPE || 'serverless',
-        apikey: "",
-        vector_size: process.env.VECTOR_SIZE || 1536,
-        index_name: isHybrid ? process.env.INDEX_NAME_HYBRID || process.env.PINECONE_INDEX_HYBRID || "llm-sample-index-hybrid" : process.env.INDEX_NAME || process.env.PINECONE_INDEX || "llm-sample-index",
-        ...(process.env.VECTOR_STORE_HOST && { host: process.env.VECTOR_STORE_HOST }),
-        ...(process.env.VECTOR_STORE_PORT && { port: process.env.VECTOR_STORE_PORT }),
-        ...(process.env.VECTOR_STORE_DEPLOYMENT && { deployment: process.env.VECTOR_STORE_DEPLOYMENT })
-      }
-      resolve(engine);
-    })
+    if (hybrid) {
+      return default_engine_hybrid
+    }
+    return default_engine;
   }
 
 }

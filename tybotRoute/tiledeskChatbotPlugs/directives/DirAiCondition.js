@@ -11,6 +11,7 @@ const Utils = require("../../utils/HttpUtils");
 const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const quotasService = require("../../services/QuotasService");
 const { Logger } = require("../../Logger");
 const { randomUUID } = require("crypto");
 
@@ -110,7 +111,7 @@ class DirAiCondition {
 
     // evaluate
 
-    let AI_endpoint = process.env.AI_ENDPOINT;
+    let AI_endpoint = process.env.KB_ENDPOINT_QA;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let headers = {
@@ -140,7 +141,7 @@ class DirAiCondition {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Condition] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Condition] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }

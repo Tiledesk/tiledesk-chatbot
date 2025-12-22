@@ -269,8 +269,8 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(req.body.engine !== undefined);
       assert(req.body.engine.name === 'pinecone');
       assert(req.body.engine.type === 'serverless');
-      assert(req.body.llm === "google");
-      assert(req.body.model === "gemini-2.0");
+      assert(req.body.model.provider === "google");
+      assert(req.body.model.model === "gemini-2.0");
 
       let reply = {}
       let http_code = 200;
