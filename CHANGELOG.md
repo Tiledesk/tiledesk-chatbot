@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.42
+- Updated AskGPTV2 with embeddings support
+
 # 2.0.41
 - Updated DirReply in order to fill actions metadata
 
