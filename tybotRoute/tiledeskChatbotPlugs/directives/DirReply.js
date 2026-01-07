@@ -84,11 +84,20 @@ class DirReply {
         if (commands.length > 0) {
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
+
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
               winston.debug("DirReply command filled: " + command.message.text);
             }
+
+            if (command.type === 'message' && command.message && command.message.metadata) {
+              command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
+              command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
+              winston.debug("DirReply command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("DirReply command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
             if (command.type === 'settings' && command.settings) {
               Object.keys(command.settings).forEach(k => {
                 command.settings[k] = filler.fill(command.settings[k], requestAttributes)
