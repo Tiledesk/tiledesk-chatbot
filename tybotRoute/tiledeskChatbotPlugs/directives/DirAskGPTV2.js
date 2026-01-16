@@ -77,9 +77,9 @@ class DirAskGPTV2 {
     let namespace = this.context.projectId;
     let llm = "openai";
     let model;
-    let temperature;
-    let max_tokens;
-    let top_k;
+    let temperature = 0.7;
+    let max_tokens = 256;
+    let top_k = 4;
     let alpha;
     let transcript;
     let citations = false;
@@ -87,6 +87,7 @@ class DirAskGPTV2 {
     let engine;
     let embedding;
     let reranking;
+    let reranking_multiplier;
     let skip_unanswered = false;
 
     let contexts = {
@@ -151,6 +152,9 @@ class DirAskGPTV2 {
     }
     if (action.reranking) {
       reranking = action.reranking;
+    }
+    if (action.reranking_multiplier) {
+      reranking_multiplier = action.reranking_multiplier;
     }
     if (action.skip_unanswered) {
       skip_unanswered = action.skip_unanswered;
@@ -321,8 +325,18 @@ class DirAskGPTV2 {
       
       if (reranking === true) {
         json.reranking = true;
-        json.reranking_multiplier = 3;
+        json.reranking_multiplier = reranking_multiplier || 3;
         json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
+
+        if ((top_k * reranking_multiplier) > 100) {
+          // Find the largest integer reranking_multiplier so that top_k * reranking_multiplier <= 100
+          let calculatedRerankingMultiplier = Math.floor(100 / top_k);
+          // At least 1 is required
+          if (calculatedRerankingMultiplier < 1) {
+            calculatedRerankingMultiplier = 1;
+          }
+          json.reranking_multiplier = calculatedRerankingMultiplier;
+        }
       }
     }
 
