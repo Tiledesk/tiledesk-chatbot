@@ -219,6 +219,26 @@ class DirAiPrompt {
     }
 
     if (action.servers) {
+
+      try {
+        let mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
+        if (mcp_integration?.value?.servers) {
+          await this.findAuthorization(action.servers, mcp_integration);
+        }
+
+      } catch (err) {
+        this.logger.error("[AI Prompt] Error getting mcp integration: ", err);
+        winston.error("DirAiPrompt Error getting mcp integration: ", err);
+        await this.chatbot.addParameter("flowError", "MCP integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
       json.servers = this.arrayToObject(action.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
@@ -245,7 +265,7 @@ class DirAiPrompt {
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          winston.error("DirAiPrompt openai err: ", err);
+          winston.error("DirAiPrompt openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
           if (err.response?.data?.detail[0]) {
@@ -257,6 +277,7 @@ class DirAiPrompt {
           } else {
             error = err.message || "General error executing action" // String(err);
           }
+          winston.error("DirAiPrompt error executing action: " + error);
           this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
@@ -509,6 +530,23 @@ class DirAiPrompt {
       acc[name] = rest;
       return acc;
     }, {});
+  }
+
+  async findAuthorization(servers, mcp_integration) {
+    const integrationServers = mcp_integration?.value?.servers;
+    if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
+  
+    // Preindex by name
+    const map = new Map(integrationServers.map(s => [s.name, s]));
+  
+    servers.forEach(server => {
+      const integrationServer = map.get(server.name);
+      if (integrationServer?.authorization?.key) {
+        server.api_key = integrationServer.authorization.key;
+      }
+    });
+
+    return servers;
   }
 
   async detectAttach(source) {

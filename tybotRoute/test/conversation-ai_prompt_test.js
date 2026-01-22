@@ -539,7 +539,7 @@ describe('Conversation for AiPrompt test', async () => {
 
       endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-        assert(req.params.name === 'myllm');
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
 
         let http_code = 200;
         let reply = {
@@ -599,6 +599,158 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt with MCP success with tools list - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: Risposta dall'agent");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "Risposta dall'agent");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
+
+        let reply = {};
+        let http_code = 200;
+
+        if (req.params.name === 'myllm') {
+          reply = {
+            _id: "656728224b45965b69111111",
+            id_project: "62c3f10152dc740035000000",
+            name: "myllm",
+            value: {
+              apikey: "example_api_key",
+            }
+          }
+        }
+        else if (req.params.name === 'mcp') {
+          reply = {
+            _id: "656728224b45965b69111112",
+            id_project: "62c3f10152dc740035000000",
+            name: "mcp",
+            value: {
+              servers: [
+                {
+                  name: "email",
+                  url: "example_url1.com/mcp",
+                  transport: "streamable_http",
+                  authorization: {
+                    type: "X-API-Key",
+                    key: "example_api_key"
+                  }
+                },
+                {
+                  name: "calendar",
+                  url: "example_url2.com/mcp",
+                  transport: "streamable_http",
+                  authorization: {
+                    type: "Bearer",
+                    key: "Bearer mybearertoken"
+                  }
+                },
+                {
+                  name: "custom",
+                  url: "example_customurl1.com/mcp",
+                  transport: "streamable_http",
+                  authorization: {
+                    type: "Basic",
+                    key: "Basic mybase64username:password"
+                  }
+                }
+              ]
+            }
+          }
+        }
+  
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.servers.email);
+        assert(req.body.servers.calendar);
+        assert(req.body.servers.custom);
+
+        assert(req.body.servers.email.url === "example_url1.com/mcp");
+        assert(req.body.servers.email.transport === "streamable_http");
+        assert(req.body.servers.email.enabled_toold.length === 2);
+        assert(req.body.servers.email.enabled_toold[0] === "email_send");
+        assert(req.body.servers.email.enabled_toold[1] === "email_read");
+        assert(req.body.servers.email.api_key === "example_api_key");
+
+        assert(req.body.servers.calendar.url === "example_url2.com/mcp");
+        assert(req.body.servers.calendar.transport === "streamable_http");
+        assert(req.body.servers.calendar.enabled_toold.length === 2);
+        assert(req.body.servers.calendar.enabled_toold[0] === "calendar_read");
+        assert(req.body.servers.calendar.enabled_toold[1] === "calendar_write");
+        assert(req.body.servers.calendar.api_key === "Bearer mybearertoken");
+
+        assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
+        assert(req.body.servers.custom.transport === "streamable_http");
+        assert(req.body.servers.custom.enabled_toold.length === 2);
+        assert(req.body.servers.custom.enabled_toold[0] === "tool1");
+        assert(req.body.servers.custom.enabled_toold[1] === "tool2");
+        assert(req.body.servers.custom.api_key === "Basic mybase64username:password");
+  
+        let reply = {}
+        let http_code = 200;
+        reply = {
+            answer: "Risposta dall'agent",
+            chat_history_dict: {},
+            prompt_token_info: null
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_mcp_tools_list',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
     it('AiPrompt with internal-MCP success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
@@ -631,7 +783,7 @@ describe('Conversation for AiPrompt test', async () => {
 
       endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-        assert(req.params.name === 'myllm');
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
 
         let http_code = 200;
         let reply = {
