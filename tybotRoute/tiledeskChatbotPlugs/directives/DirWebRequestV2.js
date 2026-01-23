@@ -118,7 +118,7 @@ class DirWebRequestV2 {
         this.logger.native("[Web Request] resbody: ", resbody);
         
         if (err) {
-          this.logger.error("WebRequest error: ", err);
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {

@@ -54,14 +54,15 @@ const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
-const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
+const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirFlowLog } = require('./directives/DirFlowLog');
+const { DirIteration } = require('./directives/DirIteration');
 
 const winston = require('../utils/winston');
-const { DirFlowLog } = require('./directives/DirFlowLog');
-const { DirAddKbContent } = require('./directives/DirAddKbContent');
 
 class DirectivesChatbotPlug {
 
@@ -292,7 +293,8 @@ class DirectivesChatbotPlug {
       [Directives.CONNECT_BLOCK]: DirConnectBlock,
       [Directives.ADD_TAGS]: DirAddTags,
       [Directives.WEB_RESPONSE]: DirWebResponse,
-      [Directives.FLOW_LOG]: DirFlowLog
+      [Directives.FLOW_LOG]: DirFlowLog,
+      [Directives.ITERATION]: DirIteration
     };
 
     const HandlerClass = handlers[directive_name];

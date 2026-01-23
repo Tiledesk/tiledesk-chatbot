@@ -1,6 +1,6 @@
 var assert = require('assert');
 let axios = require('axios');
-const tybot = require("../");
+const tybot = require("..");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
@@ -12,7 +12,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-webhook_bot.js').bots_data;
+const bots_data = require('./conversation-iteration_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
@@ -22,11 +22,11 @@ const tilebotService = require('../services/TilebotService');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for Webhook test', async () => {
+describe('Conversation for Iteration test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
-  
+
   before(() => {
     return new Promise(async (resolve, reject) => {
       winston.info("Starting tilebot server...");
@@ -47,12 +47,12 @@ describe('Conversation for Webhook test', async () => {
               winston.info('Tilebot connector listening on port ' + port);
               resolve();
             });
-        });
+          });
       }
-      catch(error) {
+      catch (error) {
         winston.error("error:", error)
       }
-      
+
     })
   });
 
@@ -62,63 +62,65 @@ describe('Conversation for Webhook test', async () => {
     });
   });
 
-  it('/webhook', (done) => {
+  it('/task gpt success (key from integrations) (old action without condition) - invokes the gpt task mockup and test the returning attributes', (done) => {
+
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
+      console.log("message: ", message);
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      assert(command2.message.type === "frame");
-      listener.close(() => {
-        done();
+      console.log("command2: ", JSON.stringify(command2))
+      console.log("message text: ",command2.message.text)
+      assert(command2.message.text === "[object Object]");
+
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert.equal(typeof attributes["output"], 'object');
+          let json = attributes["output"];
+          console.log("json id: ", json.id);
+          console.log("json name: ", json.name);
+          assert(json.id === 0 || json.id === 1)
+          assert(json.name === 'John' || json.name === 'Mark')
+
+          if (json.id === 1) {
+            listener.close(() => {
+              done();
+            });
+          }
+        }
       });
 
     });
 
-    endpointServer.post('/bot', function (req, res) {
-      // const reply = {
-      //   type: "image",
-      //   metadata: {
-      //     src: `https://img_url`
-      //   }
-      // }
-      const reply = {
-        "actions": [{
-          "_tdActionType": "reply",
-          "attributes": {
-            "commands": [{
-              "type": "wait",
-              "time": 500
-            }, {
-              "type": "message",
-              "message": {
-                "type": "frame",
-                "metadata": {
-                  src: "http://",
-                  height: 410
-                }
-              }
-            }]
-          }
-        }]
-      }
-      res.send(reply);
-    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
+
+      const iterable = [
+        { id: 0, name: "John" },
+        { id: 1, name: "Mark" }
+      ];
+      let innerJson = JSON.stringify(iterable);
+      const text = `/iteration{'iterable_varname':${innerJson}}`;
+
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/webhook',
+          "text": text,
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
