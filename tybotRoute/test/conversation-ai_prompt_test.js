@@ -695,25 +695,27 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.calendar);
         assert(req.body.servers.custom);
 
+        console.log("req.body: ", JSON.stringify(req.body, null, 2));
+
         assert(req.body.servers.email.url === "example_url1.com/mcp");
         assert(req.body.servers.email.transport === "streamable_http");
-        assert(req.body.servers.email.enabled_toold.length === 2);
-        assert(req.body.servers.email.enabled_toold[0] === "email_send");
-        assert(req.body.servers.email.enabled_toold[1] === "email_read");
+        assert(req.body.servers.email.enabled_tools.length === 2);
+        assert(req.body.servers.email.enabled_tools[0] === "email_send");
+        assert(req.body.servers.email.enabled_tools[1] === "email_read");
         assert(req.body.servers.email.api_key === "example_api_key");
 
         assert(req.body.servers.calendar.url === "example_url2.com/mcp");
         assert(req.body.servers.calendar.transport === "streamable_http");
-        assert(req.body.servers.calendar.enabled_toold.length === 2);
-        assert(req.body.servers.calendar.enabled_toold[0] === "calendar_read");
-        assert(req.body.servers.calendar.enabled_toold[1] === "calendar_write");
+        assert(req.body.servers.calendar.enabled_tools.length === 2);
+        assert(req.body.servers.calendar.enabled_tools[0] === "calendar_read");
+        assert(req.body.servers.calendar.enabled_tools[1] === "calendar_write");
         assert(req.body.servers.calendar.api_key === "Bearer mybearertoken");
 
         assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
         assert(req.body.servers.custom.transport === "streamable_http");
-        assert(req.body.servers.custom.enabled_toold.length === 2);
-        assert(req.body.servers.custom.enabled_toold[0] === "tool1");
-        assert(req.body.servers.custom.enabled_toold[1] === "tool2");
+        assert(req.body.servers.custom.enabled_tools.length === 2);
+        assert(req.body.servers.custom.enabled_tools[0] === "tool1");
+        assert(req.body.servers.custom.enabled_tools[1] === "tool2");
         assert(req.body.servers.custom.api_key === "Basic mybase64username:password");
   
         let reply = {}

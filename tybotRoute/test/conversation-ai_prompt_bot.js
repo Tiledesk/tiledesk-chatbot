@@ -169,19 +169,19 @@ const bot = {
 						name: "email", 
 						transport: "streamable_http", 
 						url: "example_url1.com/mcp", 
-						enabled_toold: ['email_send', 'email_read'] 
+						enabled_tools: ['email_send', 'email_read'] 
 					}, 
 					{ 
 						name: "calendar",
 						transport: "streamable_http", 
 						url: "example_url2.com/mcp", 
-						enabled_toold: ['calendar_read', 'calendar_write'] 
+						enabled_tools: ['calendar_read', 'calendar_write'] 
 					},
 					{ 
 						name: "custom",
 						transport: "streamable_http", 
 						url: "example_customurl1.com/mcp", 
-						enabled_toold: ['tool1', 'tool2'] 
+						enabled_tools: ['tool1', 'tool2'] 
 					}
 				],
 				"llm": "myllm",
