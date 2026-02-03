@@ -293,7 +293,8 @@ class DirectivesChatbotPlug {
       [Directives.CONNECT_BLOCK]: DirConnectBlock,
       [Directives.ADD_TAGS]: DirAddTags,
       [Directives.WEB_RESPONSE]: DirWebResponse,
-      [Directives.FLOW_LOG]: DirFlowLog
+      [Directives.FLOW_LOG]: DirFlowLog,
+      [Directives.ITERATION]: DirIteration,
     };
 
     const HandlerClass = handlers[directive_name];

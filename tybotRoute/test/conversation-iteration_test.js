@@ -62,7 +62,7 @@ describe('Conversation for Iteration test', async () => {
     });
   });
 
-  it('/task gpt success (key from integrations) (old action without condition) - invokes the gpt task mockup and test the returning attributes', (done) => {
+  it('iterate an iterable object', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -113,6 +113,7 @@ describe('Conversation for Iteration test', async () => {
       ];
       let innerJson = JSON.stringify(iterable);
       const text = `/iteration{'iterable_varname':${innerJson}}`;
+      console.log("text: ", text);
 
       let request = {
         "payload": {

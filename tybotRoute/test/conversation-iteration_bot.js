@@ -15,6 +15,7 @@ const bot = {
 			"actions": [{
 				"_tdActionType": "iteration",
 				"_tdActionTitle": "iteration",
+				"_tdActionId": "1c4a7a0d-02fa-4fe1-9787-e2839bd0ee21",
 				"goToIntent": "#00f93b97-89ee-466d-a09c-e47a18943058",
 				"iterable": "iterable_varname",
 				"assignOutputTo": "output",
@@ -44,7 +45,17 @@ const bot = {
 						}
 					}]
 				}
-			}]
+			}],
+			"attributes": {
+				"position": {
+					"x": 1111,
+					"y": 199
+				},
+				"nextBlockAction": {
+					"_tdActionType": "intent",
+					"intentName": "#00f93b97-89ee-466d-a09c-e47a18943057"
+				}
+			}
 		},
 	]
 }
