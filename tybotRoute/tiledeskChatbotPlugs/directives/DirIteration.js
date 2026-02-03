@@ -1,4 +1,3 @@
-const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
@@ -78,6 +77,10 @@ class DirIteration {
     }
   }
 
+
+  /**
+   * HELPERS METHODS
+   */
   async #initializeIteration(action, actionId, callback) {
     winston.debug("[Iteration] Initializing iteration state");
     console.log("[Iteration] Initializing iteration state");
@@ -88,10 +91,10 @@ class DirIteration {
     const delay = 1000;
     //const delay = (action.delay || 30) * 1000; // s to ms
 
-    // Get iterable array
-    const iterableArray = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, iterable);
+    // Get iterable value
+    const iterableValue = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, iterable);
 
-    if (!iterableArray) {
+    if (!iterableValue) {
       winston.verbose("[Iteration] Iterable object is undefined");
       console.log("[Iteration] Iterable object is undefined");
       this.logger.warn("[Iteration] Iterable object is undefined");
@@ -99,10 +102,13 @@ class DirIteration {
       return;
     }
 
-    if (!Array.isArray(iterableArray)) {
-      winston.verbose("[Iteration] A non-iterable object was provided. Exit...")
-      console.log("[Iteration] A non-iterable object was provided. Exit...")
-      this.logger.error("[Iteration] A non-iterable object was provided. Exit...")
+    // Try to normalize to array
+    const iterableArray = this.#normalizeToArray(iterableValue, iterable);
+    
+    if (!iterableArray) {
+      winston.verbose("[Iteration] Could not convert iterable to array");
+      console.log("[Iteration] Could not convert iterable to array");
+      this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}`);
       callback(true);
       return;
     }
@@ -145,7 +151,7 @@ class DirIteration {
       this.logger.native("[Iteration] Iteration completed");
       await this.#clearIterationState(actionId);
       console.log("[Iteration] Iteration completed");
-      callback(true);
+      callback(false);
       return;
     }
 
@@ -177,7 +183,8 @@ class DirIteration {
         
         // Return immediately - the iteration will continue on next DirIteration call
         // The goToIntent should have a connector that calls back to the intent containing this iteration
-        callback(false); // Don't stop the flow
+        //callback(false); // Don't stop the flow
+        callback(true); // Don't stop the flow
       } else {
         this.logger.warn("[Iteration] No goToIntent specified, processing items sequentially with delay");
         // If no intent to execute, process all remaining items with delay
@@ -283,6 +290,114 @@ class DirIteration {
       winston.error("[Iteration] Error finding active iteration: ", error);
       return null;
     }
+  }
+
+  /**
+   * Normalizes various input types to an array
+   * @param {*} value - The value to normalize
+   * @param {string} iterableName - Name of the iterable parameter (for logging)
+   * @returns {Array|null} - Normalized array or null if conversion fails
+   */
+  #normalizeToArray(value, iterableName) {
+    // Already an array
+    if (Array.isArray(value)) {
+      this.logger.native(`[Iteration] Iterable '${iterableName}' is already an array | length: ${value.length}`);
+      return value;
+    }
+
+    // String: try JSON.parse first, then try splitting
+    if (typeof value === 'string') {
+      // Try JSON.parse
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          this.logger.native(`[Iteration] Parsed string '${iterableName}' as JSON array | length: ${parsed.length}`);
+          return parsed;
+        }
+        // If parsed but not array, try to normalize the parsed value
+        const normalized = this.#normalizeToArray(parsed, iterableName);
+        if (normalized) {
+          return normalized;
+        }
+      } catch (e) {
+        // JSON.parse failed, try splitting by comma
+        winston.debug(`[Iteration] JSON.parse failed for '${iterableName}', trying split`);
+      }
+
+      // Try splitting by comma (common delimiter)
+      if (value.includes(',')) {
+        const split = value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        if (split.length > 0) {
+          this.logger.native(`[Iteration] Split string '${iterableName}' by comma | length: ${split.length}`);
+          return split;
+        }
+      }
+
+      // Single string value - wrap in array
+      if (value.trim().length > 0) {
+        this.logger.native(`[Iteration] Wrapped single string '${iterableName}' in array`);
+        return [value];
+      }
+    }
+
+    // Object: try Object.values, Object.entries, or Object.keys
+    if (typeof value === 'object' && value !== null) {
+      // Try Object.values (most common case)
+      try {
+        const values = Object.values(value);
+        if (values.length > 0) {
+          this.logger.native(`[Iteration] Converted object '${iterableName}' using Object.values | length: ${values.length}`);
+          return values;
+        }
+      } catch (e) {
+        winston.debug(`[Iteration] Object.values failed for '${iterableName}'`);
+      }
+
+      // Try Object.entries (array of [key, value] pairs)
+      try {
+        const entries = Object.entries(value);
+        if (entries.length > 0) {
+          this.logger.native(`[Iteration] Converted object '${iterableName}' using Object.entries | length: ${entries.length}`);
+          return entries;
+        }
+      } catch (e) {
+        winston.debug(`[Iteration] Object.entries failed for '${iterableName}'`);
+      }
+
+      // Try Object.keys
+      try {
+        const keys = Object.keys(value);
+        if (keys.length > 0) {
+          this.logger.native(`[Iteration] Converted object '${iterableName}' using Object.keys | length: ${keys.length}`);
+          return keys;
+        }
+      } catch (e) {
+        winston.debug(`[Iteration] Object.keys failed for '${iterableName}'`);
+      }
+    }
+
+    // Check if it's iterable (Set, Map, etc.)
+    if (value && typeof value[Symbol.iterator] === 'function') {
+      try {
+        const array = Array.from(value);
+        if (array.length > 0) {
+          this.logger.native(`[Iteration] Converted iterable '${iterableName}' using Array.from | length: ${array.length}`);
+          return array;
+        }
+      } catch (e) {
+        winston.debug(`[Iteration] Array.from failed for '${iterableName}'`);
+      }
+    }
+
+    // Single value (number, boolean, etc.) - wrap in array
+    if (value !== null && value !== undefined) {
+      this.logger.native(`[Iteration] Wrapped single value '${iterableName}' in array | type: ${typeof value}`);
+      return [value];
+    }
+
+    // Could not convert
+    this.logger.warn(`[Iteration] Could not normalize '${iterableName}' to array | type: ${typeof value}`);
+    return null;
   }
 
   async #executeIntent(destinationIntentId, callback) {
