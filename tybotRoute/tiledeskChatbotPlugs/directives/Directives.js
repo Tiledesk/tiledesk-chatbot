@@ -10,6 +10,7 @@ class Directives {
   static ASSIGN = "assign"; // DEPRECATED
   static ASK_HELP_CENTER = "askhelpcenter";
   static WAIT = "wait";
+  static WAIT_VARIABLE = "wait_variable";
   static LOCK_INTENT = "lockintent";
   static UNLOCK_INTENT = "unlockintent";
   static FIRE_TILEDESK_EVENT = "firetiledeskevent";
