@@ -1516,6 +1516,161 @@ describe('Conversation for AskGPTV2 test', async () => {
 
   })
 
+  it('/gpt_success_hybrid_search_with_custom_reranking - invokes the askgpt mockup and test the returning attributes', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "kb replied: this is mock kb reply with hybrid search");
+
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["kb_reply"] === "this is mock kb reply with hybrid search")
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+
+      assert(req.body.search_type === "hybrid");
+      assert(req.body.alpha === 0.8);
+      // Check that the reranking_multiplier is calculated correctly
+      assert(req.body.reranking_multiplier === 5);
+
+      let reply = {}
+      let http_code = 200;
+      if (!req.body.question) {
+        reply.error = "question field is mandatory"
+        http_code = 400;
+      }
+      else if (!req.body.model) {
+        reply.error = "model field is mandatory"
+        http_code = 400;
+      }
+      else {
+        reply = {
+          answer: "this is mock kb reply with hybrid search",
+          success: true,
+          id: "123456789",
+          ids: ["9876543210", "0123456789"],
+          source: "http://gethelp.test.com/article",
+          sources: [ "TextArticle", "http://gethelp.test.com/article"],
+          prompt_token_size: 762,
+          citations: [
+            {
+              source_id: 0,
+              source_name: "TextArticle"
+            }
+          ],
+          
+        }
+      }
+
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "openai",
+        value: {
+          apikey: "example_api_key",
+          organization: "TIledesk"
+        }
+      }
+
+      res.status(http_code).send(reply);
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+
+      let http_code = 200;
+
+      let reply = [
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          createdAt: "2024-06-06T15:50:27.970Z",
+          updatedAt: "2024-06-24T15:31:11.224Z"
+        },
+        {
+          default: false,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "12345678",
+          name: "Second Namespace",
+          hybrid: true,
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 512,
+            temperature: 0.7,
+            top_k: 4,
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          },
+          createdAt: "2024-06-10T14:08:01.601Z",
+          updatedAt: "2024-06-12T08:11:04.208Z"
+        }
+      ]
+
+      res.status(http_code).send(reply);
+    })
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/kb_success_hybrid_search_with_custom_reranking{"last_user_message":"come ti chiami", "custom_context":"sei un assistente fantastico"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+
+  })
+
   // it('/gpt_success (key from kbsettings) - invokes the askgpt mockup and test the returning attributes', (done) => {
   //   let listener;
   //   let endpointServer = express();

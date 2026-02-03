@@ -344,6 +344,36 @@ const bot = {
 			"question": ""
 		},
 		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"actions": [{
+				"_tdActionType": "askgptv2",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "kb_reply",
+				"assignSourceTo": "kb_source",
+				"assignChunksTo": "kb_chunks",
+				"namespace": "12345678",
+				"model": "gpt-4",
+				"temperature": 0.7,
+				"max_tokens": 1000,
+				"top_k": 18,
+				"alpha": 0.8,
+				"context": "this is the context: {{custom_context}}",
+				"advancedPrompt": true,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+				"question": "this is the question: {{last_user_message}}",
+				"history": true,
+				"reranking": true,
+				"reranking_multiplier": 6
+			}],
+			"language": "en",
+			"intent_display_name": "kb_success_hybrid_search_with_custom_reranking",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": ""
+		},
+		{
 			// TRUE INTENT
 			"webhook_enabled": false,
 			"enabled": true,
