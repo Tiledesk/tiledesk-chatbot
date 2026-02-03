@@ -1,4 +1,3 @@
-const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
