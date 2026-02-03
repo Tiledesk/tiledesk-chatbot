@@ -13,6 +13,10 @@ const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const aiController = require("../../services/AIController");
+const default_engine = require('../../config/kb/engine');
+const default_engine_hybrid = require('../../config/kb/engine.hybrid');
+const default_embedding = require("../../config/kb/embedding");
 
 class DirAskGPTV2 {
 
@@ -29,12 +33,7 @@ class DirAskGPTV2 {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
-
-    this.rerankingOff = false;
-    if (process.env.RERANKING_OFF && (process.env.RERANKING_OFF === "true" || process.env.RERANKING_OFF === true)) {
-      this.rerankingOff = true;
-    }
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -63,7 +62,6 @@ class DirAskGPTV2 {
       return;
     }
 
-    let publicKey = false;
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
@@ -74,11 +72,11 @@ class DirAskGPTV2 {
     winston.debug("DirAskGPTV2 trueIntentAttributes", trueIntentAttributes)
     winston.debug("DirAskGPTV2 falseIntentAttributes", falseIntentAttributes)
   
-
     // default values
     let answer = "No answers";
     let namespace = this.context.projectId;
-    let model = "gpt-3.5-turbo";
+    let llm = "openai";
+    let model;
     let temperature;
     let max_tokens;
     let top_k;
@@ -87,64 +85,75 @@ class DirAskGPTV2 {
     let citations = false;
     let chunks_only = false;
     let engine;
-    //let default_context = "You are an helpful assistant for question-answering tasks.\nUse ONLY the following pieces of retrieved context to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf none of the retrieved context answer the question, add this word to the end <NOANS>\n\n{context}";
+    let embedding;
+    let reranking;
+    let skip_unanswered = false;
 
     let contexts = {
-      "gpt-3.5-turbo":        "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
-      "gpt-4":                "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
-      "gpt-4-turbo-preview":  "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
-      "gpt-4o":               "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4o-mini":          "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1":              "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1-mini":         "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1-nano":         "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5":                "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5-mini":           "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5-nano":           "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end=="
+      "gpt-3.5-turbo":        process.env.GPT_3_5_CONTEXT       || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
+      "gpt-4":                process.env.GPT_4_CONTEXT         || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
+      "gpt-4-turbo-preview":  process.env.GPT_4T_CONTEXT        || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
+      "gpt-4o":               process.env.GPT_4O_CONTEXT        || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-4o-mini":          process.env.GPT_4O_MINI_CONTEXT   || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-4.1":              process.env.GPT_4_1_CONTEXT       || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-4.1-mini":         process.env.GPT_4_1_MINI_CONTEXT  || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-4.1-nano":         process.env.GPT_4_1_NANO_CONTEXT  || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-5":                process.env.GPT_5_CONTEXT         || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-5-mini":           process.env.GPT_5_MINI_CONTEXT    || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "gpt-5-nano":           process.env.GPT_5_NANO_CONTEXT    || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
+      "general":              process.env.GENERAL_CONTEXT       || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end=="
     }
 
     let source = null;
+    if (!action.llm) {
+      action.llm = "openai";
+    }
 
-    if (!action.question || action.question === '') {
-      this.logger.error("[Ask Knowledge Base] question attribute is mandatory");
-      winston.error("DirAskGPTV2 Error: question attribute is mandatory. Executing condition false...");
+    await this.checkMandatoryParameters(action).catch( async (missing_param) => {
+      this.logger.error(`[Ask Knowledge Base] missing attribute '${missing_param}'`);
+      await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: '${missing_param}' attribute is undefined`);
       await this.#assignAttributes(action, answer, source);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return Promise.reject();
       }
-      callback(true);
-      return;
-    }
+      callback();
+      return Promise.reject();
+    })
 
     if (action.namespace) {
       namespace = action.namespace;
     }
+    if (action.llm) {
+      llm = action.llm;
+    }
     if (action.model) {
       model = action.model;
     }
-
     if (action.top_k) {
       top_k = action.top_k;
     }
-
     if (action.temperature) {
       temperature = action.temperature;
     }
-
     if (action.max_tokens) {
       max_tokens = action.max_tokens;
     }
-
     if (action.alpha) {
       alpha = action.alpha;
     }
-
     if (action.citations) {
       citations = action.citations;
     }
-
     if (action.chunks_only) {
       chunks_only = action.chunks_only;
+    }
+    if (action.reranking) {
+      reranking = action.reranking;
+    }
+    if (action.skip_unanswered) {
+      skip_unanswered = action.skip_unanswered;
     }
 
     let requestVariables = null;
@@ -175,24 +184,31 @@ class DirAskGPTV2 {
       }
     }
 
-    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
-    if (!key) {
-      this.logger.native("[Ask Knowledge Base] OpenAI key not found in Integration. Using shared OpenAI key");
-      winston.verbose("DirAskGPTV2 - Key not found in Integrations. Searching in kb settings...");
-      key = await kbService.getKeyFromKbSettings(this.projectId, this.token);
+    let key;
+    let publicKey = false;
+
+    try {
+      model = await aiController.resolveLLMConfig(this.projectId, llm, model, this.token);
+    } catch (err) {
+      this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration.`);
+      await this.chatbot.addParameter("flowError", `${llm} integration not found`);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
     }
 
-    if (!key) {
-      winston.verbose("DirAskGPTV2 - Retrieve public gptkey")
-      key = process.env.GPTKEY;
+    if (!model.api_key && model.provider === 'openai') {
+      model.api_key = process.env.GPTKEY;
       publicKey = true;
-    } else {
-      this.logger.native("[Ask Knowledge Base] use your own OpenAI key")
     }
 
-    if (!key) {
-      winston.info("DirAskGPTV2 Error: gptkey is mandatory");
-      await this.#assignAttributes(action, answer);
+    if (!model.api_key) {
+      this.logger.error(`[Ask Knowledge Base] llm key for ${llm} not found in integrations`);
+      await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: missing key for llm ${llm}`);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -203,13 +219,28 @@ class DirAskGPTV2 {
     }
 
     if (publicKey === true && !chunks_only) {
-      let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token);
-      if (keep_going === false) {
-        this.logger.warn("[Ask Knowledge Base] Tokens quota exceeded. Skip the action")
-        winston.verbose("DirAskGPTV2 - Quota exceeded for tokens. Skip the action")
-        await this.chatbot.addParameter("flowError", "AskGPT Error: tokens quota exceeded");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-        callback(true);  
+      try {
+        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
+        if (keep_going === false) {
+          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
+          await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback();
+            return;
+          }
+          callback();
+          return;
+        }
+      } catch (err) {
+        this.logger.error("An error occured on checking token quota availability");
+        await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback();
+          return;
+        }
+        callback();
         return;
       }
     }
@@ -258,14 +289,18 @@ class DirAskGPTV2 {
       engine = await this.setDefaultEngine(ns.hybrid);
     }
 
+    embedding = ns.embedding || default_embedding;
+    embedding.api_key = process.env.EMBEDDING_API_KEY || process.env.GPTKEY;
+
     let json = {
       question: filled_question,
-      gptkey: key,
       namespace: namespace,
       model: model,
+      embedding: embedding,
       citations: citations,
       engine: engine,
-      debug: true
+      debug: true,
+      stream: false
     };
     if (top_k) {
       json.top_k = top_k;
@@ -280,17 +315,23 @@ class DirAskGPTV2 {
       json.chunks_only = chunks_only;
     }
 
-
     if (ns.hybrid === true) {
       json.search_type = 'hybrid';
       json.alpha = alpha;
+      
+      if (reranking === true) {
+        json.reranking = true;
+        json.reranking_multiplier = 3;
+        json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
+      }
     }
 
     if (!action.advancedPrompt) {
+      const contextTemplate = contexts[model.name] || contexts["general"];
       if (filled_context) {
-        json.system_context = filled_context + "\n" + contexts[model];
+        json.system_context = filled_context + "\n" + contextTemplate;
       } else {
-        json.system_context = contexts[model];
+        json.system_context = contextTemplate;
       }
     } else {
       json.system_context = filled_context;
@@ -299,13 +340,6 @@ class DirAskGPTV2 {
     if (transcript) {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
-
-    if (!this.rerankingOff) {
-      json.reranking = true;
-      json.reranking_multiplier = 3;
-      json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
-    }
-
 
     winston.debug("DirAskGPTV2 json:", json);
 
@@ -328,9 +362,14 @@ class DirAskGPTV2 {
 
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
-        
+        console.log("resbody: ", JSON.stringify(resbody));
         if (err) {
-          winston.error("DirAskGPTV2 error: ", err?.respose);
+          winston.error("DirAskGPTV2 error: ", {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data,
+          });
+          this.logger.error(`[Ask Knowledge Base] Error getting answer`);
           await this.#assignAttributes(action, answer, source);
           if (callback) {
             if (falseIntent) {
@@ -344,6 +383,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
+          console.log("Answer: ", resbody.answer);
           if (chunks_only) {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
             if (trueIntent) {
@@ -355,8 +395,9 @@ class DirAskGPTV2 {
             return;
 
           } else {
+            console.log("assign answer to ", action.assignReplyTo)
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
-            if (publicKey === true) {
+            if (publicKey === true && !chunks_only) {
               let tokens_usage = {
                 tokens: resbody.prompt_token_size,
                 model: json.model
@@ -367,6 +408,7 @@ class DirAskGPTV2 {
             }
   
             if (trueIntent) {
+              console.log("execute true intent");
               await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
@@ -375,12 +417,20 @@ class DirAskGPTV2 {
             return;
           }
         } else {
+          console.log("else case. Assign answer: ", answer);
           await this.#assignAttributes(action, answer, source);
-          kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
-            winston.error("DirAskGPTV2 - Error adding unanswered question: ", err);
-            this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
-          })
+          if (!skip_unanswered) {
+            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+              winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data,
+              });
+              this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
+            })
+          }
           if (falseIntent) {
+            console.log("execute false intent");
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
@@ -448,6 +498,18 @@ class DirAskGPTV2 {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignChunksTo, chunks);
       }
     }
+  }
+
+  async checkMandatoryParameters(action) {
+    return new Promise((resolve, reject) => {
+      let params = ['question', 'llm', 'model']; // mandatory params
+      params.forEach((p) => {
+        if (!action[p]) {
+          reject(p)
+        }
+      })
+      resolve(true);
+    })
   }
 
   /**
@@ -531,20 +593,10 @@ class DirAskGPTV2 {
   }
 
   async setDefaultEngine(hybrid = false) {
-    let isHybrid = hybrid === true;
-    return new Promise((resolve) => {
-      let engine = {
-        name: process.env.VECTOR_STORE_NAME || "pinecone",
-        type: isHybrid ? process.env.INDEX_TYPE_HYBRID || "serverless" : process.env.INDEX_TYPE || process.env.PINECONE_TYPE || 'serverless',
-        apikey: "",
-        vector_size: process.env.VECTOR_SIZE || 1536,
-        index_name: isHybrid ? process.env.INDEX_NAME_HYBRID || process.env.PINECONE_INDEX_HYBRID || "llm-sample-index-hybrid" : process.env.INDEX_NAME || process.env.PINECONE_INDEX || "llm-sample-index",
-        ...(process.env.VECTOR_STORE_HOST && { host: process.env.VECTOR_STORE_HOST }),
-        ...(process.env.VECTOR_STORE_PORT && { port: process.env.VECTOR_STORE_PORT }),
-        ...(process.env.VECTOR_STORE_DEPLOYMENT && { deployment: process.env.VECTOR_STORE_DEPLOYMENT })
-      }
-      resolve(engine);
-    })
+    if (hybrid) {
+      return default_engine_hybrid
+    }
+    return default_engine;
   }
 
 }

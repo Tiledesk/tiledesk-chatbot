@@ -91,7 +91,6 @@ class KBService {
 
       httpUtils.request(http_request, (err, response) => {
         if (err) {
-          winston.error("Error adding unanswered question:", err);
           reject(err);
         } else {
           resolve(response);

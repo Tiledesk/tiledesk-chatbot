@@ -1430,6 +1430,10 @@ describe('Conversation for GptTask test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.get('/:project_id/kbsettings', (req, res) => {
+      res.status(404).send({ success: false, message: "Settings not found"})
+    })
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {

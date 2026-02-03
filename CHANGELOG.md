@@ -1,5 +1,23 @@
 # Tiledesk native chatbot
 
+# 2.0.42
+- Updated AskGPTV2 with embeddings support
+
+# 2.0.41
+- Updated DirReply in order to fill actions metadata
+
+# 2.0.38
+- Improved AskGPTV2 action to support skip_unanswered option and use reranking only with hybrid namespaces
+
+# 2.0.34
+- Improved AskGPTV2 action with support for multi LLMs
+
+# 2.0.33
+- Added default context for general LLMs in AskKBV2
+
+# 2.0.32
+- Improved AiPrompt to support MCP Servers
+
 # 2.0.31
 - Added AiCondition action
 - Improved AiPrompt action to support openai models

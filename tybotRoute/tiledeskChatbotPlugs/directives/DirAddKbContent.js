@@ -28,7 +28,7 @@ class DirAddKbContent {
     this.log = context.log;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -85,7 +85,7 @@ class DirAddKbContent {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      this.logger.native("[Add to KnwoledgeBase] OpenAI key not found in Integration. Using shared OpenAI key");
+      this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
       winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
       key = await this.getKeyFromKbSettings();
     }

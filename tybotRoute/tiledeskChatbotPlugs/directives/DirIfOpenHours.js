@@ -1,7 +1,6 @@
 let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
 let https = require("https");
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
@@ -18,7 +17,7 @@ class DirIfOpenHours {
     this.API_ENDPOINT = context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -26,19 +25,6 @@ class DirIfOpenHours {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      if (!params.trueIntent && !params.falseIntent) {
-          winston.warn("DirIfOpenHours both params.trueIntent & params.falseIntent");
-        callback();
-        return;
-      }
-      action = {
-        trueIntent: params.trueIntent,
-        falseIntent: params.falseIntent
-      }
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
@@ -167,22 +153,6 @@ class DirIfOpenHours {
     //     callback();
     //   }
     // });
-  }
-
-  parseParams(directive_parameter) {
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
   }
 
 }

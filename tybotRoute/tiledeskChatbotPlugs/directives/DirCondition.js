@@ -1,7 +1,6 @@
 const { DirIntent } = require('./DirIntent');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
-const ms = require('minimist-string');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -15,7 +14,7 @@ class DirCondition {
     this.requestId = this.context.requestId;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -23,19 +22,6 @@ class DirCondition {
     let action;
     if (directive.action) {
       action = directive.action
-    }
-    else if (directive.parameter) {
-      let params;
-      params = this.parseParams(directive.parameter);
-      if (!params.condition) {
-        callback();
-        return;
-      }
-      action = {
-        scriptCondition: params.condition,
-        trueIntent: params.trueIntent,
-        falseIntent: params.falseIntent
-      }
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
@@ -156,27 +142,6 @@ class DirCondition {
   //   const result = new TiledeskExpression().evaluate(condition, variables)
   //   return result;
   // }
-
-  parseParams(directive_parameter) {
-    let condition = null;
-    let trueIntent = null;
-    let falseIntent = null;
-    const params = ms(directive_parameter);
-    if (params.condition) {
-      condition = params.condition
-    }
-    if (params.trueIntent) {
-      trueIntent = params.trueIntent;
-    }
-    if (params.falseIntent) {
-      falseIntent = params.falseIntent;
-    }
-    return {
-      condition: condition,
-      trueIntent: trueIntent,
-      falseIntent: falseIntent
-    }
-  }
 
 }
 

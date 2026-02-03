@@ -14,6 +14,8 @@ const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
+const path = require("path");
+const mime = require("mime-types");
 
 
 class DirAiPrompt {
@@ -31,7 +33,7 @@ class DirAiPrompt {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -102,7 +104,7 @@ class DirAiPrompt {
         winston.debug("DirAiPrompt transcript string: " + transcript_string)
 
       if (transcript_string) {
-        transcript = await TiledeskChatbotUtil.transcriptJSON(transcript_string);
+        transcript = TiledeskChatbotUtil.transcriptJSON(transcript_string);
         winston.debug("DirAiPrompt transcript: ", transcript)
       } else {
         this.logger.warn("[AI Prompt] no chat transcript found, skipping history translation");
@@ -110,7 +112,7 @@ class DirAiPrompt {
       }
     }
 
-    let AI_endpoint = process.env.AI_ENDPOINT;
+    let AI_endpoint = process.env.KB_ENDPOINT_QA;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let headers = {
@@ -139,7 +141,7 @@ class DirAiPrompt {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
       
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Prompt] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Prompt] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }
@@ -212,6 +214,44 @@ class DirAiPrompt {
 
     }
 
+    if (action.attach) {
+      json.attach = await this.detectAttach(action.attach);
+    }
+
+    if (action.servers) {
+
+      try {
+        let mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
+        if (mcp_integration?.value?.servers) {
+          await this.findAuthorization(action.servers, mcp_integration);
+        }
+
+      } catch (err) {
+        this.logger.error("[AI Prompt] Error getting mcp integration: ", err);
+        winston.error("DirAiPrompt Error getting mcp integration: ", err);
+        await this.chatbot.addParameter("flowError", "MCP integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+      json.servers = this.arrayToObject(action.servers);
+      if (!json.servers) {
+        await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback();
+          return;
+        }
+        callback();
+        return;
+      }
+    }
+
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
@@ -225,16 +265,19 @@ class DirAiPrompt {
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          winston.error("DirAiPrompt openai err: ", err);
+          winston.error("DirAiPrompt openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
           if (err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
           } else if (err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
-          } else {
+          } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
+          } else {
+            error = err.message || "General error executing action" // String(err);
           }
+          winston.error("DirAiPrompt error executing action: " + error);
           this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
@@ -476,6 +519,68 @@ class DirAiPrompt {
     })
   }
 
+  arrayToObject(arr) {
+    if (!Array.isArray(arr)) {
+      winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
+      this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
+      return null;
+    }
+    return arr.reduce((acc, item) => {
+      const { name, ...rest } = item;
+      acc[name] = rest;
+      return acc;
+    }, {});
+  }
+
+  async findAuthorization(servers, mcp_integration) {
+    const integrationServers = mcp_integration?.value?.servers;
+    if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
+  
+    // Preindex by name
+    const map = new Map(integrationServers.map(s => [s.name, s]));
+  
+    servers.forEach(server => {
+      const integrationServer = map.get(server.name);
+      if (integrationServer?.authorization?.key) {
+        server.api_key = integrationServer.authorization.key;
+      }
+    });
+
+    return servers;
+  }
+
+  async detectAttach(source) {
+    let mime_type;
+    let type;
+  
+    const ext = path.extname(source);
+    mime_type = mime.lookup(ext) || "application/octet-stream";
+
+    if (mime_type === "application/octet-stream") {
+      try {
+        const res = await axios.head(source);
+        if (res.headers["content-type"]) {
+          mime_type = res.headers["content-type"];
+        }
+      } catch (err) {
+        mime_type = "application/octet-stream";
+      }
+    }
+  
+    if (mime_type.startsWith("image/")) type = "image";
+    else if (mime_type.startsWith("video/")) type = "video";
+    else if (mime_type.startsWith("audio/")) type = "audio";
+    else type = "file";
+
+    return {
+      type: type,
+      source: source,
+      mime_type: mime_type,
+      detail: "auto"
+    }
+
+  }
+  
 }
 
 module.exports = { DirAiPrompt }

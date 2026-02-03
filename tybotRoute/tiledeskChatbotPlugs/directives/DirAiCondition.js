@@ -30,7 +30,7 @@ class DirAiCondition {
     this.API_ENDPOINT = this.context.API_ENDPOINT;
     
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -110,7 +110,7 @@ class DirAiCondition {
 
     // evaluate
 
-    let AI_endpoint = process.env.AI_ENDPOINT;
+    let AI_endpoint = process.env.KB_ENDPOINT_QA;
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let headers = {
@@ -140,7 +140,7 @@ class DirAiCondition {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
   
       if (!key && action.llm === "openai") {
-        this.logger.native("[AI Condition] OpenAI key not found in Integration. Retrieve shared OpenAI key.")
+        this.logger.native("[AI Condition] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
       }

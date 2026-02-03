@@ -20,7 +20,7 @@ class DirReply {
     this.log = context.log;
     this.API_ENDPOINT = context.API_ENDPOINT;
     
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.attributes?.intent_info?.intent_id });
+    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
@@ -84,11 +84,20 @@ class DirReply {
         if (commands.length > 0) {
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
+
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
               winston.debug("DirReply command filled: " + command.message.text);
             }
+
+            if (command.type === 'message' && command.message && command.message.metadata) {
+              command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
+              command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
+              winston.debug("DirReply command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("DirReply command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
             if (command.type === 'settings' && command.settings) {
               Object.keys(command.settings).forEach(k => {
                 command.settings[k] = filler.fill(command.settings[k], requestAttributes)
@@ -118,9 +127,17 @@ class DirReply {
       //   message.attributes.updateUserFullname = requestAttributes['userFullname'];
       // }
       // intent_info
-      if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
+      
+      // REFACTOR - START
+      if (this.context.reply.intent_display_name) {
+        message.attributes.intentName = this.context.reply.intent_display_name;
+      }
+      else if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
         message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
       }
+      // REFACTOR - END
+
+
       // userFlowAttributes
       let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
       winston.debug("DirReply userFlowAttributes:", userFlowAttributes);
@@ -143,6 +160,7 @@ class DirReply {
       
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("DirReply reply with clean message: ", cleanMessage);
+    this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
