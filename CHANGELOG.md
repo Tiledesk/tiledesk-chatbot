@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.43
+- Added Iteration action
+
 # 2.0.42
 - Updated AskGPTV2 with embeddings support
 
