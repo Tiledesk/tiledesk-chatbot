@@ -261,6 +261,7 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
       [Directives.WAIT]: DirWait,
+      [Directives.WAIT_VARIABLE]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
       [Directives.UNLOCK_INTENT]: DirUnlockIntent,
       [Directives.FIRE_TILEDESK_EVENT]: DirFireTiledeskEvent,
