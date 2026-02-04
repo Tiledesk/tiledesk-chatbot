@@ -894,7 +894,7 @@ class TiledeskChatbotUtil {
             if (_bot.attributes && _bot.attributes.globals) {
                 winston.debug("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals);
                 _bot.attributes.globals.forEach(async (global_var) => {
-                    winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
+                    winston.debug("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
                     add(global_var.key, global_var.value);
                 });
             }
