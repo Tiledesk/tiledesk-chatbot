@@ -318,6 +318,7 @@ class DirAiPrompt {
           if (action.reasoning === true) {
             reasoning_content = resbody.reasoning_content;
             this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+            await this.chatbot.addParameter("reasoning_content", reasoning_content);
           }
 
           if (publicKey === true) {
