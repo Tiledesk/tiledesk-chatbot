@@ -17,6 +17,8 @@ const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
 
+const reasoningLevels = ['low', 'medium', 'high'];
+
 
 class DirAiPrompt {
 
@@ -252,10 +254,29 @@ class DirAiPrompt {
       }
     }
 
+
+    // Handle reasoning if enabled
+    let apiEndpoint = "/ask";
+
+    if (action.reasoning === true) {
+      let reasoningLevel = 'low';
+      if (action.reasoningLevel && reasoningLevels.includes(action.reasoningLevel.toLowerCase())) { 
+        reasoningLevel = action.reasoningLevel.toLowerCase();
+        this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      } else {
+        this.logger.native(`[AI Prompt] Reasoning enabled with default level: ${reasoningLevel}`);
+      }
+      
+      apiEndpoint = "/thinking";
+      this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      winston.debug("DirAiPrompt Reasoning enabled, using /thinking endpoint");
+      json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
+    }
+
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
-      url: AI_endpoint + "/ask",
+      url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
       method: 'POST'
@@ -293,6 +314,12 @@ class DirAiPrompt {
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
 
+          let reasoning_content = null;
+          if (action.reasoning === true) {
+            reasoning_content = resbody.reasoning_content;
+            this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+          }
+
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_info?.total_tokens || 0,
@@ -301,7 +328,7 @@ class DirAiPrompt {
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
         
-          await this.#assignAttributes(action, answer);
+          await this.#assignAttributes(action, answer, reasoning_content);
 
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -421,7 +448,7 @@ class DirAiPrompt {
     }
   }
 
-  async #assignAttributes(action, answer) {
+  async #assignAttributes(action, answer, reasoning_content) {
     winston.debug("DirAiPrompt assignAttributes action: ", action)
     winston.debug("DirAiPrompt assignAttributes answer: " + answer)
 
@@ -429,7 +456,45 @@ class DirAiPrompt {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
+      if (action.assignReasoningContentTo && reasoning_content) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReasoningContentTo, reasoning_content);
+      }
     }
+  }
+
+  /**
+   * Builds the thinking object for reasoning based on the level and max_tokens
+   * @param {string} level - The reasoning level: 'low', 'medium', or 'high'
+   * @param {number} max_tokens - Maximum tokens available
+   * @returns {object} The thinking configuration object
+   */
+  #buildThinkingObject(level, max_tokens) {
+    // Calculate budget_tokens based on level
+    let budgetPercentage;
+    switch (level) {
+      case 'high':
+        budgetPercentage = 0.60; // 60%
+        break;
+      case 'medium':
+        budgetPercentage = 0.40; // 40%
+        break;
+      case 'low':
+      default:
+        budgetPercentage = 0.20; // 20%
+        break;
+    }
+
+    const budget_tokens = Math.floor(max_tokens * budgetPercentage);
+
+    return {
+      show_thinking_stream: true,
+      reasoning_effort: level,
+      reasoning_summary: "auto",
+      type: "enabled",
+      budget_tokens: budget_tokens,
+      thinkingBudget: budget_tokens,
+      thinkingLevel: level
+    };
   }
 
   async getKeyFromKbSettings() {
