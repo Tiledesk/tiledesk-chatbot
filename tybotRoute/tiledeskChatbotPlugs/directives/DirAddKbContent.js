@@ -158,6 +158,10 @@ class DirAddKbContent {
       name: filled_name,
       source: filled_name
     };
+
+    if (action.tags && Array.isArray(action.tags) && action.tags.every(tag => typeof tag === "string")) {
+      json .tags = action.tags;
+    }
     
     winston.debug("[DirAddKbContent] json:", json);
 

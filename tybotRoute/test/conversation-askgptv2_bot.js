@@ -22,7 +22,8 @@ const bot = {
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",
 				"question": "this is the question: {{last_user_message}}",
-				"history": true
+				"history": true,
+				"tags": ["tag1", "tag2"]
 			}]
 		},
 		{

@@ -341,6 +341,10 @@ class DirAskGPTV2 {
       json.chat_history_dict = await this.transcriptToLLM(transcript);
     }
 
+    if (action.tags && Array.isArray(action.tags) && action.tags.every(tag => typeof tag === "string")) {
+      json.tags = action.tags;
+    }
+
     winston.debug("DirAskGPTV2 json:", json);
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
