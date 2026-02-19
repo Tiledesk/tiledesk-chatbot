@@ -2,7 +2,7 @@ const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
-class KBService {
+class LLMService {
 
   constructor() { }
 
@@ -100,5 +100,5 @@ class KBService {
   }
 }
 
-const kbService = new KBService();
-module.exports = kbService;
+const llmService = new LLMService();
+module.exports = llmService;
