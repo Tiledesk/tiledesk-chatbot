@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.0.45
+- Added supporto to tags on DirAskGPTV2 and DirAddKbContent
+
 # 2.0.44
 - Added support for mcp tools list in DirAiPrompt
 
