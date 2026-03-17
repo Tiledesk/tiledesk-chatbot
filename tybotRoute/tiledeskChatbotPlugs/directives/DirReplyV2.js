@@ -256,7 +256,7 @@ class DirReplyV2 {
         }
         winston.debug("(DirReplyV2) Reply message sent");
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
-        if (delay > 0 && delay <= 30000) { // prevent long delays
+        if (delay > 0) { // prevent long delays
           winston.debug("(DirReplyV2) start timeout callback(" + must_stop + ") for:", current);
           setTimeout(async () => {
             winston.debug("(DirReplyV2) callback(" + must_stop + ") after delay", current);

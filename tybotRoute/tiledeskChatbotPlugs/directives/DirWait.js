@@ -97,11 +97,8 @@ class DirWait {
   normalizeMillis(value) {
     const parsed = this.parseMillis(value);
     let millis = parsed === null ? 1000 : parsed;
-    if (millis > 20000) {
-      millis = 20000;
-    }
-    else if (millis < 1000) {
-      millis = 1000;
+    if (millis < 100) {
+      millis = 100;
     }
     return millis;
   }
