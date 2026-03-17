@@ -173,7 +173,7 @@ class DirReply {
         }
         winston.verbose("DirReply reply message sent")
         const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
-        if (delay > 0 && delay <= 30000) { // prevent long delays
+        if (delay > 0) {
           setTimeout(() => {
             callback();
           }, delay);
