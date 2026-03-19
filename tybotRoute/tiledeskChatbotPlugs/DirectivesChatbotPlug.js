@@ -58,6 +58,7 @@ const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
+const { DirGptResponse } = require('./directives/DirGptResponse');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
@@ -277,6 +278,7 @@ class DirectivesChatbotPlug {
       [Directives.ASK_GPT_V2]: DirAskGPTV2,
       [Directives.ADD_KB_CONTENT]: DirAddKbContent,
       [Directives.GPT_TASK]: DirGptTask,
+      [Directives.GPT_RESPONSE]: DirGptResponse,
       [Directives.AI_PROMPT]: DirAiPrompt,
       [Directives.AI_CONDITION]: DirAiCondition,
       [Directives.WHATSAPP_ATTRIBUTE]: DirWhatsappByAttribute,

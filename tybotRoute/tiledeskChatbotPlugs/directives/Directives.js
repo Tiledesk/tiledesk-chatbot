@@ -37,6 +37,7 @@ class Directives {
   static ASK_GPT = "askgpt";
   static ASK_GPT_V2 = "askgptv2";
   static GPT_TASK = "gpt_task";
+  static GPT_RESPONSE = "gpt_response";
   static AI_PROMPT = "ai_prompt";
   static AI_CONDITION = "ai_condition";
   /**** INTEGRATIONS ****/
