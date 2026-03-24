@@ -417,6 +417,7 @@ class DirAskGPTV2 {
             return;
           }
         } else {
+          winston.info("DirAskGPTV2 resbody else case: ", resbody);
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
             kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
