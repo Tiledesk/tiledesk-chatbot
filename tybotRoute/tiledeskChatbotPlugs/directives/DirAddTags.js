@@ -80,14 +80,19 @@ class DirAddTags {
     const filled_tags = filler.fill(action.tags, requestVariables);
     winston.debug("(DirAddTags) filled_tags: ", filled_tags);
 
+    console.log("action.tags: ", action.tags);
+    console.log("filled_tags: ", filled_tags);
+
     /** use case: CONVERSATION */
     if(target === 'request'){
       
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
       this.logger.native("[Add Tag] Adding following tags to conversation: ", newTags)
+      console.log("newTags: ", newTags);
 
       if(action.pushToList){
         newTags.forEach(async (tag) => {
+          console.log("add new tag: ", tag);
           let tags = await this.addNewTag(tag)
           if(!tags){
             callback();
@@ -97,6 +102,7 @@ class DirAddTags {
       }
 
       winston.debug('(DirAddTags) UPDATE request with newTags', newTags)
+      console.log("update request with newTags: ", newTags);
       let updatedRequest = await this.updateRequestWithTags(newTags)
       this.logger.native("[Add Tag] Tags added to conversation")
       if(!updatedRequest){
@@ -196,7 +202,9 @@ class DirAddTags {
     return new Promise((resolve) => {
       let json = []
       let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
+      console.log("tags: ", tags);
       json.push(...filteredTags)
+      console.log("json: ", json);
       winston.debug('(httprequest) DirAddTags updateRequestWithTags tags: ', json)
       const HTTPREQUEST = {
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
