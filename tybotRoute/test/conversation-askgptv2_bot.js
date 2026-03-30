@@ -153,6 +153,28 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "kb_success_pinecone_reranking",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "askgptv2",
+				"_tdActionTitle": "gpt action",
+				"assignReplyTo": "kb_reply",
+				"assignSourceTo": "kb_source",
+				"reranking": true,
+				"model": "gpt-4",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+				"question": "this is the question: {{last_user_message}}",
+				"history": true,
+				"tags": ["tag1", "tag2"]
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "kb_fail_missing_namespace",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},

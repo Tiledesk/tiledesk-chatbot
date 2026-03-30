@@ -18,6 +18,8 @@ const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 
+const PINECONE_RERANKING = process.env.PINECONE_RERANKING === true || process.env.PINECONE_RERANKING === "true";
+
 class DirAskGPTV2 {
 
   constructor(context) {
@@ -323,6 +325,14 @@ class DirAskGPTV2 {
         json.reranking = true;
         json.reranking_multiplier = 3;
         json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
+      }
+    }
+
+    if (!ns.hybrid && reranking === true && PINECONE_RERANKING) {
+      json.reranking = {
+        "provider": "pinecone",
+        "api_key": process.env.PINECONE_API_KEY,
+        "model": process.env.PINECONE_RERANKING_MODEL || process.env.RERANKING_MODEL || "bge-reranker-v2-m3"
       }
     }
 
