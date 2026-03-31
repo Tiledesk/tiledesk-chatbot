@@ -62,6 +62,7 @@ const { DirPicallexSendTemplate } = require('./directives/DirPicallexSendTemplat
 const { DirPicallexCallLead } = require('./directives/DirPicallexCallLead');
 const { DirPicallexSfActivity } = require('./directives/DirPicallexSfActivity');
 const { DirPicallexSfUpdateObject } = require('./directives/DirPicallexSfUpdateObject');
+const { DirGptResponse } = require('./directives/DirGptResponse');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
@@ -72,7 +73,7 @@ class DirectivesChatbotPlug {
   /**
    * @example
    * const { DirectivesChatbotPlug } = require('./DirectivesChatbotPlug');
-   * 
+   *
    */
 
   constructor(config) {
@@ -128,8 +129,8 @@ class DirectivesChatbotPlug {
       this.theend();
       return;
     }
-    
-    const supportRequest = this.supportRequest;    
+
+    const supportRequest = this.supportRequest;
     const token = this.token;
     const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
@@ -170,10 +171,10 @@ class DirectivesChatbotPlug {
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
-    
+
     this.curr_directive_index = -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
-    
+
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
@@ -281,6 +282,7 @@ class DirectivesChatbotPlug {
       [Directives.ASK_GPT_V2]: DirAskGPTV2,
       [Directives.ADD_KB_CONTENT]: DirAddKbContent,
       [Directives.GPT_TASK]: DirGptTask,
+      [Directives.GPT_RESPONSE]: DirGptResponse,
       [Directives.AI_PROMPT]: DirAiPrompt,
       [Directives.AI_CONDITION]: DirAiCondition,
       [Directives.WHATSAPP_ATTRIBUTE]: DirWhatsappByAttribute,
