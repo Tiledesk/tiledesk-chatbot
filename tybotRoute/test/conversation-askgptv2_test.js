@@ -62,7 +62,7 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
   });
 
-  it('/gpt_success (key from integrations) - invokes the askgpt mockup and test the returning attributes', (done) => {
+  it('/gpt_success_1 (key from integrations) - invokes the askgpt mockup and test the returning attributes', (done) => {
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -100,6 +100,9 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(req.body.engine !== undefined);
       assert(req.body.engine.name === 'pinecone');
       assert(req.body.engine.type === 'serverless');
+      assert(req.body.tags.length === 2);
+      assert(req.body.tags[0] === "tag1");
+      assert(req.body.tags[1] === "tag2");
 
       let reply = {}
       let http_code = 200;

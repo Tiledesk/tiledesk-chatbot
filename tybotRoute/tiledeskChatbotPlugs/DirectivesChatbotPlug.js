@@ -62,6 +62,7 @@ const { DirAiCondition } = require('./directives/DirAiCondition');
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirIteration } = require('./directives/DirIteration');
 
 class DirectivesChatbotPlug {
 
@@ -292,7 +293,8 @@ class DirectivesChatbotPlug {
       [Directives.CONNECT_BLOCK]: DirConnectBlock,
       [Directives.ADD_TAGS]: DirAddTags,
       [Directives.WEB_RESPONSE]: DirWebResponse,
-      [Directives.FLOW_LOG]: DirFlowLog
+      [Directives.FLOW_LOG]: DirFlowLog,
+      [Directives.ITERATION]: DirIteration,
     };
 
     const HandlerClass = handlers[directive_name];

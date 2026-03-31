@@ -30,6 +30,7 @@ class TiledeskChatbotUtil {
         if (parts.length > 1) {
             let json_string = explicit_intent_name.substring(parts[0].length);
             try {
+                json_string = json_string.replace(/'/g, '"');
                 intent.parameters = JSON.parse(json_string);
                 // if (intent.parameters) {
                     // for (const [key, value] of Object.entries(intent.parameters)) {
@@ -893,7 +894,7 @@ class TiledeskChatbotUtil {
             if (_bot.attributes && _bot.attributes.globals) {
                 winston.debug("(TiledeskChatbotUtil) Got Globals: ", _bot.attributes.globals);
                 _bot.attributes.globals.forEach(async (global_var) => {
-                    winston.error("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
+                    winston.debug("(TiledeskChatbotUtil) Adding global: " + global_var.key + " value: " + global_var.value);
                     add(global_var.key, global_var.value);
                 });
             }
