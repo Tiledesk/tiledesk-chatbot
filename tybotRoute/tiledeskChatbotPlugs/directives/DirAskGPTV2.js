@@ -18,6 +18,8 @@ const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 
+const PINECONE_RERANKING = process.env.PINECONE_RERANKING === true || process.env.PINECONE_RERANKING === "true";
+
 class DirAskGPTV2 {
 
   constructor(context) {
@@ -337,6 +339,25 @@ class DirAskGPTV2 {
           }
           json.reranking_multiplier = calculatedRerankingMultiplier;
         }
+      }
+    }
+
+    if (!ns.hybrid && reranking === true && PINECONE_RERANKING) {
+      json.reranking = {
+        "provider": "pinecone",
+        "api_key": process.env.PINECONE_API_KEY,
+        "model": process.env.PINECONE_RERANKING_MODEL || process.env.RERANKING_MODEL || "bge-reranker-v2-m3"
+      }
+
+      json.reranking_multiplier = reranking_multiplier || 3;
+      if ((top_k * reranking_multiplier) > 100) {
+        // Find the largest integer reranking_multiplier so that top_k * reranking_multiplier <= 100
+        let calculatedRerankingMultiplier = Math.floor(100 / top_k);
+        // At least 1 is required
+        if (calculatedRerankingMultiplier < 1) {
+          calculatedRerankingMultiplier = 1;
+        }
+        json.reranking_multiplier = calculatedRerankingMultiplier;
       }
     }
 
