@@ -58,6 +58,10 @@ const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
+const { DirPicallexSendTemplate } = require('./directives/DirPicallexSendTemplate');
+const { DirPicallexCallLead } = require('./directives/DirPicallexCallLead');
+const { DirPicallexSfActivity } = require('./directives/DirPicallexSfActivity');
+const { DirPicallexSfUpdateObject } = require('./directives/DirPicallexSfUpdateObject');
 
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
@@ -293,7 +297,11 @@ class DirectivesChatbotPlug {
       [Directives.CONNECT_BLOCK]: DirConnectBlock,
       [Directives.ADD_TAGS]: DirAddTags,
       [Directives.WEB_RESPONSE]: DirWebResponse,
-      [Directives.FLOW_LOG]: DirFlowLog
+      [Directives.FLOW_LOG]: DirFlowLog,
+      [Directives.PICALLEX_SEND_TEMPLATE]: DirPicallexSendTemplate,
+      [Directives.PICALLEX_CALL_LEAD]: DirPicallexCallLead,
+      [Directives.PICALLEX_SF_ACTIVITY]: DirPicallexSfActivity,
+      [Directives.PICALLEX_SF_UPDATE_OBJECT]: DirPicallexSfUpdateObject
     };
 
     const HandlerClass = handlers[directive_name];

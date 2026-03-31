@@ -63,6 +63,11 @@ class Directives {
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
+  /**** PICALLEX ****/
+  static PICALLEX_SEND_TEMPLATE = "picallex_send_template";
+  static PICALLEX_CALL_LEAD = "picallex_call_lead";
+  static PICALLEX_SF_ACTIVITY = "picallex_sf_activity";
+  static PICALLEX_SF_UPDATE_OBJECT = "picallex_sf_update_object";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
