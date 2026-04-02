@@ -2,6 +2,7 @@ const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 let https = require("https");
+var path = require('path');
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
@@ -17,6 +18,37 @@ const aiController = require("../../services/AIController");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
+const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
+
+//const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
+const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
+
+const RAG_CONTEXT_ENV_OVERRIDES = {
+  "gpt-3.5-turbo":       process.env.GPT_3_5_CONTEXT,
+  "gpt-4":               process.env.GPT_4_CONTEXT,
+  "gpt-4-turbo-preview": process.env.GPT_4T_CONTEXT,
+  "gpt-4o":              process.env.GPT_4O_CONTEXT,
+  "gpt-4o-mini":         process.env.GPT_4O_MINI_CONTEXT,
+  "gpt-4.1":             process.env.GPT_4_1_CONTEXT,
+  "gpt-4.1-mini":        process.env.GPT_4_1_MINI_CONTEXT,
+  "gpt-4.1-nano":        process.env.GPT_4_1_NANO_CONTEXT,
+  "gpt-5":               process.env.GPT_5_CONTEXT,
+  "gpt-5-mini":          process.env.GPT_5_MINI_CONTEXT,
+  "gpt-5-nano":          process.env.GPT_5_NANO_CONTEXT,
+  "general":             process.env.GENERAL_CONTEXT
+};
+
+/** RAG system prompt per modello: file in config/kb/prompt/rag, sovrascrivibili via env (come prima). */
+function getRagContextTemplate(modelName) {
+  const envOverride = RAG_CONTEXT_ENV_OVERRIDES[modelName];
+  if (envOverride) {
+    return envOverride;
+  }
+  if (!PromptManager.modelMap[modelName] && process.env.GENERAL_CONTEXT) {
+    return process.env.GENERAL_CONTEXT;
+  }
+  return ragPromptManager.getPrompt(modelName);
+}
 
 class DirAskGPTV2 {
 
@@ -89,23 +121,8 @@ class DirAskGPTV2 {
     let reranking;
     let reranking_multiplier;
     let skip_unanswered = false;
-
-    let contexts = {
-      "gpt-3.5-turbo":        process.env.GPT_3_5_CONTEXT       || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say: \"I don't know<NOANS>\"\n\n####{context}####",
-      "gpt-4":                process.env.GPT_4_CONTEXT         || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
-      "gpt-4-turbo-preview":  process.env.GPT_4T_CONTEXT        || "You are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####",
-      "gpt-4o":               process.env.GPT_4O_CONTEXT        || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4o-mini":          process.env.GPT_4O_MINI_CONTEXT   || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, return <NOANS>\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1":              process.env.GPT_4_1_CONTEXT       || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1-mini":         process.env.GPT_4_1_MINI_CONTEXT  || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-4.1-nano":         process.env.GPT_4_1_NANO_CONTEXT  || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5":                process.env.GPT_5_CONTEXT         || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5-mini":           process.env.GPT_5_MINI_CONTEXT    || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "gpt-5-nano":           process.env.GPT_5_NANO_CONTEXT    || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end==",
-      "general":              process.env.GENERAL_CONTEXT       || "You are an helpful assistant for question-answering tasks. Follow these steps carefully:\n1. Answer in the same language of the user question, regardless of the retrieved context language\n2. Use ONLY the pieces of the retrieved context and the chat history to answer the question.\n3. If the retrieved context does not contain sufficient information to generate an accurate and informative answer, append <NOANS> at the end of the answer\n\n==Retrieved context start==\n{context}\n==Retrieved context end=="
-    }
-
     let source = null;
+
     if (!action.llm) {
       action.llm = "openai";
     }
@@ -341,7 +358,8 @@ class DirAskGPTV2 {
     }
 
     if (!action.advancedPrompt) {
-      const contextTemplate = contexts[model.name] || contexts["general"];
+      const contextTemplate = getRagContextTemplate(model.name);
+      
       if (filled_context) {
         json.system_context = filled_context + "\n" + contextTemplate;
       } else {
