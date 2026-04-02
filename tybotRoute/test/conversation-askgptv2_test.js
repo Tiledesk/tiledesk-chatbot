@@ -19,6 +19,7 @@ const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
 const tilebotService = require('../services/TilebotService');
+const path = require('path');
 
 let SERVER_PORT = 10001
 
@@ -273,7 +274,7 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(req.body.engine.name === 'pinecone');
       assert(req.body.engine.type === 'serverless');
       assert(req.body.model.provider === "google");
-      assert(req.body.model.model === "gemini-2.0");
+      assert(req.body.model.name === "gemini-2.0");
 
       let reply = {}
       let http_code = 200;
@@ -442,7 +443,14 @@ describe('Conversation for AskGPTV2 test', async () => {
       assert(req.body.max_tokens === 1000)
       assert(req.body.top_k === 2)
       assert(req.body.question === "this is the question: come ti chiami")
-      assert(req.body.system_context === "this is the context: sei un assistente fantastico\nYou are an helpful assistant for question-answering tasks.\nUse ONLY the pieces of retrieved context delimited by #### and the chat history to answer the question.\nIf you don't know the answer, just say that you don't know.\nIf and only if none of the retrieved context is useful for your task, add this word to the end <NOANS>\n\n####{context}####")
+      assert(req.body.model.name === "gpt-4")
+
+      const fs = require('fs');
+      const default_context_path = path.join(__dirname, '../config/kb/prompt/rag/gpt-4.txt');
+      const default_context = fs.readFileSync(default_context_path, 'utf-8');
+
+      assert(req.body.system_context === `this is the context: sei un assistente fantastico\n${default_context}`);
+
 
       let reply = {}
       let http_code = 200;
