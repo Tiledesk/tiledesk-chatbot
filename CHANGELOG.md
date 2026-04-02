@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 2.0.46
+- Added support for reranking using Pinecone with standard namespaces.
+- Improved management of system contexts for LLM models.
+
 # 2.0.45
 - Added supporto to tags on DirAskGPTV2 and DirAddKbContent
 
