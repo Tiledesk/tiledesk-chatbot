@@ -12,7 +12,6 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
 const default_engine = require('../../config/kb/engine');
@@ -377,6 +376,10 @@ class DirAskGPTV2 {
         }
         json.reranking_multiplier = calculatedRerankingMultiplier;
       }
+    }
+    
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
     }
 
     if (!action.advancedPrompt) {
