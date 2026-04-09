@@ -500,7 +500,7 @@ class DirAskGPTV2 {
               request_id: this.requestId,
               sender: this.context?.message?.senderFullname
             }
-            kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
