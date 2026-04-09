@@ -1,5 +1,11 @@
 # Tiledesk native chatbot
 
+# 2.0.47 (next-release)
+- Updated addUnansweredQuestion method in KbService to accept a data object instead of separate parameters.
+- Introduced addAnsweredQuestion method in KbService for handling answered questions.
+- Modified DirAskGPTV2 to construct data objects for both unanswered and answered questions, improving clarity and consistency.
+- Updated tests in conversation-askgptv2_test.js to assert additional properties in the request body.
+
 # 2.0.46
 - Added support for reranking using Pinecone with standard namespaces.
 - Improved management of system contexts for LLM models.
