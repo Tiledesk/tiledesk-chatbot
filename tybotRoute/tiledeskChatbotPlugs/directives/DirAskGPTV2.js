@@ -19,6 +19,7 @@ const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
+const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -451,15 +452,30 @@ class DirAskGPTV2 {
 
           } else {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
+            let tokens = resbody.prompt_token_size;
             if (publicKey === true && !chunks_only) {
+
               let tokens_usage = {
                 tokens: resbody.prompt_token_size,
                 model: json.model
               }
+
+              let multiplier = MODELS_MULTIPLIER[json.model] ?? 1;
+              tokens = tokens * multiplier;
               quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
                 winston.error("Error updating quota: ", err);
               })
             }
+            
+            const data = {
+              namespace: json.namespace,
+              question: json.question,
+              answer: resbody.answer,
+              tokens: tokens
+            }
+            kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
+              winston.error("Error adding answered question: ", err);
+            })
   
             if (trueIntent) {
               await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -473,7 +489,14 @@ class DirAskGPTV2 {
           winston.info("DirAskGPTV2 resbody else case: ", resbody);
           await this.#assignAttributes(action, answer, source);
           if (!skip_unanswered) {
-            kbService.addUnansweredQuestion(this.projectId, json.namespace, json.question, this.token).catch((err) => {
+            // console.log("this.context", JSON.stringify(this.context, null, 2));
+            const data = {
+              namespace: json.namespace,
+              question: json.question,
+              request_id: this.requestId,
+              sender: this.context?.message?.senderFullname
+            }
+            kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
