@@ -476,7 +476,7 @@ class DirAskGPTV2 {
               answer: resbody.answer,
               tokens: tokens
             }
-            kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("Error adding answered question: ", err);
             })
   
