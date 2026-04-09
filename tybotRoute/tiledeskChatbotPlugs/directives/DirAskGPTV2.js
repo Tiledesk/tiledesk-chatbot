@@ -19,6 +19,7 @@ const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
+const llmService = require("../../services/LLMService");
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
