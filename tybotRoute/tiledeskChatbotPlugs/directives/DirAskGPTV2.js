@@ -464,7 +464,7 @@ class DirAskGPTV2 {
                 model: json.model
               }
 
-              let multiplier = MODELS_MULTIPLIER[json.model] ?? 1;
+              let multiplier = MODELS_MULTIPLIER[json.model.name] ?? 1;
               tokens = tokens * multiplier;
               quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
                 winston.error("Error updating quota: ", err);
