@@ -2111,6 +2111,9 @@ describe('Conversation for AskGPTV2 test', async () => {
     endpointServer.post('/:project_id/kb/unanswered/', (req, res) => {
 
       assert(req.body.question === "this is the question: Come ti chiami?")
+      assert(req.body.request_id === REQUEST_ID)
+      assert(req.body.sender === "guest#367e")
+      assert(req.body.namespace === PROJECT_ID)
 
       let reply = { 
         id_project: req.params.project_id,

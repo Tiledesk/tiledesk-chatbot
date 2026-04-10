@@ -2,7 +2,7 @@ const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
-class KBService {
+class LLMService {
 
   constructor() { }
 
@@ -73,9 +73,7 @@ class KBService {
     })
   }
 
-  async addUnansweredQuestion(id_project, namespace, question, token) {
-    
-    const json = { namespace, question };
+  async addUnansweredQuestion(id_project, data, token) {
     
     return new Promise((resolve, reject) => {
       const http_request = {
@@ -85,7 +83,7 @@ class KBService {
           'Authorization': 'JWT ' + token
         },
         method: "POST",
-        json: json
+        json: data
       }
       winston.debug("Kb HttpRequest", http_request);
 
@@ -98,7 +96,29 @@ class KBService {
       });
     });
   }
+
+  async addAnsweredQuestion(id_project, data, token) {
+    return new Promise((resolve, reject) => {
+      const http_request = {
+        url: API_ENDPOINT + "/" + id_project + "/kb/answered/",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + token
+        },
+        json: data,
+        method: "POST"
+      }
+      winston.debug("Kb HttpRequest", http_request);
+      httpUtils.request(http_request, (err, response) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
 }
 
-const kbService = new KBService();
-module.exports = kbService;
+const llmService = new LLMService();
+module.exports = llmService;
