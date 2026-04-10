@@ -7,6 +7,7 @@ const { DirIntent } = require("./DirIntent");
 const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -193,6 +194,33 @@ class DirReplyV2 {
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
+            }
+
+            if (command.type === 'message' && command.message && command.message.metadata) {
+              command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
+              command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
+              winston.debug("(DirReplyV2) command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("(DirReplyV2) command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
+            if (command.type === 'message' && command.message && command.message.type === 'tts') {
+              command.message.text = filler.fill(command.message.text, requestAttributes);
+              const voiceSettings = {
+                text: command.message.text,
+                provider: requestAttributes['VOICE_PROVIDER'],
+                model: requestAttributes['TTS_MODEL'],
+                voice: requestAttributes['TTS_VOICE_NAME'],
+                language: requestAttributes['TTS_VOICE_LANGUAGE']
+              }
+              const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              command.message.metadata = {
+                type: voiceSpeech.contentType,
+                uid: Date.now().toString(36),
+                filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                src: this.API_ENDPOINT + "/files?path=" + encodeURIComponent(voiceSpeech.filename)
+              }
+              winston.debug("(DirReplyV2) command filled (tts): " + command.message.text);
+              winston.debug("(DirReplyV2) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
             }
           }
         }
