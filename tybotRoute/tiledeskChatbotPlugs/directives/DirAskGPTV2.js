@@ -475,6 +475,7 @@ class DirAskGPTV2 {
               namespace: json.namespace,
               question: json.question,
               answer: resbody.answer,
+              request_id: this.requestId,
               tokens: tokens
             }
             llmService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
