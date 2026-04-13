@@ -75,6 +75,7 @@ class DirectivesChatbotPlug {
   constructor(config) {
     this.supportRequest = config.supportRequest;
     this.API_ENDPOINT = config.API_ENDPOINT;
+    this.API_URL = config.API_URL;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
@@ -161,6 +162,7 @@ class DirectivesChatbotPlug {
       reply: this.reply,
       requestId: supportRequest.request_id,
       API_ENDPOINT: API_ENDPOINT,
+      API_URL: this.API_URL,
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,

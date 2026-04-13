@@ -20,6 +20,7 @@ class DirReply {
     this.tdcache = context.tdcache;
     this.log = context.log;
     this.API_ENDPOINT = context.API_ENDPOINT;
+    this.API_URL = context.API_URL;
     
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
@@ -112,7 +113,7 @@ class DirReply {
                 type: voiceSpeech.contentType,
                 uid: Date.now().toString(36),
                 filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                src: this.API_ENDPOINT + "/files?path=" + encodeURIComponent(voiceSpeech.filename)
+                src: this.API_URL + "/files?path=" + encodeURIComponent(voiceSpeech.filename)
               }
               winston.debug("(DirReply) command filled (tts): " + command.message.text);
               winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
