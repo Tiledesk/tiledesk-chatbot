@@ -113,7 +113,7 @@ class DirReply {
                 type: voiceSpeech.contentType,
                 uid: Date.now().toString(36),
                 filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                src: this.API_URL + "/files?path=" + encodeURIComponent(voiceSpeech.filename)
+                src: this.API_URL + "/files?path=" + voiceSpeech.filename
               }
               winston.debug("(DirReply) command filled (tts): " + command.message.text);
               winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
