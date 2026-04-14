@@ -54,6 +54,7 @@ router.post('/ext/:botid', async (req, res) => {
     delete req.body.payload.request.snapshot;
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
+  console.log("(tybotRoute) Request Body: ", req.body);
 
   const message = req.body.payload;
   const messageId = message._id;
@@ -68,6 +69,7 @@ router.post('/ext/:botid', async (req, res) => {
   if (message.request.id_project === null || message.request.id_project === undefined) {
     message.request.id_project = projectId;
   }
+
 
   //skip internal note messages
   if(message && message.attributes && message.attributes.subtype === 'private') {
