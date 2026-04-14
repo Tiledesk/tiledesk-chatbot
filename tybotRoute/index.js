@@ -54,7 +54,6 @@ router.post('/ext/:botid', async (req, res) => {
     delete req.body.payload.request.snapshot;
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
-  console.log("(tybotRoute) Request Body: ", req.body);
 
   const message = req.body.payload;
   const messageId = message._id;
