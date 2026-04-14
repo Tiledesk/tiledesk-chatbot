@@ -495,7 +495,7 @@ class DirAskGPTV2 {
               namespace: json.namespace,
               question: json.question,
               request_id: this.requestId,
-              sender: this.context?.message?.senderFullname
+              sender: this.context?.reply?.attributes?.intent_info?.question_payload?.senderFullname
             }
             kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {

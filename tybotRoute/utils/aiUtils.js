@@ -1,4 +1,4 @@
-var winston = require('../config/winston');
+const winston = require('./winston');
 
 // MODELS_MULTIPLIER = {
 //     "gpt-3.5-turbo": 0.6,

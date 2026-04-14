@@ -216,6 +216,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
@@ -386,6 +390,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
@@ -550,6 +558,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
@@ -713,6 +725,10 @@ describe('Conversation for AskGPTV2 test', async () => {
 
       res.status(http_code).send(reply);
     })
+
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
 
     // no longer used in this test --> key retrieved from integrations
     endpointServer.get('/:project_id/kbsettings', function (req, res) {
@@ -881,6 +897,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     });
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
@@ -1037,6 +1057,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       let http_code = 200;
 
       res.status(http_code).send(reply);
+    });
+
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -1202,6 +1226,10 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     });
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
       let request = {
@@ -1348,6 +1376,10 @@ describe('Conversation for AskGPTV2 test', async () => {
 
       res.status(http_code).send(reply);
     })
+
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -1502,6 +1534,9 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
@@ -1656,6 +1691,10 @@ describe('Conversation for AskGPTV2 test', async () => {
 
       res.status(http_code).send(reply);
     })
+
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
 
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -1813,6 +1852,9 @@ describe('Conversation for AskGPTV2 test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
