@@ -22,7 +22,6 @@ class DirIteration {
 
   execute(directive, callback) {
     winston.verbose("Execute Iteration directive");
-    console.log("directive: ", directive);
     let action;
     if (directive.action) {
       action = directive.action;
@@ -83,7 +82,6 @@ class DirIteration {
    */
   async #initializeIteration(action, actionId, callback) {
     winston.debug("[Iteration] Initializing iteration state");
-    console.log("[Iteration] Initializing iteration state");
     
     const iterable = action.iterable;
     const goToIntent = action.goToIntent;
@@ -96,7 +94,6 @@ class DirIteration {
 
     if (!iterableValue) {
       winston.verbose("[Iteration] Iterable object is undefined");
-      console.log("[Iteration] Iterable object is undefined");
       this.logger.warn("[Iteration] Iterable object is undefined");
       callback(true);
       return;
@@ -107,7 +104,6 @@ class DirIteration {
     
     if (!iterableArray) {
       winston.verbose("[Iteration] Could not convert iterable to array");
-      console.log("[Iteration] Could not convert iterable to array");
       this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}`);
       callback(true);
       return;
@@ -115,7 +111,6 @@ class DirIteration {
 
     if (iterableArray.length === 0) {
       winston.verbose("[Iteration] Iterable array is empty. Exit...")
-      console.log("[Iteration] Iterable array is empty. Exit...")
       this.logger.warn("[Iteration] Iterable array is empty. Exit...")
       callback(true);
       return;
@@ -133,7 +128,6 @@ class DirIteration {
     
     await this.#saveIterationState(actionId, iterationState);
     this.logger.native(`[Iteration] Initialized iteration with ${iterableArray.length} items`);
-    console.log(`[Iteration] Initialized iteration with ${iterableArray.length} items`);
 
     // Process first item
     await this.#processCurrentItem(iterationState, actionId, goToIntent, output, callback);
@@ -141,7 +135,6 @@ class DirIteration {
 
   async #continueIteration(iterationState, actionId, callback) {
     winston.debug(`[Iteration] Continuing iteration from index ${iterationState.currentIndex}`);
-    console.log(`[Iteration] Continuing iteration from index ${iterationState.currentIndex}`);
     
     // Increment index
     iterationState.currentIndex += 1;
@@ -150,7 +143,6 @@ class DirIteration {
     if (iterationState.currentIndex >= iterationState.totalItems) {
       this.logger.native("[Iteration] Iteration completed");
       await this.#clearIterationState(actionId);
-      console.log("[Iteration] Iteration completed");
       callback(false);
       return;
     }

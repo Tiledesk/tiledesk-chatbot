@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# 2.0.47 (next-release)
+# 2.0.47
 - Updated addUnansweredQuestion method in KbService to accept a data object instead of separate parameters.
 - Introduced addAnsweredQuestion method in KbService for handling answered questions.
 - Modified DirAskGPTV2 to construct data objects for both unanswered and answered questions, improving clarity and consistency.
