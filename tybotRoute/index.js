@@ -210,6 +210,8 @@ router.post('/ext/:botid', async (req, res) => {
 router.post('/exec/:botid', async (req, res) => {
 
   const execPrepStartedHr = process.hrtime.bigint();
+  /** Set immediately after `res.status(200).send` on successful validation — used to measure work until `processDirectives()`. */
+  let execAfterHttp200Hr = null;
   const logExecPrepMs = (phase) => {
     const ms = Number(process.hrtime.bigint() - execPrepStartedHr) / 1e6;
     winston.info(`(tybotRoute) POST /exec/:botid prep phase ${ms.toFixed(2)}ms [${phase}]`);
@@ -251,6 +253,7 @@ router.post('/exec/:botid', async (req, res) => {
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
     res.status(200).send({"success":true});
+    execAfterHttp200Hr = process.hrtime.bigint();
   }
   else {
     res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
@@ -332,6 +335,12 @@ router.post('/exec/:botid', async (req, res) => {
           cache: tdcache
         }
       );
+      if (execAfterHttp200Hr != null) {
+        const msUntilProcessDirectives = Number(process.hrtime.bigint() - execAfterHttp200Hr) / 1e6;
+        winston.info(
+          `(tybotRoute) POST /exec/:botid ${msUntilProcessDirectives.toFixed(2)}ms from HTTP 200 response until before processDirectives()`
+        );
+      }
       directivesPlug.processDirectives( () => {
         winston.verbose("(tybotRoute) Actions - Directives executed.");
       });

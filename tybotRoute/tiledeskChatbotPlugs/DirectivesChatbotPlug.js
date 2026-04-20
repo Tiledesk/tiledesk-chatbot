@@ -307,10 +307,14 @@ class DirectivesChatbotPlug {
 
     const handler = new HandlerClass(context);
 
-    // Esegue l'handler e chiama next se non stop
+    const directiveExecStartHr = process.hrtime.bigint();
+    const directiveDisplayName = directive.name != null ? directive.name : directive_name;
 
-    console.log("Execut directive: ", directive_name)
     handler.execute(directive, async (stop) => {
+      const directiveMs = Number(process.hrtime.bigint() - directiveExecStartHr) / 1e6;
+      winston.info(
+        `(DirectivesChatbotPlug) directive "${directiveDisplayName}" executed in ${directiveMs.toFixed(2)}ms`
+      );
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();
