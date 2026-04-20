@@ -87,7 +87,7 @@ class HttpUtils {
       .then((res) => {
         const ms = httpRoundTripMs();
         if (res && (res.status >= 200 && res.status <= 299) && res.data) {
-          winston.verbose(
+          winston.info(
             `[HttpUtils] ${options.method || 'GET'} ${options.url} completed in ${ms.toFixed(2)}ms ` +
             `(HTTP ${res.status}) [keep-alive client: ${keepAliveTag}]`
           );
@@ -97,7 +97,7 @@ class HttpUtils {
         }
         else {
           const status = res && res.status != null ? res.status : 'n/a';
-          winston.verbose(
+          winston.info(
             `[HttpUtils] ${options.method || 'GET'} ${options.url} completed in ${ms.toFixed(2)}ms ` +
             `(unexpected response, status ${status}) [keep-alive client: ${keepAliveTag}]`
           );

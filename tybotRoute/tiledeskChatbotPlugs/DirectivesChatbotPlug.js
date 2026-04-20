@@ -307,12 +307,14 @@ class DirectivesChatbotPlug {
 
     // Esegue l'handler e chiama next se non stop
 
+    console.log("Execut directive: ", directive_name)
     handler.execute(directive, async (stop) => {
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();
       }
       const next_dir = await this.nextDirective(this.directives);
+      console.log("Go to next directive: ", next_dir.name)
       let process_next_dir = await this.process(next_dir);
       return process_next_dir;
     });
