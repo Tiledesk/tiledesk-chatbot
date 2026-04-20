@@ -260,11 +260,6 @@ router.post('/exec/:botid', async (req, res) => {
   logExecPrepMs('validated');
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
-  await tdcache.set(
-    request_botId_key,
-    botId,
-    {EX: 604800} // 7 days
-  );
 
   let botsDS;
   if (!staticBots) {
@@ -275,11 +270,14 @@ router.post('/exec/:botid', async (req, res) => {
     botsDS = new MockBotsDataSource(staticBots);
   }
 
-  // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
-    Promise.reject(err);
-    return;
-  });
+  // Run Redis request↔bot mapping and bot metadata load in parallel (independent keys / work).
+  let bot = await Promise.all([
+    tdcache.set(request_botId_key, botId, {EX: 604800}), // 7 days
+    botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+      Promise.reject(err);
+      return;
+    }),
+  ]).then(([, b]) => b);
 
   let intentsMachine;
   let backupMachine;
