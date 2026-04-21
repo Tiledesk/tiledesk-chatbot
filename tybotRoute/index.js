@@ -258,12 +258,7 @@ router.post('/exec/:botid', async (req, res) => {
   logExecPrepMs('validated');
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
-  await tdcache.set(
-    request_botId_key,
-    botId,
-    {EX: 604800} // 7 days
-  );
-
+  
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
@@ -273,11 +268,14 @@ router.post('/exec/:botid', async (req, res) => {
     botsDS = new MockBotsDataSource(staticBots);
   }
 
-  // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
-    Promise.reject(err);
-    return;
-  });
+  // Run Redis request↔bot mapping and bot metadata load in parallel (independent keys / work).
+  let bot = await Promise.all([
+    tdcache.set(request_botId_key, botId, {EX: 604800}), // 7 days
+    botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+      Promise.reject(err);
+      return;
+    }),
+  ]).then(([, b]) => b);
 
   let intentsMachine;
   let backupMachine;
@@ -331,9 +329,19 @@ router.post('/exec/:botid', async (req, res) => {
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+
+      let t1 = process.hrtime.bigint();
+
+      if (process.env.PROMISES_TEST === "true") {
+        await directivesPlug.processDirectives();
+        console.log("processDirectives time (await): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
+      } else {
+        directivesPlug.processDirectives(() => {
+          console.log("processDirectives time (callback): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
+          winston.verbose("(tybotRoute) Actions - Directives executed.");
+        });
+      }
+
     }
     catch (error) {
       winston.error("(tybotRoute) Error while processing actions:", error);
