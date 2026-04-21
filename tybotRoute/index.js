@@ -176,9 +176,9 @@ router.post('/ext/:botid', async (req, res) => {
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+      
+      await directivesPlug.processDirectives();
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
     catch (error) {
       winston.error("(tybotRoute) Error while processing actions:", error);
@@ -329,18 +329,10 @@ router.post('/exec/:botid', async (req, res) => {
           cache: tdcache
         }
       );
-
       let t1 = process.hrtime.bigint();
-
-      if (process.env.PROMISES_TEST === "true") {
-        await directivesPlug.processDirectives();
-        console.log("processDirectives time (await): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
-      } else {
-        directivesPlug.processDirectives(() => {
-          console.log("processDirectives time (callback): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
-          winston.verbose("(tybotRoute) Actions - Directives executed.");
-        });
-      }
+      await directivesPlug.processDirectives();
+      console.log("processDirectives time (await): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
 
     }
     catch (error) {
@@ -425,21 +417,27 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }
     
     bot_answer.attributes["_raw_message"] = original_answer_text;
-    tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+    tdclient.sendSupportMessage(requestId, bot_answer, async (err, response) => {
       winston.verbose("(tybotRoute) Bot answer sent")
       if (err) {
         winston.error("(tybotRoute) Error sending message", err);
       }
-      directivesPlug.processDirectives(() => {
+      try {
+        await directivesPlug.processDirectives();
         winston.verbose("(tybotRoute) Directives executed")
-      });
+      } catch (e) {
+        winston.error("(tybotRoute) processDirectives error:", e);
+      }
     });
   }
   else {
     winston.verbose("(tybotRoute) No bot_answer")
-    directivesPlug.processDirectives(() => {
+    try {
+      await directivesPlug.processDirectives();
       winston.verbose("(tybotRoute) Directives executed")
-    });
+    } catch (e) {
+      winston.error("(tybotRoute) processDirectives error:", e);
+    }
   }
   
 });
