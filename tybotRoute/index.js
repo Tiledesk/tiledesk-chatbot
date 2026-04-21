@@ -38,6 +38,7 @@ const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
 
 let API_ENDPOINT = null;
+let API_URL = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
 
@@ -170,6 +171,7 @@ router.post('/ext/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
@@ -323,6 +325,7 @@ router.post('/exec/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
@@ -620,6 +623,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
+        console.log("listener response json: ", json);
+        console.log("listener response status: ", status);
         winston.debug("Web response status: " + status);
 
         return res.status(status).send(json.payload);
@@ -657,6 +662,14 @@ async function startApp(settings, completionCallback) {
   else {
     API_ENDPOINT = settings.API_ENDPOINT;
     winston.info("(Tilebot) settings.API_ENDPOINT:" + API_ENDPOINT);
+  }
+
+  if (!settings.API_URL) {
+    throw new Error("settings.API_URL is mandatory id no settings.bots.");
+  }
+  else {
+    API_URL = settings.API_URL;
+    winston.info("(Tilebot) settings.API_URL:" + API_URL);
   }
 
   if (!settings.TILEBOT_ENDPOINT) {
