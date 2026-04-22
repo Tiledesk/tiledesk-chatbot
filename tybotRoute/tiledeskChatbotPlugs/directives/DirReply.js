@@ -111,7 +111,7 @@ class DirReply {
               const start = Date.now();
               const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
               const end = Date.now();
-              winston.debug("(DirReply) textToSpeech time: " + (end - start) + "ms");
+              console.log("(DirReply) textToSpeech time: " + (end - start) + "ms");
               command.message.metadata = {
                 type: voiceSpeech.contentType,
                 uid: Date.now().toString(36),
