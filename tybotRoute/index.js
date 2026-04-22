@@ -38,6 +38,7 @@ const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
 
 let API_ENDPOINT = null;
+let API_URL = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
 
@@ -170,15 +171,16 @@ router.post('/ext/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+      
+      await directivesPlug.processDirectives();
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
     catch (error) {
       winston.error("(tybotRoute) Error while processing actions:", error);
@@ -206,10 +208,17 @@ router.post('/ext/:botid', async (req, res) => {
 });
 
 router.post('/exec/:botid', async (req, res) => {
-  
+
+  const execPrepStartedHr = process.hrtime.bigint();
+  const logExecPrepMs = (phase) => {
+    const ms = Number(process.hrtime.bigint() - execPrepStartedHr) / 1e6;
+    winston.info(`(tybotRoute) POST /exec/:botid prep phase ${ms.toFixed(2)}ms [${phase}]`);
+  };
+
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /exec/:botid called: " + botId);
   if(!botId || botId === "null" || botId === "undefined"){
+    logExecPrepMs('invalid botId');
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
 
@@ -234,6 +243,7 @@ router.post('/exec/:botid', async (req, res) => {
   //skip internal note messages
   if(message && message.attributes && message.attributes.subtype === 'private') {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
+    logExecPrepMs('private note');
     return res.status(200).send({"success":true});
   }
 
@@ -244,16 +254,13 @@ router.post('/exec/:botid', async (req, res) => {
   }
   else {
     res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
+    logExecPrepMs('invalid requestId');
     return;
   }
+  logExecPrepMs('validated');
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
-  await tdcache.set(
-    request_botId_key,
-    botId,
-    {EX: 604800} // 7 days
-  );
-
+  
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
@@ -263,11 +270,14 @@ router.post('/exec/:botid', async (req, res) => {
     botsDS = new MockBotsDataSource(staticBots);
   }
 
-  // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
-    Promise.reject(err);
-    return;
-  });
+  // Run Redis request↔bot mapping and bot metadata load in parallel (independent keys / work).
+  let bot = await Promise.all([
+    tdcache.set(request_botId_key, botId, {EX: 604800}), // 7 days
+    botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+      Promise.reject(err);
+      return;
+    }),
+  ]).then(([, b]) => b);
 
   let intentsMachine;
   let backupMachine;
@@ -315,15 +325,18 @@ router.post('/exec/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+      let t1 = process.hrtime.bigint();
+      await directivesPlug.processDirectives();
+      console.log("processDirectives time (await): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
+
     }
     catch (error) {
       winston.error("(tybotRoute) Error while processing actions:", error);
@@ -407,21 +420,27 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }
     
     bot_answer.attributes["_raw_message"] = original_answer_text;
-    tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+    tdclient.sendSupportMessage(requestId, bot_answer, async (err, response) => {
       winston.verbose("(tybotRoute) Bot answer sent")
       if (err) {
         winston.error("(tybotRoute) Error sending message", err);
       }
-      directivesPlug.processDirectives(() => {
+      try {
+        await directivesPlug.processDirectives();
         winston.verbose("(tybotRoute) Directives executed")
-      });
+      } catch (e) {
+        winston.error("(tybotRoute) processDirectives error:", e);
+      }
     });
   }
   else {
     winston.verbose("(tybotRoute) No bot_answer")
-    directivesPlug.processDirectives(() => {
+    try {
+      await directivesPlug.processDirectives();
       winston.verbose("(tybotRoute) Directives executed")
-    });
+    } catch (e) {
+      winston.error("(tybotRoute) processDirectives error:", e);
+    }
   }
   
 });
@@ -602,6 +621,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
+        console.log("listener response json: ", json);
+        console.log("listener response status: ", status);
         winston.debug("Web response status: " + status);
 
         return res.status(status).send(json.payload);
@@ -639,6 +660,14 @@ async function startApp(settings, completionCallback) {
   else {
     API_ENDPOINT = settings.API_ENDPOINT;
     winston.info("(Tilebot) settings.API_ENDPOINT:" + API_ENDPOINT);
+  }
+
+  if (!settings.API_URL) {
+    throw new Error("settings.API_URL is mandatory id no settings.bots.");
+  }
+  else {
+    API_URL = settings.API_URL;
+    winston.info("(Tilebot) settings.API_URL:" + API_URL);
   }
 
   if (!settings.TILEBOT_ENDPOINT) {

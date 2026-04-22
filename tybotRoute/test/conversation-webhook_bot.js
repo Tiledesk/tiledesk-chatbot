@@ -1,6 +1,6 @@
 const bot = {
 	"webhook_enabled": true,
-	"webhook_url": "http://localhost:10002/bot",
+	"webhook_url": "http://127.0.0.1:10002/bot",
 	"language": "en",
 	"name": "Your bot",
 	"type": "tilebot",

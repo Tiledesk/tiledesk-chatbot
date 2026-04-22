@@ -4,7 +4,7 @@ const tybot = require("../index.js");
 const tybotRoute = tybot.router;
 var express = require('express');
 var app = express();
-const winston = require('../utils/winston');
+const winston = require('../utils/winston.js');
 app.use("/", tybotRoute);
 app.use((err, req, res, next) => {
   winston.error("General error", err);
@@ -12,21 +12,21 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-customerio_bot.js').bots_data;
+const bots_data = require('./conversation-reply-voice_bot.js').bots_data;
 const PROJECT_ID = "projectID"; //process.env.TEST_ACTIONS_PROJECT_ID;
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID"; //process.env.TEST_ACTIONS_BOT_ID;
 const CHATBOT_TOKEN = "XXX"; //process.env.ACTIONS_CHATBOT_TOKEN;
-const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
+const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const tilebotService = require('../services/TilebotService.js');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for customerio test', async () => {
+describe('Conversation for Reply test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
-
+  
   before(() => {
     return new Promise(async (resolve, reject) => {
       winston.info("Starting tilebot server...");
@@ -42,16 +42,16 @@ describe('Conversation for customerio test', async () => {
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD
           }, () => {
-            winston.info("Tilebot route successfully started.",);
+            winston.info("Tilebot route successfully started.");
             var port = SERVER_PORT;
             app_listener = app.listen(port, () => {
-              winston.info('Tilebot connector listening on port ', port);
+              winston.info('Tilebot connector listening on port ' + port);
               resolve();
             });
           });
       }
       catch (error) {
-        winston.error("error: ", error)
+        winston.error("error:", error)
       }
 
     })
@@ -63,7 +63,7 @@ describe('Conversation for customerio test', async () => {
     });
   });
 
-  it('/customerio success', (done) => {
+  it('/reply success (dtmf-form)', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -71,22 +71,23 @@ describe('Conversation for customerio test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
+
       const command1 = message.attributes.commands[1];
       assert(command1.type === "message");
-      assert(command1.message.text === 'customerio status is: 204');
+      assert(command1.message.text === 'This is a dtmf form');
 
-      const command2 = message.attributes.commands[2];
-      assert(command2.type === "message");
-      assert(command2.message.text === 'customerio error is: null');
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "settings");
+      assert(command3.settings.maxDigits === "10");
+      assert(command3.settings.terminators === "#");
+      assert(command3.settings.transferTo === "+393334455666")
 
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(attributes);
-          assert(attributes["customerio_status"] === 204);
-          assert(attributes["customerio_error"] === null);
+
           listener.close(() => {
             done();
           });
@@ -94,95 +95,6 @@ describe('Conversation for customerio test', async () => {
       });
     });
 
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-
-      assert(req.params.name) === 'customerio';
-      let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "customerio",
-        value: {
-          apikey: "example_api_key"
-        }
-      }
-      res.status(http_code).send(reply);
-    });
-
-
-    endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
-      res.sendStatus(204);
-    });
-
-    listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      winston.verbose('endpointServer started: ' + listener.address());
-      let request = {
-        "payload": {
-          "senderFullname": "guest#367e",
-          "type": "text",
-          "sender": "A-SENDER",
-          "recipient": REQUEST_ID,
-          "text": '/customerio#SUCCESS',
-          "id_project": PROJECT_ID,
-          "metadata": "",
-          "request": {
-            "request_id": REQUEST_ID
-          },
-        },
-        "token": "XXX"
-      }
-      tilebotService.sendMessageToBot(request, BOT_ID, () => {
-        winston.verbose("Message sent:\n", request);
-      });
-    });
-  });
-
-  it('/customerio failure - return code 401', (done) => {
-
-    let listener;
-    let endpointServer = express();
-    endpointServer.use(bodyParser.json());
-    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
-      res.send({ success: true });
-      const message = req.body;
-      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-        if (err) {
-          assert.ok(false);
-        }
-        else {
-          assert(attributes);
-          assert(attributes["customerio_status"] === 401);
-          assert(attributes["customerio_error"] === "Unauthorized request");
-          listener.close(() => {
-            done();
-          });
-        }
-      });
-
-    });
-
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-      let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "customerio",
-        value: {
-          apikey: "example_api_key"
-        }
-      }
-      res.status(http_code).send(reply);
-    });
-
-    endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
-      let http_code = 401;
-      let reply = {
-        "meta": {
-          "error": "Unauthorized request"
-        }
-      }
-      res.status(http_code).send(reply);
-    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
@@ -192,7 +104,7 @@ describe('Conversation for customerio test', async () => {
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/customerio#FAILUREACCESSTOKEN',
+          "text": '/dtmfform{"transfer_to": "+393334455666"}',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -202,12 +114,12 @@ describe('Conversation for customerio test', async () => {
         "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-        winston.verbose("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
 
-  it('/customerio failure - return code 400', (done) => {
+  it('/reply success (dtmf menu)', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -215,53 +127,42 @@ describe('Conversation for customerio test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
+
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'This is a dtmf menu');
+
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "settings");
+      assert(command3.subType === "dtmf_menu");
+      assert(command3.settings.no_input === "#no_input_id");
+      assert(command3.settings.no_match === "#no_match_id");
+      assert(command3.settings.timeout === 15);
+      assert(command3.settings.bargein === true);
+
       util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
         if (err) {
           assert.ok(false);
         }
         else {
-          assert(attributes);
-          assert(attributes["customerio_status"] === 400);
-          assert(attributes["customerio_error"] === "invalid email identifier");
+
           listener.close(() => {
             done();
           });
         }
       });
-
-    });
-    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
-      let http_code = 200;
-      let reply = {
-        _id: "656728224b45965b69111111",
-        id_project: "62c3f10152dc740035000000",
-        name: "customerio",
-        value: {
-          apikey: "example_api_key"
-        }
-      }
-      res.status(http_code).send(reply);
     });
 
-    endpointServer.post('/api/v1/forms/:formid/submit', function (req, res) {
-      let http_code = 400;
-      let reply = {
-        "meta": {
-          "error": "invalid email identifier"
-        }
-      }
-      res.status(http_code).send(reply);
-    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
-      winston.verbose('endpointServer started', listener.address());
+      winston.verbose('endpointServer started' + listener.address());
       let request = {
         "payload": {
           "senderFullname": "guest#367e",
           "type": "text",
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
-          "text": '/customerio#FAILUREEMAIL',
+          "text": '/dtmfmenu',
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
@@ -271,9 +172,64 @@ describe('Conversation for customerio test', async () => {
         "token": "XXX"
       }
       tilebotService.sendMessageToBot(request, BOT_ID, () => {
-        winston.verbose("Message sent:\n", request);
+         winston.verbose("Message sent:\n", request);
       });
     });
   });
+
+  it('/reply success (blind tranfer form)', (done) => {
+
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === 'This is a transfer');
+
+      const command3 = message.attributes.commands[3];
+      assert(command3.type === "settings");
+      assert(command3.settings.transferTo === "user@email.it");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/transfer',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
 
 });
