@@ -110,7 +110,8 @@ class DirReply {
               }
               // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
               command.message.metadata = {
-                type: voiceSpeech.contentType,
+                // type: voiceSpeech.contentType,
+                type: 'audio/mp3',
                 uid: Date.now().toString(36),
                 // filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
                 filename: `audio-${Date.now().toString(36)}.mp3`,
