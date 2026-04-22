@@ -1,7 +1,7 @@
 'use strict';
 
 const axios = require('axios');
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 
 class AnalyticsClient {
 
