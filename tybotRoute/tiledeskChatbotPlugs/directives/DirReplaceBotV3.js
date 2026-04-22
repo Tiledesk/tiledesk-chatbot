@@ -7,6 +7,7 @@ let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
+const { AnalyticsClient } = require('../../AnalyticsClient');
 
 class DirReplaceBotV3 {
 
@@ -84,6 +85,15 @@ class DirReplaceBotV3 {
         }
 
         winston.debug("(DirReplaceBotV3)  replace resbody: ", resbody);
+
+        // Emit analytics event for bot switch
+        AnalyticsClient.track('chatbot.bot_switched', this.context.projectId, {
+          from_bot_id:  this.context.chatbot?.botId || '',
+          to_bot_id:    (useSlug ? botSlug : botId) || resbody?.bot?._id || '',
+          intent_name:  this.context.reply?.attributes?.intent_info?.intent_name || null,
+          request_id:   this.requestId || null
+        });
+
         if (blockName) {
           winston.debug("(DirReplaceBotV3) Sending hidden /start message to bot in dept");
           const message = {

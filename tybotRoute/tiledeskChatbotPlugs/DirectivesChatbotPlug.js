@@ -63,6 +63,7 @@ const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
+const { AnalyticsClient } = require('../AnalyticsClient');
 
 class DirectivesChatbotPlug {
 
@@ -181,6 +182,14 @@ class DirectivesChatbotPlug {
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
+      AnalyticsClient.track('chatbot.flow_error', this.context.projectId, {
+        bot_id:        this.chatbot?.botId || '',
+        error_type:    go_on.error_code || 'runtime_error',
+        error_message: go_on.error || null,
+        step_count:    go_on.step_count || 0,
+        intent_name:   this.context.reply?.attributes?.intent_info?.intent_name || null,
+        request_id:    this.context.requestId || null
+      });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
