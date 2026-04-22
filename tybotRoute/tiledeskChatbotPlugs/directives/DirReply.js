@@ -7,49 +7,6 @@ const { Logger } = require('../../Logger');
 const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston')
 
-function splitTextIntoTtsPhrases(text) {
-  const s = String(text || '').trim();
-  if (!s) {
-    return [];
-  }
-  const pieces = s.split(/(?<=[.!?;])\s+|\n+/).map((p) => p.trim()).filter(Boolean);
-  if (pieces.length <= 1 && s.length > 250) {
-    return splitLongTextForTts(s, 250);
-  }
-  return pieces.length ? pieces : [s];
-}
-
-function splitLongTextForTts(s, maxLen) {
-  const words = s.split(/\s+/);
-  const out = [];
-  let cur = '';
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (next.length > maxLen && cur) {
-      out.push(cur);
-      cur = w;
-    } else {
-      cur = next;
-    }
-  }
-  if (cur) {
-    out.push(cur);
-  }
-  return out.length ? out : [s];
-}
-
-function sendSupportMessagePromise(tdClient, requestId, msg) {
-  return new Promise((resolve, reject) => {
-    tdClient.sendSupportMessage(requestId, msg, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
 class DirReply {
 
   constructor(context) {
@@ -144,30 +101,23 @@ class DirReply {
 
             if (command.type === 'message' && command.message && command.message.type === 'tts') {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              const ttsPhrases = splitTextIntoTtsPhrases(command.message.text);
-              if (ttsPhrases.length <= 1) {
-                const phraseForTts = ttsPhrases.length === 1 ? ttsPhrases[0] : String(command.message.text || '').trim();
-                const voiceSettings = {
-                  text: phraseForTts,
-                  provider: requestAttributes['VOICE_PROVIDER'],
-                  model: requestAttributes['TTS_MODEL'],
-                  voice: requestAttributes['TTS_VOICE_NAME'],
-                  language: requestAttributes['TTS_VOICE_LANGUAGE']
-                };
-                const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token);
-                command.message.text = phraseForTts;
-                command.message.metadata = {
-                  type: voiceSpeech.contentType,
-                  uid: Date.now().toString(36),
-                  filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                  src: this.API_URL + "/files?path=" + voiceSpeech.filename
-                };
-                console.log("(DirReply) command filled (tts): " + phraseForTts);
-                winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
-              } else {
-                command._ttsPhrases = ttsPhrases;
-                console.log("(DirReply) tts split into " + ttsPhrases.length + " phrases (deferred TTS + send)");
+              const voiceSettings = {
+                // text: command.message.text,
+                provider: requestAttributes['VOICE_PROVIDER'],
+                model: requestAttributes['TTS_MODEL'],
+                voice: requestAttributes['TTS_VOICE_NAME'],
+                language: requestAttributes['TTS_VOICE_LANGUAGE']
               }
+              // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              command.message.metadata = {
+                type: voiceSpeech.contentType,
+                uid: Date.now().toString(36),
+                filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                src: `${this.API_URL}/${this.projectId}/llm/speech`,
+                voiceSettings: voiceSettings
+              }
+              winston.debug("(DirReply) command filled (tts): " + command.message.text);
+              winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
             }
 
             if (command.type === 'settings' && command.settings) {
@@ -224,64 +174,6 @@ class DirReply {
           catch(err) {
             winston.error("DirReply An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
           }
-        }
-      }
-
-      if (message.attributes && message.attributes.commands) {
-        const cmds = message.attributes.commands;
-        const voiceBase = {
-          provider: requestAttributes['VOICE_PROVIDER'],
-          model: requestAttributes['TTS_MODEL'],
-          voice: requestAttributes['TTS_VOICE_NAME'],
-          language: requestAttributes['TTS_VOICE_LANGUAGE']
-        };
-        const filesBaseUrl = this.API_URL || this.API_ENDPOINT || '';
-        let removedSplitTtsCommand = false;
-        for (let i = cmds.length - 1; i >= 0; i--) {
-          const cmd = cmds[i];
-          if (cmd.type !== 'message' || !cmd.message || cmd.message.type !== 'tts' || !cmd._ttsPhrases) {
-            continue;
-          }
-          const phrases = cmd._ttsPhrases;
-          delete cmd._ttsPhrases;
-          const phraseList = phrases.filter((p) => p && String(p).trim());
-          for (let p = 0; p < phraseList.length; p++) {
-            const phrase = phraseList[p];
-            const voiceSpeech = await aiService.textToSpeech(
-              { ...voiceBase, text: phrase },
-              this.projectId,
-              this.token
-            );
-            const metadata = {
-              type: voiceSpeech.contentType,
-              uid: `${Date.now().toString(36)}-${i}-${p}`,
-              filename: `audio-${Date.now().toString(36)}-${i}-${p}.${voiceSpeech.contentType.split('/')[1]}`,
-              src: filesBaseUrl + "/files?path=" + voiceSpeech.filename
-            };
-            const chunkMsg = {
-              text: phrase,
-              senderFullname: this.context.chatbot.bot.name,
-              attributes: {
-                ...message.attributes,
-                commands: [{
-                  type: 'message',
-                  message: {
-                    type: 'tts',
-                    text: phrase,
-                    metadata
-                  }
-                }]
-              }
-            };
-            await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, chunkMsg);
-            await sendSupportMessagePromise(this.tdClient, this.requestId, chunkMsg);
-            winston.debug(`(DirReply) tts chunk ${p + 1}/${phraseList.length} sent`);
-          }
-          cmds.splice(i, 1);
-          removedSplitTtsCommand = true;
-        }
-        if (removedSplitTtsCommand && requestAttributes) {
-          TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
         }
       }
     }
