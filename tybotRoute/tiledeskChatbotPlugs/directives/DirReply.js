@@ -101,14 +101,22 @@ class DirReply {
 
             if (command.type === 'message' && command.message && command.message.type === 'tts') {
               command.message.text = filler.fill(command.message.text, requestAttributes);
-              const voiceSettings = {
-                provider: requestAttributes['VOICE_PROVIDER'],
-                model: requestAttributes['TTS_MODEL'],
-                voice: requestAttributes['TTS_VOICE_NAME'],
-                language: requestAttributes['TTS_VOICE_LANGUAGE']
+              
+              const uid=Date.now().toString(36);
+              try {
+                const voiceSettings = {
+                  text: command.message.text,
+                  provider: requestAttributes['VOICE_PROVIDER'],
+                  model: requestAttributes['TTS_MODEL'],
+                  voice: requestAttributes['TTS_VOICE_NAME'],
+                  language: requestAttributes['TTS_VOICE_LANGUAGE']
+                }
+                const speechPreload = await aiService.preloadSpeech(voiceSettings, uid, this.projectId, this.token)
+                console.log("DirReply speechPreload: ", speechPreload);
+              } catch (error) {
+                winston.error("DirReply Error preloading speech: ", error);
               }
               // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
-              const uid=Date.now().toString(36);
               command.message.metadata = {
                 // type: voiceSpeech.contentType,
                 type: 'audio/mp3',
