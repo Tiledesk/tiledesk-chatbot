@@ -118,12 +118,11 @@ class DirReply {
               }
               // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
               command.message.metadata = {
-                // type: voiceSpeech.contentType,
                 type: 'audio/mp3',
-                uid: Date.now().toString(36),
+                uid: uid,
                 // filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                filename: `audio-${Date.now().toString(36)}.mp3`,
-                src: `${this.API_URL}/${this.projectId}/llm/speech`,
+                filename: `audio-${uid}.mp3`,
+                src: `${this.API_URL}/${this.projectId}/llm/speech/${uid}`,
                 voiceSettings: voiceSettings
               }
               winston.debug("(DirReply) command filled (tts): " + command.message.text);
