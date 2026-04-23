@@ -103,14 +103,14 @@ class DirReply {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               
               const uid=Date.now().toString(36);
+              const voiceSettings = {
+                text: command.message.text,
+                provider: requestAttributes['VOICE_PROVIDER'],
+                model: requestAttributes['TTS_MODEL'],
+                voice: requestAttributes['TTS_VOICE_NAME'],
+                language: requestAttributes['TTS_VOICE_LANGUAGE']
+              }
               try {
-                const voiceSettings = {
-                  text: command.message.text,
-                  provider: requestAttributes['VOICE_PROVIDER'],
-                  model: requestAttributes['TTS_MODEL'],
-                  voice: requestAttributes['TTS_VOICE_NAME'],
-                  language: requestAttributes['TTS_VOICE_LANGUAGE']
-                }
                 const speechPreload = await aiService.preloadSpeech(voiceSettings, uid, this.projectId, this.token)
                 console.log("DirReply speechPreload: ", speechPreload);
               } catch (error) {
