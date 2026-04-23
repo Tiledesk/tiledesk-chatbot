@@ -6,6 +6,7 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
 const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston')
+const { v4: uuidv4 } = require('uuid');
 
 class DirReply {
 
@@ -102,7 +103,7 @@ class DirReply {
             if (command.type === 'message' && command.message && command.message.type === 'tts') {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               
-              const uid=Date.now().toString(36);
+              const uid = uuidv4();
               const voiceSettings = {
                 text: command.message.text,
                 provider: requestAttributes['VOICE_PROVIDER'],
