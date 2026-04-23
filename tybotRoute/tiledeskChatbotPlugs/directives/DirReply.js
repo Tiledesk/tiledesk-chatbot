@@ -102,18 +102,19 @@ class DirReply {
             if (command.type === 'message' && command.message && command.message.type === 'tts') {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               const voiceSettings = {
-                // text: command.message.text,
                 provider: requestAttributes['VOICE_PROVIDER'],
                 model: requestAttributes['TTS_MODEL'],
                 voice: requestAttributes['TTS_VOICE_NAME'],
                 language: requestAttributes['TTS_VOICE_LANGUAGE']
               }
               // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              const uid=Date.now().toString(36);
               command.message.metadata = {
-                type: voiceSpeech.contentType,
-                uid: Date.now().toString(36),
-                filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                src: `${this.API_URL}/${this.projectId}/llm/speech`,
+                type: 'audio/mp3',
+                uid: uid,
+                // filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                filename: `audio-${uid}.mp3`,
+                src: `${this.API_URL}/${this.projectId}/llm/speech/${uid}`,
                 voiceSettings: voiceSettings
               }
               winston.debug("(DirReply) command filled (tts): " + command.message.text);
