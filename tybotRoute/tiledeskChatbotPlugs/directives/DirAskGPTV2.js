@@ -451,7 +451,11 @@ class DirAskGPTV2 {
             return;
 
           } else {
-            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks);
+            let json_sources;
+            if (citations) {
+              json_sources = this.normalizeCitationSources(resbody.citations);
+            }
+            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks, json_sources);
             let tokens = resbody.prompt_token_size;
             if (publicKey === true && !chunks_only) {
 
@@ -558,10 +562,11 @@ class DirAskGPTV2 {
     }
   }
 
-  async #assignAttributes(action, answer, source, chunks) {
+  async #assignAttributes(action, answer, source, chunks, json_sources) {
     winston.debug("DirAskGPTV2assignAttributes action: ", action)
     winston.debug("DirAskGPTV2assignAttributes answer: ", answer)
     winston.debug("DirAskGPTV2assignAttributes source: ", source)
+
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
@@ -571,6 +576,9 @@ class DirAskGPTV2 {
       }
       if (action.assignChunksTo && chunks) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignChunksTo, chunks);
+      }
+      if (action.assignJsonSourcesTo && json_sources) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignJsonSourcesTo, json_sources);
       }
     }
   }
@@ -585,6 +593,16 @@ class DirAskGPTV2 {
       })
       resolve(true);
     })
+  }
+
+  normalizeCitationSources(citations) {
+    const uniqueMap = new Map();
+    for (const { source_id, ...source } of citations) {
+      if (!uniqueMap.has(source.source_name)) {
+        uniqueMap.set(source.source_name, source);
+      }
+    }
+    return Array.from(uniqueMap.values());
   }
 
   /**
