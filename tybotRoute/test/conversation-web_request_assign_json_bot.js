@@ -17,7 +17,7 @@ const bot = {
 		"actions": [{
 			"_tdActionTitle": "",
 			"_tdActionId": "4c04c334-b87d-4931-9d0e-57a7378936bd",
-			"url": "http://localhost:10002/test/webrequest/get/json",
+			"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 			"headersString": {
 				"Content-Type": "application/json",
 				"Cache-Control": "no-cache",
