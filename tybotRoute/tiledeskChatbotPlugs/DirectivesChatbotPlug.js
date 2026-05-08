@@ -63,6 +63,8 @@ const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
+const { DirInvokeSubAgent } = require('./directives/DirInvokeSubAgent');
+const { DirSubAgentResponse } = require('./directives/DirSubAgentResponse');
 
 class DirectivesChatbotPlug {
 
@@ -295,6 +297,8 @@ class DirectivesChatbotPlug {
       [Directives.WEB_RESPONSE]: DirWebResponse,
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
+      [Directives.INVOKE_SUB_AGENT]: DirInvokeSubAgent,
+      [Directives.SUB_AGENT_RESPONSE]: DirSubAgentResponse,
     };
 
     const HandlerClass = handlers[directive_name];
