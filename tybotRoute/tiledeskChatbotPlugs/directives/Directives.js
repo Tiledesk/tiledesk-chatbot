@@ -63,7 +63,8 @@ class Directives {
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
-  static INVOKE_SUB_AGENT = "invoke_subagent";
+  static INVOKE_SUB_AGENT = "invoke_sub_agent";
+  static SUB_AGENT_RESPONSE = "sub_agent_response";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
