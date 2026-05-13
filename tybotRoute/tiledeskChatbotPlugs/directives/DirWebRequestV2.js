@@ -111,6 +111,7 @@ class DirWebRequestV2 {
       HTTPREQUEST, async (err, res) => {
 
         let resbody = res.data;
+        console.log("\n\nDirWebRequestV2 resbody: ", resbody);
         let status = res.status;
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
@@ -131,6 +132,7 @@ class DirWebRequestV2 {
           }
         }
         else if (res.status >= 200 && res.status <= 299) {
+
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);

@@ -50,6 +50,11 @@ class TiledeskChatbotConst {
     static REQ_EMAIL_REPLY_TO = 'email_replyTo';
     static REQ_EMAIL_EML = 'email_eml';
     static REQ_EMAIL_ATTACHMENTS_FILES = 'attachments'
+
+    /** Set by DirWebResponse after publish; DirInvokeSubAgent waits via poll + pub/sub. */
+    static redisWebhookReadyKey(requestId) {
+        return `tilebot:webhook_ready:${requestId}`;
+    }
 }
 
 module.exports = { TiledeskChatbotConst };
