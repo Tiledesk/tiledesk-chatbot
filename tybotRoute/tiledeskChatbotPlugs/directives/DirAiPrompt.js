@@ -238,8 +238,14 @@ class DirAiPrompt {
         callback();
         return;
       }
-
-      json.servers = this.arrayToObject(action.servers);
+      console.log('requestVariables', requestVariables);
+      let flowVariables = {
+        chatbotToken: requestVariables.chatbotToken,
+        project_id: requestVariables.project_id,
+        conversation_id: requestVariables.conversation_id,
+        chatbot_name: requestVariables.chatbot_name
+      };
+      json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -519,7 +525,57 @@ class DirAiPrompt {
     })
   }
 
-  arrayToObject(arr) {
+  /**
+   * Unisce gli headers già presenti con un oggetto JSON di variabili (chiave → valore).
+   * Valori convertiti in stringa (oggetti/array con JSON.stringify). Ignora undefined e funzioni.
+   *
+   * @param {Record<string, unknown>|null|undefined} existingHeaders - headers già definiti (es. sul server MCP)
+   * @param {Record<string, unknown>|null|undefined} variables - variabili da aggiungere (sovrascrivono la stessa chiave su existing)
+   * @returns {Record<string, string>}
+   */
+  mergeHeadersWithVariables(existingHeaders, variables) {
+    const base =
+      existingHeaders &&
+      typeof existingHeaders === 'object' &&
+      !Array.isArray(existingHeaders)
+        ? { ...existingHeaders }
+        : {};
+    for (const key of Object.keys(base)) {
+      const v = base[key];
+      if (v !== undefined && v !== null && typeof v !== 'string') {
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      }
+    }
+    if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
+      return base;
+    }
+    for (const key of Object.keys(variables)) {
+      try {
+        const v = variables[key];
+        if (v === undefined || typeof v === 'function') {
+          continue;
+        }
+        if (v === null) {
+          base[key] = '';
+          continue;
+        }
+        if (typeof v === 'object') {
+          base[key] = JSON.stringify(v);
+        } else {
+          base[key] = String(v);
+        }
+      } catch (e) {
+        winston.debug(`DirAiPrompt skip header variable "${key}": ${e.message}`);
+      }
+    }
+    return base;
+  }
+
+  /**
+   * @param {Array} arr
+   * @param {Record<string, unknown>|null|undefined} headerVariables - opzionale; da action.mcpHeaders o simile
+   */
+  arrayToObject(arr, flowVariables) {
     if (!Array.isArray(arr)) {
       winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
       this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
@@ -527,7 +583,12 @@ class DirAiPrompt {
     }
     return arr.reduce((acc, item) => {
       const { name, ...rest } = item;
-      acc[name] = rest;
+      const existingHeaders = rest.headers && typeof rest.headers === 'object' && !Array.isArray(rest.headers)? rest.headers : {};
+      acc[name] = {
+        ...rest,
+        headers: this.mergeHeadersWithVariables(existingHeaders, flowVariables)
+      };
+      console.log('acc', acc);
       return acc;
     }, {});
   }
