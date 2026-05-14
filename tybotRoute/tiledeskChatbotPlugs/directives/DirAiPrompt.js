@@ -240,7 +240,6 @@ class DirAiPrompt {
         callback();
         return;
       }
-      console.log('requestVariables', requestVariables);
       let flowVariables = {
         chatbotToken: requestVariables.chatbotToken,
         project_id: requestVariables.project_id,
@@ -258,6 +257,7 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('json.servers', json.servers);
     }
 
 
