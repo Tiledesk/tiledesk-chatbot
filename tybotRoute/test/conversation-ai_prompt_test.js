@@ -801,6 +801,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.email.headers.project_id === PROJECT_ID);
         assert(req.body.servers.email.headers.conversation_id === REQUEST_ID);
         assert(req.body.servers.email.headers.chatbot_name === 'Your bot');
+        assert(req.body.servers.email.headers.chatbot_id === BOT_ID);
 
         assert(req.body.servers.calendar.url === "example_url2.com/mcp");
         assert(req.body.servers.calendar.transport === "streamable_http");
@@ -812,6 +813,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.calendar.headers.project_id === PROJECT_ID);
         assert(req.body.servers.calendar.headers.conversation_id === REQUEST_ID);
         assert(req.body.servers.calendar.headers.chatbot_name === 'Your bot');
+        assert(req.body.servers.calendar.headers.chatbot_id === BOT_ID);
 
         assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
         assert(req.body.servers.custom.transport === "streamable_http");
@@ -823,6 +825,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.custom.headers.project_id === PROJECT_ID);
         assert(req.body.servers.custom.headers.conversation_id === REQUEST_ID);
         assert(req.body.servers.custom.headers.chatbot_name === 'Your bot');
+        assert(req.body.servers.custom.headers.chatbot_id === BOT_ID);
   
         let reply = {}
         let http_code = 200;
