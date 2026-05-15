@@ -258,6 +258,7 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('json.servers', json.servers);
     }
 
 
