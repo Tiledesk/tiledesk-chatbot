@@ -238,12 +238,12 @@ class DirAiPrompt {
         callback();
         return;
       }
-      console.log('requestVariables', requestVariables);
       let flowVariables = {
         chatbotToken: requestVariables.chatbotToken,
         project_id: requestVariables.project_id,
         conversation_id: requestVariables.conversation_id,
-        chatbot_name: requestVariables.chatbot_name
+        chatbot_name: requestVariables.chatbot_name,
+        chatbot_id: this.chatbot.botId
       };
       json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
