@@ -238,12 +238,15 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('requestVariables', requestVariables);
+      console.log('context', this.context);
       let flowVariables = {
-        chatbotToken: requestVariables.chatbotToken,
-        project_id: requestVariables.project_id,
-        conversation_id: requestVariables.conversation_id,
-        chatbot_name: requestVariables.chatbot_name,
-        chatbot_id: this.chatbot.botId
+        'x-chatbotToken': requestVariables.chatbotToken,
+        'x-project_id': requestVariables.project_id,
+        'x-conversation_id': requestVariables.conversation_id,
+        'x-chatbot_name': requestVariables.chatbot_name,
+        'x-chatbot_id': this.chatbot.botId,
+        'x-user_id': this.context.message.sender
       };
       json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
@@ -267,7 +270,7 @@ class DirAiPrompt {
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-
+    await this.chatbot.lockIntent(this.requestId, trueIntent);
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -285,6 +288,7 @@ class DirAiPrompt {
           }
           winston.error("DirAiPrompt error executing action: " + error);
           this.logger.error("[AI Prompt] error executing action: ", error);
+          await this.chatbot.unlockIntent(this.requestId);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -308,7 +312,8 @@ class DirAiPrompt {
           }
         
           await this.#assignAttributes(action, answer);
-
+          
+          await this.chatbot.unlockIntent(this.requestId);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
