@@ -84,10 +84,8 @@ class TiledeskChatbot {
 
       //Checking locked mpc 
       const locked_mpc = await this.currentLockedMpc(this.requestId);
-      console.log('locked_mpc??', locked_mpc);
       winston.verbose("(TiledeskChatbot) Got locked mpc: -" + locked_mpc + "-");
       if (locked_mpc) {
-        console.log('locked_mpc', locked_mpc);
         winston.verbose("(TiledeskChatbot) Locked mpc. Skipping intent processing");
         resolve(true);
         return;
