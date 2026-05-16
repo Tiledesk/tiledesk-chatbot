@@ -240,12 +240,14 @@ class DirAiPrompt {
         callback();
         return;
       }
+      
       let flowVariables = {
-        chatbotToken: requestVariables.chatbotToken,
-        project_id: requestVariables.project_id,
-        conversation_id: requestVariables.conversation_id,
-        chatbot_name: requestVariables.chatbot_name,
-        chatbot_id: this.chatbot.botId
+        'x-chatbotToken': requestVariables.chatbotToken,
+        'x-project_id': requestVariables.project_id,
+        'x-conversation_id': requestVariables.conversation_id,
+        'x-chatbot_name': requestVariables.chatbot_name,
+        'x-chatbot_id': this.chatbot.botId,
+        'x-user_id': requestVariables.user_id
       };
       json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
@@ -289,7 +291,6 @@ class DirAiPrompt {
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
