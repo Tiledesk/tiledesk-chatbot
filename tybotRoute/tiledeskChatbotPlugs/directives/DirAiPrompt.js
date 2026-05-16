@@ -269,7 +269,6 @@ class DirAiPrompt {
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-    // await this.chatbot.lockIntent(this.requestId, trueIntent);
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -287,7 +286,6 @@ class DirAiPrompt {
           }
           winston.error("DirAiPrompt error executing action: " + error);
           this.logger.error("[AI Prompt] error executing action: ", error);
-          // await this.chatbot.unlockIntent(this.requestId);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
             await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -312,7 +310,6 @@ class DirAiPrompt {
         
           await this.#assignAttributes(action, answer);
 
-          await this.chatbot.unlockIntent(this.requestId);
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
