@@ -37,13 +37,13 @@ class DirMoveToAgent {
       }
       else {
         // Successfully moved to agent
-        AnalyticsClient.track('handover_to_agent', this.context.projectId, {
+        AnalyticsClient.track('handover_to_human', this.context.projectId, {
           id_request:           this.requestId,
-          agent_id:             null,
+          human_id:             null,
           reason:               'bot_directive',
           department_id:        this.context.departmentId || null,
           waiting_time_seconds: null,
-          bot_id:               this.context.chatbot?.botId || null,
+          agent_id:             this.context.chatbot?.botId || null,
           trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
         });
       }

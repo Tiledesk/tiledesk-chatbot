@@ -396,8 +396,8 @@ class TiledeskChatbot {
     const _step = this.tdcache
       ? (Number(await TiledeskChatbot.currentStep(this.tdcache, this.requestId)) || 0)
       : 0;
-    AnalyticsClient.track('chatbot.intent_matched', this.projectId, {
-      bot_id:      this.botId,
+    AnalyticsClient.track('agent.intent_matched', this.projectId, {
+      agent_id:    this.botId,
       intent_name: intent_name,
       match_type:  matchContext.match_type || 'explicit',
       confidence:  (answerObj.score != null) ? answerObj.score : null,

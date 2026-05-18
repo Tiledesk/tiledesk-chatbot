@@ -24,7 +24,7 @@ class AnalyticsClient {
       event_type:     eventType,
       timestamp:      new Date().toISOString(),
       id_project:     projectId,
-      source_service: 'bot-engine',
+      source_service: 'tiledesk-chatbot',
       event_version:  '1.0',
       payload:        payload
     };

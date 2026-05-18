@@ -181,8 +181,8 @@ class DirectivesChatbotPlug {
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
-      AnalyticsClient.track('chatbot.flow_error', this.context.projectId, {
-        bot_id:        this.chatbot?.botId || '',
+      AnalyticsClient.track('agent.flow_error', this.context.projectId, {
+        agent_id:      this.chatbot?.botId || '',
         error_type:    go_on.error_code || 'runtime_error',
         error_message: go_on.error || null,
         step_count:    go_on.step_count || 0,
