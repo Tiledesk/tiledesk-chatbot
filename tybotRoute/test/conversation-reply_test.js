@@ -407,12 +407,10 @@ describe('Conversation for Reply test', async () => {
       });
     });
 
-    endpointServer.post('/:projectId/llm/speech', function (req, res) {
-      res.send({ 
-        "message": "Speech audio saved successfully",
-        "filename": "uploads%2Fusers%2F65c5e20d0f1c9b0013973e8a%2Ffiles%2F0fc73b0b-a160-4917-aae9-0fa3a2f38895%2Fspeech.mp3",
-        "contentType": "audio/mp3"
-       });
+    endpointServer.post('/:projectId/llm/preload/speech', function (req, res) {
+      res.status(202).send({ 
+        "status": "started",
+      });
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {

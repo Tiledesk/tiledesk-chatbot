@@ -6,6 +6,7 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
 const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston')
+const { v4: uuidv4 } = require('uuid');
 
 class DirReply {
 
@@ -101,6 +102,8 @@ class DirReply {
 
             if (command.type === 'message' && command.message && command.message.type === 'tts') {
               command.message.text = filler.fill(command.message.text, requestAttributes);
+              
+              const uid = uuidv4();
               const voiceSettings = {
                 text: command.message.text,
                 provider: requestAttributes['VOICE_PROVIDER'],
@@ -108,12 +111,20 @@ class DirReply {
                 voice: requestAttributes['TTS_VOICE_NAME'],
                 language: requestAttributes['TTS_VOICE_LANGUAGE']
               }
-              const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              try {
+                const speechPreload = await aiService.preloadSpeech(voiceSettings, uid, this.projectId, this.token)
+                console.log("DirReply speechPreload: ", speechPreload);
+              } catch (error) {
+                winston.error("DirReply Error preloading speech: ", error);
+              }
+              // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
               command.message.metadata = {
-                type: voiceSpeech.contentType,
-                uid: Date.now().toString(36),
-                filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
-                src: this.API_URL + "/files?path=" + voiceSpeech.filename
+                type: 'audio/mp3',
+                uid: uid,
+                // filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                filename: `audio-${uid}.mp3`,
+                src: `${this.API_URL}/${this.projectId}/llm/speech/${uid}`,
+                voiceSettings: voiceSettings
               }
               winston.debug("(DirReply) command filled (tts): " + command.message.text);
               winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));

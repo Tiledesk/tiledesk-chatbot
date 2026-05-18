@@ -797,6 +797,11 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.email.enabled_tools[0] === "email_send");
         assert(req.body.servers.email.enabled_tools[1] === "email_read");
         assert(req.body.servers.email.api_key === "example_api_key");
+        assert(req.body.servers.email.headers['x-chatbotToken'] === 'XXX');
+        assert(req.body.servers.email.headers['x-project_id'] === PROJECT_ID);
+        assert(req.body.servers.email.headers['x-conversation_id'] === REQUEST_ID);
+        assert(req.body.servers.email.headers['x-chatbot_name'] === 'Your bot');
+        assert(req.body.servers.email.headers['x-chatbot_id'] === BOT_ID);
 
         assert(req.body.servers.calendar.url === "example_url2.com/mcp");
         assert(req.body.servers.calendar.transport === "streamable_http");
@@ -804,6 +809,11 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.calendar.enabled_tools[0] === "calendar_read");
         assert(req.body.servers.calendar.enabled_tools[1] === "calendar_write");
         assert(req.body.servers.calendar.api_key === "Bearer mybearertoken");
+        assert(req.body.servers.calendar.headers['x-chatbotToken'] === 'XXX');
+        assert(req.body.servers.calendar.headers['x-project_id'] === PROJECT_ID);
+        assert(req.body.servers.calendar.headers['x-conversation_id'] === REQUEST_ID);
+        assert(req.body.servers.calendar.headers['x-chatbot_name'] === 'Your bot');
+        assert(req.body.servers.calendar.headers['x-chatbot_id'] === BOT_ID);
 
         assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
         assert(req.body.servers.custom.transport === "streamable_http");
@@ -811,6 +821,11 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.custom.enabled_tools[0] === "tool1");
         assert(req.body.servers.custom.enabled_tools[1] === "tool2");
         assert(req.body.servers.custom.api_key === "Basic mybase64username:password");
+        assert(req.body.servers.custom.headers['x-chatbotToken'] === 'XXX');
+        assert(req.body.servers.custom.headers['x-project_id'] === PROJECT_ID);
+        assert(req.body.servers.custom.headers['x-conversation_id'] === REQUEST_ID);
+        assert(req.body.servers.custom.headers['x-chatbot_name'] === 'Your bot');
+        assert(req.body.servers.custom.headers['x-chatbot_id'] === BOT_ID);
   
         let reply = {}
         let http_code = 200;

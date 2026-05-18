@@ -83,6 +83,16 @@ class TiledeskChatbot {
         winston.error("(TiledeskChatbot) Error resetting locked intent: ", error);
       }
 
+      //Checking locked mpc 
+      const locked_mpc = await this.currentLockedMpc(this.requestId);
+      winston.verbose("(TiledeskChatbot) Got locked mpc: -" + locked_mpc + "-");
+      if (locked_mpc) {
+        winston.verbose("(TiledeskChatbot) Locked mpc. Skipping intent processing");
+        resolve(true);
+        return;
+      }
+
+
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
@@ -475,6 +485,15 @@ class TiledeskChatbot {
   async currentLockedIntent(requestId) {
     if (this.tdcache) {
       return await this.tdcache.get("tilebot:requests:"  + requestId + ":locked");
+    }
+    else {
+      return null;
+    }
+  }
+
+  async currentLockedMpc(requestId) {
+    if (this.tdcache) {
+      return await this.tdcache.get("tilebot:requests:"  + requestId + ":mcp:locked");
     }
     else {
       return null;
