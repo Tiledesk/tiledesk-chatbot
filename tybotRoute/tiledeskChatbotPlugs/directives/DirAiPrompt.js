@@ -241,6 +241,8 @@ class DirAiPrompt {
         return;
       }
       
+      console.log('requestVariables', requestVariables);
+      console.log('context', this.context);
       let flowVariables = {
         'x-chatbotToken': requestVariables.chatbotToken,
         'x-project_id': requestVariables.project_id,
