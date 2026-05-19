@@ -283,4 +283,81 @@ describe('AnalyticsClient', function () {
     });
   });
 
+  // ── agent.intent_completed ─────────────────────────────────────────────────
+  describe('agent.intent_completed', function () {
+    it('posts correct payload', function () {
+      withIngestUrl(() => {
+        AnalyticsClient.track('agent.intent_completed', 'proj1', {
+          agent_id: 'bot1', intent_id: 'intent_abc',
+          intent_name: 'Welcome Message', duration_ms: 1500,
+          success: true, request_id: 'req10'
+        });
+      });
+      assert.strictEqual(_calls.length, 1);
+      const [, body] = _calls[0];
+      assert.strictEqual(body.event_type, 'agent.intent_completed');
+      assert.strictEqual(body.payload.agent_id, 'bot1');
+      assert.strictEqual(body.payload.intent_id, 'intent_abc');
+      assert.strictEqual(body.payload.intent_name, 'Welcome Message');
+      assert.strictEqual(body.payload.duration_ms, 1500);
+      assert.strictEqual(body.payload.success, true);
+    });
+
+    it('accepts zero duration and failure', function () {
+      withIngestUrl(() => {
+        AnalyticsClient.track('agent.intent_completed', 'proj1', {
+          agent_id: 'bot1', intent_id: 'intent_xyz',
+          intent_name: 'Failing Intent', duration_ms: 0,
+          success: false, request_id: null
+        });
+      });
+      assert.strictEqual(_calls.length, 1);
+      const [, body] = _calls[0];
+      assert.strictEqual(body.payload.duration_ms, 0);
+      assert.strictEqual(body.payload.success, false);
+      assert.strictEqual(body.payload.request_id, null);
+    });
+  });
+
+  // ── agent.block_executed ───────────────────────────────────────────────────
+  describe('agent.block_executed', function () {
+    it('posts correct payload with all fields', function () {
+      withIngestUrl(() => {
+        AnalyticsClient.track('agent.block_executed', 'proj1', {
+          agent_id: 'bot1', block_id: 'block_abc',
+          block_name: 'Send Reply', directive_type: 'reply',
+          intent_id: 'intent_abc', intent_name: 'Welcome',
+          duration_ms: 45, success: true, request_id: 'req11'
+        });
+      });
+      assert.strictEqual(_calls.length, 1);
+      const [, body] = _calls[0];
+      assert.strictEqual(body.event_type, 'agent.block_executed');
+      assert.strictEqual(body.payload.agent_id, 'bot1');
+      assert.strictEqual(body.payload.block_id, 'block_abc');
+      assert.strictEqual(body.payload.block_name, 'Send Reply');
+      assert.strictEqual(body.payload.directive_type, 'reply');
+      assert.strictEqual(body.payload.intent_id, 'intent_abc');
+      assert.strictEqual(body.payload.intent_name, 'Welcome');
+      assert.strictEqual(body.payload.duration_ms, 45);
+      assert.strictEqual(body.payload.success, true);
+    });
+
+    it('accepts null intent_name', function () {
+      withIngestUrl(() => {
+        AnalyticsClient.track('agent.block_executed', 'proj1', {
+          agent_id: 'bot2', block_id: 'block_xyz',
+          block_name: 'Web Call', directive_type: 'webrequestV2',
+          intent_id: 'intent_1', intent_name: null,
+          duration_ms: 200, success: false, request_id: 'req12'
+        });
+      });
+      assert.strictEqual(_calls.length, 1);
+      const [, body] = _calls[0];
+      assert.strictEqual(body.payload.intent_name, null);
+      assert.strictEqual(body.payload.success, false);
+      assert.strictEqual(body.payload.duration_ms, 200);
+    });
+  });
+
 });

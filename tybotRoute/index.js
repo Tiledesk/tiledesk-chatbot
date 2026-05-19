@@ -7,6 +7,7 @@ const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 const { TiledeskChatbot } = require('./engine/TiledeskChatbot.js');
+const { AnalyticsClient } = require('./AnalyticsClient.js');
 const { MongodbBotsDataSource } = require('./engine/MongodbBotsDataSource.js');
 const { MockBotsDataSource } = require('./engine/mock/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./engine/TiledeskChatbotConst.js');
@@ -186,6 +187,20 @@ router.post('/ext/:botid', async (req, res) => {
     catch (error) {
       winston.error("(tybotRoute) Error while processing actions:", error);
     }
+
+    const intentDuration = chatbot._intentStartTime
+      ? Date.now() - chatbot._intentStartTime
+      : 0;
+    AnalyticsClient.track('agent.intent_completed', projectId, {
+      agent_id:    botId,
+      intent_id:   chatbot._lastIntentId || '',
+      intent_name: reply.intent_id ||
+                   reply.attributes?.intent_info?.intent_name ||
+                   reply.attributes?.intent_info?.intent_id || 'unknown',
+      duration_ms: intentDuration,
+      success:     true,
+      request_id:  requestId || null
+    });
   }
   else { // text answer (parse text directives to get actions)
     winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
@@ -203,6 +218,20 @@ router.post('/ext/:botid', async (req, res) => {
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
+    });
+
+    const intentDuration = chatbot._intentStartTime
+      ? Date.now() - chatbot._intentStartTime
+      : 0;
+    AnalyticsClient.track('agent.intent_completed', projectId, {
+      agent_id:    botId,
+      intent_id:   chatbot._lastIntentId || '',
+      intent_name: reply.intent_id ||
+                   reply.attributes?.intent_info?.intent_name ||
+                   reply.attributes?.intent_info?.intent_id || 'unknown',
+      duration_ms: intentDuration,
+      success:     true,
+      request_id:  requestId || null
     });
   }
   

@@ -396,6 +396,11 @@ class TiledeskChatbot {
     const _step = this.tdcache
       ? (Number(await TiledeskChatbot.currentStep(this.tdcache, this.requestId)) || 0)
       : 0;
+
+    // Store intent tracking data for downstream completion/block analytics
+    this._intentStartTime = Date.now();
+    this._lastIntentId = answerObj._id?.toString() || '';
+
     AnalyticsClient.track('agent.intent_matched', this.projectId, {
       agent_id:    this.botId,
       intent_name: intent_name,

@@ -317,6 +317,7 @@ class DirectivesChatbotPlug {
 
     winston.verbose("(DirectivesChatbotPlug) Execut directive: " + directive_name);
 
+    const blockStart = Date.now();
     let stopFlag;
     try {
       stopFlag = await new Promise((resolve, reject) => {
@@ -329,11 +330,36 @@ class DirectivesChatbotPlug {
         }
       });
     } catch (err) {
+      // Emit block execution analytics on error (fire-and-forget)
+      AnalyticsClient.track('agent.block_executed', this.context.projectId, {
+        agent_id:       this.context.chatbot?.botId || '',
+        block_id:       directive.blockId || directive.action?.blockId || directive.action?._id || '',
+        block_name:     directive.action?.name || directive.blockId || 'unnamed',
+        directive_type: directive.name || 'unknown',
+        intent_id:      this.context.chatbot?._lastIntentId || '',
+        intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+        duration_ms:    Date.now() - blockStart,
+        success:        false,
+        request_id:     this.context.requestId || null
+      });
       winston.error("(DirectivesChatbotPlug) Error in directive.execute: ", err);
       throw err;
     }
 
     const stop = await Promise.resolve(stopFlag);
+
+    // Emit block execution analytics (fire-and-forget)
+    AnalyticsClient.track('agent.block_executed', this.context.projectId, {
+      agent_id:       this.context.chatbot?.botId || '',
+      block_id:       directive.blockId || directive.action?.blockId || directive.action?._id || '',
+      block_name:     directive.action?.name || directive.blockId || 'unnamed',
+      directive_type: directive.name || 'unknown',
+      intent_id:      this.context.chatbot?._lastIntentId || '',
+      intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+      duration_ms:    Date.now() - blockStart,
+      success:        true,
+      request_id:     this.context.requestId || null
+    });
 
     if (stop) {
       winston.debug("(DirectivesChatbotPlug) Stopping Actions on:", directive);
