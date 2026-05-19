@@ -150,13 +150,14 @@ describe('AnalyticsClient', function () {
       it(`accepts match_type="${match_type}"`, function () {
         withIngestUrl(() => {
           AnalyticsClient.track('agent.intent_matched', 'proj1', {
-            agent_id: 'bot1', intent_name: 'greet',
+            agent_id: 'bot1', intent_id: 'intent-uuid-1', intent_name: 'greet',
             match_type, confidence: null, step_count: 0, request_id: 'r1'
           });
         });
         assert.strictEqual(_calls.length, 1);
         const [, body] = _calls[0];
         assert.strictEqual(body.payload.agent_id, 'bot1');
+        assert.strictEqual(body.payload.intent_id, 'intent-uuid-1');
         assert.strictEqual(body.payload.match_type, match_type);
         resetCalls();
       });

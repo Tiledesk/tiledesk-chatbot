@@ -161,6 +161,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    let directivesSuccess = true;
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
@@ -185,6 +186,7 @@ router.post('/ext/:botid', async (req, res) => {
       winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
     catch (error) {
+      directivesSuccess = false;
       winston.error("(tybotRoute) Error while processing actions:", error);
     }
 
@@ -194,11 +196,9 @@ router.post('/ext/:botid', async (req, res) => {
     AnalyticsClient.track('agent.intent_completed', projectId, {
       agent_id:    botId,
       intent_id:   chatbot._lastIntentId || '',
-      intent_name: reply.intent_id ||
-                   reply.attributes?.intent_info?.intent_name ||
-                   reply.attributes?.intent_info?.intent_id || 'unknown',
+      intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
       duration_ms: intentDuration,
-      success:     true,
+      success:     directivesSuccess,
       request_id:  requestId || null
     });
   }
@@ -226,9 +226,7 @@ router.post('/ext/:botid', async (req, res) => {
     AnalyticsClient.track('agent.intent_completed', projectId, {
       agent_id:    botId,
       intent_id:   chatbot._lastIntentId || '',
-      intent_name: reply.intent_id ||
-                   reply.attributes?.intent_info?.intent_name ||
-                   reply.attributes?.intent_info?.intent_id || 'unknown',
+      intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
       duration_ms: intentDuration,
       success:     true,
       request_id:  requestId || null
@@ -238,6 +236,10 @@ router.post('/ext/:botid', async (req, res) => {
 });
 
 router.post('/exec/:botid', async (req, res) => {
+  // NOTE (analytics): This route executes a named block directly via findBlock() and has no
+  // intent context. agent.intent_matched / agent.intent_completed are intentionally NOT emitted
+  // here. Only agent.block_executed (and related events) may be emitted by DirectivesChatbotPlug
+  // for individual directives inside the block.
 
   const execPrepStartedHr = process.hrtime.bigint();
   const logExecPrepMs = (phase) => {

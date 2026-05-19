@@ -333,8 +333,8 @@ class DirectivesChatbotPlug {
       // Emit block execution analytics on error (fire-and-forget)
       AnalyticsClient.track('agent.block_executed', this.context.projectId, {
         agent_id:       this.context.chatbot?.botId || '',
-        block_id:       directive.blockId || directive.action?.blockId || directive.action?._id || '',
-        block_name:     directive.action?.name || directive.blockId || 'unnamed',
+        block_id:       directive.action?.["_tdActionId"] || '',
+        block_name:     directive.action?.["_tdActionTitle"] || directive.action?.name || 'unnamed',
         directive_type: directive.name || 'unknown',
         intent_id:      this.context.chatbot?._lastIntentId || '',
         intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
@@ -351,8 +351,8 @@ class DirectivesChatbotPlug {
     // Emit block execution analytics (fire-and-forget)
     AnalyticsClient.track('agent.block_executed', this.context.projectId, {
       agent_id:       this.context.chatbot?.botId || '',
-      block_id:       directive.blockId || directive.action?.blockId || directive.action?._id || '',
-      block_name:     directive.action?.name || directive.blockId || 'unnamed',
+      block_id:       directive.action?.["_tdActionId"] || '',
+      block_name:     directive.action?.["_tdActionTitle"] || directive.action?.name || 'unnamed',
       directive_type: directive.name || 'unknown',
       intent_id:      this.context.chatbot?._lastIntentId || '',
       intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,

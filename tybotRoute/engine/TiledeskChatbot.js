@@ -399,10 +399,11 @@ class TiledeskChatbot {
 
     // Store intent tracking data for downstream completion/block analytics
     this._intentStartTime = Date.now();
-    this._lastIntentId = answerObj._id?.toString() || '';
+    this._lastIntentId = answerObj.intent_id || answerObj._id?.toString() || '';
 
     AnalyticsClient.track('agent.intent_matched', this.projectId, {
       agent_id:    this.botId,
+      intent_id:   answerObj.intent_id || answerObj._id?.toString() || '',
       intent_name: intent_name,
       match_type:  matchContext.match_type || 'explicit',
       confidence:  (answerObj.score != null) ? answerObj.score : null,

@@ -90,7 +90,7 @@ class DirReplaceBotV2 {
         // Emit analytics event for bot switch
         AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
           from_agent_id:  this.context.chatbot?.botId || '',
-          to_agent_id:    (useSlug ? botSlug : botId) || resbody?.bot?._id || '',
+          to_agent_id:    botName || resbody?.bot?._id || '',
           intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
           request_id:     this.requestId || null
         });
