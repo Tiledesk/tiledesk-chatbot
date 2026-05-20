@@ -854,6 +854,7 @@ class TiledeskChatbotUtil {
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
                 winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); 
             }
+            console.log('message.attributes', message.attributes);
             if (message.attributes) {
                 winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes);
 
