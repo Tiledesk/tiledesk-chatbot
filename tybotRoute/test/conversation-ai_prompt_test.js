@@ -695,8 +695,6 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.calendar);
         assert(req.body.servers.custom);
 
-        console.log("req.body: ", JSON.stringify(req.body, null, 2));
-
         assert(req.body.servers.email.url === "example_url1.com/mcp");
         assert(req.body.servers.email.transport === "streamable_http");
         assert(req.body.servers.email.enabled_tools.length === 2);
