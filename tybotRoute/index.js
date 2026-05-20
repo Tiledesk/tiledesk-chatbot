@@ -56,6 +56,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
 
+  console.log('req.body', req.body);
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
