@@ -332,6 +332,17 @@ router.post('/exec/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text);
 
+
+  try {
+    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+    if (requestId.startsWith("support-group-")) {
+      await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    }
+  } catch (e) {
+    winston.error("Error on /exec updating request attributes or transcript: ", e)
+    return;
+  }
+  
   let reply = null;
   try {
     reply = await chatbot.findBlock(message);
