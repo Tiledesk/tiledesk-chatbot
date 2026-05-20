@@ -96,44 +96,26 @@ class DirAskGPTV2 {
       callback();
       return;
     }
-
+    
     let trueIntent = action.trueIntent;
     let falseIntent = action.falseIntent;
     let trueIntentAttributes = action.trueIntentAttributes;
     let falseIntentAttributes = action.falseIntentAttributes;
-
+    
     winston.debug("DirAskGPTV2 trueIntent", trueIntent)
     winston.debug("DirAskGPTV2 falseIntent", falseIntent)
     winston.debug("DirAskGPTV2 trueIntentAttributes", trueIntentAttributes)
     winston.debug("DirAskGPTV2 falseIntentAttributes", falseIntentAttributes)
-  
+    
     // default values
     let answer = "No answers";
-    let namespace = this.context.projectId;
-    let llm = "openai";
-    let model;
-    let temperature = 0.7;
-    let max_tokens = 256;
-    let top_k = 4;
-    let alpha;
-    let transcript;
-    let citations = false;
-    let chunks_only = false;
-    let engine;
-    let embedding;
-    let reranking;
-    let reranking_multiplier;
-    let skip_unanswered = false;
-    let source = null;
-
-    if (!action.llm) {
-      action.llm = "openai";
-    }
-
+    action.llm ??= "openai";
+    action.model ??= "gpt-4o";
+    
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       this.logger.error(`[Ask Knowledge Base] missing attribute '${missing_param}'`);
       await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: '${missing_param}' attribute is undefined`);
-      await this.#assignAttributes(action, answer, source);
+      await this.#assignAttributes(action, answer);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
@@ -143,52 +125,35 @@ class DirAskGPTV2 {
       return Promise.reject();
     })
 
-    if (action.namespace) {
-      namespace = action.namespace;
-    }
-    if (action.llm) {
-      llm = action.llm;
-    }
-    if (action.model) {
-      model = action.model;
-    }
-    if (action.top_k) {
-      top_k = action.top_k;
-    }
-    if (action.temperature) {
-      temperature = action.temperature;
-    }
-    if (action.max_tokens) {
-      max_tokens = action.max_tokens;
-    }
-    if (action.alpha) {
-      alpha = action.alpha;
-    }
-    if (action.citations) {
-      citations = action.citations;
-    }
-    if (action.chunks_only) {
-      chunks_only = action.chunks_only;
-    }
-    if (action.reranking) {
-      reranking = action.reranking;
-    }
-    if (action.reranking_multiplier) {
-      reranking_multiplier = action.reranking_multiplier;
-    }
-    if (action.skip_unanswered) {
-      skip_unanswered = action.skip_unanswered;
-    }
+    let {
+      namespace = this.context.projectId,
+      llm,
+      model,
+      temperature = 0.7,
+      max_tokens = 2048,
+      top_k = 4,
+      alpha = 0.5,
+      citations = false,
+      chunks_only = false,
+      reranking = false,
+      reranking_multiplier = 3,
+      skip_unanswered = false,
+      use_hyde = false,
+      use_cache = false,
+    } = action;
 
+    let transcript;
+    
     let requestVariables = null;
     requestVariables =
-      await TiledeskChatbot.allParametersStatic(
-        this.tdcache, this.requestId
-      );
-
+    await TiledeskChatbot.allParametersStatic(
+      this.tdcache, this.requestId
+    );
+    
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables)
+    
 
     if (action.history) {
       this.logger.native("[Ask Knowledge Base] use chat transcript")
@@ -207,9 +172,10 @@ class DirAskGPTV2 {
         winston.verbose("DirAskGPT transcript_string is undefined. Skip JSON translation for chat history")
       }
     }
-
-    let key;
+    
     let publicKey = false;
+    let embedding;
+    let engine;
 
     try {
       model = await aiController.resolveLLMConfig(this.projectId, llm, model, this.token);
@@ -281,7 +247,7 @@ class DirAskGPTV2 {
     }
 
     let ns;
-
+    
     if (action.namespaceAsName) {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
@@ -306,7 +272,7 @@ class DirAskGPTV2 {
       callback();
       return;
     }
-
+    
     if (ns.engine) {
       engine = ns.engine;
     } else {
@@ -338,7 +304,7 @@ class DirAskGPTV2 {
     if (chunks_only) {
       json.chunks_only = chunks_only;
     }
-
+    
     if (ns.hybrid === true) {
       json.search_type = 'hybrid';
       json.alpha = alpha;
@@ -399,6 +365,14 @@ class DirAskGPTV2 {
       json.tags = action.tags;
     }
 
+    if (use_hyde) {
+      json.use_hyde = use_hyde;
+    }
+
+    if (use_cache) {
+      json.use_cache = use_cache;
+    }
+    
     winston.debug("DirAskGPTV2 json:", json);
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
@@ -427,7 +401,7 @@ class DirAskGPTV2 {
             data: err.response?.data,
           });
           this.logger.error(`[Ask Knowledge Base] Error getting answer`);
-          await this.#assignAttributes(action, answer, source);
+          await this.#assignAttributes(action, answer);
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -492,14 +466,14 @@ class DirAskGPTV2 {
           }
         } else {
           winston.info("DirAskGPTV2 resbody else case: ", resbody);
-          await this.#assignAttributes(action, answer, source);
+          await this.#assignAttributes(action, answer);
           if (!skip_unanswered) {
-            // console.log("this.context", JSON.stringify(this.context, null, 2));
             const data = {
               namespace: json.namespace,
               question: json.question,
               request_id: this.requestId
             }
+
             kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
