@@ -245,7 +245,8 @@ class DirAiPrompt {
         'x-conversation_id': requestVariables.conversation_id,
         'x-chatbot_name': requestVariables.chatbot_name,
         'x-chatbot_id': this.chatbot.botId,
-        'x-user_id': requestVariables.userLeadId || requestVariables.user_id
+        'x-user_id': requestVariables.userLeadId || requestVariables.user_id,
+        'x-last_user_text': requestVariables.lastUserText,
       };
       json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
