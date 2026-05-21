@@ -57,11 +57,15 @@ describe('Conversation for Performance test', async () => {
     })
   });
 
-  after(function (done) {
-    app_listener.close(() => {
-      done();
-    });
-  });
+  // after(function (done) {
+  //   try {
+  //     app_listener.close(() => {
+  //       done();
+  //     });
+  //   } catch (error) {
+  //     winston.error("error closing app_listener:", error)
+  //   }
+  // });
 
   it('/performance_singles_wait', (done) => {
 
