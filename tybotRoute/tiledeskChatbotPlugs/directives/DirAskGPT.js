@@ -131,7 +131,9 @@ class DirAskGPT {
     let json = {
       question: filled_question,
       kbid: action.kbid,
-      gptkey: key
+      gptkey: key,
+      id_project: this.projectId,
+      request_id: this.requestId
     };
     winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 

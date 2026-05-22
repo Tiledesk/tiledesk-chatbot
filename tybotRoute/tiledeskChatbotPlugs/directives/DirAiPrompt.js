@@ -195,7 +195,10 @@ class DirAiPrompt {
       model: filled_model,
       llm_key: key,
       temperature: action.temperature,
-      max_tokens: action.max_tokens
+      max_tokens: action.max_tokens,
+      id_project: this.projectId,
+      request_id: this.requestId,
+      agent_id: this.chatbot?.botId
     }
 
     if (action.context) {
