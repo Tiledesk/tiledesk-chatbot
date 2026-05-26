@@ -22,7 +22,7 @@ const tilebotService = require('../services/TilebotService');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for AiPrompt test', async () => {
+describe('Conversation for Invoke Subagent test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -37,6 +37,7 @@ describe('Conversation for AiPrompt test', async () => {
             bots: bots_data,
             TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
+            API_URL: process.env.API_URL,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -80,6 +81,8 @@ describe('Conversation for AiPrompt test', async () => {
         assert(command2.type === "message");
 
         if (command2.message.text !== "Hi, how can I help you?") {
+
+          console.log("message from parent: ", command2.message.text);
           util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
             if (err) {
               assert.ok(false);

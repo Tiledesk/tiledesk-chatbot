@@ -20,6 +20,7 @@ class DirReturn {
   }
 
   execute(directive, callback) {
+    console.log("DirReturn execute");
     const action = directive.action;
     if (!action) {
       this.logger.error('[Return] Incorrect action for ', directive.name, directive);
@@ -34,6 +35,7 @@ class DirReturn {
   }
 
   async go(action, callback) {
+    console.log("DirReturn go");
     if (!this.tdcache) {
       winston.error('(DirReturn) tdcache is mandatory');
       callback();
@@ -62,10 +64,13 @@ class DirReturn {
     this.logger.native('[Return] payload: ', returnMessage);
 
     const topic = InternalSubAgentService.webhookTopic(this.requestId);
+    console.log("DirReturn topic: ", topic);
     const readyKey = TiledeskChatbotConst.redisWebhookReadyKey(this.requestId);
-
+    console.log("DirReturn readyKey: ", readyKey);
     try {
+      console.log("DirReturn publishing to topic: ", topic);
       await this.tdcache.publish(topic, JSON.stringify(returnMessage));
+      console.log("DirReturn setting readyKey: ", readyKey);
       await this.tdcache.set(readyKey, '1', { EX: 120 });
       winston.verbose('(DirReturn) Published return to topic: ' + topic);
     } catch (error) {

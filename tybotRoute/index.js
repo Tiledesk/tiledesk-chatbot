@@ -706,6 +706,7 @@ async function startApp(settings, completionCallback) {
   }
 
   if (!settings.API_URL) {
+    console.log("settings.API_URL is mandatory id no settings.bots.");
     throw new Error("settings.API_URL is mandatory id no settings.bots.");
   }
   else {
