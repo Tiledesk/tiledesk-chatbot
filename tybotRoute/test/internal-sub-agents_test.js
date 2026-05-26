@@ -102,6 +102,7 @@ describe('Internal Sub-Agents', function() {
   it('invokes a sub-bot by id through the existing tilebot service', (done) => {
     const cache = new FakeTdCache();
     const originalSendMessageToBot = tilebotService.sendMessageToBot;
+    const originalExecuteBlock = tilebotService.executeBlock;
     const parentRequestId = 'support-group-projectID-parent';
 
     const context = {
@@ -122,21 +123,27 @@ describe('Internal Sub-Agents', function() {
       }
     };
 
-    tilebotService.sendMessageToBot = async (message, botId, callback) => {
+    const assertSubAgentDispatch = async (message, botId, callback) => {
       try {
         assert.strictEqual(botId, 'botID');
         assert.strictEqual(message.payload.text, '/#intentID');
         assert.notStrictEqual(message.payload.request.request_id, parentRequestId);
         assert.strictEqual(message.payload.attributes.payload.question, 'hello');
         assert(message.payload.attributes.payload._tdSubAgent.runId);
-        callback();
+        if (callback) {
+          callback();
+        }
         done();
       } catch (error) {
         done(error);
       } finally {
         tilebotService.sendMessageToBot = originalSendMessageToBot;
+        tilebotService.executeBlock = originalExecuteBlock;
       }
     };
+
+    tilebotService.sendMessageToBot = assertSubAgentDispatch;
+    tilebotService.executeBlock = assertSubAgentDispatch;
 
     const directive = {
       action: {

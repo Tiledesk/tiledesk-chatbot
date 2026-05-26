@@ -1,5 +1,6 @@
 const tilebotService = require('../../services/TilebotService');
 const { InternalSubAgentService, INTERNAL_SUB_AGENT_STATUS } = require('../../services/InternalSubAgentService');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { Logger } = require('../../Logger');
 const winston = require('../../utils/winston');
 
@@ -104,7 +105,7 @@ class DirInvokeSubAgent {
 
       const message = InternalSubAgentService.buildSubAgentMessage(this.context, run, command);
 
-      tilebotService.sendMessageToBot(message, subagentId, async (err) => {
+      this.#dispatchToBot(message, subagentId, action, async (err) => {
         if (err) {
           await this.#failRun(run, action, err);
         }
@@ -143,23 +144,30 @@ class DirInvokeSubAgent {
 
   async #subscribeForWebhook(action, run) {
     const topic = InternalSubAgentService.webhookTopic(run.subRequestId);
-    const listener = async (message) => {
-      let webResponse;
-      try {
-        webResponse = JSON.parse(message);
-      } catch (error) {
-        winston.error('(DirInvokeSubAgent) Error parsing webhook response: ', error);
+    const readyKey = TiledeskChatbotConst.redisWebhookReadyKey(run.subRequestId);
+    let handled = false;
+
+    const onWebhookPayload = async (webResponse, source) => {
+      if (handled) {
         return;
       }
+      handled = true;
 
-      await this.tdcache.unsubscribe(topic);
+      winston.verbose(`(DirInvokeSubAgent) Sub-agent return received via ${source} on ${topic}`);
+
+      try {
+        await this.tdcache.unsubscribe(topic);
+      } catch (e) {
+        winston.warn('(DirInvokeSubAgent) unsubscribe after webhook:', e);
+      }
+      await this.tdcache.del(readyKey).catch(() => {});
 
       const httpStatus = webResponse.status !== undefined ? webResponse.status : 200;
       const success = InternalSubAgentService.isWebhookSuccess(httpStatus);
       const terminalStatus = success ? INTERNAL_SUB_AGENT_STATUS.COMPLETED : INTERNAL_SUB_AGENT_STATUS.FAILED;
       const output = webResponse.payload;
       const error = success ? null : {
-        message: 'Sub-agent webhook returned error status',
+        message: 'Sub-agent return returned error status',
         status: httpStatus,
         payload: output
       };
@@ -193,8 +201,48 @@ class DirInvokeSubAgent {
       await this.#continueParent(action, event, success);
     };
 
+    const listener = async (message) => {
+      let webResponse;
+      try {
+        webResponse = JSON.parse(message);
+      } catch (error) {
+        winston.error('(DirInvokeSubAgent) Error parsing webhook response: ', error);
+        await onWebhookPayload({ status: 500, payload: null }, 'pubsub-parse-error');
+        return;
+      }
+      await onWebhookPayload(webResponse, 'pubsub');
+    };
+
+    winston.verbose(`(DirInvokeSubAgent) Subscribing to ${topic} (parent ${run.parentRequestId})`);
     await this.tdcache.subscribe(topic, listener);
-    this.#scheduleTimeout(action, run);
+
+    const pollIv = setInterval(async () => {
+      if (handled) {
+        clearInterval(pollIv);
+        return;
+      }
+      try {
+        const raw = await this.tdcache.get(readyKey);
+        if (!raw) {
+          return;
+        }
+        let webResponse;
+        try {
+          webResponse = JSON.parse(raw);
+        } catch (error) {
+          winston.error('(DirInvokeSubAgent) Error parsing webhook ready key: ', error);
+          return;
+        }
+        clearInterval(pollIv);
+        await onWebhookPayload(webResponse, 'redis-key');
+      } catch (error) {
+        winston.warn('(DirInvokeSubAgent) webhook_ready poll:', error);
+      }
+    }, 25);
+
+    this.#scheduleTimeout(action, run, () => {
+      clearInterval(pollIv);
+    });
   }
 
   async #subscribeForResult(action, run) {
@@ -220,7 +268,16 @@ class DirInvokeSubAgent {
     this.#scheduleTimeout(action, run);
   }
 
-  #scheduleTimeout(action, run) {
+  #dispatchToBot(message, botId, action, callback) {
+    const useExt = action.useExt === true || action.dispatchViaExt === true;
+    if (useExt) {
+      tilebotService.sendMessageToBot(message, botId, callback);
+      return;
+    }
+    tilebotService.executeBlock(message, botId, callback);
+  }
+
+  #scheduleTimeout(action, run, onTimeout) {
     setTimeout(async () => {
       const currentRun = await InternalSubAgentService.getRun(this.tdcache, run.parentRequestId, run.runId);
       if (!currentRun || InternalSubAgentService.isTerminalStatus(currentRun.status)) {
@@ -257,6 +314,9 @@ class DirInvokeSubAgent {
           await this.#continueParent(action, event, false);
         }
       }
+      if (onTimeout) {
+        onTimeout();
+      }
     }, run.timeoutMs);
   }
 
@@ -269,8 +329,13 @@ class DirInvokeSubAgent {
     }
 
     const message = InternalSubAgentService.buildParentContinuationMessage(this.context, intentName, event);
-    tilebotService.sendMessageToBot(message, this.chatbot.botId, () => {
-      winston.debug('(DirInvokeSubAgent) Parent continuation sent');
+    winston.verbose(`(DirInvokeSubAgent) Continuing parent ${event.parentRequestId} -> ${intentName}`);
+    this.#dispatchToBot(message, this.chatbot.botId, action, (err) => {
+      if (err) {
+        winston.error('(DirInvokeSubAgent) Parent continuation failed: ', err);
+        return;
+      }
+      winston.debug('(DirInvokeSubAgent) Parent continuation dispatched');
     });
   }
 
@@ -280,12 +345,18 @@ class DirInvokeSubAgent {
       : (action.falseIntent || action.onFailedIntent || action.onTimeoutIntent);
 
     if (!intentName) {
+      winston.warn('(DirInvokeSubAgent) No parent continuation intent configured on invoke_subagent action');
       return;
     }
 
     const message = InternalSubAgentService.buildParentContinuationMessage(this.context, intentName, event);
-    tilebotService.sendMessageToBot(message, this.chatbot.botId, () => {
-      winston.debug('(DirInvokeSubAgent) Parent continuation sent after webhook');
+    winston.verbose(`(DirInvokeSubAgent) Continuing parent ${event.parentRequestId} after webhook -> ${intentName}`);
+    this.#dispatchToBot(message, this.chatbot.botId, action, (err) => {
+      if (err) {
+        winston.error('(DirInvokeSubAgent) Parent continuation after webhook failed: ', err);
+        return;
+      }
+      winston.debug('(DirInvokeSubAgent) Parent continuation after webhook dispatched');
     });
   }
 
