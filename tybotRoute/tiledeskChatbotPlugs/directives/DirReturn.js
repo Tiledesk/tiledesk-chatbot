@@ -63,10 +63,10 @@ class DirReturn {
 
     const topic = InternalSubAgentService.webhookTopic(this.requestId);
     const readyKey = TiledeskChatbotConst.redisWebhookReadyKey(this.requestId);
-
     try {
-      await this.tdcache.publish(topic, JSON.stringify(returnMessage));
-      await this.tdcache.set(readyKey, '1', { EX: 120 });
+      const serialized = JSON.stringify(returnMessage);
+      await this.tdcache.publish(topic, serialized);
+      await this.tdcache.set(readyKey, serialized, { EX: 120 });
       winston.verbose('(DirReturn) Published return to topic: ' + topic);
     } catch (error) {
       winston.error('(DirReturn) Error publishing return: ', error);
