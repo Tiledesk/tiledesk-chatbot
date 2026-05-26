@@ -267,12 +267,20 @@ class DirectivesChatbotPlug {
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
 
     // In checkpoint mode, create or load the FlowExecution doc.
-    // If the doc already exists (re-dispatch / resume), honour its
-    // current.directive_index so we don't restart from zero.
+    // Three cases to handle:
+    //   - fresh execution_id: getOrCreate creates the doc; start from 0.
+    //   - existing doc, status='running': we're being re-dispatched into
+    //     an in-progress chain; resume from current.directive_index.
+    //   - existing doc, status='completed': this is a NEW chain on the
+    //     same request_id (Tiledesk routinely runs multiple chains per
+    //     request, e.g. after DirIntent navigation). Archive the
+    //     previous chain into previous_chains[] and reset the active
+    //     fields. This keeps the supervisor's view accurate and
+    //     preserves full audit history.
     let startFromIndex = 0;
     if (this.checkpointEnabled && this.executionId) {
       try {
-        const { doc, created } = await FlowExecutionStore.getOrCreate({
+        let { doc, created } = await FlowExecutionStore.getOrCreate({
           executionId: this.executionId,
           requestId: supportRequest.request_id,
           botId: supportRequest.bot_id || (this.chatbot && this.chatbot.botId),
@@ -288,16 +296,29 @@ class DirectivesChatbotPlug {
             reply: this.reply,
             supportRequest: supportRequest,
             directives: directives,
-            parameters: {} // populated as the bot runs (setParameter writes Redis; snapshot is best-effort)
+            parameters: {}
           }
         });
-        this._executionDoc = doc;
-        if (!created && doc.current && Number.isFinite(doc.current.directive_index)) {
+
+        if (!created && doc.status === 'completed') {
+          // Previous chain finished — start a fresh chain on this doc.
+          doc = await FlowExecutionStore.resetForNewChain(this.executionId, {
+            newMessage: this.message,
+            newReply: this.reply,
+            newSupportRequest: supportRequest,
+            newDirectives: directives,
+            newParameters: (doc.snapshot && doc.snapshot.parameters) || {}
+          });
+          winston.info(`(DirectivesChatbotPlug) New chain on execution ${this.executionId} (archived chain #${(doc.previous_chains || []).length - 1})`);
+          startFromIndex = 0;
+        } else if (!created && doc.current && Number.isFinite(doc.current.directive_index)) {
           startFromIndex = doc.current.directive_index;
           winston.info(`(DirectivesChatbotPlug) Resuming execution ${this.executionId} from index ${startFromIndex}`);
         } else {
           winston.info(`(DirectivesChatbotPlug) Started execution ${this.executionId} (created=${created})`);
         }
+
+        this._executionDoc = doc;
       } catch (err) {
         winston.error("(DirectivesChatbotPlug) Failed to init FlowExecution; continuing without checkpoint:", err);
         this.checkpointEnabled = false;

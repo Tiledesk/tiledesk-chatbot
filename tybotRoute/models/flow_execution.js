@@ -107,7 +107,36 @@ var FlowExecutionSchema = new Schema({
   // (FLOW_REDIS_CLEANUP_DELAY_MS) to keep Redis from growing unbounded.
   // The Mongo doc itself is NEVER deleted by the supervisor — kept for
   // audit / debugging indefinitely.
-  redis_cleaned_at: { type: Date }
+  redis_cleaned_at: { type: Date },
+
+  // Tiledesk's engine can run MULTIPLE directive chains within a single
+  // request_id (e.g. DirIntent navigation → chain #1 finishes → chain #2
+  // starts with a different directives array). Each chain is treated as
+  // a distinct execution unit for resilience purposes, but they share
+  // the same execution_id for traceability.
+  //
+  // When a new chain begins (processDirectives is called and finds the
+  // doc in status='completed'), the previous chain's state is archived
+  // here and the active fields (status, current, side_effects, snapshot)
+  // are reset for the new chain. This preserves full audit history
+  // while keeping the active fields accurate for the supervisor.
+  //
+  // The most recent chain is the "active" one (lives in the top-level
+  // fields); earlier chains live in this array in order.
+  previous_chains: {
+    type: [{
+      _id: false,
+      chain_index: { type: Number, required: true },
+      message: { type: Schema.Types.Mixed },
+      reply: { type: Schema.Types.Mixed },
+      directives: { type: [Schema.Types.Mixed] },
+      current: { type: Schema.Types.Mixed },        // last-known position before completion
+      side_effects: { type: [Schema.Types.Mixed] },
+      started_at: { type: Date },
+      completed_at: { type: Date }
+    }],
+    default: []
+  }
 }, {
   collection: 'flow_executions'
 });

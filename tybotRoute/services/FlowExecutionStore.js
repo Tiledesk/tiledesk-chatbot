@@ -261,6 +261,85 @@ class FlowExecutionStore {
   }
 
   /**
+   * Begin a new directive chain on an existing (completed) execution.
+   *
+   * Tiledesk's engine can run multiple chains under a single request_id
+   * (e.g. intent navigation triggers a fresh processDirectives call with
+   * a different directives array). When this happens AND the previous
+   * chain already marked the doc as completed, we need to:
+   *
+   *   1. Archive the previous chain (snapshot.directives, side_effects,
+   *      current, completed_at, ...) into previous_chains[] for audit.
+   *   2. Reset the active fields so the new chain is treated as a fresh
+   *      execution by the supervisor (status='running' so claimDue can
+   *      pick it up if needed, side_effects=[] so new idempotency keys
+   *      don't collide with archived ones, etc.).
+   *
+   * Idempotent against concurrent races: we use findOneAndUpdate
+   * targeting `status='completed'` so two concurrent resets would only
+   * archive once.
+   *
+   * Returns the freshly-reset doc.
+   */
+  static async resetForNewChain(executionId, { newMessage, newReply, newSupportRequest, newDirectives, newParameters }) {
+    // Read current state so we know what to archive.
+    const current = await FlowExecution.findOne({ execution_id: executionId });
+    if (!current) {
+      throw new Error(`resetForNewChain: execution ${executionId} not found`);
+    }
+    // Only archive+reset if the previous chain truly finished. Otherwise
+    // we'd nuke an in-progress chain's state.
+    if (current.status !== 'completed') {
+      return current;
+    }
+    const chainIndex = (current.previous_chains || []).length;
+    const archive = {
+      chain_index: chainIndex,
+      message: current.snapshot && current.snapshot.message,
+      reply: current.snapshot && current.snapshot.reply,
+      directives: (current.snapshot && current.snapshot.directives) || [],
+      current: current.current || {},
+      side_effects: current.side_effects || [],
+      started_at: current.current && current.current.started_at,
+      completed_at: current.completed_at
+    };
+
+    // Atomic flip: only reset if still 'completed' (race-safe).
+    const updated = await FlowExecution.findOneAndUpdate(
+      { execution_id: executionId, status: 'completed' },
+      {
+        $push: { previous_chains: archive },
+        $set: {
+          status: 'running',
+          'current.directive_index': 0,
+          'current.directive_name': null,
+          'current.started_at': null,
+          'current.expected_end_at': null,
+          attempts: 0,
+          last_error: null,
+          completed_at: null,
+          redis_cleaned_at: null,
+          side_effects: [],
+          'lease.worker_id': null,
+          'lease.until': null,
+          'snapshot.message': newMessage !== undefined ? newMessage : current.snapshot.message,
+          'snapshot.reply': newReply !== undefined ? newReply : current.snapshot.reply,
+          'snapshot.supportRequest': newSupportRequest !== undefined ? newSupportRequest : current.snapshot.supportRequest,
+          'snapshot.directives': newDirectives !== undefined ? newDirectives : current.snapshot.directives,
+          'snapshot.parameters': newParameters !== undefined ? newParameters : (current.snapshot.parameters || {}),
+          updated_at: new Date()
+        }
+      },
+      { new: true }
+    );
+    if (!updated) {
+      // Another writer beat us to it (race). Return whatever state exists now.
+      return await FlowExecution.findOne({ execution_id: executionId });
+    }
+    return updated;
+  }
+
+  /**
    * Find executions that completed at least `delayMs` ago and have not yet
    * had their Redis keys cleaned. Used by the supervisor's cleanup pass.
    *
