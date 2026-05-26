@@ -267,16 +267,18 @@ class DirectivesChatbotPlug {
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
 
     // In checkpoint mode, create or load the FlowExecution doc.
-    // Three cases to handle:
-    //   - fresh execution_id: getOrCreate creates the doc; start from 0.
-    //   - existing doc, status='running': we're being re-dispatched into
-    //     an in-progress chain; resume from current.directive_index.
-    //   - existing doc, status='completed': this is a NEW chain on the
-    //     same request_id (Tiledesk routinely runs multiple chains per
-    //     request, e.g. after DirIntent navigation). Archive the
-    //     previous chain into previous_chains[] and reset the active
-    //     fields. This keeps the supervisor's view accurate and
-    //     preserves full audit history.
+    //
+    // CRITICAL: every processDirectives call is by definition a NEW CHAIN.
+    // Tiledesk's HTTP routes invoke processDirectives once per bot reply,
+    // and intent navigation triggers separate roundtrips that hit the
+    // route again with a different directives array. The supervisor uses
+    // resumeFromIndex (NOT processDirectives) to continue an in-progress
+    // chain. So:
+    //   - fresh execution_id: getOrCreate creates the doc and we start at 0.
+    //   - existing doc (any status): archive its current state into
+    //     previous_chains[] and reset the active fields for the new chain.
+    //     This guarantees the supervisor's view (status, current,
+    //     side_effects) always reflects the chain that is actually running.
     let startFromIndex = 0;
     if (this.checkpointEnabled && this.executionId) {
       try {
@@ -300,9 +302,8 @@ class DirectivesChatbotPlug {
           }
         });
 
-        if (!created && doc.status === 'completed') {
-          // Previous chain finished — start a fresh chain on this doc.
-          doc = await FlowExecutionStore.resetForNewChain(this.executionId, {
+        if (!created) {
+          doc = await FlowExecutionStore.archiveAndStartNewChain(this.executionId, {
             newMessage: this.message,
             newReply: this.reply,
             newSupportRequest: supportRequest,
@@ -310,14 +311,9 @@ class DirectivesChatbotPlug {
             newParameters: (doc.snapshot && doc.snapshot.parameters) || {}
           });
           winston.info(`(DirectivesChatbotPlug) New chain on execution ${this.executionId} (archived chain #${(doc.previous_chains || []).length - 1})`);
-          startFromIndex = 0;
-        } else if (!created && doc.current && Number.isFinite(doc.current.directive_index)) {
-          startFromIndex = doc.current.directive_index;
-          winston.info(`(DirectivesChatbotPlug) Resuming execution ${this.executionId} from index ${startFromIndex}`);
         } else {
-          winston.info(`(DirectivesChatbotPlug) Started execution ${this.executionId} (created=${created})`);
+          winston.info(`(DirectivesChatbotPlug) Started execution ${this.executionId} (created=true)`);
         }
-
         this._executionDoc = doc;
       } catch (err) {
         winston.error("(DirectivesChatbotPlug) Failed to init FlowExecution; continuing without checkpoint:", err);
@@ -418,6 +414,17 @@ class DirectivesChatbotPlug {
 
     if (!directive || !directive.name) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is null", directive);
+      // End-of-chain: the directives array was exhausted normally (no
+      // directive signalled stop=true). In checkpoint mode we must mark
+      // the chain as completed; otherwise the supervisor keeps claiming
+      // the stale expected_end_at and retrying forever.
+      if (this.checkpointEnabled && this.executionId) {
+        try {
+          await FlowExecutionStore.markCompleted(this.executionId);
+        } catch (err) {
+          winston.error("(DirectivesChatbotPlug) markCompleted at end-of-chain failed:", err);
+        }
+      }
       return this.theend();
     }
 

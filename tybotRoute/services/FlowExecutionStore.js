@@ -261,36 +261,34 @@ class FlowExecutionStore {
   }
 
   /**
-   * Begin a new directive chain on an existing (completed) execution.
+   * Archive the current chain state into previous_chains[] and reset the
+   * active fields to start a fresh chain on the same execution_id.
    *
-   * Tiledesk's engine can run multiple chains under a single request_id
-   * (e.g. intent navigation triggers a fresh processDirectives call with
-   * a different directives array). When this happens AND the previous
-   * chain already marked the doc as completed, we need to:
+   * Called by the engine on every NEW processDirectives invocation that
+   * finds an existing doc — Tiledesk's HTTP routes invoke
+   * processDirectives once per bot reply, and intent navigation triggers
+   * separate roundtrips that hit the route again with a different
+   * directives array. Each such call is by definition a new chain.
    *
-   *   1. Archive the previous chain (snapshot.directives, side_effects,
-   *      current, completed_at, ...) into previous_chains[] for audit.
-   *   2. Reset the active fields so the new chain is treated as a fresh
-   *      execution by the supervisor (status='running' so claimDue can
-   *      pick it up if needed, side_effects=[] so new idempotency keys
-   *      don't collide with archived ones, etc.).
+   * The previous chain's snapshot (directives, message, reply), current
+   * pointer, side_effects log, and timestamps are preserved in
+   * previous_chains[]. The active fields are reset:
+   *   - status='running' so the supervisor can pick it up if needed
+   *   - current.directive_index=0
+   *   - attempts=0, last_error=null, completed_at=null, redis_cleaned_at=null
+   *   - side_effects=[] (idempotency keys are scoped to a chain)
+   *   - lease cleared (the previous chain's supervisor may still hold it
+   *     transiently; the engine takes priority over a stale lease)
    *
-   * Idempotent against concurrent races: we use findOneAndUpdate
-   * targeting `status='completed'` so two concurrent resets would only
-   * archive once.
-   *
-   * Returns the freshly-reset doc.
+   * Idempotency: uses atomic findOneAndUpdate keyed by execution_id only,
+   * so concurrent calls may both archive (rare but not catastrophic —
+   * the archive log just gets duplicate entries). For tighter guarantees
+   * we'd need a write-side lock that we don't have today.
    */
-  static async resetForNewChain(executionId, { newMessage, newReply, newSupportRequest, newDirectives, newParameters }) {
-    // Read current state so we know what to archive.
+  static async archiveAndStartNewChain(executionId, { newMessage, newReply, newSupportRequest, newDirectives, newParameters }) {
     const current = await FlowExecution.findOne({ execution_id: executionId });
     if (!current) {
-      throw new Error(`resetForNewChain: execution ${executionId} not found`);
-    }
-    // Only archive+reset if the previous chain truly finished. Otherwise
-    // we'd nuke an in-progress chain's state.
-    if (current.status !== 'completed') {
-      return current;
+      throw new Error(`archiveAndStartNewChain: execution ${executionId} not found`);
     }
     const chainIndex = (current.previous_chains || []).length;
     const archive = {
@@ -303,10 +301,8 @@ class FlowExecutionStore {
       started_at: current.current && current.current.started_at,
       completed_at: current.completed_at
     };
-
-    // Atomic flip: only reset if still 'completed' (race-safe).
     const updated = await FlowExecution.findOneAndUpdate(
-      { execution_id: executionId, status: 'completed' },
+      { execution_id: executionId },
       {
         $push: { previous_chains: archive },
         $set: {
@@ -332,11 +328,7 @@ class FlowExecutionStore {
       },
       { new: true }
     );
-    if (!updated) {
-      // Another writer beat us to it (race). Return whatever state exists now.
-      return await FlowExecution.findOne({ execution_id: executionId });
-    }
-    return updated;
+    return updated || await FlowExecution.findOne({ execution_id: executionId });
   }
 
   /**
