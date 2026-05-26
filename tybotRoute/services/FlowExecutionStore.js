@@ -259,6 +259,56 @@ class FlowExecutionStore {
       { $set: { 'snapshot.parameters': parameters || {}, updated_at: new Date() } }
     );
   }
+
+  /**
+   * Find executions that completed at least `delayMs` ago and have not yet
+   * had their Redis keys cleaned. Used by the supervisor's cleanup pass.
+   *
+   * Only `status=completed` are considered. Failed / needs_review are
+   * intentionally preserved so operators can inspect Redis state.
+   */
+  static async findCompletedForCleanup({ delayMs, limit }) {
+    const cutoff = new Date(Date.now() - delayMs);
+    return await FlowExecution.find({
+      status: 'completed',
+      redis_cleaned_at: null,
+      completed_at: { $lte: cutoff }
+    }).limit(limit || 50).lean();
+  }
+
+  /**
+   * Stamp the doc as cleaned so the next cleanup pass skips it.
+   */
+  static async markRedisCleaned(executionId) {
+    return await FlowExecution.updateOne(
+      { execution_id: executionId },
+      { $set: { redis_cleaned_at: new Date() } }
+    );
+  }
+
+  /**
+   * The full list of per-request_id Redis keys produced by the chatbot
+   * engine. Kept in this file (not buried in the supervisor) so that any
+   * future engine code that introduces a new key can be reflected here in
+   * one place.
+   *
+   * NOTE: keep this in sync with TiledeskChatbot and IntentForm. If a new
+   * `tilebot:requests:<id>:<suffix>` key appears, add the suffix here.
+   */
+  static redisKeysFor(requestId) {
+    if (!requestId) return [];
+    return [
+      `tilebot:${requestId}`,
+      `tilebot:requests:${requestId}:parameters`,
+      `tilebot:requests:${requestId}:locked`,
+      `tilebot:requests:${requestId}:action:locked`,
+      `tilebot:requests:${requestId}:step`,
+      `tilebot:requests:${requestId}:started`,
+      `tilebot:requests:${requestId}:currentFieldIndex`,
+      `tilebot:requests:${requestId}:currentForm`,
+      `tilebot:botId_requests:${requestId}`
+    ];
+  }
 }
 
 module.exports = { FlowExecutionStore };

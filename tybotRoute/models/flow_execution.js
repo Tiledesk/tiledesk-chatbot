@@ -100,7 +100,14 @@ var FlowExecutionSchema = new Schema({
   // Bookkeeping
   created_at: { type: Date, default: Date.now, index: true },
   updated_at: { type: Date, default: Date.now },
-  completed_at: { type: Date }
+  completed_at: { type: Date, index: true },
+
+  // Redis cleanup tracking. The supervisor deletes the per-request_id
+  // Redis keys once an execution has been completed for some time
+  // (FLOW_REDIS_CLEANUP_DELAY_MS) to keep Redis from growing unbounded.
+  // The Mongo doc itself is NEVER deleted by the supervisor — kept for
+  // audit / debugging indefinitely.
+  redis_cleaned_at: { type: Date }
 }, {
   collection: 'flow_executions'
 });

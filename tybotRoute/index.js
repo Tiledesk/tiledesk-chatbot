@@ -781,9 +781,26 @@ function startFlowSupervisor() {
   const leaseTtlMs = parseInt(process.env.FLOW_SUPERVISOR_LEASE_MS, 10) || 60_000;
   const batchSize = parseInt(process.env.FLOW_SUPERVISOR_BATCH_SIZE, 10) || 10;
   const maxAttempts = parseInt(process.env.FLOW_SUPERVISOR_MAX_ATTEMPTS, 10) || 5;
+
+  // Redis cleanup: the supervisor reclaims per-request_id keys for
+  // automations after they complete. Default enabled; opt out by setting
+  // FLOW_REDIS_CLEANUP_ENABLED=false. The delay gives async writers
+  // (transcripts, loggers) time to finish before keys are deleted.
+  const cleanupEnabled = process.env.FLOW_REDIS_CLEANUP_ENABLED !== 'false';
+  const cleanupDelayMs = parseInt(process.env.FLOW_REDIS_CLEANUP_DELAY_MS, 10) || 600_000;
+  const cleanupBatchSize = parseInt(process.env.FLOW_REDIS_CLEANUP_BATCH_SIZE, 10) || 50;
+  const redisClient = (tdcache && tdcache.client) ? tdcache.client : null;
+  if (cleanupEnabled && !redisClient) {
+    winston.warn("(Tilebot) FLOW_REDIS_CLEANUP_ENABLED=true but no Redis client; cleanup disabled");
+  }
+
   flowSupervisor = new FlowExecutionSupervisor({
     resumeFn: resumeFlowExecution,
-    intervalMs, leaseTtlMs, batchSize, maxAttempts
+    intervalMs, leaseTtlMs, batchSize, maxAttempts,
+    redisClient,
+    cleanupEnabled,
+    cleanupDelayMs,
+    cleanupBatchSize
   });
   flowSupervisor.start();
 }

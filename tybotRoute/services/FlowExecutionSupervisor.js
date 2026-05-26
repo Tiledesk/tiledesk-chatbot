@@ -29,7 +29,7 @@ const winston = require('../utils/winston');
  * circular imports with the engine.)
  */
 class FlowExecutionSupervisor {
-  constructor({ resumeFn, intervalMs, leaseTtlMs, batchSize, maxAttempts }) {
+  constructor({ resumeFn, intervalMs, leaseTtlMs, batchSize, maxAttempts, redisClient, cleanupEnabled, cleanupDelayMs, cleanupBatchSize }) {
     if (typeof resumeFn !== 'function') {
       throw new Error('FlowExecutionSupervisor: resumeFn(doc) is required');
     }
@@ -42,6 +42,12 @@ class FlowExecutionSupervisor {
     this.timer = null;
     this.running = false;
     this.shutdownRequested = false;
+
+    // Cleanup config — optional, off if no redisClient provided.
+    this.redisClient = redisClient || null;
+    this.cleanupEnabled = cleanupEnabled !== false && !!this.redisClient;
+    this.cleanupDelayMs = cleanupDelayMs || 600_000;   // 10 min
+    this.cleanupBatchSize = cleanupBatchSize || 50;
   }
 
   start() {
@@ -77,14 +83,64 @@ class FlowExecutionSupervisor {
     this.running = true;
     try {
       await FlowExecutionStore.recoverStuckLeases();
+      // Resume pass — claim and run due executions
       for (let i = 0; i < this.batchSize; i++) {
         if (this.shutdownRequested) break;
         const doc = await FlowExecutionStore.claimDue(this.workerId, this.leaseTtlMs);
         if (!doc) break;
         await this._resume(doc);
       }
+      // Cleanup pass — delete Redis keys for executions completed >delay ago
+      if (this.cleanupEnabled && !this.shutdownRequested) {
+        await this._cleanupCompleted();
+      }
     } finally {
       this.running = false;
+    }
+  }
+
+  /**
+   * Cleanup pass — delete the per-request_id Redis keys for executions
+   * that have been completed for longer than `cleanupDelayMs`. The delay
+   * gives any async post-completion writers (transcripts, loggers) time
+   * to finish before we wipe the slate.
+   *
+   * Failed / needs_review executions are NOT cleaned up here so operators
+   * can still inspect the Redis state during troubleshooting.
+   *
+   * The Mongo doc itself is never deleted — it's the audit trail. Only
+   * Redis keys are reclaimed, which is where the bulk of the long-term
+   * disk growth lives (especially the :parameters hash).
+   */
+  async _cleanupCompleted() {
+    let cleaned = 0;
+    try {
+      const docs = await FlowExecutionStore.findCompletedForCleanup({
+        delayMs: this.cleanupDelayMs,
+        limit: this.cleanupBatchSize
+      });
+      for (const doc of docs) {
+        if (this.shutdownRequested) break;
+        const keys = FlowExecutionStore.redisKeysFor(doc.request_id);
+        if (!keys.length) continue;
+        try {
+          // node-redis client.del accepts a variadic array. Single
+          // round-trip per execution. DEL is O(1) per key and ignores
+          // non-existent ones, so it's safe to delete the full set even
+          // if some keys never existed for this particular execution.
+          await this.redisClient.del(keys);
+          await FlowExecutionStore.markRedisCleaned(doc.execution_id);
+          cleaned++;
+        } catch (err) {
+          winston.error(`(FlowExecutionSupervisor) cleanup failed for ${doc.execution_id}:`, err);
+          // Leave redis_cleaned_at unset so we retry on the next tick.
+        }
+      }
+      if (cleaned > 0) {
+        winston.info(`(FlowExecutionSupervisor) cleanup pass freed Redis keys for ${cleaned} completed executions`);
+      }
+    } catch (err) {
+      winston.error('(FlowExecutionSupervisor) cleanup pass error:', err);
     }
   }
 
