@@ -30,5 +30,7 @@ COPY . .
 
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+# Run node directly so SIGTERM is delivered to the Node process (PID 1).
+# `npm start` does NOT forward signals reliably, breaking graceful shutdown.
+CMD [ "node", "index.js" ]
 
