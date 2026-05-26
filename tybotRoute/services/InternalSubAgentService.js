@@ -16,37 +16,33 @@ const DEFAULT_TTL_SECONDS = 86400;
 
 class InternalSubAgentService {
 
-  static registryFromBot(bot) {
-    const attributes = bot && bot.attributes ? bot.attributes : {};
-    const registry = attributes.internalAgents || attributes.internal_agents || [];
-
-    if (Array.isArray(registry)) {
-      return registry;
-    }
-
-    if (registry && typeof registry === 'object') {
-      return Object.entries(registry).map(([key, value]) => {
-        if (value && typeof value === 'object') {
-          return { key, ...value };
-        }
-        return { key, value };
-      });
-    }
-
-    return [];
-  }
-
-  static resolveAgent(bot, agentKey) {
-    if (!agentKey) {
+  static agentFromSubBot(subBot, subagentId) {
+    if (!subagentId) {
       return null;
     }
+    return {
+      key: subagentId,
+      id: subBot && subBot._id ? subBot._id : subagentId,
+      name: subBot && subBot.name ? subBot.name : subagentId,
+      botId: subagentId,
+      type: 'internal_flow',
+      timeoutMs: subBot && subBot.attributes ? subBot.attributes.subAgentTimeoutMs : undefined
+    };
+  }
 
-    const registry = InternalSubAgentService.registryFromBot(bot);
-    return registry.find((agent) => {
-      return agent &&
-        agent.enabled !== false &&
-        (agent.key === agentKey || agent.name === agentKey || agent.id === agentKey);
-    }) || null;
+  static intentCommand(intentName) {
+    if (!intentName || typeof intentName !== 'string') {
+      return null;
+    }
+    const trimmed = intentName.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  static webhookTopic(requestId) {
+    return `/webhooks/${requestId}`;
   }
 
   static runKey(parentRequestId, runId) {
@@ -66,7 +62,7 @@ class InternalSubAgentService {
   }
 
   static timeoutMs(agent, action) {
-    const timeout = action.timeoutMs || action.timeout || agent.timeoutMs || DEFAULT_TIMEOUT_MS;
+    const timeout = action.timeoutMs || action.timeout || (agent && agent.timeoutMs) || DEFAULT_TIMEOUT_MS;
     const asNumber = Number(timeout);
     if (!Number.isFinite(asNumber) || asNumber <= 0) {
       return DEFAULT_TIMEOUT_MS;
@@ -82,6 +78,7 @@ class InternalSubAgentService {
     const runId = params.runId || InternalSubAgentService.newRunId();
     const timeoutMs = InternalSubAgentService.timeoutMs(params.agent, params.action || {});
     const now = Date.now();
+    const agent = params.agent || {};
     const run = {
       schemaVersion: 1,
       runId: runId,
@@ -89,9 +86,10 @@ class InternalSubAgentService {
       subRequestId: InternalSubAgentService.buildSubRequestId(params.projectId, runId),
       projectId: params.projectId,
       parentBotId: params.parentBotId,
-      agentKey: params.agent.key || params.agent.name,
-      agentName: params.agent.name,
-      type: params.agent.type || 'internal_flow',
+      subagentId: params.subagentId || agent.key || agent.id,
+      agentKey: agent.key || agent.name || params.subagentId,
+      agentName: agent.name,
+      type: agent.type || 'internal_flow',
       mode: params.mode || 'fire_and_continue',
       status: STATUS.RUNNING,
       input: params.input || {},
@@ -160,6 +158,11 @@ class InternalSubAgentService {
       status === STATUS.TIMEOUT;
   }
 
+  static isWebhookSuccess(status) {
+    const code = Number(status);
+    return Number.isFinite(code) && code >= 200 && code < 300;
+  }
+
   static async publishEvent(tdcache, run, event) {
     if (!tdcache || !run) {
       return;
@@ -204,23 +207,7 @@ class InternalSubAgentService {
     return value;
   }
 
-  static flowCommand(agent) {
-    const flow = agent.flow || {};
-    if (flow.intentId || flow.intent_id || agent.flow_id) {
-      return `/#${flow.intentId || flow.intent_id || agent.flow_id}`;
-    }
-    if (flow.intentName || flow.intent_name) {
-      return `/${flow.intentName || flow.intent_name}`;
-    }
-    return null;
-  }
-
-  static flowBotId(agent, fallbackBotId) {
-    const flow = agent.flow || {};
-    return flow.botId || flow.bot_id || agent.botId || agent.bot_id || fallbackBotId;
-  }
-
-  static buildSubAgentMessage(context, agent, run) {
+  static buildSubAgentMessage(context, run, command) {
     const payload = {
       ...(run.input || {}),
       _tdSubAgent: {
@@ -228,6 +215,7 @@ class InternalSubAgentService {
         parentRequestId: run.parentRequestId,
         subRequestId: run.subRequestId,
         agentKey: run.agentKey,
+        subagentId: run.subagentId,
         mode: run.mode
       }
     };
@@ -239,7 +227,7 @@ class InternalSubAgentService {
         type: 'text',
         sender: '_tdinternal',
         recipient: run.subRequestId,
-        text: InternalSubAgentService.flowCommand(agent),
+        text: command,
         id_project: run.projectId,
         attributes: {
           payload: payload
@@ -258,6 +246,7 @@ class InternalSubAgentService {
   }
 
   static buildParentContinuationMessage(context, intentName, event) {
+    const intentCommand = InternalSubAgentService.intentCommand(intentName);
     return {
       payload: {
         _id: uuidv4(),
@@ -265,7 +254,7 @@ class InternalSubAgentService {
         type: 'text',
         sender: '_tdinternal',
         recipient: event.parentRequestId,
-        text: `/${intentName}`,
+        text: intentCommand,
         id_project: context.projectId,
         attributes: {
           payload: {

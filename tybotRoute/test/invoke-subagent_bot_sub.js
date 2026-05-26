@@ -68,8 +68,8 @@ const bot = {
 					"assignResultTo": "result",
 					"_outline": "none",
 					"_isNoFeatured": true,
-					"trueIntent": "#WEBRESPONSE_SUCCESS",
-					"falseIntent": "#WEBRESPONSE_ERROR"
+					"trueIntent": "#RETURN_SUCCESS",
+					"falseIntent": "#RETURN_ERROR"
 				}
 			],
 			"id_faq_kb": "69fdd87594c456001308f343",
@@ -90,13 +90,13 @@ const bot = {
 			}
 		},
 
-		// WEB RESPONSE SUCCESS
+		// RETURN SUCCESS
 		{
 			"webhook_enabled": false,
 			"enabled": true,
 			"actions": [
 				{
-					"_tdActionType": "web_response",
+					"_tdActionType": "return",
 					"status": 200,
 					"bodyType": "json",
 					"payload": "{\n\t\"success\": true,\n\t\"message\": \"Flow finished\",\n        \"body\": {{ result | json }}\n}",
@@ -105,8 +105,8 @@ const bot = {
 					"_isNoFeatured": true
 				}],
 			"id_faq_kb": "69fdd87594c456001308f343",
-			"intent_id": "WEBRESPONSE_SUCCESS",
-			"intent_display_name": "response",
+			"intent_id": "RETURN_SUCCESS",
+			"intent_display_name": "return_success",
 			"language": "en",
 			"attributes": {
 				"position": { "x": 1595, "y": 83 },
@@ -120,7 +120,7 @@ const bot = {
 			"agents_available": false
 		},
 
-		// WEB RESPONSE ERROR
+		// RETURN ERROR
 		{
 			"webhook_enabled": false,
 			"enabled": true,
@@ -129,11 +129,10 @@ const bot = {
 					"_tdActionTitle": "",
 					"_tdActionId": "45189bc0-376d-4fb9-8288-ea3dafff332c",
 					"payload": "{\n\t\"success\": false,\n\t\"message\": \"Flow finished with error\"\n}",
-					"headersString": { "Content-Type": "*/*", "Cache-Control": "no-cache", "User-Agent": "TiledeskBotRuntime", "Accept": "*/*" },
 					"bodyType": "json",
 					"assignTo": "",
 					"assignments": {},
-					"_tdActionType": "web_response",
+					"_tdActionType": "return",
 					"_outline": "2px solid rgba(156,163,205, 1)",
 					"_isNoFeatured": true,
 					"status": "500"
@@ -141,8 +140,8 @@ const bot = {
 			],
 			"id_faq_kb": "69fdd87594c456001308f343",
 			"language": "en",
-			"intent_display_name": "untitled_block_4",
-			"intent_id": "WEBRESPONSE_ERROR",
+			"intent_display_name": "return_error",
+			"intent_id": "RETURN_ERROR",
 			"agents_available": false,
 			"attributes": {
 				"position": { "x": 1660, "y": 507.5 },

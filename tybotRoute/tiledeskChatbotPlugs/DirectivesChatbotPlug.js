@@ -65,6 +65,7 @@ const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { DirInvokeSubAgent } = require('./directives/DirInvokeSubAgent');
 const { DirSubAgentResponse } = require('./directives/DirSubAgentResponse');
+const { DirReturn } = require('./directives/DirReturn');
 
 class DirectivesChatbotPlug {
 
@@ -299,6 +300,7 @@ class DirectivesChatbotPlug {
       [Directives.ITERATION]: DirIteration,
       [Directives.INVOKE_SUB_AGENT]: DirInvokeSubAgent,
       [Directives.SUB_AGENT_RESPONSE]: DirSubAgentResponse,
+      [Directives.RETURN]: DirReturn,
     };
 
     const HandlerClass = handlers[directive_name];
@@ -311,7 +313,7 @@ class DirectivesChatbotPlug {
 
     // Esegue l'handler e chiama next se non stop
 
-    console.log("(DirectivesChatbotPlug) Executing directive: ", directive);
+    winston.debug("(DirectivesChatbotPlug) Executing directive: ", directive.name);
     handler.execute(directive, async (stop) => {
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);

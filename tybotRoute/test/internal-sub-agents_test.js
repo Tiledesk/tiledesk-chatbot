@@ -2,6 +2,7 @@ var assert = require('assert');
 const { InternalSubAgentService, INTERNAL_SUB_AGENT_STATUS } = require('../services/InternalSubAgentService');
 const { DirInvokeSubAgent } = require('../tiledeskChatbotPlugs/directives/DirInvokeSubAgent');
 const { DirSubAgentResponse } = require('../tiledeskChatbotPlugs/directives/DirSubAgentResponse');
+const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
 const tilebotService = require('../services/TilebotService');
 
 class FakeTdCache {
@@ -53,32 +54,38 @@ class FakeTdCache {
   }
 }
 
+const staticBots = {
+  bots: {
+    botID: {
+      webhook_enabled: false,
+      language: 'en',
+      name: 'Sub Bot',
+      intents: {},
+      intents_by_intent_id: {
+        intentID: {
+          intent_id: 'intentID',
+          intent_display_name: 'target',
+          actions: []
+        }
+      }
+    }
+  }
+};
+
 describe('Internal Sub-Agents', function() {
 
-  it('resolves internal agents from bot attributes and creates isolated run state', async () => {
+  it('builds agent metadata from sub-bot id and creates isolated run state', async () => {
     const cache = new FakeTdCache();
-    const bot = {
-      attributes: {
-        internalAgents: [{
-          key: 'knowledge_agent',
-          name: 'Knowledge Agent',
-          type: 'internal_flow',
-          flow: {
-            botId: 'botID',
-            intentId: 'intentID'
-          },
-          timeoutMs: 5000
-        }]
-      }
-    };
-
-    const agent = InternalSubAgentService.resolveAgent(bot, 'knowledge_agent');
+    const subBot = { _id: 'botID', name: 'Knowledge Agent' };
+    const agent = InternalSubAgentService.agentFromSubBot(subBot, 'botID');
     assert(agent);
+    assert.strictEqual(agent.key, 'botID');
 
     const run = await InternalSubAgentService.createRun(cache, {
       projectId: 'projectID',
       parentRequestId: 'support-group-projectID-parent',
-      parentBotId: 'botID',
+      parentBotId: 'parentBot',
+      subagentId: 'botID',
       agent: agent,
       input: { query: 'docs' }
     });
@@ -88,11 +95,11 @@ describe('Internal Sub-Agents', function() {
     assert.strictEqual(run.status, INTERNAL_SUB_AGENT_STATUS.RUNNING);
 
     const saved = await InternalSubAgentService.getRun(cache, run.parentRequestId, run.runId);
-    assert.strictEqual(saved.agentKey, 'knowledge_agent');
+    assert.strictEqual(saved.agentKey, 'botID');
     assert.deepStrictEqual(saved.input, { query: 'docs' });
   });
 
-  it('invokes an internal flow through the existing tilebot service', (done) => {
+  it('invokes a sub-bot by id through the existing tilebot service', (done) => {
     const cache = new FakeTdCache();
     const originalSendMessageToBot = tilebotService.sendMessageToBot;
     const parentRequestId = 'support-group-projectID-parent';
@@ -104,24 +111,14 @@ describe('Internal Sub-Agents', function() {
       supportRequest: {
         request_id: parentRequestId,
         id_project: 'projectID',
-        bot_id: 'botID'
+        bot_id: 'parentBot'
       },
       reply: {},
       tdcache: cache,
       chatbot: {
-        botId: 'botID',
-        bot: {
-          attributes: {
-            internalAgents: [{
-              key: 'knowledge_agent',
-              type: 'internal_flow',
-              flow: {
-                botId: 'botID',
-                intentId: 'intentID'
-              }
-            }]
-          }
-        }
+        botId: 'parentBot',
+        bot: { _id: 'parentBot', name: 'Parent' },
+        botsDataSource: new MockBotsDataSource(staticBots)
       }
     };
 
@@ -143,8 +140,9 @@ describe('Internal Sub-Agents', function() {
 
     const directive = {
       action: {
-        _tdActionType: 'invoke_sub_agent',
-        agentKey: 'knowledge_agent',
+        _tdActionType: 'invoke_subagent',
+        subagent_id: 'botID',
+        intentName: '#intentID',
         mode: 'fire_and_continue',
         input: {
           question: 'hello'
@@ -171,7 +169,7 @@ describe('Internal Sub-Agents', function() {
       parentRequestId: parentRequestId,
       subRequestId: subRequestId,
       projectId: 'projectID',
-      agentKey: 'knowledge_agent',
+      agentKey: 'botID',
       status: INTERNAL_SUB_AGENT_STATUS.RUNNING,
       input: {},
       output: null,
@@ -199,7 +197,7 @@ describe('Internal Sub-Agents', function() {
     await new Promise((resolve) => {
       dir.execute({
         action: {
-          _tdActionType: 'sub_agent_response',
+          _tdActionType: 'subagent_response',
           output: {
             text: '{{answer}}'
           }
@@ -216,7 +214,7 @@ describe('Internal Sub-Agents', function() {
     await new Promise((resolve) => {
       dir.execute({
         action: {
-          _tdActionType: 'sub_agent_response',
+          _tdActionType: 'subagent_response',
           output: {
             text: 'duplicate'
           }

@@ -35,22 +35,47 @@ class DirInvokeSubAgent {
       return;
     }
 
-    const agentKey = action.agentKey || action.agent || action.key;
-    const agent = InternalSubAgentService.resolveAgent(this.chatbot.bot, agentKey);
-    if (!agent) {
-      await this.#assignImmediateFailure(action, `Internal sub-agent not found: ${agentKey}`);
+    if (!this.chatbot || !this.chatbot.botsDataSource) {
+      await this.#assignImmediateFailure(action, 'botsDataSource is mandatory');
       callback();
       return;
     }
 
-    const command = InternalSubAgentService.flowCommand(agent);
+    const subagentId = action.subagent_id || action.agentKey || action.agent || action.key;
+    if (!subagentId) {
+      await this.#assignImmediateFailure(action, 'subagent_id is mandatory');
+      callback();
+      return;
+    }
+
+    let subBot;
+    try {
+      subBot = await this.chatbot.botsDataSource.getBotByIdCache(subagentId, this.tdcache);
+    } catch (error) {
+      winston.error('(DirInvokeSubAgent) Error loading sub-agent bot: ', error);
+      await this.#assignImmediateFailure(action, error && error.message ? error.message : error);
+      callback();
+      return;
+    }
+
+    if (!subBot) {
+      await this.#assignImmediateFailure(action, `Sub-agent bot not found: ${subagentId}`);
+      callback();
+      return;
+    }
+
+    const command = InternalSubAgentService.intentCommand(action.intentName);
     if (!command) {
-      await this.#assignImmediateFailure(action, `Internal sub-agent has no mapped flow: ${agentKey}`);
+      await this.#assignImmediateFailure(action, `Sub-agent intentName is required for: ${subagentId}`);
       callback();
       return;
     }
 
-    const mode = action.mode || (action.waitForResult ? 'wait_result' : 'fire_and_continue');
+    const agent = InternalSubAgentService.agentFromSubBot(subBot, subagentId);
+    const awaitWebhook = action.awaitWebhookPublish === true;
+    const mode = awaitWebhook
+      ? 'wait_result'
+      : (action.mode || (action.waitForResult ? 'wait_result' : 'fire_and_continue'));
     const requestAttributes = await InternalSubAgentService.allParameters(this.tdcache, this.requestId);
     const rawInput = action.input || action.payload || {};
     const input = InternalSubAgentService.fillValue(rawInput, requestAttributes);
@@ -61,6 +86,7 @@ class DirInvokeSubAgent {
         projectId: this.projectId,
         parentRequestId: this.requestId,
         parentBotId: this.chatbot.botId,
+        subagentId: subagentId,
         agent: agent,
         action: action,
         mode: mode,
@@ -70,21 +96,22 @@ class DirInvokeSubAgent {
       await this.#assignRun(action, run);
       await InternalSubAgentService.publishEvent(this.tdcache, run, { status: INTERNAL_SUB_AGENT_STATUS.STARTED });
 
-      if (mode === 'wait_result') {
+      if (awaitWebhook) {
+        await this.#subscribeForWebhook(action, run);
+      } else if (mode === 'wait_result') {
         await this.#subscribeForResult(action, run);
       }
 
-      const message = InternalSubAgentService.buildSubAgentMessage(this.context, agent, run);
-      const botId = InternalSubAgentService.flowBotId(agent, this.chatbot.botId);
+      const message = InternalSubAgentService.buildSubAgentMessage(this.context, run, command);
 
-      tilebotService.sendMessageToBot(message, botId, async (err) => {
+      tilebotService.sendMessageToBot(message, subagentId, async (err) => {
         if (err) {
           await this.#failRun(run, action, err);
         }
       });
 
-      this.logger.native(`[Invoke Sub-Agent] Started ${run.agentKey} run ${run.runId}`);
-      callback(mode === 'wait_result');
+      this.logger.native(`[Invoke Sub-Agent] Started ${subagentId} run ${run.runId}`);
+      callback(awaitWebhook || mode === 'wait_result');
     } catch (error) {
       winston.error('(DirInvokeSubAgent) Error invoking sub-agent: ', error);
       await this.#assignImmediateFailure(action, error && error.message ? error.message : error);
@@ -114,6 +141,62 @@ class DirInvokeSubAgent {
     this.logger.error('[Invoke Sub-Agent] ', error);
   }
 
+  async #subscribeForWebhook(action, run) {
+    const topic = InternalSubAgentService.webhookTopic(run.subRequestId);
+    const listener = async (message) => {
+      let webResponse;
+      try {
+        webResponse = JSON.parse(message);
+      } catch (error) {
+        winston.error('(DirInvokeSubAgent) Error parsing webhook response: ', error);
+        return;
+      }
+
+      await this.tdcache.unsubscribe(topic);
+
+      const httpStatus = webResponse.status !== undefined ? webResponse.status : 200;
+      const success = InternalSubAgentService.isWebhookSuccess(httpStatus);
+      const terminalStatus = success ? INTERNAL_SUB_AGENT_STATUS.COMPLETED : INTERNAL_SUB_AGENT_STATUS.FAILED;
+      const output = webResponse.payload;
+      const error = success ? null : {
+        message: 'Sub-agent webhook returned error status',
+        status: httpStatus,
+        payload: output
+      };
+
+      const updatedRun = await InternalSubAgentService.updateRun(
+        this.tdcache,
+        run.parentRequestId,
+        run.runId,
+        {
+          status: terminalStatus,
+          output: output,
+          error: error
+        }
+      );
+
+      if (!updatedRun) {
+        return;
+      }
+
+      const event = {
+        status: terminalStatus,
+        output: output,
+        error: error,
+        parentRequestId: run.parentRequestId,
+        subRequestId: run.subRequestId,
+        runId: run.runId
+      };
+
+      await InternalSubAgentService.assignParentResult(this.tdcache, this.requestId, action, event);
+      await InternalSubAgentService.publishEvent(this.tdcache, updatedRun, event);
+      await this.#continueParent(action, event, success);
+    };
+
+    await this.tdcache.subscribe(topic, listener);
+    this.#scheduleTimeout(action, run);
+  }
+
   async #subscribeForResult(action, run) {
     const topic = InternalSubAgentService.topic(run.parentRequestId, run.runId);
     const listener = async (message) => {
@@ -134,7 +217,10 @@ class DirInvokeSubAgent {
     };
 
     await this.tdcache.subscribe(topic, listener);
+    this.#scheduleTimeout(action, run);
+  }
 
+  #scheduleTimeout(action, run) {
     setTimeout(async () => {
       const currentRun = await InternalSubAgentService.getRun(this.tdcache, run.parentRequestId, run.runId);
       if (!currentRun || InternalSubAgentService.isTerminalStatus(currentRun.status)) {
@@ -158,6 +244,18 @@ class DirInvokeSubAgent {
           status: INTERNAL_SUB_AGENT_STATUS.TIMEOUT,
           error: timeoutRun.error
         });
+
+        if (action.awaitWebhookPublish) {
+          const event = {
+            status: INTERNAL_SUB_AGENT_STATUS.TIMEOUT,
+            error: timeoutRun.error,
+            parentRequestId: run.parentRequestId,
+            subRequestId: run.subRequestId,
+            runId: run.runId
+          };
+          await InternalSubAgentService.assignParentResult(this.tdcache, this.requestId, action, event);
+          await this.#continueParent(action, event, false);
+        }
       }
     }, run.timeoutMs);
   }
@@ -173,6 +271,21 @@ class DirInvokeSubAgent {
     const message = InternalSubAgentService.buildParentContinuationMessage(this.context, intentName, event);
     tilebotService.sendMessageToBot(message, this.chatbot.botId, () => {
       winston.debug('(DirInvokeSubAgent) Parent continuation sent');
+    });
+  }
+
+  async #continueParent(action, event, success) {
+    const intentName = success
+      ? (action.trueIntent || action.onCompletedIntent || action.onCompleteIntent || action.thenIntent)
+      : (action.falseIntent || action.onFailedIntent || action.onTimeoutIntent);
+
+    if (!intentName) {
+      return;
+    }
+
+    const message = InternalSubAgentService.buildParentContinuationMessage(this.context, intentName, event);
+    tilebotService.sendMessageToBot(message, this.chatbot.botId, () => {
+      winston.debug('(DirInvokeSubAgent) Parent continuation sent after webhook');
     });
   }
 
@@ -196,19 +309,19 @@ class DirInvokeSubAgent {
       });
     }
 
-    if (failedRun && action.mode !== 'wait_result' && action.assignErrorTo) {
+    if (failedRun && action.mode !== 'wait_result' && !action.awaitWebhookPublish && action.assignErrorTo) {
       await InternalSubAgentService.addParameter(this.tdcache, this.requestId, action.assignErrorTo, failedRun.error);
     }
   }
 
   #continuationIntent(action, status) {
     if (status === INTERNAL_SUB_AGENT_STATUS.COMPLETED) {
-      return action.onCompletedIntent || action.onCompleteIntent || action.thenIntent;
+      return action.trueIntent || action.onCompletedIntent || action.onCompleteIntent || action.thenIntent;
     }
     if (status === INTERNAL_SUB_AGENT_STATUS.TIMEOUT) {
-      return action.onTimeoutIntent || action.onFailedIntent;
+      return action.onTimeoutIntent || action.falseIntent || action.onFailedIntent;
     }
-    return action.onFailedIntent;
+    return action.falseIntent || action.onFailedIntent;
   }
 }
 

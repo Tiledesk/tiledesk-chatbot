@@ -38,17 +38,11 @@ class DirIntent {
   }
 
   go(action, callback) {
-    console.log("DirIntent go: ", action);
     const intentName = action.intentName;
-    console.log("DirIntent intentName: ", intentName);
     const projectId = this.supportRequest.id_project;
-    console.log("DirIntent projectId: ", projectId);
     const requestId = this.supportRequest.request_id;
-    console.log("DirIntent requestId: ", requestId);
     const draft = this.supportRequest.draft;
-    console.log("DirIntent draft: ", draft);
     const botId = this.supportRequest.bot_id;
-    console.log("DirIntent botId: ", botId);
     let intent_command;
     if (intentName) {
       intent_command = "/" + intentName;
@@ -75,13 +69,11 @@ class DirIntent {
       },
       "token": this.token
     }
-    console.log("DirIntent move to intent message: ", intent_command_request);
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
     // tilebotService.executeBlock(intent_command_request, botId, () => {
     //   callback(true);
     // });
-
     tilebotService.sendMessageToBot(intent_command_request, botId, () => {
       callback(true);
     });

@@ -79,8 +79,6 @@ describe('Conversation for AiPrompt test', async () => {
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
 
-        console.log("command2.message.text: ", command2.message.text);
-
         if (command2.message.text !== "Hi, how can I help you?") {
           util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
             if (err) {
