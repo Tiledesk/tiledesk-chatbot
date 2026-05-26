@@ -49,10 +49,6 @@ class InternalSubAgentService {
     return `tilebot:requests:${parentRequestId}:subagents:${runId}`;
   }
 
-  static topic(parentRequestId, runId) {
-    return `/subagents/${parentRequestId}/${runId}`;
-  }
-
   static newRunId() {
     return uuidv4().replace(/-/g, '');
   }
@@ -161,29 +157,6 @@ class InternalSubAgentService {
   static isWebhookSuccess(status) {
     const code = Number(status);
     return Number.isFinite(code) && code >= 200 && code < 300;
-  }
-
-  static async publishEvent(tdcache, run, event) {
-    if (!tdcache || !run) {
-      return;
-    }
-
-    const payload = {
-      runId: run.runId,
-      parentRequestId: run.parentRequestId,
-      subRequestId: run.subRequestId,
-      agentKey: run.agentKey,
-      status: event.status,
-      output: event.output,
-      error: event.error,
-      progress: event.progress,
-      timestamp: Date.now()
-    };
-
-    await tdcache.publish(
-      InternalSubAgentService.topic(run.parentRequestId, run.runId),
-      JSON.stringify(payload)
-    );
   }
 
   static fillValue(value, parameters) {

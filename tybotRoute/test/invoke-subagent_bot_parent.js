@@ -84,7 +84,7 @@ const bot = {
 					"_tdActionType": "invoke_subagent",
 					"intentName": "#0d9dd162-5882-4da0-a898-41d209652534",
 					"subagent_id": "subagent_bot_id",
-					"awaitWebhookPublish": true,
+					"mode": "wait_result",
 					"trueIntent": "#SUCCESS",
 					// "falseIntent": "#FAILURE",
 					"assignResultTo": "subagent_result",

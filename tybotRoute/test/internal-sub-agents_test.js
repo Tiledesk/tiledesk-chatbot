@@ -1,7 +1,6 @@
 var assert = require('assert');
 const { InternalSubAgentService, INTERNAL_SUB_AGENT_STATUS } = require('../services/InternalSubAgentService');
 const { DirInvokeSubAgent } = require('../tiledeskChatbotPlugs/directives/DirInvokeSubAgent');
-const { DirSubAgentResponse } = require('../tiledeskChatbotPlugs/directives/DirSubAgentResponse');
 const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
 const tilebotService = require('../services/TilebotService');
 
@@ -165,72 +164,5 @@ describe('Internal Sub-Agents', function() {
       const runId = parameters.subAgentRunId;
       assert(runId);
     });
-  });
-
-  it('stores sub-agent result before publishing the terminal event', async () => {
-    const cache = new FakeTdCache();
-    const parentRequestId = 'support-group-projectID-parent';
-    const subRequestId = 'automation-request-projectID-sub';
-    const run = {
-      runId: 'runID',
-      parentRequestId: parentRequestId,
-      subRequestId: subRequestId,
-      projectId: 'projectID',
-      agentKey: 'botID',
-      status: INTERNAL_SUB_AGENT_STATUS.RUNNING,
-      input: {},
-      output: null,
-      error: null,
-      timeoutMs: 5000,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      expiresAt: Date.now() + 5000
-    };
-
-    await InternalSubAgentService.saveRun(cache, run);
-    await InternalSubAgentService.addParameter(cache, subRequestId, '_tdSubAgent', {
-      runId: run.runId,
-      parentRequestId: parentRequestId
-    });
-    await InternalSubAgentService.addParameter(cache, subRequestId, 'answer', 'done');
-
-    const dir = new DirSubAgentResponse({
-      requestId: subRequestId,
-      supportRequest: { request_id: subRequestId },
-      reply: {},
-      tdcache: cache
-    });
-
-    await new Promise((resolve) => {
-      dir.execute({
-        action: {
-          _tdActionType: 'subagent_response',
-          output: {
-            text: '{{answer}}'
-          }
-        }
-      }, resolve);
-    });
-
-    const saved = await InternalSubAgentService.getRun(cache, parentRequestId, run.runId);
-    assert.strictEqual(saved.status, INTERNAL_SUB_AGENT_STATUS.COMPLETED);
-    assert.deepStrictEqual(saved.output, { text: 'done' });
-    assert.strictEqual(cache.messages.length, 1);
-    assert.strictEqual(cache.messages[0].topic, InternalSubAgentService.topic(parentRequestId, run.runId));
-
-    await new Promise((resolve) => {
-      dir.execute({
-        action: {
-          _tdActionType: 'subagent_response',
-          output: {
-            text: 'duplicate'
-          }
-        }
-      }, resolve);
-    });
-
-    const afterDuplicate = await InternalSubAgentService.getRun(cache, parentRequestId, run.runId);
-    assert.deepStrictEqual(afterDuplicate.output, { text: 'done' });
-    assert.strictEqual(cache.messages.length, 1);
   });
 });
