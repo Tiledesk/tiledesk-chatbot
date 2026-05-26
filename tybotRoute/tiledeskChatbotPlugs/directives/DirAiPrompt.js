@@ -17,6 +17,8 @@ const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
 
+const reasoningLevels = ['low', 'medium', 'high'];
+
 
 class DirAiPrompt {
 
@@ -193,7 +195,10 @@ class DirAiPrompt {
       model: filled_model,
       llm_key: key,
       temperature: action.temperature,
-      max_tokens: action.max_tokens
+      max_tokens: action.max_tokens,
+      id_project: this.projectId,
+      request_id: this.requestId,
+      agent_id: this.chatbot?.botId
     }
 
     if (action.context) {
@@ -239,7 +244,17 @@ class DirAiPrompt {
         return;
       }
 
-      json.servers = this.arrayToObject(action.servers);
+      let flowVariables = {
+        'x-chatbotToken': requestVariables.chatbotToken,
+        'x-project_id': requestVariables.project_id,
+        'x-conversation_id': requestVariables.conversation_id,
+        'x-department_id': requestVariables.department_id,
+        'x-chatbot_name': requestVariables.chatbot_name,
+        'x-chatbot_id': this.chatbot.botId,
+        'x-user_id': requestVariables.user_id || requestVariables.userLeadId,
+        'x-last_user_text': requestVariables.lastUserText,
+      };
+      json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -250,18 +265,37 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('json.servers', json.servers);
+    }
+
+
+    // Handle reasoning if enabled
+    let apiEndpoint = "/ask";
+
+    if (action.reasoning === true) {
+      let reasoningLevel = 'low';
+      if (action.reasoningLevel && reasoningLevels.includes(action.reasoningLevel.toLowerCase())) { 
+        reasoningLevel = action.reasoningLevel.toLowerCase();
+        this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      } else {
+        this.logger.native(`[AI Prompt] Reasoning enabled with default level: ${reasoningLevel}`);
+      }
+      
+      apiEndpoint = "/thinking";
+      this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      winston.debug("DirAiPrompt Reasoning enabled, using /thinking endpoint");
+      json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
-      url: AI_endpoint + "/ask",
+      url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -293,6 +327,13 @@ class DirAiPrompt {
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
 
+          let reasoning_content = null;
+          if (action.reasoning === true) {
+            reasoning_content = resbody.reasoning_content;
+            this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+            await this.chatbot.addParameter("reasoning_content", reasoning_content);
+          }
+
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_info?.total_tokens || 0,
@@ -301,7 +342,7 @@ class DirAiPrompt {
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
         
-          await this.#assignAttributes(action, answer);
+          await this.#assignAttributes(action, answer, reasoning_content);
 
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -421,7 +462,7 @@ class DirAiPrompt {
     }
   }
 
-  async #assignAttributes(action, answer) {
+  async #assignAttributes(action, answer, reasoning_content) {
     winston.debug("DirAiPrompt assignAttributes action: ", action)
     winston.debug("DirAiPrompt assignAttributes answer: " + answer)
 
@@ -429,7 +470,45 @@ class DirAiPrompt {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
+      if (action.assignReasoningContentTo && reasoning_content) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReasoningContentTo, reasoning_content);
+      }
     }
+  }
+
+  /**
+   * Builds the thinking object for reasoning based on the level and max_tokens
+   * @param {string} level - The reasoning level: 'low', 'medium', or 'high'
+   * @param {number} max_tokens - Maximum tokens available
+   * @returns {object} The thinking configuration object
+   */
+  #buildThinkingObject(level, max_tokens) {
+    // Calculate budget_tokens based on level
+    let budgetPercentage;
+    switch (level) {
+      case 'high':
+        budgetPercentage = 0.60; // 60%
+        break;
+      case 'medium':
+        budgetPercentage = 0.40; // 40%
+        break;
+      case 'low':
+      default:
+        budgetPercentage = 0.20; // 20%
+        break;
+    }
+
+    const budget_tokens = Math.floor(max_tokens * budgetPercentage);
+
+    return {
+      show_thinking_stream: true,
+      reasoning_effort: level,
+      reasoning_summary: "auto",
+      type: "enabled",
+      budget_tokens: budget_tokens,
+      thinkingBudget: budget_tokens,
+      thinkingLevel: level
+    };
   }
 
   async getKeyFromKbSettings() {
@@ -519,7 +598,57 @@ class DirAiPrompt {
     })
   }
 
-  arrayToObject(arr) {
+  /**
+   * Unisce gli headers già presenti con un oggetto JSON di variabili (chiave → valore).
+   * Valori convertiti in stringa (oggetti/array con JSON.stringify). Ignora undefined e funzioni.
+   *
+   * @param {Record<string, unknown>|null|undefined} existingHeaders - headers già definiti (es. sul server MCP)
+   * @param {Record<string, unknown>|null|undefined} variables - variabili da aggiungere (sovrascrivono la stessa chiave su existing)
+   * @returns {Record<string, string>}
+   */
+  mergeHeadersWithVariables(existingHeaders, variables) {
+    const base =
+      existingHeaders &&
+      typeof existingHeaders === 'object' &&
+      !Array.isArray(existingHeaders)
+        ? { ...existingHeaders }
+        : {};
+    for (const key of Object.keys(base)) {
+      const v = base[key];
+      if (v !== undefined && v !== null && typeof v !== 'string') {
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      }
+    }
+    if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
+      return base;
+    }
+    for (const key of Object.keys(variables)) {
+      try {
+        const v = variables[key];
+        if (v === undefined || typeof v === 'function') {
+          continue;
+        }
+        if (v === null) {
+          base[key] = '';
+          continue;
+        }
+        if (typeof v === 'object') {
+          base[key] = JSON.stringify(v);
+        } else {
+          base[key] = String(v);
+        }
+      } catch (e) {
+        winston.debug(`DirAiPrompt skip header variable "${key}": ${e.message}`);
+      }
+    }
+    return base;
+  }
+
+  /**
+   * @param {Array} arr
+   * @param {Record<string, unknown>|null|undefined} headerVariables - opzionale; da action.mcpHeaders o simile
+   */
+  arrayToObject(arr, flowVariables) {
     if (!Array.isArray(arr)) {
       winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
       this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
@@ -527,7 +656,12 @@ class DirAiPrompt {
     }
     return arr.reduce((acc, item) => {
       const { name, ...rest } = item;
-      acc[name] = rest;
+      const existingHeaders = rest.headers && typeof rest.headers === 'object' && !Array.isArray(rest.headers)? rest.headers : {};
+      acc[name] = {
+        ...rest,
+        headers: this.mergeHeadersWithVariables(existingHeaders, flowVariables)
+      };
+      console.log('acc', acc);
       return acc;
     }, {});
   }
