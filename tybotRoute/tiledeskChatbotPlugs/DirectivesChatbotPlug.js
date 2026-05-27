@@ -63,6 +63,7 @@ const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
+const { AnalyticsClient } = require('../AnalyticsClient');
 
 class DirectivesChatbotPlug {
 
@@ -181,6 +182,14 @@ class DirectivesChatbotPlug {
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
+      AnalyticsClient.track('agent.flow_error', this.context.projectId, {
+        agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
+        error_type:    go_on.error_code || 'runtime_error',
+        error_message: go_on.error || null,
+        step_count:    go_on.step_count || 0,
+        intent_name:   this.context.reply?.attributes?.intent_info?.intent_name || null,
+        request_id:    this.context.requestId || null
+      });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
@@ -307,7 +316,19 @@ class DirectivesChatbotPlug {
 
     // Esegue l'handler e chiama next se non stop
 
+    const blockStart = Date.now();
     handler.execute(directive, async (stop) => {
+      AnalyticsClient.track('agent.block_executed', this.context.projectId, {
+        agent_id:       this.context.chatbot?.bot.root_id || this.context.chatbot?.botId || '',
+        block_id:       directive.action?.["_tdActionId"] || '',
+        block_name:     directive.action?.["_tdActionTitle"] || directive.action?.name || 'unnamed',
+        directive_type: directive.name || 'unknown',
+        intent_id:      this.context.chatbot?._lastIntentId || '',
+        intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+        duration_ms:    Date.now() - blockStart,
+        success:        !stop,
+        request_id:     this.context.requestId || null
+      });
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();

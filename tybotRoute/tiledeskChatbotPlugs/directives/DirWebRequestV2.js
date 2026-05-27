@@ -3,6 +3,7 @@ let https = require("https");
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
+const { AnalyticsClient } = require('../../AnalyticsClient');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -37,6 +38,13 @@ class DirWebRequestV2 {
     this.logger.native("Executing WebRequest action ", directive.action)
     this.go(action, (stop) => {
       this.logger.native("[Web Request] Executed");
+      AnalyticsClient.track('webhook.triggered', this.context.projectId, {
+        webhook_id: action.webhookId || action._id || 'unknown',
+        agent_id:   this.context.chatbot?.bot.root_id || this.context.chatbot?.botId || '',
+        block_id:   directive.blockId || directive.action?.blockId || 'unknown',
+        async:      action.async === true,
+        request_id: this.requestId || null
+      });
       callback(stop);
     }).catch((err) => {
       // do not nothing

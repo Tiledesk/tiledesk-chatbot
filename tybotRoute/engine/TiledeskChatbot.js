@@ -8,6 +8,7 @@ const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 const winston = require('../utils/winston');
+const { AnalyticsClient } = require('../AnalyticsClient');
 
 class TiledeskChatbot {
 
@@ -99,7 +100,7 @@ class TiledeskChatbot {
         winston.debug("(TiledeskChatbot) Locked intent. Got faqs: ", faq);
         let reply;
         if (faq) {
-          reply = await this.execIntent(faq, message, lead);//, bot);
+          reply = await this.execIntent(faq, message, lead, { match_type: 'locked' });
         }
         else {
           reply = {
@@ -158,7 +159,7 @@ class TiledeskChatbot {
                   this.addParameter(key, value);                  
                 }
               }
-              reply = await this.execIntent(faq, message, lead);
+              reply = await this.execIntent(faq, message, lead, { match_type: 'explicit' });
               resolve(reply);
               return;
             }
@@ -189,7 +190,7 @@ class TiledeskChatbot {
         let reply;
         const faq = faqs[0];
         try {
-          reply = await this.execIntent(faq, message, lead);//, bot);
+            reply = await this.execIntent(faq, message, lead, { match_type: 'exact' });//, bot);
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occured during exact match execIntent(): ", error);
@@ -220,7 +221,7 @@ class TiledeskChatbot {
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
           try {
-            reply = await this.execIntent(faq, message, lead);//, bot);
+          reply = await this.execIntent(faq, message, lead, { match_type: 'nlp' });//, bot);
           }
           catch(error) {
             winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
@@ -239,7 +240,7 @@ class TiledeskChatbot {
           else {
             let reply;
             try {
-              reply = await this.execIntent(fallbackIntent, message, lead);//, bot);
+              reply = await this.execIntent(fallbackIntent, message, lead, { match_type: 'fallback' });//, bot);
             }
             catch(error) {
               winston.error("(TiledeskChatbot) An error occurred during defaultFallback: ", error);
@@ -311,14 +312,15 @@ class TiledeskChatbot {
     });
   }
   
-  async execIntent(faq, message, lead) {//, bot) {
+  async execIntent(faq, message, lead, matchContext = {}) {//, bot) {
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
 
     winston.debug("(TiledeskChatbot) execIntent requestId: " + this.requestId)
     winston.debug("(TiledeskChatbot) execIntent token: " + this.token)
     winston.debug("(TiledeskChatbot) execIntent projectId: " + this.projectId)
-    
+    this._intentStartTime = Date.now();
+
     if (this.tdcache) {
       const requestKey = "tilebot:" + this.requestId
       await this.tdcache.setJSON(requestKey, this.request);
@@ -380,7 +382,25 @@ class TiledeskChatbot {
       }
     }
     // FORM END
-    
+
+    // Emit analytics event: intent fully resolved (skipped for form-in-progress / form-canceled early returns above)
+    const _step = this.tdcache
+      ? (Number(await TiledeskChatbot.currentStep(this.tdcache, this.requestId)) || 0)
+      : 0;
+
+    // Store intent tracking data for downstream completion/block analytics
+    this._lastIntentId = answerObj.intent_id || answerObj._id?.toString() || '';
+
+    AnalyticsClient.track('agent.intent_matched', this.projectId, {
+      agent_id:    this.bot.root_id || this.botId,
+      intent_id:   answerObj.intent_id || answerObj._id?.toString() || '',
+      intent_name: intent_name,
+      match_type:  matchContext.match_type || 'explicit',
+      confidence:  (answerObj.score != null) ? answerObj.score : null,
+      step_count:  _step,
+      request_id:  this.requestId || null
+    });
+
     const context = {
       payload: {
         botId: botId,
@@ -572,7 +592,9 @@ class TiledeskChatbot {
       winston.verbose("(TiledeskChatbot) max_steps limit just violated");
       winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
       return {
-        error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded."
+        error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded.",
+        error_code: 'max_steps_exceeded',
+        step_count: current_step
       };
     }
     // else {
@@ -593,7 +615,9 @@ class TiledeskChatbot {
       if (execution_time > max_execution_time) {
         winston.verbose("(TiledeskChatbot) execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
         return {
-          error: "Anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded."
+          error: "Anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded.",
+          error_code: 'max_time_exceeded',
+          step_count: current_step
         };
       }
     }
