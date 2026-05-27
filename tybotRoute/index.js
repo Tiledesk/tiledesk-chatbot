@@ -593,6 +593,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     const execution_id = uuidv4().replace(/-/g, '');
     request_id = "automation-request-" + project_id + "-" + execution_id;
   }
+  AnalyticsClient.track('webhook.triggered', project_id, {
+    agent_id:   bot_id,
+    block_id:   block_id,
+    async:      async === true,
+    request_id: request_id
+  });
+
   const command = "/#" + block_id;
   let message = {
     payload: {

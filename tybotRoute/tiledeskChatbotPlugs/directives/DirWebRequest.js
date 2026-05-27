@@ -3,7 +3,6 @@ let https = require("https");
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
-const { AnalyticsClient } = require('../../AnalyticsClient');
 const winston = require('../../utils/winston');
 
 class DirWebRequest {
@@ -28,13 +27,6 @@ class DirWebRequest {
       return;
     }
     this.go(action, () => {
-      AnalyticsClient.track('webhook.triggered', this.context.projectId, {
-        webhook_id: action.webhookId || action._id || 'unknown',
-        agent_id:   this.context.chatbot?.bot.root_id || this.context.chatbot?.botId || '',
-        block_id:   directive.blockId || directive.action?.blockId || 'unknown',
-        async:      action.async === true,
-        request_id: this.requestId || null
-      });
       callback();
     });
   }
