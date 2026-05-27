@@ -85,14 +85,30 @@ class DirGptResponse {
     const filled_prompt = filler.fill(action.prompt, requestVariables);
     const filled_response_id = this.#resolveActionValue(action.responseId, requestVariables, filler, true);
 
-    // Resolve previous_response_id from either attribute name or liquid expression.
+    // Resolve the "Previous Response ID" input (attribute name or liquid expression).
     let previous_response_id = this.#resolveActionValue(action.previousResponseIdAttribute, requestVariables, filler);
+
+    // A resp_ value passed through the responseId field is also previous-response chaining.
+    if (!previous_response_id && filled_response_id && filled_response_id.startsWith('resp_')) {
+      previous_response_id = filled_response_id;
+    }
+
+    // When there is no Previous Response ID, fall back to the Conversations methodology:
+    // the thread is kept server-side via a conversation id stored in the well-known
+    // `conversationId` attribute, so it is reused automatically across turns.
+    const useConversation = !previous_response_id;
+    let conversation_id = useConversation
+      ? this.#resolveActionValue("conversationId", requestVariables, filler)
+      : null;
 
     winston.debug("(DirGptResponse) filled_prompt: " + filled_prompt);
     winston.debug("(DirGptResponse) filled_response_id: " + filled_response_id);
     winston.debug("(DirGptResponse) previous_response_id: " + previous_response_id);
+    winston.debug("(DirGptResponse) useConversation: " + useConversation);
+    winston.debug("(DirGptResponse) conversation_id: " + conversation_id);
 
-    const openai_url = process.env.OPENAI_ENDPOINT + "/responses";
+    const openai_base = process.env.OPENAI_ENDPOINT;
+    const openai_url = openai_base + "/responses";
     winston.debug("(DirGptResponse) openai_url: " + openai_url);
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
@@ -150,14 +166,25 @@ class DirGptResponse {
     if (filled_response_id) {
       if (filled_response_id.startsWith('pmpt_')) {
         json.prompt = { id: filled_response_id };
-      } else if (filled_response_id.startsWith('resp_') && !previous_response_id) {
-        json.previous_response_id = filled_response_id;
-      } else {
+      } else if (!filled_response_id.startsWith('resp_')) {
+        // Plain string → model name. (resp_ values are handled via previous_response_id.)
         json.model = filled_response_id;
       }
     }
 
-    if (previous_response_id) {
+    if (useConversation) {
+      // Conversations methodology: keep the thread server-side via a conversation id.
+      // Mutually exclusive with previous_response_id, so that field is not sent here.
+      if (!conversation_id) {
+        conversation_id = await this.#createConversation(openai_base, key);
+        if (!conversation_id) {
+          this.logger.warn("[OpenAI Response] Could not create a conversation; proceeding without thread state");
+        }
+      }
+      if (conversation_id) {
+        json.conversation = conversation_id;
+      }
+    } else if (previous_response_id) {
       json.previous_response_id = previous_response_id;
     }
 
@@ -209,6 +236,15 @@ class DirGptResponse {
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "responseId", resbody.id);
           }
 
+          // Store the conversation ID under the well-known `conversationId` attribute so the
+          // next turn reuses the same thread automatically (mirrors how `responseId` is stored).
+          if (useConversation && this.context.tdcache) {
+            const newConversationId = this.#extractConversationId(resbody, conversation_id);
+            if (newConversationId) {
+              await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "conversationId", newConversationId);
+            }
+          }
+
           await this.#assignResultAttribute(action, answer);
 
           if (publicKey === true && resbody.usage) {
@@ -253,6 +289,42 @@ class DirGptResponse {
       winston.error("(DirGptResponse) Error extracting response text: ", e);
       return "No answer.";
     }
+  }
+
+  async #createConversation(openai_base, key) {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: openai_base + "/conversations",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key
+        },
+        json: {},
+        method: 'POST'
+      };
+      winston.debug("(DirGptResponse) create conversation HttpRequest ", HTTPREQUEST);
+      httpUtils.request(HTTPREQUEST, (err, resbody) => {
+        if (err) {
+          winston.error("(DirGptResponse) create conversation err: " + (err.response?.data?.error?.message || err.message));
+          resolve(null);
+        } else {
+          resolve((resbody && resbody.id) ? resbody.id : null);
+        }
+      });
+    });
+  }
+
+  #extractConversationId(resbody, fallback) {
+    const conv = resbody ? resbody.conversation : null;
+    if (conv) {
+      if (typeof conv === 'string') {
+        return conv;
+      }
+      if (typeof conv === 'object' && conv.id) {
+        return conv.id;
+      }
+    }
+    return fallback || null;
   }
 
   #resolveActionValue(valueOrRef, requestVariables, filler, fallbackToRaw = false) {
