@@ -57,10 +57,28 @@ let flowSupervisor = null;
  */
 async function resumeFlowExecution(doc) {
   const { bot_id, project_id, token, snapshot } = doc;
-  const { message, reply, supportRequest, directives } = snapshot;
+  const { message, reply, supportRequest, directives, parameters } = snapshot;
   if (!supportRequest || !Array.isArray(directives)) {
     throw new Error('FlowExecution snapshot missing supportRequest or directives');
   }
+
+  // Rehydrate parameters from the Mongo snapshot back into Redis BEFORE
+  // any directive runs. Mongo is the durable source of truth; Redis is
+  // cache. This is what lets the flow survive a full Redis wipe — not
+  // just a chatbot container restart. Directives read params via
+  // chatbot.getParameter (which hits Redis), so the cache must be warm.
+  if (parameters && typeof parameters === 'object') {
+    const reqId = supportRequest.request_id;
+    for (const [k, v] of Object.entries(parameters)) {
+      try {
+        await TiledeskChatbot.addParameterStatic(tdcache, reqId, k, v);
+      } catch (err) {
+        winston.error(`(resumeFlowExecution) rehydrate param '${k}' failed:`, err);
+      }
+    }
+    winston.info(`(resumeFlowExecution) rehydrated ${Object.keys(parameters).length} params for ${doc.execution_id}`);
+  }
+
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({ projectId: project_id, botId: bot_id });

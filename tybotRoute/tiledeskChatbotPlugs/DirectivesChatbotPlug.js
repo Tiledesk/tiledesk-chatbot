@@ -542,14 +542,27 @@ class DirectivesChatbotPlug {
         ? await this._resolveWaitMillis(directive)
         : (DIRECTIVE_TIMEOUTS_MS[directive_name] || DEFAULT_DIRECTIVE_TIMEOUT_MS);
 
-      // Persist `current` (start time + deadline). For WAIT, advance the
-      // index so the supervisor's resume targets the next directive.
+      // Snapshot the live parameters from Redis so they're durable in
+      // Mongo. This makes Redis a pure cache: on resume the supervisor
+      // rehydrates these into Redis, so the flow survives even a full
+      // Redis wipe (not just a chatbot restart).
+      let liveParams = undefined;
+      try {
+        liveParams = await this.chatbot.allParameters();
+      } catch (err) {
+        winston.error("(DirectivesChatbotPlug) reading params for snapshot failed:", err);
+      }
+
+      // Persist `current` (start time + deadline) + params snapshot. For
+      // WAIT, advance the index so the supervisor's resume targets the
+      // next directive.
       const persistedIndex = isWait ? idx + 1 : idx;
       try {
         this._executionDoc = await FlowExecutionStore.beginDirective(this.executionId, {
           directiveIndex: persistedIndex,
           directiveName: directive_name,
-          expectedTimeoutMs: timeoutMs
+          expectedTimeoutMs: timeoutMs,
+          parameters: liveParams
         });
       } catch (err) {
         winston.error("(DirectivesChatbotPlug) beginDirective failed (continuing best-effort):", err);

@@ -91,19 +91,26 @@ class FlowExecutionStore {
    *   - DirAskGPT / DirAssistant: model timeout + headroom (e.g. 120s)
    *   - everything else: small constant (e.g. 5_000)
    */
-  static async beginDirective(executionId, { directiveIndex, directiveName, expectedTimeoutMs }) {
+  static async beginDirective(executionId, { directiveIndex, directiveName, expectedTimeoutMs, parameters }) {
     const now = new Date();
+    const set = {
+      'current.directive_index': directiveIndex,
+      'current.directive_name': directiveName,
+      'current.started_at': now,
+      'current.expected_end_at': new Date(now.getTime() + (expectedTimeoutMs || 5000)),
+      updated_at: now
+    };
+    // Snapshot the live parameters into Mongo so they survive even a full
+    // Redis wipe. Mongo is the durable source of truth; Redis is cache.
+    // On resume the supervisor rehydrates these back into Redis before
+    // running the next directive. Folded into this single write to avoid
+    // an extra round-trip per directive.
+    if (parameters !== undefined && parameters !== null) {
+      set['snapshot.parameters'] = parameters;
+    }
     return await FlowExecution.findOneAndUpdate(
       { execution_id: executionId },
-      {
-        $set: {
-          'current.directive_index': directiveIndex,
-          'current.directive_name': directiveName,
-          'current.started_at': now,
-          'current.expected_end_at': new Date(now.getTime() + (expectedTimeoutMs || 5000)),
-          updated_at: now
-        }
-      },
+      { $set: set },
       { new: true }
     );
   }
