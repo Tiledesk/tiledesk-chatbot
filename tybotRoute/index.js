@@ -36,10 +36,90 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
+const { FlowExecutionSupervisor } = require('./services/FlowExecutionSupervisor.js');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
+let flowSupervisor = null;
+
+/**
+ * Resume callback for the FlowExecutionSupervisor.
+ *
+ * Reconstructs the chatbot + DirectivesChatbotPlug from a persisted
+ * FlowExecution snapshot, then calls resumeFromIndex(current.directive_index)
+ * to continue execution from where the previous run left off.
+ *
+ * Crucially: the bot's botsDataSource and TiledeskChatbot are recreated
+ * because they hold non-serialisable state (Mongo connections, in-memory
+ * caches). The serialisable bits (directives, supportRequest, message)
+ * come straight from `doc.snapshot`.
+ */
+async function resumeFlowExecution(doc) {
+  const { bot_id, project_id, token, snapshot } = doc;
+  const { message, reply, supportRequest, directives, parameters } = snapshot;
+  if (!supportRequest || !Array.isArray(directives)) {
+    throw new Error('FlowExecution snapshot missing supportRequest or directives');
+  }
+
+  // Rehydrate parameters from the Mongo snapshot back into Redis BEFORE
+  // any directive runs. Mongo is the durable source of truth; Redis is
+  // cache. This is what lets the flow survive a full Redis wipe — not
+  // just a chatbot container restart. Directives read params via
+  // chatbot.getParameter (which hits Redis), so the cache must be warm.
+  if (parameters && typeof parameters === 'object') {
+    const reqId = supportRequest.request_id;
+    for (const [k, v] of Object.entries(parameters)) {
+      try {
+        await TiledeskChatbot.addParameterStatic(tdcache, reqId, k, v);
+      } catch (err) {
+        winston.error(`(resumeFlowExecution) rehydrate param '${k}' failed:`, err);
+      }
+    }
+    winston.info(`(resumeFlowExecution) rehydrated ${Object.keys(parameters).length} params for ${doc.execution_id}`);
+  }
+
+  let botsDS;
+  if (!staticBots) {
+    botsDS = new MongodbBotsDataSource({ projectId: project_id, botId: bot_id });
+  } else {
+    botsDS = new MockBotsDataSource(staticBots);
+  }
+  const bot = await botsDS.getBotByIdCache(bot_id, tdcache);
+  if (!bot) {
+    throw new Error(`Bot ${bot_id} not found for execution ${doc.execution_id}`);
+  }
+  const chatbot = new TiledeskChatbot({
+    botsDataSource: botsDS,
+    botId: bot_id,
+    bot: bot,
+    token: token,
+    APIURL: API_ENDPOINT,
+    APIKEY: '___',
+    tdcache: tdcache,
+    requestId: supportRequest.request_id,
+    projectId: project_id,
+    MAX_STEPS: MAX_STEPS,
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
+  });
+  const plug = new DirectivesChatbotPlug({
+    message: message,
+    reply: reply,
+    directives: directives,
+    chatbot: chatbot,
+    supportRequest: supportRequest,
+    API_ENDPOINT: API_ENDPOINT,
+    TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
+    token: token,
+    cache: tdcache
+  });
+  // Engine reads its own checkpoint flag from env + request_id. We don't
+  // need to inject anything extra — the plug will see the FlowExecution
+  // already exists and resume seamlessly.
+  await new Promise((resolve) => {
+    plug.resumeFromIndex(doc.current && doc.current.directive_index || 0, () => resolve());
+  });
+}
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
@@ -683,6 +763,7 @@ async function startApp(settings, completionCallback) {
       else {
         winston.info("(Tilebot) MongoDB Connected");
         await connectRedis();
+        startFlowSupervisor();
         winston.info("(Tilebot) Tilebot started");
 
         if (completionCallback) {
@@ -694,11 +775,52 @@ async function startApp(settings, completionCallback) {
   else {
     winston.info("(Tilebot) Using static bots");
     await connectRedis();
+    // No supervisor in static-bots mode — there's no Mongo to read from.
     winston.info("(Tilebot) Tilebot started");
     if (completionCallback) {
       completionCallback();
     }
   }
+}
+
+/**
+ * Start the FlowExecutionSupervisor if enabled via env. Designed to run on
+ * a single chatbot instance in a multi-replica deployment — set
+ * FLOW_SUPERVISOR_ENABLED=true only on the designated worker replica.
+ * Other replicas keep checkpoint mode enabled (writes) but skip the
+ * poll loop (reads), avoiding redundant Mongo traffic.
+ */
+function startFlowSupervisor() {
+  if (process.env.FLOW_SUPERVISOR_ENABLED !== 'true') {
+    winston.info("(Tilebot) FlowExecutionSupervisor disabled (FLOW_SUPERVISOR_ENABLED!=true)");
+    return;
+  }
+  const intervalMs = parseInt(process.env.FLOW_SUPERVISOR_INTERVAL_MS, 10) || 10_000;
+  const leaseTtlMs = parseInt(process.env.FLOW_SUPERVISOR_LEASE_MS, 10) || 60_000;
+  const batchSize = parseInt(process.env.FLOW_SUPERVISOR_BATCH_SIZE, 10) || 10;
+  const maxAttempts = parseInt(process.env.FLOW_SUPERVISOR_MAX_ATTEMPTS, 10) || 5;
+
+  // Redis cleanup: the supervisor reclaims per-request_id keys for
+  // automations after they complete. Default enabled; opt out by setting
+  // FLOW_REDIS_CLEANUP_ENABLED=false. The delay gives async writers
+  // (transcripts, loggers) time to finish before keys are deleted.
+  const cleanupEnabled = process.env.FLOW_REDIS_CLEANUP_ENABLED !== 'false';
+  const cleanupDelayMs = parseInt(process.env.FLOW_REDIS_CLEANUP_DELAY_MS, 10) || 600_000;
+  const cleanupBatchSize = parseInt(process.env.FLOW_REDIS_CLEANUP_BATCH_SIZE, 10) || 50;
+  const redisClient = (tdcache && tdcache.client) ? tdcache.client : null;
+  if (cleanupEnabled && !redisClient) {
+    winston.warn("(Tilebot) FLOW_REDIS_CLEANUP_ENABLED=true but no Redis client; cleanup disabled");
+  }
+
+  flowSupervisor = new FlowExecutionSupervisor({
+    resumeFn: resumeFlowExecution,
+    intervalMs, leaseTtlMs, batchSize, maxAttempts,
+    redisClient,
+    cleanupEnabled,
+    cleanupDelayMs,
+    cleanupBatchSize
+  });
+  flowSupervisor.start();
 }
 
 async function connectRedis() {
@@ -770,4 +892,39 @@ function myrequest(options, callback) {
   );
 }
 
-module.exports = { router: router, startApp: startApp};
+/**
+ * Graceful shutdown of background services owned by tybotRoute.
+ * Called from the root index.js SIGTERM handler.
+ *
+ * Order matters:
+ *   1. Stop supervisor first so it doesn't claim new executions while we
+ *      tear down Redis/Mongo underneath it.
+ *   2. Close Redis client (so no in-flight reads/writes hang).
+ *   3. Close Mongo connection (last, since the supervisor needed it).
+ */
+async function stopApp() {
+  winston.info("(Tilebot) stopApp: stopping background services...");
+  if (flowSupervisor) {
+    try {
+      await flowSupervisor.stop();
+    } catch (e) {
+      winston.error("(Tilebot) Error stopping FlowExecutionSupervisor: ", e);
+    }
+  }
+  if (tdcache && tdcache.client) {
+    try {
+      await tdcache.client.quit();
+      winston.info("(Tilebot) Redis disconnected");
+    } catch (e) {
+      winston.error("(Tilebot) Error disconnecting Redis: ", e);
+    }
+  }
+  try {
+    await mongoose.disconnect();
+    winston.info("(Tilebot) MongoDB disconnected");
+  } catch (e) {
+    winston.error("(Tilebot) Error disconnecting MongoDB: ", e);
+  }
+}
+
+module.exports = { router: router, startApp: startApp, stopApp: stopApp };
