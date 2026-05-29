@@ -244,7 +244,6 @@ router.post('/exec/:botid', async (req, res) => {
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /exec/:botid called: " + botId);
   if(!botId || botId === "null" || botId === "undefined"){
-    logExecPrepMs('invalid botId');
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
 
@@ -269,7 +268,6 @@ router.post('/exec/:botid', async (req, res) => {
   //skip internal note messages
   if(message && message.attributes && message.attributes.subtype === 'private') {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
-    logExecPrepMs('private note');
     return res.status(200).send({"success":true});
   }
 
@@ -280,10 +278,8 @@ router.post('/exec/:botid', async (req, res) => {
   }
   else {
     res.status(400).send({"success": false, error: "Request id is invalid:" + requestId + " for projectId:" + projectId + "chatbotId:" + botId});
-    logExecPrepMs('invalid requestId');
     return;
   }
-  logExecPrepMs('validated');
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
   
