@@ -64,9 +64,21 @@ var FlowExecutionSchema = new Schema({
     expected_end_at: { type: Date, index: true }
   },
 
+  // Status lifecycle:
+  //   running       — engine actively processing directives (lease may be held)
+  //   waiting       — paused on a DirWait, supervisor will resume when
+  //                   current.expected_end_at <= now. This is the ONLY status
+  //                   the supervisor auto-resumes from. Distinguishing
+  //                   'waiting' from 'running' prevents the supervisor from
+  //                   re-firing side-effects of mid-flow crashes (which would
+  //                   otherwise look like "running with expired deadline").
+  //   completed     — chain finished normally
+  //   failed        — exhausted retries
+  //   needs_review  — crashed mid-flow; operator must inspect (auto-retry
+  //                   disabled to avoid duplicate side-effects)
   status: {
     type: String,
-    enum: ['running', 'completed', 'failed', 'needs_review'],
+    enum: ['running', 'waiting', 'completed', 'failed', 'needs_review'],
     default: 'running',
     index: true
   },

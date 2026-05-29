@@ -555,14 +555,17 @@ class DirectivesChatbotPlug {
 
       // Persist `current` (start time + deadline) + params snapshot. For
       // WAIT, advance the index so the supervisor's resume targets the
-      // next directive.
+      // next directive AND flip status to 'waiting' so claimDue can pick
+      // it up at the deadline (the supervisor only resumes 'waiting'
+      // docs, not 'running' ones — see FlowExecutionStore.claimDue).
       const persistedIndex = isWait ? idx + 1 : idx;
       try {
         this._executionDoc = await FlowExecutionStore.beginDirective(this.executionId, {
           directiveIndex: persistedIndex,
           directiveName: directive_name,
           expectedTimeoutMs: timeoutMs,
-          parameters: liveParams
+          parameters: liveParams,
+          status: isWait ? 'waiting' : undefined
         });
       } catch (err) {
         winston.error("(DirectivesChatbotPlug) beginDirective failed (continuing best-effort):", err);
@@ -570,7 +573,7 @@ class DirectivesChatbotPlug {
 
       if (isWait) {
         // Stop executing in-process. Supervisor will pick up at deadline.
-        winston.info(`(DirectivesChatbotPlug) [checkpoint] WAIT persisted ${timeoutMs}ms. Exiting chain.`);
+        winston.info(`(DirectivesChatbotPlug) [checkpoint] WAIT persisted ${timeoutMs}ms. Exiting chain (status=waiting).`);
         return this.theend();
       }
 
