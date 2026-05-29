@@ -535,6 +535,24 @@ class DirAiPrompt {
     }, {});
   }
 
+  /**
+   * Converte customHeaders dell'integrazione MCP in un oggetto headers per il server AI.
+   * @param {Array<{enabled?: boolean, key?: string, value?: unknown}>|null|undefined} customHeaders
+   * @returns {Record<string, string>}
+   */
+  customHeadersToObject(customHeaders) {
+    if (!Array.isArray(customHeaders)) {
+      return {};
+    }
+    return customHeaders.reduce((acc, header) => {
+      if (header?.enabled === false || !header?.key) {
+        return acc;
+      }
+      acc[header.key] = header.value != null ? String(header.value) : '';
+      return acc;
+    }, {});
+  }
+
   async findAuthorization(servers, mcp_integration) {
     const integrationServers = mcp_integration?.value?.servers;
     if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
@@ -544,8 +562,23 @@ class DirAiPrompt {
   
     servers.forEach(server => {
       const integrationServer = map.get(server.name);
-      if (integrationServer?.authorization?.key) {
+      if (!integrationServer) {
+        return;
+      }
+
+      if (integrationServer.authorization?.key) {
         server.api_key = integrationServer.authorization.key;
+      }
+
+      const integrationHeaders = this.customHeadersToObject(integrationServer.customHeaders);
+      if (Object.keys(integrationHeaders).length > 0) {
+        const existingHeaders =
+          server.headers &&
+          typeof server.headers === 'object' &&
+          !Array.isArray(server.headers)
+            ? server.headers
+            : {};
+        server.headers = { ...existingHeaders, ...integrationHeaders };
       }
     });
 
