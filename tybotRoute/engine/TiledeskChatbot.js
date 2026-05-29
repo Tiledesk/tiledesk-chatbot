@@ -83,6 +83,16 @@ class TiledeskChatbot {
         winston.error("(TiledeskChatbot) Error resetting locked intent: ", error);
       }
 
+      //Checking locked mpc 
+      const locked_mpc = await this.currentLockedMpc(this.requestId);
+      winston.verbose("(TiledeskChatbot) Got locked mpc: -" + locked_mpc + "-");
+      if (locked_mpc) {
+        winston.verbose("(TiledeskChatbot) Locked mpc. Skipping intent processing");
+        resolve(true);
+        return;
+      }
+
+
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
@@ -486,6 +496,15 @@ class TiledeskChatbot {
       return null;
     }
   }
+
+  async currentLockedMpc(requestId) {
+    if (this.tdcache) {
+      return await this.tdcache.get("tilebot:requests:"  + requestId + ":mcp:locked");
+    }
+    else {
+      return null;
+    }
+  }
   
   async unlockIntent(requestId) {
     await DirUnlockIntent.unlockIntent(this.tdcache, requestId);
@@ -589,7 +608,7 @@ class TiledeskChatbot {
     let _current_step = await _tdcache.get(parameter_key);
     let current_step = Number(_current_step);
     if (current_step > max_steps) {
-      winston.verbose("(TiledeskChatbot) max_steps limit just violated");
+      winston.verbose("(TiledeskChatbot) max_steps_limit just violated");
       winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
       return {
         error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded.",
