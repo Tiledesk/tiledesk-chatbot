@@ -68,6 +68,83 @@ const { DirPicallexSfUpdateObject } = require('./directives/DirPicallexSfUpdateO
 const winston = require('../utils/winston');
 const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { FlowExecutionStore } = require('../services/FlowExecutionStore');
+
+/**
+ * Per-directive timeout budget for the supervisor's "is it stuck?" check.
+ * The supervisor considers a running execution due for inspection when
+ *   now > current.expected_end_at = started_at + DIRECTIVE_TIMEOUTS_MS[name]
+ * For WAIT directives, the wait's own millis overrides this default.
+ *
+ * Choose values generous enough that healthy executions don't trip them
+ * but tight enough that genuinely crashed ones get noticed within a
+ * reasonable window. These are conservative defaults; tune per directive
+ * if real-world telemetry shows otherwise.
+ */
+const DIRECTIVE_TIMEOUTS_MS = {
+  // Wait-by-design (overridden with the wait's actual duration)
+  wait: 60_000,
+  wait_variable: 60_000,
+  // HTTP-bound calls
+  web_request: 60_000,
+  web_request_v2: 60_000,
+  fire_tiledesk_event: 30_000,
+  make: 60_000,
+  hubspot: 30_000,
+  customerio: 30_000,
+  brevo: 30_000,
+  picallex_send_template: 30_000,
+  picallex_call_lead: 30_000,
+  picallex_sf_activity: 30_000,
+  picallex_sf_update_object: 30_000,
+  picallex_check_stop_policies: 15_000,
+  send_email: 30_000,
+  send_whatsapp: 30_000,
+  // LLM calls — longer, may include retries internally
+  ask_gpt: 120_000,
+  ask_gpt_v2: 120_000,
+  ai_prompt: 120_000,
+  ai_condition: 120_000,
+  gpt_task: 120_000,
+  gpt_response: 120_000,
+  gpt_assistant: 180_000,
+  // Outbound messages — near-instant but include SMTP/MQTT-ish slack
+  reply: 10_000,
+  reply_v2: 10_000,
+  message: 10_000,
+  hmessage: 10_000,
+  random_reply: 10_000,
+};
+const DEFAULT_DIRECTIVE_TIMEOUT_MS = 5_000;
+
+/**
+ * Directives with external side-effects. The checkpoint engine will:
+ *   - look up the idempotency_key in side_effects before executing
+ *   - skip the call if a prior run already recorded it
+ *   - append to the log on success
+ *
+ * Pure/internal directives (assign, condition, code, set_attribute, etc.)
+ * are safe to re-execute and are NOT in this set.
+ */
+const SIDE_EFFECT_DIRECTIVES = new Set([
+  'send_email', 'send_whatsapp',
+  'web_request', 'web_request_v2',
+  'fire_tiledesk_event',
+  'make', 'hubspot', 'customerio', 'brevo',
+  'picallex_send_template', 'picallex_call_lead',
+  'picallex_sf_activity', 'picallex_sf_update_object',
+  'ask_gpt', 'ask_gpt_v2', 'ai_prompt', 'gpt_task', 'gpt_response', 'gpt_assistant',
+  'reply', 'reply_v2', 'message', 'hmessage', 'random_reply'
+]);
+
+/**
+ * Detect if a request_id belongs to a fire-and-forget automation.
+ * Conversational bot flows do NOT use checkpointing — their reconciliation
+ * lives in PHP (Picallex/Services/WhatsApp/Crons/TreatConversationalBots).
+ */
+function isAutomationRequest(requestId) {
+  return typeof requestId === 'string' && requestId.startsWith('automation-request-');
+}
 
 class DirectivesChatbotPlug {
 
@@ -88,6 +165,20 @@ class DirectivesChatbotPlug {
     this.reply = config.reply;
     this.chatbot = config.chatbot;
     this.message = config.message;
+
+    // Checkpoint mode is active only for automation request_ids AND the
+    // global flag. Conversational bots intentionally never enter this path.
+    const requestId = this.supportRequest && this.supportRequest.request_id;
+    const projectId = this.supportRequest && this.supportRequest.id_project;
+    this.checkpointEnabled =
+      process.env.FLOW_CHECKPOINT_ENABLED === 'true' &&
+      isAutomationRequest(requestId);
+    this.executionId = this.checkpointEnabled
+      ? FlowExecutionStore.executionIdFromRequestId(requestId, projectId)
+      : null;
+    // Cached doc — refreshed by beginDirective() so the side-effect lookup
+    // sees the latest log without an extra read.
+    this._executionDoc = null;
   }
 
   exec(pipeline) {
@@ -176,8 +267,110 @@ class DirectivesChatbotPlug {
     this.curr_directive_index = -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
 
+    // In checkpoint mode, create or load the FlowExecution doc.
+    //
+    // CRITICAL: every processDirectives call is by definition a NEW CHAIN.
+    // Tiledesk's HTTP routes invoke processDirectives once per bot reply,
+    // and intent navigation triggers separate roundtrips that hit the
+    // route again with a different directives array. The supervisor uses
+    // resumeFromIndex (NOT processDirectives) to continue an in-progress
+    // chain. So:
+    //   - fresh execution_id: getOrCreate creates the doc and we start at 0.
+    //   - existing doc (any status): archive its current state into
+    //     previous_chains[] and reset the active fields for the new chain.
+    //     This guarantees the supervisor's view (status, current,
+    //     side_effects) always reflects the chain that is actually running.
+    let startFromIndex = 0;
+    if (this.checkpointEnabled && this.executionId) {
+      try {
+        let { doc, created } = await FlowExecutionStore.getOrCreate({
+          executionId: this.executionId,
+          requestId: supportRequest.request_id,
+          botId: supportRequest.bot_id || (this.chatbot && this.chatbot.botId),
+          projectId: projectId,
+          token: token,
+          trigger: {
+            block_id: this.message && this.message.attributes && this.message.attributes.payload
+              ? this.message.attributes.payload.block_id : null,
+            payload: this.message && this.message.attributes && this.message.attributes.payload
+          },
+          snapshot: {
+            message: this.message,
+            reply: this.reply,
+            supportRequest: supportRequest,
+            directives: directives,
+            parameters: {}
+          }
+        });
+
+        if (!created) {
+          doc = await FlowExecutionStore.archiveAndStartNewChain(this.executionId, {
+            newMessage: this.message,
+            newReply: this.reply,
+            newSupportRequest: supportRequest,
+            newDirectives: directives,
+            newParameters: (doc.snapshot && doc.snapshot.parameters) || {}
+          });
+          winston.info(`(DirectivesChatbotPlug) New chain on execution ${this.executionId} (archived chain #${(doc.previous_chains || []).length - 1})`);
+        } else {
+          winston.info(`(DirectivesChatbotPlug) Started execution ${this.executionId} (created=true)`);
+        }
+        this._executionDoc = doc;
+      } catch (err) {
+        winston.error("(DirectivesChatbotPlug) Failed to init FlowExecution; continuing without checkpoint:", err);
+        this.checkpointEnabled = false;
+        this._executionDoc = null;
+      }
+    }
+
+    this.curr_directive_index = startFromIndex - 1;
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
+    await this.process(next_dir);
+  }
+
+  /**
+   * Resume directive execution from a specific index. Used by the
+   * FlowExecutionSupervisor after a checkpoint deadline expires (e.g.
+   * the wait finished, or a crashed directive needs to be retried).
+   *
+   * Mirrors processDirectives() initialisation but starts at start_index
+   * instead of zero, and assumes the FlowExecution doc already exists.
+   */
+  async resumeFromIndex(startIndex, theend) {
+    this.theend = theend || (() => {});
+    const directives = this.directives;
+    if (!directives || directives.length === 0 || startIndex >= directives.length) {
+      winston.verbose("(DirectivesChatbotPlug) resumeFromIndex: nothing to process");
+      if (this.checkpointEnabled && this.executionId) {
+        await FlowExecutionStore.markCompleted(this.executionId);
+      }
+      return this.theend();
+    }
+    const supportRequest = this.supportRequest;
+    const projectId = supportRequest.id_project;
+    let depId;
+    if (supportRequest.department && supportRequest.department._id) {
+      depId = supportRequest.department._id;
+    }
+    this.context = {
+      projectId: projectId,
+      chatbot: this.chatbot,
+      message: this.message,
+      token: this.token,
+      supportRequest: supportRequest,
+      reply: this.reply,
+      requestId: supportRequest.request_id,
+      API_ENDPOINT: this.API_ENDPOINT,
+      TILEBOT_ENDPOINT: this.TILEBOT_ENDPOINT,
+      departmentId: depId,
+      tdcache: this.tdcache,
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
+      __resumed: true
+    };
+    this.curr_directive_index = startIndex - 1;
+    winston.verbose(`(DirectivesChatbotPlug) resumeFromIndex at ${startIndex}`);
+    const next_dir = await this.nextDirective(directives);
     await this.process(next_dir);
   }
 
@@ -222,6 +415,17 @@ class DirectivesChatbotPlug {
 
     if (!directive || !directive.name) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is null", directive);
+      // End-of-chain: the directives array was exhausted normally (no
+      // directive signalled stop=true). In checkpoint mode we must mark
+      // the chain as completed; otherwise the supervisor keeps claiming
+      // the stale expected_end_at and retrying forever.
+      if (this.checkpointEnabled && this.executionId) {
+        try {
+          await FlowExecutionStore.markCompleted(this.executionId);
+        } catch (err) {
+          winston.error("(DirectivesChatbotPlug) markCompleted at end-of-chain failed:", err);
+        }
+      }
       return this.theend();
     }
 
@@ -316,8 +520,108 @@ class DirectivesChatbotPlug {
 
     const handler = new HandlerClass(context);
 
-    // Esegue l'handler e chiama next se non stop
+    // -------------------------------------------------------------------
+    // Checkpoint mode (automations only)
+    // -------------------------------------------------------------------
+    // For each directive we:
+    //   1. Compute its expected deadline (timeout budget; for WAIT we read
+    //      the wait's own millis), and persist `current` to Mongo.
+    //   2. If it's a WAIT, we DO NOT execute the handler. We just persist
+    //      the deadline and return — the supervisor resumes the next
+    //      directive when the deadline passes. This avoids holding a
+    //      setTimeout in memory (which dies on deploy/crash).
+    //   3. If it's a side-effect directive, look up the idempotency_key in
+    //      side_effects. If found, skip the handler (the previous run
+    //      already executed it) and proceed to the next directive. If not
+    //      found, run the handler and append a marker on success.
+    //   4. Pure directives (assign, condition, ...) just run.
+    // -------------------------------------------------------------------
+    if (this.checkpointEnabled && this.executionId) {
+      const idx = this.curr_directive_index;
+      const isWait = (directive_name === 'wait' || directive_name === 'wait_variable');
+      const isSideEffect = SIDE_EFFECT_DIRECTIVES.has(directive_name);
+      const timeoutMs = isWait
+        ? await this._resolveWaitMillis(directive)
+        : (DIRECTIVE_TIMEOUTS_MS[directive_name] || DEFAULT_DIRECTIVE_TIMEOUT_MS);
 
+      // Snapshot the live parameters from Redis so they're durable in
+      // Mongo. This makes Redis a pure cache: on resume the supervisor
+      // rehydrates these into Redis, so the flow survives even a full
+      // Redis wipe (not just a chatbot restart).
+      let liveParams = undefined;
+      try {
+        liveParams = await this.chatbot.allParameters();
+      } catch (err) {
+        winston.error("(DirectivesChatbotPlug) reading params for snapshot failed:", err);
+      }
+
+      // Persist `current` (start time + deadline) + params snapshot. For
+      // WAIT, advance the index so the supervisor's resume targets the
+      // next directive.
+      const persistedIndex = isWait ? idx + 1 : idx;
+      try {
+        this._executionDoc = await FlowExecutionStore.beginDirective(this.executionId, {
+          directiveIndex: persistedIndex,
+          directiveName: directive_name,
+          expectedTimeoutMs: timeoutMs,
+          parameters: liveParams
+        });
+      } catch (err) {
+        winston.error("(DirectivesChatbotPlug) beginDirective failed (continuing best-effort):", err);
+      }
+
+      if (isWait) {
+        // Stop executing in-process. Supervisor will pick up at deadline.
+        winston.info(`(DirectivesChatbotPlug) [checkpoint] WAIT persisted ${timeoutMs}ms. Exiting chain.`);
+        return this.theend();
+      }
+
+      if (isSideEffect) {
+        const key = FlowExecutionStore.idempotencyKey(this.executionId, idx, directive);
+        const prior = FlowExecutionStore.findSideEffect(this._executionDoc, key);
+        if (prior) {
+          winston.info(`(DirectivesChatbotPlug) [checkpoint] side-effect ${directive_name} already done (key=${key}); skipping`);
+          const next_dir = await this.nextDirective(this.directives);
+          return this.process(next_dir);
+        }
+        // Execute and, on success, append marker.
+        const startedAt = Date.now();
+        return handler.execute(directive, async (stop) => {
+          try {
+            await FlowExecutionStore.appendSideEffect(this.executionId, {
+              idempotencyKey: key,
+              directiveName: directive_name,
+              directiveIndex: idx,
+              result: { stopped: !!stop },
+              durationMs: Date.now() - startedAt
+            });
+          } catch (err) {
+            winston.error("(DirectivesChatbotPlug) appendSideEffect failed:", err);
+          }
+          if (stop) {
+            await FlowExecutionStore.markCompleted(this.executionId);
+            return this.theend();
+          }
+          const next_dir = await this.nextDirective(this.directives);
+          return this.process(next_dir);
+        });
+      }
+
+      // Pure / internal directive — run normally; advance current on completion.
+      return handler.execute(directive, async (stop) => {
+        if (stop) {
+          await FlowExecutionStore.markCompleted(this.executionId);
+          return this.theend();
+        }
+        const next_dir = await this.nextDirective(this.directives);
+        return this.process(next_dir);
+      });
+    }
+
+    // -------------------------------------------------------------------
+    // Legacy path — conversational bots and any automation with checkpoint
+    // disabled go through here. Unchanged behaviour.
+    // -------------------------------------------------------------------
     handler.execute(directive, async (stop) => {
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
@@ -327,6 +631,47 @@ class DirectivesChatbotPlug {
       let process_next_dir = await this.process(next_dir);
       return process_next_dir;
     });
+  }
+
+  /**
+   * Resolve the wait duration for a WAIT/WAIT_VARIABLE directive without
+   * actually executing DirWait. Mirrors DirWait.resolveMillis. Used by the
+   * checkpoint path to compute the deadline.
+   */
+  async _resolveWaitMillis(directive) {
+    let action;
+    if (directive.action) {
+      action = directive.action;
+    } else if (directive.parameter) {
+      const _m = parseInt(String(directive.parameter).trim(), 10);
+      action = { millis: Number.isFinite(_m) ? _m : 500 };
+    } else {
+      action = { millis: 500 };
+    }
+    let millis = action.millis;
+    // Variable form: { value, isVariable: true }
+    if (millis && typeof millis === 'object') {
+      const v = millis.value;
+      if (millis.isVariable && this.chatbot && this.chatbot.getParameter) {
+        const name = String(v).trim().replace(/^\{\{\s*|\s*\}\}$/g, '');
+        millis = await this.chatbot.getParameter(name);
+      } else {
+        millis = v;
+      }
+    }
+    // String — could be a number-string or a {{var}} reference
+    if (typeof millis === 'string') {
+      const n = Number(millis);
+      if (Number.isFinite(n)) {
+        millis = n;
+      } else if (this.chatbot && this.chatbot.getParameter) {
+        const name = millis.trim().replace(/^\{\{\s*|\s*\}\}$/g, '');
+        millis = await this.chatbot.getParameter(name);
+      }
+    }
+    const parsed = Number(millis);
+    if (!Number.isFinite(parsed) || parsed < 100) return 1000;
+    return parsed;
   }
 
   // DEPRECATED
