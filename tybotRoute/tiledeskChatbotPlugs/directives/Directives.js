@@ -67,6 +67,7 @@ class Directives {
   /**** PICALLEX ****/
   static PICALLEX_SEND_TEMPLATE = "picallex_send_template";
   static PICALLEX_CALL_LEAD = "picallex_call_lead";
+  static PICALLEX_CHECK_STOP_POLICIES = "picallex_check_stop_policies";
   static PICALLEX_SF_ACTIVITY = "picallex_sf_activity";
   static PICALLEX_SF_UPDATE_OBJECT = "picallex_sf_update_object";
 

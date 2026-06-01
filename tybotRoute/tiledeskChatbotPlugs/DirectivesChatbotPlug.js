@@ -61,6 +61,7 @@ const { DirAiCondition } = require('./directives/DirAiCondition');
 const { DirGptResponse } = require('./directives/DirGptResponse');
 const { DirPicallexSendTemplate } = require('./directives/DirPicallexSendTemplate');
 const { DirPicallexCallLead } = require('./directives/DirPicallexCallLead');
+const { DirPicallexCheckStopPolicies } = require('./directives/DirPicallexCheckStopPolicies');
 const { DirPicallexSfActivity } = require('./directives/DirPicallexSfActivity');
 const { DirPicallexSfUpdateObject } = require('./directives/DirPicallexSfUpdateObject');
 
@@ -506,6 +507,7 @@ class DirectivesChatbotPlug {
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.PICALLEX_SEND_TEMPLATE]: DirPicallexSendTemplate,
       [Directives.PICALLEX_CALL_LEAD]: DirPicallexCallLead,
+      [Directives.PICALLEX_CHECK_STOP_POLICIES]: DirPicallexCheckStopPolicies,
       [Directives.PICALLEX_SF_ACTIVITY]: DirPicallexSfActivity,
       [Directives.PICALLEX_SF_UPDATE_OBJECT]: DirPicallexSfUpdateObject,
     };
