@@ -89,25 +89,16 @@ async function resumeFlowExecution(doc) {
   if (!bot) {
     throw new Error(`Bot ${bot_id} not found for execution ${doc.execution_id}`);
   }
-  // Refuse to resume against a trashed bot. Such bots are typically
-  // missing one or more intents in the saved directives chain, so
-  // resumeFromIndex enters a directive whose target intent no longer
-  // exists. The engine then sits forever waiting for a callback that
-  // never fires (the HTTP roundtrip back to /ext/:botid yields no
-  // executable directives), which manifests as a permanent supervisor
-  // hang on this single doc and blocks every other automation behind it
-  // in the resume queue. Mark the execution as failed so an operator can
-  // decide whether to clean up the doc or restore the bot.
-  if (bot.trashed === true) {
-    const { FlowExecutionStore } = require('./services/FlowExecutionStore');
-    await FlowExecutionStore.markFailed(
-      doc.execution_id,
-      new Error(`bot ${bot_id} is trashed; refusing to resume`),
-      { needsReview: true }
-    );
-    winston.warn(`(resumeFlowExecution) bot ${bot_id} is trashed; marked ${doc.execution_id} as needs_review`);
-    return;
-  }
+  // NOTE: an earlier version of this code refused to resume when
+  // `bot.trashed === true`, on the theory that trashed bots were the
+  // source of poison-pill resumes that hung the supervisor. That theory
+  // was wrong: Tiledesk marks bot snapshots (versioned publishes) with
+  // trashed=true while the root bot (`root_id`) is still active. The
+  // execution snapshot stores the snapshot bot_id, so every legitimate
+  // resume hit the trashed check and got routed to needs_review. The
+  // 30s `resumeFn` timeout in FlowExecutionSupervisor plus the
+  // maxAttempts retry cap already handle real poison pills without
+  // requiring this signal.
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     botId: bot_id,
