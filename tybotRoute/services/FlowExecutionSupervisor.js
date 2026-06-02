@@ -29,7 +29,7 @@ const winston = require('../utils/winston');
  * circular imports with the engine.)
  */
 class FlowExecutionSupervisor {
-  constructor({ resumeFn, intervalMs, leaseTtlMs, batchSize, maxAttempts, redisClient, cleanupEnabled, cleanupDelayMs, cleanupBatchSize }) {
+  constructor({ resumeFn, intervalMs, leaseTtlMs, batchSize, maxAttempts, resumeTimeoutMs, redisClient, cleanupEnabled, cleanupDelayMs, cleanupBatchSize }) {
     if (typeof resumeFn !== 'function') {
       throw new Error('FlowExecutionSupervisor: resumeFn(doc) is required');
     }
@@ -38,6 +38,21 @@ class FlowExecutionSupervisor {
     this.leaseTtlMs = leaseTtlMs || 60_000;
     this.batchSize = batchSize || 10;
     this.maxAttempts = maxAttempts || 5;
+    // Hard upper bound for a single resume. If exceeded we abandon the
+    // attempt, release the lease, and let recoverStuckLeases route the
+    // doc to needs_review on the next tick.
+    //
+    // Why this exists: a buggy/trashed/deleted bot can cause resumeFn to
+    // hang forever (e.g. DirIntent firing an HTTP call that never returns
+    // because the target intent is missing, or a callback never invoked).
+    // One such "poison pill" was enough to freeze the entire supervisor —
+    // _tick sets this.running=true, the awaited resume never resolves,
+    // every subsequent tick returns early at the running-guard, and the
+    // backlog grows unbounded.
+    //
+    // Default 30s comfortably exceeds normal resume latency (a few ms to
+    // a few hundred ms) but stops poison pills from cascading.
+    this.resumeTimeoutMs = resumeTimeoutMs || 30_000;
     this.workerId = `${os.hostname()}:${process.pid}:${uuidv4().substring(0, 8)}`;
     this.timer = null;
     this.running = false;
@@ -153,7 +168,29 @@ class FlowExecutionSupervisor {
         await FlowExecutionStore.markFailed(exec_id, new Error('max attempts exceeded'));
         return;
       }
-      await this.resumeFn(doc);
+      // Promise.race against a hard timeout so a hung resume can't lock
+      // the supervisor. The losing promise (whichever it is) doesn't get
+      // cancelled — Node has no cancellation primitive — but the await
+      // returns and the next iteration of the resume loop proceeds. The
+      // orphaned promise eventually settles in the background; its
+      // failure handler is a no-op because we already released the lease.
+      const TIMEOUT = Symbol('resume-timeout');
+      let timer;
+      const timeoutPromise = new Promise(resolve => {
+        timer = setTimeout(() => resolve(TIMEOUT), this.resumeTimeoutMs);
+      });
+      // Swallow late settlements from a timed-out resumeFn so they don't
+      // surface as unhandledRejection long after we've moved on.
+      const wrappedResume = Promise.resolve()
+        .then(() => this.resumeFn(doc))
+        .catch(err => { winston.warn(`(FlowExecutionSupervisor) late resume rejection for ${exec_id}:`, err && err.message); });
+      const result = await Promise.race([wrappedResume, timeoutPromise]);
+      clearTimeout(timer);
+      if (result === TIMEOUT) {
+        // Throw into the catch block below so we get the standard
+        // "release lease + record last_error + back off" treatment.
+        throw new Error(`resumeFn exceeded ${this.resumeTimeoutMs}ms timeout`);
+      }
       // The engine itself advances `current` and marks completed when the
       // last directive runs. So we don't unconditionally markCompleted
       // here. We just release the lease as a safety net in case the
