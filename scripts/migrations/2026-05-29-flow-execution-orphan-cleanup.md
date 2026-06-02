@@ -54,53 +54,30 @@ print("orphans remaining:", JSON.stringify(after));
 
 ---
 
-## Additional cleanup: poison-pill executions from trashed bots
+## ~~Additional cleanup: poison-pill executions from trashed bots~~ (DO NOT RUN)
 
-If you see the supervisor hang on a specific `execution_id` (logs show `resuming execution=<id>` followed by silence and no further claims), the cause is usually a trashed bot. The bot's directives reference intents that no longer exist; the engine sits waiting for a callback that never fires.
+An earlier version of this doc suggested flagging executions whose `bot_id` had `trashed: true` as `needs_review`. **Do not run that script.** Tiledesk marks bot snapshots (versioned publishes) with `trashed: true` while the `root_id` bot is still live; the execution snapshot's `bot_id` points at the snapshot, so a "trashed bot" filter matches every legitimate automation, not just dead ones. The corresponding code-level check was reverted for the same reason. Real poison-pill hangs are caught by `FLOW_SUPERVISOR_RESUME_TIMEOUT_MS` (30s default) plus the existing `maxAttempts` retry cap.
 
-Code-level fix in this PR (`resumeFlowExecution` now refuses to resume against `bot.trashed === true` and routes the doc to `needs_review`, plus the supervisor enforces a 30s hard timeout on every resume), but pre-existing stuck docs need a one-time cleanup:
+If you already ran the script and have legitimate executions stuck in `needs_review`, recover them with:
 
 ```bash
-# Find candidates — executions whose bot is trashed
 docker exec mongo mongosh tiledesk --quiet --eval '
-  const trashedBots = db.faq_kbs.find(
-    { trashed: true },
-    { _id: 1 }
-  ).map(b => String(b._id));
-  print("trashed bot count:", trashedBots.length);
-  const stuck = db.flow_executions.countDocuments({
-    bot_id: { $in: trashedBots },
-    status: { $in: ["running", "waiting"] }
-  });
-  print("stuck executions on trashed bots:", stuck);
-'
-
-# Mark them as needs_review so an operator can decide
-docker exec mongo mongosh tiledesk --quiet --eval '
-  const trashedBots = db.faq_kbs.find(
-    { trashed: true },
-    { _id: 1 }
-  ).map(b => String(b._id));
   const r = db.flow_executions.updateMany(
     {
-      bot_id: { $in: trashedBots },
-      status: { $in: ["running", "waiting"] }
+      status: "needs_review",
+      last_error: /trashed/i
     },
     {
       $set: {
-        status: "needs_review",
-        last_error: "trashed-bot poison-pill cleanup",
-        "lease.worker_id": null,
-        "lease.until": null,
+        status: "waiting",
+        last_error: "recovered from false-positive trashed-bot flag",
         updated_at: new Date()
       }
     }
   );
-  print("flagged:", r.modifiedCount);
+  print("recovered:", r.modifiedCount);
 '
 ```
-
-Run this once, after the first migration above but before deploying. After the code change lands, new executions for trashed bots will be auto-flagged on the first resume attempt — this script catches the ones already queued.
 
 ---
 
