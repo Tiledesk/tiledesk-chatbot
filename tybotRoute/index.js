@@ -89,6 +89,25 @@ async function resumeFlowExecution(doc) {
   if (!bot) {
     throw new Error(`Bot ${bot_id} not found for execution ${doc.execution_id}`);
   }
+  // Refuse to resume against a trashed bot. Such bots are typically
+  // missing one or more intents in the saved directives chain, so
+  // resumeFromIndex enters a directive whose target intent no longer
+  // exists. The engine then sits forever waiting for a callback that
+  // never fires (the HTTP roundtrip back to /ext/:botid yields no
+  // executable directives), which manifests as a permanent supervisor
+  // hang on this single doc and blocks every other automation behind it
+  // in the resume queue. Mark the execution as failed so an operator can
+  // decide whether to clean up the doc or restore the bot.
+  if (bot.trashed === true) {
+    const { FlowExecutionStore } = require('./services/FlowExecutionStore');
+    await FlowExecutionStore.markFailed(
+      doc.execution_id,
+      new Error(`bot ${bot_id} is trashed; refusing to resume`),
+      { needsReview: true }
+    );
+    winston.warn(`(resumeFlowExecution) bot ${bot_id} is trashed; marked ${doc.execution_id} as needs_review`);
+    return;
+  }
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     botId: bot_id,
@@ -795,10 +814,25 @@ function startFlowSupervisor() {
     winston.info("(Tilebot) FlowExecutionSupervisor disabled (FLOW_SUPERVISOR_ENABLED!=true)");
     return;
   }
+  // Idempotent guard: this function is invoked from the mongoose.connect
+  // callback, which can fire more than once during boot if Mongo
+  // reconnects (e.g. a transient network blip between the chatbot
+  // container and the mongo container). Each invocation would otherwise
+  // construct a fresh FlowExecutionSupervisor with its own setInterval —
+  // observed in prod as 2-3 supervisor instances per process, all
+  // polling Mongo and competing for claims. The atomic `claimDue` made
+  // them correct, just wasteful. Worse, when one of them hung on a
+  // poison-pill resume, debugging was confusing because logs from the
+  // other instances kept showing healthy cleanup-pass activity.
+  if (flowSupervisor) {
+    winston.warn("(Tilebot) FlowExecutionSupervisor already started; skipping duplicate init (worker=" + flowSupervisor.workerId + ")");
+    return;
+  }
   const intervalMs = parseInt(process.env.FLOW_SUPERVISOR_INTERVAL_MS, 10) || 10_000;
   const leaseTtlMs = parseInt(process.env.FLOW_SUPERVISOR_LEASE_MS, 10) || 60_000;
   const batchSize = parseInt(process.env.FLOW_SUPERVISOR_BATCH_SIZE, 10) || 10;
   const maxAttempts = parseInt(process.env.FLOW_SUPERVISOR_MAX_ATTEMPTS, 10) || 5;
+  const resumeTimeoutMs = parseInt(process.env.FLOW_SUPERVISOR_RESUME_TIMEOUT_MS, 10) || 30_000;
 
   // Redis cleanup: the supervisor reclaims per-request_id keys for
   // automations after they complete. Default enabled; opt out by setting
@@ -814,7 +848,7 @@ function startFlowSupervisor() {
 
   flowSupervisor = new FlowExecutionSupervisor({
     resumeFn: resumeFlowExecution,
-    intervalMs, leaseTtlMs, batchSize, maxAttempts,
+    intervalMs, leaseTtlMs, batchSize, maxAttempts, resumeTimeoutMs,
     redisClient,
     cleanupEnabled,
     cleanupDelayMs,

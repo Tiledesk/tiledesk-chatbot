@@ -91,7 +91,7 @@ class FlowExecutionStore {
    *   - DirAskGPT / DirAssistant: model timeout + headroom (e.g. 120s)
    *   - everything else: small constant (e.g. 5_000)
    */
-  static async beginDirective(executionId, { directiveIndex, directiveName, expectedTimeoutMs, parameters }) {
+  static async beginDirective(executionId, { directiveIndex, directiveName, expectedTimeoutMs, parameters, status }) {
     const now = new Date();
     const set = {
       'current.directive_index': directiveIndex,
@@ -100,6 +100,13 @@ class FlowExecutionStore {
       'current.expected_end_at': new Date(now.getTime() + (expectedTimeoutMs || 5000)),
       updated_at: now
     };
+    // Optional explicit status transition. Used by the WAIT path to flip
+    // 'running' -> 'waiting' atomically with persisting the deadline, so
+    // the supervisor's claimDue (which filters status='waiting') can only
+    // resume docs that are TRULY paused on a wait — not crashed mid-flow.
+    if (status) {
+      set.status = status;
+    }
     // Snapshot the live parameters into Mongo so they survive even a full
     // Redis wipe. Mongo is the durable source of truth; Redis is cache.
     // On resume the supervisor rehydrates these back into Redis before
@@ -165,15 +172,30 @@ class FlowExecutionStore {
   /**
    * Atomically claim an execution for resumption. Used by the supervisor.
    *
-   * Returns the claimed doc, or null if nothing is due / all due are
-   * already leased.
+   * Selector deliberately narrow: only `status='waiting'` docs (paused on a
+   * DirWait with a future deadline now reached) are claimed. Mid-flow
+   * 'running' docs whose lease expired are NOT claimed here — they get
+   * routed to 'needs_review' by recoverStuckLeases. Reasoning:
+   *
+   *   - A 'waiting' doc is at a well-defined post-WAIT directive index;
+   *     resumeFromIndex(idx) re-enters at a safe boundary.
+   *   - A 'running' doc with expired lease crashed mid-side-effect. We
+   *     don't know if the side-effect committed. Auto-resuming re-runs
+   *     all directives from `current.directive_index`, which (combined
+   *     with side_effects[] being chain-scoped and reset by intent nav)
+   *     can re-fire HTTP/WhatsApp/SF side-effects. Surfacing as
+   *     'needs_review' lets an operator decide.
+   *
+   * On claim we flip 'waiting' -> 'running' atomically so the engine sees
+   * the correct state during resume and won't be double-claimed by a
+   * concurrent supervisor on another replica.
    */
   static async claimDue(workerId, leaseTtlMs) {
     const now = new Date();
     const leaseUntil = new Date(now.getTime() + leaseTtlMs);
     return await FlowExecution.findOneAndUpdate(
       {
-        status: 'running',
+        status: 'waiting',
         'current.expected_end_at': { $lte: now },
         $or: [
           { 'lease.until': null },
@@ -182,6 +204,7 @@ class FlowExecutionStore {
       },
       {
         $set: {
+          status: 'running',
           'lease.worker_id': workerId,
           'lease.until': leaseUntil,
           updated_at: now
@@ -241,17 +264,38 @@ class FlowExecutionStore {
 
   /**
    * Recover executions whose lease expired while in supervisor hands
-   * (worker crashed mid-resume). Just clear the lease so the next poll
-   * picks them up again.
+   * (worker crashed mid-resume, or chatbot SIGKILLed mid-process).
+   *
+   * Policy: do NOT auto-retry these. The doc was 'running' (engine was
+   * actively driving directives), so we can't know if a side-effect
+   * committed before the crash. Re-claiming would re-run from
+   * current.directive_index and potentially re-fire HTTP/WhatsApp/SF
+   * calls. Instead we mark them 'needs_review' so an operator can
+   * inspect and decide. The lease is cleared in the same update so the
+   * doc is no longer "held".
+   *
+   * Note: this is a behaviour change from the original spec, which
+   * cleared the lease and let claimDue pick the doc back up. The change
+   * trades automatic crash-recovery (which was double-firing in
+   * practice — see the 'waiting' status rationale above) for an
+   * operator-in-the-loop signal on mid-flow crashes.
    */
   static async recoverStuckLeases() {
     const now = new Date();
     const r = await FlowExecution.updateMany(
       { 'lease.until': { $lt: now }, status: 'running' },
-      { $set: { 'lease.worker_id': null, 'lease.until': null } }
+      {
+        $set: {
+          status: 'needs_review',
+          last_error: 'lease expired while running; routed to needs_review to prevent duplicate side-effects',
+          'lease.worker_id': null,
+          'lease.until': null,
+          updated_at: now
+        }
+      }
     );
     if (r.modifiedCount > 0) {
-      winston.warn(`(FlowExecutionStore) recovered ${r.modifiedCount} stuck leases`);
+      winston.warn(`(FlowExecutionStore) routed ${r.modifiedCount} stuck-lease executions to needs_review`);
     }
     return r.modifiedCount || 0;
   }
