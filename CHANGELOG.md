@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.0
+- Added support to analytics
+
 # 2.0.47
 - Updated addUnansweredQuestion method in KbService to accept a data object instead of separate parameters.
 - Introduced addAnsweredQuestion method in KbService for handling answered questions.

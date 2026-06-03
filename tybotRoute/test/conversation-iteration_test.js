@@ -71,13 +71,10 @@ describe('Conversation for Iteration test', async () => {
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
-      console.log("message: ", message);
       assert(message.attributes.commands !== null);
       assert(message.attributes.commands.length === 2);
       const command2 = message.attributes.commands[1];
       assert(command2.type === "message");
-      console.log("command2: ", JSON.stringify(command2))
-      console.log("message text: ",command2.message.text)
       assert(command2.message.text === "[object Object]");
 
 
@@ -89,8 +86,6 @@ describe('Conversation for Iteration test', async () => {
           assert(attributes);
           assert.equal(typeof attributes["output"], 'object');
           let json = attributes["output"];
-          console.log("json id: ", json.id);
-          console.log("json name: ", json.name);
           assert(json.id === 0 || json.id === 1)
           assert(json.name === 'John' || json.name === 'Mark')
 
@@ -114,7 +109,6 @@ describe('Conversation for Iteration test', async () => {
       ];
       let innerJson = JSON.stringify(iterable);
       const text = `/iteration{'iterable_varname':${innerJson}}`;
-      console.log("text: ", text);
 
       let request = {
         "payload": {

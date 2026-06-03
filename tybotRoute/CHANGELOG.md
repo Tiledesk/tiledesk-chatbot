@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 2.1.0
+- added: support to analytics
+
 # 2.0.36
 - changed: minimist-string package (ssh problem) in favour of minimist and string-argv packages
 

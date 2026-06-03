@@ -182,7 +182,7 @@ class DirectivesChatbotPlug {
 
     if (go_on.error) {
       AnalyticsClient.track('agent.flow_error', this.context.projectId, {
-        agent_id:      this.chatbot?.botId || '',
+        agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
         error_type:    go_on.error_code || 'runtime_error',
         error_message: go_on.error || null,
         step_count:    go_on.step_count || 0,

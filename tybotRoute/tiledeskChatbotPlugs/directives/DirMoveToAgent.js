@@ -43,7 +43,7 @@ class DirMoveToAgent {
           reason:               'bot_directive',
           department_id:        this.context.departmentId || null,
           waiting_time_seconds: null,
-          agent_id:             this.context.chatbot?.botId || null,
+          agent_id:             this.context.chatbot?.bot.root_id || this.context.chatbot?.botId,
           trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
         });
       }

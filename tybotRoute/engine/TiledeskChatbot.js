@@ -200,7 +200,7 @@ class TiledeskChatbot {
         let reply;
         const faq = faqs[0];
         try {
-            reply = await this.execIntent(faq, message, lead, { match_type: 'nlp' });//, bot);
+            reply = await this.execIntent(faq, message, lead, { match_type: 'exact' });//, bot);
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occured during exact match execIntent(): ", error);
@@ -231,7 +231,7 @@ class TiledeskChatbot {
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
           try {
-          reply = await this.execIntent(faq, message, lead, { match_type: 'exact' });//, bot);
+          reply = await this.execIntent(faq, message, lead, { match_type: 'nlp' });//, bot);
           }
           catch(error) {
             winston.error("(TiledeskChatbot) An error occurred during NLP decoding: ", error);
@@ -329,7 +329,8 @@ class TiledeskChatbot {
     winston.debug("(TiledeskChatbot) execIntent requestId: " + this.requestId)
     winston.debug("(TiledeskChatbot) execIntent token: " + this.token)
     winston.debug("(TiledeskChatbot) execIntent projectId: " + this.projectId)
-    
+    this._intentStartTime = Date.now();
+
     if (this.tdcache) {
       const requestKey = "tilebot:" + this.requestId
       await this.tdcache.setJSON(requestKey, this.request);
@@ -398,11 +399,10 @@ class TiledeskChatbot {
       : 0;
 
     // Store intent tracking data for downstream completion/block analytics
-    this._intentStartTime = Date.now();
     this._lastIntentId = answerObj.intent_id || answerObj._id?.toString() || '';
 
     AnalyticsClient.track('agent.intent_matched', this.projectId, {
-      agent_id:    this.botId,
+      agent_id:    this.bot.root_id || this.botId,
       intent_id:   answerObj.intent_id || answerObj._id?.toString() || '',
       intent_name: intent_name,
       match_type:  matchContext.match_type || 'explicit',

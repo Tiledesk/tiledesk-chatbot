@@ -595,7 +595,6 @@ If more than one condition is true, answer with the first label corresponding to
         ];
         let instructions = "User question: {{last_user_text}}"
         let raw_condition_prompt = TiledeskChatbotUtil.AiConditionPromptBuilder(prompt_header, intents, instructions);
-        console.log("raw_condition_prompt: ", raw_condition_prompt);
         assert(raw_condition_prompt !== null);
         assert(raw_condition_prompt.includes(prompt_header));
         assert(raw_condition_prompt.includes("- label: " + intents[0].label) + " When: " + intents[0].prompt);
