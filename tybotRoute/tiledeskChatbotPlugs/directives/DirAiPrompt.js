@@ -243,13 +243,13 @@ class DirAiPrompt {
 
       let flowVariables = {
         'x-chatbotToken': requestVariables.chatbotToken,
-        'x-project_id': requestVariables.project_id,
-        'x-conversation_id': requestVariables.conversation_id,
-        'x-department_id': requestVariables.department_id,
-        'x-chatbot_name': requestVariables.chatbot_name,
-        'x-chatbot_id': this.chatbot.botId,
-        'x-user_id': requestVariables.user_id || requestVariables.userLeadId,
-        'x-last_user_text': requestVariables.lastUserText,
+        'x-project-id': requestVariables.project_id,
+        'x-conversation-id': requestVariables.conversation_id,
+        'x-department-id': requestVariables.department_id,
+        'x-chatbot-name': requestVariables.chatbot_name,
+        'x-chatbot-id': this.chatbot.botId,
+        'x-user-id': requestVariables.user_id || requestVariables.userLeadId,
+        'x-last-user-text': requestVariables.lastUserText,
       };
       json.servers = this.arrayToObject(action.servers, flowVariables);
       if (!json.servers) {
