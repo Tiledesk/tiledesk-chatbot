@@ -94,17 +94,27 @@ class DirGptResponse {
     }
 
     // When there is no Previous Response ID, fall back to the Conversations methodology:
-    // the thread is kept server-side via a conversation id stored in the well-known
-    // `conversationId` attribute, so it is reused automatically across turns.
+    // the thread is kept server-side via a conversation id stored in a well-known
+    // attribute, so it is reused automatically across turns.
+    //
+    // The attribute name is namespaced per unique prompt id (pmpt_xxxx) so that
+    // different OpenAI Response blocks in the same flow each keep their own
+    // conversation thread instead of all sharing a single one. When the response id
+    // is not a prompt id (a model name or empty), fall back to the shared
+    // `conversationId` attribute.
     const useConversation = !previous_response_id;
+    const conversationAttributeName = (filled_response_id && filled_response_id.startsWith('pmpt_'))
+      ? "conversationId_" + filled_response_id
+      : "conversationId";
     let conversation_id = useConversation
-      ? this.#resolveActionValue("conversationId", requestVariables, filler)
+      ? this.#resolveActionValue(conversationAttributeName, requestVariables, filler)
       : null;
 
     winston.debug("(DirGptResponse) filled_prompt: " + filled_prompt);
     winston.debug("(DirGptResponse) filled_response_id: " + filled_response_id);
     winston.debug("(DirGptResponse) previous_response_id: " + previous_response_id);
     winston.debug("(DirGptResponse) useConversation: " + useConversation);
+    winston.debug("(DirGptResponse) conversationAttributeName: " + conversationAttributeName);
     winston.debug("(DirGptResponse) conversation_id: " + conversation_id);
 
     const openai_base = process.env.OPENAI_ENDPOINT;
@@ -236,12 +246,12 @@ class DirGptResponse {
             await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "responseId", resbody.id);
           }
 
-          // Store the conversation ID under the well-known `conversationId` attribute so the
-          // next turn reuses the same thread automatically (mirrors how `responseId` is stored).
+          // Store the conversation ID under the (per-prompt namespaced) conversation attribute so
+          // the next turn reuses the same thread automatically (mirrors how `responseId` is stored).
           if (useConversation && this.context.tdcache) {
             const newConversationId = this.#extractConversationId(resbody, conversation_id);
             if (newConversationId) {
-              await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "conversationId", newConversationId);
+              await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, conversationAttributeName, newConversationId);
             }
           }
 
