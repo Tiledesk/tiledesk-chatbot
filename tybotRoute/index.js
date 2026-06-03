@@ -233,11 +233,6 @@ router.post('/ext/:botid', async (req, res) => {
 });
 
 router.post('/exec/:botid', async (req, res) => {
-  // NOTE (analytics): This route executes a named block directly via findBlock() and has no
-  // intent context. agent.intent_matched / agent.intent_completed are intentionally NOT emitted
-  // here. Only agent.block_executed (and related events) may be emitted by DirectivesChatbotPlug
-  // for individual directives inside the block.
-
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /exec/:botid called: " + botId);
   if(!botId || botId === "null" || botId === "undefined"){
@@ -334,6 +329,7 @@ router.post('/exec/:botid', async (req, res) => {
   }
 
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    let directivesSuccess = true;
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
@@ -357,7 +353,20 @@ router.post('/exec/:botid', async (req, res) => {
       });
     }
     catch (error) {
+      directivesSuccess = false;
       winston.error("(tybotRoute) Error while processing actions:", error);
+    }
+
+    if (chatbot._intentStartTime) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id || botId,
+        intent_id:   reply?.intent_id || reply._id?.toString() || '',
+        intent_name: reply?.intent_display_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     directivesSuccess,
+        request_id:  requestId || null
+      });
     }
   }
   else { // text answer (parse text directives to get actions)
@@ -370,13 +379,25 @@ router.post('/exec/:botid', async (req, res) => {
     reply.attributes.splits = true;
     reply.attributes.markbot = true;
     reply.attributes.fillParams = true;
-    
+
     const apiext = new ExtApi({
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
+
+    if (chatbot._intentStartTime) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id,
+        intent_id:   chatbot._lastIntentId || '',
+        intent_name: reply.intent_display_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     true,
+        request_id:  requestId || null
+      });
+    }
   }
 
 })
