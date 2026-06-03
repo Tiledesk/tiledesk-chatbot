@@ -191,8 +191,8 @@ router.post('/ext/:botid', async (req, res) => {
       const intentDuration = Date.now() - chatbot._intentStartTime;
       AnalyticsClient.track('agent.intent_completed', projectId, {
         agent_id:    bot.root_id || botId,
-        intent_id:   chatbot._lastIntentId || '',
-        intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
+        intent_id:   reply?.intent_id || reply._id?.toString() || '',
+        intent_name: reply?.intent_display_name || 'unknown',
         duration_ms: intentDuration,
         success:     directivesSuccess,
         request_id:  requestId || null
@@ -222,7 +222,7 @@ router.post('/ext/:botid', async (req, res) => {
       AnalyticsClient.track('agent.intent_completed', projectId, {
         agent_id:    bot.root_id,
         intent_id:   chatbot._lastIntentId || '',
-        intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
+        intent_name: reply.intent_display_name || 'unknown',
         duration_ms: intentDuration,
         success:     true,
         request_id:  requestId || null
