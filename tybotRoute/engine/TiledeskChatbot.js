@@ -506,6 +506,8 @@ class TiledeskChatbot {
     console.log("TYPE:", await this.tdcache.client.type("tilebot:requests:"  + requestId + ":mcp:locked"));
     console.log("GET:", await this.tdcache.client.get("tilebot:requests:"  + requestId + ":mcp:locked"));
 
+    console.log("CHAT DB:", await this.tdcache.client.sendCommand(["INFO", "keyspace"]));
+    
     if (this.tdcache) {
       console.log('(TiledeskChatbot) currentLockedMpc ---> key:', "tilebot:requests:"  + requestId + ":mcp:locked");
       return await this.tdcache.get("tilebot:requests:"  + requestId + ":mcp:locked");
