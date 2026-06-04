@@ -85,7 +85,6 @@ class TiledeskChatbot {
 
       //Checking locked mpc 
       const locked_mpc = await this.currentLockedMpc(this.requestId);
-      console.log('(TiledeskChatbot) locked_mpc', locked_mpc, this.requestId);
       winston.verbose("(TiledeskChatbot) Got locked mpc: -" + locked_mpc + "-");
       if (locked_mpc) {
         winston.verbose("(TiledeskChatbot) Locked mpc. Unlocking mpc and return");
@@ -499,10 +498,6 @@ class TiledeskChatbot {
   }
 
   async currentLockedMpc(requestId) {
-    console.log('(TiledeskChatbot) currentLockedMpc ---> key:', "tilebot:requests:"  + requestId + ":mcp:locked");
-    console.log("EXISTS:", await this.tdcache.client.exists("tilebot:requests:"  + requestId + ":mcp:locked"));
-    console.log("TYPE:", await this.tdcache.client.type("tilebot:requests:"  + requestId + ":mcp:locked"));
-    console.log("GET:", await this.tdcache.client.get("tilebot:requests:"  + requestId + ":mcp:locked"));
     if (this.tdcache) {
       return await this.tdcache.get("tilebot:requests:"  + requestId + ":mcp:locked");
     }
