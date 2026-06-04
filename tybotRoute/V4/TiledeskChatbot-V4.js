@@ -32,6 +32,10 @@ const MAX_STEPS = 50; // guard anti-loop sul walk del grafo
 async function reply(ctx) {
   const { botId, projectId, requestId, token, message, tdcache, tilebotEndpoint, bot } = ctx;
   const text = ((message && message.text) || '').trim();
+  // Bottone "action": il widget invia il nodo target esplicito in attributes.action
+  // (es. "#c84bbfc3"). Lo usiamo per instradare in modo affidabile, indipendente
+  // dallo stato salvato (awaitingButtons).
+  const action = (message && message.attributes && message.attributes.action) || null;
 
   const ds = new NodesDataSourceV4(botId);
   const nodes = await ds.getNodes();
@@ -39,6 +43,12 @@ async function reply(ctx) {
     winston.warn(`(TiledeskChatbotV4) nessun nodo per bot ${botId}: niente da eseguire.`);
     return;
   }
+
+  // Turn token: marca questo turno. Un nuovo turno concorrente (es. click su un
+  // bottone durante l'attesa tra i messaggi di un reply) sovrascrive il token →
+  // il loop di invio annulla i messaggi rimanenti (vedi MessageSenderV4.sendV4Messages).
+  const turnToken = Date.now() + '-' + Math.random().toString(36).slice(2);
+  await state.setTurn(tdcache, requestId, turnToken);
 
   // Variabili per il fill `{{...}}` del testo: attributi della request salvati in
   // Redis (variabili utente) + le chiavi standard chatbot_id / chatbot_name /
@@ -62,9 +72,11 @@ async function reply(ctx) {
     tilebotEndpoint,
     botName: (bot && bot.name) || 'bot',
     params,
+    tdcache,
+    turnToken,
   });
 
-  const entryNode = await resolveEntryNode({ text, nodes, tdcache, requestId });
+  const entryNode = await resolveEntryNode({ text, action, nodes, tdcache, requestId });
   if (!entryNode) {
     winston.warn(`(TiledeskChatbotV4) nessun nodo di ingresso risolto (text="${text}").`);
     return;
@@ -79,11 +91,23 @@ async function reply(ctx) {
  * - testo = un bottone in attesa → nodo target del bottone;
  * - altrimenti          → `defaultFallback` (input non riconosciuto).
  */
-async function resolveEntryNode({ text, nodes, tdcache, requestId }) {
+async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
   if (START_COMMANDS.includes(text)) {
     await state.clearState(tdcache, requestId);
     winston.verbose('(TiledeskChatbotV4) entry: START → nodo start');
     return NodesDataSourceV4.startNode(nodes);
+  }
+
+  // Bottone "action": il target è esplicito in attributes.action ("#<nodeId>").
+  // Instrada diretto, indipendente dallo stato salvato (più robusto).
+  if (action) {
+    const nodeId = String(action).replace(/^#/, '');
+    const target = NodesDataSourceV4.byId(nodes, nodeId);
+    if (target) {
+      winston.verbose('(TiledeskChatbotV4) entry: action button → nodo ' + nodeId);
+      return target;
+    }
+    winston.verbose('(TiledeskChatbotV4) action "' + action + '" non risolve a un nodo, provo awaitingButtons/fallback');
   }
 
   const saved = await state.getState(tdcache, requestId);

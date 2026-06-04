@@ -73,10 +73,14 @@ di "non supportato" (non crasha, non esegue logica V3).
   (array piatto, testo in `label`) → mappato a `attachment.buttons: [{ type, value }]`.
   `mapButtons` gestisce anche la shape `{active, ui, json}`.
 - ✅ Bottoni — ROUTING: il target del click vive in `node.slots` (key `button`,
-  `slot.id == button.id` → `nextNode`). `reply-V4.js` costruisce `awaitingButtons`
-  incrociando bottoni↔slot per id (esclusi gli `url`); al click l'echo (= label/value)
-  fa match e instrada. `MessageSender-V4.mapButtons` popola `action` (=`#<nextNode>`) e
-  `show_echo:true` sui bottoni `action` — il widget richiede `action` non vuoto per emettere il click.
+  `slot.id == button.id` → `nextNode`). `MessageSender-V4.mapButtons` popola `action`
+  (=`#<nextNode>`) e `show_echo:true` sui bottoni `action` — il widget richiede `action`
+  non vuoto per emettere il click.
+  - Bottoni **`action`**: instradati in modo AFFIDABILE dal target esplicito che il widget
+    rimanda in `message.attributes.action` (`"#<nodeId>"`) → `resolveEntryNode` fa strip `#`
+    + `byId`. Indipendente dallo stato (funziona anche con awaitingButtons stale/dopo resume).
+  - Bottoni **`text`** con slot: match su `awaitingButtons` (stato salvato) per `value/label`.
+  - Bottoni senza connettore → defaultFallback (corretto).
 - ✅ `directNext`: solo lo slot `direct` è forward automatico (niente fallback a `slots[0]`):
   un reply con soli slot `button` si FERMA e attende il click.
 - NB widget: i bottoni `url` per design del widget non collassavano mai (manca la guardia
@@ -90,6 +94,13 @@ di "non supportato" (non crasha, non esegue logica V3).
   mostrato (fail-safe). Provato e2e (vero→mostra, falso→nasconde).
 - ✅ Messaggi vuoti (`{text:""}`) senza bottoni: saltati.
 - Delay: `sleep(delayMs)` lato engine.
+- ✅ Reply multi-messaggio + interazione concorrente ("turn token"):
+  - Ogni turno (`reply()`) scrive un token univoco in Redis (`state-V4.setTurn`).
+  - `MessageSender-V4.sendV4Messages`, dopo il delay e prima di ogni messaggio, verifica
+    `isStaleTurn()`: se è iniziato un nuovo turno (es. click su un bottone durante
+    l'attesa) → **annulla i messaggi rimanenti** del reply (Caso A). Verificato e2e.
+  - Se NON si clicca nulla, il messaggio successivo esce e il widget nasconde i bottoni
+    del precedente via `isLastMessage` (Caso B, già gestito lato widget).
 
 ## Diagnostica
 - Log `verbose` nell'engine: `entry: START|bottone|input non riconosciuto → ...` e

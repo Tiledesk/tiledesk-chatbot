@@ -1,6 +1,7 @@
 const { ExtApi } = require('../ExtApi.js');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler.js');
 const { evaluateWhen } = require('./when-eval-V4.js');
+const stateV4 = require('./state-V4.js');
 const winston = require('../utils/winston');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -18,14 +19,27 @@ const MAX_DELAY_MS = 10000;
  */
 class MessageSenderV4 {
 
-  constructor({ projectId, requestId, token, tilebotEndpoint, botName, params }) {
+  constructor({ projectId, requestId, token, tilebotEndpoint, botName, params, tdcache, turnToken }) {
     this.projectId = projectId;
     this.requestId = requestId;
     this.token = token;
     this.botName = botName || 'bot';
     this.params = params || {};
+    this.tdcache = tdcache;
+    this.turnToken = turnToken;
     this.filler = new Filler();
     this.apiext = new ExtApi({ TILEBOT_ENDPOINT: tilebotEndpoint });
+  }
+
+  /**
+   * Caso A: rileva se è iniziato un NUOVO turno (es. click su un bottone) mentre
+   * questo reply stava inviando i suoi messaggi. Confronta il turn token catturato
+   * a inizio reply con quello corrente in Redis.
+   */
+  async isStaleTurn() {
+    if (!this.turnToken || !this.tdcache) return false;
+    const current = await stateV4.getTurn(this.tdcache, this.requestId);
+    return !!(current && current !== this.turnToken);
   }
 
   /**
@@ -101,6 +115,12 @@ class MessageSenderV4 {
       }
       const delay = Math.min(Math.max(Number(m.delayMs) || 0, 0), MAX_DELAY_MS);
       if (delay > 0) await sleep(delay);
+      // Caso A: se durante l'attesa è iniziato un nuovo turno (es. click su un
+      // bottone), annulla l'invio dei messaggi rimanenti di questo reply.
+      if (await this.isStaleTurn()) {
+        winston.verbose('(MessageSenderV4) nuovo turno rilevato → annullo i messaggi rimanenti del reply');
+        return;
+      }
       await this.sendBody(body);
     }
   }

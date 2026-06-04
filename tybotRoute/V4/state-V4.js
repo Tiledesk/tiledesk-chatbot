@@ -52,4 +52,35 @@ async function clearState(tdcache, requestId) {
   }
 }
 
-module.exports = { getState, setState, clearState };
+// ── Turn token ──────────────────────────────────────────────────────────────
+// Token univoco per "turno" (un messaggio utente processato). Serve a coordinare
+// l'invio multi-messaggio di un reply con un eventuale nuovo turno concorrente
+// (es. click su un bottone durante l'attesa tra un messaggio e il successivo):
+// il loop di invio annulla i messaggi rimanenti se il token corrente è cambiato.
+const TURN_PREFIX = 'tilebotv4:turn:';
+const TURN_TTL_SECONDS = 60 * 60; // 1h: vive solo per il coordinamento in-flight
+
+function turnKey(requestId) {
+  return TURN_PREFIX + requestId;
+}
+
+async function setTurn(tdcache, requestId, token) {
+  if (!tdcache) return;
+  try {
+    await tdcache.set(turnKey(requestId), token, { EX: TURN_TTL_SECONDS });
+  } catch (err) {
+    winston.error('(state-V4) setTurn error: ', err);
+  }
+}
+
+async function getTurn(tdcache, requestId) {
+  if (!tdcache) return null;
+  try {
+    return await tdcache.get(turnKey(requestId));
+  } catch (err) {
+    winston.error('(state-V4) getTurn error: ', err);
+    return null;
+  }
+}
+
+module.exports = { getState, setState, clearState, setTurn, getTurn };
