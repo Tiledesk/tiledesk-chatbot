@@ -10,6 +10,8 @@ const { TiledeskChatbot } = require('./engine/TiledeskChatbot.js');
 const { AnalyticsClient } = require('./AnalyticsClient.js');
 const { MongodbBotsDataSource } = require('./engine/MongodbBotsDataSource.js');
 const { MockBotsDataSource } = require('./engine/mock/MockBotsDataSource.js');
+const Node = require('./models/node.js');
+const TiledeskChatbotV4 = require('./V4/TiledeskChatbot-V4.js');
 const { TiledeskChatbotConst } = require('./engine/TiledeskChatbotConst.js');
 const { IntentsMachineFactory } = require('./engine/IntentsMachineFactory.js');
 const { v4: uuidv4 } = require('uuid');
@@ -41,6 +43,48 @@ const tilebotService = require('./services/TilebotService.js');
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
+
+/**
+ * Dispatcher Design Studio V4.
+ *
+ * Il percorso V3 di questo runtime resta invariato. Se il bot è "v4" — cioè ha
+ * almeno un documento nella collection `nodes` — l'esecuzione viene instradata
+ * al motore V4 (`./V4/TiledeskChatbot-V4.js`), che legge i nodi e risponde nello
+ * stesso formato del widget. I bot v3 (solo `faqs`) NON entrano qui.
+ *
+ * @returns {Promise<boolean>} true se il bot è v4 ed è stato gestito dal motore
+ *   V4 (il chiamante DEVE interrompere il flusso v3); false se può procedere v3.
+ */
+async function dispatchIfV4(botId, projectId, requestId, token, message, bot) {
+  let isV4Bot = false;
+  try {
+    isV4Bot = !!(await Node.exists({ id_faq_kb: botId }));
+  }
+  catch (err) {
+    winston.error("(tybotRoute) Error checking V4 nodes for botId " + botId + ": ", err);
+    return false; // in caso di errore non dirottiamo: lascia proseguire il v3
+  }
+  if (!isV4Bot) {
+    return false;
+  }
+  winston.verbose("(tybotRoute) Bot " + botId + " is a Design Studio V4 chatbot (has nodes) → routing to V4 engine.");
+  try {
+    await TiledeskChatbotV4.reply({
+      botId,
+      projectId,
+      requestId,
+      token,
+      message,
+      bot,
+      tdcache: tdcache,
+      tilebotEndpoint: TILEBOT_ENDPOINT,
+    });
+  }
+  catch (err) {
+    winston.error("(tybotRoute) V4 engine error for bot " + botId + ": ", err);
+  }
+  return true;
+}
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
@@ -107,6 +151,11 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   });
   
+  // V4 dispatch: se il bot ha nodes (chatbot Design Studio V4) lo gestisce il motore V4.
+  if (await dispatchIfV4(botId, projectId, requestId, token, message, bot)) {
+    return;
+  }
+
   let intentsMachine;
   let backupMachine;
   if (!staticBots) {
@@ -299,6 +348,11 @@ router.post('/exec/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+
+  // V4 dispatch: se il bot ha nodes (chatbot Design Studio V4) lo gestisce il motore V4.
+  if (await dispatchIfV4(botId, projectId, requestId, token, message, bot)) {
+    return;
+  }
 
   let intentsMachine;
   let backupMachine;
