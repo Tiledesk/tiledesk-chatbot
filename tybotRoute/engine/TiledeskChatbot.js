@@ -499,17 +499,11 @@ class TiledeskChatbot {
   }
 
   async currentLockedMpc(requestId) {
-    console.log('(TiledeskChatbot) currentLockedMpc', requestId);
-    console.log("TDCache client info:", this.tdcache.client);
-
+    console.log('(TiledeskChatbot) currentLockedMpc ---> key:', "tilebot:requests:"  + requestId + ":mcp:locked");
     console.log("EXISTS:", await this.tdcache.client.exists("tilebot:requests:"  + requestId + ":mcp:locked"));
     console.log("TYPE:", await this.tdcache.client.type("tilebot:requests:"  + requestId + ":mcp:locked"));
     console.log("GET:", await this.tdcache.client.get("tilebot:requests:"  + requestId + ":mcp:locked"));
-
-    console.log("CHAT DB:", await this.tdcache.client.sendCommand(["INFO", "keyspace"]));
-    
     if (this.tdcache) {
-      console.log('(TiledeskChatbot) currentLockedMpc ---> key:', "tilebot:requests:"  + requestId + ":mcp:locked");
       return await this.tdcache.get("tilebot:requests:"  + requestId + ":mcp:locked");
     }
     else {
