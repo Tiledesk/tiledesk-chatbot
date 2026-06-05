@@ -439,7 +439,11 @@ sollecito o chiusura automatica).
 | `reply` — redirect | ✅ |
 | `reply` — gallery | ✅ |
 | `replyv2` (Reply avanzato: + `no_match` / `no_input`) | ✅ |
-| altri (`ai_prompt`, `web_request`, `condition`, ecc.) | ⬜ da fare (fallback sicuro: messaggio "tipo non supportato") |
+| **Logica** (`wait`, `delete`, `setattribute-v2`, `capture_user_reply`, `connect_block`, `hmessage`, `flow_log`, `leadupdate`, `replacebotv3`, `randomreply`, `condition`, `jsoncondition`, `iteration`) | ✅ — §8 |
+| **Routing/operatore** (`agent`, `department`, `move_to_unassigned`, `clear_transcript`, `add_tags`, `ifopenhours`, `ifonlineagentsv2`) | ✅ — §8 |
+| **HTTP/integrazioni** (`webrequestv2`, `web_response`, `email`, `whatsapp_static`, `whatsapp_attribute`, `send_whatsapp`) | ✅ — §8 |
+| **AI/LLM/KB** (`ai_prompt`, `askgptv2`, `gpt_assistant`, `ai_condition`, `add_kb_content`) | ✅ — §8 |
+| `code`; voice/IVR; provider 3rd-party (Make/HubSpot/Brevo/n8n/Qapla/Customer.io); deprecate v1 | ⬜ fuori scope MVP |
 
 > Tipi di nodo non ancora migrati: il motore non crasha, logga e invia un messaggio
 > "tipo di nodo non ancora supportato". Vedi `MIGRATION-STATUS.md` per il dettaglio.
@@ -454,5 +458,98 @@ sollecito o chiusura automatica).
 | `NodesDataSource-V4.js` | Lettura nodi + helper navigazione (slot `direct`/`button`). |
 | `MessageSender-V4.js` | **Costruzione del JSON inviato** (testo/media/iframe/redirect/gallery, bottoni, fill `{{}}`, type mapping) + invio. |
 | `when-eval-V4.js` | Valutazione del filtro `when` (DSL). |
-| `state-V4.js` | Stato conversazione + turn token (Redis, namespace `tilebotv4:`). |
-| `nodes/start-V4.js`, `reply-V4.js`, `close-V4.js`, `defaultFallback-V4.js` | Handler per tipo di nodo. |
+| `state-V4.js` | Stato conversazione + turn token + USER_INPUT (Redis, namespace `tilebotv4:`). |
+| `slots-V4.js` | Risoluzione uscita: `chooseNext` (`next` > `nextSlotKey` > `direct`) + `firstSlot`. |
+| `variables-V4.js` | Lettura/scrittura variabili (Redis `tilebot:requests:<rid>:parameters`). |
+| `expression-V4.js` | Valutazione condition/setattribute (wrapper su `TiledeskExpression`). |
+| `services/` | Servizi esterni (mock + real): HTTP, email, WhatsApp, AI/KB, routing. |
+| `nodes/*-V4.js` | Un handler per tipo di nodo (uno per ogni action). |
+
+---
+
+## 8. Action aggiuntive (logica, routing, HTTP, AI)
+
+Tutte le action seguono il contratto handler `async execute(node, ctx)` e instradano
+per **slot key** (`nextSlotKey`). `ctx` espone `variables` (get/set/delete), `fill()`
+(`{{var}}`), `services` (mock+real), `message`, `sender`. Le action che scrivono variabili
+segnano `touchedVariables` → il `reply` successivo vede subito i nuovi valori.
+
+### 8.1 Logica / navigazione
+
+| type | Cosa fa | `data` chiave | Uscita |
+|---|---|---|---|
+| `wait` | Pausa N ms | `millis` | `direct` |
+| `delete` | Rimuove una variabile | `variableName` | `direct` |
+| `setattribute-v2` | Calcola e assegna una variabile | `destination`, `operation{operands,operators}` | `direct` |
+| `capture_user_reply` | Salva il testo utente in una variabile | `assignResultTo` | `direct` |
+| `connect_block` | Jump a un altro nodo | — (solo slot) | `direct` |
+| `hmessage` | Log invisibile in chat | `text` | `direct` |
+| `flow_log` | Log con severità | `level`, `log` | `direct` |
+| `leadupdate` | Aggiorna attributi lead | `update{}` | `direct` |
+| `replacebotv3` | Sostituisce il bot | `botId`/`botSlug`/`useSlug`/`blockName` | `direct` |
+| `randomreply` | Un messaggio a caso | `messages[]` | `direct` |
+| `condition` | Valuta condizioni | `groups` | `true` / `else` |
+| `jsoncondition` | Condizioni multi-gruppo | `groups` | `true` / `false` |
+| `iteration` | Loop su array (re-entry) | `iterable`, `assignOutputTo` | `loop` / `fallback` |
+
+**`setattribute-v2`** — esempio:
+```json
+{ "type": "setattribute-v2", "data": {
+  "destination": "score",
+  "operation": { "operands": [ { "value": "score", "isVariable": true }, { "value": "10", "isVariable": false } ], "operators": ["addAsNumber"] } },
+  "slots": [ { "key": "direct", "nextNode": "..." } ] }
+```
+Risolve i `{{var}}`, costruisce l'espressione (`JSONOperationToExpression`), valuta con
+`TiledeskMath`/`TiledeskString`, assegna a `destination`.
+
+**`condition`** — `data.groups` = struttura `JSONGroups` (operand1 = variabile, operator,
+operand2 `{type:'const'|'var', value/name}`); vero → slot `true`, falso → `else`.
+`jsoncondition` usa `true`/`false`. **`iteration`**: re-entry (il corpo `loop` si ricollega
+al nodo); stato in `tilebotv4:iter:<rid>:<nodeId>`; empty/null → `fallback`, completato → terminale.
+
+### 8.2 Routing / operatore (service mock+real)
+
+| type | Cosa fa | `data` chiave | Uscita |
+|---|---|---|---|
+| `agent` | Handoff a operatore umano | — | `direct` |
+| `department` | Cambio dipartimento | `depName` | `direct` |
+| `move_to_unassigned` | Coda non assegnati | — | `direct` |
+| `clear_transcript` | Azzera il transcript | — | `direct` |
+| `add_tags` | Tag su request/lead | `tags[]`, `target` | `direct` |
+| `ifopenhours` | Branch orario apertura | — | `open` / `else` |
+| `ifonlineagentsv2` | Branch agenti online | `selectedOption`, `selectedDepartmentId` | `online` / `else` |
+
+### 8.3 HTTP / integrazioni (service mock+real)
+
+| type | Cosa fa | `data` chiave | Uscita |
+|---|---|---|---|
+| `webrequestv2` | Chiamata HTTP | `url`, `method`, `headers`, `bodyType`, `jsonBody`/`formData`, `assignResultTo`/`assignStatusTo`/`assignErrorTo` | `success` / `error` |
+| `web_response` | Risposta HTTP (webhook) | `payload`, `status` | — (terminale) |
+| `email` | Invio email | `to`, `subject`, `replyTo`, `text` | `direct` |
+| `whatsapp_static` | Template WA, lista statica | `templateName`, `phoneNumberId`, `receivers[]` | `direct` |
+| `whatsapp_attribute` | Template WA, numero da attributo | `templateName`, `phoneNumberId`, `attributeName` | `direct` |
+| `send_whatsapp` | Template WA con esito | `templateName`, `phoneNumberId`, `receivers[]` | `success` / `error` |
+
+**`webrequestv2`**: risolve url/headers/body (`{{var}}`), chiama il service `http`; su 2xx
+assegna `assignResultTo`=body e `assignStatusTo`=status → `success`; su errore assegna
+`assignErrorTo` + `flowError` → `error`.
+
+### 8.4 AI / LLM / KB (service mock+real)
+
+| type | Cosa fa | `data` chiave | Uscita |
+|---|---|---|---|
+| `ai_prompt` | Prompt LLM | `question`, `llm`, `model`, `assignReplyTo` | `success` / `error` |
+| `askgptv2` | RAG su Knowledge Base | `question`, `namespace`, `assignReplyTo`, `assignSourceTo` | `success` / `error` |
+| `gpt_assistant` | OpenAI Assistant | `prompt`, `assistantId`, `assignResultTo` | `success` / `error` |
+| `ai_condition` | Classifica su intent via LLM | `question`, `instructions`, `intents[]` | `intent_<id>` / `fallback` / `error` |
+| `add_kb_content` | Popola la KB | `namespace`, `type`, `name`, `content` | `direct` |
+
+**`ai_condition`**: il service classifica l'input su uno degli `intents[]`; il match
+instrada allo **slot dinamico** `intent_<id>` (id dell'intent scelto), nessun match →
+`fallback`, errore → `error`.
+
+> **Servizi esterni**: ogni I/O passa dal service layer `services/` (coppia **mock + real**,
+> selezione env `V4_SERVICES_REAL=1`). I test e2e girano sui mock deterministici; il `http`
+> real è implementato (riusa `utils/HttpUtils`), email/WhatsApp/AI hanno stub real TODO da
+> cablare agli endpoint quando disponibili. Gestione errori: variabile `flowError` + ramo
+> `error`/`false`/`fallback`.

@@ -44,6 +44,25 @@ class MessageSenderV4 {
   }
 
   /**
+   * Ricarica le variabili di conversazione (Redis) in `this.params`, preservando
+   * le chiavi standard chatbot_id/name/conversation_id. Chiamato dal walk dopo un
+   * handler che ha scritto variabili, così i `reply` successivi vedono i nuovi valori.
+   */
+  async refreshParams() {
+    if (!this.tdcache) return;
+    try {
+      const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js'); // lazy: evita cicli
+      const fresh = (await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId)) || {};
+      fresh.chatbot_id = this.params.chatbot_id;
+      fresh.chatbot_name = this.params.chatbot_name;
+      fresh.conversation_id = this.params.conversation_id;
+      this.params = fresh;
+    } catch (err) {
+      winston.error('(MessageSenderV4) refreshParams error: ', err);
+    }
+  }
+
+  /**
    * Ack "idle": inviato quando il turno NON ha prodotto alcun messaggio visibile
    * (es. nodo reply vuoto, ramo terminale senza contenuto). Serve SOLO a far
    * arrivare un messaggio al widget così da spegnere l'indicatore "sta scrivendo"

@@ -2,21 +2,63 @@ const winston = require('../utils/winston');
 const { NodesDataSourceV4 } = require('./NodesDataSource-V4.js');
 const { MessageSenderV4 } = require('./MessageSender-V4.js');
 const state = require('./state-V4.js');
+const { chooseNext, firstSlot } = require('./slots-V4.js');
+const { createVariables } = require('./variables-V4.js');
+const { createServices } = require('./services/index.js');
 
 // Handler per tipo di nodo. Aggiungere qui i nuovi type man mano che si migrano.
 const HANDLERS = {
+  // core conversazionale
   start: require('./nodes/start-V4.js'),
   reply: require('./nodes/reply-V4.js'),
   replyv2: require('./nodes/replyv2-V4.js'),
+  randomreply: require('./nodes/randomreply-V4.js'),
   close: require('./nodes/close-V4.js'),
   defaultFallback: require('./nodes/defaultFallback-V4.js'),
+  // logica / navigazione (Fase 1)
+  wait: require('./nodes/wait-V4.js'),
+  delete: require('./nodes/delete-V4.js'),
+  hmessage: require('./nodes/hmessage-V4.js'),
+  flow_log: require('./nodes/flow_log-V4.js'),
+  leadupdate: require('./nodes/leadupdate-V4.js'),
+  connect_block: require('./nodes/connect_block-V4.js'),
+  capture_user_reply: require('./nodes/capture_user_reply-V4.js'),
+  replacebotv3: require('./nodes/replacebotv3-V4.js'),
+  'setattribute-v2': require('./nodes/setattribute-v2-V4.js'),
+  condition: require('./nodes/condition-V4.js'),
+  jsoncondition: require('./nodes/jsoncondition-V4.js'),
+  iteration: require('./nodes/iteration-V4.js'),
+  // routing / operatore (Fase 2)
+  agent: require('./nodes/agent-V4.js'),
+  department: require('./nodes/department-V4.js'),
+  move_to_unassigned: require('./nodes/move_to_unassigned-V4.js'),
+  clear_transcript: require('./nodes/clear_transcript-V4.js'),
+  add_tags: require('./nodes/add_tags-V4.js'),
+  ifopenhours: require('./nodes/ifopenhours-V4.js'),
+  ifonlineagentsv2: require('./nodes/ifonlineagentsv2-V4.js'),
+  // HTTP / integrazioni (Fase 3)
+  webrequestv2: require('./nodes/webrequestv2-V4.js'),
+  web_response: require('./nodes/web_response-V4.js'),
+  email: require('./nodes/email-V4.js'),
+  whatsapp_static: require('./nodes/whatsapp_static-V4.js'),
+  whatsapp_attribute: require('./nodes/whatsapp_attribute-V4.js'),
+  send_whatsapp: require('./nodes/send_whatsapp-V4.js'),
+  // AI / LLM / KB (Fase 4)
+  ai_prompt: require('./nodes/ai_prompt-V4.js'),
+  askgptv2: require('./nodes/askgptv2-V4.js'),
+  gpt_assistant: require('./nodes/gpt_assistant-V4.js'),
+  ai_condition: require('./nodes/ai_condition-V4.js'),
+  add_kb_content: require('./nodes/add_kb_content-V4.js'),
 };
 
 // Comandi di avvio conversazione accettati dal server:
 //  - "\start" (backslash): inviato esplicitamente (es. chat-cli, bot legacy v3);
 //  - "/start"  (slash): inviato dal server in autostart per i chatbot nuovi.
 const START_COMMANDS = ['\\start', '/start'];
-const MAX_STEPS = 50; // guard anti-loop sul walk del grafo
+// Guard anti-loop sul walk del grafo. Alzato a 500 perché `iteration` re-entra nel
+// nodo una volta per item NELLO STESSO walk (il corpo del loop si ricollega): un
+// loop su N item con corpo di K nodi consuma ~N*(K+1) step.
+const MAX_STEPS = 500;
 
 function makeToken() {
   return Date.now() + '-' + Math.random().toString(36).slice(2);
@@ -78,7 +120,7 @@ async function reply(ctx) {
  * no_input. Riusato anche dal timer no_input.
  */
 async function runTurn(ctx, nodes, entryNode) {
-  const { projectId, requestId, token, tdcache, tilebotEndpoint, bot } = ctx;
+  const { projectId, requestId, token, tdcache, tilebotEndpoint, bot, botId } = ctx;
   const turnToken = makeToken();
   await state.setTurn(tdcache, requestId, turnToken);
   const params = await buildParams(ctx);
@@ -94,7 +136,32 @@ async function runTurn(ctx, nodes, entryNode) {
     turnToken,
   });
 
-  const pendingNoInput = await walk({ entryNode, nodes, sender, tdcache, requestId });
+  // HandlerContext: passato a ogni handler. `params` è un getter così riflette i
+  // refresh fatti dopo le action che scrivono variabili.
+  const variables = createVariables(tdcache, requestId);
+  const services = createServices({ projectId, requestId, token, apiEndpoint: ctx.apiEndpoint, tdcache });
+  const handlerCtx = {
+    tdcache,
+    requestId,
+    projectId,
+    token,
+    tilebotEndpoint,
+    botId,
+    bot,
+    sender,
+    message: ctx.message,
+    nodes,
+    variables,
+    services,
+    get params() {
+      return sender.params;
+    },
+    fill(text) {
+      return sender.filler.fill(text || '', { ...sender.params });
+    },
+  };
+
+  const pendingNoInput = await walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx });
 
   // Nessun messaggio visibile → ack nascosto per non lasciare il widget in attesa.
   if (!sender.hasSent()) {
@@ -162,7 +229,7 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
  * @returns {object|null} il `noInput` pendente se un nodo (replyv2) si è fermato
  *   con un no_input connesso; altrimenti null.
  */
-async function walk({ entryNode, nodes, sender, tdcache, requestId }) {
+async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }) {
   let node = entryNode;
   let steps = 0;
 
@@ -178,10 +245,35 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId }) {
       return null;
     }
 
-    const result = handler.execute(node);
+    // Contratto handler retro-compatibile: i 5 handler storici sono sincroni e
+    // ignorano il 2° argomento; i nuovi sono `async execute(node, ctx)`.
+    let result;
+    try {
+      result = await Promise.resolve(handler.execute(node, handlerCtx));
+    } catch (err) {
+      winston.error(`(TiledeskChatbotV4) errore handler '${node.type}' (${node.id}): `, err);
+      if (handlerCtx && handlerCtx.variables) {
+        await handlerCtx.variables.set('flowError', String((err && err.message) || err));
+        await sender.refreshParams();
+      }
+      // Instrada al ramo errore se esiste (error/false/fallback), altrimenti termina.
+      const errTarget = firstSlot(node, ['error', 'false', 'fallback']);
+      if (errTarget) {
+        node = NodesDataSourceV4.byId(nodes, errTarget);
+        continue;
+      }
+      return null;
+    }
+    result = result || {};
 
     if (result.messages && result.messages.length > 0) {
       await sender.sendV4Messages(result.messages, result.buttonSlotMap);
+    }
+
+    // Action che ha scritto variabili → ricarica i params del sender (così i reply
+    // successivi vedono i nuovi valori).
+    if (result.touchedVariables) {
+      await sender.refreshParams();
     }
 
     if (result.close) {
@@ -198,7 +290,7 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId }) {
       return result.noInput || null;
     }
 
-    node = NodesDataSourceV4.byId(nodes, result.next);
+    node = NodesDataSourceV4.byId(nodes, chooseNext(node, result));
   }
 
   if (steps >= MAX_STEPS) {

@@ -57,11 +57,67 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare · ⛔ fallback halt (non anc
 | `replyv2` | ✅ | Come `reply` + slot `no_match` (input non riconosciuto) e `no_input` (timeout `noInputTimeout` ms, timer in-process con controllo `USER_INPUT`). `nodes/replyv2-V4.js`. |
 | `close` | ✅ | Termina la conversazione (azzera lo stato). `nodes/close-V4.js`. |
 | `defaultFallback` | ✅ | Eseguito su input non riconosciuto; naviga allo slot `direct`. `nodes/defaultFallback-V4.js`. |
-| `ai_prompt` | ⛔ | Fase successiva. |
-| `rag_query` / KB | ⛔ | Fase successiva. |
-| `condition` / `jsoncondition` | ⛔ | Branching `when` DSL — fase successiva. |
-| `web_request` | ⛔ | Fase successiva. |
-| altri (capture, iteration, ecc.) | ⛔ | Vedi `docs/missing-actions-roadmap.md` del design-studio. |
+| `randomreply` | ✅ | Un messaggio a caso da `data.messages`. `nodes/randomreply-V4.js`. |
+| `wait` | ✅ | Pausa `data.millis` ms → `direct`. |
+| `delete` | ✅ | Rimuove `data.variableName` → `direct`. |
+| `hmessage` | ✅ | Hidden message: logga `data.text` → `direct`. |
+| `flow_log` | ✅ | Log con severità `data.level` → `direct`. |
+| `leadupdate` | ✅ (parziale) | Risolve `data.update`; PATCH lead reale via service (TODO) → `direct`. |
+| `connect_block` | ✅ | Jump esplicito allo slot `direct`. |
+| `capture_user_reply` | ✅ | Cattura `ctx.message.text` in `data.assignResultTo` → `direct`. |
+| `replacebotv3` | ✅ (parziale) | Risolve target/block; switch bot reale via service (TODO) → `direct`. |
+| `setattribute-v2` | ✅ | Calcola `data.operation` → `data.destination` (riusa `TiledeskExpression`). |
+| `condition` | ✅ | `data.groups` → slot `true`/`else`. |
+| `jsoncondition` | ✅ | `data.groups` → slot `true`/`false`. |
+| `iteration` | ✅ | Loop re-entry su `data.iterable` → `loop`/`fallback`; stato Redis `tilebotv4:iter:`. |
+| `webrequestv2` | ✅ | HTTP (service `http`) → assign result/status/error → slot `success`/`error`. |
+| `web_response` | ✅ | Risposta HTTP (canale webhook); terminale sul widget. |
+| `email` | ✅ | Invio email (service) → `direct`. |
+| `whatsapp_static` / `whatsapp_attribute` | ✅ | Template WhatsApp (service) → `direct`. |
+| `send_whatsapp` | ✅ | Template WhatsApp con esito → slot `success`/`error`. |
+| `ai_prompt` | ✅ | Prompt LLM (service `aiPrompt`) → assign reply → `success`/`error`. |
+| `askgptv2` | ✅ | RAG su KB (service `askKb`) → assign reply/source → `success`/`error`. |
+| `gpt_assistant` | ✅ | OpenAI Assistant (service) → assign result → `success`/`error`. |
+| `ai_condition` | ✅ | Classificazione LLM → slot dinamico `intent_<id>` / `fallback` / `error`. |
+| `add_kb_content` | ✅ | Popola KB (service) → `direct`. |
+
+### Service layer esteso (Fasi 3-4)
+- `mock-services` aggiunge: `http`, `sendEmail`, `sendWhatsapp`, `aiPrompt`, `askKb`,
+  `gptAssistant`, `aiCondition`, `addKbContent` (deterministici + configurabili via `opts.mock`).
+- `real-services`: `http` **implementato** (riusa `utils/HttpUtils`); email/WhatsApp/AI
+  sono stub TODO conservativi (attivabili quando gli endpoint AI/KB/SMTP/WA sono confermati).
+- Test: `test/phase34.test.js` (25/25). E2e integrazione: `setattribute → condition → reply`
+  (branching multi-slot) verificato sul runtime reale.
+| `agent` | ✅ | Handoff a operatore (service) → `direct`. |
+| `department` | ✅ | Cambio dipartimento `data.depName` (service) → `direct`. |
+| `move_to_unassigned` | ✅ | Coda non assegnati (service) → `direct`. |
+| `clear_transcript` | ✅ | Azzera transcript (service) → `direct`. |
+| `add_tags` | ✅ | Tag risolti su request/lead (service) → `direct`. |
+| `ifopenhours` | ✅ | Disponibilità orario (service `isOpen`) → slot `open`/`else`. |
+| `ifonlineagentsv2` | ✅ | Agenti online (service `onlineAgents`) → slot `online`/`else`. |
+
+### Service layer (Fase 2)
+- `services/` — coppia **mock + real** (`createServices`, selezione env `V4_SERVICES_REAL=1`).
+  `mock-services.js` deterministico + configurabile (test); `real-services.js` usa
+  `@tiledesk/tiledesk-client` (`moveToAgent`, `updateRequestParticipants`) — alcuni
+  endpoint (orari/agenti online, addTags, changeDepartment, clearTranscript) sono TODO
+  conservativi finché non confermati in dev. Default in runtime = **mock** (flow corretto,
+  effetti server reali con il real abilitato). Test: `test/phase2.test.js` (13/13).
+
+### Evoluzione motore (Fase 0)
+- Contratto handler **async + context** retro-compatibile: `execute(node, ctx)`. `ctx` =
+  `{ tdcache, requestId, projectId, token, sender, message, nodes, variables, params, fill() }`.
+- **Branching multi-slot**: gli handler ritornano `nextSlotKey` (`true`/`false`/`else`/
+  `success`/`error`/`loop`/`fallback`/`intent_<id>`/`direct`); `slots-V4.chooseNext` risolve
+  (precedenza `next` > `nextSlotKey` > `direct`).
+- **Variabili**: `variables-V4` (facade su `TiledeskChatbot.*ParameterStatic`, hash
+  `tilebot:requests:<rid>:parameters`); `sender.refreshParams()` dopo gli handler con
+  `touchedVariables` → i reply successivi vedono i nuovi valori. Provato e2e (`score=8`).
+- **Errori**: try/catch nel walk → `flowError` + instradamento a `error`/`false`/`fallback`.
+- **Espressioni**: `expression-V4` (unico contatto con `TiledeskExpression`) per
+  condition/jsoncondition (`JSONGroupsToExpression`) e setattribute (`JSONOperationToExpression`
+  + `TiledeskMath`/`TiledeskString`).
+- **Test**: harness `test/harness-V4.js` (tdcache in-memory + sender fake); `test/phase1.test.js` (23/23).
 
 **Fallback sicuro**: un node `type` non gestito → l'engine logga e invia un messaggio
 di "non supportato" (non crasha, non esegue logica V3).
