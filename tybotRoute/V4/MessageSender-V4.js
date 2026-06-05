@@ -8,6 +8,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Cap di sicurezza al delay per non bloccare il flow su valori anomali.
 const MAX_DELAY_MS = 10000;
 
+// Mappa dei `type` del messaggio-nodo V4 → `type` del protocollo messaggi del widget.
+// Il DS usa 'iframe', ma il widget rende il frame solo con `type === 'frame'`
+// (chat21-core/utils/utils-message.isFrame). Gli altri (text/image/redirect/file/audio)
+// coincidono e non vanno rimappati.
+const NODE_TYPE_TO_MSG_TYPE = { iframe: 'frame' };
+
 /**
  * Invio dei messaggi del bot V4 alla conversazione (stesso endpoint del V3).
  *
@@ -27,8 +33,31 @@ class MessageSenderV4 {
     this.params = params || {};
     this.tdcache = tdcache;
     this.turnToken = turnToken;
+    this.sentCount = 0; // messaggi VISIBILI inviati in questo turno
     this.filler = new Filler();
     this.apiext = new ExtApi({ TILEBOT_ENDPOINT: tilebotEndpoint });
+  }
+
+  /** True se in questo turno è stato inviato almeno un messaggio visibile. */
+  hasSent() {
+    return this.sentCount > 0;
+  }
+
+  /**
+   * Ack "idle": inviato quando il turno NON ha prodotto alcun messaggio visibile
+   * (es. nodo reply vuoto, ramo terminale senza contenuto). Serve SOLO a far
+   * arrivare un messaggio al widget così da spegnere l'indicatore "sta scrivendo"
+   * e non lasciare la chat in attesa. `subtype:'info'` → il server NON pubblica
+   * typing per questo messaggio e il widget lo rende come nota di servizio (non
+   * come bolla del bot), non come risposta.
+   */
+  async sendIdleAck() {
+    await this.sendBody({
+      text: '',
+      type: 'text',
+      senderFullname: this.botName,
+      attributes: { subtype: 'info' },
+    });
   }
 
   /**
@@ -79,12 +108,45 @@ class MessageSenderV4 {
   buildMessageBody(v4message, buttonSlotMap) {
     const rawText = v4message.text != null ? v4message.text : '';
     const text = this.filler.fill(rawText, { ...this.params });
+    // Usa il `type` reale del messaggio (es. 'image'), rimappato al protocollo
+    // widget dove serve (es. 'iframe' → 'frame'). Mai forzare 'text'.
+    const rawType = v4message.type || 'text';
+    const type = NODE_TYPE_TO_MSG_TYPE[rawType] || rawType;
+    const body = { text: text, type: type, senderFullname: this.botName };
+
+    // Media (image/file/...): porta `metadata` (con fill delle variabili in src/name).
+    if (v4message.metadata) {
+      const metadata = { ...v4message.metadata };
+      if (metadata.src) metadata.src = this.filler.fill(metadata.src, { ...this.params });
+      if (metadata.name) metadata.name = this.filler.fill(metadata.name, { ...this.params });
+      body.metadata = metadata;
+    }
+
+    // Gallery (carousel): le card vivono in `galleries[]` → attributes.attachment.gallery[].
+    if (rawType === 'gallery' && Array.isArray(v4message.galleries) && v4message.galleries.length > 0) {
+      const gallery = v4message.galleries.map((card) => this.buildGalleryCard(card, buttonSlotMap));
+      body.attributes = { attachment: { gallery } };
+      return body;
+    }
+
+    // Bottoni top-level del messaggio (text/image): attachment template.
     const buttons = MessageSenderV4.mapButtons(v4message, buttonSlotMap);
-    const body = { text: text, type: 'text', senderFullname: this.botName };
     if (buttons.length > 0) {
       body.attributes = { attachment: { type: 'template', buttons } };
     }
     return body;
+  }
+
+  /** Mappa una card della gallery nello shape atteso dal carousel del widget. */
+  buildGalleryCard(card, buttonSlotMap) {
+    const preview = card && card.preview ? { ...card.preview } : { src: '' };
+    if (preview.src) preview.src = this.filler.fill(preview.src, { ...this.params });
+    return {
+      preview,
+      title: this.filler.fill((card && card.title) || '', { ...this.params }),
+      description: this.filler.fill((card && card.description) || '', { ...this.params }),
+      buttons: MessageSenderV4.mapButtons({ buttons: (card && card.buttons) || [] }, buttonSlotMap),
+    };
   }
 
   /** Invia un singolo body (Promise wrapper sul callback di ExtApi). */
@@ -109,9 +171,11 @@ class MessageSenderV4 {
         continue;
       }
       const body = this.buildMessageBody(m, buttonSlotMap);
-      const hasButtons = !!(body.attributes && body.attributes.attachment && body.attributes.attachment.buttons.length > 0);
-      if ((!body.text || body.text.trim() === '') && !hasButtons) {
-        continue; // es. messaggio { text: "" } senza bottoni
+      const hasButtons = (body.attributes?.attachment?.buttons?.length || 0) > 0;
+      const hasMedia = !!body.metadata?.src;
+      const hasGallery = (body.attributes?.attachment?.gallery?.length || 0) > 0;
+      if ((!body.text || body.text.trim() === '') && !hasButtons && !hasMedia && !hasGallery) {
+        continue; // es. messaggio { text: "" } senza bottoni/media/gallery
       }
       const delay = Math.min(Math.max(Number(m.delayMs) || 0, 0), MAX_DELAY_MS);
       if (delay > 0) await sleep(delay);
@@ -122,12 +186,14 @@ class MessageSenderV4 {
         return;
       }
       await this.sendBody(body);
+      this.sentCount++;
     }
   }
 
   /** Invio di un singolo messaggio di testo semplice (es. fallback non supportato). */
   async sendText(text) {
     await this.sendBody({ text, type: 'text', senderFullname: this.botName });
+    this.sentCount++;
   }
 }
 

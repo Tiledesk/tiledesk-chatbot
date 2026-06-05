@@ -83,4 +83,51 @@ async function getTurn(tdcache, requestId) {
   }
 }
 
-module.exports = { getState, setState, clearState, setTurn, getTurn };
+// ── USER_INPUT (controllo no_input di replyv2) ───────────────────────────────
+// Variabile di controllo: quando un nodo `replyv2` si ferma, salva un token e
+// schedula un timer. Allo scadere, se il token è ANCORA questo (= nessun input
+// utente nel frattempo, perché ogni nuovo turno lo azzera) → triggera il
+// connettore `no_input`. Replica `TiledeskChatbotConst.USER_INPUT` del V3.
+const USERINPUT_PREFIX = 'tilebotv4:userinput:';
+
+function userInputKey(requestId) {
+  return USERINPUT_PREFIX + requestId;
+}
+
+async function setUserInput(tdcache, requestId, token) {
+  if (!tdcache) return;
+  try {
+    await tdcache.set(userInputKey(requestId), token, { EX: TURN_TTL_SECONDS });
+  } catch (err) {
+    winston.error('(state-V4) setUserInput error: ', err);
+  }
+}
+
+async function getUserInput(tdcache, requestId) {
+  if (!tdcache) return null;
+  try {
+    return await tdcache.get(userInputKey(requestId));
+  } catch (err) {
+    winston.error('(state-V4) getUserInput error: ', err);
+    return null;
+  }
+}
+
+async function clearUserInput(tdcache, requestId) {
+  if (!tdcache) return;
+  try {
+    if (typeof tdcache.del === 'function') {
+      await tdcache.del(userInputKey(requestId));
+    } else {
+      await tdcache.set(userInputKey(requestId), '', { EX: 1 });
+    }
+  } catch (err) {
+    winston.error('(state-V4) clearUserInput error: ', err);
+  }
+}
+
+module.exports = {
+  getState, setState, clearState,
+  setTurn, getTurn,
+  setUserInput, getUserInput, clearUserInput,
+};

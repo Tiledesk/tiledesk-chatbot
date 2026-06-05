@@ -54,6 +54,7 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare · ⛔ fallback halt (non anc
 |---|---|---|
 | `start` | ✅ | Entrypoint su `\start`; naviga allo slot `direct`. `nodes/start-V4.js`. |
 | `reply` | ✅ | `data.messages[]` → testo + delay; bottoni base. `nodes/reply-V4.js`. |
+| `replyv2` | ✅ | Come `reply` + slot `no_match` (input non riconosciuto) e `no_input` (timeout `noInputTimeout` ms, timer in-process con controllo `USER_INPUT`). `nodes/replyv2-V4.js`. |
 | `close` | ✅ | Termina la conversazione (azzera lo stato). `nodes/close-V4.js`. |
 | `defaultFallback` | ✅ | Eseguito su input non riconosciuto; naviga allo slot `direct`. `nodes/defaultFallback-V4.js`. |
 | `ai_prompt` | ⛔ | Fase successiva. |
@@ -93,6 +94,23 @@ di "non supportato" (non crasha, non esegue logica V3).
   nascosto se `when` è falso; vuoto/assente = sempre mostrato; errore parse/eval =
   mostrato (fail-safe). Provato e2e (vero→mostra, falso→nasconde).
 - ✅ Messaggi vuoti (`{text:""}`) senza bottoni: saltati.
+- ✅ Media (immagini / iframe / redirect / gallery): messaggio
+  `{ type, text, metadata:{src,...}, galleries? }` → `buildMessageBody` usa il `type` reale e
+  inoltra `metadata`/cards (fill `{{var}}`). Il widget renderizza `type=='image'`,
+  `type=='frame'`, `type=='redirect'`, `type=='gallery'`.
+  - **Type mapping** (`NODE_TYPE_TO_MSG_TYPE`): il DS usa `type:'iframe'`, ma il widget
+    rende il frame solo con `type:'frame'` (`utils-message.isFrame`) → il runtime mappa
+    `iframe → frame`. `redirect` già riconosciuto. Altri type coincidono.
+  - **Gallery**: `galleries[]` → `attributes.attachment.gallery[]` (card: `preview.src`,
+    `title`, `description`, `buttons`); il widget la rende come carousel (`isCarousel`).
+- 📖 **Documentazione action**: vedi `ACTIONS-REFERENCE.md` (JSON nodo + JSON costruito +
+  spiegazione + casi d'uso per start/defaultFallback/close/reply×5 tipi). Base per la doc futura.
+- ✅ Idle-ack (no chat "in attesa"): se un turno NON produce alcun messaggio visibile
+  (nodo reply vuoto, ramo terminale, close senza contenuto), il motore invia un messaggio
+  nascosto `{ type:'text', text:'', attributes:{subtype:'info'} }`. Il server NON pubblica
+  typing per i `subtype:'info'` e il widget, ricevendo un messaggio, **spegne l'indicatore
+  "sta scrivendo"** (lo rende come nota di servizio, non come bolla del bot). Conteggio in
+  `MessageSenderV4.sentCount` / `hasSent()`; invio in `TiledeskChatbot-V4.reply()` dopo il walk.
 - Delay: `sleep(delayMs)` lato engine.
 - ✅ Reply multi-messaggio + interazione concorrente ("turn token"):
   - Ogni turno (`reply()`) scrive un token univoco in Redis (`state-V4.setTurn`).
