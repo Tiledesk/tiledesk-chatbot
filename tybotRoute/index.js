@@ -54,7 +54,6 @@ router.post('/ext/:botid', async (req, res) => {
     delete req.body.payload.request.snapshot;
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
-  console.log("req.body:", req.body);
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
@@ -73,12 +72,6 @@ router.post('/ext/:botid', async (req, res) => {
   //skip internal note messages
   if(message && message.attributes && message.attributes.subtype === 'private') {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
-    return res.status(200).send({"success":true});
-  }
-
-  //skip hidden info messages (must not trigger intent matching or defaultFallback)
-  if (TiledeskChatbotUtil.isHiddenMessage(message)) {
-    winston.verbose("(tybotRoute) Skipping hidden info message: " + message.text);
     return res.status(200).send({"success":true});
   }
 
@@ -125,7 +118,6 @@ router.post('/ext/:botid', async (req, res) => {
     intentsMachine = {}
   }
 
-  console.log("intentsMachine:", intentsMachine);
   const chatbot = new TiledeskChatbot({
     botsDataSource: botsDS,
     intentsFinder: intentsMachine,

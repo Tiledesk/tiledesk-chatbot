@@ -49,12 +49,6 @@ class TiledeskChatbot {
       if (message.request) {
         this.request = message.request;
       }
-
-      if (TiledeskChatbotUtil.isHiddenMessage(message)) {
-        winston.verbose("(TiledeskChatbot) Skipping hidden info message: " + message.text);
-        resolve(null);
-        return;
-      }
       
       // reset lockedIntent on direct user invocation ( /intent or action => this only?)
       if (message.sender != "_tdinternal") {
