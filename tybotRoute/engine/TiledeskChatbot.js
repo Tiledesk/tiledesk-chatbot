@@ -103,7 +103,7 @@ class TiledeskChatbot {
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
       winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
-      if (locked_intent) {
+      if (locked_intent && message.sender !== "_tdinternal") {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
         //   token: this.token,

@@ -352,6 +352,22 @@ router.post('/exec/:botid', async (req, res) => {
     return;
   }
 
+  if (!reply.attributes) {
+    reply.attributes = {};
+  }
+  if (!reply.attributes.intent_info) {
+    let question_payload = Object.assign({}, message);
+    delete question_payload.request;
+    reply.attributes.intent_info = {
+      intent_name: reply.intent_display_name,
+      intent_id: reply.intent_id,
+      is_fallback: false,
+      question_payload: question_payload,
+      botId: botId,
+      bot: bot
+    };
+  }
+
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
     let directivesSuccess = true;
     try {
