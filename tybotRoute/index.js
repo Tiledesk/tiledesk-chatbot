@@ -136,6 +136,7 @@ router.post('/ext/:botid', async (req, res) => {
   winston.verbose("(tybotRoute) Message text: " + message.text)
   
   try {
+    console.log("(/ext) updateRequestAttributes message: ", message);
     await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
     if (requestId.startsWith("support-group-")) {
       await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
@@ -322,6 +323,7 @@ router.post('/exec/:botid', async (req, res) => {
 
 
   try {
+    console.log("(/exec) updateRequestAttributes message: ", message);
     await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
     if (requestId.startsWith("support-group-")) {
       await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
