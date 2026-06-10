@@ -52,6 +52,7 @@ class DirIntent {
       return;
     }
 
+    console.log("DirIntent intent_command: ", this.context);
     let intent_command_request = {
       "payload": {
         "_id": uuidv4(),
