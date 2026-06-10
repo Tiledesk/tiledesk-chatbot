@@ -52,6 +52,7 @@ class DirIntent {
       return;
     }
 
+    console.log("DirIntent intent_command: ", this.context);
     let intent_command_request = {
       "payload": {
         "_id": uuidv4(),
@@ -71,13 +72,13 @@ class DirIntent {
     }
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
-    // tilebotService.executeBlock(intent_command_request, botId, () => {
-    //   callback(true);
-    // });
-
-    tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    tilebotService.executeBlock(intent_command_request, botId, () => {
       callback(true);
     });
+
+    // tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    //   callback(true);
+    // });
 
   }
 
