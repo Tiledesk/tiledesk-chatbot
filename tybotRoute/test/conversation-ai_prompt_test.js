@@ -392,6 +392,114 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt vllm multi-server success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: this is the answer");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "this is the answer");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'vllm');
+
+        let http_code = 200;
+        let reply = {
+          _id: "694ab906a51c8c2ad0933d19",
+          id_project: "62c3f10152dc740035000000",
+          name: "vllm",
+          value: {
+            servers: [
+              {
+                name: "Cerebras",
+                url: "https://cerebras.example.cpm/",
+                apikey: "cerebras_api_key",
+                models: ["gpt-oss-30b", "llama3.1b"]
+              },
+              {
+                name: "OpenRouter",
+                url: "https://openrouter.example.cpm/",
+                apikey: "openrouter_api_key",
+                models: ["pippo", "pluto"]
+              }
+            ]
+          }
+        }
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "vllm");
+        assert(req.body.llm_key === "cerebras_api_key");
+        console.log("req.body.model: ", req.body.model);
+        assert(req.body.model.name === "gpt-oss-30b");
+        assert(req.body.model.url === "https://cerebras.example.cpm/");
+        assert(req.body.model.token === null);
+  
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "this is the answer",
+          chat_history_dict: {
+            additionalProp1: { question: "string", answer: "string" },
+            additionalProp2: { question: "string", answer: "string" },
+            additionalProp3: { question: "string", answer: "string" }
+          }
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_vllm_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
     it('AiPrompt ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;

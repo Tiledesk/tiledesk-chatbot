@@ -122,6 +122,7 @@ class DirAiPrompt {
     let key;
     let publicKey = false;
     let ollama_integration;
+    let vllm_server_config;
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
@@ -136,6 +137,65 @@ class DirAiPrompt {
         callback();
         return;
       });
+
+    } else if (action.llm === 'vllm') {
+      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
+      if (!vllm_integration?.value) {
+        this.logger.error("[AI Prompt] Error getting vllm integration.");
+        winston.error("DirAiPrompt Error getting vllm integration");
+        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+      const vllm_value = vllm_integration.value;
+      if (Array.isArray(vllm_value.servers)) {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        if (!filled_vllm_server) {
+          this.logger.error("[AI Prompt] missing vllmServer for multi-server vllm integration");
+          await this.chatbot.addParameter("flowError", "AiPrompt Error: 'vllmServer' attribute is undefined");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
+        if (!vllm_server_config) {
+          this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
+          await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        key = vllm_server_config.apikey;
+      } else {
+        key = vllm_value.apikey;
+      }
+
+      if (!key) {
+        this.logger.error("[AI Prompt] llm key not found in vllm integration");
+        winston.error("Error: DirAiPrompt llm key not found in vllm integration");
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm vllm");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
@@ -215,6 +275,14 @@ class DirAiPrompt {
       }
       json.stream = false
 
+    }
+
+    if (action.llm === 'vllm' && vllm_server_config) {
+      json.model = {
+        name: filled_model,
+        url: vllm_server_config.url,
+        token: vllm_server_config.token || null
+      }
     }
 
     if (action.attach) {
