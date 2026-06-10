@@ -370,9 +370,9 @@ class DirAiPrompt {
           winston.error("DirAiPrompt openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
-          if (err.response?.data?.detail[0]) {
+          if (err.response?.data?.detail && err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail?.answer) {
+          } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
           } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
