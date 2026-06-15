@@ -280,12 +280,14 @@ class DirAiPrompt {
     }
 
     if (action.llm === 'vllm' && vllm_server_config) {
+      console.log("llm: vllm")
       json.model = {
         name: filled_model,
         url: vllm_server_config.url,
         api_key: vllm_server_config.apikey || null,
         provider: 'vllm'
       }
+      console.log("set json.model to: ", json.model);
     }
 
     if (action.attach) {
@@ -357,6 +359,7 @@ class DirAiPrompt {
     }
 
     winston.debug("DirAiPrompt json: ", json);
+    console.log("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
       url: AI_endpoint + apiEndpoint,
