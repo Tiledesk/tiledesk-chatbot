@@ -2,6 +2,7 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const { InternalSubAgentService } = require('../../services/InternalSubAgentService');
 const { DirIntent } = require("./DirIntent");
 // const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');
@@ -246,9 +247,19 @@ class DirReplyV2 {
     // }
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("(DirReplyV2) Reply: ", cleanMessage);
+
+    const outboundRequestId = InternalSubAgentService.resolveOutboundRequestId(
+      this.requestId,
+      requestAttributes,
+      this.context
+    );
+    if (outboundRequestId !== this.requestId) {
+      winston.debug(`(DirReplyV2) Sub-agent reply routed to parent request ${outboundRequestId}`);
+    }
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
-      this.requestId,
+      outboundRequestId,
       cleanMessage,
       (err) => {
         if (err) {

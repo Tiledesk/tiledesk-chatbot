@@ -1,6 +1,7 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const { InternalSubAgentService } = require('../../services/InternalSubAgentService');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
@@ -162,9 +163,18 @@ class DirReply {
     winston.debug("DirReply reply with clean message: ", cleanMessage);
     this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
+    const outboundRequestId = InternalSubAgentService.resolveOutboundRequestId(
+      this.requestId,
+      requestAttributes,
+      this.context
+    );
+    if (outboundRequestId !== this.requestId) {
+      winston.debug(`(DirReply) Sub-agent reply routed to parent request ${outboundRequestId}`);
+    }
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
-      this.requestId,
+      outboundRequestId,
       cleanMessage,
       (err) => {
         if (err) {

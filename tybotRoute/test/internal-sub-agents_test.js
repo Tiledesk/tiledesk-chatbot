@@ -98,6 +98,29 @@ describe('Internal Sub-Agents', function() {
     assert.deepStrictEqual(saved.input, { query: 'docs' });
   });
 
+  it('resolves outbound request id to parent when running inside a sub-agent', () => {
+    const parentRequestId = 'support-group-projectID-parent';
+    const subRequestId = 'automation-request-projectID-run123';
+    const requestAttributes = {
+      payload: {
+        _tdSubAgent: {
+          parentRequestId: parentRequestId,
+          subRequestId: subRequestId,
+          runId: 'run123'
+        }
+      }
+    };
+
+    assert.strictEqual(
+      InternalSubAgentService.resolveOutboundRequestId(subRequestId, requestAttributes, null),
+      parentRequestId
+    );
+    assert.strictEqual(
+      InternalSubAgentService.resolveOutboundRequestId(parentRequestId, {}, null),
+      parentRequestId
+    );
+  });
+
   it('invokes a sub-bot by id through the existing tilebot service', (done) => {
     const cache = new FakeTdCache();
     const originalSendMessageToBot = tilebotService.sendMessageToBot;

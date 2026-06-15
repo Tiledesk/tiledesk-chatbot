@@ -280,6 +280,29 @@ class InternalSubAgentService {
     await tdcache.hset(parameterKey, parameterName, parameterValueAsString);
   }
 
+  static subAgentContext(requestAttributes, context) {
+    const fromPayload = requestAttributes?.payload?._tdSubAgent || requestAttributes?._tdSubAgent;
+    if (fromPayload?.parentRequestId) {
+      return fromPayload;
+    }
+
+    const message = context && context.message;
+    const supportRequest = context && context.supportRequest;
+    const fromMessage = message?.attributes?.payload?._tdSubAgent
+      || message?.request?.attributes?.payload?._tdSubAgent
+      || supportRequest?.attributes?.payload?._tdSubAgent;
+
+    return fromMessage || null;
+  }
+
+  static resolveOutboundRequestId(requestId, requestAttributes, context) {
+    const subAgent = InternalSubAgentService.subAgentContext(requestAttributes, context);
+    if (subAgent && subAgent.parentRequestId) {
+      return subAgent.parentRequestId;
+    }
+    return requestId;
+  }
+
   static async allParameters(tdcache, requestId) {
     if (!tdcache || !requestId) {
       return {};

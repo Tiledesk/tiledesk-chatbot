@@ -79,7 +79,17 @@ describe('Conversation for AiPrompt test', async () => {
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
 
-        if (command2.message.text !== "Hi, how can I help you?") {
+        if (command2.message.text === "Hi, how can I help you?") {
+          return;
+        }
+
+        if (command2.message.text === "Ricevuto, dammi un secondo") {
+          assert.strictEqual(req.params.requestId, REQUEST_ID);
+          assert.strictEqual(message.senderFullname, "Subagent");
+          return;
+        }
+
+        if (command2.message.text.startsWith("Subagent reply with result:")) {
           util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
             if (err) {
               assert.ok(false);

@@ -289,6 +289,13 @@ router.post('/exec/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text);
 
+  try {
+    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+  } catch (e) {
+    winston.error("Error on /exec updating request attributes: ", e);
+    return;
+  }
+
   let reply = null;
   try {
     reply = await chatbot.findBlock(message);

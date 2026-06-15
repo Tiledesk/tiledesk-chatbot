@@ -96,6 +96,26 @@ const bot = {
 			"enabled": true,
 			"actions": [
 				{
+					"_tdActionType": "reply",
+					"text": "Ricevuto, dammi un secondo",
+					"attributes": {
+						"disableInputMessage": false,
+						"commands": [
+							{
+								"type": "wait",
+								"time": 500
+							},
+							{
+								"type": "message",
+								"message": {
+									"type": "text",
+									"text": "Ricevuto, dammi un secondo"
+								}
+							}
+						]
+					}
+				},
+				{
 					"_tdActionType": "return",
 					"status": 200,
 					"bodyType": "json",
