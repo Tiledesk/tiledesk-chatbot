@@ -15,6 +15,7 @@ class DirAskGPT {
       throw new Error('context object is mandatory');
     }
     this.context = context;
+    this.chatbot = this.context.chatbot;
     this.tdcache = this.context.tdcache;
     this.requestId = this.context.requestId;
     this.projectId = this.context.projectId;
@@ -131,7 +132,10 @@ class DirAskGPT {
     let json = {
       question: filled_question,
       kbid: action.kbid,
-      gptkey: key
+      gptkey: key,
+      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
+      id_project: this.projectId,
+      request_id: this.requestId
     };
     winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 
