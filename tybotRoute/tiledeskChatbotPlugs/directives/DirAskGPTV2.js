@@ -140,6 +140,7 @@ class DirAskGPTV2 {
       skip_unanswered = false,
       use_hyde = false,
       use_cache = false,
+      vllmServer = null,
     } = action;
 
     let transcript;
@@ -152,7 +153,8 @@ class DirAskGPTV2 {
     
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
-    const filled_context = filler.fill(action.context, requestVariables)
+    const filled_context = filler.fill(action.context, requestVariables);
+    const filled_model = filler.fill(action.model, requestVariables);
     
 
     if (action.history) {
@@ -178,10 +180,11 @@ class DirAskGPTV2 {
     let engine;
 
     try {
-      model = await aiController.resolveLLMConfig(this.projectId, llm, model, this.token);
+      model = await aiController.resolveLLMConfig(this.projectId, llm, filled_model, this.token, vllmServer);
     } catch (err) {
-      this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration.`);
-      await this.chatbot.addParameter("flowError", `${llm} integration not found`);
+      const errorMsg = err?.error || `${llm} integration not found`;
+      this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration: `, errorMsg);
+      await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: ${errorMsg}`);
       if (falseIntent) {
         await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);

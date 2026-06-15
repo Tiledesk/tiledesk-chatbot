@@ -393,7 +393,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt openai success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+    it('AiPrompt vllm multi-server success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -425,28 +425,43 @@ describe('Conversation for AiPrompt test', async () => {
 
       endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
-        assert(req.params.name === 'openai');
+        assert(req.params.name === 'vllm');
 
-        let http_code = 404;
-        let reply = "Integration not found for model " + req.params.nane
-
-        res.status(http_code).send(reply);
-
-      })
-
-      endpointServer.get('/:project_id/quotes/:type', function (req, res) {
-
-        let reply = { isAvailable: true };
         let http_code = 200;
-  
+        let reply = {
+          _id: "694ab906a51c8c2ad0933d19",
+          id_project: "62c3f10152dc740035000000",
+          name: "vllm",
+          value: {
+            servers: [
+              {
+                name: "Cerebras",
+                url: "https://cerebras.example.cpm/",
+                apikey: "cerebras_api_key",
+                models: ["gpt-oss-30b", "llama3.1b"]
+              },
+              {
+                name: "OpenRouter",
+                url: "https://openrouter.example.cpm/",
+                apikey: "openrouter_api_key",
+                models: ["pippo", "pluto"]
+              }
+            ]
+          }
+        }
+
         res.status(http_code).send(reply);
+
       })
 
       endpointServer.post('/api/ask', function (req, res) {
 
-        assert(req.body.llm === "openai");
-        assert(req.body.model === "gpt-5");
-        assert(req.body.llm_key === "example_api_key");
+        assert(req.body.llm === "vllm");
+        assert(req.body.llm_key === "cerebras_api_key");
+        assert(req.body.model.name === "gpt-oss-30b");
+        assert(req.body.model.url === "https://cerebras.example.cpm/");
+        assert(req.body.model.api_key === "cerebras_api_key");
+        assert(req.body.model.provider === "vllm");
   
         let reply = {}
         let http_code = 200;
@@ -470,7 +485,7 @@ describe('Conversation for AiPrompt test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_openai',
+            "text": '/ai_prompt_vllm_success',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
