@@ -268,18 +268,75 @@ function isNumeric(v) {
   return false;
 }
 
+// Boolean coercion per the `when` grammar (§3): only true / "true" coerce to
+// true, only false / "false" to false; anything else coerces to false.
+function coerceBoolean(v) {
+  if (v === true) return true;
+  if (v === false) return false;
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase();
+    if (s === 'true') return true;
+    if (s === 'false') return false;
+  }
+  return false;
+}
+
+// Parse a value into a Date (ISO-8601 strings, epoch numbers, Date instances).
+// Returns null when the value is missing or not a valid date.
+function parseDate(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const d = (v instanceof Date) ? v : new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+// Structural (deep) equality for arrays / plain objects coming from JSON
+// variables. Used when both sides of == / != resolve to objects.
+function deepEqual(a, b, depth) {
+  if (depth > MAX_DEPTH) return false;
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const ak = Object.keys(a), bk = Object.keys(b);
+  if (ak.length !== bk.length) return false;
+  for (const k of ak) {
+    if (FORBIDDEN_KEYS.has(k)) continue;
+    if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+    if (!deepEqual(a[k], b[k], depth + 1)) return false;
+  }
+  return true;
+}
+
+// Equality whose semantics follow the RIGHT operand's type, mirroring the
+// grammar's disambiguation of the single `==` token:
+//   x == "y"   -> text    (case-sensitive String comparison)
+//   x == N     -> number  (numeric coercion; non-numeric left -> not equal)
+//   x == true  -> boolean (coerceBoolean on the left)
+//   x == otherVar -> compare by the resolved value (deep equality for objects)
 function looseEq(l, r) {
-  if (isNumeric(l) && isNumeric(r)) return Number(l) === Number(r);
+  if (typeof r === 'boolean') return coerceBoolean(l) === r;
+  if (typeof r === 'number') {
+    // Only real numbers / numeric strings compare numerically; arrays, objects,
+    // booleans and empty/non-numeric strings are NOT a number -> not equal.
+    return isNumeric(l) && Number(l) === r;
+  }
+  if (r !== null && typeof r === 'object') return deepEqual(l, r, 0);
+  // string / null / undefined right operand -> case-sensitive text comparison
   return String(l) === String(r);
 }
 
-function compare(l, r) {
-  if (isNumeric(l) && isNumeric(r)) {
-    const a = Number(l), b = Number(r);
-    return a < b ? -1 : (a > b ? 1 : 0);
+// Relational operators (<, <=, >, >=) are numeric-only per the grammar (§3).
+// Anything that is not a number / numeric string (arrays, objects, booleans,
+// empty strings, missing values) yields false instead of a coerced comparison.
+function numericCompare(op, l, r) {
+  if (!isNumeric(l) || !isNumeric(r)) return false;
+  const a = Number(l), b = Number(r);
+  switch (op) {
+    case '<': return a < b;
+    case '<=': return a <= b;
+    case '>': return a > b;
+    case '>=': return a >= b;
+    default: return false;
   }
-  const a = String(l), b = String(r);
-  return a < b ? -1 : (a > b ? 1 : 0);
 }
 
 function applyBinary(op, l, r) {
@@ -295,28 +352,69 @@ function applyBinary(op, l, r) {
     case '!=': return !looseEq(l, r);
     case '===': return l === r;
     case '!==': return l !== r;
-    case '<': return compare(l, r) < 0;
-    case '<=': return compare(l, r) <= 0;
-    case '>': return compare(l, r) > 0;
-    case '>=': return compare(l, r) >= 0;
+    case '<':
+    case '<=':
+    case '>':
+    case '>=': return numericCompare(op, l, r);
     default: throw new WhenEvalError('Unknown binary operator: ' + op);
   }
 }
 
-// Whitelisted functions callable from a `when` expression. Names mirror the
-// legacy TiledeskExpression.OPERATORS semantics. This table is the ONLY way an
-// expression can invoke code.
+// Whitelisted functions callable from a `when` expression. This table covers
+// the full JSON-condition grammar (see docs/json-condition-when-grammar.md) and
+// is the ONLY way an expression can invoke code. No function ever throws: on bad
+// input it returns false (predicates) or a neutral value, so a condition that
+// cannot be evaluated simply resolves falsy.
 const DEFAULT_FUNCTIONS = {
+  // --- Text (case-sensitive; grammar §3) ---------------------------------
   startsWith: (a, b) => String(a).startsWith(String(b)),
   notStartsWith: (a, b) => !String(a).startsWith(String(b)),
-  startsWithIgnoreCase: (a, b) => String(a).toLowerCase().startsWith(String(b).toLowerCase()),
-  endsWith: (a, b) => String(a).toLowerCase().endsWith(String(b).toLowerCase()),
+  endsWith: (a, b) => String(a).endsWith(String(b)),
   contains: (a, b) => String(a).includes(String(b)),
-  containsIgnoreCase: (a, b) => String(a).toLowerCase().includes(String(b).toLowerCase()),
-  isEmpty: (a) => a === '' || a === null || a === undefined,
+  matches: (a, b) => { try { return new RegExp(String(b)).test(String(a)); } catch (e) { return false; } },
+  // Legacy *IgnoreCase operators were removed by the grammar (§5); if they
+  // surface in old data, evaluate them as their case-sensitive equivalent.
+  startsWithIgnoreCase: (a, b) => String(a).startsWith(String(b)),
+  containsIgnoreCase: (a, b) => String(a).includes(String(b)),
+
+  // --- Existence / emptiness ---------------------------------------------
+  // isEmpty: null/undefined, "", [], or {} are empty; scalars are never empty.
+  isEmpty: (a) => {
+    if (a === null || a === undefined) return true;
+    if (typeof a === 'string') return a === '';
+    if (Array.isArray(a)) return a.length === 0;
+    if (typeof a === 'object') return Object.keys(a).length === 0;
+    return false;
+  },
   isNull: (a) => a === null,
   isUndefined: (a) => a === undefined,
-  matches: (a, b) => { try { return String(a).match(new RegExp(String(b))) ? true : false; } catch (e) { return false; } },
+
+  // --- Date / time (ISO-8601; any invalid/missing date -> false) ---------
+  dateEqual: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() === y.getTime(); },
+  isAfter: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() > y.getTime(); },
+  isBefore: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() < y.getTime(); },
+  isAfterOrEqual: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() >= y.getTime(); },
+  isBeforeOrEqual: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() <= y.getTime(); },
+
+  // --- Array -------------------------------------------------------------
+  // arrayContains: coerce the left side to an array (parse JSON strings), then
+  // membership-test comparing elements as strings (no substring false positive).
+  arrayContains: (a, b) => {
+    let arr = a;
+    if (typeof a === 'string') {
+      try { const parsed = JSON.parse(a); if (Array.isArray(parsed)) arr = parsed; } catch (e) { /* not a JSON array */ }
+    }
+    if (!Array.isArray(arr)) return false;
+    return arr.some((el) => String(el) === String(b));
+  },
+  // length: array element count, or string character length, otherwise 0.
+  length: (a) => {
+    if (Array.isArray(a)) return a.length;
+    if (typeof a === 'string') return a.length;
+    return 0;
+  },
+
+  // --- Scalar transforms (not condition operators, kept for expression use)
   upperCase: (a) => String(a).toUpperCase(),
   lowerCase: (a) => String(a).toLowerCase(),
   capitalize: (a) => { const s = String(a); return s.charAt(0).toUpperCase() + s.slice(1); },
@@ -327,7 +425,6 @@ const DEFAULT_FUNCTIONS = {
   cos: (a) => Math.cos(Number(a)),
   sin: (a) => Math.sin(Number(a)),
   tan: (a) => Math.tan(Number(a)),
-  length: (a) => (a === null || a === undefined ? 0 : (a.length !== undefined ? a.length : String(a).length)),
   convertToNumber: (a) => Number(a),
 };
 
