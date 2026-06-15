@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.1-rc20
+- Updated TiledeskWhenExpression and directive json_condition v2
+
 # 2.1.1-rc19
 - Added TiledeskWhenExpression and directive json_condition v2
 
