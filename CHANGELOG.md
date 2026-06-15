@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.1
+- Improved support for multiple vLLM servers
+
 # 2.1.0
 - Added support to analytics
 
