@@ -457,10 +457,10 @@ describe('Conversation for AiPrompt test', async () => {
 
         assert(req.body.llm === "vllm");
         assert(req.body.llm_key === "cerebras_api_key");
-        console.log("req.body.model: ", req.body.model);
         assert(req.body.model.name === "gpt-oss-30b");
         assert(req.body.model.url === "https://cerebras.example.cpm/");
-        assert(req.body.model.token === null);
+        assert(req.body.model.api_key === "cerebras_api_key");
+        assert(req.body.model.provider === "vllm");
   
         let reply = {}
         let http_code = 200;
