@@ -4,6 +4,7 @@ const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const { AnalyticsClient } = require('../../AnalyticsClient');
 
 class DirMoveToAgent {
 
@@ -36,6 +37,15 @@ class DirMoveToAgent {
       }
       else {
         // Successfully moved to agent
+        AnalyticsClient.track('handover_to_human', this.context.projectId, {
+          id_request:           this.requestId,
+          human_id:             null,
+          reason:               'bot_directive',
+          department_id:        this.context.departmentId || null,
+          waiting_time_seconds: null,
+          agent_id:             this.context.chatbot?.bot.root_id || this.context.chatbot?.botId,
+          trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
+        });
       }
       callback();
     });

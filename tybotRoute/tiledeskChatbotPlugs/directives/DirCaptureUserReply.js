@@ -33,9 +33,26 @@ class DirCaptureUserReply {
       callback();
       return;
     }
-    this.go(action, () => {
-      callback();
+    this.go(action, (stop) => {
+      callback(stop);
     });
+  }
+
+  #resolveIntentLockKey() {
+    const intent_info = this.reply?.attributes?.intent_info;
+    if (intent_info?.intent_id) {
+      return "#" + intent_info.intent_id;
+    }
+    if (intent_info?.intent_name) {
+      return intent_info.intent_name;
+    }
+    if (this.reply?.intent_id) {
+      return "#" + this.reply.intent_id;
+    }
+    if (this.reply?.intent_display_name) {
+      return this.reply.intent_display_name;
+    }
+    return null;
   }
 
   async go(action, callback) {
@@ -43,12 +60,18 @@ class DirCaptureUserReply {
     const goToIntent = action.goToIntent;
     let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
     if (!lockedAction) {
-      const intent_name = this.reply.attributes.intent_info.intent_name
-      const actionId = action["_tdActionId"];;
+      const intent_name = this.#resolveIntentLockKey();
+      const actionId = action["_tdActionId"];
+      if (!intent_name) {
+        this.logger.error("[Capture User Reply] Cannot lock intent: missing intent info");
+        winston.error("(DirCaptureUserReply) Cannot lock intent: missing intent info");
+        callback();
+        return;
+      }
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
       this.logger.native("[Capture User Reply] Waiting for user reply...");
-      callback();
+      callback(true);
       return;
     } else {
       try {
