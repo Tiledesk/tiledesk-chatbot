@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
 # 2.1.1
+- Fixed bug con AiPrompt action with vllm models
+
+# 2.1.1
 - Improved support for multiple vLLM servers
 
 # 2.1.0
