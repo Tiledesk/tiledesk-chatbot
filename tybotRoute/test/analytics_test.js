@@ -250,39 +250,8 @@ describe('AnalyticsClient', function () {
     });
   });
 
-  // ── webhook.triggered ─────────────────────────────────────────────────────
-  describe('webhook.triggered', function () {
-    it('posts sync webhook payload', function () {
-      withIngestUrl(() => {
-        AnalyticsClient.track('webhook.triggered', 'proj1', {
-          webhook_id: 'wh_abc', agent_id: 'bot1',
-          block_id: 'block_get_account', async: false,
-          request_id: 'req8'
-        });
-      });
-      assert.strictEqual(_calls.length, 1);
-      const [, body] = _calls[0];
-      assert.strictEqual(body.event_type, 'webhook.triggered');
-      assert.strictEqual(body.payload.webhook_id, 'wh_abc');
-      assert.strictEqual(body.payload.agent_id, 'bot1');
-      assert.strictEqual(body.payload.block_id, 'block_get_account');
-      assert.strictEqual(body.payload.async, false);
-    });
-
-    it('posts async webhook payload', function () {
-      withIngestUrl(() => {
-        AnalyticsClient.track('webhook.triggered', 'proj1', {
-          webhook_id: 'wh_xyz', agent_id: 'bot2',
-          block_id: 'block_send_notification', async: true,
-          request_id: 'req9'
-        });
-      });
-      assert.strictEqual(_calls.length, 1);
-      const [, body] = _calls[0];
-      assert.strictEqual(body.payload.webhook_id, 'wh_xyz');
-      assert.strictEqual(body.payload.async, true);
-    });
-  });
+  // webhook.triggered is intentionally NOT tested here: it is owned by
+  // tiledesk-server (production webhook automations), not the chatbot.
 
   // ── agent.intent_completed ─────────────────────────────────────────────────
   describe('agent.intent_completed', function () {

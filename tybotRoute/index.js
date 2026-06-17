@@ -593,12 +593,10 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     const execution_id = uuidv4().replace(/-/g, '');
     request_id = "automation-request-" + project_id + "-" + execution_id;
   }
-  AnalyticsClient.track('webhook.triggered', project_id, {
-    agent_id:   bot_id,
-    block_id:   block_id,
-    async:      async === true,
-    request_id: request_id
-  });
+  // webhook.triggered is emitted by tiledesk-server (routes/webhook.js) — the
+  // single source for production webhook automations (it carries webhook_id and
+  // excludes dev/draft runs). Not emitted here to avoid double-counting; the
+  // block execution itself is already recorded via agent.block_executed.
 
   const command = "/#" + block_id;
   let message = {
