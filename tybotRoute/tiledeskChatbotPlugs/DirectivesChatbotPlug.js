@@ -321,6 +321,15 @@ class DirectivesChatbotPlug {
 
     const blockStart = Date.now();
     handler.execute(directive, async (stop) => {
+      // [analytics-debug] Trace the block_executed decision per directive so we can
+      // see whether the event is emitted and why (missing root_id, draft, etc.).
+      winston.debug("(DirectivesChatbotPlug) [analytics] block_executed decision:" +
+        " directive_type=" + (directive.name || 'unknown') +
+        " block_id=" + (directive.action?.["_tdActionId"] || '<empty>') +
+        " root_id=" + (this.context.chatbot?.bot?.root_id || '<none>') +
+        " draft=" + (this.context.supportRequest?.draft) +
+        " stop=" + stop +
+        " willEmit=" + (!!this.context.chatbot?.bot?.root_id));
       // Only track published (production) runs (root/draft copy has no root_id).
       if (this.context.chatbot?.bot.root_id) {
         AnalyticsClient.track('agent.block_executed', this.context.projectId, {
