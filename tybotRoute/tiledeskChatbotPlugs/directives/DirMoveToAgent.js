@@ -36,16 +36,19 @@ class DirMoveToAgent {
         winston.error("DirMoveToAgent) Error moving to agent: ", err);
       }
       else {
-        // Successfully moved to agent
-        AnalyticsClient.track('handover_to_human', this.context.projectId, {
-          id_request:           this.requestId,
-          human_id:             null,
-          reason:               'bot_directive',
-          department_id:        this.context.departmentId || null,
-          waiting_time_seconds: null,
-          agent_id:             this.context.chatbot?.bot.root_id || this.context.chatbot?.botId,
-          trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
-        });
+        // Successfully moved to agent. Only track published (production) runs
+        // (root/draft copy has no root_id).
+        if (this.context.chatbot?.bot.root_id) {
+          AnalyticsClient.track('handover_to_human', this.context.projectId, {
+            id_request:           this.requestId,
+            human_id:             null,
+            reason:               'bot_directive',
+            department_id:        this.context.departmentId || null,
+            waiting_time_seconds: null,
+            agent_id:             this.context.chatbot?.bot.root_id,
+            trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
+          });
+        }
       }
       callback();
     });
