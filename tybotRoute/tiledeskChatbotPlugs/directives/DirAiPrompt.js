@@ -256,7 +256,7 @@ class DirAiPrompt {
       max_tokens: action.max_tokens,
       id_project: this.projectId,
       request_id: this.requestId,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId
+      agent_id: this.chatbot?.bot.root_id || null
     }
 
     if (action.context) {
