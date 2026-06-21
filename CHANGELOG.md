@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
-# 2.1.1
+# 2.1.3
+- Fixed bug on analytics integration
+
+# 2.1.2
 - Fixed bug on AiPrompt action with vllm models
 
 # 2.1.1
