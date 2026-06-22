@@ -190,7 +190,7 @@ class TiledeskChatbot {
       let faqs;
       try {
         faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
-        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
+        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + JSON.stringify(faqs, null, 2));
       }
       catch (error) {
         winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
@@ -215,7 +215,7 @@ class TiledeskChatbot {
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
-          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:", intents);
+          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:" + JSON.stringify(intents, null, 2));
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occurred on IntentsFinder.decode() (/model/parse error):" + error.message);
@@ -226,7 +226,7 @@ class TiledeskChatbot {
             winston.debug("(TiledeskChatbot) Got intents from backup finder: ", intents);
           }
         }
-        winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
+        winston.debug("(TiledeskChatbot) NLP intents found: " + JSON.stringify(intents, null, 2));
         if (intents && intents.length > 0) {
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
