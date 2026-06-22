@@ -360,18 +360,6 @@ class DirectivesChatbotPlug {
       let process_next_dir = await this.process(next_dir);
       return process_next_dir;
     });
-
-    if (stop) {
-      winston.debug("(DirectivesChatbotPlug) Stopping Actions on:", directive);
-      return;
-    }
-
-    const next_dir = await this.nextDirective(this.directives);
-    winston.verbose(
-      "(DirectivesChatbotPlug) Go to next directive: " +
-        (next_dir && next_dir.name != null ? next_dir.name : String(next_dir))
-    );
-    return this.process(next_dir);
   }
 
   // DEPRECATED
