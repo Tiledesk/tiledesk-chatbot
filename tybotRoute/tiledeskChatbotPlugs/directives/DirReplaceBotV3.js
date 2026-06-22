@@ -86,13 +86,16 @@ class DirReplaceBotV3 {
 
         winston.debug("(DirReplaceBotV3)  replace resbody: ", resbody);
 
-        // Emit analytics event for bot switch
-        AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
-          from_agent_id:  this.context.chatbot?.bot.root_id || this.context.chatbot?.botId || '',
-          to_agent_id:    (useSlug ? botSlug : botId) || resbody?.bot?._id || '',
-          intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
-          request_id:     this.requestId || null
-        });
+        // Emit analytics event for bot switch. Only track published (production)
+        // runs (root/draft copy has no root_id).
+        if (this.context.chatbot?.bot.root_id) {
+          AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
+            from_agent_id:  this.context.chatbot?.bot.root_id,
+            to_agent_id:    resbody?.replaced_bot_root_id || (useSlug ? botSlug : botId) || '',
+            intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+            request_id:     this.requestId || null
+          });
+        }
 
         if (blockName) {
           winston.debug("(DirReplaceBotV3) Sending hidden /start message to bot in dept");

@@ -296,7 +296,7 @@ class DirAskGPTV2 {
       stream: false,
       id_project: this.projectId,
       request_id: this.requestId,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
+      agent_id: this.chatbot?.bot.root_id || null,
     };
     if (top_k) {
       json.top_k = top_k;

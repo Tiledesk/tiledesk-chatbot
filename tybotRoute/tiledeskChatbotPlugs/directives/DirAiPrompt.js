@@ -258,7 +258,7 @@ class DirAiPrompt {
       max_tokens: action.max_tokens,
       id_project: this.projectId,
       request_id: this.requestId,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId
+      agent_id: this.chatbot?.bot.root_id || null
     }
 
     if (action.context) {
@@ -284,7 +284,7 @@ class DirAiPrompt {
       json.model = {
         name: filled_model,
         url: vllm_server_config.url,
-        api_key: vllm_server_config.apikey || null,
+        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
       console.log("set json.model to: ", json.model);

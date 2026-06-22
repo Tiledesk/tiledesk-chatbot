@@ -1,7 +1,17 @@
 # Tiledesk native chatbot
 
+
+# 2.1.3
+- Fixed bug on analytics integration
+
 # 2.1.3-rc1
 - Updated TiledeskWhenExpression and directive json_condition v2
+
+# 2.1.2
+- Fixed bug on AiPrompt action with vllm models
+
+# 2.1.1
+- Improved support for multiple vLLM servers
 
 # 2.1.1-rc19
 - Added TiledeskWhenExpression and directive json_condition v2
