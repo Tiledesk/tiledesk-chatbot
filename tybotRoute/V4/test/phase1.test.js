@@ -15,10 +15,19 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     ok(r.touchedVariables === true, 'touchedVariables true');
   });
 
-  await run('capture_user_reply → cattura il testo utente', async () => {
+  await run('capture_user_reply → 1ª fase: si ferma e attende (nessuna cattura)', async () => {
     const ctx = makeCtx({ message: { text: 'Mario Rossi' } });
-    await H('capture_user_reply').execute({ data: { assignResultTo: 'nome' } }, ctx);
+    const r = await H('capture_user_reply').execute({ data: { assignResultTo: 'nome' } }, ctx);
+    ok(r.stop === true && r.awaitInput === true, 'attende input (stop + awaitInput)');
+    eq(await ctx.variables.get('nome'), null, 'niente catturato durante l\'attesa');
+  });
+
+  await run('capture_user_reply → resume: cattura il testo utente', async () => {
+    const ctx = makeCtx({ message: { text: 'Mario Rossi' } });
+    ctx.resuming = true; // il dispatcher segnala "questo è l'input atteso"
+    const r = await H('capture_user_reply').execute({ data: { assignResultTo: 'nome' } }, ctx);
     eq(await ctx.variables.get('nome'), 'Mario Rossi', 'testo catturato in nome');
+    eq(r.nextSlotKey, 'direct', 'prosegue direct dopo la cattura');
   });
 
   await run('setattribute-v2 → somma numerica', async () => {

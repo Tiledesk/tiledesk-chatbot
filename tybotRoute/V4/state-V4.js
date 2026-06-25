@@ -6,8 +6,11 @@ const winston = require('../utils/winston');
  * Namespace dedicato `tilebotv4:` → NON tocca lo stato del runtime V3.
  * Forma dello stato:
  *   {
- *     currentNodeId: string | null,   // ultimo nodo eseguito che attende input
- *     awaitingButtons: [ { value, nextNode } ],  // bottoni dell'ultimo reply
+ *     currentNodeId: string | null,   // ultimo nodo che si è fermato (stop)
+ *     awaitingButtons: [ { value, nextNode } ] | null,  // bottoni dell'ultimo reply
+ *     noMatchNode: string | null,     // target no_match (replyv2)
+ *     resumeNodeId: string | null,    // nodo che attende input LIBERO: il prossimo
+ *                                     // messaggio utente riprende da qui (capture, …)
  *   }
  */
 

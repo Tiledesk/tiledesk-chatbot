@@ -5,6 +5,7 @@ const state = require('./state-V4.js');
 const { chooseNext, firstSlot } = require('./slots-V4.js');
 const { createVariables } = require('./variables-V4.js');
 const { createServices } = require('./services/index.js');
+const { labelFor, createTurnLogger } = require('./flowlog-V4.js');
 
 // Handler per tipo di nodo. Aggiungere qui i nuovi type man mano che si migrano.
 const HANDLERS = {
@@ -105,13 +106,13 @@ async function reply(ctx) {
     return;
   }
 
-  const entryNode = await resolveEntryNode({ text, action, nodes, tdcache, requestId });
-  if (!entryNode) {
+  const entry = await resolveEntryNode({ text, action, nodes, tdcache, requestId });
+  if (!entry || !entry.node) {
     winston.warn(`(TiledeskChatbotV4) nessun nodo di ingresso risolto (text="${text}").`);
     return;
   }
 
-  await runTurn(ctx, nodes, entryNode);
+  await runTurn(ctx, nodes, entry.node, entry.resuming);
 }
 
 /**
@@ -119,7 +120,7 @@ async function reply(ctx) {
  * il grafo, invia l'idle-ack se nulla è stato inviato, e schedula l'eventuale
  * no_input. Riusato anche dal timer no_input.
  */
-async function runTurn(ctx, nodes, entryNode) {
+async function runTurn(ctx, nodes, entryNode, resuming = false) {
   const { projectId, requestId, token, tdcache, tilebotEndpoint, bot, botId } = ctx;
   const turnToken = makeToken();
   await state.setTurn(tdcache, requestId, turnToken);
@@ -161,7 +162,9 @@ async function runTurn(ctx, nodes, entryNode) {
     },
   };
 
-  const pendingNoInput = await walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx });
+  // Flow-log del turno (pubblicato su rabbitmq, letto dal pannello di test del DS).
+  const flowlog = createTurnLogger(requestId, ctx.message);
+  const pendingNoInput = await walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx, flowlog, resuming });
 
   // Nessun messaggio visibile → ack nascosto per non lasciare il widget in attesa.
   if (!sender.hasSent()) {
@@ -175,10 +178,12 @@ async function runTurn(ctx, nodes, entryNode) {
 }
 
 /**
- * Nodo di ingresso:
+ * Nodo di ingresso del turno. Ritorna `{ node, resuming }`:
  * - `\start`/`/start`                     → nodo `start` (azzera lo stato);
  * - `attributes.action` (bottone action)  → nodo target esplicito;
  * - testo = bottone in attesa             → nodo collegato;
+ * - turno SOSPESO su un nodo che attende input libero (capture, …) → RIPRENDE
+ *   da quel nodo con `resuming: true` (gli passa l'input dell'utente);
  * - input non riconosciuto su un nodo con `no_match` (replyv2) → nodo no_match;
  * - altrimenti                            → `defaultFallback`.
  */
@@ -186,7 +191,7 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
   if (START_COMMANDS.includes(text)) {
     await state.clearState(tdcache, requestId);
     winston.verbose('(TiledeskChatbotV4) entry: START → nodo start');
-    return NodesDataSourceV4.startNode(nodes);
+    return { node: NodesDataSourceV4.startNode(nodes), resuming: false };
   }
 
   if (action) {
@@ -194,9 +199,9 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
     const target = NodesDataSourceV4.byId(nodes, nodeId);
     if (target) {
       winston.verbose('(TiledeskChatbotV4) entry: action button → nodo ' + nodeId);
-      return target;
+      return { node: target, resuming: false };
     }
-    winston.verbose('(TiledeskChatbotV4) action "' + action + '" non risolve a un nodo, provo awaitingButtons/no_match/fallback');
+    winston.verbose('(TiledeskChatbotV4) action "' + action + '" non risolve a un nodo, provo awaitingButtons/resume/no_match/fallback');
   }
 
   const saved = await state.getState(tdcache, requestId);
@@ -206,8 +211,21 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
       const target = NodesDataSourceV4.byId(nodes, btn.nextNode);
       if (target) {
         winston.verbose('(TiledeskChatbotV4) entry: bottone "' + text + '" → nodo ' + btn.nextNode);
-        return target;
+        return { node: target, resuming: false };
       }
+    }
+  }
+
+  // Resume: il turno precedente si è SOSPESO su un nodo che attende input libero
+  // (es. `capture_user_reply`). Il messaggio corrente è quell'input → riprendi
+  // da quel nodo con `resuming: true`. Consuma il marker (one-shot): un'eventuale
+  // nuova attesa verrà ri-salvata dal walk.
+  if (saved && saved.resumeNodeId) {
+    const target = NodesDataSourceV4.byId(nodes, saved.resumeNodeId);
+    if (target) {
+      await state.clearState(tdcache, requestId);
+      winston.verbose('(TiledeskChatbotV4) entry: resume input → nodo ' + saved.resumeNodeId);
+      return { node: target, resuming: true };
     }
   }
 
@@ -216,12 +234,12 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
     const target = NodesDataSourceV4.byId(nodes, saved.noMatchNode);
     if (target) {
       winston.verbose('(TiledeskChatbotV4) entry: no_match → nodo ' + saved.noMatchNode);
-      return target;
+      return { node: target, resuming: false };
     }
   }
 
   winston.verbose('(TiledeskChatbotV4) entry: input non riconosciuto ("' + text + '") → defaultFallback');
-  return NodesDataSourceV4.fallbackNode(nodes);
+  return { node: NodesDataSourceV4.fallbackNode(nodes), resuming: false };
 }
 
 /**
@@ -229,13 +247,18 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
  * @returns {object|null} il `noInput` pendente se un nodo (replyv2) si è fermato
  *   con un no_input connesso; altrimenti null.
  */
-async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }) {
+async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx, flowlog, resuming }) {
   let node = entryNode;
   let steps = 0;
 
   while (node && steps < MAX_STEPS) {
     steps++;
     winston.verbose('(TiledeskChatbotV4) visito nodo: ' + node.type + ' (' + node.id + ')');
+    const label = labelFor(node.type);
+    if (flowlog) {
+      flowlog.intent_id = node.id;
+      flowlog.debug('[' + label + '] Executing node ' + node.id + ' (type: ' + node.type + ')');
+    }
     const handler = HANDLERS[node.type];
 
     if (!handler) {
@@ -245,6 +268,11 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }
       return null;
     }
 
+    // `resuming` vale SOLO per il nodo di ingresso del turno (step 1): è il
+    // segnale "questo è l'input atteso" per i nodi input-consuming (capture).
+    // Dai nodi successivi è sempre false (sono esecuzioni "fresche").
+    handlerCtx.resuming = steps === 1 ? !!resuming : false;
+
     // Contratto handler retro-compatibile: i 5 handler storici sono sincroni e
     // ignorano il 2° argomento; i nuovi sono `async execute(node, ctx)`.
     let result;
@@ -252,6 +280,7 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }
       result = await Promise.resolve(handler.execute(node, handlerCtx));
     } catch (err) {
       winston.error(`(TiledeskChatbotV4) errore handler '${node.type}' (${node.id}): `, err);
+      if (flowlog) flowlog.error('[' + label + '] Error: ' + ((err && err.message) || err));
       if (handlerCtx && handlerCtx.variables) {
         await handlerCtx.variables.set('flowError', String((err && err.message) || err));
         await sender.refreshParams();
@@ -267,6 +296,12 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }
     result = result || {};
 
     if (result.messages && result.messages.length > 0) {
+      if (flowlog) {
+        result.messages.forEach((m, i) => {
+          const t = m && typeof m.text === 'string' ? m.text : '';
+          flowlog.native('[' + label + '] Reply with' + (i > 0 ? ' ' + (i + 1) : '') + ': ' + t);
+        });
+      }
       await sender.sendV4Messages(result.messages, result.buttonSlotMap);
     }
 
@@ -274,6 +309,16 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }
     // successivi vedono i nuovi valori).
     if (result.touchedVariables) {
       await sender.refreshParams();
+    }
+
+    if (flowlog) {
+      // Nodo che si sospende in attesa di input → log "Waiting" invece di
+      // "Executed" (non ha ancora consumato nulla — parità V3 capture).
+      if (result.stop && result.awaitInput) {
+        flowlog.native('[' + label + '] Waiting for user input…');
+      } else {
+        flowlog.native('[' + label + '] Executed');
+      }
     }
 
     if (result.close) {
@@ -286,6 +331,9 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx }
         currentNodeId: node.id,
         awaitingButtons: result.awaitingButtons || null,
         noMatchNode: result.noMatchNode || null,
+        // Marker di resume: il nodo attende input libero (capture, …) → il
+        // prossimo messaggio utente lo fa ripartire da qui (resolveEntryNode).
+        resumeNodeId: result.awaitInput ? node.id : null,
       });
       return result.noInput || null;
     }

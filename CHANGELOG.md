@@ -1,5 +1,10 @@
 # Tiledesk native chatbot
 
+
+# this branch
+- V4 engine: added a generic suspend/resume primitive (dispatcher `resolveEntryNode`/`walk` + `resumeNodeId` state) so input-consuming nodes can pause the turn and resume on the next user message.
+- Fixed V4 `capture_user_reply`: now waits for the user's reply before capturing it (two-phase, parity with V3 `DirCaptureUserReply` lock), instead of capturing the trigger text and advancing immediately (which left `{{var}}` unresolved).
+
 # 2.1.0
 - Added support to analytics
 
