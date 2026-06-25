@@ -1,7 +1,10 @@
 # Tiledesk native chatbot
 
+# this branch 1.1
+- V4 engine: ported the safe `TiledeskWhenExpression` evaluator (no `eval`/`Function`/`vm2`; whitelisted operators + functions) — copied verbatim from `main_pre`, with its `test/when_expression_test.js`.
+- V4 `condition`/`jsoncondition` nodes now PREFER the safe `data.when` string (evaluated by `TiledeskWhenExpression`) and FALL BACK to the legacy `data.groups` when `when` is absent — same backward-compat scheme as `DirJSONConditionV2`. New helpers `evalWhen`/`evalConditionData` in `V4/expression-V4.js`; new test `V4/test/condition-when-V4.test.js`. Legacy `condition` data keeps working (runtime back-compat).
 
-# this branch
+# this branch 1.0
 - V4 engine: added a generic suspend/resume primitive (dispatcher `resolveEntryNode`/`walk` + `resumeNodeId` state) so input-consuming nodes can pause the turn and resume on the next user message.
 - Fixed V4 `capture_user_reply`: now waits for the user's reply before capturing it (two-phase, parity with V3 `DirCaptureUserReply` lock), instead of capturing the trigger text and advancing immediately (which left `{{var}}` unresolved).
 

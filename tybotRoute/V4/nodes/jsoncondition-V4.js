@@ -1,13 +1,13 @@
-const { evalGroups } = require('../expression-V4.js');
+const { evalConditionData } = require('../expression-V4.js');
 
 /**
- * Node `jsoncondition` — valuta `data.groups` (multi-gruppo con AND/OR).
+ * Node `jsoncondition` — valuta la condizione (multi-gruppo con AND/OR).
+ * Preferisce `data.when` (safe, no-eval); fallback su `data.groups` (legacy).
  * Vero → slot `true`; falso → slot `false`.
  */
 async function execute(node, ctx) {
-  const groups = (node.data && node.data.groups) || [];
   const vars = await ctx.variables.all();
-  return { nextSlotKey: evalGroups(groups, vars) ? 'true' : 'false' };
+  return { nextSlotKey: evalConditionData(node.data, vars) ? 'true' : 'false' };
 }
 
 module.exports = { execute };
