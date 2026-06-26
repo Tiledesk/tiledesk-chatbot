@@ -55,7 +55,7 @@ const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
 const { DirAddTags } = require('./directives/DirAddTags');
 const { DirSendWhatsapp } = require('./directives/DirSendWhatsapp');
 const { DirReplaceBotV3 } = require('./directives/DirReplaceBotV3');
-const { DirAiPrompt } = require('./directives/DirAiPrompt');
+const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
@@ -80,7 +80,6 @@ class DirectivesChatbotPlug {
   constructor(config) {
     this.supportRequest = config.supportRequest;
     this.API_ENDPOINT = config.API_ENDPOINT;
-    this.API_URL = config.API_URL;
     this.TILEBOT_ENDPOINT = config.TILEBOT_ENDPOINT;
     this.token = config.token;
     this.HELP_CENTER_API_ENDPOINT = config.HELP_CENTER_API_ENDPOINT;
@@ -123,13 +122,14 @@ class DirectivesChatbotPlug {
 
   }
 
-  async processDirectives() {
+  async processDirectives(theend) {
+    this.theend = theend;
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       winston.verbose("(DirectivesChatbotPlug) No directives to process.");
+      this.theend();
       return;
     }
-
     const supportRequest = this.supportRequest;
     const token = this.token;
     const API_ENDPOINT = this.API_ENDPOINT;
@@ -143,8 +143,9 @@ class DirectivesChatbotPlug {
 
     const projectId = supportRequest.id_project;
     const tdcache = this.tdcache;
+    let tdclient = null;
     try {
-      new TiledeskClient({
+      tdclient = new TiledeskClient({
         projectId: projectId,
         token: token,
         APIURL: API_ENDPOINT,
@@ -164,7 +165,6 @@ class DirectivesChatbotPlug {
       reply: this.reply,
       requestId: supportRequest.request_id,
       API_ENDPOINT: API_ENDPOINT,
-      API_URL: this.API_URL,
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
@@ -226,15 +226,13 @@ class DirectivesChatbotPlug {
     }
   }
 
-  /**
-   * Runs directives sequentially. Resolves when the chain ends (null directive), stops (stop flag), or throws.
-   */
   async process(directive) {
+
     const context = this.context;
 
     if (!directive || !directive.name) {
       winston.debug("(DirectivesChatbotPlug) stop process(). directive is null", directive);
-      return;
+      return this.theend();
     }
 
     const directive_name = directive.name.toLowerCase();
