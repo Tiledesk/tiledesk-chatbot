@@ -771,7 +771,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "X-API-Key",
                     key: "example_api_key"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "email_send" },
+                    { name: "email_read" }
+                  ]
                 },
                 {
                   name: "calendar",
@@ -780,7 +784,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "Bearer",
                     key: "Bearer mybearertoken"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "calendar_read" },
+                    { name: "calendar_write" }
+                  ]
                 },
                 {
                   name: "custom",
@@ -789,7 +797,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "Basic",
                     key: "Basic mybase64username:password"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "tool1" },
+                    { name: "tool2" }
+                  ]
                 }
               ]
             }
@@ -812,6 +824,9 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.email.enabled_tools[0] === "email_send");
         assert(req.body.servers.email.enabled_tools[1] === "email_read");
         assert(req.body.servers.email.api_key === "example_api_key");
+        assert(req.body.servers.email.id === undefined);
+        assert(req.body.servers.email.tools === undefined);
+        assert(req.body.servers.email.native === undefined);
 
         assert(req.body.servers.calendar.url === "example_url2.com/mcp");
         assert(req.body.servers.calendar.transport === "streamable_http");
@@ -1002,9 +1017,13 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers["Tiledesk Communicator"]);
         assert(req.body.servers["Tiledesk Communicator"].url === nativeMcpUrl);
         assert(req.body.servers["Tiledesk Communicator"].transport === "streamable_http");
-        assert(req.body.servers["Tiledesk Communicator"].tools.length === 2);
-        assert(req.body.servers["Tiledesk Communicator"].tools[0].name === "ask_kb");
-        assert(req.body.servers["Tiledesk Communicator"].tools[1].name === "check_available_agents");
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools.length === 2);
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools[0] === "ask_kb");
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools[1] === "check_available_agents");
+        assert(req.body.servers["Tiledesk Communicator"].id === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].native === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].tools === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].customHeaders === undefined);
 
         let reply = {}
         let http_code = 200;

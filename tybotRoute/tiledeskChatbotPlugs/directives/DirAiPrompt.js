@@ -293,10 +293,11 @@ class DirAiPrompt {
 
     if (action.servers) {
 
+      let mcp_integration;
       try {
-        let mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
+        mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
         if (mcp_integration?.value?.servers) {
-          await this.findAuthorization(action.servers, mcp_integration);
+          this.enrichServersFromIntegration(action.servers, mcp_integration);
         }
 
       } catch (err) {
@@ -324,8 +325,19 @@ class DirAiPrompt {
         return;
       }
 
-      json.servers = this.arrayToObject(action.servers);
-      console.log("json.servers: ", json.servers);
+      const flowVariables = {
+        'x-chatbotToken': requestVariables.chatbotToken,
+        'x-project-id': requestVariables.project_id,
+        'x-conversation-id': requestVariables.conversation_id,
+        'x-department-id': requestVariables.department_id,
+        'x-chatbot-name': requestVariables.chatbot_name,
+        'x-chatbot-id': this.chatbot.botId,
+        'x-user-id': requestVariables.user_id || requestVariables.userLeadId,
+        'x-last-user-text': requestVariables.lastUserText,
+      };
+
+      json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
+      winston.debug("DirAiPrompt json.servers: ", json.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -605,34 +617,159 @@ class DirAiPrompt {
     })
   }
 
-  arrayToObject(arr) {
+  // Fields accepted by the LLM server schema. Everything else (id, native,
+  // customHeaders, oauth, tools, ...) is internal and must not be forwarded.
+  static SERVER_ALLOWED_FIELDS = ['transport', 'url', 'command', 'args', 'api_key', 'headers', 'parameters'];
+
+  arrayToObject(arr, mcp_integration, flowVariables) {
     if (!Array.isArray(arr)) {
       winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
       this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
       return null;
     }
-    return arr.reduce((acc, item) => {
-      const { name, ...rest } = item;
-      acc[name] = rest;
+
+    const integrationServers = Array.isArray(mcp_integration?.value?.servers)
+      ? mcp_integration.value.servers
+      : [];
+
+    return arr.reduce((acc, server) => {
+      const integrationServer = this.getIntegrationServer(integrationServers, server);
+
+      const cleanServer = {};
+      for (const field of DirAiPrompt.SERVER_ALLOWED_FIELDS) {
+        if (field === 'headers') continue;
+        if (server[field] !== undefined) {
+          cleanServer[field] = server[field];
+        }
+      }
+
+      const enabled_tools = this.buildEnabledTools(server, integrationServer);
+      if (enabled_tools) {
+        cleanServer.enabled_tools = enabled_tools;
+      }
+
+      const integrationHeaders = this.customHeadersToObject(integrationServer?.customHeaders);
+      const serverFlowVariables = server.native === true ? flowVariables : null;
+      cleanServer.headers = this.mergeHeadersWithVariables(
+        this.mergeHeadersWithVariables(integrationHeaders, server.headers),
+        serverFlowVariables
+      );
+
+      acc[server.name] = cleanServer;
       return acc;
     }, {});
   }
 
-  async findAuthorization(servers, mcp_integration) {
+  /**
+   * Builds the enabled_tools array of strings for a server.
+   * Priority: the project-level 'selectedTools' returned by the mcp integration,
+   * then any explicit enabled_tools/tools provided on the action server.
+   */
+  buildEnabledTools(server, integrationServer) {
+    const toNames = (tools) =>
+      Array.isArray(tools)
+        ? tools
+            .map(t => (typeof t === 'string' ? t : t?.name))
+            .filter(name => typeof name === 'string' && name.length > 0)
+        : null;
+
+    const fromSelected = toNames(integrationServer?.selectedTools);
+    if (fromSelected && fromSelected.length > 0) {
+      return fromSelected;
+    }
+
+    const fromEnabled = toNames(server.enabled_tools);
+    if (fromEnabled && fromEnabled.length > 0) {
+      return fromEnabled;
+    }
+
+    const fromTools = toNames(server.tools);
+    if (fromTools && fromTools.length > 0) {
+      return fromTools;
+    }
+
+    return null;
+  }
+
+  getIntegrationServer(integrationServers, server) {
+    if (!Array.isArray(integrationServers) || !server) return null;
+    if (server.id) {
+      const byId = integrationServers.find(s => s.id === server.id);
+      if (byId) return byId;
+    }
+    if (server.name) {
+      return integrationServers.find(s => s.name === server.name) || null;
+    }
+    return null;
+  }
+
+  enrichServersFromIntegration(servers, mcp_integration) {
     const integrationServers = mcp_integration?.value?.servers;
     if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
-  
-    // Preindex by name
-    const map = new Map(integrationServers.map(s => [s.name, s]));
-  
+
     servers.forEach(server => {
-      const integrationServer = map.get(server.name);
-      if (integrationServer?.authorization?.key) {
+      const integrationServer = this.getIntegrationServer(integrationServers, server);
+      if (!integrationServer) return;
+
+      if (!server.native && integrationServer.url) {
+        server.url = integrationServer.url;
+      }
+      if (integrationServer.transport) {
+        server.transport = integrationServer.transport;
+      }
+      if (integrationServer.authorization?.key) {
         server.api_key = integrationServer.authorization.key;
       }
     });
 
     return servers;
+  }
+
+  customHeadersToObject(customHeaders) {
+    if (!Array.isArray(customHeaders)) {
+      return {};
+    }
+    return customHeaders.reduce((acc, header) => {
+      if (header?.enabled === false || !header?.key) {
+        return acc;
+      }
+      acc[header.key] = header.value != null ? String(header.value) : '';
+      return acc;
+    }, {});
+  }
+
+  mergeHeadersWithVariables(existingHeaders, variables) {
+    const base =
+      existingHeaders &&
+      typeof existingHeaders === 'object' &&
+      !Array.isArray(existingHeaders)
+        ? { ...existingHeaders }
+        : {};
+    for (const key of Object.keys(base)) {
+      const v = base[key];
+      if (v !== undefined && v !== null && typeof v !== 'string') {
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      }
+    }
+    if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
+      return base;
+    }
+    for (const key of Object.keys(variables)) {
+      try {
+        const v = variables[key];
+        if (v === undefined || typeof v === 'function') {
+          continue;
+        }
+        if (v === null) {
+          base[key] = '';
+          continue;
+        }
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      } catch (err) {
+        winston.warn("DirAiPrompt mergeHeadersWithVariables skip key:", key, err);
+      }
+    }
+    return base;
   }
 
   async resolveNativeServerUrls(servers) {
