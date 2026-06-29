@@ -18,6 +18,8 @@ const path = require("path");
 const mime = require("mime-types");
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
+const reasoningLevels = ['low', 'medium', 'high'];
+
 
 class DirAiPrompt {
 
@@ -279,12 +281,14 @@ class DirAiPrompt {
     }
 
     if (action.llm === 'vllm' && vllm_server_config) {
+      console.log("llm: vllm")
       json.model = {
         name: filled_model,
         url: vllm_server_config.url,
         api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
+      console.log("set json.model to: ", json.model);
     }
 
     if (action.attach) {
@@ -348,27 +352,47 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('json.servers', json.servers);
+    }
+
+
+    // Handle reasoning if enabled
+    let apiEndpoint = "/ask";
+
+    if (action.reasoning === true) {
+      let reasoningLevel = 'low';
+      if (action.reasoningLevel && reasoningLevels.includes(action.reasoningLevel.toLowerCase())) { 
+        reasoningLevel = action.reasoningLevel.toLowerCase();
+        this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      } else {
+        this.logger.native(`[AI Prompt] Reasoning enabled with default level: ${reasoningLevel}`);
+      }
+      
+      apiEndpoint = "/thinking";
+      this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      winston.debug("DirAiPrompt Reasoning enabled, using /thinking endpoint");
+      json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
     winston.debug("DirAiPrompt json: ", json);
+    console.log("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
-      url: AI_endpoint + "/ask",
+      url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("DirAiPrompt openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
-          if (err.response?.data?.detail[0]) {
+          if (err.response?.data?.detail && err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail?.answer) {
+          } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
           } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
@@ -391,6 +415,13 @@ class DirAiPrompt {
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
 
+          let reasoning_content = null;
+          if (action.reasoning === true) {
+            reasoning_content = resbody.reasoning_content;
+            this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+            await this.chatbot.addParameter("reasoning_content", reasoning_content);
+          }
+
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_info?.total_tokens || 0,
@@ -399,7 +430,7 @@ class DirAiPrompt {
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
         
-          await this.#assignAttributes(action, answer);
+          await this.#assignAttributes(action, answer, reasoning_content);
 
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -519,7 +550,7 @@ class DirAiPrompt {
     }
   }
 
-  async #assignAttributes(action, answer) {
+  async #assignAttributes(action, answer, reasoning_content) {
     winston.debug("DirAiPrompt assignAttributes action: ", action)
     winston.debug("DirAiPrompt assignAttributes answer: " + answer)
 
@@ -527,7 +558,45 @@ class DirAiPrompt {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
+      if (action.assignReasoningContentTo && reasoning_content) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReasoningContentTo, reasoning_content);
+      }
     }
+  }
+
+  /**
+   * Builds the thinking object for reasoning based on the level and max_tokens
+   * @param {string} level - The reasoning level: 'low', 'medium', or 'high'
+   * @param {number} max_tokens - Maximum tokens available
+   * @returns {object} The thinking configuration object
+   */
+  #buildThinkingObject(level, max_tokens) {
+    // Calculate budget_tokens based on level
+    let budgetPercentage;
+    switch (level) {
+      case 'high':
+        budgetPercentage = 0.60; // 60%
+        break;
+      case 'medium':
+        budgetPercentage = 0.40; // 40%
+        break;
+      case 'low':
+      default:
+        budgetPercentage = 0.20; // 20%
+        break;
+    }
+
+    const budget_tokens = Math.floor(max_tokens * budgetPercentage);
+
+    return {
+      show_thinking_stream: true,
+      reasoning_effort: level,
+      reasoning_summary: "auto",
+      type: "enabled",
+      budget_tokens: budget_tokens,
+      thinkingBudget: budget_tokens,
+      thinkingLevel: level
+    };
   }
 
   async getKeyFromKbSettings() {
@@ -719,6 +788,17 @@ class DirAiPrompt {
       }
       if (integrationServer.authorization?.key) {
         server.api_key = integrationServer.authorization.key;
+      }
+
+      const integrationHeaders = this.customHeadersToObject(integrationServer.customHeaders);
+      if (Object.keys(integrationHeaders).length > 0) {
+        const existingHeaders =
+          server.headers &&
+          typeof server.headers === 'object' &&
+          !Array.isArray(server.headers)
+            ? server.headers
+            : {};
+        server.headers = { ...existingHeaders, ...integrationHeaders };
       }
     });
 
