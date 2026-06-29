@@ -17,6 +17,7 @@ const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
 
+const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 
 class DirAiPrompt {
 
@@ -311,7 +312,20 @@ class DirAiPrompt {
         return;
       }
 
+      const nativeUrlError = await this.resolveNativeServerUrls(action.servers);
+      if (nativeUrlError) {
+        await this.chatbot.addParameter("flowError", nativeUrlError);
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
       json.servers = this.arrayToObject(action.servers);
+      console.log("json.servers: ", json.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -619,6 +633,90 @@ class DirAiPrompt {
     });
 
     return servers;
+  }
+
+  async resolveNativeServerUrls(servers) {
+    if (!Array.isArray(servers)) return null;
+
+    const nativeServers = servers.filter(server => server.native === true);
+    if (nativeServers.length === 0) return null;
+
+    let nativeMcpCache = await this.getNativeMcpServersFromCache();
+    if (!nativeMcpCache) {
+      await this.fetchNativeMcpServers();
+      nativeMcpCache = await this.getNativeMcpServersFromCache();
+    }
+
+    if (!nativeMcpCache) {
+      this.logger.error("[AI Prompt] native MCP servers cache not found");
+      winston.error("DirAiPrompt native MCP servers cache not found");
+      return "AiPrompt Error: native MCP servers not available";
+    }
+
+    for (const server of nativeServers) {
+      const cachedServer = this.findNativeServerInCache(nativeMcpCache, server.id);
+      if (cachedServer?.url) {
+        server.url = cachedServer.url;
+      }
+    }
+
+    const unresolved = nativeServers.filter(server => !server.url);
+    if (unresolved.length > 0) {
+      const names = unresolved.map(server => server.name || server.id).join(", ");
+      this.logger.error("[AI Prompt] native MCP server url not found for: ", names);
+      winston.error("DirAiPrompt native MCP server url not found for: ", names);
+      return "AiPrompt Error: native MCP server url not found for " + names;
+    }
+
+    return null;
+  }
+
+  async getNativeMcpServersFromCache() {
+    try {
+      const cached = await this.tdcache.get(NATIVE_MCP_CACHE_KEY);
+      if (!cached) return null;
+      return JSON.parse(cached);
+    } catch (err) {
+      this.logger.error("[AI Prompt] Error reading native MCP cache: ", err);
+      winston.error("DirAiPrompt Error reading native MCP cache: ", err);
+      return null;
+    }
+  }
+
+  findNativeServerInCache(cache, serverId) {
+    if (!cache || !serverId) return null;
+
+    if (Array.isArray(cache)) {
+      return cache.find(server => server.id === serverId);
+    }
+
+    if (typeof cache === 'object') {
+      return cache[serverId];
+    }
+
+    return null;
+  }
+
+  async fetchNativeMcpServers() {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.token
+        },
+        method: "GET"
+      };
+      winston.debug("DirAiPrompt fetch native MCP servers HttpRequest", HTTPREQUEST);
+
+      httpUtils.request(HTTPREQUEST, (err) => {
+        if (err) {
+          this.logger.error("[AI Prompt] Error fetching native MCP servers: ", err);
+          winston.error("DirAiPrompt Error fetching native MCP servers: ", err);
+        }
+        resolve();
+      });
+    });
   }
 
   async detectAttach(source) {

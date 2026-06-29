@@ -19,6 +19,9 @@ const BOT_ID = "botID";
 const CHATBOT_TOKEN = "XXX";
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
 const tilebotService = require('../services/TilebotService');
+const { TdCache } = require('../TdCache');
+
+const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 
 let SERVER_PORT = 10001
 
@@ -855,6 +858,190 @@ describe('Conversation for AiPrompt test', async () => {
         tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
+      });
+
+    })
+
+    it('AiPrompt with native MCP tools - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      const nativeMcpUrl = "http://localhost:10002/mcp/tiledesk-communicator";
+      let testCache;
+
+      const setupNativeMcpCache = async () => {
+        testCache = new TdCache({
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT,
+          password: process.env.REDIS_PASSWORD
+        });
+        await testCache.connect();
+        await testCache.set(
+          NATIVE_MCP_CACHE_KEY,
+          JSON.stringify([
+            {
+              id: "tiledesk-communicator",
+              url: nativeMcpUrl
+            }
+          ])
+        );
+      };
+
+      const cleanupNativeMcpCache = async () => {
+        if (testCache) {
+          await testCache.del(NATIVE_MCP_CACHE_KEY);
+        }
+      };
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: Risposta dall'agent");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "Risposta dall'agent");
+            cleanupNativeMcpCache().finally(() => {
+              listener.close(() => {
+                done();
+              });
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
+
+        let reply = {};
+        let http_code = 200;
+
+        if (req.params.name === 'myllm') {
+          reply = {
+            _id: "656728224b45965b69111111",
+            id_project: "62c3f10152dc740035000000",
+            name: "myllm",
+            value: {
+              apikey: "example_api_key",
+            }
+          }
+        }
+        else if (req.params.name === 'mcp') {
+          reply = {
+            _id: "656728224b45965b69111112",
+            id_project: "62c3f10152dc740035000000",
+            name: "mcp",
+            value: {
+              servers: [
+                {
+                  id: "tiledesk-communicator",
+                  name: "Tiledesk Communicator",
+                  url: "",
+                  transport: "streamable_http",
+                  native: true,
+                  description: "Tiledesk Communicator description",
+                  tools: [
+                    {
+                      "name": "check_available_agents",
+                      "description": "Checks whether human agents are currently available for handoff on the active Tiledesk project. Calls GET /projects/{projectId}/users/availables. IMPORTANT: if a departmentId is available in the system context, the assistant MUST use that value automatically and MUST NOT ask the user for it. The system context may contain a field like: `departmentId: {{department_id}}`. Use this tool before escalating the conversation to a live agent. Requires MCP session headers `x-project_id` and `x-chatbottoken`."
+                    },
+                    {
+                      "name": "ask_kb",
+                      "description": "Answers the user's question using a Tiledesk knowledge base (KB). Resolves the KB namespace by name or id, then calls POST /api/{projectId}/kb/qa. The user question is taken from session header `x-last_user_text` (not a tool argument). Provide `namespace` and `lookup_by` (name or id). On success, `text` is the KB `answer` string from the QA API (for the LLM to read or paraphrase; it is not sent to the chat). To deliver the answer in Chat21, call `reply_to_user` with the returned `text`. Requires MCP session headers `x-project-id`, `x-chatbottoken`, and `x-last-user-text`."
+                    },
+                    {
+                      "name": "close_conversation",
+                      "description": "Terminates and closes the current Tiledesk/Chat21 conversation. Use this tool when the user request has been fully completed, the support interaction is finished, or the assistant explicitly needs to end the conversation lifecycle. This tool performs a backend API call to close the active conversation associated with the current MCP session context. After successful execution, the conversation should be considered closed and no further user interaction is expected. This tool does not send messages to the user and does not wait for replies."
+                    }
+                  ],
+                  selectedTools: [
+                    {
+                      "name": "ask_kb"
+                    },
+                    {
+                      "name": "check_available_agents"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.get('/:project_id/mcp/native', async function (req, res) {
+        if (testCache) {
+          await testCache.set(
+            NATIVE_MCP_CACHE_KEY,
+            JSON.stringify([
+              {
+                id: "tiledesk-communicator",
+                url: nativeMcpUrl
+              }
+            ])
+          );
+        }
+        res.status(200).send({ success: true });
+      });
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.servers["Tiledesk Communicator"]);
+        assert(req.body.servers["Tiledesk Communicator"].url === nativeMcpUrl);
+        assert(req.body.servers["Tiledesk Communicator"].transport === "streamable_http");
+        assert(req.body.servers["Tiledesk Communicator"].tools.length === 2);
+        assert(req.body.servers["Tiledesk Communicator"].tools[0].name === "ask_kb");
+        assert(req.body.servers["Tiledesk Communicator"].tools[1].name === "check_available_agents");
+
+        let reply = {}
+        let http_code = 200;
+        reply = {
+            answer: "Risposta dall'agent",
+            chat_history_dict: {},
+            prompt_token_info: null
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      setupNativeMcpCache().then(() => {
+        listener = endpointServer.listen(10002, '0.0.0.0', () => {
+          winston.verbose('endpointServer started' + listener.address());
+          let request = {
+            "payload": {
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": '/ai_prompt_native_mcp_tools',
+              "id_project": PROJECT_ID,
+              "metadata": "",
+              "request": {
+                "request_id": REQUEST_ID
+              }
+            },
+            "token": "XXX"
+          }
+          tilebotService.sendMessageToBot(request, BOT_ID, () => {
+            winston.verbose("Message sent:\n", request);
+          });
+        });
+      }).catch((err) => {
+        winston.error("Error setting up native MCP cache: ", err);
+        done(err);
       });
 
     })
