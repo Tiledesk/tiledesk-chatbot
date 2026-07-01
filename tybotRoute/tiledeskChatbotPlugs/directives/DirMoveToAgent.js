@@ -23,8 +23,8 @@ class DirMoveToAgent {
 
   execute(directive, callback) {
     winston.verbose("Execute MoveToAgent directive");
-    directive.action = {};
-    this.go(directive.action, () => {
+    const action = directive.action || {};
+    this.go(action, () => {
       this.logger.native("[Transfer to a Human] Executed");
       callback();
     });
@@ -50,7 +50,59 @@ class DirMoveToAgent {
           });
         }
       }
-      callback();
+
+      const departmentId = action.departmentId;
+      if (departmentId) {
+        this.moveToDepartment(this.requestId, departmentId, (deps) => {
+          if (deps) {
+            winston.debug("DirMoveToAgent) Moved to department: ", deps);
+          }
+          else {
+            winston.error("DirMoveToAgent) Error moving to department");
+          }
+          callback();
+        });
+      }
+      else {
+        callback();
+      }
+    });
+
+    
+  }
+
+  moveToDepartment(requestId, depName, callback) {
+    this.tdClient.getAllDepartments((err, deps) => {
+      winston.debug("(DirDepartment) deps: ", deps);
+      if (err) {
+        winston.error("(DirDepartment) getAllDepartments() error: ", err);
+        callback();
+        return;
+      }
+      let dep = null;
+      let i;
+      for (i = 0; i < deps.length; i++) {
+        let d = deps[i];
+        if (d.name.toLowerCase() === depName.toLowerCase()) {
+          dep = d;
+          break;
+        }
+      }
+      if (dep) {
+        this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
+          if (err) {
+            winston.error("(DirDepartment) updatedRequestDepartment error: ", err);
+            callback();
+          }
+          else {
+            winston.debug("(DirDepartment) response: ", res); 
+            callback(deps);
+          }
+        });
+      }
+      else {
+        callback();
+      }
     });
   }
 
