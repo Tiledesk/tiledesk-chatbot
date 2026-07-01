@@ -7,7 +7,9 @@ async function execute(node, ctx) {
   const res = await ctx.services.aiPrompt({
     question: ctx.fill(d.question || ''),
     llm: d.llm, model: d.model, maxTokens: d.maxTokens, temperature: d.temperature,
-    context: d.context, history: d.history,
+    context: d.context ? ctx.fill(d.context) : undefined,
+    history: d.history,
+    reasoning: d.reasoning, reasoningLevel: d.reasoningLevel,
   }, ctx);
   if (res.ok) {
     if (d.assignReplyTo) await ctx.variables.set(d.assignReplyTo, res.reply);

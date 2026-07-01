@@ -8,6 +8,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Cap di sicurezza al delay per non bloccare il flow su valori anomali.
 const MAX_DELAY_MS = 10000;
 
+/**
+ * Gap minimo (ms) fra DUE invii consecutivi di messaggi nello stesso turno.
+ *
+ * Perché serve: il web widget ordina i messaggi della conversazione per
+ * `timestamp` (chat21) con un sort STABILE, inserendo i nuovi in testa
+ * (`mqtt-conversation-handler.addReplaceMessageInArray`). Se due messaggi
+ * back-to-back ricevono lo STESSO timestamp (collisione sul millisecondo),
+ * l'ultimo arrivato resta in testa → i messaggi appaiono in ordine INVERTITO
+ * (es. il messaggio del nodo 2 sopra quello del nodo 1). Il V3 non aveva il
+ * problema perché i `commands` facevano calcolare al widget timestamp
+ * incrementali (`prev + 100ms`). Spaziando gli invii garantiamo a chat21
+ * timestamp distinti e crescenti → ordine corretto. Configurabile via env.
+ */
+const MIN_SEND_GAP_MS = Math.max(0, Number(process.env.V4_MSG_MIN_GAP_MS) || 150);
+
 // Mappa dei `type` del messaggio-nodo V4 → `type` del protocollo messaggi del widget.
 // Il DS usa 'iframe', ma il widget rende il frame solo con `type === 'frame'`
 // (chat21-core/utils/utils-message.isFrame). Gli altri (text/image/redirect/file/audio)
@@ -34,6 +49,9 @@ class MessageSenderV4 {
     this.tdcache = tdcache;
     this.turnToken = turnToken;
     this.sentCount = 0; // messaggi VISIBILI inviati in questo turno
+    // Epoch (ms) dell'ultimo invio: usato per spaziare gli invii consecutivi
+    // (vedi `MIN_SEND_GAP_MS`) ed evitare collisioni di timestamp lato widget.
+    this.lastSendAt = 0;
     this.filler = new Filler();
     this.apiext = new ExtApi({ TILEBOT_ENDPOINT: tilebotEndpoint });
   }
@@ -168,8 +186,26 @@ class MessageSenderV4 {
     };
   }
 
+  /**
+   * Spaziatura anti-collisione: prima di ogni invio garantisce che siano
+   * trascorsi almeno `MIN_SEND_GAP_MS` dall'invio precedente nello stesso
+   * turno, così chat21 assegna timestamp distinti e crescenti e il widget non
+   * inverte l'ordine dei messaggi (vedi commento su `MIN_SEND_GAP_MS`).
+   * `lastSendAt` viene aggiornato PRIMA della richiesta HTTP così la cadenza è
+   * regolata sull'avvio degli invii (l'eventuale `delayMs` già speso conta come
+   * gap: se ha superato il minimo, qui non si attende oltre).
+   */
+  async throttleSend() {
+    if (this.lastSendAt > 0) {
+      const wait = MIN_SEND_GAP_MS - (Date.now() - this.lastSendAt);
+      if (wait > 0) await sleep(wait);
+    }
+    this.lastSendAt = Date.now();
+  }
+
   /** Invia un singolo body (Promise wrapper sul callback di ExtApi). */
-  sendBody(body) {
+  async sendBody(body) {
+    await this.throttleSend();
     return new Promise((resolve) => {
       this.apiext.sendSupportMessageExt(body, this.projectId, this.requestId, this.token, (err) => {
         if (err) winston.error('(MessageSenderV4) send error: ', err);

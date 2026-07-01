@@ -1,5 +1,13 @@
 # Tiledesk native chatbot
 
+# this branch 1.2
+- V4 `close` node now actually closes the conversation: `close-V4` calls `await ctx.services.closeRequest(ctx)` (parity with V3 `DirClose`) so the request reaches `closed` and the web widget shows the **service rating** — before, it only reset the bot's internal state and the conversation stayed open. `real-services.closeRequest` → `tdClient.closeRequest(requestId)`; mock added.
+- V4 `ai_prompt` runs a real LLM call: `real-services.aiPrompt` now POSTs to the server `${API}/${projectId}/llm/ask` (camelCase→snake_case mapping, `request_id`), returning `{ ok, reply }`; the node forwards `reasoning`/`reasoningLevel` and resolves `{{var}}` in `context`. Passes through `chat_history_dict`/`servers` when present (history/MCP phases).
+- V4 `add_kb_content` is now a **FAQ** add: the node sends `{ question, answer, tags, type:'faq' }` (was `name/content/source`); `real-services.addKbContent` POSTs to `${API}/${projectId}/kb/` mapping the FAQ shape (`name=question`, `source=question`, `content=question\nanswer`, `namespace`, optional `tags`), reusing the V3 import logic. Mock notes `opts.question`.
+- Fixed V4 message ordering (timestamp collisions): `MessageSender-V4` now spaces consecutive sends within a turn by `MIN_SEND_GAP_MS` (env `V4_MSG_MIN_GAP_MS`, default 150ms) via `throttleSend()`, so chat21 assigns distinct, increasing timestamps and the widget no longer renders back-to-back messages in reverse order (the widget sorts by `timestamp` and inserts at head). New regression test `V4/test/message-order-V4.test.js`.
+- Added a services diagnostic: `createServices` warns once when MOCK services are active while a backend (`API_ENDPOINT`) is configured — conversation ops (`close`, `transferToAgent`, `moveToUnassigned`, …) are NO-OP unless `V4_SERVICES_REAL=1` (the usual cause of "close does nothing / no service rating").
+- Tests: updated `V4/test/phase2.test.js` and `phase34.test.js` (close→`closeRequest`, `add_kb_content` FAQ shape); added `V4/test/message-order-V4.test.js`.
+
 # this branch 1.1
 - V4 engine: ported the safe `TiledeskWhenExpression` evaluator (no `eval`/`Function`/`vm2`; whitelisted operators + functions) — copied verbatim from `main_pre`, with its `test/when_expression_test.js`.
 - V4 `condition`/`jsoncondition` nodes now PREFER the safe `data.when` string (evaluated by `TiledeskWhenExpression`) and FALL BACK to the legacy `data.groups` when `when` is absent — same backward-compat scheme as `DirJSONConditionV2`. New helpers `evalWhen`/`evalConditionData` in `V4/expression-V4.js`; new test `V4/test/condition-when-V4.test.js`. Legacy `condition` data keeps working (runtime back-compat).

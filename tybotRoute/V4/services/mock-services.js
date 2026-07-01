@@ -19,6 +19,7 @@ function create(opts) {
     async transferToAgent() { note('transferToAgent'); },
     async changeDepartment(name) { note('changeDepartment:' + name); },
     async moveToUnassigned() { note('moveToUnassigned'); },
+    async closeRequest() { note('closeRequest'); },
     async clearTranscript() { note('clearTranscript'); },
     async addTags(tags, target) { note('addTags:' + JSON.stringify(tags) + ':' + target); },
     async leadUpdate(update) { note('leadUpdate:' + JSON.stringify(update)); },
@@ -55,7 +56,7 @@ function create(opts) {
       const intentId = cfg.matchIntentId || (intents[0] && intents[0].id) || null;
       return { ok: true, intentId, reply: 'MOCK', error: null };
     },
-    async addKbContent(opts) { note('addKbContent:' + (opts && opts.name)); return { ok: !cfg.aiError }; },
+    async addKbContent(opts) { note('addKbContent:' + (opts && opts.question)); return { ok: !cfg.aiError }; },
   };
 }
 

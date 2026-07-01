@@ -8,6 +8,13 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     ok(ctx.services._calls.includes('transferToAgent'), 'service transferToAgent chiamato');
   });
 
+  await run('close → close:true + closeRequest (valutazione servizio nel widget)', async () => {
+    const ctx = makeCtx();
+    const r = await H('close').execute({ data: {} }, ctx);
+    ok(r.close === true && r.stop === true, 'result close+stop');
+    ok(ctx.services._calls.includes('closeRequest'), 'service closeRequest chiamato (chiude la richiesta lato server)');
+  });
+
   await run('department → direct + changeDepartment(nome risolto)', async () => {
     const ctx = makeCtx({ params: { dep: 'Sales' } });
     eq((await H('department').execute({ data: { depName: '{{dep}}' } }, ctx)).nextSlotKey, 'direct', 'direct');

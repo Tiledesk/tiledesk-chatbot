@@ -66,9 +66,14 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     ok(['intent_abc123', 'fallback'].includes((await H('ai_condition').execute({ data: { question: 'Q', intents } }, ctxN)).nextSlotKey), 'no match esplicito → primo/fallback');
     eq((await H('ai_condition').execute({ data: { question: 'Q', intents } }, makeCtx({ mock: { aiError: true } }))).nextSlotKey, 'error', 'errore → error');
   });
-  await run('add_kb_content → direct', async () => {
-    const ctx = makeCtx();
-    eq((await H('add_kb_content').execute({ data: { namespace: 'ns', name: 'n', content: 'c' } }, ctx)).nextSlotKey, 'direct', 'direct');
+  await run('add_kb_content → direct + addKbContent (FAQ question/answer, {{var}} risolte)', async () => {
+    const ctx = makeCtx({ params: { who: 'Mario' } });
+    const r = await H('add_kb_content').execute(
+      { data: { namespace: 'ns', type: 'faq', question: 'Ciao {{who}}?', answer: 'Risposta', tags: ['a'] } },
+      ctx,
+    );
+    eq(r.nextSlotKey, 'direct', 'direct');
+    ok(ctx.services._calls.includes('addKbContent:Ciao Mario?'), 'addKbContent con question fillata');
   });
 
   summary();
