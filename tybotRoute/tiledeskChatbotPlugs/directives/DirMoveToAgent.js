@@ -34,31 +34,18 @@ class DirMoveToAgent {
     this.tdClient.moveToAgent(this.requestId, (err) => {
       if (err) {
         winston.error("DirMoveToAgent) Error moving to agent: ", err);
-      }
-      else {
-        // Successfully moved to agent. Only track published (production) runs
-        // (root/draft copy has no root_id).
-        if (this.context.chatbot?.bot.root_id) {
-          AnalyticsClient.track('handover_to_human', this.context.projectId, {
-            id_request:           this.requestId,
-            human_id:             null,
-            reason:               'bot_directive',
-            department_id:        this.context.departmentId || null,
-            waiting_time_seconds: null,
-            agent_id:             this.context.chatbot?.bot.root_id,
-            trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
-          });
-        }
+        callback();
+        return;
       }
 
-      const departmentId = action.departmentId;
-      if (departmentId) {
-        this.moveToDepartment(this.requestId, departmentId, (deps) => {
-          if (deps) {
-            winston.debug("DirMoveToAgent) Moved to department: ", deps);
+      const depName = action.depName;
+      if (depName) {
+        this.moveToDepartment(this.requestId, depName, (err, deps) => {
+          if (err) {
+            winston.error("DirMoveToAgent) Error moving to department: ", err);
           }
           else {
-            winston.error("DirMoveToAgent) Error moving to department");
+            winston.debug("DirMoveToAgent) Moved to department: ", deps);
           }
           callback();
         });
@@ -66,17 +53,30 @@ class DirMoveToAgent {
       else {
         callback();
       }
-    });
 
-    
+      // Successfully moved to agent. Only track published (production) runs
+      // (root/draft copy has no root_id).
+      if (this.context.chatbot?.bot.root_id) {
+        AnalyticsClient.track('handover_to_human', this.context.projectId, {
+          id_request:           this.requestId,
+          human_id:             null,
+          reason:               'bot_directive',
+          department_id:        this.context.departmentId || null,
+          waiting_time_seconds: null,
+          agent_id:             this.context.chatbot?.bot.root_id,
+          trigger_intent:       this.context.reply?.attributes?.intent_info?.intent_name || null
+        });
+      }
+      
+    });
   }
 
-  moveToDepartment(requestId, depName, callback) {
+  async moveToDepartment(requestId, depName, callback) {
     this.tdClient.getAllDepartments((err, deps) => {
       winston.debug("(DirDepartment) deps: ", deps);
       if (err) {
         winston.error("(DirDepartment) getAllDepartments() error: ", err);
-        callback();
+        callback(err);
         return;
       }
       let dep = null;
@@ -92,16 +92,16 @@ class DirMoveToAgent {
         this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
             winston.error("(DirDepartment) updatedRequestDepartment error: ", err);
-            callback();
+            callback(err);
           }
           else {
             winston.debug("(DirDepartment) response: ", res); 
-            callback(deps);
+            callback(null, deps);
           }
         });
       }
       else {
-        callback();
+        callback(null, null);
       }
     });
   }
