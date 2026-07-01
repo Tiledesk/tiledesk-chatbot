@@ -96,7 +96,7 @@ describe('Conversation for Move to Agent test', async () => {
     });
   });
 
-  it('/move_to_agent without departmentId', (done) => {
+  it('/move_to_agent without depName', (done) => {
     const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
     let listener;
     let endpointServer = express();
@@ -153,7 +153,7 @@ describe('Conversation for Move to Agent test', async () => {
     });
   });
 
-  it('/move_to_agent_with_department with departmentId', (done) => {
+  it('/move_to_agent_with_department with depName', (done) => {
     const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
     let listener;
     let endpointServer = express();

@@ -60,7 +60,7 @@ const bot = {
 					"_tdActionTitle": "Move to agent with department",
 					"_tdActionId": "44444444-4444-4444-4444-444444444444",
 					"_tdActionType": "agent",
-					"departmentId": "Support"
+					"depName": "Support"
 				}
 			]
 		}
