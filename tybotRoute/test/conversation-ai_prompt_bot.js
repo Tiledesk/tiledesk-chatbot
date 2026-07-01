@@ -90,6 +90,27 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "ai_prompt_openai",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"llm": "openai",
+				"model": "gpt-5",
+				"max_tokens": 1024,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "ai_prompt_ollama_success",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
@@ -218,6 +239,45 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "ai_prompt_native_mcp_tools",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"servers": [
+                    {
+                        "id": "tiledesk-communicator",
+                        "name": "Tiledesk Communicator",
+                        "url": "",
+                        "transport": "streamable_http",
+                        "native": true,
+                        "customHeaders": [],
+                        "tools": [
+                            {
+                                "name": "ask_kb"
+                            },
+                            {
+                                "name": "check_available_agents"
+                            }
+                        ]
+                    }
+                ],
+				"llm": "myllm",
+				"model": "llmmodel",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "ai_prompt_internal_mcp",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
@@ -231,6 +291,30 @@ const bot = {
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_prompt_reasoning",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943058",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"assignReasoningContentTo": "reasoning_content",
+				"question": "this is the question",
+				"reasoning": true,
+				"reasoningLevel": "low",
+				"llm": "myllm",
+				"model": "llmmodel",
+				"max_tokens": 32000,
 				"temperature": 0.7,
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE",

@@ -227,6 +227,7 @@ const bot = {
 					}]
 			}],
 			"stopOnConditionMet": true,
+			"when": "score == 10",
 			"trueIntent": "#d19b1b7a-7146-481d-a7d5-6b9cce8fcb50"
 		}, {
 			"_tdActionTitle": null,
@@ -245,6 +246,7 @@ const bot = {
 					}]
 			}],
 			"stopOnConditionMet": true,
+			"when": "score <= 5",
 			"trueIntent": "#16240c0b-9618-40cd-87e7-6319e5c3e392"
 		}, {
 			"_tdActionTitle": null,
@@ -276,6 +278,7 @@ const bot = {
 			}],
 			
 			"stopOnConditionMet": false,
+			"when": "score != 5 && score != 10",
 			"trueIntent": "#98dd1994-83ef-4863-8179-07c48d2194b9"
 		}],
 		"language": "en",

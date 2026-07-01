@@ -19,6 +19,9 @@ const BOT_ID = "botID";
 const CHATBOT_TOKEN = "XXX";
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
 const tilebotService = require('../services/TilebotService');
+const { TdCache } = require('../TdCache');
+
+const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 
 let SERVER_PORT = 10001
 
@@ -37,6 +40,7 @@ describe('Conversation for AiPrompt test', async () => {
             bots: bots_data,
             TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
+            API_URL: process.env.API_URL,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
@@ -540,7 +544,7 @@ describe('Conversation for AiPrompt test', async () => {
           id_project: "62c3f10152dc740035000000",
           name: "ollama",
           value: {
-            url: "http://localhost:10002/ollama/",
+            url: "http://127.0.0.1:10002/ollama/",
             token: "customtoken",
             models: [ 'mymodel1', 'mymodel2' ]
           }
@@ -555,7 +559,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.llm === "ollama");
         assert(req.body.llm_key === "");
         assert(req.body.model.name === "mymodel");
-        assert(req.body.model.url === "http://localhost:10002/ollama/")
+        assert(req.body.model.url === "http://127.0.0.1:10002/ollama/")
   
         let reply = {}
         let http_code = 200;
@@ -768,7 +772,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "X-API-Key",
                     key: "example_api_key"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "email_send" },
+                    { name: "email_read" }
+                  ]
                 },
                 {
                   name: "calendar",
@@ -777,7 +785,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "Bearer",
                     key: "Bearer mybearertoken"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "calendar_read" },
+                    { name: "calendar_write" }
+                  ]
                 },
                 {
                   name: "custom",
@@ -786,7 +798,11 @@ describe('Conversation for AiPrompt test', async () => {
                   authorization: {
                     type: "Basic",
                     key: "Basic mybase64username:password"
-                  }
+                  },
+                  selectedTools: [
+                    { name: "tool1" },
+                    { name: "tool2" }
+                  ]
                 }
               ]
             }
@@ -809,6 +825,9 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.email.enabled_tools[0] === "email_send");
         assert(req.body.servers.email.enabled_tools[1] === "email_read");
         assert(req.body.servers.email.api_key === "example_api_key");
+        assert(req.body.servers.email.id === undefined);
+        assert(req.body.servers.email.tools === undefined);
+        assert(req.body.servers.email.native === undefined);
 
         assert(req.body.servers.calendar.url === "example_url2.com/mcp");
         assert(req.body.servers.calendar.transport === "streamable_http");
@@ -816,6 +835,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.calendar.enabled_tools[0] === "calendar_read");
         assert(req.body.servers.calendar.enabled_tools[1] === "calendar_write");
         assert(req.body.servers.calendar.api_key === "Bearer mybearertoken");
+        assert.deepStrictEqual(req.body.servers.calendar.headers, {});
 
         assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
         assert(req.body.servers.custom.transport === "streamable_http");
@@ -823,6 +843,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers.custom.enabled_tools[0] === "tool1");
         assert(req.body.servers.custom.enabled_tools[1] === "tool2");
         assert(req.body.servers.custom.api_key === "Basic mybase64username:password");
+        assert.deepStrictEqual(req.body.servers.custom.headers, {});
   
         let reply = {}
         let http_code = 200;
@@ -855,6 +876,194 @@ describe('Conversation for AiPrompt test', async () => {
         tilebotService.sendMessageToBot(request, BOT_ID, () => {
           winston.verbose("Message sent:\n", request);
         });
+      });
+
+    })
+
+    it('AiPrompt with native MCP tools - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      const nativeMcpUrl = "http://localhost:10002/mcp/tiledesk-communicator";
+      let testCache;
+
+      const setupNativeMcpCache = async () => {
+        testCache = new TdCache({
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT,
+          password: process.env.REDIS_PASSWORD
+        });
+        await testCache.connect();
+        await testCache.set(
+          NATIVE_MCP_CACHE_KEY,
+          JSON.stringify([
+            {
+              id: "tiledesk-communicator",
+              url: nativeMcpUrl
+            }
+          ])
+        );
+      };
+
+      const cleanupNativeMcpCache = async () => {
+        if (testCache) {
+          await testCache.del(NATIVE_MCP_CACHE_KEY);
+        }
+      };
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: Risposta dall'agent");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "Risposta dall'agent");
+            cleanupNativeMcpCache().finally(() => {
+              listener.close(() => {
+                done();
+              });
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
+
+        let reply = {};
+        let http_code = 200;
+
+        if (req.params.name === 'myllm') {
+          reply = {
+            _id: "656728224b45965b69111111",
+            id_project: "62c3f10152dc740035000000",
+            name: "myllm",
+            value: {
+              apikey: "example_api_key",
+            }
+          }
+        }
+        else if (req.params.name === 'mcp') {
+          reply = {
+            _id: "656728224b45965b69111112",
+            id_project: "62c3f10152dc740035000000",
+            name: "mcp",
+            value: {
+              servers: [
+                {
+                  id: "tiledesk-communicator",
+                  name: "Tiledesk Communicator",
+                  url: "",
+                  transport: "streamable_http",
+                  native: true,
+                  description: "Tiledesk Communicator description",
+                  tools: [
+                    {
+                      "name": "check_available_agents",
+                      "description": "Checks whether human agents are currently available for handoff on the active Tiledesk project. Calls GET /projects/{projectId}/users/availables. IMPORTANT: if a departmentId is available in the system context, the assistant MUST use that value automatically and MUST NOT ask the user for it. The system context may contain a field like: `departmentId: {{department_id}}`. Use this tool before escalating the conversation to a live agent. Requires MCP session headers `x-project_id` and `x-chatbottoken`."
+                    },
+                    {
+                      "name": "ask_kb",
+                      "description": "Answers the user's question using a Tiledesk knowledge base (KB). Resolves the KB namespace by name or id, then calls POST /api/{projectId}/kb/qa. The user question is taken from session header `x-last_user_text` (not a tool argument). Provide `namespace` and `lookup_by` (name or id). On success, `text` is the KB `answer` string from the QA API (for the LLM to read or paraphrase; it is not sent to the chat). To deliver the answer in Chat21, call `reply_to_user` with the returned `text`. Requires MCP session headers `x-project-id`, `x-chatbottoken`, and `x-last-user-text`."
+                    },
+                    {
+                      "name": "close_conversation",
+                      "description": "Terminates and closes the current Tiledesk/Chat21 conversation. Use this tool when the user request has been fully completed, the support interaction is finished, or the assistant explicitly needs to end the conversation lifecycle. This tool performs a backend API call to close the active conversation associated with the current MCP session context. After successful execution, the conversation should be considered closed and no further user interaction is expected. This tool does not send messages to the user and does not wait for replies."
+                    }
+                  ],
+                  selectedTools: [
+                    {
+                      "name": "ask_kb"
+                    },
+                    {
+                      "name": "check_available_agents"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.get('/:project_id/mcp/native', async function (req, res) {
+        if (testCache) {
+          await testCache.set(
+            NATIVE_MCP_CACHE_KEY,
+            JSON.stringify([
+              {
+                id: "tiledesk-communicator",
+                url: nativeMcpUrl
+              }
+            ])
+          );
+        }
+        res.status(200).send({ success: true });
+      });
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.servers["Tiledesk Communicator"]);
+        assert(req.body.servers["Tiledesk Communicator"].url === nativeMcpUrl);
+        assert(req.body.servers["Tiledesk Communicator"].transport === "streamable_http");
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools.length === 2);
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools[0] === "ask_kb");
+        assert(req.body.servers["Tiledesk Communicator"].enabled_tools[1] === "check_available_agents");
+        assert(req.body.servers["Tiledesk Communicator"].id === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].native === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].tools === undefined);
+        assert(req.body.servers["Tiledesk Communicator"].customHeaders === undefined);
+
+        let reply = {}
+        let http_code = 200;
+        reply = {
+            answer: "Risposta dall'agent",
+            chat_history_dict: {},
+            prompt_token_info: null
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      setupNativeMcpCache().then(() => {
+        listener = endpointServer.listen(10002, '0.0.0.0', () => {
+          winston.verbose('endpointServer started' + listener.address());
+          let request = {
+            "payload": {
+              "senderFullname": "guest#367e",
+              "type": "text",
+              "sender": "A-SENDER",
+              "recipient": REQUEST_ID,
+              "text": '/ai_prompt_native_mcp_tools',
+              "id_project": PROJECT_ID,
+              "metadata": "",
+              "request": {
+                "request_id": REQUEST_ID
+              }
+            },
+            "token": "XXX"
+          }
+          tilebotService.sendMessageToBot(request, BOT_ID, () => {
+            winston.verbose("Message sent:\n", request);
+          });
+        });
+      }).catch((err) => {
+        winston.error("Error setting up native MCP cache: ", err);
+        done(err);
       });
 
     })
@@ -950,6 +1159,88 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt with reasoning success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: Answer reasoned from the agent");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "Answer reasoned from the agent");
+            assert(attributes["reasoning_content"] === "Reasoning content from the agent");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        assert(req.params.name === 'myllm');
+        let http_code = 200;
+        let reply = {
+          _id: "656728224b45965b69111111",
+          id_project: "62c3f10152dc740035000000",
+          name: "myllm",
+          value: {
+            apikey: "example_api_key",
+          }
+        }
+        res.status(http_code).send(reply);
+      });
+
+      endpointServer.post('/api/thinking', function (req, res) {
+        console.log("req.body: ", req.body);
+        assert(req.body.thinking.reasoning_effort === "low");
+        assert(req.body.thinking.budget_tokens === 6400);
+
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "Answer reasoned from the agent",
+          reasoning_content: "Reasoning content from the agent",
+          chat_history_dict: {},
+          prompt_token_info: null
+        }
+        res.status(http_code).send(reply);
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_reasoning',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+    });
   })
 
   describe('Ask Fail', async () => {
