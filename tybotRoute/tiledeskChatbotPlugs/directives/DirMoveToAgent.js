@@ -33,7 +33,7 @@ class DirMoveToAgent {
   async go(action, callback) {
     this.tdClient.moveToAgent(this.requestId, (err) => {
       if (err) {
-        winston.error("DirMoveToAgent) Error moving to agent: ", err);
+        winston.error("(DirMoveToAgent) Error moving to agent: ", err);
         callback();
         return;
       }
@@ -42,10 +42,11 @@ class DirMoveToAgent {
       if (depName) {
         this.moveToDepartment(this.requestId, depName, (err, deps) => {
           if (err) {
-            winston.error("DirMoveToAgent) Error moving to department: ", err);
+            winston.error("(DirMoveToAgent) Error moving to department: ", err);
           }
           else {
-            winston.debug("DirMoveToAgent) Moved to department: ", deps);
+            this.logger.native("[Move to Department] Moved to department: ", depName);
+            winston.debug("(DirMoveToAgent) Moved to department: ", deps);
           }
           callback();
         });
@@ -73,9 +74,9 @@ class DirMoveToAgent {
 
   async moveToDepartment(requestId, depName, callback) {
     this.tdClient.getAllDepartments((err, deps) => {
-      winston.debug("(DirDepartment) deps: ", deps);
+      winston.debug("(DirMoveToAgent) deps: ", deps);
       if (err) {
-        winston.error("(DirDepartment) getAllDepartments() error: ", err);
+        winston.error("(DirMoveToAgent) getAllDepartments() error: ", err);
         callback(err);
         return;
       }
@@ -91,11 +92,11 @@ class DirMoveToAgent {
       if (dep) {
         this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {
           if (err) {
-            winston.error("(DirDepartment) updatedRequestDepartment error: ", err);
+            winston.error("(DirMoveToAgent) updatedRequestDepartment error: ", err);
             callback(err);
           }
           else {
-            winston.debug("(DirDepartment) response: ", res); 
+            winston.debug("(DirMoveToAgent) response: ", res); 
             callback(null, deps);
           }
         });
