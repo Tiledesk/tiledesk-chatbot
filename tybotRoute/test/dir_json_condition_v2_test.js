@@ -82,6 +82,36 @@ describe('DirJSONConditionV2', () => {
       assert.ok(d._executed[0].action.intentName.includes('"my_name":"supernova"'));
       assert.ok(d._executed[0].action.intentName.includes('"size":"2B"'));
     });
+
+    it('passes falseIntentAttributes through when `when` is false', async () => {
+      const ctx = makeContext({ score: 3 });
+      const d = makeDirective(ctx);
+      await run(d, cond({
+        when: 'score == 10',
+        trueIntent: '#TRUE',
+        falseIntent: '#FALSE',
+        falseIntentAttributes: { reason: 'no_match', size: '1B' },
+      }));
+      assert.ok(d._executed[0].action.intentName.startsWith('#FALSE'));
+      assert.ok(d._executed[0].action.intentName.includes('"reason":"no_match"'));
+      assert.ok(d._executed[0].action.intentName.includes('"size":"1B"'));
+    });
+
+    it('`when` true but no trueIntent -> callback once, no intent executed', async () => {
+      const ctx = makeContext({ score: 10 });
+      const d = makeDirective(ctx);
+      const res = await run(d, cond({ when: 'score == 10', falseIntent: '#FALSE' }));
+      assert.strictEqual(res.calls, 1);
+      assert.strictEqual(d._executed.length, 0);
+    });
+
+    it('`when` false but no falseIntent -> callback once, no intent executed', async () => {
+      const ctx = makeContext({ score: 3 });
+      const d = makeDirective(ctx);
+      const res = await run(d, cond({ when: 'score == 10', trueIntent: '#TRUE' }));
+      assert.strictEqual(res.calls, 1);
+      assert.strictEqual(d._executed.length, 0);
+    });
   });
 
   describe('error handling', () => {
@@ -133,6 +163,13 @@ describe('DirJSONConditionV2', () => {
       const d = makeDirective(ctx);
       // Legacy action with no intents -> legacy returns via callback() without network.
       const res = await run(d, cond({ groups: [], trueIntent: '', falseIntent: '' }));
+      assert.strictEqual(res.calls, 1);
+    });
+
+    it('whitespace-only `when` -> delegates to legacy (callback once, no hang)', async () => {
+      const ctx = makeContext({});
+      const d = makeDirective(ctx);
+      const res = await run(d, cond({ when: '   ', groups: [], trueIntent: '', falseIntent: '' }));
       assert.strictEqual(res.calls, 1);
     });
   });

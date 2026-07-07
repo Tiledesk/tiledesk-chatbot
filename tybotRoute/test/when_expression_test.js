@@ -165,6 +165,27 @@ describe('TiledeskWhenExpression', () => {
       assert.strictEqual(evalIt('length(s) == 5', { s: "hello" }), true);
       assert.strictEqual(evalIt('length(o) == 0', { o: { a: 1 } }), true); // object -> 0
     });
+    it('length with != / < / <= operators', () => {
+      assert.strictEqual(evalIt('length(tags) != 2', { tags: ["a", "b"] }), false);
+      assert.strictEqual(evalIt('length(tags) != 2', { tags: ["a"] }), true);
+      assert.strictEqual(evalIt('length(tags) < 3', { tags: ["a", "b"] }), true);
+      assert.strictEqual(evalIt('length(tags) < 2', { tags: ["a", "b"] }), false);
+      assert.strictEqual(evalIt('length(tags) <= 2', { tags: ["a", "b"] }), true); // boundary (== N)
+      assert.strictEqual(evalIt('length(tags) <= 1', { tags: ["a", "b"] }), false); // boundary (< N)
+    });
+  });
+
+  // Grammar §5: legacy *IgnoreCase operators were removed; if they surface in old
+  // data they must evaluate as their case-sensitive equivalent (never throw).
+  describe('legacy IgnoreCase operators (case-sensitive fallback)', () => {
+    it('startsWithIgnoreCase behaves like case-sensitive startsWith', () => {
+      assert.strictEqual(evalIt('startsWithIgnoreCase(s, "dar")', { s: "dario" }), true);
+      assert.strictEqual(evalIt('startsWithIgnoreCase(s, "Dar")', { s: "dario" }), false); // not case-insensitive
+    });
+    it('containsIgnoreCase behaves like case-sensitive contains', () => {
+      assert.strictEqual(evalIt('containsIgnoreCase(s, "ar")', { s: "dario" }), true);
+      assert.strictEqual(evalIt('containsIgnoreCase(s, "AR")', { s: "dario" }), false); // not case-insensitive
+    });
   });
 
   describe('deep equality of arrays / objects (variable vs variable)', () => {

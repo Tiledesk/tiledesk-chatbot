@@ -262,6 +262,7 @@ class DirectivesChatbotPlug {
       [Directives.IF_ONLINE_AGENTS_V2]: DirIfOnlineAgentsV2,
       [Directives.FUNCTION_VALUE]: DirAssignFromFunction,
       [Directives.JSON_CONDITION]: DirJSONConditionV2,
+      [Directives.JSON_CONDITION_2]: DirJSONConditionV2, // NEW: JSON Condition V2 (tipo dedicato dal DS)
       [Directives.ASSIGN]: DirAssign,
       [Directives.SET_ATTRIBUTE]: DirSetAttribute,
       [Directives.SET_ATTRIBUTE_V2]: DirSetAttributeV2,
