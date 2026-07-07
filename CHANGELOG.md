@@ -1,7 +1,7 @@
 # Tiledesk native chatbot
 
 
-# 2.1.4-rc1
+# 2.2.0-rc8
 - Registered new `jsoncondition2` action type in the directives dispatcher, routing it to DirJSONConditionV2 (JSON Condition V2 from Design Studio).
 - Legacy `jsoncondition` (V1) left unchanged, preserving full backward compatibility.
 
