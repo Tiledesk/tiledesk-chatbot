@@ -11,6 +11,7 @@ const Utils = require("../../utils/HttpUtils");
 const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const quotasService = require("../../services/QuotasService");
 const { Logger } = require("../../Logger");
 const { randomUUID } = require("crypto");
 
@@ -195,7 +196,7 @@ class DirAiCondition {
       max_tokens: action.max_tokens,
       id_project: this.projectId,
       request_id: this.requestId,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId
+      agent_id: this.chatbot?.bot.root_id || null
     }
 
     if (action.context) {

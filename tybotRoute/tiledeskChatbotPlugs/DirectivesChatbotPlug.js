@@ -59,12 +59,15 @@ const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
-
-const winston = require('../utils/winston');
-const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
+const { DirDataTables } = require('./directives/DirDataTables');
+const { DirInvokeSubAgent } = require('./directives/DirInvokeSubAgent');
+const { DirReturn } = require('./directives/DirReturn');
+
+const winston = require('../utils/winston');
 
 class DirectivesChatbotPlug {
 
@@ -127,8 +130,7 @@ class DirectivesChatbotPlug {
       this.theend();
       return;
     }
-    
-    const supportRequest = this.supportRequest;    
+    const supportRequest = this.supportRequest;
     const token = this.token;
     const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
@@ -150,11 +152,11 @@ class DirectivesChatbotPlug {
         APIKEY: "___"
       });
     }
-    catch(err) {
+    catch (err) {
       winston.error("(DirectivesChatbotPlug) An error occurred while creating TiledeskClient in DirectivesChatbotPlug: ", err);
     }
 
-    this.context =  {
+    this.context = {
       projectId: projectId,
       chatbot: this.chatbot,
       message: this.message,
@@ -167,12 +169,12 @@ class DirectivesChatbotPlug {
       departmentId: depId,
       tdcache: tdcache,
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
-    }
+    };
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
-    
+
     this.curr_directive_index = -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
-    
+
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
@@ -183,14 +185,17 @@ class DirectivesChatbotPlug {
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
     if (go_on.error) {
-      AnalyticsClient.track('agent.flow_error', this.context.projectId, {
-        agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
-        error_type:    go_on.error_code || 'runtime_error',
-        error_message: go_on.error || null,
-        step_count:    go_on.step_count || 0,
-        intent_name:   this.context.reply?.attributes?.intent_info?.intent_name || null,
-        request_id:    this.context.requestId || null
-      });
+      // Only track published (production) runs (root/draft copy has no root_id).
+      if (this.chatbot?.bot.root_id) {
+        AnalyticsClient.track('agent.flow_error', this.context.projectId, {
+          agent_id: this.chatbot?.bot.root_id,
+          error_type:    go_on.error_code || 'runtime_error',
+          error_message: go_on.error || null,
+          step_count:    go_on.step_count || 0,
+          intent_name:   this.context.reply?.attributes?.intent_info?.intent_name || null,
+          request_id:    this.context.requestId || null
+        });
+      }
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
@@ -306,6 +311,9 @@ class DirectivesChatbotPlug {
       [Directives.WEB_RESPONSE]: DirWebResponse,
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
+      [Directives.INVOKE_SUB_AGENT]: DirInvokeSubAgent,
+      [Directives.RETURN]: DirReturn,
+      [Directives.DATA_TABLES]: DirDataTables,
     };
 
     const HandlerClass = handlers[directive_name];
@@ -316,21 +324,33 @@ class DirectivesChatbotPlug {
 
     const handler = new HandlerClass(context);
 
-    // Esegue l'handler e chiama next se non stop
+    winston.verbose("(DirectivesChatbotPlug) Execut directive: " + directive_name);
 
     const blockStart = Date.now();
     handler.execute(directive, async (stop) => {
-      AnalyticsClient.track('agent.block_executed', this.context.projectId, {
-        agent_id:       this.context.chatbot?.bot.root_id || this.context.chatbot?.botId || '',
-        block_id:       directive.action?.["_tdActionId"] || '',
-        block_name:     directive.action?.["_tdActionTitle"] || directive.action?.name || 'unnamed',
-        directive_type: directive.name || 'unknown',
-        intent_id:      this.context.chatbot?._lastIntentId || '',
-        intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
-        duration_ms:    Date.now() - blockStart,
-        success:        !stop,
-        request_id:     this.context.requestId || null
-      });
+      // [analytics-debug] Trace the block_executed decision per directive so we can
+      // see whether the event is emitted and why (missing root_id, draft, etc.).
+      winston.debug("(DirectivesChatbotPlug) [analytics] block_executed decision:" +
+        " directive_type=" + (directive.name || 'unknown') +
+        " block_id=" + (directive.action?.["_tdActionId"] || '<empty>') +
+        " root_id=" + (this.context.chatbot?.bot?.root_id || '<none>') +
+        " draft=" + (this.context.supportRequest?.draft) +
+        " stop=" + stop +
+        " willEmit=" + (!!this.context.chatbot?.bot?.root_id));
+      // Only track published (production) runs (root/draft copy has no root_id).
+      if (this.context.chatbot?.bot.root_id) {
+        AnalyticsClient.track('agent.block_executed', this.context.projectId, {
+          agent_id:       this.context.chatbot?.bot.root_id,
+          block_id:       directive.action?.["_tdActionId"] || '',
+          block_name:     directive.action?.["_tdActionTitle"] || directive.action?.name || 'unnamed',
+          directive_type: directive.name || 'unknown',
+          intent_id:      this.context.chatbot?._lastIntentId || '',
+          intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+          duration_ms:    Date.now() - blockStart,
+          success:        !stop,
+          request_id:     this.context.requestId || null
+        });
+      }
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();

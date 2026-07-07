@@ -17,6 +17,9 @@ const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
 
+const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
+const reasoningLevels = ['low', 'medium', 'high'];
+
 
 class DirAiPrompt {
 
@@ -122,6 +125,7 @@ class DirAiPrompt {
     let key;
     let publicKey = false;
     let ollama_integration;
+    let vllm_server_config;
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
@@ -136,6 +140,65 @@ class DirAiPrompt {
         callback();
         return;
       });
+
+    } else if (action.llm === 'vllm') {
+      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
+      if (!vllm_integration?.value) {
+        this.logger.error("[AI Prompt] Error getting vllm integration.");
+        winston.error("DirAiPrompt Error getting vllm integration");
+        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+      const vllm_value = vllm_integration.value;
+      if (Array.isArray(vllm_value.servers)) {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        if (!filled_vllm_server) {
+          this.logger.error("[AI Prompt] missing vllmServer for multi-server vllm integration");
+          await this.chatbot.addParameter("flowError", "AiPrompt Error: 'vllmServer' attribute is undefined");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
+        if (!vllm_server_config) {
+          this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
+          await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        key = vllm_server_config.apikey;
+      } else {
+        key = vllm_value.apikey;
+      }
+
+      if (!key) {
+        this.logger.error("[AI Prompt] llm key not found in vllm integration");
+        winston.error("Error: DirAiPrompt llm key not found in vllm integration");
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm vllm");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
@@ -196,7 +259,7 @@ class DirAiPrompt {
       max_tokens: action.max_tokens,
       id_project: this.projectId,
       request_id: this.requestId,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId
+      agent_id: this.chatbot?.bot.root_id || null
     }
 
     if (action.context) {
@@ -217,16 +280,28 @@ class DirAiPrompt {
 
     }
 
+    if (action.llm === 'vllm' && vllm_server_config) {
+      console.log("llm: vllm")
+      json.model = {
+        name: filled_model,
+        url: vllm_server_config.url,
+        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
+        provider: 'vllm'
+      }
+      console.log("set json.model to: ", json.model);
+    }
+
     if (action.attach) {
       json.attach = await this.detectAttach(action.attach);
     }
 
     if (action.servers) {
 
+      let mcp_integration;
       try {
-        let mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
+        mcp_integration = await integrationService.getIntegration(this.projectId, "mcp", this.token);
         if (mcp_integration?.value?.servers) {
-          await this.findAuthorization(action.servers, mcp_integration);
+          this.enrichServersFromIntegration(action.servers, mcp_integration);
         }
 
       } catch (err) {
@@ -242,7 +317,31 @@ class DirAiPrompt {
         return;
       }
 
-      json.servers = this.arrayToObject(action.servers);
+      const nativeUrlError = await this.resolveNativeServerUrls(action.servers);
+      if (nativeUrlError) {
+        await this.chatbot.addParameter("flowError", nativeUrlError);
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+      const flowVariables = {
+        'x-chatbotToken': requestVariables.chatbotToken,
+        'x-project-id': requestVariables.project_id,
+        'x-conversation-id': requestVariables.conversation_id,
+        'x-department-id': requestVariables.department_id,
+        'x-chatbot-name': requestVariables.chatbot_name,
+        'x-chatbot-id': this.chatbot.botId,
+        'x-user-id': requestVariables.user_id || requestVariables.userLeadId,
+        'x-last-user-text': requestVariables.lastUserText,
+      };
+
+      json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
+      winston.debug("DirAiPrompt json.servers: ", json.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -253,27 +352,47 @@ class DirAiPrompt {
         callback();
         return;
       }
+      console.log('json.servers', json.servers);
+    }
+
+
+    // Handle reasoning if enabled
+    let apiEndpoint = "/ask";
+
+    if (action.reasoning === true) {
+      let reasoningLevel = 'low';
+      if (action.reasoningLevel && reasoningLevels.includes(action.reasoningLevel.toLowerCase())) { 
+        reasoningLevel = action.reasoningLevel.toLowerCase();
+        this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      } else {
+        this.logger.native(`[AI Prompt] Reasoning enabled with default level: ${reasoningLevel}`);
+      }
+      
+      apiEndpoint = "/thinking";
+      this.logger.native(`[AI Prompt] Reasoning enabled with level: ${reasoningLevel}`);
+      winston.debug("DirAiPrompt Reasoning enabled, using /thinking endpoint");
+      json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
     winston.debug("DirAiPrompt json: ", json);
+    console.log("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
-      url: AI_endpoint + "/ask",
+      url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("DirAiPrompt openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
-          if (err.response?.data?.detail[0]) {
+          if (err.response?.data?.detail && err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail?.answer) {
+          } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
           } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
@@ -296,6 +415,13 @@ class DirAiPrompt {
           answer = resbody.answer;
           this.logger.native("[AI Prompt] answer: ", answer);
 
+          let reasoning_content = null;
+          if (action.reasoning === true) {
+            reasoning_content = resbody.reasoning_content;
+            this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+            await this.chatbot.addParameter("reasoning_content", reasoning_content);
+          }
+
           if (publicKey === true) {
             let tokens_usage = {
               tokens: resbody.prompt_token_info?.total_tokens || 0,
@@ -304,7 +430,7 @@ class DirAiPrompt {
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
         
-          await this.#assignAttributes(action, answer);
+          await this.#assignAttributes(action, answer, reasoning_content);
 
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -424,7 +550,7 @@ class DirAiPrompt {
     }
   }
 
-  async #assignAttributes(action, answer) {
+  async #assignAttributes(action, answer, reasoning_content) {
     winston.debug("DirAiPrompt assignAttributes action: ", action)
     winston.debug("DirAiPrompt assignAttributes answer: " + answer)
 
@@ -432,7 +558,45 @@ class DirAiPrompt {
       if (action.assignReplyTo && answer) {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
+      if (action.assignReasoningContentTo && reasoning_content) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReasoningContentTo, reasoning_content);
+      }
     }
+  }
+
+  /**
+   * Builds the thinking object for reasoning based on the level and max_tokens
+   * @param {string} level - The reasoning level: 'low', 'medium', or 'high'
+   * @param {number} max_tokens - Maximum tokens available
+   * @returns {object} The thinking configuration object
+   */
+  #buildThinkingObject(level, max_tokens) {
+    // Calculate budget_tokens based on level
+    let budgetPercentage;
+    switch (level) {
+      case 'high':
+        budgetPercentage = 0.60; // 60%
+        break;
+      case 'medium':
+        budgetPercentage = 0.40; // 40%
+        break;
+      case 'low':
+      default:
+        budgetPercentage = 0.20; // 20%
+        break;
+    }
+
+    const budget_tokens = Math.floor(max_tokens * budgetPercentage);
+
+    return {
+      show_thinking_stream: true,
+      reasoning_effort: level,
+      reasoning_summary: "auto",
+      type: "enabled",
+      budget_tokens: budget_tokens,
+      thinkingBudget: budget_tokens,
+      thinkingLevel: level
+    };
   }
 
   async getKeyFromKbSettings() {
@@ -522,34 +686,254 @@ class DirAiPrompt {
     })
   }
 
-  arrayToObject(arr) {
+  // Fields accepted by the LLM server schema. Everything else (id, native,
+  // customHeaders, oauth, tools, ...) is internal and must not be forwarded.
+  static SERVER_ALLOWED_FIELDS = ['transport', 'url', 'command', 'args', 'api_key', 'headers', 'parameters'];
+
+  arrayToObject(arr, mcp_integration, flowVariables) {
     if (!Array.isArray(arr)) {
       winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
       this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
       return null;
     }
-    return arr.reduce((acc, item) => {
-      const { name, ...rest } = item;
-      acc[name] = rest;
+
+    const integrationServers = Array.isArray(mcp_integration?.value?.servers)
+      ? mcp_integration.value.servers
+      : [];
+
+    return arr.reduce((acc, server) => {
+      const integrationServer = this.getIntegrationServer(integrationServers, server);
+
+      const cleanServer = {};
+      for (const field of DirAiPrompt.SERVER_ALLOWED_FIELDS) {
+        if (field === 'headers') continue;
+        if (server[field] !== undefined) {
+          cleanServer[field] = server[field];
+        }
+      }
+
+      const enabled_tools = this.buildEnabledTools(server, integrationServer);
+      if (enabled_tools) {
+        cleanServer.enabled_tools = enabled_tools;
+      }
+
+      const integrationHeaders = this.customHeadersToObject(integrationServer?.customHeaders);
+      const serverFlowVariables = server.native === true ? flowVariables : null;
+      cleanServer.headers = this.mergeHeadersWithVariables(
+        this.mergeHeadersWithVariables(integrationHeaders, server.headers),
+        serverFlowVariables
+      );
+
+      acc[server.name] = cleanServer;
       return acc;
     }, {});
   }
 
-  async findAuthorization(servers, mcp_integration) {
+  /**
+   * Builds the enabled_tools array of strings for a server.
+   * Priority: the project-level 'selectedTools' returned by the mcp integration,
+   * then any explicit enabled_tools/tools provided on the action server.
+   */
+  buildEnabledTools(server, integrationServer) {
+    const toNames = (tools) =>
+      Array.isArray(tools)
+        ? tools
+            .map(t => (typeof t === 'string' ? t : t?.name))
+            .filter(name => typeof name === 'string' && name.length > 0)
+        : null;
+
+    const fromSelected = toNames(integrationServer?.selectedTools);
+    if (fromSelected && fromSelected.length > 0) {
+      return fromSelected;
+    }
+
+    const fromEnabled = toNames(server.enabled_tools);
+    if (fromEnabled && fromEnabled.length > 0) {
+      return fromEnabled;
+    }
+
+    const fromTools = toNames(server.tools);
+    if (fromTools && fromTools.length > 0) {
+      return fromTools;
+    }
+
+    return null;
+  }
+
+  getIntegrationServer(integrationServers, server) {
+    if (!Array.isArray(integrationServers) || !server) return null;
+    if (server.id) {
+      const byId = integrationServers.find(s => s.id === server.id);
+      if (byId) return byId;
+    }
+    if (server.name) {
+      return integrationServers.find(s => s.name === server.name) || null;
+    }
+    return null;
+  }
+
+  enrichServersFromIntegration(servers, mcp_integration) {
     const integrationServers = mcp_integration?.value?.servers;
     if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
-  
-    // Preindex by name
-    const map = new Map(integrationServers.map(s => [s.name, s]));
-  
+
     servers.forEach(server => {
-      const integrationServer = map.get(server.name);
-      if (integrationServer?.authorization?.key) {
+      const integrationServer = this.getIntegrationServer(integrationServers, server);
+      if (!integrationServer) return;
+
+      if (!server.native && integrationServer.url) {
+        server.url = integrationServer.url;
+      }
+      if (integrationServer.transport) {
+        server.transport = integrationServer.transport;
+      }
+      if (integrationServer.authorization?.key) {
         server.api_key = integrationServer.authorization.key;
+      }
+
+      const integrationHeaders = this.customHeadersToObject(integrationServer.customHeaders);
+      if (Object.keys(integrationHeaders).length > 0) {
+        const existingHeaders =
+          server.headers &&
+          typeof server.headers === 'object' &&
+          !Array.isArray(server.headers)
+            ? server.headers
+            : {};
+        server.headers = { ...existingHeaders, ...integrationHeaders };
       }
     });
 
     return servers;
+  }
+
+  customHeadersToObject(customHeaders) {
+    if (!Array.isArray(customHeaders)) {
+      return {};
+    }
+    return customHeaders.reduce((acc, header) => {
+      if (header?.enabled === false || !header?.key) {
+        return acc;
+      }
+      acc[header.key] = header.value != null ? String(header.value) : '';
+      return acc;
+    }, {});
+  }
+
+  mergeHeadersWithVariables(existingHeaders, variables) {
+    const base =
+      existingHeaders &&
+      typeof existingHeaders === 'object' &&
+      !Array.isArray(existingHeaders)
+        ? { ...existingHeaders }
+        : {};
+    for (const key of Object.keys(base)) {
+      const v = base[key];
+      if (v !== undefined && v !== null && typeof v !== 'string') {
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      }
+    }
+    if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
+      return base;
+    }
+    for (const key of Object.keys(variables)) {
+      try {
+        const v = variables[key];
+        if (v === undefined || typeof v === 'function') {
+          continue;
+        }
+        if (v === null) {
+          base[key] = '';
+          continue;
+        }
+        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      } catch (err) {
+        winston.warn("DirAiPrompt mergeHeadersWithVariables skip key:", key, err);
+      }
+    }
+    return base;
+  }
+
+  async resolveNativeServerUrls(servers) {
+    if (!Array.isArray(servers)) return null;
+
+    const nativeServers = servers.filter(server => server.native === true);
+    if (nativeServers.length === 0) return null;
+
+    let nativeMcpCache = await this.getNativeMcpServersFromCache();
+    if (!nativeMcpCache) {
+      await this.fetchNativeMcpServers();
+      nativeMcpCache = await this.getNativeMcpServersFromCache();
+    }
+
+    if (!nativeMcpCache) {
+      this.logger.error("[AI Prompt] native MCP servers cache not found");
+      winston.error("DirAiPrompt native MCP servers cache not found");
+      return "AiPrompt Error: native MCP servers not available";
+    }
+
+    for (const server of nativeServers) {
+      const cachedServer = this.findNativeServerInCache(nativeMcpCache, server.id);
+      if (cachedServer?.url) {
+        server.url = cachedServer.url;
+      }
+    }
+
+    const unresolved = nativeServers.filter(server => !server.url);
+    if (unresolved.length > 0) {
+      const names = unresolved.map(server => server.name || server.id).join(", ");
+      this.logger.error("[AI Prompt] native MCP server url not found for: ", names);
+      winston.error("DirAiPrompt native MCP server url not found for: ", names);
+      return "AiPrompt Error: native MCP server url not found for " + names;
+    }
+
+    return null;
+  }
+
+  async getNativeMcpServersFromCache() {
+    try {
+      const cached = await this.tdcache.get(NATIVE_MCP_CACHE_KEY);
+      if (!cached) return null;
+      return JSON.parse(cached);
+    } catch (err) {
+      this.logger.error("[AI Prompt] Error reading native MCP cache: ", err);
+      winston.error("DirAiPrompt Error reading native MCP cache: ", err);
+      return null;
+    }
+  }
+
+  findNativeServerInCache(cache, serverId) {
+    if (!cache || !serverId) return null;
+
+    if (Array.isArray(cache)) {
+      return cache.find(server => server.id === serverId);
+    }
+
+    if (typeof cache === 'object') {
+      return cache[serverId];
+    }
+
+    return null;
+  }
+
+  async fetchNativeMcpServers() {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + this.token
+        },
+        method: "GET"
+      };
+      winston.debug("DirAiPrompt fetch native MCP servers HttpRequest", HTTPREQUEST);
+
+      httpUtils.request(HTTPREQUEST, (err) => {
+        if (err) {
+          this.logger.error("[AI Prompt] Error fetching native MCP servers: ", err);
+          winston.error("DirAiPrompt Error fetching native MCP servers: ", err);
+        }
+        resolve();
+      });
+    });
   }
 
   async detectAttach(source) {
