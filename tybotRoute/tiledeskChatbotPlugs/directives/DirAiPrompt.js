@@ -1,14 +1,11 @@
 const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
-let https = require("https");
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const Utils = require("../../utils/HttpUtils");
-const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
@@ -530,93 +527,6 @@ class DirAiPrompt {
     }
   }
 
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiPrompt KB HttpRequest", KB_HTTPREQUEST);
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiPrompt Get KnowledgeBase err: " + err.message);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiPrompt check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAiPrompt update quote HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(httprequest) DirAiPrompt Increment token quote resbody: ", resbody);
-            resolve(true);
-          }
-        }
-      )
-    })
-  }
-
   // Fields accepted by the LLM server schema. Everything else (id, native,
   // customHeaders, oauth, tools, ...) is internal and must not be forwarded.
   static SERVER_ALLOWED_FIELDS = ['transport', 'url', 'command', 'args', 'api_key', 'headers', 'parameters'];
@@ -643,52 +553,24 @@ class DirAiPrompt {
         }
       }
 
-      const enabled_tools = this.buildEnabledTools(server, integrationServer);
-      if (enabled_tools) {
-        cleanServer.enabled_tools = enabled_tools;
-      }
+      cleanServer.enabled_tools = this.buildEnabledTools(server);
 
       const integrationHeaders = this.customHeadersToObject(integrationServer?.customHeaders);
       const serverFlowVariables = server.native === true ? flowVariables : null;
-      cleanServer.headers = this.mergeHeadersWithVariables(
-        this.mergeHeadersWithVariables(integrationHeaders, server.headers),
-        serverFlowVariables
-      );
+      cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, serverFlowVariables);
 
       acc[server.name] = cleanServer;
       return acc;
     }, {});
   }
 
-  /**
-   * Builds the enabled_tools array of strings for a server.
-   * Priority: the project-level 'selectedTools' returned by the mcp integration,
-   * then any explicit enabled_tools/tools provided on the action server.
-   */
-  buildEnabledTools(server, integrationServer) {
-    const toNames = (tools) =>
-      Array.isArray(tools)
-        ? tools
-            .map(t => (typeof t === 'string' ? t : t?.name))
-            .filter(name => typeof name === 'string' && name.length > 0)
-        : null;
-
-    const fromSelected = toNames(integrationServer?.selectedTools);
-    if (fromSelected && fromSelected.length > 0) {
-      return fromSelected;
+  buildEnabledTools(server) {
+    if (!Array.isArray(server?.tools) || server.tools.length === 0) {
+      return [];
     }
-
-    const fromEnabled = toNames(server.enabled_tools);
-    if (fromEnabled && fromEnabled.length > 0) {
-      return fromEnabled;
-    }
-
-    const fromTools = toNames(server.tools);
-    if (fromTools && fromTools.length > 0) {
-      return fromTools;
-    }
-
-    return null;
+    return server.tools
+      .map(t => (typeof t === 'string' ? t : t?.name))
+      .filter(name => typeof name === 'string' && name.length > 0);
   }
 
   getIntegrationServer(integrationServers, server) {
@@ -711,7 +593,9 @@ class DirAiPrompt {
       const integrationServer = this.getIntegrationServer(integrationServers, server);
       if (!integrationServer) return;
 
-      if (!server.native && integrationServer.url) {
+      if (server.native) {
+        delete server.url;
+      } else if (integrationServer.url) {
         server.url = integrationServer.url;
       }
       if (integrationServer.transport) {
@@ -721,8 +605,6 @@ class DirAiPrompt {
         server.api_key = integrationServer.authorization.key;
       }
     });
-
-    return servers;
   }
 
   customHeadersToObject(customHeaders) {

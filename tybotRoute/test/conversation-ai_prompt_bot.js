@@ -142,70 +142,13 @@ const bot = {
 				"_tdActionTitle": "ai action",
 				"assignReplyTo": "ai_reply",
 				"question": "this is the question",
-				"servers": [ { name: "email", transport: "streamable_http", url: "example_url1.com/mcp" }, { name: "calendar", transport: "streamable_http", url: "example_url2.com/mcp" } ],
-				"llm": "myllm",
-				"model": "llmmodel",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_mcp",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"servers": [ { name: "email", transport: "streamable_http", url: "example_url1.com/mcp" }, { name: "calendar", transport: "streamable_http", url: "example_url2.com/mcp" } ],
-				"llm": "myllm",
-				"model": "llmmodel",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_mcp_tools_list",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"servers": [ 
-					{ 
-						name: "email", 
-						transport: "streamable_http", 
-						url: "example_url1.com/mcp", 
-						enabled_tools: ['email_send', 'email_read'] 
-					}, 
-					{ 
-						name: "calendar",
-						transport: "streamable_http", 
-						url: "example_url2.com/mcp", 
-						enabled_tools: ['calendar_read', 'calendar_write'] 
-					},
-					{ 
-						name: "custom",
-						transport: "streamable_http", 
-						url: "example_customurl1.com/mcp", 
-						enabled_tools: ['tool1', 'tool2'] 
-					}
-				],
+				"servers": [{
+					"name": "Gmail",
+					"tools": [
+						"GMAIL_SEND_EMAIL",
+						"GMAIL_SEND_DRAFT",
+					]
+				}],
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
@@ -231,42 +174,17 @@ const bot = {
                     {
                         "id": "tiledesk-communicator",
                         "name": "Tiledesk Communicator",
-                        "url": "",
-                        "transport": "streamable_http",
                         "native": true,
-                        "customHeaders": [],
                         "tools": [
                             {
-                                "name": "ask_kb"
+                                "name": "ASK_KB"
                             },
                             {
-                                "name": "check_available_agents"
+                                "name": "CHECK_AVAILABLE_AGENTS"
                             }
                         ]
                     }
                 ],
-				"llm": "myllm",
-				"model": "llmmodel",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_internal_mcp",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"attach": "https://repo.com/example_image.png",
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
