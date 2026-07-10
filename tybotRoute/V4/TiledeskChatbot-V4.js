@@ -11,6 +11,8 @@ const { labelFor, createTurnLogger } = require('./flowlog-V4.js');
 const HANDLERS = {
   // core conversazionale
   start: require('./nodes/start-V4.js'),
+  webhook: require('./nodes/webhook-V4.js'),
+  copilot: require('./nodes/copilot-V4.js'),
   reply: require('./nodes/reply-V4.js'),
   replyv2: require('./nodes/replyv2-V4.js'),
   randomreply: require('./nodes/randomreply-V4.js'),
@@ -99,6 +101,33 @@ async function reply(ctx) {
   // Nuovo input utente → invalida un eventuale no_input pendente di un replyv2.
   await state.clearUserInput(tdcache, requestId);
 
+  // Webhook: il body della richiesta HTTP arriva in `message.attributes.payload`
+  // (server block route: `attributes: { payload: body }`). Lo salviamo come
+  // attributo `payload` della request, così i nodi lo referenziano con
+  // `{{payload.<campo>}}` (LiquidJS, accesso annidato). Solo se è un oggetto.
+  const incomingPayload = message && message.attributes && message.attributes.payload;
+  if (incomingPayload && typeof incomingPayload === 'object' && !Array.isArray(incomingPayload)) {
+    try {
+      const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js'); // lazy: evita cicli
+      await TiledeskChatbot.addParameterStatic(tdcache, requestId, 'payload', incomingPayload);
+    } catch (err) {
+      winston.error('(TiledeskChatbotV4) store webhook payload error: ', err);
+    }
+  }
+
+  // Parità V3: mantieni `lastUserText` come variabile di sistema (equivalente al
+  // REQ_LAST_USER_TEXT di V3) per ogni messaggio utente reale (esclusi i comandi
+  // di start), così `{{lastUserText}}` risolve ovunque — es. nelle istruzioni
+  // dell'ai_condition da cui il classificatore ricava il testo da analizzare.
+  if (text && !START_COMMANDS.includes(text)) {
+    try {
+      const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js'); // lazy: evita cicli
+      await TiledeskChatbot.addParameterStatic(tdcache, requestId, 'lastUserText', text);
+    } catch (err) {
+      winston.error('(TiledeskChatbotV4) set lastUserText error: ', err);
+    }
+  }
+
   const ds = new NodesDataSourceV4(botId);
   const nodes = await ds.getNodes();
   if (!nodes || nodes.length === 0) {
@@ -160,6 +189,11 @@ async function runTurn(ctx, nodes, entryNode, resuming = false) {
     fill(text) {
       return sender.filler.fill(text || '', { ...sender.params });
     },
+    // Fill SAFE per body JSON: ogni {{...}} → token JSON valido, così una singola
+    // interpolazione malformata non rompe il parse dell'intero body.
+    fillJson(text) {
+      return sender.filler.fillJson(text || '', { ...sender.params });
+    },
   };
 
   // Flow-log del turno (pubblicato su rabbitmq, letto dal pannello di test del DS).
@@ -167,7 +201,10 @@ async function runTurn(ctx, nodes, entryNode, resuming = false) {
   const pendingNoInput = await walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx, flowlog, resuming });
 
   // Nessun messaggio visibile → ack nascosto per non lasciare il widget in attesa.
-  if (!sender.hasSent()) {
+  // Skip per le request webhook/automation (`automation-request-...`): non hanno un
+  // canale chat, quindi l'invio a /messages darebbe 422 — la risposta HTTP viaggia
+  // sul topic `/webhooks/...` via il nodo web_response, non come messaggio.
+  if (!sender.hasSent() && !String(requestId || '').startsWith('automation-request-')) {
     await sender.sendIdleAck();
   }
 
@@ -192,6 +229,21 @@ async function resolveEntryNode({ text, action, nodes, tdcache, requestId }) {
     await state.clearState(tdcache, requestId);
     winston.verbose('(TiledeskChatbotV4) entry: START → nodo start');
     return { node: NodesDataSourceV4.startNode(nodes), resuming: false };
+  }
+
+  // Comando "jump to block" via testo: `/#<nodeId>` (o `#<nodeId>`). È il modo con
+  // cui il trigger webhook parte dal nodo d'ingresso (server block route manda
+  // `/#<block_id>`) e con cui i deep-link saltano a un blocco. Parte pulito.
+  const jumpMatch = text.match(/^\/?#(.+)$/);
+  if (jumpMatch) {
+    const nodeId = jumpMatch[1].trim();
+    const target = NodesDataSourceV4.byId(nodes, nodeId);
+    if (target) {
+      await state.clearState(tdcache, requestId);
+      winston.verbose('(TiledeskChatbotV4) entry: jump #' + nodeId + ' (comando testuale)');
+      return { node: target, resuming: false };
+    }
+    winston.warn('(TiledeskChatbotV4) jump #' + nodeId + ' non risolve a un nodo del flow');
   }
 
   if (action) {

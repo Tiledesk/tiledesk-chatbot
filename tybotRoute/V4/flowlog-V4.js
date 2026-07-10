@@ -57,8 +57,15 @@ function labelFor(type) {
   return NODE_LABEL[type] || type;
 }
 
-/** Una conversazione è "di test" (draft) se la sourcePage contiene `td_draft=true`. */
+/**
+ * Una conversazione è "di test" (draft) — abilita i log `native`/`debug` — quando:
+ *  - il widget la marca via `sourcePage` con `td_draft=true` (test chat), OPPURE
+ *  - la request è marcata `draft: true` (test **webhook** dal `/dev`: il block
+ *    route propaga `req.body.draft` in `message.request.draft`). Senza questo ramo
+ *    le invocazioni webhook di test non pubblicherebbero alcun flow-log.
+ */
 function isDraft(message) {
+  if (message && message.request && message.request.draft === true) return true;
   const sp =
     (message && message.request && message.request.attributes && message.request.attributes.sourcePage) ||
     (message && message.attributes && message.attributes.sourcePage) ||

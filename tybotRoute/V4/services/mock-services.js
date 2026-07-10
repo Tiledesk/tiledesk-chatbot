@@ -50,11 +50,11 @@ function create(opts) {
     },
     async aiCondition(opts) {
       note('aiCondition');
-      if (cfg.aiError) return { ok: false, intentId: null, error: 'mock ai_condition error' };
-      const intents = (opts && opts.intents) || [];
-      // mock: classifica sul primo intent (o cfg.matchIntentId)
-      const intentId = cfg.matchIntentId || (intents[0] && intents[0].id) || null;
-      return { ok: true, intentId, reply: 'MOCK', error: null };
+      if (cfg.aiError) return { ok: false, branchId: null, error: 'mock ai_condition error' };
+      const branches = (opts && (opts.branches || opts.intents)) || []; // intents = legacy
+      // mock: classifica sul primo ramo (o cfg.matchBranchId / legacy cfg.matchIntentId)
+      const branchId = cfg.matchBranchId || cfg.matchIntentId || (branches[0] && branches[0].id) || null;
+      return { ok: true, branchId, reply: 'MOCK', error: null };
     },
     async addKbContent(opts) { note('addKbContent:' + (opts && opts.question)); return { ok: !cfg.aiError }; },
   };

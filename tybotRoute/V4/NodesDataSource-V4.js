@@ -68,6 +68,16 @@ class NodesDataSourceV4 {
     const slot = slots.find((s) => s.key === key);
     return slot ? (slot.nextNode || null) : null;
   }
+
+  /** Target del nodo associato a uno specifico `slot.id` (routing per id: rami
+   *  `ai_condition`, analogo ai bottoni). Funziona anche sui vecchi slot
+   *  `intent_<id>` dei bot legacy, perché `slot.id === branch.id` è invariato. */
+  static nextBySlotId(node, id) {
+    if (!id) return null;
+    const slots = (node && node.slots) || [];
+    const slot = slots.find((s) => s.id === id);
+    return slot ? (slot.nextNode || null) : null;
+  }
 }
 
 module.exports = { NodesDataSourceV4 };

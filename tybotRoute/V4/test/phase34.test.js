@@ -17,6 +17,33 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     ok((await ctx.variables.get('err')) != null, 'assignErrorTo valorizzato');
     ok((await ctx.variables.get('flowError')) != null, 'flowError valorizzato');
   });
+  await run('webrequestv2 → form-data usa `name` come chiave, salta disabilitati/vuoti', async () => {
+    const ctx = makeCtx(); // niente httpBody → il mock ri-echeggia req.body
+    const node = { data: {
+      url: 'http://x/api', method: 'POST', bodyType: 'form-data',
+      formData: [
+        { name: 'first', value: 'Mario', type: 'Text', enabled: true },
+        { name: 'last', value: 'Rossi', type: 'Text', enabled: true },
+        { name: 'skipDisabled', value: 'x', type: 'Text', enabled: false },
+        { name: 'skipEmptyValue', value: '', type: 'Text', enabled: true },
+        { name: '', value: 'noName', type: 'Text', enabled: true },
+      ],
+      assignResultTo: 'resp',
+    } };
+    const r = await H('webrequestv2').execute(node, ctx);
+    eq(r.nextSlotKey, 'success', 'success');
+    eq((await ctx.variables.get('resp')).echo, { first: 'Mario', last: 'Rossi' }, 'body form-data: name-keyed, salta disabled/empty/no-name');
+  });
+  await run('webrequestv2 → formData ignorata se bodyType !== form-data', async () => {
+    const ctx = makeCtx();
+    const node = { data: {
+      url: 'http://x', method: 'POST', bodyType: 'json', jsonBody: '{"a":1}',
+      formData: [{ name: 'x', value: 'y', type: 'Text', enabled: true }],
+      assignResultTo: 'resp',
+    } };
+    await H('webrequestv2').execute(node, ctx);
+    eq((await ctx.variables.get('resp')).echo, { a: 1 }, 'usa jsonBody, non la formData residua');
+  });
   await run('web_response → terminale (nessuno slot)', async () => {
     const r = await H('web_response').execute({ data: {} }, makeCtx());
     ok(!r.nextSlotKey && !r.next, 'nessuno slot → terminale');
@@ -57,14 +84,18 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     eq(r.nextSlotKey, 'success', 'success');
     eq(await ctx.variables.get('res'), 'Assist', 'result');
   });
-  await run('ai_condition → slot intent_<id> / fallback', async () => {
-    const intents = [{ id: 'abc123', label: 'Saluto' }, { id: 'def456', label: 'Acquisto' }];
-    const ctxM = makeCtx({ mock: { matchIntentId: 'def456' } });
-    eq((await H('ai_condition').execute({ data: { question: 'Q', intents } }, ctxM)).nextSlotKey, 'intent_def456', 'match → intent_def456');
-    const ctxN = makeCtx({ mock: { matchIntentId: null } });
-    // matchIntentId null ma il mock fallback al primo intent → intent_abc123
-    ok(['intent_abc123', 'fallback'].includes((await H('ai_condition').execute({ data: { question: 'Q', intents } }, ctxN)).nextSlotKey), 'no match esplicito → primo/fallback');
-    eq((await H('ai_condition').execute({ data: { question: 'Q', intents } }, makeCtx({ mock: { aiError: true } }))).nextSlotKey, 'error', 'errore → error');
+  await run('ai_condition → slot branch (per id) / fallback', async () => {
+    const branches = [{ id: 'abc123', label: 'abc123', criterion: 'Saluto' }, { id: 'def456', label: 'def456', criterion: 'Acquisto' }];
+    const ctxM = makeCtx({ mock: { matchBranchId: 'def456' } });
+    eq((await H('ai_condition').execute({ data: { question: 'Q', branches } }, ctxM)).nextSlotId, 'def456', 'match → nextSlotId def456');
+    const ctxN = makeCtx({ mock: { matchBranchId: null } });
+    // matchBranchId null ma il mock fallback al primo ramo → nextSlotId abc123
+    const rN = await H('ai_condition').execute({ data: { question: 'Q', branches } }, ctxN);
+    ok(rN.nextSlotId === 'abc123' || rN.nextSlotKey === 'fallback', 'no match esplicito → primo/fallback');
+    eq((await H('ai_condition').execute({ data: { question: 'Q', branches } }, makeCtx({ mock: { aiError: true } }))).nextSlotKey, 'error', 'errore → error');
+    // retro-compat: shape legacy `data.intents` instrada comunque (per id)
+    const legacy = [{ id: 'leg001', label: 'leg001', prompt: 'x' }];
+    eq((await H('ai_condition').execute({ data: { question: 'Q', intents: legacy } }, makeCtx({ mock: { matchIntentId: 'leg001' } }))).nextSlotId, 'leg001', 'legacy intents → nextSlotId leg001');
   });
   await run('add_kb_content → direct + addKbContent (FAQ question/answer, {{var}} risolte)', async () => {
     const ctx = makeCtx({ params: { who: 'Mario' } });

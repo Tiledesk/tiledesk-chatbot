@@ -78,6 +78,7 @@ function makeCtx(opts) {
     services: opts.services || require('../services/mock-services.js').create({ mock: opts.mock }),
     get params() { return sender.params; },
     fill(text) { return sender.filler.fill(text || '', { ...sender.params }); },
+    fillJson(text) { return sender.filler.fillJson(text || '', { ...sender.params }); },
   };
   return ctx;
 }
