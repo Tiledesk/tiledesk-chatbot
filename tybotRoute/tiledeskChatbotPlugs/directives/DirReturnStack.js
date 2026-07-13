@@ -1,10 +1,9 @@
-const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const SubagentStack = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
-const tilebotService = require('../../services/TilebotService');
+const SubagentResumeService = require('../../services/SubagentResumeService');
 
 class DirReturnStack {
 
@@ -90,42 +89,8 @@ class DirReturnStack {
         });
       }
 
-      winston.info(
-        "(Subagent) RESUME trigger requestId=" + this.requestId +
-        " parentBotId=" + parentState.parentBotId +
-        " resumeIndex=" + parentState.resumeIndex
-      );
-
-      const resumeRequest = {
-        payload: {
-          _id: uuidv4(),
-          senderFullname: "_tdinternal",
-          type: "text",
-          sender: "_tdinternal",
-          recipient: this.requestId,
-          text: "/",
-          id_project: this.context.projectId,
-          attributes: {
-            subagentResume: true,
-            subagentResumeState: parentState
-          },
-          request: {
-            request_id: this.requestId,
-            id_project: this.context.projectId,
-            bot_id: parentState.parentBotId,
-            draft: parentState.supportRequest?.draft
-          }
-        },
-        token: this.context.token
-      };
-
-      tilebotService.sendMessageToBot(resumeRequest, parentState.parentBotId, (err) => {
-        if (err) {
-          winston.error("(DirReturnStack) Error triggering parent resume:", err);
-          this.logger.error("(DirReturnStack) Error triggering parent resume:", err);
-        }
-        callback(true);
-      });
+      await SubagentResumeService.resumeParentFlow(parentState, this.context);
+      callback(true);
     } catch (error) {
       winston.error("(DirReturnStack) error: ", error);
       this.logger.error("(DirReturnStack) Return to parent error: ", error);

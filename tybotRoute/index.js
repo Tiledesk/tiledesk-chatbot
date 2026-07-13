@@ -37,6 +37,7 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
+const SubagentResumeService = require('./services/SubagentResumeService.js');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -150,21 +151,15 @@ router.post('/ext/:botid', async (req, res) => {
 
     if (resumeState) {
       try {
-        const directivesPlug = new DirectivesChatbotPlug({
-          message: resumeState.message || message,
-          reply: resumeState.reply,
-          directives: resumeState.directives,
-          chatbot: chatbot,
-          supportRequest: message.request,
-          API_ENDPOINT: API_ENDPOINT,
-          TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
+        await SubagentResumeService.resumeParentFlow(resumeState, {
+          projectId: projectId,
+          requestId: requestId,
           token: token,
-          cache: tdcache,
-          resumeIndex: resumeState.resumeIndex
+          tdcache: tdcache,
+          API_ENDPOINT: API_ENDPOINT,
+          TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
         });
-        directivesPlug.processDirectives(() => {
-          winston.verbose("(tybotRoute) Subagent resume - directives executed.");
-        });
+        winston.verbose("(tybotRoute) Subagent resume - directives executed.");
       } catch (resumeError) {
         winston.error("(tybotRoute) Error resuming subagent parent flow:", resumeError);
       }
@@ -736,6 +731,12 @@ async function startApp(settings, completionCallback) {
 
   winston.info("(Tilebot) MAX_STEPS: " + MAX_STEPS);
   winston.info("(Tilebot) MAX_EXECUTION_TIME: " + MAX_EXECUTION_TIME);
+
+  SubagentResumeService.configure({
+    staticBots: staticBots,
+    MAX_STEPS: MAX_STEPS,
+    MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
+  });
   
   var pjson = require('./package.json');
   winston.info("(Tilebot) Starting Tilebot connector v" + pjson.version);
