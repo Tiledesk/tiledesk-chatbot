@@ -16,6 +16,7 @@ class DirIntent {
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.supportRequest = context.supportRequest;
     this.token = context.token;
+    this.message = context.message;
   }
 
   execute(directive, callback) {
@@ -66,7 +67,8 @@ class DirIntent {
           "request_id": requestId,
           "id_project": projectId,
           "draft": draft
-        }
+        },
+        "message": this.message
       },
       "token": this.token
     }
@@ -100,6 +102,10 @@ class DirIntent {
     tilebotService.executeBlock(intent_command_request, botId, () => {
       callback(true);
     });
+
+    // tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    //   callback(true);
+    // });
 
   }
 

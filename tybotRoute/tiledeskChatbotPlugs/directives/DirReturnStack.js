@@ -73,6 +73,7 @@ class DirReturnStack {
         { id: parentState.parentBotId },
         this.context.token
       );
+      console.log("(DirReplaceBotV4) Replace bot resbody: ", JSON.stringify(resbody));
 
       winston.info(
         "(Subagent) REPLACE → parent requestId=" + this.requestId +
