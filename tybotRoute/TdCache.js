@@ -130,6 +130,26 @@ class TdCache {
     async del(key) {
         await this.client.del(key);
     }
+
+    async lPush(key, value) {
+      await this.client.LPUSH(key, value);
+    }
+
+    async lPop(key) {
+      return await this.client.lPop(key);
+    }
+
+    async lLen(key) {
+      return await this.client.lLen(key);
+    }
+
+    async lIndex(key, index) {
+      return await this.client.lIndex(key, index);
+    }
+
+    async expire(key, seconds) {
+      await this.client.expire(key, seconds);
+    }
     
     async publish(key, value) {
       await this.client.publish(key, value);

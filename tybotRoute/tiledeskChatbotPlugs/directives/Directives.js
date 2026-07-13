@@ -33,6 +33,7 @@ class Directives {
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
   static REPLACE_BOT_V3 = "replacebotv3";
+  static REPLACE_BOT_V4 = "replacebotv4";
   static ITERATION = "iteration";
   /**** AI ****/
   static ASK_GPT = "askgpt";
@@ -64,6 +65,7 @@ class Directives {
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
+  static RETURN = "return";
 
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace

@@ -145,6 +145,33 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
 
+  if (message.attributes && message.attributes.subagentResume === true) {
+    const resumeState = message.attributes.subagentResumeState;
+
+    if (resumeState) {
+      try {
+        const directivesPlug = new DirectivesChatbotPlug({
+          message: resumeState.message || message,
+          reply: resumeState.reply,
+          directives: resumeState.directives,
+          chatbot: chatbot,
+          supportRequest: message.request,
+          API_ENDPOINT: API_ENDPOINT,
+          TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
+          token: token,
+          cache: tdcache,
+          resumeIndex: resumeState.resumeIndex
+        });
+        directivesPlug.processDirectives(() => {
+          winston.verbose("(tybotRoute) Subagent resume - directives executed.");
+        });
+      } catch (resumeError) {
+        winston.error("(tybotRoute) Error resuming subagent parent flow:", resumeError);
+      }
+      return;
+    }
+  }
+
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);

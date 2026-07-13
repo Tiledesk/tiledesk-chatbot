@@ -65,6 +65,9 @@ const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
+const { DirReplaceBotV4 } = require('./directives/DirReplaceBotV4');
+const { DirReturn } = require('./directives/DirReturn');
+const SubagentStack = require('./SubagentStack');
 
 class DirectivesChatbotPlug {
 
@@ -85,6 +88,7 @@ class DirectivesChatbotPlug {
     this.reply = config.reply;
     this.chatbot = config.chatbot;
     this.message = config.message;
+    this.resumeIndex = config.resumeIndex;
   }
 
   exec(pipeline) {
@@ -170,7 +174,7 @@ class DirectivesChatbotPlug {
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
-    this.curr_directive_index = -1;
+    this.curr_directive_index = (this.resumeIndex != null) ? this.resumeIndex - 1 : -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
     
     const next_dir = await this.nextDirective(directives);
@@ -275,6 +279,7 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT]: DirReplaceBot,
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
+      [Directives.REPLACE_BOT_V4]: DirReplaceBotV4,
       [Directives.WAIT]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
       [Directives.UNLOCK_INTENT]: DirUnlockIntent,
@@ -309,12 +314,21 @@ class DirectivesChatbotPlug {
       [Directives.WEB_RESPONSE]: DirWebResponse,
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
+      [Directives.RETURN]: DirReturn,
     };
 
     const HandlerClass = handlers[directive_name];
     if (!HandlerClass) {
       const next_dir = await this.nextDirective(this.directives);
       return this.process(next_dir);
+    }
+
+    if (directive_name === Directives.REPLACE_BOT_V4) {
+      context.subagentSnapshot = SubagentStack.buildSnapshot(
+        context,
+        this.directives,
+        this.curr_directive_index + 1
+      );
     }
 
     const handler = new HandlerClass(context);
