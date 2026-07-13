@@ -1,10 +1,13 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const { InternalSubAgentService } = require('../../services/InternalSubAgentService');
 let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { Logger } = require('../../Logger');
+const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston')
+const { v4: uuidv4 } = require('uuid');
 
 class DirReply {
 
@@ -19,6 +22,7 @@ class DirReply {
     this.tdcache = context.tdcache;
     this.log = context.log;
     this.API_ENDPOINT = context.API_ENDPOINT;
+    this.API_URL = context.API_URL;
     
     this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
@@ -84,24 +88,53 @@ class DirReply {
         if (commands.length > 0) {
           for (let i = 0; i < commands.length; i++) {
             let command = commands[i];
-
             if (command.type === 'message' && command.message && command.message.text) {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
-              winston.debug("DirReply command filled: " + command.message.text);
+              winston.debug("(DirReply) command filled: " + command.message.text);
             }
 
             if (command.type === 'message' && command.message && command.message.metadata) {
               command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
               command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
-              winston.debug("DirReply command filled (metadata.src): " + command.message.metadata.src);
-              winston.debug("DirReply command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+              winston.debug("(DirReply) command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("(DirReply) command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
+            if (command.type === 'message' && command.message && command.message.type === 'tts') {
+              command.message.text = filler.fill(command.message.text, requestAttributes);
+              
+              const uid = uuidv4();
+              const voiceSettings = {
+                text: command.message.text,
+                provider: requestAttributes['VOICE_PROVIDER'],
+                model: requestAttributes['TTS_MODEL'],
+                voice: requestAttributes['TTS_VOICE_NAME'],
+                language: requestAttributes['TTS_VOICE_LANGUAGE']
+              }
+              try {
+                const speechPreload = await aiService.preloadSpeech(voiceSettings, uid, this.projectId, this.token)
+                console.log("DirReply speechPreload: ", speechPreload);
+              } catch (error) {
+                winston.error("DirReply Error preloading speech: ", error);
+              }
+              // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              command.message.metadata = {
+                type: 'audio/mp3',
+                uid: uid,
+                // filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                filename: `audio-${uid}.mp3`,
+                src: `${this.API_URL}/${this.projectId}/llm/speech/${uid}`,
+                voiceSettings: voiceSettings
+              }
+              winston.debug("(DirReply) command filled (tts): " + command.message.text);
+              winston.debug("(DirReply) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
             }
 
             if (command.type === 'settings' && command.settings) {
               Object.keys(command.settings).forEach(k => {
                 command.settings[k] = filler.fill(command.settings[k], requestAttributes)
-                winston.debug("DirReply settings command filled: " + command.settings[k]);
+                winston.debug("(DirReply) settings command filled: " + command.settings[k]);
               })
             }
           }
@@ -162,9 +195,18 @@ class DirReply {
     winston.debug("DirReply reply with clean message: ", cleanMessage);
     this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
+    const outboundRequestId = InternalSubAgentService.resolveOutboundRequestId(
+      this.requestId,
+      requestAttributes,
+      this.context
+    );
+    if (outboundRequestId !== this.requestId) {
+      winston.debug(`(DirReply) Sub-agent reply routed to parent request ${outboundRequestId}`);
+    }
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
-      this.requestId,
+      outboundRequestId,
       cleanMessage,
       (err) => {
         if (err) {

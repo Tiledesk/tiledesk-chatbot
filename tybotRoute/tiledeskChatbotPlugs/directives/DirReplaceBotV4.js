@@ -67,6 +67,7 @@ class DirReplaceBotV4 {
 
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
+      console.log("(DirReplaceBotV4) Replace bot resbody: ", JSON.stringify(resbody));
       if (this.context.chatbot?.bot.root_id) {
         AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
           from_agent_id: this.context.chatbot?.bot.root_id,
