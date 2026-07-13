@@ -6,7 +6,7 @@ const SubagentStack = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
 const tilebotService = require('../../services/TilebotService');
 
-class DirReturn {
+class DirReturnStack {
 
   constructor(context) {
     if (!context) {
@@ -22,41 +22,50 @@ class DirReturn {
   }
 
   execute(directive, callback) {
-    winston.verbose("Execute Return directive");
+    winston.verbose("Execute ReturnStack directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.warn("DirReturn Incorrect directive: ", directive);
+      winston.warn("DirReturnStack Incorrect directive: ", directive);
       callback(true);
       return;
     }
     this.go(action, (stop) => {
-      this.logger.native("[Return] Executed");
+      this.logger.native("[Return Stack] Executed");
       callback(stop);
     })
   }
 
   async go(action, callback) {
-    winston.debug("(DirReturn) Action: ", action);
+    winston.debug("(DirReturnStack) Action: ", action);
 
     if (!this.context.tdcache) {
-      winston.error("(DirReturn) Error: tdcache is mandatory");
+      winston.error("(DirReturnStack) Error: tdcache is mandatory");
       callback(true);
       return;
     }
 
     const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
     const parentState = await subagentStack.pop(this.requestId);
+    const stackSize = await subagentStack.size(this.requestId);
 
     if (!parentState || !parentState.parentBotId) {
-      winston.error("(DirReturn) Error: subagent stack is empty or invalid");
-      this.logger.error("(DirReturn) Subagent stack is empty or invalid");
+      winston.error("(DirReturnStack) Error: subagent stack is empty or invalid");
+      this.logger.error("(DirReturnStack) Subagent stack is empty or invalid");
       callback(true);
       return;
     }
+
+    winston.info(
+      "(Subagent) POP requestId=" + this.requestId +
+      " parentBotId=" + parentState.parentBotId +
+      " resumeIndex=" + parentState.resumeIndex +
+      " remainingStackDepth=" + stackSize +
+      " currentBotId=" + this.context.supportRequest?.bot_id
+    );
 
     try {
       const resbody = await requestService.replaceBot(
@@ -64,6 +73,12 @@ class DirReturn {
         this.requestId,
         { id: parentState.parentBotId },
         this.context.token
+      );
+
+      winston.info(
+        "(Subagent) REPLACE → parent requestId=" + this.requestId +
+        " from=" + this.context.supportRequest?.bot_id +
+        " to=" + (resbody?.replaced_bot_root_id || parentState.parentBotId)
       );
 
       if (this.context.chatbot?.bot?.root_id) {
@@ -74,6 +89,12 @@ class DirReturn {
           request_id: this.requestId || null
         });
       }
+
+      winston.info(
+        "(Subagent) RESUME trigger requestId=" + this.requestId +
+        " parentBotId=" + parentState.parentBotId +
+        " resumeIndex=" + parentState.resumeIndex
+      );
 
       const resumeRequest = {
         payload: {
@@ -100,14 +121,14 @@ class DirReturn {
 
       tilebotService.sendMessageToBot(resumeRequest, parentState.parentBotId, (err) => {
         if (err) {
-          winston.error("(DirReturn) Error triggering parent resume:", err);
-          this.logger.error("(DirReturn) Error triggering parent resume:", err);
+          winston.error("(DirReturnStack) Error triggering parent resume:", err);
+          this.logger.error("(DirReturnStack) Error triggering parent resume:", err);
         }
         callback(true);
       });
     } catch (error) {
-      winston.error("(DirReturn) error: ", error);
-      this.logger.error("(DirReturn) Return to parent error: ", error);
+      winston.error("(DirReturnStack) error: ", error);
+      this.logger.error("(DirReturnStack) Return to parent error: ", error);
       await subagentStack.push(this.requestId, parentState);
       callback(true);
     }
@@ -115,4 +136,4 @@ class DirReturn {
 
 }
 
-module.exports = { DirReturn };
+module.exports = { DirReturnStack };

@@ -126,7 +126,7 @@ const subagentBot = normalizeBot({
 				}]
 			}
 		}, {
-			"_tdActionType": "return",
+			"_tdActionType": "returnstack",
 			"_tdActionId": "return-subagent"
 		}]
 	}, {
@@ -175,7 +175,7 @@ const subagentBot = normalizeBot({
 				}]
 			}
 		}, {
-			"_tdActionType": "return",
+			"_tdActionType": "returnstack",
 			"_tdActionId": "return-sub1"
 		}]
 	}]
@@ -210,7 +210,7 @@ const nestedSubagentBot = normalizeBot({
 				}]
 			}
 		}, {
-			"_tdActionType": "return",
+			"_tdActionType": "returnstack",
 			"_tdActionId": "return-nested"
 		}]
 	}]

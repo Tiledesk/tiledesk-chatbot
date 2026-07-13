@@ -66,7 +66,7 @@ const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
 const { DirReplaceBotV4 } = require('./directives/DirReplaceBotV4');
-const { DirReturn } = require('./directives/DirReturn');
+const { DirReturnStack } = require('./directives/DirReturnStack');
 const SubagentStack = require('./SubagentStack');
 
 class DirectivesChatbotPlug {
@@ -314,7 +314,7 @@ class DirectivesChatbotPlug {
       [Directives.WEB_RESPONSE]: DirWebResponse,
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
-      [Directives.RETURN]: DirReturn,
+      [Directives.RETURN_STACK]: DirReturnStack,
     };
 
     const HandlerClass = handlers[directive_name];
