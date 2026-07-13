@@ -123,7 +123,7 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    this.theend = theend;
+    this.theend = typeof theend === 'function' ? theend : () => {};
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       winston.verbose("(DirectivesChatbotPlug) No directives to process.");
