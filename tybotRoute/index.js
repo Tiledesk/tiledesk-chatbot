@@ -38,6 +38,7 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
 const SubagentResumeService = require('./services/SubagentResumeService.js');
+const SubagentStack = require('./tiledeskChatbotPlugs/SubagentStack.js');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -165,6 +166,19 @@ router.post('/ext/:botid', async (req, res) => {
       }
       return;
     }
+  }
+
+  const subagentStack = new SubagentStack({ tdCache: tdcache });
+  const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
+  if (
+    consumedTriggerText &&
+    message.text === consumedTriggerText &&
+    message.sender !== '_tdinternal' &&
+    !message.attributes?.action
+  ) {
+    winston.verbose("(tybotRoute) Skipping subagent trigger message re-delivery: " + message.text);
+    await subagentStack.clearConsumedTriggerMessage(requestId);
+    return;
   }
 
   let reply = null;

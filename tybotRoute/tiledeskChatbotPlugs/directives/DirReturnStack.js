@@ -90,6 +90,12 @@ class DirReturnStack {
       }
 
       await SubagentResumeService.resumeParentFlow(parentState, this.context);
+
+      const triggerText = parentState.message?.text;
+      if (triggerText) {
+        await subagentStack.markTriggerMessageConsumed(this.requestId, triggerText);
+      }
+
       callback(true);
     } catch (error) {
       winston.error("(DirReturnStack) error: ", error);

@@ -106,7 +106,8 @@ class SubagentResumeService {
       token: token,
       cache: tdcache,
       resumeIndex: parentState.resumeIndex,
-      HELP_CENTER_API_ENDPOINT: context.HELP_CENTER_API_ENDPOINT
+      HELP_CENTER_API_ENDPOINT: context.HELP_CENTER_API_ENDPOINT,
+      inlineBlockExec: true
     });
 
     await new Promise((resolve, reject) => {

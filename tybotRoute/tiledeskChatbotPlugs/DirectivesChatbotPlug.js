@@ -89,6 +89,7 @@ class DirectivesChatbotPlug {
     this.chatbot = config.chatbot;
     this.message = config.message;
     this.resumeIndex = config.resumeIndex;
+    this.inlineBlockExec = config.inlineBlockExec;
   }
 
   exec(pipeline) {
@@ -170,7 +171,8 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
+      inlineBlockExec: this.inlineBlockExec
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     

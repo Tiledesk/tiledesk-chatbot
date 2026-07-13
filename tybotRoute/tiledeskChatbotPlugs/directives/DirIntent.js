@@ -3,6 +3,7 @@ let https = require("https");
 const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');
+const BlockExecutionService = require('../../services/BlockExecutionService');
 
 class DirIntent {
 
@@ -71,11 +72,32 @@ class DirIntent {
     }
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
-    // tilebotService.executeBlock(intent_command_request, botId, () => {
-    //   callback(true);
-    // });
+    const supportRequest = {
+      ...this.supportRequest,
+      bot_id: botId
+    };
 
-    tilebotService.sendMessageToBot(intent_command_request, botId, () => {
+    if (this.context.inlineBlockExec && this.context.chatbot?.botId === botId) {
+      BlockExecutionService.executeBlockInline({
+        chatbot: this.context.chatbot,
+        message: intent_command_request.payload,
+        supportRequest: supportRequest,
+        token: this.token,
+        API_ENDPOINT: this.context.API_ENDPOINT,
+        TILEBOT_ENDPOINT: this.context.TILEBOT_ENDPOINT,
+        tdcache: this.context.tdcache,
+        HELP_CENTER_API_ENDPOINT: this.context.HELP_CENTER_API_ENDPOINT,
+        inlineBlockExec: true
+      }).then(() => {
+        callback(true);
+      }).catch((err) => {
+        winston.error("(DirIntent) Inline block exec error:", err);
+        callback(true);
+      });
+      return;
+    }
+
+    tilebotService.executeBlock(intent_command_request, botId, () => {
       callback(true);
     });
 

@@ -13,6 +13,11 @@ class SubagentStack {
     }
 
     static STACK_TTL_SECONDS = 60 * 60 * 24;
+    static CONSUMED_MESSAGE_TTL_SECONDS = 300;
+
+    static consumedMessageKey(requestId) {
+        return `subagent:consumed_text:${requestId}`;
+    }
 
     static buildSnapshot(context, directives, resumeIndex) {
         return {
@@ -77,6 +82,25 @@ class SubagentStack {
     async clear(requestId) {
         const key = this.stackKey(requestId);
         await this.tdCache.del(key);
+    }
+
+    async markTriggerMessageConsumed(requestId, text) {
+        if (!text) {
+            return;
+        }
+        await this.tdCache.set(
+            SubagentStack.consumedMessageKey(requestId),
+            text,
+            { EX: SubagentStack.CONSUMED_MESSAGE_TTL_SECONDS }
+        );
+    }
+
+    async getConsumedTriggerMessage(requestId) {
+        return await this.tdCache.get(SubagentStack.consumedMessageKey(requestId));
+    }
+
+    async clearConsumedTriggerMessage(requestId) {
+        await this.tdCache.del(SubagentStack.consumedMessageKey(requestId));
     }
 
 }
