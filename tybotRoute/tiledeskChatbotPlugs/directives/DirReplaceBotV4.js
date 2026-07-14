@@ -75,9 +75,11 @@ class DirReplaceBotV4 {
       nextBlock: intentAction
     }
     await subagentStack.push(this.requestId, stackData);
+    console.log(`*** Session added to the stack for bot ${this.context.chatbot?.botId}`);
 
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
+      console.log("*** Replace bot done: ", JSON.stringify(resbody));
       if (this.context.chatbot?.bot.root_id) {
         AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
           from_agent_id:  this.context.chatbot?.bot.root_id,
@@ -105,6 +107,7 @@ class DirReplaceBotV4 {
           subtype: "info"
         }
       }
+      console.log(`*** Sending hidden /start message to bot in dept: ${blockName}`);
       this.tdClient.sendSupportMessage(
         this.requestId,
         message, (err) => {

@@ -42,13 +42,15 @@ class DirReturnStack {
         winston.debug("(DirReturnStack) Action: ", action);
         const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
         const data = await subagentStack.pop(this.requestId);
+        console.log("Session popped from the stack");
         if (!data?.parentId) {
             this.logger.error("(ReturnStack) No parentId found");
             callback(true);
             return;
         }
         try {
-            await requestService.replaceBot(this.context.projectId, this.requestId, { id: data.parentId }, this.context.token);
+            const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, { id: data.parentId }, this.context.token);
+            console.log("*** Bot replaced successfully ", JSON.stringify(resbody));
         } catch (error) {
             winston.error("(DirReturnStack) error: ", error);
             this.logger.error("(ReturnStack) Invoke subagent error: ", error);
@@ -76,6 +78,7 @@ class DirReturnStack {
                 "token": this.context.token
             }
 
+            console.log("*** Sending intent command to bot ", JSON.stringify(intent_command_request));
             tilebotService.sendMessageToBot(
                 intent_command_request,
                 data.parentId,
