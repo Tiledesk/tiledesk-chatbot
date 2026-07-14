@@ -72,6 +72,7 @@ class DirReplaceBotV4 {
 
     const stackData = {
       parentId: this.context.chatbot?.botId,
+      parentToken: this.context.token,
       nextBlock: intentAction
     }
     await subagentStack.push(this.requestId, stackData);

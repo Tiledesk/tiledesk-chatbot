@@ -73,7 +73,7 @@ class DirReturnStack {
                         "draft": false
                     }
                 },
-                "token": this.context.token
+                "token": data.parentToken
             }
 
             tilebotService.sendMessageToBot(
