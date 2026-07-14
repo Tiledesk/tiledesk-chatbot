@@ -74,7 +74,7 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
-
+  
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
@@ -134,7 +134,7 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
-  
+
   try {
     await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
     if (requestId.startsWith("support-group-")) {
@@ -144,7 +144,7 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
   }
-
+  
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);

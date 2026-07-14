@@ -65,6 +65,8 @@ const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
+const { DirReplaceBotV4 } = require('./directives/DirReplaceBotV4');
+const { DirReturnStack } = require('./directives/DirReturnStack');
 
 class DirectivesChatbotPlug {
 
@@ -275,6 +277,8 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT]: DirReplaceBot,
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
+      [Directives.REPLACE_BOT_V4]: DirReplaceBotV4,
+      [Directives.RETURN_STACK]: DirReturnStack,
       [Directives.WAIT]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
       [Directives.UNLOCK_INTENT]: DirUnlockIntent,
