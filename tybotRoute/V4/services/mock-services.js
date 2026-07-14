@@ -21,7 +21,7 @@ function create(opts) {
     async moveToUnassigned() { note('moveToUnassigned'); },
     async closeRequest() { note('closeRequest'); },
     async clearTranscript() { note('clearTranscript'); },
-    async addTags(tags, target) { note('addTags:' + JSON.stringify(tags) + ':' + target); },
+    async addTags(tags, target, pushToList) { note('addTags:' + JSON.stringify(tags) + ':' + target + ':' + !!pushToList); return { ok: true }; },
     async leadUpdate(update) { note('leadUpdate:' + JSON.stringify(update)); },
     async replaceBot(o) { note('replaceBot:' + JSON.stringify(o)); },
     // HTTP / integrazioni (Fase 3)

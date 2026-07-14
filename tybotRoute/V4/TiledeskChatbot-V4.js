@@ -363,10 +363,22 @@ async function walk({ entryNode, nodes, sender, tdcache, requestId, handlerCtx, 
       await sender.refreshParams();
     }
 
+    // Log del turno per il pannello del DS:
+    //  - nodo `flow_log`: UNA riga con il messaggio dell'autore, pubblicata al
+    //    LIVELLO scelto (`data.level`) — così il pannello mostra il livello nel tag
+    //    (`test-log__level-tag`) e il messaggio nel testo (`LOG: <msg>`); niente
+    //    "[Flow Log] Executed" ridondante. Prima restava solo su winston (pannello
+    //    vuoto). Log vuoto → nessuna riga.
+    //  - altri nodi: trace generico "Executed" / "Waiting for user input".
     if (flowlog) {
-      // Nodo che si sospende in attesa di input → log "Waiting" invece di
-      // "Executed" (non ha ancora consumato nulla — parità V3 capture).
-      if (result.stop && result.awaitInput) {
+      if (result.flowLog) {
+        if (result.flowLog.text) {
+          const lvl = result.flowLog.level;
+          const logMethod = typeof flowlog[lvl] === 'function' ? lvl : 'info';
+          flowlog[logMethod]('LOG: ' + result.flowLog.text);
+        }
+      } else if (result.stop && result.awaitInput) {
+        // Nodo che si sospende in attesa di input → "Waiting" invece di "Executed".
         flowlog.native('[' + label + '] Waiting for user input…');
       } else {
         flowlog.native('[' + label + '] Executed');
@@ -433,4 +445,5 @@ function scheduleNoInput(ctx, noInput) {
   });
 }
 
-module.exports = { reply };
+// `walk` esportato anche per gli unit test d'integrazione (es. flow_log → pannello).
+module.exports = { reply, walk };

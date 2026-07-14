@@ -5,9 +5,9 @@ const winston = require('../../utils/winston');
  * operazioni sulla conversazione (le stesse del runtime V3) e `API_ENDPOINT` per
  * gli endpoint REST. Selezionata con env `V4_SERVICES_REAL=1`.
  *
- * NB: alcune chiamate (disponibilità orari/agenti, addTags, clearTranscript) sono
- * marcate TODO finché non si conferma l'endpoint locale; nel frattempo restano
- * conservative (default sicuro) e non bloccano il flow.
+ * NB: alcune chiamate (disponibilità orari/agenti, changeDepartment, clearTranscript,
+ * leadUpdate, replaceBot) sono ancora marcate TODO finché non si conferma l'endpoint
+ * locale; nel frattempo restano conservative (default sicuro) e non bloccano il flow.
  */
 function create(opts) {
   opts = opts || {};
@@ -32,7 +32,66 @@ function create(opts) {
     async closeRequest() { if (tdClient) await cb((c) => tdClient.closeRequest(requestId, c)); },
     async changeDepartment(name) { winston.verbose('(services:real) changeDepartment TODO: ' + name); },
     async clearTranscript() { winston.verbose('(services:real) clearTranscript TODO'); },
-    async addTags(tags) { winston.verbose('(services:real) addTags TODO: ' + JSON.stringify(tags)); },
+    // Aggiunge i tag alla conversazione (`target:'request'`) o al lead (`target:'lead'`),
+    // come il `DirAddTags` V3. Endpoint: PUT `${API}/${projectId}/requests/${requestId}/tag`
+    // (body `[{tag,color}]`) o PUT `.../leads/${leadId}/tag` (body `[tag,…]`, lead._id
+    // risolto via `getRequestById`). `pushToList` → POST `.../tags` per registrare ogni
+    // tag nella tag-list del progetto. Non blocca il flow in caso di errore (solo log).
+    async addTags(tags, target, pushToList) {
+      const list = (Array.isArray(tags) ? tags : [tags])
+        .map((t) => String(t == null ? '' : t).trim())
+        .filter((t) => t.length > 0);
+      if (!list.length) { winston.warn('(services:real) addTags: nessun tag → skip'); return { ok: false, error: 'no tags' }; }
+      if (!API || !projectId) { winston.warn('(services:real) addTags: API/projectId mancanti → skip'); return { ok: false, error: 'missing API/projectId' }; }
+      const tgt = target === 'lead' ? 'lead' : 'request';
+      const COLOR = '#f0806f';
+      const jwt = 'JWT ' + String(token || '').replace(/^(JWT |Bearer )/i, '');
+      const headers = { 'Content-Type': 'application/json', Authorization: jwt };
+      const httpUtils = require('../../utils/HttpUtils');
+      const call = (reqOpts) => new Promise((res) => {
+        httpUtils.request(reqOpts, (err, body, full) => {
+          const status = (full && full.statusCode) || (err ? 500 : 200);
+          res({ err, status, body });
+        });
+      });
+      try {
+        // pushToList: registra ogni tag nella tag-list del progetto (POST /tags).
+        if (pushToList) {
+          for (const tag of list) {
+            await call({ url: `${API}/${projectId}/tags`, method: 'POST', headers, json: { tag, color: COLOR }, timeout: 20000 });
+          }
+        }
+
+        if (tgt === 'request') {
+          const payload = list.map((tag) => ({ tag, color: COLOR }));
+          const r = await call({ url: `${API}/${projectId}/requests/${requestId}/tag`, method: 'PUT', headers, json: payload, timeout: 20000 });
+          if (r.err || r.status >= 400) {
+            winston.error('(services:real) addTags request tag error: HTTP ' + r.status);
+            return { ok: false, error: 'requests/tag HTTP ' + r.status };
+          }
+          winston.verbose('(services:real) addTags → conversation ' + JSON.stringify(list));
+          return { ok: true };
+        }
+
+        // target 'lead': risolve lead._id dalla request, poi PUT leads/{id}/tag.
+        let leadId = null;
+        try {
+          const request = tdClient ? await tdClient.getRequestById(requestId) : null;
+          leadId = request && request.lead && request.lead._id;
+        } catch (e) { winston.error('(services:real) addTags getRequestById error: ', e); }
+        if (!leadId) { winston.warn('(services:real) addTags: lead non trovato per la request → skip'); return { ok: false, error: 'lead not found' }; }
+        const r = await call({ url: `${API}/${projectId}/leads/${leadId}/tag`, method: 'PUT', headers, json: list, timeout: 20000 });
+        if (r.err || r.status >= 400) {
+          winston.error('(services:real) addTags lead tag error: HTTP ' + r.status);
+          return { ok: false, error: 'leads/tag HTTP ' + r.status };
+        }
+        winston.verbose('(services:real) addTags → lead ' + leadId + ' ' + JSON.stringify(list));
+        return { ok: true };
+      } catch (e) {
+        winston.error('(services:real) addTags exception: ', e);
+        return { ok: false, error: String(e) };
+      }
+    },
     async leadUpdate(update) { winston.verbose('(services:real) leadUpdate TODO: ' + JSON.stringify(update)); },
     async replaceBot(o) { winston.verbose('(services:real) replaceBot TODO: ' + JSON.stringify(o)); },
     // HTTP — implementato (riusa HttpUtils/axios del runtime V3).
