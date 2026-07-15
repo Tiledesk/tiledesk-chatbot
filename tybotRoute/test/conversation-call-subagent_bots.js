@@ -36,7 +36,7 @@ const parentBot = normalizeBot({
 		"form": {},
 		"actions": [{
 			"_tdActionTitle": "Invoke subagent",
-			"_tdActionType": "replacebotv4",
+			"_tdActionType": "callsubagent",
 			"botId": SUBAGENT_BOT_ID,
 			"useSlug": false,
 			"blockName": "start"

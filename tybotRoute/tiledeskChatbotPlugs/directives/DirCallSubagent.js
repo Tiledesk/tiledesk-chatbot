@@ -11,7 +11,7 @@ const { AnalyticsClient } = require('../../AnalyticsClient');
 const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
 
-class DirReplaceBotV4 {
+class DirCallSubAgent {
 
   constructor(context) {
     if (!context) {
@@ -26,25 +26,25 @@ class DirReplaceBotV4 {
   }
 
   execute(directive, callback) {
-    winston.verbose("Execute ReplaceBotV4 directive");
+    winston.verbose("Execute CallSubAgent directive");
     let action;
     if (directive.action) {
       action = directive.action;
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.warn("DirReplaceBotV4 Incorrect directive: ", directive);
+      winston.warn("DirCallSubAgent Incorrect directive: ", directive);
       callback();
       return;
     }
     this.go(action, (stop) => {
-      this.logger.native("[Replace Bot] Executed");
+      this.logger.native("[Call SubAgent] Executed");
       callback(stop);
     })
   }
 
   async go(action, callback) {
-    winston.debug("(DirReplaceBotV4) Action: ", action);
+    winston.debug("(DirCallSubAgent) Action: ", action);
     let botId = action.botId;
     let botSlug = action.botSlug;
     let useSlug = action.useSlug;
@@ -89,7 +89,7 @@ class DirReplaceBotV4 {
       }
     } catch (error) {
       await subagentStack.pop(this.requestId);
-      winston.error("(DirReplaceBotV4) error: ", error);
+      winston.error("(DirCallSubAgent) error: ", error);
       this.logger.error("(ReplaceBot) Invoke subagent error: ", error);
       if (callback) {
         callback(true);
@@ -98,7 +98,7 @@ class DirReplaceBotV4 {
     }
 
     if (blockName) {
-      winston.debug("(DirReplaceBotV4) Sending hidden /start message to bot in dept");
+      winston.debug("(DirCallSubAgent) Sending hidden /start message to bot in dept");
       const message = {
         type: "text",
         text: "/" + blockName,
@@ -110,7 +110,7 @@ class DirReplaceBotV4 {
         this.requestId,
         message, (err) => {
           if (err) {
-            winston.debug("(DirReplaceBotV3) Error sending hidden message: " + err.message);
+            winston.debug("(DirCallSubAgent) Error sending hidden message: " + err.message);
           }
           callback(true);
         });
@@ -122,4 +122,4 @@ class DirReplaceBotV4 {
 
 }
 
-module.exports = { DirReplaceBotV4 };
+module.exports = { DirCallSubAgent };

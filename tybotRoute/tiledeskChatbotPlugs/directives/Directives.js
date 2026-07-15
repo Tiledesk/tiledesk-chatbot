@@ -33,7 +33,7 @@ class Directives {
   static CAPTURE_USER_REPLY = "capture_user_reply";
   static REPLACE_BOT_V2 = "replacebotv2";
   static REPLACE_BOT_V3 = "replacebotv3";
-  static REPLACE_BOT_V4 = "replacebotv4";
+  static CALL_SUBAGENT = "callsubagent";
   static RETURN_STACK = "returnstack";
   static ITERATION = "iteration";
   /**** AI ****/

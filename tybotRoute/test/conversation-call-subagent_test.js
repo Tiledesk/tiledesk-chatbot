@@ -26,7 +26,7 @@ const {
   PARENT_BOT_ID,
   SUBAGENT_BOT_ID,
   NESTED_SUBAGENT_BOT_ID
-} = require('./conversation-replacebot_bots.js');
+} = require('./conversation-call-subagent_bots.js');
 
 const PROJECT_ID = "projectID";
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
@@ -69,7 +69,7 @@ function getUserVisibleText(message) {
   return msgCmd?.message?.text || null;
 }
 
-describe('Conversation for ReplaceBotV4 test', async () => {
+describe('Conversation for CallSubAgent test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -109,7 +109,7 @@ describe('Conversation for ReplaceBotV4 test', async () => {
     });
   });
 
-  it('/replace_success', (done) => {
+  it('/call_subagent_success', (done) => {
     let listener;
     let endpointServer = express();
     let messageReceived = [];
@@ -117,7 +117,7 @@ describe('Conversation for ReplaceBotV4 test', async () => {
 
     endpointServer.use(bodyParser.json());
 
-    // Simulates Tiledesk: after replaceBot, track which bot owns the request.
+    // Simulates Tiledesk: after callSubAgent, track which bot owns the request.
     endpointServer.put('/:projectId/requests/:requestId/replace', function (req, res) {
       if (req.body.id) {
         activeBotId = req.body.id;
