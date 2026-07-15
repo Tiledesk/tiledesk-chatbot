@@ -1,5 +1,7 @@
 # Tiledesk native chatbot
 
+# 2.1.5
+- Added action DirDataTables
 
 # 2.1.4
 - added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
