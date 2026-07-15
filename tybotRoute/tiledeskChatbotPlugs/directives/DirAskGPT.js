@@ -133,7 +133,7 @@ class DirAskGPT {
       question: filled_question,
       kbid: action.kbid,
       gptkey: key,
-      agent_id: this.chatbot?.bot.root_id || this.chatbot?.botId,
+      agent_id: this.chatbot?.bot.root_id || null,
       id_project: this.projectId,
       request_id: this.requestId
     };

@@ -1,5 +1,18 @@
 # Tiledesk native chatbot
 
+
+# 2.1.4
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+
+# 2.1.3
+- Fixed bug on analytics integration
+
+# 2.1.2
+- Fixed bug on AiPrompt action with vllm models
+
+# 2.1.1
+- Improved support for multiple vLLM servers
+
 # 2.1.0
 - Added support to analytics
 

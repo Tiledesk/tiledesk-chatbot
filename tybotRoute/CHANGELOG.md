@@ -5,6 +5,9 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# this branch
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+
 # 2.1.0
 - added: support to analytics
 

@@ -187,10 +187,12 @@ router.post('/ext/:botid', async (req, res) => {
       winston.error("(tybotRoute) Error while processing actions:", error);
     }
 
-    if (chatbot._intentStartTime) {
+    // Only track published (production) runs: the root/draft copy has no root_id,
+    // so draft/test executions are intentionally excluded from analytics.
+    if (chatbot._intentStartTime && bot.root_id) {
       const intentDuration = Date.now() - chatbot._intentStartTime;
       AnalyticsClient.track('agent.intent_completed', projectId, {
-        agent_id:    bot.root_id || botId,
+        agent_id:    bot.root_id,
         intent_id:   chatbot._lastIntentId || '',
         intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
         duration_ms: intentDuration,
@@ -217,7 +219,9 @@ router.post('/ext/:botid', async (req, res) => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
 
-    if (chatbot._intentStartTime) {
+    // Only track published (production) runs: the root/draft copy has no root_id,
+    // so draft/test executions are intentionally excluded from analytics.
+    if (chatbot._intentStartTime && bot.root_id) {
       const intentDuration = Date.now() - chatbot._intentStartTime;
       AnalyticsClient.track('agent.intent_completed', projectId, {
         agent_id:    bot.root_id,
@@ -593,12 +597,10 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     const execution_id = uuidv4().replace(/-/g, '');
     request_id = "automation-request-" + project_id + "-" + execution_id;
   }
-  AnalyticsClient.track('webhook.triggered', project_id, {
-    agent_id:   bot_id,
-    block_id:   block_id,
-    async:      async === true,
-    request_id: request_id
-  });
+  // webhook.triggered is emitted by tiledesk-server (routes/webhook.js) — the
+  // single source for production webhook automations (it carries webhook_id and
+  // excludes dev/draft runs). Not emitted here to avoid double-counting; the
+  // block execution itself is already recorded via agent.block_executed.
 
   const command = "/#" + block_id;
   let message = {
