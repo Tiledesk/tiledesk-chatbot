@@ -11,7 +11,7 @@ const { AnalyticsClient } = require('../../AnalyticsClient');
 const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
 
-class DirCallSubAgent {
+class DirCallSubagent {
 
   constructor(context) {
     if (!context) {
@@ -122,4 +122,4 @@ class DirCallSubAgent {
 
 }
 
-module.exports = { DirCallSubAgent };
+module.exports = { DirCallSubagent };
