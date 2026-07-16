@@ -33,7 +33,7 @@ class DirCallSubagent {
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.warn("DirCallSubAgent Incorrect directive: ", directive);
+      winston.warn("DirCallSubagent Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -44,7 +44,7 @@ class DirCallSubagent {
   }
 
   async go(action, callback) {
-    winston.debug("(DirCallSubAgent) Action: ", action);
+    winston.debug("(DirCallSubagent) Action: ", action);
     let botId = action.botId;
     let botSlug = action.botSlug;
     let useSlug = action.useSlug;
@@ -89,7 +89,7 @@ class DirCallSubagent {
       }
     } catch (error) {
       await subagentStack.pop(this.requestId);
-      winston.error("(DirCallSubAgent) error: ", error);
+      winston.error("(DirCallSubagent) error: ", error);
       this.logger.error("(ReplaceBot) Invoke subagent error: ", error);
       if (callback) {
         callback(true);
@@ -98,7 +98,7 @@ class DirCallSubagent {
     }
 
     if (blockName) {
-      winston.debug("(DirCallSubAgent) Sending hidden /start message to bot in dept");
+      winston.debug("(DirCallSubagent) Sending hidden /start message to bot in dept");
       const message = {
         type: "text",
         text: "/" + blockName,
@@ -110,7 +110,7 @@ class DirCallSubagent {
         this.requestId,
         message, (err) => {
           if (err) {
-            winston.debug("(DirCallSubAgent) Error sending hidden message: " + err.message);
+            winston.debug("(DirCallSubagent) Error sending hidden message: " + err.message);
           }
           callback(true);
         });
