@@ -279,7 +279,7 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT]: DirReplaceBot,
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
-      [Directives.CALL_SUBAGENT]: DirCallSubAgent,
+      [Directives.CALL_SUBAGENT]: DirCallSubagent,
       [Directives.RETURN_STACK]: DirReturnStack,
       [Directives.WAIT]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
