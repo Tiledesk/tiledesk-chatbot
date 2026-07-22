@@ -362,6 +362,41 @@ function create(opts) {
         return { ok: false, status: 0, error: String(e) };
       }
     },
+    // Esegue un tool Composio generico (qualunque toolkit/tool esposto dal
+    // server, non solo Sheets): POST `${API}/${projectId}/composio/execute`
+    // (OAuth gestita lato server). Body `{ toolkit, tool, arguments }`.
+    async composioExecute(opts) {
+      const o = opts || {};
+      if (!API || !projectId) {
+        winston.warn('(services:real) composioExecute: API/projectId mancanti → skip');
+        return { ok: false, error: 'missing API/projectId' };
+      }
+      const body = { toolkit: o.toolkit, tool: o.tool, arguments: o.arguments || {} };
+      const jwt = 'JWT ' + String(token || '').replace(/^(JWT |Bearer )/i, '');
+      const url = `${API}/${projectId}/composio/execute`;
+      try {
+        const httpUtils = require('../../utils/HttpUtils');
+        return await new Promise((res) => {
+          httpUtils.request(
+            { url, method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': jwt }, json: body, timeout: 30000 },
+            (err, resbody, fullres) => {
+              const status = (fullres && fullres.statusCode) || (err ? 500 : 200);
+              if (err || status >= 400) {
+                const e = (resbody && (resbody.error || resbody.message)) || String(err || ('HTTP ' + status));
+                winston.error('(services:real) composioExecute error: ' + JSON.stringify(e));
+                res({ ok: false, error: typeof e === 'string' ? e : JSON.stringify(e) });
+              } else {
+                winston.verbose('(services:real) composioExecute ok (' + status + ') toolkit=' + o.toolkit + ' tool=' + o.tool);
+                res({ ok: true, data: resbody && resbody.data });
+              }
+            },
+          );
+        });
+      } catch (e) {
+        winston.error('(services:real) composioExecute exception: ', e);
+        return { ok: false, error: String(e) };
+      }
+    },
   };
 }
 

@@ -51,6 +51,7 @@ const NODE_LABEL = {
   gpt_assistant: 'GPT Assistant',
   ai_condition: 'AI Condition',
   add_kb_content: 'Add KB Content',
+  composio_tool: 'Composio Tool',
 };
 
 function labelFor(type) {

@@ -46,12 +46,40 @@ const HANDLERS = {
   whatsapp_static: require('./nodes/whatsapp_static-V4.js'),
   whatsapp_attribute: require('./nodes/whatsapp_attribute-V4.js'),
   send_whatsapp: require('./nodes/send_whatsapp-V4.js'),
-  // AI / LLM / KB (Fase 4)
+  // AI / LLM / KB / integrazioni (Fase 4)
   ai_prompt: require('./nodes/ai_prompt-V4.js'),
   askgptv2: require('./nodes/askgptv2-V4.js'),
   gpt_assistant: require('./nodes/gpt_assistant-V4.js'),
   ai_condition: require('./nodes/ai_condition-V4.js'),
   add_kb_content: require('./nodes/add_kb_content-V4.js'),
+  composio_tool: require('./nodes/composio_tool-V4.js'),
+};
+
+// Ponte di retro-compatibilità: nel DB può esistere ancora un nodo `type:'google_sheets'`
+// non migrato (la migrazione allo shape `composio_tool` vive nel Design Studio e
+// scatta al load del canvas — un flow salvato prima non passa da lì finché non
+// viene riaperto). Finché non sono tutti migrati, traduciamo lo shape legacy al
+// volo e deleghiamo allo stesso handler `composio_tool`. Da rimuovere quando la
+// migrazione DS avrà raggiunto tutti i bot in produzione.
+HANDLERS.google_sheets = {
+  async execute(node, ctx) {
+    const legacy = node.data || {};
+    const values = Array.isArray(legacy.values) ? legacy.values : [];
+    const headers = Array.isArray(legacy.headers) ? legacy.headers : [];
+    const args = { spreadsheetTitle: legacy.spreadsheetTitle || '', values: values.join(',') };
+    if (headers.length) args.headers = headers.join(',');
+    const composioNode = {
+      ...node,
+      data: {
+        toolkit: 'googlesheets',
+        tool: 'TILEDESK_SHEETS_APPEND_ROW',
+        arguments: args,
+        assignResultTo: legacy.assignSpreadsheetIdTo,
+        assignErrorTo: legacy.assignErrorTo,
+      },
+    };
+    return HANDLERS.composio_tool.execute(composioNode, ctx);
+  },
 };
 
 // Comandi di avvio conversazione accettati dal server:

@@ -57,6 +57,12 @@ function create(opts) {
       return { ok: true, branchId, reply: 'MOCK', error: null };
     },
     async addKbContent(opts) { note('addKbContent:' + (opts && opts.question)); return { ok: !cfg.aiError }; },
+    // Composio (Fase 4) — tool generico (toolkit/tool/arguments)
+    async composioExecute(opts) {
+      note('composioExecute:' + (opts && opts.toolkit) + '/' + (opts && opts.tool));
+      if (cfg.composioError) return { ok: false, error: 'mock composio error' };
+      return { ok: true, data: { mock: true, tool: opts && opts.tool } };
+    },
   };
 }
 

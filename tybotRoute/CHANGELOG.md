@@ -4,6 +4,10 @@
 
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
+# this branch 1.2
+- V4 engine: new generic `composio_tool` node (`V4/nodes/composio_tool-V4.js`) — runs any Composio tool (raw or curated `TILEDESK_*` virtual) on the project's connected account. Interpolates every `data.arguments` value via `ctx.fill`, calls the new `services.composioExecute` (real: `POST /:pid/composio/execute` with the bot JWT, 30s timeout; mock: `cfg.composioError` toggle), assigns `assignResultTo` (JSON-serialized when the result is an object) and `assignErrorTo` + `flowError` on failure, routes the `success`/`error` slots; missing `toolkit`/`tool` → `error` branch without calling the service. Replaces the dedicated `google_sheets` node (never committed), removed together with its test.
+- Defensive `google_sheets` alias in the dispatcher (`TiledeskChatbot-V4.js`): legacy nodes not yet migrated by the Design Studio (migration runs at canvas load, not retroactively on stored bots) are translated on the fly — `spreadsheetTitle/values[]/headers[]/assignSpreadsheetIdTo` → `composio_tool` shape with `TILEDESK_SHEETS_APPEND_ROW` and CSV values — and delegated to the generic handler. `composio_tool: 'Composio Tool'` label in `flowlog-V4.js`.
+- New test `V4/test/composio_tool-V4.test.js` (33 assertions: happy path with interpolation and JSON result, service error with/without message, missing toolkit/tool, absent assigns, shared mock-services integration, legacy alias via `walk`); full V4 suite 190/190 green, zero regressions.
 
 # this branch 1.1
 - V4 engine: ported the safe `TiledeskWhenExpression` evaluator (no `eval`/`Function`/`vm2`; whitelisted operators + functions) — copied verbatim from `main_pre`, with its `test/when_expression_test.js`.
