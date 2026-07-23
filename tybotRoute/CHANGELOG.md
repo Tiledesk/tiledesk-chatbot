@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # this branch
-- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+- added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
 
 # 2.1.0
 - added: support to analytics
