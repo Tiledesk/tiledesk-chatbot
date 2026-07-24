@@ -89,7 +89,8 @@ class DirAiCondition {
       this.tdcache, this.requestId
     )
     const filler = new Filler();
-
+    const filled_model = filler.fill(action.model, requestVariables);
+    
     let conditions = "";
     intents.forEach( function(intent) {
       let filled_prompt = filler.fill(intent.prompt, requestVariables);
