@@ -35,6 +35,7 @@ describe('Conversation for WebRequestV2 test', async () => {
           bots: bots_data,
           TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
           API_ENDPOINT: process.env.API_ENDPOINT,
+          API_URL: process.env.API_URL,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT,
           REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -484,6 +485,355 @@ describe('Conversation for WebRequestV2 test', async () => {
           "sender": "A-SENDER",
           "recipient": REQUEST_ID,
           "text": "/webrequestv2_post-incorrect-body",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a raw json body with placeholders, get result, assign status', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/json', async (req, res) => {
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/json");
+      assert(req.headers["cache-control"] === "no-cache");
+      res.send({
+        "replyname": req.body.name,
+        "replyemail": req.body.email
+      });
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "HTTP POST Success with status 200. From reply, name: myname, email: myemail");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["status"] === 200);
+          assert(attributes["result"]["replyname"] === "myname");
+          assert(attributes["result"]["replyemail"] === "myemail");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw_json",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a raw xml body, sent verbatim as a string', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/xml', bodyParser.text({ type: '*/*' }), async (req, res) => {
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/xml");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.body === "<note><to>Tove</to><body>Hello</body></note>");
+      res.send("ok-xml");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "webrequest replied: ok-xml with status 200");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["reply"] === "ok-xml");
+          assert(attributes["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw_xml",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a raw text body, sent verbatim as a string', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/text', bodyParser.text({ type: '*/*' }), async (req, res) => {
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "text/plain");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.body === "Hello, raw text body");
+      res.send("ok-text");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "webrequest replied: ok-text with status 200");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["reply"] === "ok-text");
+          assert(attributes["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw_text",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a raw html body, sent verbatim as a string', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/html', bodyParser.text({ type: '*/*' }), async (req, res) => {
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "text/html");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.body === "<html><body><h1>Hello</h1></body></html>");
+      res.send("ok-html");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "webrequest replied: ok-html with status 200");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["reply"] === "ok-html");
+          assert(attributes["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw_html",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a raw javascript body, sent verbatim as a string', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/javascript', bodyParser.text({ type: '*/*' }), async (req, res) => {
+      assert(req.headers["user-agent"] === "TiledeskBotRuntime");
+      assert(req.headers["content-type"] === "application/javascript");
+      assert(req.headers["cache-control"] === "no-cache");
+      assert(req.body === "console.log(\"hello\");");
+      res.send("ok-js");
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "webrequest replied: ok-js with status 200");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["reply"] === "ok-js");
+          assert(attributes["status"] === 200);
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw_javascript",
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": CHATBOT_TOKEN
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+         winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/webrequestv2 - post: POST a MALFORMED raw json body ', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/test/webrequest/post/raw/json', async (req, res) => {
+      res.send({
+        "replyname": req.body.name,
+        "replyemail": req.body.email
+      });
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command1 = message.attributes.commands[1];
+      assert(command1.type === "message");
+      assert(command1.message.text === "webrequest error: Error parsing json body");
+      assert(command1.type === "message");
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["flowError"] === "Error parsing json body");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": "/webrequestv2_post_raw-incorrect-body",
           "id_project": PROJECT_ID,
           "metadata": "",
           "request": {
