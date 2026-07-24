@@ -121,6 +121,7 @@ class DirAiCondition {
     let key;
     let publicKey = false;
     let ollama_integration;
+    let vllm_server_config;
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
