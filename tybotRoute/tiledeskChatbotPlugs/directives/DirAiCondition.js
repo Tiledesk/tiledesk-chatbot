@@ -70,7 +70,7 @@ class DirAiCondition {
     let fallbackIntent = action.fallbackIntent; // non condition met block
     let errorIntent = action.errorIntent; // On error block
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
-      const error = "AiPrompt Error: '" + missing_param + "' attribute is undefined"
+      const error = "AiCondition Error: '" + missing_param + "' attribute is undefined"
       this.logger.error(error);
       await this.chatbot.addParameter("flowError", error);
       if (errorIntent) {
@@ -111,7 +111,7 @@ class DirAiCondition {
     // evaluate
 
     let AI_endpoint = process.env.KB_ENDPOINT_QA;
-    winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
+    winston.verbose("DirAiCondition AI_endpoint " + AI_endpoint);
 
     let headers = {
       'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ class DirAiCondition {
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
         this.logger.error("[AI Condition] Error getting ollama integration.")
-        winston.error("DirAiPrompt Error getting ollama integration: ", err);
+        winston.error("DirAiCondition Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (errorIntent) {
           await this.#executeIntent(errorIntent);
@@ -135,6 +135,66 @@ class DirAiCondition {
         callback();
         return;
       });
+
+    } else if(action.llm === 'vllm'){
+      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
+      
+      if (!vllm_integration?.value) {
+        this.logger.error("[AI Condition] Error getting vllm integration.");
+        winston.error("DirAiCondition Error getting vllm integration");
+        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+      const vllm_value = vllm_integration.value;
+      if (Array.isArray(vllm_value.servers)) {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        if (!filled_vllm_server) {
+          this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
+          await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
+        if (!vllm_server_config) {
+          this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
+          await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
+          if (falseIntent) {
+            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            callback(true);
+            return;
+          }
+          callback();
+          return;
+        }
+        key = vllm_server_config.apikey;
+      } else {
+        key = vllm_value.apikey;
+      }
+
+      if (!key) {
+        this.logger.error("[AI Condition] llm key not found in vllm integration");
+        winston.error("Error: DirAiCondition llm key not found in vllm integration");
+        await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
@@ -147,8 +207,8 @@ class DirAiCondition {
 
       if (!key) {
         this.logger.error("[AI Condition] llm key not found");
-        winston.error("Error: DirAiPrompt llm key not found");
-        await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
+        winston.error("Error: DirAiCondition llm key not found");
+        await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm " + action.llm);
         if (errorIntent) {
           await this.#executeIntent(errorIntent);
           callback(true);
@@ -216,7 +276,18 @@ class DirAiCondition {
 
     }
 
-    winston.debug("DirAiPrompt json: ", json);
+    if (action.llm === 'vllm' && vllm_server_config) {
+      console.log("llm: vllm")
+      json.model = {
+        name: filled_model,
+        url: vllm_server_config.url,
+        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
+        provider: 'vllm'
+      }
+      console.log("set json.model to: ", json.model);
+    }
+
+    winston.debug("DirAiCondition json: ", json);
 
     const HTTPREQUEST = {
       url: AI_endpoint + "/ask",
@@ -224,12 +295,12 @@ class DirAiCondition {
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
+    winston.debug("DirAiCondition HttpRequest: ", HTTPREQUEST);
 
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          winston.error("DirAiPrompt openai err: ", err);
+          winston.error("DirAiCondition openai err: ", err);
           await this.#assignAttributes(action, answer);
           let error;
           if (err.response?.data?.detail[0]) {
@@ -250,7 +321,7 @@ class DirAiCondition {
           return;
         } else {
 
-          winston.debug("DirAiPrompt resbody: ", resbody);
+          winston.debug("DirAiCondition resbody: ", resbody);
           answer = resbody.answer;
           this.logger.native("[AI Condition] answer: ", answer);
 
@@ -388,7 +459,7 @@ class DirAiCondition {
       }
       else {
         this.logger.native("[AI Condition] no block connected to true condition");
-        winston.debug("DirAiPrompt No trueIntentDirective specified");
+        winston.debug("DirAiCondition No trueIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -405,7 +476,7 @@ class DirAiCondition {
       }
       else {
         this.logger.native("[AI Condition] no block connected to false condition");
-        winston.debug("DirAiPrompt No falseIntentDirective specified");
+        winston.debug("DirAiCondition No falseIntentDirective specified");
         if (callback) {
           callback();
         }
@@ -414,8 +485,8 @@ class DirAiCondition {
   }
 
   async #assignAttributes(action, answer) {
-    winston.debug("DirAiPrompt assignAttributes action: ", action)
-    winston.debug("DirAiPrompt assignAttributes answer: " + answer)
+    winston.debug("DirAiCondition assignAttributes action: ", action)
+    winston.debug("DirAiCondition assignAttributes answer: " + answer)
 
     if (this.context.tdcache) {
       if (action.assignReplyTo && answer) {
@@ -457,12 +528,12 @@ class DirAiCondition {
         },
         method: "GET"
       }
-      winston.debug("DirAiPrompt KB HttpRequest", KB_HTTPREQUEST);
+      winston.debug("DirAiCondition KB HttpRequest", KB_HTTPREQUEST);
 
       httpUtils.request(
         KB_HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("(httprequest) DirAiPrompt Get KnowledgeBase err: " + err.message);
+            winston.error("(httprequest) DirAiCondition Get KnowledgeBase err: " + err.message);
             resolve(null);
           } else {
             if (!resbody.gptkey) {
@@ -487,7 +558,7 @@ class DirAiCondition {
         },
         method: "GET"
       }
-      winston.debug("DirAiPrompt check quote availability HttpRequest", HTTPREQUEST);
+      winston.debug("DirAiCondition check quote availability HttpRequest", HTTPREQUEST);
 
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
@@ -517,15 +588,15 @@ class DirAiCondition {
         json: tokens_usage,
         method: "POST"
       }
-      winston.debug("DirAiPrompt update quote HttpRequest", HTTPREQUEST);
+      winston.debug("DirAiCondition update quote HttpRequest", HTTPREQUEST);
 
       httpUtils.request(
         HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);
+            winston.error("(httprequest) DirAiCondition Increment tokens quote err: ", err);
             reject(false)
           } else {
-            winston.debug("(httprequest) DirAiPrompt Increment token quote resbody: ", resbody);
+            winston.debug("(httprequest) DirAiCondition Increment token quote resbody: ", resbody);
             resolve(true);
           }
         }

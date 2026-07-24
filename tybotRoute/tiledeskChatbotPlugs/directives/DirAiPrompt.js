@@ -169,9 +169,6 @@ class DirAiPrompt {
           return;
         }
         vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
-        console.log("vllm_server_config", vllm_server_config);
-        console.log("filled_vllm_server", filled_vllm_server);
-        console.log("vllm_value.servers", vllm_value.servers);
         if (!vllm_server_config) {
           this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
