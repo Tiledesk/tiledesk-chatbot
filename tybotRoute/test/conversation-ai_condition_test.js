@@ -12,7 +12,7 @@ app.use((err, req, res, next) => {
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const bots_data = require('./conversation-ai_prompt_bot').bots_data;
+const bots_data = require('./conversation-ai_condition_bot').bots_data;
 const PROJECT_ID = "projectID";
 const REQUEST_ID = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
 const BOT_ID = "botID";
@@ -22,7 +22,7 @@ const tilebotService = require('../services/TilebotService');
 
 let SERVER_PORT = 10001
 
-describe('Conversation for AiPrompt test', async () => {
+describe('Conversation for AiCondition test', async () => {
 
   let app_listener;
   let util = new TiledeskChatbotUtil();
@@ -64,7 +64,7 @@ describe('Conversation for AiPrompt test', async () => {
 
   describe('Missing parameters tests', async () => {
 
-    it('AiPrompt fail - missing question parameter', (done) => {
+    it('AiCondition fail - missing question parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -77,7 +77,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiPrompt Error: 'question' attribute is undefined");
+        assert(command2.message.text === "Error: AiCondition Error: 'question' attribute is undefined");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -85,7 +85,7 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiPrompt Error: 'question' attribute is undefined");
+            assert(attributes["flowError"] === "AiCondition Error: 'question' attribute is undefined");
             listener.close(() => {
               done();
             });
@@ -118,7 +118,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt fail - missing llm parameter', (done) => {
+    it('AiCondition fail - missing llm parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -130,7 +130,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(message.attributes.commands !== null);
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
-        assert(command2.message.text === "Error: AiPrompt Error: 'llm' attribute is undefined");
+        assert(command2.message.text === "Error: AiCondition Error: 'llm' attribute is undefined");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -138,7 +138,7 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiPrompt Error: 'llm' attribute is undefined");
+            assert(attributes["flowError"] === "AiCondition Error: 'llm' attribute is undefined");
             listener.close(() => {
               done();
             });
@@ -171,7 +171,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt fail - missing model parameter', (done) => {
+    it('AiCondition fail - missing model parameter', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -184,7 +184,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiPrompt Error: 'model' attribute is undefined");
+        assert(command2.message.text === "Error: AiCondition Error: 'model' attribute is undefined");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -192,7 +192,7 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiPrompt Error: 'model' attribute is undefined");
+            assert(attributes["flowError"] === "AiCondition Error: 'model' attribute is undefined");
             listener.close(() => {
               done();
             });
@@ -230,7 +230,7 @@ describe('Conversation for AiPrompt test', async () => {
 
   describe('Missing LLM key', async () => {
 
-    it('AiPrompt fail - missing llm key in integration', (done) => {
+    it('AiCondition fail - missing llm key in integration', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -243,7 +243,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiPrompt Error: missing key for llm myllm");
+        assert(command2.message.text === "Error: AiCondition Error: missing key for llm myllm");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -251,7 +251,7 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiPrompt Error: missing key for llm myllm");
+            assert(attributes["flowError"] === "AiCondition Error: missing key for llm myllm");
             listener.close(() => {
               done();
             });
@@ -300,7 +300,7 @@ describe('Conversation for AiPrompt test', async () => {
 
   describe('Ask Success', async () => {
 
-    it('AiPrompt success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+    it('AiCondition success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -392,7 +392,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+    it('AiCondition ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -505,13 +505,9 @@ describe('Conversation for AiPrompt test', async () => {
         });
       });
 
-    })
+    });
 
-  })
-
-  describe('Ask Fail', async () => {
-
-    it('AiPrompt fail - invokes the aiprompt mockup and test the returning attributes', (done) => {
+    it('AiCondition vllm success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;
       let endpointServer = express();
@@ -524,7 +520,7 @@ describe('Conversation for AiPrompt test', async () => {
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiPrompt Error: this is the error message");
+        assert(command2.message.text === "Answer: medical");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -532,7 +528,119 @@ describe('Conversation for AiPrompt test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiPrompt Error: this is the error message");
+            assert(attributes["ai_reply"] === "medical");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'vllm');
+
+        let http_code = 200;
+        let reply = {
+          _id: "694ab906a51c8c2ad0933d19",
+          id_project: "62c3f10152dc740035000000",
+          name: "vllm",
+          value: {
+            servers: [
+              {
+                name: "Cerebras",
+                url: "https://cerebras.example.cpm/",
+                apikey: "cerebras_api_key",
+                models: ["gpt-oss-30b", "llama3.1b"]
+              },
+              {
+                name: "OpenRouter",
+                url: "https://openrouter.example.cpm/",
+                apikey: "openrouter_api_key",
+                models: ["pippo", "pluto"]
+              }
+            ]
+          }
+        }
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "vllm");
+        assert(req.body.llm_key === "cerebras_api_key");
+        assert(req.body.model.name === "gpt-oss-30b");
+        assert(req.body.model.url === "https://cerebras.example.cpm/");
+        assert(req.body.model.api_key === "cerebras_api_key");
+        assert(req.body.model.provider === "vllm");
+  
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "medical",
+          chat_history_dict: {
+            additionalProp1: { question: "string", answer: "string" },
+            additionalProp2: { question: "string", answer: "string" },
+            additionalProp3: { question: "string", answer: "string" }
+          }
+        }
+
+        res.status(http_code).send(reply);
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_condition_vllm_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
+  })
+
+  describe('Ask Fail', async () => {
+
+    it('AiCondition fail - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Error: AiCondition Error: this is the error message");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["flowError"] === "AiCondition Error: this is the error message");
             listener.close(() => {
               done();
             });
