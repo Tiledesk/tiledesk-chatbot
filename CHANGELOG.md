@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
 # 2.1.5
 - Added action DirDataTables
 
