@@ -560,7 +560,8 @@ class TiledeskChatbot {
     if (parameter_value_s?.length > 20000000) {
       return;
     }
-    await _tdcache.hset(parameter_key, parameter_name, parameter_value_s);
+    const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
+    await _tdcache.hset(parameter_key, parameter_name, parameter_value_s, { EX: ttl });
   }
 
   async allParameters() {

@@ -277,7 +277,8 @@ class InternalSubAgentService {
     if (parameterValueAsString?.length > 20000000) {
       return;
     }
-    await tdcache.hset(parameterKey, parameterName, parameterValueAsString);
+    const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
+    await tdcache.hset(parameterKey, parameterName, parameterValueAsString, { EX: ttl });
   }
 
   static subAgentContext(requestAttributes, context) {
