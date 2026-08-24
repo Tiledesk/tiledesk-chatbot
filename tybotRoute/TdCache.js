@@ -127,6 +127,10 @@ class TdCache {
       return JSON.parse(value);
     }
     
+    async expire(key, seconds) {
+      await this.client.expire(key, seconds);
+    }
+
     async del(key) {
         await this.client.del(key);
     }
