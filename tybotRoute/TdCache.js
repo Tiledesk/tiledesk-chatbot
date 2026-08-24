@@ -82,14 +82,14 @@ class TdCache {
       if (!value) {
         return;
       }
-      if (!options) {
-        options = {EX: 86400}
-      }
       await this.client.HSET(
         dict_key,
         key,
-        value,
-        options);
+        value);
+      // HSET does not support EX; apply TTL via EXPIRE when provided
+      if (options && options.EX) {
+        await this.expire(dict_key, options.EX);
+      }
     }
 
     async hdel(dict_key, key) {
