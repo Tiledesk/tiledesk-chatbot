@@ -98,11 +98,6 @@ class DirAskGPT {
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
-      winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
-      key = await this.getKeyFromKbSettings();
-    }
-
-    if (!key) {
       winston.debug("(DirAskGPT) - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
@@ -248,29 +243,28 @@ class DirAskGPT {
     }
   }
 
-  async getKeyFromKbSettings() {
+  async checkQuoteAvailability() {
     return new Promise((resolve) => {
 
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
+      const HTTPREQUEST = {
+        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + this.context.token
         },
         method: "GET"
       }
-      winston.debug("(DirAskGPT) KB HttpRequest ", KB_HTTPREQUEST);
+      winston.debug("(DirAskGPT) check quote availability HttpRequest ", HTTPREQUEST);
 
       httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
+        HTTPREQUEST, async (err, resbody) => {
           if (err) {
-            winston.error("DirAskGPT Get kb settings error ", err?.response?.data);
-            resolve(null);
+            resolve(true)
           } else {
-            if (!resbody.gptkey) {
-              resolve(null);
+            if (resbody.isAvailable === true) {
+              resolve(true)
             } else {
-              resolve(resbody.gptkey);
+              resolve(false)
             }
           }
         }

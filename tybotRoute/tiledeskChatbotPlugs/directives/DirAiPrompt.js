@@ -597,36 +597,6 @@ class DirAiPrompt {
     };
   }
 
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiPrompt KB HttpRequest", KB_HTTPREQUEST);
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiPrompt Get KnowledgeBase err: " + err.message);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
-  }
-
   async checkQuoteAvailability() {
     return new Promise((resolve) => {
 

@@ -810,8 +810,9 @@ describe('Conversation for GptTask test', async () => {
     });
   });
 
-  it('/task gpt success (key from kbsettings) - invokes the gpt task mockup and test the returning attributes', (done) => {
+  it('/task gpt success (key from shared GPTKEY) - invokes the gpt task mockup and test the returning attributes', (done) => {
 
+    process.env.GPTKEY = "sk-123456";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -885,15 +886,6 @@ describe('Conversation for GptTask test', async () => {
       res.status(http_code).send(reply);
     });
 
-    endpointServer.get('/:project_id/kbsettings', function (req, res) {
-
-      let reply = { gptkey: "sk-123456" };
-      // let reply = { gptkey: null };
-      let http_code = 200;
-
-      res.status(http_code).send(reply);
-    });
-
     endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
 
       let http_code = 200;
@@ -902,6 +894,13 @@ describe('Conversation for GptTask test', async () => {
       res.status(http_code).send(reply);
     })
 
+    endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+      res.status(200).send({ isAvailable: true });
+    });
+
+    endpointServer.post('/:project_id/quotes/incr/:type', function (req, res) {
+      res.status(200).send({});
+    });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {
       winston.verbose('endpointServer started' + listener.address());
@@ -928,6 +927,7 @@ describe('Conversation for GptTask test', async () => {
 
   it('/task gpt success - get quotes availability and increments quote value', (done) => {
 
+    process.env.GPTKEY = "sk-123456";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
