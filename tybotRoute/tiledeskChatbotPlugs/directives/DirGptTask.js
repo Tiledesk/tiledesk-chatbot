@@ -9,6 +9,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const quotasService = require("../../services/QuotasService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -146,7 +147,7 @@ class DirGptTask extends BaseDirective {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
+      let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token);
       if (keep_going === false) {
         this.logger.warn("[ChatGPT Task] OpenAI tokens quota exceeded");
         await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
@@ -232,7 +233,7 @@ class DirGptTask extends BaseDirective {
               tokens: resbody.usage.total_tokens,
               model: json.model
             }
-            this.updateQuote(tokens_usage);
+            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
 
           if (trueIntent) {
@@ -286,63 +287,6 @@ class DirGptTask extends BaseDirective {
             } else {
               resolve(resbody.gptkey);
             }
-          }
-        }
-      )
-    })
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirGptTask) check quote availability HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("(DirGptTask) update quote HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.debug("(DirGptTask) Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(DirGptTask)  Increment token quote resbody: ", resbody);
-            resolve(true);
           }
         }
       )

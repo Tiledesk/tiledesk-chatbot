@@ -10,6 +10,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const quotasService = require("../../services/QuotasService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -101,7 +102,7 @@ class DirAddKbContent extends BaseDirective {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
+      let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token);
       if (keep_going === false) {
         this.logger.warn("[Add to KnwoledgeBase] Tokens quota exceeded. Skip the action")
         winston.verbose("[DirAddKbContent] - Quota exceeded for tokens. Skip the action")
@@ -218,63 +219,6 @@ class DirAddKbContent extends BaseDirective {
             } else {
               resolve(resbody.gptkey);
             }
-          }
-        }
-      )
-    })
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAddKbContent check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAddKbContent Check quote availability err: ", err);
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAddKbContent update quote HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAddKbContent Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            resolve(true);
           }
         }
       )

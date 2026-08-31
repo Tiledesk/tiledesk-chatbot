@@ -11,6 +11,7 @@ const Utils = require("../../utils/HttpUtils");
 const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const quotasService = require("../../services/QuotasService");
 const { BaseDirective } = require("../BaseDirective");
 const { randomUUID } = require("crypto");
 const { Directives } = require('./Directives');
@@ -225,7 +226,7 @@ class DirAiCondition extends BaseDirective {
 
     if (publicKey === true) {
       try {
-        let keep_going = await this.checkQuoteAvailability(this.projectId, this.token)
+        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
         if (keep_going === false) {
           this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
@@ -489,63 +490,6 @@ class DirAiCondition extends BaseDirective {
             } else {
               resolve(resbody.gptkey);
             }
-          }
-        }
-      )
-    })
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiCondition check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAiCondition update quote HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiCondition Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(httprequest) DirAiCondition Increment token quote resbody: ", resbody);
-            resolve(true);
           }
         }
       )
