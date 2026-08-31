@@ -6,7 +6,7 @@ Requires **Node 22** (the version CI uses; `node -v` should print `v22.x`) and
 Docker.
 
 ```bash
-npm --prefix tybotRoute install   # or `npm --prefix tybotRoute ci`
+npm install                       # or `npm ci`
 docker compose -f docker-compose.test.yml up -d
 npm test
 ```
@@ -23,8 +23,13 @@ file in its own mocha process and compares the result against
 > suite elsewhere with `REDIS_PORT`.
 
 Skipping the install step is the most common fresh-checkout failure: without
-`tybotRoute/node_modules` every file reports `ERR ... no mocha summary in output`
-(`Cannot find module .../_mocha`) and the run exits non-zero.
+the repo-root `node_modules` every file reports `ERR ... no mocha summary in
+output` (`Cannot find module .../_mocha`) and the run exits non-zero.
+
+There is a single package: one `package.json` and one `node_modules`, both at
+the repo root. The runner still spawns mocha with `cwd=tybotRoute` so the tests'
+relative requires (`require("..")`, `require("../utils/...")`) keep resolving,
+but the `_mocha` binary and every dependency come from the root tree.
 
 ## Running one file
 
@@ -39,7 +44,7 @@ non-zero if the file fails.
 Doing it by hand requires the same two flags the runner uses:
 
 ```bash
-cd tybotRoute && node node_modules/.bin/_mocha --no-config --no-package --timeout 20000 --exit test/filler_test.js
+cd tybotRoute && node ../node_modules/.bin/_mocha --no-config --no-package --timeout 20000 --exit test/filler_test.js
 ```
 
 `--no-config --no-package` are **mandatory**. Mocha merges the `spec:` globs from

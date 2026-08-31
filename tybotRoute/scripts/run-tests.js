@@ -94,7 +94,10 @@ function runOne(file) {
     // .mocharc.yml with any positional argument, so without them this "one file"
     // spawn silently runs the entire suite in a single process (which is exactly
     // what per-file isolation exists to prevent). See docs/testing.md.
-    [path.join(__dirname, '..', 'node_modules', '.bin', '_mocha'),
+    // Dependencies live in the single repo-root node_modules (the two packages
+    // were collapsed into one), but cwd stays tybotRoute so that the positional
+    // `test/<file>` and the tests' own relative requires keep resolving.
+    [path.join(REPO_ROOT, 'node_modules', '.bin', '_mocha'),
      '--no-config', '--no-package', '--timeout', opts.timeout, '--exit', path.join('test', file)],
     {
       cwd: path.join(__dirname, '..'),

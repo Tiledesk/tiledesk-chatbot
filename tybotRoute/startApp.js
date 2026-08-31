@@ -67,7 +67,7 @@ async function startApp(settings, completionCallback) {
   winston.info("(Tilebot) MAX_STEPS: " + runtimeContext.MAX_STEPS);
   winston.info("(Tilebot) MAX_EXECUTION_TIME: " + runtimeContext.MAX_EXECUTION_TIME);
   
-  var pjson = require('./package.json');
+  var pjson = require('../package.json');
   winston.info("(Tilebot) Starting Tilebot connector v" + pjson.version);
 
   if (!runtimeContext.staticBots) {
