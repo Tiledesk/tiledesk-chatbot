@@ -7,7 +7,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const llmKeyService = require("../../services/LLMKeyService");
-const { kbEndpoint } = require("../../config/endpoints");
+const llmAskService = require("../../services/LlmAskService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -91,8 +91,7 @@ class DirAskGPT extends BaseDirective {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    const kb_endpoint = kbEndpoint();
-    winston.verbose("DirAskGPT KbEndpoint URL: ", kb_endpoint);
+    winston.verbose("DirAskGPT KbEndpoint URL: ", llmAskService.legacyKbBaseUrl());
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
       caller: "(DirAskGPT)",
@@ -137,58 +136,52 @@ class DirAskGPT extends BaseDirective {
     };
     winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 
-    const HTTPREQUEST = {
-      url: kb_endpoint + "/qa",
-      json: json,
-      method: "POST"
-    }
-    winston.debug("(DirAskGPT) HttpRequest", HTTPREQUEST); 
-    
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
+    const { err, resbody } = await llmAskService.askLegacyKb(json, "(DirAskGPT)");
 
-        winston.debug("(DirAskGPT) resbody:", resbody); 
-        let answer = resbody.answer;
-        let source = resbody.source_url;
-        await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignSourceTo', source, { onlyIfTruthy: true }]]);
-        
-        if (err) {
-          winston.error("(DirAskGPT) error: ", err);
-          if (callback) {
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        }
-        else if (resbody.success === true) {
+    winston.debug("(DirAskGPT) resbody:", resbody);
+    // These two shadowed the outer `answer`/`source` while the body lived
+    // inside the request callback; renamed now that it does not. Nothing but
+    // the _assignAttributes call below ever read them - including on the error
+    // path, where `resbody` is null and this line throws, exactly as before.
+    let kb_answer = resbody.answer;
+    let kb_source = resbody.source_url;
+    await this._assignAttributes(action, [['assignReplyTo', kb_answer, { onlyIfTruthy: true }], ['assignSourceTo', kb_source, { onlyIfTruthy: true }]]);
 
-          // if (publicKey === true) {
-          //   let token_usage = resbody.usage.total_tokens;
-          //   this.updateQuote(token_usage);
-          // }
-          
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        } else {
-          if (falseIntent) {
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
+    if (err) {
+      winston.error("(DirAskGPT) error: ", err);
+      if (callback) {
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
           return;
         }
+        callback();
+        return;
       }
-    )
+    }
+    else if (resbody.success === true) {
+
+      // if (publicKey === true) {
+      //   let token_usage = resbody.usage.total_tokens;
+      //   this.updateQuote(token_usage);
+      // }
+
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    } else {
+      if (falseIntent) {
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
   }
 
 }

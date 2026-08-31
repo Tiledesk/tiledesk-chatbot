@@ -13,7 +13,7 @@ const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
-const { qaEndpoint } = require("../../config/endpoints");
+const llmAskService = require("../../services/LlmAskService");
 const { BaseDirective } = require("../BaseDirective");
 const { randomUUID } = require("crypto");
 const { Directives } = require('./Directives');
@@ -116,13 +116,8 @@ class DirAiCondition extends BaseDirective {
 
     // evaluate
 
-    let AI_endpoint = qaEndpoint();
-    winston.verbose("DirAiCondition AI_endpoint " + AI_endpoint);
+    winston.verbose("DirAiCondition AI_endpoint " + llmAskService.qaBaseUrl());
 
-    let headers = {
-      'Content-Type': 'application/json'
-    }
-    
     let answer = "";
     let key;
     let publicKey = false;
@@ -296,94 +291,84 @@ class DirAiCondition extends BaseDirective {
 
     winston.debug("DirAiCondition json: ", json);
 
-    const HTTPREQUEST = {
-      url: AI_endpoint + "/ask",
-      headers: headers,
-      json: json,
-      method: 'POST'
-    }
-    winston.debug("DirAiCondition HttpRequest: ", HTTPREQUEST);
+    const { err, resbody } = await llmAskService.ask(json, "/ask", "DirAiCondition");
 
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.error("DirAiCondition openai err: ", err);
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-          let error;
-          if (err.response?.data?.detail[0]) {
-            error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail?.answer) {
-            error = err.response.data.detail.answer;
-          } else {
-            error = JSON.stringify(err.response.data);
-          }
-          this.logger.error("[AI Condition] error executing action: ", error);
-          if (errorIntent) {
-            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
-            await this.#executeIntent(errorIntent);
+    if (err) {
+      winston.error("DirAiCondition openai err: ", err);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      let error;
+      if (err.response?.data?.detail[0]) {
+        error = err.response.data.detail[0]?.msg;
+      } else if (err.response?.data?.detail?.answer) {
+        error = err.response.data.detail.answer;
+      } else {
+        error = JSON.stringify(err.response.data);
+      }
+      this.logger.error("[AI Condition] error executing action: ", error);
+      if (errorIntent) {
+        await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+        await this.#executeIntent(errorIntent);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    } else {
+
+      winston.debug("DirAiCondition resbody: ", resbody);
+      answer = resbody.answer;
+      this.logger.native("[AI Condition] answer: ", answer);
+
+      // if (publicKey === true) {
+      //   let tokens_usage = {
+      //     tokens: resbody.usage.total_token,
+      //     model: json.model
+      //   }
+      //   quotasService.updateQuote(this.projectId, this.token, tokens_usage);
+      // }
+
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+
+      if (answer === "fallback") {
+        if (fallbackIntent) {
+          await this.#executeIntent(fallbackIntent) 
+          if (callback) {
             callback(true);
             return;
           }
-          callback();
-          return;
-        } else {
-
-          winston.debug("DirAiCondition resbody: ", resbody);
-          answer = resbody.answer;
-          this.logger.native("[AI Condition] answer: ", answer);
-
-          // if (publicKey === true) {
-          //   let tokens_usage = {
-          //     tokens: resbody.usage.total_token,
-          //     model: json.model
-          //   }
-          //   quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          // }
-        
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-
-          if (answer === "fallback") {
-            if (fallbackIntent) {
-              await this.#executeIntent(fallbackIntent) 
-              if (callback) {
-                callback(true);
-                return;
-              }
+        }
+      }
+      else {
+        let answer_found = null;
+        intents.forEach( i => {
+          if (i.label === answer) {
+            answer_found = i;
+          }
+        });
+        if (answer_found) {
+          await this.#executeIntent(answer_found.conditionIntentId) 
+          if (callback) {
+            callback(true);
+            return;
+          }
+        }
+        else { // if (answer === "fallback") {
+          if (fallbackIntent) {
+            await this.#executeIntent(fallbackIntent) 
+            if (callback) {
+              callback(true);
+              return;
             }
           }
           else {
-            let answer_found = null;
-            intents.forEach( i => {
-              if (i.label === answer) {
-                answer_found = i;
-              }
-            });
-            if (answer_found) {
-              await this.#executeIntent(answer_found.conditionIntentId) 
-              if (callback) {
-                callback(true);
-                return;
-              }
-            }
-            else { // if (answer === "fallback") {
-              if (fallbackIntent) {
-                await this.#executeIntent(fallbackIntent) 
-                if (callback) {
-                  callback(true);
-                  return;
-                }
-              }
-              else {
-                this.logger.error("[AI Condition] Fallback connector not found");
-              }
-            }
+            this.logger.error("[AI Condition] Fallback connector not found");
           }
-          this.logger.error("[AI Condition] error executing action: condition label not found in intents list");
-          callback();
-          return;
         }
       }
-    )
+      this.logger.error("[AI Condition] error executing action: condition label not found in intents list");
+      callback();
+      return;
+    }
   }
 
   async checkMandatoryParameters(action) {

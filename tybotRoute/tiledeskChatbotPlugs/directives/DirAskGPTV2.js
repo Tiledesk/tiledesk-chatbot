@@ -14,7 +14,7 @@ const { BaseDirective } = require("../BaseDirective");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
-const { qaEndpoint } = require("../../config/endpoints");
+const llmAskService = require("../../services/LlmAskService");
 const aiController = require("../../services/AIController");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
@@ -381,122 +381,108 @@ class DirAskGPTV2 extends BaseDirective {
     
     winston.debug("DirAskGPTV2 json:", json);
 
-    let kb_endpoint = qaEndpoint(ns.hybrid);
-    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
+    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + llmAskService.qaBaseUrl(ns.hybrid));
 
-    const HTTPREQUEST = {
-      url: kb_endpoint + "/qa",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
-      },
-      json: json,
-      method: "POST"
+    const { err, resbody } = await llmAskService.askNamespace(json, ns.hybrid, this.context.token, "DirAskGPTV2");
+
+    if (err) {
+      winston.error("DirAskGPTV2 error: ", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+      });
+      this.logger.error(`[Ask Knowledge Base] Error getting answer`);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      if (callback) {
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
     }
-    winston.debug("DirAskGPTV2 HttpRequest: ", HTTPREQUEST);
+    else if (resbody.success === true) {
+      winston.debug("DirAskGPTV2 resbody: ", resbody);
+      console.log("DirAskGPTV2 resbody: ", JSON.stringify(resbody));
+      if (chunks_only) {
+        await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.chunks, { onlyIfTruthy: true }]]);
+        if (trueIntent) {
+          await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
 
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.error("DirAskGPTV2 error: ", {
+      } else {
+        let json_sources;
+        if (citations) {
+          json_sources = this.normalizeCitationSources(resbody.citations);
+        }
+        await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.content_chunks, { onlyIfTruthy: true }], ['assignJsonSourcesTo', json_sources, { onlyIfTruthy: true }]]);
+        let tokens = resbody.prompt_token_size;
+        if (publicKey === true && !chunks_only) {
+
+          let tokens_usage = {
+            tokens: resbody.prompt_token_size,
+            model: json.model
+          }
+
+          let multiplier = MODELS_MULTIPLIER[json.model.name] ?? 1;
+          tokens = tokens * multiplier;
+          quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
+            winston.error("Error updating quota: ", err);
+          })
+        }
+
+        const data = {
+          namespace: json.namespace,
+          question: json.question,
+          answer: resbody.answer,
+          request_id: this.requestId,
+          tokens: tokens
+        }
+        kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
+          winston.error("Error adding answered question: ", err);
+        })
+
+        if (trueIntent) {
+          await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+    } else {
+      winston.info("DirAskGPTV2 resbody else case: ", resbody);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      if (!skip_unanswered) {
+        const data = {
+          namespace: json.namespace,
+          question: json.question,
+          request_id: this.requestId
+        }
+
+        kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
+          winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
             status: err.response?.status,
             statusText: err.response?.statusText,
             data: err.response?.data,
           });
-          this.logger.error(`[Ask Knowledge Base] Error getting answer`);
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-          if (callback) {
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        }
-        else if (resbody.success === true) {
-          winston.debug("DirAskGPTV2 resbody: ", resbody);
-          console.log("DirAskGPTV2 resbody: ", JSON.stringify(resbody));
-          if (chunks_only) {
-            await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.chunks, { onlyIfTruthy: true }]]);
-            if (trueIntent) {
-              await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-
-          } else {
-            let json_sources;
-            if (citations) {
-              json_sources = this.normalizeCitationSources(resbody.citations);
-            }
-            await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.content_chunks, { onlyIfTruthy: true }], ['assignJsonSourcesTo', json_sources, { onlyIfTruthy: true }]]);
-            let tokens = resbody.prompt_token_size;
-            if (publicKey === true && !chunks_only) {
-
-              let tokens_usage = {
-                tokens: resbody.prompt_token_size,
-                model: json.model
-              }
-
-              let multiplier = MODELS_MULTIPLIER[json.model.name] ?? 1;
-              tokens = tokens * multiplier;
-              quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
-                winston.error("Error updating quota: ", err);
-              })
-            }
-            
-            const data = {
-              namespace: json.namespace,
-              question: json.question,
-              answer: resbody.answer,
-              request_id: this.requestId,
-              tokens: tokens
-            }
-            kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
-              winston.error("Error adding answered question: ", err);
-            })
-  
-            if (trueIntent) {
-              await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else {
-          winston.info("DirAskGPTV2 resbody else case: ", resbody);
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-          if (!skip_unanswered) {
-            const data = {
-              namespace: json.namespace,
-              question: json.question,
-              request_id: this.requestId
-            }
-
-            kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
-              winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
-                status: err.response?.status,
-                statusText: err.response?.statusText,
-                data: err.response?.data,
-              });
-              this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
-            })
-          }
-          if (falseIntent) {
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
+          this.logger.warn("[Ask Knowledge Base] Unable to add unanswered question", json.question, "to namespacae", json.namespace);
+        })
       }
-    )
+      if (falseIntent) {
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
   }
 
   async checkMandatoryParameters(action) {

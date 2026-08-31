@@ -12,7 +12,7 @@ const { BaseDirective } = require("../BaseDirective");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
-const { qaEndpoint } = require("../../config/endpoints");
+const llmAskService = require("../../services/LlmAskService");
 const path = require("path");
 const mime = require("mime-types");
 const { Directives } = require('./Directives');
@@ -117,13 +117,8 @@ class DirAiPrompt extends BaseDirective {
       }
     }
 
-    let AI_endpoint = qaEndpoint();
-    winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
+    winston.verbose("DirAiPrompt AI_endpoint " + llmAskService.qaBaseUrl());
 
-    let headers = {
-      'Content-Type': 'application/json'
-    }
-    
     let key;
     let publicKey = false;
     let ollama_integration;
@@ -380,71 +375,62 @@ class DirAiPrompt extends BaseDirective {
     winston.debug("DirAiPrompt json: ", json);
     console.log("DirAiPrompt json: ", json);
 
-    const HTTPREQUEST = {
-      url: AI_endpoint + apiEndpoint,
-      headers: headers,
-      json: json,
-      method: 'POST'
-    }
-    winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.error("DirAiPrompt openai err: ", err.response?.data);
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-          let error;
-          if (err.response?.data?.detail && err.response?.data?.detail[0]) {
-            error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
-            error = err.response.data.detail.answer;
-          } else if (err.response?.data) {
-            error = JSON.stringify(err.response.data);
-          } else {
-            error = err.message || "General error executing action" // String(err);
-          }
-          winston.error("DirAiPrompt error executing action: " + error);
-          this.logger.error("[AI Prompt] error executing action: ", error);
-          if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        } else {
+    const { err, resbody } = await llmAskService.ask(json, apiEndpoint, "DirAiPrompt");
 
-          winston.debug("DirAiPrompt resbody: ", resbody);
-          answer = resbody.answer;
-          this.logger.native("[AI Prompt] answer: ", answer);
-
-          let reasoning_content = null;
-          if (action.reasoning === true) {
-            reasoning_content = resbody.reasoning_content;
-            this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
-            await this.chatbot.addParameter("reasoning_content", reasoning_content);
-          }
-
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.prompt_token_info?.total_tokens || 0,
-              model: json.model
-            }
-            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          }
-        
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignReasoningContentTo', reasoning_content, { onlyIfTruthy: true }]]);
-
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
+    if (err) {
+      winston.error("DirAiPrompt openai err: ", err.response?.data);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      let error;
+      if (err.response?.data?.detail && err.response?.data?.detail[0]) {
+        error = err.response.data.detail[0]?.msg;
+      } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
+        error = err.response.data.detail.answer;
+      } else if (err.response?.data) {
+        error = JSON.stringify(err.response.data);
+      } else {
+        error = err.message || "General error executing action" // String(err);
       }
-    )
+      winston.error("DirAiPrompt error executing action: " + error);
+      this.logger.error("[AI Prompt] error executing action: ", error);
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    } else {
+
+      winston.debug("DirAiPrompt resbody: ", resbody);
+      answer = resbody.answer;
+      this.logger.native("[AI Prompt] answer: ", answer);
+
+      let reasoning_content = null;
+      if (action.reasoning === true) {
+        reasoning_content = resbody.reasoning_content;
+        this.logger.native("[AI Prompt] reasoning_content: ", reasoning_content);
+        await this.chatbot.addParameter("reasoning_content", reasoning_content);
+      }
+
+      if (publicKey === true) {
+        let tokens_usage = {
+          tokens: resbody.prompt_token_info?.total_tokens || 0,
+          model: json.model
+        }
+        quotasService.updateQuote(this.projectId, this.token, tokens_usage);
+      }
+
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignReasoningContentTo', reasoning_content, { onlyIfTruthy: true }]]);
+
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
 
   }
 
