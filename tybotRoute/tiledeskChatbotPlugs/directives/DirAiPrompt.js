@@ -8,7 +8,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const path = require("path");
@@ -18,22 +18,20 @@ const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
 
 
-class DirAiPrompt {
+class DirAiPrompt extends BaseDirective {
+
+  _conditionLabels = {
+    trueExecute: "[AI Prompt] executing true condition",
+    trueMissing: "[AI Prompt] no block connected to true condition",
+    falseExecute: "[AI Prompt] executing false condition",
+    falseMissing: "[AI Prompt] no block connected to false condition"
+  };
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = this.context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -76,7 +74,7 @@ class DirAiPrompt {
       this.logger.error(`[AI Prompt] missing attribute '${missing_param}'`);
       await this.chatbot.addParameter("flowError", "AiPrompt Error: '" + missing_param + "' attribute is undefined");
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return Promise.reject();
       }
@@ -130,7 +128,7 @@ class DirAiPrompt {
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -146,7 +144,7 @@ class DirAiPrompt {
         winston.error("DirAiPrompt Error getting vllm integration");
         await this.chatbot.addParameter("flowError", "Vllm integration not found");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -161,7 +159,7 @@ class DirAiPrompt {
           this.logger.error("[AI Prompt] missing vllmServer for multi-server vllm integration");
           await this.chatbot.addParameter("flowError", "AiPrompt Error: 'vllmServer' attribute is undefined");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -173,7 +171,7 @@ class DirAiPrompt {
           this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -190,7 +188,7 @@ class DirAiPrompt {
         winston.error("Error: DirAiPrompt llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm vllm");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -212,7 +210,7 @@ class DirAiPrompt {
         winston.error("Error: DirAiPrompt llm key not found in integrations");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -228,7 +226,7 @@ class DirAiPrompt {
           this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback();
             return;
           }
@@ -239,7 +237,7 @@ class DirAiPrompt {
         this.logger.error("An error occured on checking token quota availability");
         await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback();
           return;
         }
@@ -307,7 +305,7 @@ class DirAiPrompt {
         winston.error("DirAiPrompt Error getting mcp integration: ", err);
         await this.chatbot.addParameter("flowError", "MCP integration not found");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -319,7 +317,7 @@ class DirAiPrompt {
       if (nativeUrlError) {
         await this.chatbot.addParameter("flowError", nativeUrlError);
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -343,7 +341,7 @@ class DirAiPrompt {
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback();
           return;
         }
@@ -386,7 +384,7 @@ class DirAiPrompt {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("DirAiPrompt openai err: ", err.response?.data);
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
           let error;
           if (err.response?.data?.detail && err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
@@ -401,7 +399,7 @@ class DirAiPrompt {
           this.logger.error("[AI Prompt] error executing action: ", error);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -428,10 +426,10 @@ class DirAiPrompt {
             quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           }
         
-          await this.#assignAttributes(action, answer, reasoning_content);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignReasoningContentTo', reasoning_content, { onlyIfTruthy: true }]]);
 
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -501,65 +499,6 @@ class DirAiPrompt {
     }
 
     return objectTranscript;
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.logger.native("[AI Prompt] executing true condition");
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        this.logger.native("[AI Prompt] no block connected to true condition");
-        winston.debug("DirAiPrompt No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.logger.native("[AI Prompt] executing false condition");
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        this.logger.native("[AI Prompt] no block connected to false condition");
-        winston.debug("DirAiPrompt No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer, reasoning_content) {
-    winston.debug("DirAiPrompt assignAttributes action: ", action)
-    winston.debug("DirAiPrompt assignAttributes answer: " + answer)
-
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-      if (action.assignReasoningContentTo && reasoning_content) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReasoningContentTo, reasoning_content);
-      }
-    }
   }
 
   /**

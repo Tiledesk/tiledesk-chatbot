@@ -4,19 +4,14 @@ const { DirIntent } = require('./DirIntent');
 const { IntentForm } = require('../../engine/IntentForm.js');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirForm {
+class DirForm extends BaseDirective {
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
     this.log = context.log;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
@@ -103,7 +98,7 @@ class DirForm {
         this.chatbot.unlockAction(this.requestId);
 
         if (callback) {
-          this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+          this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
             callback(false); // continue the flow
           });
         }
@@ -122,7 +117,7 @@ class DirForm {
 
         // TODO: INVOKE DIR_INTENT FOR CANCEL.
         if (callback) {
-          this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+          this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
             callback(false); // continue the flow
           });
         }
@@ -142,39 +137,6 @@ class DirForm {
       }
     }
     // FORM END
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          callback();
-        });
-      }
-      else {
-        winston.debug("(DirForm) No trueIntentDirective specified");
-        callback();
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          callback();
-        });
-      }
-      else {
-        winston.debug("(DirForm) No falseIntentDirective specified");
-        callback();
-      }
-    }
   }
 
 }

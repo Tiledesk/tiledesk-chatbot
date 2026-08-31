@@ -4,22 +4,23 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirWebRequestV2 {
+class DirWebRequestV2 extends BaseDirective {
+
+  _conditionLabels = {
+    trueExecute: "WebRequest: executing true condition",
+    trueMissing: "WebRequest: no block connected to true condition",
+    falseExecute: "WebRequest: executing false condition",
+    falseMissing: "WebRequest: no block connected to false condition"
+  };
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
+    super(context);
     this.chatbot = context.chatbot;
     this.log = context.log;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -74,7 +75,7 @@ class DirWebRequestV2 {
       this.logger.error("[Web Request] Error getting headers");
       await this.chatbot.addParameter("flowError", "Error getting headers");
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return Promise.reject(err);;
       }
@@ -86,7 +87,7 @@ class DirWebRequestV2 {
       this.logger.error("[Web Request] Error parsing json body");
       await this.chatbot.addParameter("flowError", "Error parsing json body");
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return Promise.reject(err);;
       }
@@ -113,7 +114,11 @@ class DirWebRequestV2 {
         let resbody = res.data;
         let status = res.status;
         let error = res.error;
-        await this.#assignAttributes(action, resbody, status, error)
+        await this._assignAttributes(action, [
+          ['assignResultTo', resbody, { onlyIfTruthy: true }],
+          ['assignErrorTo', error, { onlyIfTruthy: true }],
+          ['assignStatusTo', status, { onlyIfTruthy: true }]
+        ])
         winston.debug("DirWebRequestV2 resbody:", resbody);
         this.logger.native("[Web Request] resbody: ", resbody);
         
@@ -122,7 +127,7 @@ class DirWebRequestV2 {
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -132,7 +137,7 @@ class DirWebRequestV2 {
         }
         else if (res.status >= 200 && res.status <= 299) {
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -143,7 +148,7 @@ class DirWebRequestV2 {
           this.logger.warn("[Web Request] status ", status);
           this.logger.error("[Web Request] error ", error);
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -229,66 +234,16 @@ class DirWebRequestV2 {
     })
   }
 
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.logger.native("WebRequest: executing true condition");
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        this.logger.native("WebRequest: no block connected to true condition");
-        winston.debug("DirWebRequestV2 No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.logger.native("WebRequest: executing false condition");
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        this.logger.native("WebRequest: no block connected to false condition");
-        winston.debug("DirWebRequestV2 No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, resbody, status, error) {
-
-    if (this.context.tdcache) {
-      if (action.assignResultTo && resbody) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, resbody);
-      }
-      if (action.assignErrorTo && error) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
-      }
-      if (action.assignStatusTo && status) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-    }
-  }
-
+  /**
+   * DirWebRequestV2 deliberately keeps its own request implementation instead of
+   * utils/http.js (same reasoning as DirMake): its contract differs, it is not
+   * just a different set of accepted status codes. It performs no status check,
+   * hands the *whole* axios response to the callback (the caller reads res.data /
+   * res.status / res.error itself), turns rejections into a synthetic
+   * { status, data, error } success payload, and adds the request timeout plus
+   * the 10MB maxContentLength / maxBodyLength caps. Folding that into the shared
+   * helper would change behaviour, so it stays local.
+   */
   #myrequest(options, callback) {
     try {
       let axios_options = {

@@ -7,21 +7,14 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const { BaseDirective } = require("../BaseDirective");
 
-class DirAskGPT {
+class DirAskGPT extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = this.context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
   }
 
@@ -66,9 +59,9 @@ class DirAskGPT {
 
     if (!action.question || action.question === '') {
       winston.error("(DirAskGPT) Error: question attribute is mandatory. Executing condition false...");
-      await this.#assignAttributes(action, answer, source);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignSourceTo', source, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
       }
       callback(true);
       return;
@@ -76,9 +69,9 @@ class DirAskGPT {
 
     if (!action.kbid) {
       winston.error("(DirAskGPT) Error: kbid attribute is mandatory. Executing condition false...");
-      await this.#assignAttributes(action, answer, source);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignSourceTo', source, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
       }
       callback(true);
       return;
@@ -110,9 +103,9 @@ class DirAskGPT {
 
     if (!key) {
       winston.error("(DirAskGPT) Error: gptkey is mandatory");
-      await this.#assignAttributes(action, answer);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -152,13 +145,13 @@ class DirAskGPT {
         winston.debug("(DirAskGPT) resbody:", resbody); 
         let answer = resbody.answer;
         let source = resbody.source_url;
-        await this.#assignAttributes(action, answer, source);
+        await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignSourceTo', source, { onlyIfTruthy: true }]]);
         
         if (err) {
           winston.error("(DirAskGPT) error: ", err);
           if (callback) {
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -174,7 +167,7 @@ class DirAskGPT {
           // }
           
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -182,7 +175,7 @@ class DirAskGPT {
           return;
         } else {
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -191,61 +184,6 @@ class DirAskGPT {
         }
       }
     )
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        winston.debug("(DirAskGPT) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirAskGPT) No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer, source) {
-    winston.debug("(DirAskGPT) assignAttributes action:", action)
-    winston.debug("(DirAskGPT) assignAttributes answer:", answer)
-    winston.debug("(DirAskGPT) assignAttributes source:", source)
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-      if (action.assignSourceTo && source) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
-      }
-    }
   }
 
   async getKeyFromKbSettings() {

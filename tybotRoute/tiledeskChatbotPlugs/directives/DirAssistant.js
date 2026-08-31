@@ -6,22 +6,12 @@ const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston')
 const httpUtils = require('../../utils/HttpUtils');
 const integrationService = require('../../services/IntegrationService');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirAssistant {
+class DirAssistant extends BaseDirective {
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
+    super(context);
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -141,7 +131,7 @@ class DirAssistant {
       winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
         callback(true);
       }
       return;
@@ -181,7 +171,7 @@ class DirAssistant {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, lastMessage);
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "lastMessageData", messages.data[0].content); // content is an array, see on this source end for messages structure example, including content. Ex get annotation[0]: content[0].text.annotations[0]
         if (trueIntent) {
-          await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+          await this._executeCondition(true, trueIntent, null, falseIntent, null);
           callback(true);
         }
         else {
@@ -192,7 +182,7 @@ class DirAssistant {
       else {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, null);
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+          await this._executeCondition(false, trueIntent, null, falseIntent, null);
           callback(true);
         }
         else {
@@ -205,53 +195,12 @@ class DirAssistant {
       winston.error("(DirAssistant) error:", error);
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, error);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
       }
       callback(true);
       return;
     }
     
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirAssistant) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirAssistant) No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
   }
 
   #webrequest_timeout(action, default_timeout, min, max) {

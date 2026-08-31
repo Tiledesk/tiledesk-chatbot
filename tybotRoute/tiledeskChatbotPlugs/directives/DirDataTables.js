@@ -2,28 +2,24 @@ const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 const dataTablesService = require("../../services/DataTablesService");
 
 const SUPPORTED_OPERATIONS = ['get', 'insert', 'update', 'delete', 'upsert'];
 const ROW_DOCUMENT_OPERATIONS = ['insert', 'update', 'delete', 'upsert'];
 
-class DirDataTables {
+class DirDataTables extends BaseDirective {
+
+  _conditionLabels = {
+    trueExecute: "[DataTables] executing true condition",
+    falseExecute: "[DataTables] executing false condition"
+  };
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
-    this.projectId = context.projectId;
-    this.token = context.token;
-    this.API_ENDPOINT = context.API_ENDPOINT;
 
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -66,9 +62,9 @@ class DirDataTables {
     if (!tableId) {
       const error = "tableId is required";
       this.logger.error("[DataTables] " + error);
-      await this.#assignAttributes(action, null, error);
+      await this._assignAttributes(action, [['assignErrorTo', error, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -79,9 +75,9 @@ class DirDataTables {
     if (!operation || !SUPPORTED_OPERATIONS.includes(operation)) {
       const error = `operation must be one of: ${SUPPORTED_OPERATIONS.join(', ')}`;
       this.logger.error("[DataTables] " + error);
-      await this.#assignAttributes(action, null, error);
+      await this._assignAttributes(action, [['assignErrorTo', error, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -119,9 +115,14 @@ class DirDataTables {
       }
 
       this.logger.native("[DataTables] operation " + operation + " completed");
-      await this.#assignAttributes(action, this.#normalizeResult(result, operation), null);
+      // the original #assignAttributes wrote assignResultTo only when the value was
+      // neither undefined nor null - which is *not* the same as a truthiness guard.
+      const normalizedResult = this.#normalizeResult(result, operation);
+      await this._assignAttributes(action, normalizedResult === undefined || normalizedResult === null
+        ? []
+        : [['assignResultTo', normalizedResult]]);
       if (trueIntent) {
-        await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -130,9 +131,9 @@ class DirDataTables {
       const error = this.#extractError(err);
       this.logger.error("[DataTables] " + operation + " error: ", error);
       winston.error("DirDataTables error:", err?.response?.data || err);
-      await this.#assignAttributes(action, null, error);
+      await this._assignAttributes(action, [['assignErrorTo', error, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -235,59 +236,6 @@ class DirDataTables {
     return String(err);
   }
 
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.logger.native("[DataTables] executing true condition");
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("DirDataTables No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.logger.native("[DataTables] executing false condition");
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("DirDataTables No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, result, error) {
-    if (this.context.tdcache) {
-      if (action.assignResultTo && result !== undefined && result !== null) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, result);
-      }
-      if (action.assignErrorTo && error) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
-      }
-    }
-  }
 }
 
 module.exports = { DirDataTables };

@@ -11,26 +11,24 @@ const Utils = require("../../utils/HttpUtils");
 const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 const { randomUUID } = require("crypto");
 
 
-class DirAiCondition {
+class DirAiCondition extends BaseDirective {
+
+  _conditionLabels = {
+    trueExecute: "[AI Condition] executing true condition",
+    trueMissing: "[AI Condition] no block connected to true condition",
+    falseExecute: "[AI Condition] executing false condition",
+    falseMissing: "[AI Condition] no block connected to false condition"
+  };
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = this.context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -146,7 +144,7 @@ class DirAiCondition {
         winston.error("DirAiCondition Error getting vllm integration");
         await this.chatbot.addParameter("flowError", "Vllm integration not found");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -161,7 +159,7 @@ class DirAiCondition {
           this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
           await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -173,7 +171,7 @@ class DirAiCondition {
           this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -190,7 +188,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
           return;
         }
@@ -303,7 +301,7 @@ class DirAiCondition {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.error("DirAiCondition openai err: ", err);
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
           let error;
           if (err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
@@ -335,7 +333,7 @@ class DirAiCondition {
           //   quotasService.updateQuote(this.projectId, this.token, tokens_usage);
           // }
         
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
 
           if (answer === "fallback") {
             if (fallbackIntent) {
@@ -440,62 +438,6 @@ class DirAiCondition {
 
   //   return objectTranscript;
   // }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.logger.native("[AI Condition] executing true condition");
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        this.logger.native("[AI Condition] no block connected to true condition");
-        winston.debug("DirAiCondition No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.logger.native("[AI Condition] executing false condition");
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        this.logger.native("[AI Condition] no block connected to false condition");
-        winston.debug("DirAiCondition No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer) {
-    winston.debug("DirAiCondition assignAttributes action: ", action)
-    winston.debug("DirAiCondition assignAttributes answer: " + answer)
-
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-    }
-  }
 
   async #executeIntent(destinationIntentId, callback) {
     let intentDirective = null;

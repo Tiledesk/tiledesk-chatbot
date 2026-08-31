@@ -11,7 +11,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
@@ -53,22 +53,13 @@ function getRagContextTemplate(modelName) {
 
 const PINECONE_RERANKING = process.env.PINECONE_RERANKING === true || process.env.PINECONE_RERANKING === "true";
 
-class DirAskGPTV2 {
+class DirAskGPTV2 extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -115,9 +106,9 @@ class DirAskGPTV2 {
     await this.checkMandatoryParameters(action).catch( async (missing_param) => {
       this.logger.error(`[Ask Knowledge Base] missing attribute '${missing_param}'`);
       await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: '${missing_param}' attribute is undefined`);
-      await this.#assignAttributes(action, answer);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return Promise.reject();
       }
@@ -186,7 +177,7 @@ class DirAskGPTV2 {
       this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration: `, errorMsg);
       await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: ${errorMsg}`);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -203,7 +194,7 @@ class DirAskGPTV2 {
       this.logger.error(`[Ask Knowledge Base] llm key for ${llm} not found in integrations`);
       await this.chatbot.addParameter("flowError", `AskKnowledgeBase Error: missing key for llm ${llm}`);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -218,7 +209,7 @@ class DirAskGPTV2 {
           this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback();
             return;
           }
@@ -229,7 +220,7 @@ class DirAskGPTV2 {
         this.logger.error("An error occured on checking token quota availability");
         await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
         if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback();
           return;
         }
@@ -243,7 +234,7 @@ class DirAskGPTV2 {
       winston.verbose("DirAskGPTV2 - Error: namespace is undefined")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "AskGPT Error: namespace is undefined");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -265,10 +256,10 @@ class DirAskGPTV2 {
 
     if (!ns) {
       this.logger.error("[Ask Knowledge Base] Namespace not found")
-      await this.#assignAttributes(action, answer);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
       await this.chatbot.addParameter("flowError", "AskGPT Error: namespace not found");
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -407,10 +398,10 @@ class DirAskGPTV2 {
             data: err.response?.data,
           });
           this.logger.error(`[Ask Knowledge Base] Error getting answer`);
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
           if (callback) {
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -422,9 +413,9 @@ class DirAskGPTV2 {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
           console.log("DirAskGPTV2 resbody: ", JSON.stringify(resbody));
           if (chunks_only) {
-            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
+            await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.chunks, { onlyIfTruthy: true }]]);
             if (trueIntent) {
-              await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -436,7 +427,7 @@ class DirAskGPTV2 {
             if (citations) {
               json_sources = this.normalizeCitationSources(resbody.citations);
             }
-            await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks, json_sources);
+            await this._assignAttributes(action, [['assignReplyTo', resbody.answer, { onlyIfTruthy: true }], ['assignSourceTo', resbody.source, { onlyIfTruthy: true }], ['assignChunksTo', resbody.content_chunks, { onlyIfTruthy: true }], ['assignJsonSourcesTo', json_sources, { onlyIfTruthy: true }]]);
             let tokens = resbody.prompt_token_size;
             if (publicKey === true && !chunks_only) {
 
@@ -464,7 +455,7 @@ class DirAskGPTV2 {
             })
   
             if (trueIntent) {
-              await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -473,7 +464,7 @@ class DirAskGPTV2 {
           }
         } else {
           winston.info("DirAskGPTV2 resbody else case: ", resbody);
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
           if (!skip_unanswered) {
             const data = {
               namespace: json.namespace,
@@ -491,7 +482,7 @@ class DirAskGPTV2 {
             })
           }
           if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -500,68 +491,6 @@ class DirAskGPTV2 {
         }
       }
     )
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        winston.debug("DirAskGPTV2 No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("DirAskGPTV2 No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer, source, chunks, json_sources) {
-    winston.debug("DirAskGPTV2assignAttributes action: ", action)
-    winston.debug("DirAskGPTV2assignAttributes answer: ", answer)
-    winston.debug("DirAskGPTV2assignAttributes source: ", source)
-
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-      if (action.assignSourceTo && source) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
-      }
-      if (action.assignChunksTo && chunks) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignChunksTo, chunks);
-      }
-      if (action.assignJsonSourcesTo && json_sources) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignJsonSourcesTo, json_sources);
-      }
-    }
   }
 
   async checkMandatoryParameters(action) {

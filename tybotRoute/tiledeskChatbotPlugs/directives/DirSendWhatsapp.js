@@ -4,24 +4,17 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 
 let whatsapp_api_url;
 
-class DirSendWhatsapp {
+class DirSendWhatsapp extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -106,7 +99,7 @@ class DirSendWhatsapp {
           await this.chatbot.addParameter("flowError", "SendWhatsapp Error: " + err);
           if (callback) {
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              await this._executeCondition(false, trueIntent, null, falseIntent, null);
               callback(true);
               return;
             }
@@ -116,7 +109,7 @@ class DirSendWhatsapp {
         } else if (resbody.success === true) {
           if (callback) {
             if (trueIntent) {
-              await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+              await this._executeCondition(true, trueIntent, null, falseIntent, null);
               callback(true);
               return;
             }
@@ -127,7 +120,7 @@ class DirSendWhatsapp {
           winston.debug("(DirSendWhatsapp) unexpected resbody: ", resbody);
           if (callback) {
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              await this._executeCondition(false, trueIntent, null, falseIntent, null);
               callback(true);
               return
             }
@@ -137,47 +130,6 @@ class DirSendWhatsapp {
         }
       }
     )
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        winston.debug("(DirSendWhatsapp) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirSendWhatsapp) No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
   }
 
   async fillWholeReceiver(receiver, requestVariables) {

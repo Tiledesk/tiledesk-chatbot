@@ -9,24 +9,15 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 
-class DirGptTask {
+class DirGptTask extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = this.context.chatbot;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -76,7 +67,7 @@ class DirGptTask {
       winston.debug("(DirGptTask) Error: question attribute is mandatory. Executing condition false...")
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "GPT Error: question attribute is undefined");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -139,10 +130,10 @@ class DirGptTask {
     if (!key) {
       this.logger.error("[ChatGPT Task] OpenAI key is mandatory");
       winston.error("(DirGptTask) gptkey is mandatory");
-      await this.#assignAttributes(action, answer);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
       if (falseIntent) {
         await this.chatbot.addParameter("flowError", "GPT Error: gpt apikey is undefined");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -155,7 +146,7 @@ class DirGptTask {
       if (keep_going === false) {
         this.logger.warn("[ChatGPT Task] OpenAI tokens quota exceeded");
         await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback();
         return;
       }
@@ -211,10 +202,10 @@ class DirGptTask {
           winston.debug("(DirGptTask) openai err: ", err);
           winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
           this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
           if (falseIntent) {
             await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -230,7 +221,7 @@ class DirGptTask {
         
           this.logger.native("[ChatGPT Task] Completions answer: ", answer);
           
-          await this.#assignAttributes(action, answer);
+          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
 
           if (publicKey === true) {
             let tokens_usage = {
@@ -241,7 +232,7 @@ class DirGptTask {
           }
 
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
             return;
           }
@@ -265,58 +256,6 @@ class DirGptTask {
       }
     })
 
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        })
-      }
-      else {
-        winston.debug("(DirGptTask) No trueIntentDirective specified"); 
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirGptTask) No falseIntentDirective specified"); 
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
-
-  async #assignAttributes(action, answer) {
-    winston.debug("(DirGptTask) assignAttributes action: ", action)
-    winston.debug("(DirGptTask) assignAttributes answer: " + answer)
-
-    if (this.context.tdcache) {
-      if (action.assignReplyTo && answer) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
-      }
-    }
   }
 
   async getKeyFromKbSettings() {
