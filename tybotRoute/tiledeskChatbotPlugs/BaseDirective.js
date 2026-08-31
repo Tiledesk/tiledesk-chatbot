@@ -1,6 +1,16 @@
 const winston = require('../utils/winston');
 const { Logger } = require("../Logger");
 
+/**
+ * Shared shapes, declared once in tybotRoute/types/index.js. These are
+ * type-only imports: JSDoc `import()` is erased at runtime, so nothing is
+ * actually required here and no cycle is introduced.
+ *
+ * @typedef {import('../types').DirectiveContext} DirectiveContext
+ * @typedef {import('../types').Action} Action
+ * @typedef {import('../types').TdCacheLike} TdCacheLike
+ */
+
 // DirIntent is required lazily: BaseDirective is imported by directives, and
 // directives/DirIntent will itself become a BaseDirective subclass in a later
 // phase. A module-level require would therefore create a cycle.
@@ -32,18 +42,35 @@ function getTiledeskChatbot() {
  * These are conventional-protected `_`-prefixed methods rather than `#private`
  * fields on purpose: `#private` members cannot be inherited or overridden, which
  * is precisely what a base class needs them to be.
+ *
+ * Subclasses supply the dispatch entry point themselves; the contract the
+ * dispatcher relies on is
+ *   execute(directive: import('../types').Directive,
+ *           callback: import('../types').DirectiveCallback): void
+ * -- call `callback(true)` to stop directive processing, `callback()` to go on.
  */
 class BaseDirective {
 
+  /**
+   * @param {DirectiveContext} context  The per-reply context built by
+   *   DirectivesChatbotPlug.processDirectives(). Mandatory.
+   * @throws {Error} if `context` is missing.
+   */
   constructor(context) {
     if (!context) {
       throw new Error('context object is mandatory');
     }
+    /** @type {DirectiveContext} */
     this.context = context;
+    /** @type {TdCacheLike|undefined} */
     this.tdcache = this.context.tdcache;
+    /** @type {string|undefined} */
     this.requestId = this.context.requestId;
+    /** @type {string|undefined} */
     this.projectId = this.context.projectId;
+    /** @type {string|undefined} */
     this.token = this.context.token;
+    /** @type {string|undefined} */
     this.API_ENDPOINT = this.context.API_ENDPOINT;
 
     this.logger = new Logger({
@@ -57,6 +84,8 @@ class BaseDirective {
    * The winston prefix for this directive, e.g. "(DirBrevo)".
    * Derived from the subclass name; the parenthesised form is the one used by
    * the majority of the directives.
+   *
+   * @returns {string}
    */
   get _tag() {
     return "(" + this.constructor.name + ")";
@@ -69,9 +98,15 @@ class BaseDirective {
    * of the four keys below; a missing key emits nothing at that point.
    *   { trueExecute, trueMissing, falseExecute, falseMissing }
    * Defaults to null, i.e. emit nothing.
+   *
+   * @type {{trueExecute?: string, trueMissing?: string, falseExecute?: string, falseMissing?: string}|null}
    */
   _conditionLabels = null;
 
+  /**
+   * @param {'trueExecute'|'trueMissing'|'falseExecute'|'falseMissing'} key
+   * @returns {void}
+   */
   _nativeLog(key) {
     const labels = this._conditionLabels;
     if (labels && labels[key]) {
@@ -84,6 +119,14 @@ class BaseDirective {
    * otherwise. `callback` is optional and is invoked once the branch completed.
    *
    * Requires `this.intentDir` (a DirIntent instance) to be set by the subclass.
+   *
+   * @param {boolean} result                    Branch selector; strictly `true` takes the true branch.
+   * @param {string} [trueIntent]               Intent name to run when `result === true`.
+   * @param {Record<string, any>} [trueIntentAttributes]   Attributes passed to the true intent.
+   * @param {string} [falseIntent]              Intent name to run otherwise.
+   * @param {Record<string, any>} [falseIntentAttributes]  Attributes passed to the false intent.
+   * @param {() => void} [callback]             Invoked once the selected branch completed.
+   * @returns {Promise<void>}
    */
   async _executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
     const DirIntent = getDirIntent();
@@ -139,9 +182,11 @@ class BaseDirective {
    * so the shared form is the ordered list of assignments they all reduce to.
    * Order matters: the writes happen sequentially, exactly as before.
    *
-   * @param {object} action
-   * @param {Array} assignments  ordered tuples [actionKey, value] or
-   *                             [actionKey, value, { onlyIfTruthy: true }]
+   * @param {Action} action  The directive's action payload; `action[actionKey]`
+   *   holds the NAME of the flow attribute to write to.
+   * @param {Array<[string, any] | [string, any, {onlyIfTruthy?: boolean}]>} assignments
+   *   ordered tuples [actionKey, value] or [actionKey, value, { onlyIfTruthy: true }]
+   * @returns {Promise<void>}
    */
   async _assignAttributes(action, assignments) {
     const TiledeskChatbot = getTiledeskChatbot();

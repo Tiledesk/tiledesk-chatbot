@@ -26,10 +26,27 @@ const winston = require('../../utils/winston');
  * DirDisableInputText and DirMessageToBot) simply contribute nothing.
  */
 
+/**
+ * Type-only imports (erased at runtime, so no require and no cycle).
+ *
+ * @typedef {import('../../types').DirectiveClass} DirectiveClass
+ * @typedef {Record<string, DirectiveClass>} DirectiveRegistry
+ *   Maps a lowercase directive name to the class that handles it. Several names
+ *   may map to the same class.
+ */
+
 const DIRECTIVES_DIR = __dirname;
 const SELF = path.basename(__filename);
 
+/**
+ * Scans the directive modules in this folder and builds the
+ * directive-name -> class map from their `static directiveNames` declarations.
+ *
+ * @returns {DirectiveRegistry}
+ * @throws {Error} if two different classes claim the same directive name.
+ */
 function buildRegistry() {
+  /** @type {DirectiveRegistry} */
   const registry = {};
 
   const files = fs.readdirSync(DIRECTIVES_DIR)
@@ -71,6 +88,11 @@ function buildRegistry() {
   return registry;
 }
 
+/**
+ * The registry used by DirectivesChatbotPlug to dispatch a directive.
+ *
+ * @type {DirectiveRegistry}
+ */
 const directiveRegistry = buildRegistry();
 
 module.exports = { directiveRegistry, buildRegistry };
