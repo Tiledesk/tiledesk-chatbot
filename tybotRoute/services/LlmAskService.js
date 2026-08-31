@@ -34,25 +34,6 @@ class LlmAskService {
   constructor() { }
 
   /**
-   * Base url of the legacy knowledge-base service (DirAskGPT only).
-   * Exposed so the call site can keep logging it where it logged it before.
-   * @returns {string|undefined}
-   */
-  legacyKbBaseUrl() {
-    return kbEndpoint();
-  }
-
-  /**
-   * Base url of the ask/qa service.
-   * @param {*} [hybrid] the namespace `hybrid` flag; only a literal `true`
-   *                     selects the GPU endpoint.
-   * @returns {string|undefined}
-   */
-  qaBaseUrl(hybrid) {
-    return qaEndpoint(hybrid);
-  }
-
-  /**
    * DirAskGPT's v1 question answering call.
    *
    * Sends NO headers, exactly as before - the key travels in the body as
@@ -65,7 +46,7 @@ class LlmAskService {
   async askLegacyKb(json, caller = "(LlmAskService)") {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: this.legacyKbBaseUrl() + "/qa",
+        url: kbEndpoint() + "/qa",
         json: json,
         method: "POST"
       }
@@ -90,7 +71,7 @@ class LlmAskService {
   async ask(json, path, caller = "LlmAskService") {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: this.qaBaseUrl() + path,
+        url: qaEndpoint() + path,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -119,7 +100,7 @@ class LlmAskService {
   async askNamespace(json, hybrid, token, caller = "LlmAskService") {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: this.qaBaseUrl(hybrid) + "/qa",
+        url: qaEndpoint(hybrid) + "/qa",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token

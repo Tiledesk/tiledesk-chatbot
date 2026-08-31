@@ -72,8 +72,6 @@ class DirBrevo extends BaseDirective {
       return;
     }
 
-    winston.debug("(DirBrevo) brevo_base_url: " + brevoService.apiUrl());
-
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'Brevo', this.token);
     winston.debug("(DirBrevo) key: ", key)
     if (!key) {
@@ -105,8 +103,6 @@ class DirBrevo extends BaseDirective {
     winston.debug("(DirBrevo)  brevo_email: " + brevo_email) 
     winston.debug("(DirBrevo)  brevo_bodyParameters: ", brevo_bodyParameters)
 
-
-    winston.debug("(DirBrevo)  brevo_base_url: " + brevoService.apiUrl());
 
     const { err, resbody } = await brevoService.createContact(
       brevo_email, brevo_bodyParameters, key, "(DirBrevo)"

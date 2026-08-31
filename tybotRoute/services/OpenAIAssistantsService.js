@@ -155,7 +155,7 @@ class OpenAIAssistantsService {
             winston.error(caller + " error: ", err);
             reject(err);
           }
-          winston.debug("(DirAddTags) got response data: ", res);
+          winston.debug(caller + " got response data: ", res);
           resolve(res);
         }
       );
@@ -189,7 +189,7 @@ class OpenAIAssistantsService {
             winston.error(caller + " error: ", err);
             reject(err);
           }
-          winston.debug("(DirAddTags) got response data: ", res);
+          winston.debug(caller + " got response data: ", res);
           resolve(res);
         }
       );
@@ -222,7 +222,7 @@ class OpenAIAssistantsService {
             winston.error(caller + " error: ", err);
             reject(err);
           }
-          winston.debug("(DirAddTags) got response data: ", res);
+          winston.debug(caller + " got response data: ", res);
           resolve(res);
         }
       );

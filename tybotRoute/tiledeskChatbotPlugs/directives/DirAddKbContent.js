@@ -1,9 +1,6 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
-const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const quotasService = require("../../services/QuotasService");

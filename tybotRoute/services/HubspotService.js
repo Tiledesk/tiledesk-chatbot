@@ -23,15 +23,6 @@ class HubspotService {
   constructor() { }
 
   /**
-   * The Hubspot API base url, resolved at call time. Ends with a slash.
-   * Exposed so the call site can log it where it logged it before.
-   * @returns {string}
-   */
-  apiUrl() {
-    return hubspotEndpoint();
-  }
-
-  /**
    * Create one contact through the batch endpoint.
    *
    * The `{ inputs: [ { properties, associations: [] } ] }` envelope is
@@ -53,7 +44,7 @@ class HubspotService {
       }
 
       const HTTPREQUEST = {
-        url: this.apiUrl() + 'objects/contacts/batch/create',
+        url: hubspotEndpoint() + 'objects/contacts/batch/create',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + key

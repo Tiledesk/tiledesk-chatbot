@@ -35,14 +35,6 @@ class MakeService {
   constructor() { }
 
   /**
-   * The Make override base url, or undefined when there is none.
-   * @returns {string|undefined}
-   */
-  apiUrl() {
-    return makeEndpoint();
-  }
-
-  /**
    * POST a body to a Make webhook.
    *
    * The url selection is Make's, not the caller's: when MAKE_ENDPOINT is set
@@ -58,7 +50,7 @@ class MakeService {
   async trigger(webhookUrl, body, caller = "(MakeService)") {
     return new Promise((resolve) => {
 
-      const make_base_url = this.apiUrl();
+      const make_base_url = makeEndpoint();
       let url;
       if (make_base_url) {
         url = make_base_url + "/make/";

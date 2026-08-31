@@ -27,15 +27,6 @@ class WhatsappService {
   constructor() { }
 
   /**
-   * The Whatsapp module base url, resolved at call time.
-   * Exposed so call sites can log it exactly where they logged it before.
-   * @returns {string}
-   */
-  apiUrl() {
-    return whatsappEndpoint();
-  }
-
-  /**
    * POST a broadcast payload to the Whatsapp module.
    *
    * @param {*} payload         request body, sent as-is
@@ -46,7 +37,7 @@ class WhatsappService {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: this.apiUrl() + "/tiledesk/broadcast",
+        url: whatsappEndpoint() + "/tiledesk/broadcast",
         headers: {
           'Content-Type': 'application/json'
         },

@@ -84,8 +84,6 @@ class DirQapla extends BaseDirective {
       return;
     }
 
-    winston.debug("(DirQapla) DirQapla qapla_base_url: " + qaplaService.apiUrl());
-
     let key = action.apiKey;
 
     if (!key) {

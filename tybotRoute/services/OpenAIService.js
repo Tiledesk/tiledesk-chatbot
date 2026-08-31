@@ -23,15 +23,6 @@ class OpenAIService {
   constructor() { }
 
   /**
-   * The full completions url, resolved at call time. Exposed so the call site
-   * can keep logging it where it logged it before.
-   * @returns {string} `${OPENAI_ENDPOINT}/chat/completions`
-   */
-  completionsUrl() {
-    return openaiEndpoint() + "/chat/completions";
-  }
-
-  /**
    * POST a chat completion.
    *
    * @param {string} key      the api key, sent as "Bearer <key>"
@@ -42,7 +33,7 @@ class OpenAIService {
   async chatCompletions(key, json, caller = "(OpenAIService)") {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
-        url: this.completionsUrl(),
+        url: openaiEndpoint() + "/chat/completions",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + key

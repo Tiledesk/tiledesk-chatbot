@@ -113,8 +113,6 @@ class DirGptTask extends BaseDirective {
       }
     }
 
-    winston.debug("(DirGptTask)  openai_url " + openAIService.completionsUrl());
-
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
       caller: "(DirGptTask)",
       onIntegrationMiss: () => {

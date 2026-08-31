@@ -25,15 +25,6 @@ class BrevoService {
   constructor() { }
 
   /**
-   * The Brevo API base url, resolved at call time.
-   * Exposed so the call site can log it where it logged it before.
-   * @returns {string}
-   */
-  apiUrl() {
-    return brevoEndpoint();
-  }
-
-  /**
    * Create (or update) a Brevo contact.
    *
    * The constant envelope around the contact - the blacklist flags, the
@@ -65,7 +56,7 @@ class BrevoService {
       }
 
       const HTTPREQUEST = {
-        url: this.apiUrl() + '/contacts',
+        url: brevoEndpoint() + '/contacts',
         headers: {
           'api-key': key,
           'Content-Type': 'application/json',

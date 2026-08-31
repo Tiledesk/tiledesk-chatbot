@@ -30,8 +30,6 @@ class DirWhatsappByAttribute extends BaseDirective {
   async go(action, callback) {
     winston.debug("(DirWhatsappByAttribute) Action: ", action);
 
-    winston.debug("(DirWhatsappByAttribute) whatsapp_api_url: " + whatsappService.apiUrl());
-
     if (!action.attributeName) {
       winston.error("(DirWhatsappByAttribute) attributeName is mandatory")
       callback();

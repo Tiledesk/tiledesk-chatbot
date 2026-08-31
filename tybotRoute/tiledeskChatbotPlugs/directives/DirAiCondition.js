@@ -1,7 +1,6 @@
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
 const winston = require('../../utils/winston');
@@ -10,7 +9,6 @@ const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
 const llmAskService = require("../../services/LlmAskService");
 const { BaseDirective } = require("../BaseDirective");
-const { randomUUID } = require("crypto");
 const { Directives } = require('./Directives');
 
 
@@ -110,8 +108,6 @@ class DirAiCondition extends BaseDirective {
     const filled_context = filler.fill(action.context, requestVariables);
 
     // evaluate
-
-    winston.verbose("DirAiCondition AI_endpoint " + llmAskService.qaBaseUrl());
 
     let answer = "";
     let key;

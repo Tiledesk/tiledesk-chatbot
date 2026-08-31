@@ -69,8 +69,6 @@ class DirCustomerio extends BaseDirective {
       return;
     }
 
-    winston.debug("(DirCustomerio) customerio_base_url: " + customerioService.apiUrl()); 
-
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'customerio', this.token);
     if (!key) {
       this.logger.error("[Customer.io] Key not found in Integrations");

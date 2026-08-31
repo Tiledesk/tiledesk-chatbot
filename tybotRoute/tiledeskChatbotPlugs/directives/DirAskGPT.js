@@ -88,8 +88,6 @@ class DirAskGPT extends BaseDirective {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    winston.verbose("DirAskGPT KbEndpoint URL: ", llmAskService.legacyKbBaseUrl());
-
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
       caller: "(DirAskGPT)",
       onIntegrationMiss: () => {

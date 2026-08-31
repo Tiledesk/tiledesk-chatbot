@@ -73,8 +73,6 @@ class DirSendWhatsapp extends BaseDirective {
     payload.transaction_id = this.context.requestId;
     payload.broadcast = false;
     
-    winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsappService.apiUrl());
-
     const { err, resbody } = await whatsappService.broadcast(payload, "(DirSendWhatsapp)");
 
     if (err) {

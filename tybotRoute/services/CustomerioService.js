@@ -41,15 +41,6 @@ class CustomerioService {
   constructor() { }
 
   /**
-   * The Customer.io API base url, resolved at call time.
-   * Exposed so the call site can log it where it logged it before.
-   * @returns {string}
-   */
-  apiUrl() {
-    return customerioEndpoint();
-  }
-
-  /**
    * Submit a form.
    *
    * @param {string} formId       the Customer.io form id, interpolated into the path as-is
@@ -66,7 +57,7 @@ class CustomerioService {
       }
 
       const HTTPREQUEST = {
-        url: this.apiUrl() + "/forms/" + formId + "/submit",
+        url: customerioEndpoint() + "/forms/" + formId + "/submit",
         headers: {
           'authorization': 'Basic ' + key,
           'Content-Type': 'application/json',

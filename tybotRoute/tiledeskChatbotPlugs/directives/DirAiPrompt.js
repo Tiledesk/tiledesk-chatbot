@@ -113,8 +113,6 @@ class DirAiPrompt extends BaseDirective {
       }
     }
 
-    winston.verbose("DirAiPrompt AI_endpoint " + llmAskService.qaBaseUrl());
-
     let key;
     let publicKey = false;
     let ollama_integration;

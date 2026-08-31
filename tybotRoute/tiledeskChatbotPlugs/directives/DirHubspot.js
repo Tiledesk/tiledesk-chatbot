@@ -71,8 +71,6 @@ class DirHubspot extends BaseDirective {
       return;
     }
 
-    winston.debug("(DirHubspot) hubspot_base_url " + hubspotService.apiUrl());
-
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'hubspot', this.token);
     if (!key) {
       this.logger.error("[Hubspot] Key not found in Integrations");

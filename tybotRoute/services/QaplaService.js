@@ -24,15 +24,6 @@ class QaplaService {
   constructor() { }
 
   /**
-   * The Qapla API base url, resolved at call time.
-   * Exposed so the call site can log it where it logged it before.
-   * @returns {string}
-   */
-  apiUrl() {
-    return qaplaEndpoint();
-  }
-
-  /**
    * Look a shipment up by tracking number.
    *
    * @param {string} apiKey           the Qapla api key, sent as a query parameter
@@ -44,7 +35,7 @@ class QaplaService {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
-        url: this.apiUrl() + "/getShipment/",
+        url: qaplaEndpoint() + "/getShipment/",
         headers: {
           'Content-Type': 'application/json'
         },

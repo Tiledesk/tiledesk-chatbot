@@ -378,8 +378,6 @@ class DirAskGPTV2 extends BaseDirective {
     
     winston.debug("DirAskGPTV2 json:", json);
 
-    winston.verbose("DirAskGPTV2  KbEndpoint URL: " + llmAskService.qaBaseUrl(ns.hybrid));
-
     const { err, resbody } = await llmAskService.askNamespace(json, ns.hybrid, this.context.token, "DirAskGPTV2");
 
     if (err) {

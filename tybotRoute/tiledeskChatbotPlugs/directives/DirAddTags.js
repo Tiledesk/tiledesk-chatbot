@@ -1,10 +1,5 @@
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
-const { DirIntent } = require("./DirIntent");
-const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
-const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
-const req = require("express/lib/request");
-const { update } = require("../../models/faq");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const tiledeskApiService = require("../../services/TiledeskApiService");
