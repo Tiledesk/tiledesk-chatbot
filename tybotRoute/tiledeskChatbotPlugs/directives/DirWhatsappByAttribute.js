@@ -1,4 +1,3 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
