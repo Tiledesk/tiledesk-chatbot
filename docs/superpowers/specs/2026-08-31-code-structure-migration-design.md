@@ -483,6 +483,77 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Follow-on: remote-request extraction (user-requested)
+
+**Status: complete.** 16 commits after the migration. Requested in the user's words:
+"the directive source is still rich of business logic, I would prefer to extract
+logic that do remote requests to service so the directive structure is more
+readable."
+
+This **reverses Ruling 11**, which dropped per-vendor services because they removed
+no duplication. The user's goal is separation of concerns, not deduplication, so a
+one-caller service is fine. Done in three waves, riskiest last.
+
+| | Before | After |
+|---|---|---|
+| Directives importing `axios` directly | 26 | **2** (both deliberate) |
+| Directive LOC | 10,159 | **9,480** |
+| Services | 12 | **23** |
+
+Wave 1 — 11 Tiledesk-platform directives into `TiledeskApiService` (69→376 lines),
+removing 6 copies of `new TiledeskClient(...)`. Wave 2 — 5 vendor services plus
+`WhatsappService`. Wave 3 — 7 LLM/AI directives into `LlmAskService`,
+`OpenAIService`, `McpService`, `OpenAIAssistantsService` and `KbService`.
+
+**`DirWebRequest` and `DirWebRequestV2` are deliberately excluded** and are the only
+directives still importing `axios`. Their URL comes from `action.url`, supplied by
+the bot author — making arbitrary HTTP calls *is* the feature, so there is no
+external system to model. That they remain the only two is a useful signal.
+
+**How this was verified.** Almost all of Waves 2 and 3 is ungated (those directives'
+tests are quarantined or absent), so the green suite proved little. Equivalence was
+established on the wire instead: the old inline body and the new service were run
+side by side against a local HTTP server, comparing outgoing URL, method, headers
+and body plus every success and error branch — **291 comparisons across the three
+waves, all identical**. The test invariant held: no file under `tybotRoute/test/`
+was modified except one authorised note appended to `quarantine/README.md`.
+
+### Two latent bugs this surfaced and fixed
+
+1. **One boot could resolve two different API hosts.** `config/endpoints.js` read
+   `process.env` while `runtimeContext` held `startApp`'s `settings`. They matched
+   only because the root `index.js` passes one into the other. `startApp` now seeds
+   the endpoint config, so both agree by construction. This also fixed
+   `ChatbotParametersClient`, which built `undefined/ext/reserved/parameters/...`
+   for any embedder configuring `TILEBOT_ENDPOINT` through settings rather than env.
+2. **A double callback on the Customer.io success path.** `utils/http.js` invoked
+   its callback twice on an accepted 200-with-body, so `DirCustomerio`'s success
+   branch re-entered the directive pipeline twice. Now `else if`.
+
+### Did readability actually improve?
+
+Yes, and the honest measure is not the −679 LOC — it is **nesting depth**. Every
+converted directive lost 2-3 levels of indentation:
+`httpUtils.request(REQ, async (err, resbody) => { if (err) {...} else {...} })`
+became `const { err, resbody } = await service.x(...)`. `DirBrevo`, `DirHubspot`,
+`DirCustomerio`, `DirQapla`, `DirMake` and `DirGptTask` now read as flow: guards →
+filler → one service call → branch.
+
+Stated plainly: **the three big LLM directives are still big** — `DirAiPrompt` 587,
+`DirAskGPTV2` 564, `DirAiCondition` 453. Their HTTP wiring is gone, but what remains
+is ollama/vllm/custom key-and-model branching and a ~120-line JSON assembly. That is
+genuinely business logic and belongs in the directive. If those three files are what
+prompted the request, **the next target is that branching, not the HTTP** —
+`LLMKeyService` already exists as the seam.
+
+### Accepted trade-off
+
+Four LLM endpoint URLs were logged at `winston.verbose`; the services log the full
+request at `winston.debug`. Since verbose(4) does not include debug(5), those URLs
+are no longer visible at `LOG_LEVEL=verbose`. Promoting the request logs to verbose
+was rejected: it would expose `Authorization: JWT <token>` and end-user prompts at a
+broader log level. The URLs remain visible at `LOG_LEVEL=debug`.
+
 ## Migration outcome — all phases complete
 
 **Status: Phases 0-7 complete** on `refactor/code-structure-migration` (32 commits,
