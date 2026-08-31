@@ -3,9 +3,7 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-// DirQapla never had a private #myrequest: it already shares utils/HttpUtils,
-// which accepts any 2xx. Left as is so its accepted statuses do not change.
-const httpUtils = require("../../utils/HttpUtils");
+const qaplaService = require("../../services/QaplaService");
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
@@ -86,8 +84,7 @@ class DirQapla extends BaseDirective {
       return;
     }
 
-    const qapla_base_url = process.env.QAPLA_ENDPOINT || "https://api.qapla.it/1.2"
-    winston.debug("(DirQapla) DirQapla qapla_base_url: " + qapla_base_url);
+    winston.debug("(DirQapla) DirQapla qapla_base_url: " + qaplaService.apiUrl());
 
     let key = action.apiKey;
 
@@ -113,71 +110,56 @@ class DirQapla extends BaseDirective {
       return;
     }
 
-    const QAPLA_HTTPREQUEST = {
-      url: qapla_base_url + "/getShipment/",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      params: {
-        apiKey: key,
-        trackingNumber: tracking_number
-      },
-      method: "GET"
-    }
-    winston.debug("(DirQapla) HttpRequest ", QAPLA_HTTPREQUEST);
+    const { err, resbody } = await qaplaService.getShipment(key, tracking_number, "(DirQapla)");
 
-    httpUtils.request(
-      QAPLA_HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          if (callback) {
-            winston.debug("(DirQapla) getShipment err: " + err.message);
-            error = "Unable to get shipment";
-            await this._assignAttributes(action, [
-              ['assignStatusTo', status],
-              ['assignResultTo', result, { onlyIfTruthy: true }],
-              ['assignErrorTo', error]
-            ]);
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else if (callback) {
-          winston.debug("(DirQapla)  getShipment resbody: ", resbody);
-
-          if (resbody.getShipment &&
-            resbody.getShipment.shipments &&
-            resbody.getShipment.shipments[0] &&
-            resbody.getShipment.shipments[0].status &&
-            resbody.getShipment.shipments[0].status.qaplaStatus &&
-            resbody.getShipment.shipments[0].status.qaplaStatus.status) {
-            status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
-          }
-          // status = resbody.getShipment?.shipments[0]?.status?.qaplaStatus?.status; // doesn't works
-          
-          if (resbody.getShipment && 
-              resbody.getShipment.result)
-          result = resbody.getShipment?.result;
-          error = resbody.getShipment?.error;
-
-          await this._assignAttributes(action, [
-            ['assignStatusTo', status],
-            ['assignResultTo', result, { onlyIfTruthy: true }],
-            ['assignErrorTo', error]
-          ]);
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
+    if (err) {
+      if (callback) {
+        winston.debug("(DirQapla) getShipment err: " + err.message);
+        error = "Unable to get shipment";
+        await this._assignAttributes(action, [
+          ['assignStatusTo', status],
+          ['assignResultTo', result, { onlyIfTruthy: true }],
+          ['assignErrorTo', error]
+        ]);
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
           return;
         }
+        callback();
+        return;
       }
-    )
+    } else if (callback) {
+      winston.debug("(DirQapla)  getShipment resbody: ", resbody);
+
+      if (resbody.getShipment &&
+        resbody.getShipment.shipments &&
+        resbody.getShipment.shipments[0] &&
+        resbody.getShipment.shipments[0].status &&
+        resbody.getShipment.shipments[0].status.qaplaStatus &&
+        resbody.getShipment.shipments[0].status.qaplaStatus.status) {
+        status = resbody.getShipment.shipments[0].status.qaplaStatus.status;
+      }
+      // status = resbody.getShipment?.shipments[0]?.status?.qaplaStatus?.status; // doesn't works
+
+      if (resbody.getShipment && 
+          resbody.getShipment.result)
+      result = resbody.getShipment?.result;
+      error = resbody.getShipment?.error;
+
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignResultTo', result, { onlyIfTruthy: true }],
+        ['assignErrorTo', error]
+      ]);
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
   }
 
 }

@@ -42,7 +42,12 @@ const ENDPOINT_KEYS = [
   'KB_ENDPOINT_QA',
   'KB_ENDPOINT_QA_GPU',
   'OPENAI_ENDPOINT',
-  'WHATSAPP_ENDPOINT'
+  'WHATSAPP_ENDPOINT',
+  'BREVO_ENDPOINT',
+  'CUSTOMERIO_ENDPOINT',
+  'HUBSPOT_ENDPOINT',
+  'MAKE_ENDPOINT',
+  'QAPLA_ENDPOINT'
 ];
 
 /** Values seeded by `configure()`. Empty until startApp runs. */
@@ -169,6 +174,63 @@ function whatsappEndpoint() {
   return apiEndpoint() + "/modules/whatsapp/api";
 }
 
+/* ------------------------------------------------------------------ vendors
+ *
+ * The five external systems below were each resolved inline in their own
+ * directive, as `process.env.X_ENDPOINT || "<the vendor's production url>"`.
+ * The variables exist so a test can point a directive at a local stub; the
+ * literal default is the real service. Both halves are reproduced verbatim.
+ */
+
+/**
+ * Brevo (ex Sendinblue) API base url. Used by BrevoService.
+ * @returns {string}
+ */
+function brevoEndpoint() {
+  return resolve('BREVO_ENDPOINT') || "https://api.brevo.com/v3";
+}
+
+/**
+ * Customer.io track API base url. Used by CustomerioService.
+ * @returns {string}
+ */
+function customerioEndpoint() {
+  return resolve('CUSTOMERIO_ENDPOINT') || "https://track.customer.io/api/v1";
+}
+
+/**
+ * Hubspot CRM API base url. Note the TRAILING SLASH in the default: the call
+ * site appends "objects/contacts/batch/create" with no separator of its own,
+ * so the slash is load bearing and is kept exactly as it was.
+ * @returns {string}
+ */
+function hubspotEndpoint() {
+  return resolve('HUBSPOT_ENDPOINT') || "https://api.hubapi.com/crm/v3/";
+}
+
+/**
+ * Qapla shipment API base url. Used by QaplaService.
+ * @returns {string}
+ */
+function qaplaEndpoint() {
+  return resolve('QAPLA_ENDPOINT') || "https://api.qapla.it/1.2";
+}
+
+/**
+ * The Make override base url, and the ONLY endpoint here with no default.
+ *
+ * DirMake posts to a webhook url supplied by the bot author, EXCEPT when
+ * MAKE_ENDPOINT is set, in which case the author's url is ignored entirely and
+ * the request goes to `${MAKE_ENDPOINT}/make/`. The original comment is worth
+ * repeating: this variable is for testing only and must not be defined in a
+ * production environment.
+ *
+ * @returns {string|undefined} undefined when no override is configured.
+ */
+function makeEndpoint() {
+  return resolve('MAKE_ENDPOINT');
+}
+
 module.exports = {
   configure,
   apiEndpoint,
@@ -176,5 +238,10 @@ module.exports = {
   qaEndpoint,
   kbEndpoint,
   openaiEndpoint,
-  whatsappEndpoint
+  whatsappEndpoint,
+  brevoEndpoint,
+  customerioEndpoint,
+  hubspotEndpoint,
+  qaplaEndpoint,
+  makeEndpoint
 };

@@ -5,10 +5,8 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
-const http = require("../../utils/http");
+const brevoService = require("../../services/BrevoService");
 const { Directives } = require('./Directives');
-
-const ACCEPTED_STATUS_CODES = [200, 201];
 
 class DirBrevo extends BaseDirective {
 
@@ -74,8 +72,7 @@ class DirBrevo extends BaseDirective {
       return;
     }
 
-    const brevo_base_url = process.env.BREVO_ENDPOINT || "https://api.brevo.com/v3"
-    winston.debug("(DirBrevo) brevo_base_url: " + brevo_base_url);
+    winston.debug("(DirBrevo) brevo_base_url: " + brevoService.apiUrl());
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'Brevo', this.token);
     winston.debug("(DirBrevo) key: ", key)
@@ -109,94 +106,66 @@ class DirBrevo extends BaseDirective {
     winston.debug("(DirBrevo)  brevo_bodyParameters: ", brevo_bodyParameters)
 
 
-    let json = {
-      email: brevo_email,
-      attributes: brevo_bodyParameters,
-      "emailBlacklisted": false,
-			"smsBlacklisted": false,
-			"listIds": [
-					  0
-			],
-			"updateEnabled": false,
-			"smtpBlacklistSender": [
-					"info@mytest.com"
-			]
-    }
+    winston.debug("(DirBrevo)  brevo_base_url: " + brevoService.apiUrl());
 
-    winston.debug("(DirBrevo)  brevo_base_url: " + brevo_base_url);
-    winston.debug("(DirBrevo)  json: ", json);
-    const BREVO_HTTPREQUEST = {
-      url: brevo_base_url + '/contacts',
-      headers: {
-        'api-key': key,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      json: json,
-      method: "POST"
-    }
-    winston.debug("(DirBrevo) HttpRequest ", BREVO_HTTPREQUEST);
+    const { err, resbody } = await brevoService.createContact(
+      brevo_email, brevo_bodyParameters, key, "(DirBrevo)"
+    );
 
-    http.request(
-      BREVO_HTTPREQUEST,
-      async (err, resbody) => {
-        if (err) {
-          if (callback) {
-            this.logger.error("[Brevo] Error response: ", err.response);
-            winston.debug("(DirBrevo) err response: ", err.response)
-            winston.debug("(DirBrevo)  err data:", err.response.data)
+    if (err) {
+      if (callback) {
+        this.logger.error("[Brevo] Error response: ", err.response);
+        winston.debug("(DirBrevo) err response: ", err.response)
+        winston.debug("(DirBrevo)  err data:", err.response.data)
 
-            let result = null;
-            let status = null;
-            let error;
+        let result = null;
+        let status = null;
+        let error;
 
-            if (err.response &&
-                err.response.status) {
-                  status = err.response.status;
-            }
+        if (err.response &&
+            err.response.status) {
+              status = err.response.status;
+        }
 
-            if (err.response &&
-                err.response.data &&
-                err.response.data.message) {
-                  error = err.response.data.message;
-            }
+        if (err.response &&
+            err.response.data &&
+            err.response.data.message) {
+              error = err.response.data.message;
+        }
 
-            await this._assignAttributes(action, [
-              ['assignStatusTo', status],
-              ['assignResultTo', result],
-              ['assignErrorTo', error]
-            ]);
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else if (callback) {
-          winston.debug("(DirBrevo) resbody: ", resbody);
-
-          let status = 201;
-          let error = null;
-          let result = JSON.stringify(resbody, null, 2).slice(2, -1);
-          this.logger.error("[Brevo] Result: ", result);
-          await this._assignAttributes(action, [
-            ['assignStatusTo', status],
-            ['assignResultTo', result],
-            ['assignErrorTo', error]
-          ]);
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
-            callback(true);
-            return;
-          }
-          callback();
+        await this._assignAttributes(action, [
+          ['assignStatusTo', status],
+          ['assignResultTo', result],
+          ['assignErrorTo', error]
+        ]);
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
           return;
         }
-      },
-      { acceptedStatusCodes: ACCEPTED_STATUS_CODES }
-    );
+        callback();
+        return;
+      }
+    } else if (callback) {
+      winston.debug("(DirBrevo) resbody: ", resbody);
+
+      let status = 201;
+      let error = null;
+      let result = JSON.stringify(resbody, null, 2).slice(2, -1);
+      this.logger.error("[Brevo] Result: ", result);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignResultTo', result],
+        ['assignErrorTo', error]
+      ]);
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
 
   }
 

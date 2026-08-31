@@ -5,16 +5,8 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
-const http = require("../../utils/http");
+const customerioService = require("../../services/CustomerioService");
 const { Directives } = require('./Directives');
-
-// Customer.io answers a successful form submit with 204 and an empty body, so
-// the *request* body is handed back to the callback in that case.
-const REQUEST_CONFIG = {
-  acceptedStatusCodes: [200, 204],
-  fallbackToRequestData: true,
-  statusErrorMessage: "Response status is not 204"
-};
 
 class DirCustomerio extends BaseDirective {
 
@@ -77,8 +69,7 @@ class DirCustomerio extends BaseDirective {
       return;
     }
 
-    const customerio_base_url = process.env.CUSTOMERIO_ENDPOINT || "https://track.customer.io/api/v1";
-    winston.debug("(DirCustomerio) customerio_base_url: " + customerio_base_url); 
+    winston.debug("(DirCustomerio) customerio_base_url: " + customerioService.apiUrl()); 
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'customerio', this.token);
     if (!key) {
@@ -105,83 +96,63 @@ class DirCustomerio extends BaseDirective {
     }
     winston.debug("(DirCustomerio)  bodyParameters filler: ", bodyParameters)
 
-    let json = {
-      data: bodyParameters
-    }
+    const { err, resbody } = await customerioService.submitForm(
+      formid, bodyParameters, key, "(DirCustomerio)"
+    );
 
-    const CUSTOMERIO_HTTPREQUEST = {
-      url: customerio_base_url + "/forms/" + formid + "/submit",
-      headers: {
-        'authorization': 'Basic ' + key,
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'User-Agent': 'TiledeskBotRuntime',
-        'Accept': '*/*'
-      },
-      json: json,
-      method: "POST"
-    }
-    winston.debug("(DirCustomerio) HttpRequest: ", CUSTOMERIO_HTTPREQUEST); 
+    if (err) {
+      if (callback) {
+        this.logger.error("[Customer.io] Error response: ", err.response);
+        winston.debug("(DirCustomerio) err response:", err.response)
+        winston.debug("(DirCustomerio) err data:", err.response.data)
 
-    http.request(
-      CUSTOMERIO_HTTPREQUEST,
-      async (err, resbody) => {
-        if (err) {
-          if (callback) {
-            this.logger.error("[Customer.io] Error response: ", err.response);
-            winston.debug("(DirCustomerio) err response:", err.response)
-            winston.debug("(DirCustomerio) err data:", err.response.data)
+        let status = null;
+        let error;
 
-            let status = null;
-            let error;
+        if (err.response &&
+          err.response.status) {
+          status = err.response.status;
+        }
+        if (err.response &&
+          err.response.data &&
+          err.response.data.meta && err.response.data.meta.error) {
+          error = err.response.data.meta.error;
+        }
 
-            if (err.response &&
-              err.response.status) {
-              status = err.response.status;
-            }
-            if (err.response &&
-              err.response.data &&
-              err.response.data.meta && err.response.data.meta.error) {
-              error = err.response.data.meta.error;
-            }
+        winston.debug("(DirCustomerio) err data status: " + status);
+        winston.debug("(DirCustomerio) err data error: ", error);
 
-            winston.debug("(DirCustomerio) err data status: " + status);
-            winston.debug("(DirCustomerio) err data error: ", error);
-
-            await this._assignAttributes(action, [
-              ['assignStatusTo', status],
-              ['assignErrorTo', error]
-            ]);
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, null, falseIntent, null);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-
-          }
-        } else if (callback) {
-          winston.debug("(DirCustomerio) DirCustomerio resbody: ", resbody); 
-
-          let status = 204;
-          let error = null;
-          this.logger.error("[Customer.io] Response status: ", status);
-          await this._assignAttributes(action, [
-            ['assignStatusTo', status],
-            ['assignErrorTo', error]
-          ]);
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, null, falseIntent, null);
-            callback(true);
-            return;
-          }
-          callback();
+        await this._assignAttributes(action, [
+          ['assignStatusTo', status],
+          ['assignErrorTo', error]
+        ]);
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, null, falseIntent, null);
+          callback(true);
           return;
         }
-      },
-      REQUEST_CONFIG
-    );
+        callback();
+        return;
+
+      }
+    } else if (callback) {
+      winston.debug("(DirCustomerio) DirCustomerio resbody: ", resbody); 
+
+      let status = 204;
+      let error = null;
+      this.logger.error("[Customer.io] Response status: ", status);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignErrorTo', error]
+      ]);
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, null, falseIntent, null);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
 
   }
 

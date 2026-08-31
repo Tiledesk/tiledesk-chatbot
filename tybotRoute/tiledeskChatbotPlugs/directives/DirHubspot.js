@@ -5,10 +5,8 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
-const http = require("../../utils/http");
+const hubspotService = require("../../services/HubspotService");
 const { Directives } = require('./Directives');
-
-const ACCEPTED_STATUS_CODES = [200, 201];
 
 class DirHubspot extends BaseDirective {
 
@@ -73,8 +71,7 @@ class DirHubspot extends BaseDirective {
       return;
     }
 
-    const hubspot_base_url = process.env.HUBSPOT_ENDPOINT || "https://api.hubapi.com/crm/v3/";
-    winston.debug("(DirHubspot) hubspot_base_url " + hubspot_base_url);
+    winston.debug("(DirHubspot) hubspot_base_url " + hubspotService.apiUrl());
 
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'hubspot', this.token);
     if (!key) {
@@ -94,84 +91,66 @@ class DirHubspot extends BaseDirective {
     }
     winston.debug("(DirHubspot) bodyParameters filled: ", bodyParameters);
 
-    let json = {
-      inputs: [
-        { properties: bodyParameters, associations: [] }
-      ]
-    }
-    const HUBSPOT_HTTPREQUEST = {
-      url: hubspot_base_url + 'objects/contacts/batch/create',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      json: json,
-      method: "POST"
-    }
-    winston.debug("(DirHubspot) HttpRequest ", HUBSPOT_HTTPREQUEST);
+    const { err, resbody } = await hubspotService.batchCreateContacts(
+      bodyParameters, key, "(DirHubspot)"
+    );
 
-    http.request(
-      HUBSPOT_HTTPREQUEST,
-      async (err, resbody) => {
-        if (err) {
-          if (callback) {
-            this.logger.error("[Hubspot] Error response: ", err.response);
-            winston.error("(DirHubspot)  err response: ", err.response.data)
-            let result = null;
-            let status = null;
-            let error;
+    if (err) {
+      if (callback) {
+        this.logger.error("[Hubspot] Error response: ", err.response);
+        winston.error("(DirHubspot)  err response: ", err.response.data)
+        let result = null;
+        let status = null;
+        let error;
 
-            if (err.response &&
-                err.response.status) {
-                  status = err.response.status;
-            }
+        if (err.response &&
+            err.response.status) {
+              status = err.response.status;
+        }
 
-            if (err.response &&
-                err.response.data &&
-                err.response.data.message) {
-                  error = err.response.data.message;
-            }
+        if (err.response &&
+            err.response.data &&
+            err.response.data.message) {
+              error = err.response.data.message;
+        }
 
-            winston.debug("(DirHubspot) err data result: " + result);
-            winston.debug("(DirHubspot) err data status: " + status);
-            winston.debug("(DirHubspot) err data error: ", error);
+        winston.debug("(DirHubspot) err data result: " + result);
+        winston.debug("(DirHubspot) err data status: " + status);
+        winston.debug("(DirHubspot) err data error: ", error);
 
-            await this._assignAttributes(action, [
-              ['assignStatusTo', status],
-              ['assignResultTo', result],
-              ['assignErrorTo', error]
-            ]);
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else if (callback) {
-          winston.debug("(DirHubspot) resbody: ", resbody);
-
-          let status = 201;
-          let error = null;
-          let result = resbody;
-          this.logger.error("[Hubspot] Result: ", result);
-          await this._assignAttributes(action, [
-            ['assignStatusTo', status],
-            ['assignResultTo', result],
-            ['assignErrorTo', error]
-          ]);
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
-            callback(true);
-            return;
-          }
-          callback();
+        await this._assignAttributes(action, [
+          ['assignStatusTo', status],
+          ['assignResultTo', result],
+          ['assignErrorTo', error]
+        ]);
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
           return;
         }
-      },
-      { acceptedStatusCodes: ACCEPTED_STATUS_CODES }
-    );
+        callback();
+        return;
+      }
+    } else if (callback) {
+      winston.debug("(DirHubspot) resbody: ", resbody);
+
+      let status = 201;
+      let error = null;
+      let result = resbody;
+      this.logger.error("[Hubspot] Result: ", result);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignResultTo', result],
+        ['assignErrorTo', error]
+      ]);
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
 
   }
 
