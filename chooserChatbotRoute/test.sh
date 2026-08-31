@@ -1,1 +1,0 @@
-npx mocha test/chooser_test.js

@@ -13,10 +13,6 @@ const templates = require("./templatesRoute");
 const templatesRoute = templates.router;
 app.use("/chatbots", templatesRoute);
 
-// const chooser_bot = require("./chooserChatbotRoute");
-// const chooserRoute = chooser_bot.router;
-// app.use("/langbot", chooserRoute);
-
 // TEMP
 // const bots_data = require('./tybotRoute/test/conversation-actions_bot.js').bots_data;
 
