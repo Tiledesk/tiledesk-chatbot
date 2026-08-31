@@ -4,11 +4,15 @@ const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
 const { BaseDirective } = require("../BaseDirective");
 const dataTablesService = require("../../services/DataTablesService");
+const { Directives } = require('./Directives');
 
 const SUPPORTED_OPERATIONS = ['get', 'insert', 'update', 'delete', 'upsert'];
 const ROW_DOCUMENT_OPERATIONS = ['insert', 'update', 'delete', 'upsert'];
 
 class DirDataTables extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.DATA_TABLES];
 
   _conditionLabels = {
     trueExecute: "[DataTables] executing true condition",

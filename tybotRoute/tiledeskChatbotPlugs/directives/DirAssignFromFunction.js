@@ -2,8 +2,12 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot.js');
 const winston = require('../../utils/winston')
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirAssignFromFunction extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.FUNCTION_VALUE];
 
   constructor(context) {
     super(context);

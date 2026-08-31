@@ -4,10 +4,14 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 let levels = ['error', 'warn', 'info', 'debug'];
 
 class DirFlowLog extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.FLOW_LOG];
 
   constructor(context) {
     super(context);

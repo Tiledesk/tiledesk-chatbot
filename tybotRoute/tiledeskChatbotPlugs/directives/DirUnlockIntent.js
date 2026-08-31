@@ -1,8 +1,12 @@
 const winston = require('../../utils/winston');
 const IntentLock = require('../../engine/IntentLock');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirUnlockIntent extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.UNLOCK_INTENT];
 
   constructor(context) {
     super(context);

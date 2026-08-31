@@ -4,8 +4,12 @@ const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst.js')
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirDeflectToHelpCenter extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.ASK_HELP_CENTER];
 
   constructor(context) {
     super(context);

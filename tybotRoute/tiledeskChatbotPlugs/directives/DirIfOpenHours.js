@@ -4,8 +4,12 @@ let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirIfOpenHours extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.IF_OPEN_HOURS];
 
   constructor(context) {
     super(context);

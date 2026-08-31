@@ -5,8 +5,12 @@ const { IntentForm } = require('../../engine/IntentForm.js');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirForm extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.FORM];
   constructor(context) {
     super(context);
     this.chatbot = context.chatbot;

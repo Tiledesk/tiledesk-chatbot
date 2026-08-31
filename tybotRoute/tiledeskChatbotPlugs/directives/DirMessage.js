@@ -7,6 +7,9 @@ const { BaseDirective } = require('../BaseDirective');
 
 class DirMessage extends BaseDirective {
 
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.HMESSAGE, Directives.MESSAGE];
+
   constructor(context) {
     super(context);
     this.supportRequest = this.context.supportRequest;

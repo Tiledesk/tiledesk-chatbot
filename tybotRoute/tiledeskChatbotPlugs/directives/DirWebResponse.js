@@ -4,8 +4,12 @@ const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
 let axios = require('axios');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirWebResponse extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.WEB_RESPONSE];
 
   execute(directive, callback) {
     winston.debug("Execute WebResponse directive: ", directive);

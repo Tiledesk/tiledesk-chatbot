@@ -3,8 +3,12 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirJSONCondition extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.JSON_CONDITION];
 
   constructor(context) {
     super(context);

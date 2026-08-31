@@ -7,6 +7,9 @@ const { BaseDirective } = require('../BaseDirective');
 
 class DirMoveToUnassigned extends BaseDirective {
 
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.MOVE_TO_UNASSIGNED];
+
   constructor(context) {
     super(context);
 

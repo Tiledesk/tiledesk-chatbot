@@ -13,12 +13,16 @@ const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
+const { Directives } = require('./Directives');
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
 
 
 class DirAiPrompt extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.AI_PROMPT];
 
   _conditionLabels = {
     trueExecute: "[AI Prompt] executing true condition",

@@ -3,8 +3,12 @@ const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const winston = require('../../utils/winston');
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 class DirClose extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.CLOSE];
 
     constructor(context) {
       super(context);

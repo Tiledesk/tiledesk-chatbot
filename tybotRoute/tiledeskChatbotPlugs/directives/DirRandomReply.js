@@ -4,8 +4,12 @@ const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirRandomReply extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.RANDOM_REPLY];
 
   constructor(context) {
     super(context);

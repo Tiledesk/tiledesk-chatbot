@@ -20,6 +20,7 @@ const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
+const { Directives } = require('./Directives');
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -54,6 +55,9 @@ function getRagContextTemplate(modelName) {
 const PINECONE_RERANKING = process.env.PINECONE_RERANKING === true || process.env.PINECONE_RERANKING === "true";
 
 class DirAskGPTV2 extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.ASK_GPT_V2];
 
   constructor(context) {
     super(context);

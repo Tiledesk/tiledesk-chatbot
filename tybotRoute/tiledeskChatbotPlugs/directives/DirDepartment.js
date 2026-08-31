@@ -1,8 +1,12 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const winston = require('../../utils/winston');
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 class DirDepartment extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.DEPARTMENT];
 
   constructor(context) {
     super(context);

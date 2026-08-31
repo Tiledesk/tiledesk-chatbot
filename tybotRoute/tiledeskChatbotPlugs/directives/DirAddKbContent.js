@@ -11,8 +11,12 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 class DirAddKbContent extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.ADD_KB_CONTENT];
 
   constructor(context) {
     super(context);

@@ -8,8 +8,12 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 class DirAskGPT extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.ASK_GPT];
 
   constructor(context) {
     super(context);

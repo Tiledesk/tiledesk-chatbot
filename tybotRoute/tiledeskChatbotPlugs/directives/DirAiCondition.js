@@ -13,9 +13,13 @@ const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const { randomUUID } = require("crypto");
+const { Directives } = require('./Directives');
 
 
 class DirAiCondition extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.AI_CONDITION];
 
   _conditionLabels = {
     trueExecute: "[AI Condition] executing true condition",

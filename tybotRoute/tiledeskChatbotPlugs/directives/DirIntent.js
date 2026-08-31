@@ -4,8 +4,12 @@ const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirIntent extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.INTENT];
 
   constructor(context) {
     super(context);

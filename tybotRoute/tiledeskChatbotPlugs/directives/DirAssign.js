@@ -5,8 +5,12 @@ const { parseArgsStringToArgv } = require('string-argv');
 const minimist = require('minimist');
 const winston = require('../../utils/winston')
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirAssign extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.ASSIGN];
 
   execute(directive, callback) {
     winston.verbose("Execute Assign directive");

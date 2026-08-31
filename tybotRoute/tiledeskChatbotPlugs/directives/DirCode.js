@@ -3,8 +3,12 @@ const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirCode extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.CODE];
 
   execute(directive, callback) {
     winston.verbose("Execute Code directive");

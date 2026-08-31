@@ -5,10 +5,14 @@ const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 let whatsapp_api_url;
 
 class DirSendWhatsapp extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.SEND_WHATSAPP];
 
   constructor(context) {
     super(context);

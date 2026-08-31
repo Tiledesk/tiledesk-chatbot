@@ -5,8 +5,12 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirWebRequestV2 extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.WEB_REQUEST_V2];
 
   _conditionLabels = {
     trueExecute: "WebRequest: executing true condition",

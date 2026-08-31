@@ -6,10 +6,14 @@ const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const http = require("../../utils/http");
+const { Directives } = require('./Directives');
 
 const ACCEPTED_STATUS_CODES = [200, 201];
 
 class DirHubspot extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.HUBSPOT];
 
   constructor(context) {
     super(context);

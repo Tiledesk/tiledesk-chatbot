@@ -3,8 +3,12 @@ const { parseArgsStringToArgv } = require('string-argv');
 const minimist = require('minimist');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirFireTiledeskEvent extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.FIRE_TILEDESK_EVENT];
 
   constructor(context) {
     super(context);

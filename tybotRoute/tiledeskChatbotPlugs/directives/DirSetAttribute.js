@@ -6,6 +6,7 @@ const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 const schema = {
     "type": "object",
@@ -72,6 +73,9 @@ const schema = {
 
 
 class DirSetAttribute extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.SET_ATTRIBUTE];
 
     execute(directive, callback) {
         winston.verbose("Execute SetAttribute directive");

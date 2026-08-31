@@ -6,8 +6,12 @@ let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const { BaseDirective } = require("../BaseDirective");
+const { Directives } = require('./Directives');
 
 class DirMake extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.MAKE];
 
   constructor(context) {
     super(context);

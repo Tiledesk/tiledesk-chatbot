@@ -1,8 +1,12 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirRemoveCurrentBot extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.REMOVE_CURRENT_BOT];
 
   constructor(context) {
     super(context);

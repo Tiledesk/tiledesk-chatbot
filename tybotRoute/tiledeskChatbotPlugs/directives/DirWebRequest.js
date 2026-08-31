@@ -5,8 +5,12 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirWebRequest extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.WEB_REQUEST];
 
   execute(directive, callback) {
     winston.verbose("Execute WebRequest directive");

@@ -5,8 +5,12 @@ let axios = require('axios');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston')
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirReply extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.REPLY, Directives.DTMF_FORM, Directives.DTMF_MENU, Directives.BLIND_TRANSFER, Directives.SPEECH_FORM, Directives.PLAY_PROMPT, Directives.AUDIO_RECORD];
 
   constructor(context) {
     super(context);

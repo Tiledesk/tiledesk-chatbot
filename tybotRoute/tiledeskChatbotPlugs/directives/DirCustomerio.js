@@ -6,6 +6,7 @@ const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const http = require("../../utils/http");
+const { Directives } = require('./Directives');
 
 // Customer.io answers a successful form submit with 204 and an empty body, so
 // the *request* body is handed back to the callback in that case.
@@ -16,6 +17,9 @@ const REQUEST_CONFIG = {
 };
 
 class DirCustomerio extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.CUSTOMERIO];
 
   constructor(context) {
     super(context);

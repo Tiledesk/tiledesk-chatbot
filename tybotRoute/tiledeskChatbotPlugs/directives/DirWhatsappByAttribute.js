@@ -3,10 +3,14 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const httpUtils = require("../../utils/HttpUtils");
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 let whatsapp_api_url;
 
 class DirWhatsappByAttribute extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.WHATSAPP_ATTRIBUTE];
 
   execute(directive, callback) {
     winston.verbose("Execute WhatsappByAttribute directive");

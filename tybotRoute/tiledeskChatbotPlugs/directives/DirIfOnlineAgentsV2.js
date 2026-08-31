@@ -6,8 +6,12 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirIfOnlineAgentsV2 extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.IF_ONLINE_AGENTS_V2];
 
   constructor(context) {
     super(context);

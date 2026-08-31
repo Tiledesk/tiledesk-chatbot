@@ -8,8 +8,12 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirReplaceBotV2 extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.REPLACE_BOT_V2];
 
   constructor(context) {
     super(context);

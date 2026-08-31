@@ -2,8 +2,12 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirWait extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.WAIT];
 
   constructor(context) {
     super(context);

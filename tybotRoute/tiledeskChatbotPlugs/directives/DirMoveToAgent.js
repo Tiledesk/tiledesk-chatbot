@@ -8,6 +8,9 @@ const { BaseDirective } = require('../BaseDirective');
 
 class DirMoveToAgent extends BaseDirective {
 
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.AGENT];
+
   constructor(context) {
     super(context);
 

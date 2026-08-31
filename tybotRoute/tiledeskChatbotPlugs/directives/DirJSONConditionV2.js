@@ -4,6 +4,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskWhenExpression } = require('../../TiledeskWhenExpression');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 /**
  * DirJSONConditionV2
@@ -20,6 +21,9 @@ const { BaseDirective } = require('../BaseDirective');
  * guaranteed to be called EXACTLY ONCE on every path, including errors.
  */
 class DirJSONConditionV2 extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.JSON_CONDITION_2];
 
   constructor(context) {
     super(context);

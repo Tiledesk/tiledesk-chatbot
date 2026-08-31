@@ -4,8 +4,12 @@ const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');
 const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('./Directives');
 
 class DirConnectBlock extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.CONNECT_BLOCK];
   constructor(context) {
     super(context);
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
