@@ -52,6 +52,63 @@ class KBService {
     })
   }
 
+  /**
+   * Look a namespace up by name OR by id, resolving `null` when the lookup
+   * fails and `undefined` when it succeeds but nothing matches.
+   *
+   * DirAddKbContent and DirAskGPTV2 each carried a byte-identical private
+   * `getNamespace(name, id)`; the ONLY difference was the winston prefix,
+   * which `caller` reproduces. It is deliberately NOT merged with
+   * `getNamespace` above: that one rejects on error (with an undeclared
+   * `reject`, see its own note), returns `namespace || null`, and validates
+   * that the body is an array. The directives' copy does none of that, and
+   * both call sites test the result with a bare `if (!ns)`, so the
+   * undefined-vs-null distinction is invisible to them but is preserved here
+   * anyway rather than "tidied".
+   *
+   * The url was built from the directive's `this.API_ENDPOINT`, which
+   * `startApp` seeds from `endpoints.apiEndpoint()` - the same value this
+   * resolves.
+   *
+   * @param {string} id_project
+   * @param {string} token      raw JWT (sent as "JWT <token>")
+   * @param {string|null} name  when truthy, match on `n.name === name`
+   * @param {string|null} id    otherwise, match on `n.id === id`
+   * @param {string} [caller]   log prefix, e.g. "DirAskGPTV2"
+   * @returns {Promise<object|null|undefined>} never rejects
+   */
+  async getNamespaceOrNull(id_project, token, name, id, caller = "KbService") {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: apiEndpoint() + "/" + id_project + "/kb/namespace/all",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + token
+        },
+        method: "GET"
+      }
+      winston.debug(caller + " get all namespaces HttpRequest", HTTPREQUEST);
+      httpUtils.request(
+        HTTPREQUEST, async (err, namespaces) => {
+          if (err) {
+            winston.error(caller + " get all namespaces err: ", err);
+            resolve(null)
+          } else {
+            winston.debug(caller + " get all namespaces resbody: ", namespaces);
+            if (name) {
+              let namespace = namespaces.find(n => n.name === name);
+              resolve(namespace);
+            } else {
+              let namespace = namespaces.find(n => n.id === id);
+              resolve(namespace);
+            }
+
+          }
+        }
+      )
+    })
+  }
+
   async addUnansweredQuestion(id_project, data, token) {
     
     return new Promise((resolve, reject) => {

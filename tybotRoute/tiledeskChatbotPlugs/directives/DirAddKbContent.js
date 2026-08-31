@@ -10,6 +10,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const quotasService = require("../../services/QuotasService");
+const kbService = require("../../services/KbService");
 const llmKeyService = require("../../services/LLMKeyService");
 const { apiEndpoint } = require("../../config/endpoints");
 const { BaseDirective } = require("../BaseDirective");
@@ -128,12 +129,12 @@ class DirAddKbContent extends BaseDirective {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
       this.logger.native("[Add to KnwoledgeBase] Searching namespace by name ", filled_namespace);
-      ns = await this.getNamespace(filled_namespace, null);
+      ns = await kbService.getNamespaceOrNull(this.context.projectId, this.context.token, filled_namespace, null, "DirAddKbContent");
       namespace = ns?.id;
       winston.verbose("[DirAddKbContent] - Retrieved namespace id from name " + namespace);
     } else {
       this.logger.native("[Add to KnwoledgeBase] Searching namespace by id ", namespace);
-      ns = await this.getNamespace(null, namespace);
+      ns = await kbService.getNamespaceOrNull(this.context.projectId, this.context.token, null, namespace, "DirAddKbContent");
     }
 
     if (!ns) {
@@ -195,38 +196,6 @@ class DirAddKbContent extends BaseDirective {
         }
       }
     )
-  }
-
-  async getNamespace(name, id) {
-    return new Promise((resolve) => {
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAddKbContent get all namespaces HttpRequest", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, namespaces) => {
-          if (err) {
-            winston.error("DirAddKbContent get all namespaces err: ", err);
-            resolve(null)
-          } else {
-            winston.debug("DirAddKbContent get all namespaces resbody: ", namespaces);
-            if (name) {
-              let namespace = namespaces.find(n => n.name === name);
-              resolve(namespace);
-            } else {
-              let namespace = namespaces.find(n => n.id === id);
-              resolve(namespace);
-            }
-
-          }
-        }
-      )
-    })
   }
 
   // async setDefaultEngine() {

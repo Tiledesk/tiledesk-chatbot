@@ -255,12 +255,12 @@ class DirAskGPTV2 extends BaseDirective {
       // Namespace could be an attribute
       const filled_namespace = filler.fill(action.namespace, requestVariables)
       this.logger.native("[Ask Knowledge Base] Searching namespace by name ", filled_namespace);
-      ns = await this.getNamespace(filled_namespace, null);
+      ns = await kbService.getNamespaceOrNull(this.context.projectId, this.context.token, filled_namespace, null, "DirAskGPTV2");
       namespace = ns?.id;
       winston.verbose("DirAskGPTV2 - Retrieved namespace id from name " + namespace);
     } else {
       this.logger.native("[Ask Knowledge Base] Searching namespace by id ", namespace);
-      ns = await this.getNamespace(null, namespace);
+      ns = await kbService.getNamespaceOrNull(this.context.projectId, this.context.token, null, namespace, "DirAskGPTV2");
     }
 
     if (!ns) {
@@ -567,38 +567,6 @@ class DirAskGPTV2 extends BaseDirective {
     }
 
     return objectTranscript;
-  }
-
-  async getNamespace(name, id) {
-    return new Promise((resolve) => {
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAskGPTV2 get all namespaces HttpRequest", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, namespaces) => {
-          if (err) {
-            winston.error("DirAskGPTV2 get all namespaces err: ", err);
-            resolve(null)
-          } else {
-            winston.debug("DirAskGPTV2 get all namespaces resbody: ", namespaces);
-            if (name) {
-              let namespace = namespaces.find(n => n.name === name);
-              resolve(namespace);
-            } else {
-              let namespace = namespaces.find(n => n.id === id);
-              resolve(namespace);
-            }
-
-          }
-        }
-      )
-    })
   }
 
   async setDefaultEngine(hybrid = false) {
