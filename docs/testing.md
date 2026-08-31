@@ -15,6 +15,30 @@ npm test
 file in its own mocha process and compares the result against
 `docs/test-baseline.json`. It exits non-zero on any failure or any regression.
 
+## Booting the app end-to-end
+
+The suite uses static bots and never connects to MongoDB, but the real app does:
+
+```bash
+docker compose -f docker-compose.test.yml up -d      # starts redis AND mongo
+MONGODB_URI=mongodb://127.0.0.1:27017/tiledesk \
+API_ENDPOINT=http://localhost:10002 \
+CACHE_REDIS_HOST=127.0.0.1 CACHE_REDIS_PORT=6379 \
+PORT=3000 npm start
+```
+
+`curl localhost:3000/` should answer `Hello Tilebot!`.
+
+Two things that will trip you up:
+
+- The root `index.js` reads **`CACHE_REDIS_HOST`/`CACHE_REDIS_PORT`**, not the
+  `REDIS_HOST`/`REDIS_PORT` the tests use. Pass the wrong pair and the app boots
+  with no cache instead of failing.
+- Posting to `/ext/:botid` with a bot id that is not in MongoDB crashes on
+  `Cannot read properties of null (reading 'language')` —
+  `IntentsMachineFactory.getBackupMachine` has no null guard where its sibling
+  `getIntentsMachine` does. Pre-existing; seed a bot before exercising that route.
+
 > **Port 6379 must be free.** If something else already owns it (a local
 > `redis-server`, another project's container) `docker compose up -d` fails with
 > `Bind for 0.0.0.0:6379 failed: port is already allocated`, or — worse — appears

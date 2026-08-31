@@ -483,6 +483,62 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Verification closed: local end-to-end + quarantine release
+
+**Retro-compatibility is now proven directly, not inferred.**
+
+All 12 quarantined files were run against the pre-refactor tree (`467fde6b`,
+before any source restructuring) and the fully refactored tree, same environment,
+same Redis:
+
+```
+before:  60 passing, 27 failing
+after:   60 passing, 27 failing     -> identical, file by file
+```
+
+Those 60 tests were written against the original code and pass unchanged on the
+refactored code, covering Brevo, Customerio, Hubspot, Make, Qapla, GptTask,
+AskGPT, AiPrompt and AskGPTV2 — the directives the migration changed most and the
+ones the gate previously could not reach. The 27 remaining failures fail
+identically on both trees, so they predate the migration.
+
+### The quarantine was a configuration gap, not missing tests
+
+Each quarantined file already started its own mock on port 10002 and registered
+the vendor/AI routes it needed (`/api/v3/contacts`,
+`/crm/v3/objects/contacts/batch/create`, `/1.2/getShipment/`, `/1.3/make/`,
+`/v1/chat/completions`, `/api/qa`, `/api/ask`). Nothing pointed the directives at
+that mock, so they called the real vendor hosts and timed out.
+
+Adding the endpoint defaults to the runner's `TEST_ENV` released **7 files and 41
+tests** with **no test file modified**. Baseline raised **332 -> 373 tests across
+56 files**.
+
+Five remain quarantined, all pre-existing: `askgptv2` (11 pass / 8 fail) and
+`ai_prompt` (8 / 3) fail on assertions, not configuration — 19 passing tests are
+held out of the gate only by their file-level failures, making them the best next
+target. `ai_condition`, `form` and `locked-intent` time out in a flow that reaches
+"Processing intent" and never posts its reply.
+
+### The app boots end-to-end
+
+With redis + mongo from `docker-compose.test.yml`: MongoDB connected, Redis
+connected, listening. Verified live — `GET /` returns `Hello Tilebot!`,
+`/test/webrequest/*` and `/echobot` return 200, `/ext/:botid` returns 200, the
+`/chatbots` templates route mounts, and the running app wrote
+`tilebot:botId_requests:*` keys to Redis.
+
+Two findings from the boot, both pre-existing:
+
+- The root `index.js` reads `CACHE_REDIS_HOST`/`CACHE_REDIS_PORT`, not the
+  `REDIS_HOST`/`REDIS_PORT` the tests use. The wrong pair boots with no cache
+  rather than failing.
+- `IntentsMachineFactory.getBackupMachine` reads `bot.language` with no null
+  guard, so an unknown bot id crashes it. Its sibling `getIntentsMachine` guards.
+  The file is **byte-identical to `91008e03`** — the migration never touched it.
+
+CI remains deliberately unrun; nothing has been pushed.
+
 ## Follow-on: remote-request extraction (user-requested)
 
 **Status: complete.** 16 commits after the migration. Requested in the user's words:
