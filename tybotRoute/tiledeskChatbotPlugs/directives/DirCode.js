@@ -2,19 +2,9 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
 const winston = require('../../utils/winston');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirCode {
-
-  constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.requestId = this.context.requestId;
-    
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
-  }
+class DirCode extends BaseDirective {
 
   execute(directive, callback) {
     winston.verbose("Execute Code directive");

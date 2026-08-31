@@ -5,6 +5,7 @@ const { TiledeskString } = require('../../TiledeskString');
 const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
 const schema = {
     "type": "object",
@@ -70,14 +71,7 @@ const schema = {
 };
 
 
-class DirSetAttribute {
-
-    constructor(context) {
-        if (!context) {
-            throw new Error('context object is mandatory.');
-        }
-        this.context = context;
-    }
+class DirSetAttribute extends BaseDirective {
 
     execute(directive, callback) {
         winston.verbose("Execute SetAttribute directive");

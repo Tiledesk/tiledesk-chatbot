@@ -6,20 +6,14 @@ const axios = require("axios").default;
 let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
-const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirReplaceBotV2 {
+class DirReplaceBotV2 extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.requestId = context.requestId;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
+    super(context);
+
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 

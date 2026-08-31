@@ -3,17 +3,13 @@ let https = require("https");
 const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirConnectBlock {
+class DirConnectBlock extends BaseDirective {
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.API_ENDPOINT = context.API_ENDPOINT,
+    super(context);
     this.TILEBOT_ENDPOINT = context.TILEBOT_ENDPOINT;
     this.supportRequest = context.supportRequest;
-    this.token = context.token;
   }
 
   execute(directive, callback) {

@@ -1,17 +1,14 @@
 const winston = require('../../utils/winston');
 const IntentLock = require('../../engine/IntentLock');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirLockIntent {
+class DirLockIntent extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     if (!context.tdcache) {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
-    this.tdcache = this.context.tdcache;
   }
 
   async execute(directive, callback) {

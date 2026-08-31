@@ -1,25 +1,18 @@
 
 
-const { Logger } = require('../../Logger');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
 let levels = ['error', 'warn', 'info', 'debug'];
 
-class DirFlowLog {
+class DirFlowLog extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
     this.log = context.log;
-
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {

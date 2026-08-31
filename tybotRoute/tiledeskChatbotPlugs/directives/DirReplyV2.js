@@ -8,26 +8,17 @@ const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirReplyV2 {
+class DirReplyV2 extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.projectId = context.projectId;
-    this.requestId = context.requestId;
-    this.token = context.token;
-    this.tdcache = context.tdcache;
+    super(context);
     this.chatbot = context.chatbot;
     this.reply = context.reply;
     this.originalMessage = context.message;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
+
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 

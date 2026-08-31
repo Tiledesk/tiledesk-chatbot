@@ -6,7 +6,7 @@ const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
 const schema = {
     "type": "object",
@@ -72,18 +72,7 @@ const schema = {
 };
 
 
-class DirSetAttributeV2 {
-
-    constructor(context) {
-        if (!context) {
-            throw new Error('context object is mandatory.');
-        }
-        this.context = context;
-        this.tdcache = context.tdcache;
-        this.requestId = context.requestId;
-
-        this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
-    }
+class DirSetAttributeV2 extends BaseDirective {
 
     execute(directive, callback) {
         winston.verbose("Execute SetAttributeV2 directive");

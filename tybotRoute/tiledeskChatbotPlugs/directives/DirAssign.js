@@ -4,15 +4,9 @@ const { Filler } = require('../Filler');
 const { parseArgsStringToArgv } = require('string-argv');
 const minimist = require('minimist');
 const winston = require('../../utils/winston')
+const { BaseDirective } = require('../BaseDirective');
 
-class DirAssign {
-
-  constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-  }
+class DirAssign extends BaseDirective {
 
   execute(directive, callback) {
     winston.verbose("Execute Assign directive");

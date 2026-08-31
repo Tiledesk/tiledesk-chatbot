@@ -1,23 +1,12 @@
 const axios = require("axios").default;
-const { Logger } = require("../../Logger");
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const httpUtils = require("../../utils/HttpUtils");
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
 let whatsapp_api_url;
 
-class DirWhatsappByAttribute {
-
-  constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
-    this.requestId = this.context.requestId;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
-  }
+class DirWhatsappByAttribute extends BaseDirective {
 
   execute(directive, callback) {
     winston.verbose("Execute WhatsappByAttribute directive");

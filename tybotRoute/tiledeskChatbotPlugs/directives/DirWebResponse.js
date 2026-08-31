@@ -3,22 +3,9 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
 let axios = require('axios');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirWebResponse {
-
-  constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.projectId = context.projectId;
-    this.requestId = context.requestId;
-    this.token = context.token;
-    this.tdcache = context.tdcache;
-    
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
-  }
+class DirWebResponse extends BaseDirective {
 
   execute(directive, callback) {
     winston.debug("Execute WebResponse directive: ", directive);

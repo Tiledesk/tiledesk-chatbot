@@ -4,16 +4,9 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirWebRequest {
-  constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.tdcache = context.tdcache;
-    this.requestId = context.requestId;
-  }
+class DirWebRequest extends BaseDirective {
 
   execute(directive, callback) {
     winston.verbose("Execute WebRequest directive");

@@ -3,7 +3,7 @@ const { DirJSONCondition } = require('./DirJSONCondition');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskWhenExpression } = require('../../TiledeskWhenExpression');
 const winston = require('../../utils/winston');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
 /**
  * DirJSONConditionV2
@@ -19,18 +19,13 @@ const { Logger } = require('../../Logger');
  * callback is invoked with `stop` (truthy halts the directive chain) and is
  * guaranteed to be called EXACTLY ONCE on every path, including errors.
  */
-class DirJSONConditionV2 {
+class DirJSONConditionV2 extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.requestId = this.context.requestId;
 
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {

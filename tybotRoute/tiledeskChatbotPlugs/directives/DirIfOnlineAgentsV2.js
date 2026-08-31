@@ -5,23 +5,16 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirIfOnlineAgentsV2 {
+class DirIfOnlineAgentsV2 extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     this.chatbot = context.chatbot;
-    this.requestId = this.context.requestId;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
-    this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
 
+    this.intentDir = new DirIntent(context);
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {

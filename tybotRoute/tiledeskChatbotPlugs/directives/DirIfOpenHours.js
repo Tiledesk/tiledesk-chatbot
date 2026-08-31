@@ -3,21 +3,14 @@ const { DirIntent } = require('./DirIntent');
 let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
-const { Logger } = require('../../Logger');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirIfOpenHours {
+class DirIfOpenHours extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
+    super(context);
 
-    this.context = context;
-    this.requestId = this.context.requestId;
-    this.API_ENDPOINT = context.API_ENDPOINT;
-    
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {

@@ -3,20 +3,13 @@ const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot.js");
 const { Filler } = require("../Filler");
 const winston = require('../../utils/winston');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirMessage {
+class DirMessage extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory.');
-    }
-    this.context = context;
-    this.API_ENDPOINT = context.API_ENDPOINT
-    this.projectId = context.projectId;
-    this.requestId = context.requestId;
-    this.tdcache = this.context.tdcache;
-    this.token = context.token;
-    this.supportRequest = this.context.supportRequest
+    super(context);
+    this.supportRequest = this.context.supportRequest;
 
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
