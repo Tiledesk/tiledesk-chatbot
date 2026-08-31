@@ -1,0 +1,66 @@
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { parseArgsStringToArgv } = require('string-argv');
+const minimist = require('minimist');
+const winston = require('../../../utils/winston');
+const { BaseDirective } = require('../../BaseDirective');
+const { Directives } = require('../Directives');
+
+class DirFireTiledeskEvent extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.FIRE_TILEDESK_EVENT];
+
+  constructor(context) {
+    super(context);
+    this.log = context.log;
+
+    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
+  }
+
+  execute(directive, callback) {
+    winston.verbose("Execute FireTiledeskEvent directive");
+    if (directive.parameter) {
+      const params = this.parseParams(directive.parameter);
+      const event_name = params.name;
+      const event = {
+        name: event_name,
+        attributes: params.payload
+      }
+      this.tdClient.fireEvent(event, function(err, result) {
+          if (err) {
+              winston.error("(FireTiledeskEvent) An error occurred invoking an event: ", err);
+          }
+          callback();
+      });
+    }
+    else {
+      winston.verbose("(DirFireTiledeskEvent) no parameter");
+      callback();
+    }
+  }
+
+  parseParams(directive_parameter) {
+    let name = null;
+    let payload = null;
+    const argv = parseArgsStringToArgv(directive_parameter); // trasforma in array come process.argv
+    const params = minimist(argv); 
+    if (params.n) {
+      name = params.n;
+    }
+    if (params.name) {
+      name = params.name;
+    }
+    if (params.p) {
+      payload = params.p;
+    }
+    if (params.payload) {
+      payload = params.payload;
+    }
+    return {
+      name: name,
+      payload: payload
+    }
+  }
+}
+
+module.exports = { DirFireTiledeskEvent };

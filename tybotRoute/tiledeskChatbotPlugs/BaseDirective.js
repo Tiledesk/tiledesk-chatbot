@@ -12,12 +12,12 @@ const { Logger } = require("../observability/Logger");
  */
 
 // DirIntent is required lazily: BaseDirective is imported by directives, and
-// directives/DirIntent will itself become a BaseDirective subclass in a later
+// directives/flow/DirIntent will itself become a BaseDirective subclass in a later
 // phase. A module-level require would therefore create a cycle.
 let _DirIntent = null;
 function getDirIntent() {
   if (!_DirIntent) {
-    _DirIntent = require("./directives/DirIntent").DirIntent;
+    _DirIntent = require("./directives/flow/DirIntent").DirIntent;
   }
   return _DirIntent;
 }

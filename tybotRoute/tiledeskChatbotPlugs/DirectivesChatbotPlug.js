@@ -11,7 +11,7 @@ const { directiveRegistry } = require('./directives/registry');
 
 // Still referenced by the DEPRECATED processInlineDirectives() path below.
 const { Directives } = require('./directives/Directives');
-const { DirDeflectToHelpCenter } = require('./directives/DirDeflectToHelpCenter');
+const { DirDeflectToHelpCenter } = require('./directives/agents/DirDeflectToHelpCenter');
 
 class DirectivesChatbotPlug {
 

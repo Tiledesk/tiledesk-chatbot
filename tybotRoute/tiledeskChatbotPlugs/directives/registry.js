@@ -16,10 +16,13 @@ const winston = require('../../utils/winston');
  * `dtmf_menu`, ... ; DirMessage handles `hmessage` and `message`), so the map
  * is many-names-to-one-class.
  *
- * This module walks the directive modules in this folder and builds the
- * directive-name -> class map from those declarations, so adding a directive is
- * a one-file change: create the file, declare `static directiveNames`, done.
- * No registration list to keep in sync.
+ * This module walks the directive modules in this folder and its domain
+ * subfolders (ai/, integrations/, conversation/, flow/, agents/, data/, bot/,
+ * tiledesk/), recursively, and builds the directive-name -> class map from
+ * those declarations, so adding a directive is a one-file change: create the
+ * file in the subfolder its domain belongs to, declare `static
+ * directiveNames`, done. No registration list to keep in sync, and the
+ * subfolder a directive lives in has no effect on the map it produces.
  *
  * Files with no class declaring `directiveNames` (helpers such as
  * Directives.js, and the currently undispatched DirCondition,
@@ -36,11 +39,35 @@ const winston = require('../../utils/winston');
  */
 
 const DIRECTIVES_DIR = __dirname;
-const SELF = path.basename(__filename);
 
 /**
- * Scans the directive modules in this folder and builds the
- * directive-name -> class map from their `static directiveNames` declarations.
+ * Lists every `.js` module under `dir`, recursively, as a path relative to
+ * DIRECTIVES_DIR (e.g. `ai/DirAskGPT.js`), skipping this file itself. Sorted so
+ * the scan order -- and therefore any duplicate-name error -- is deterministic.
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
+function listDirectiveFiles(dir) {
+  /** @type {string[]} */
+  const found = [];
+
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...listDirectiveFiles(full));
+    } else if (entry.name.endsWith('.js') && full !== __filename) {
+      found.push(path.relative(DIRECTIVES_DIR, full));
+    }
+  }
+
+  return found.sort();
+}
+
+/**
+ * Scans the directive modules in this folder and its subfolders, recursively,
+ * and builds the directive-name -> class map from their `static directiveNames`
+ * declarations.
  *
  * @returns {DirectiveRegistry}
  * @throws {Error} if two different classes claim the same directive name.
@@ -49,9 +76,7 @@ function buildRegistry() {
   /** @type {DirectiveRegistry} */
   const registry = {};
 
-  const files = fs.readdirSync(DIRECTIVES_DIR)
-    .filter((file) => file.endsWith('.js') && file !== SELF)
-    .sort();
+  const files = listDirectiveFiles(DIRECTIVES_DIR);
 
   for (const file of files) {
     const exported = require(path.join(DIRECTIVES_DIR, file));

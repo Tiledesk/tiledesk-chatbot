@@ -1,6 +1,6 @@
  var assert = require('assert');
- const { DirSetAttribute } = require('../tiledeskChatbotPlugs/directives/DirSetAttribute.js');
- const { DirSetAttributeV2 } = require('../tiledeskChatbotPlugs/directives/DirSetAttributeV2.js');
+ const { DirSetAttribute } = require('../tiledeskChatbotPlugs/directives/data/DirSetAttribute.js');
+ const { DirSetAttributeV2 } = require('../tiledeskChatbotPlugs/directives/data/DirSetAttributeV2.js');
  const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
  const { promisify } = require('util');
  const winston = require('../utils/winston.js');
