@@ -56,11 +56,21 @@ distinct causes, which must not be conflated:
 where the harness does not interfere.
 
 Of the 104 `.js` files in `test/`, **61** are named `*_test.js`/`*-test.js` and
-**43** are not. Of those 43, 41 are pure `bots_data` fixtures — but **`testin.js`
-and `validate_variable_names.js` contain real `describe()` suites**. A naive
-`*_test.js` spec glob would silently drop them; they must be renamed, not
-excluded. A further 9 non-`.js` entries are already-disabled tests suffixed
-`.js_`/`.txt`, plus `single_test.sh`.
+**43** are not. Of those 43, 41 are pure `bots_data` fixtures, and two contain
+`describe()` blocks that a naive `*_test.js` glob would drop. Inspecting both:
+
+- **`validate_variable_names.js` is a real suite** — 4 assertions against
+  `TiledeskExpression.validateVariableName`. It must be renamed, not excluded.
+- **`testin.js` is not.** Its single `it()` has its entire body commented out and
+  only calls `done()`. It passes while asserting nothing. Excluding it costs
+  nothing.
+
+A further 9 non-`.js` entries are already-disabled tests suffixed `.js_`/`.txt`,
+plus `single_test.sh`.
+
+A third file, `close_directive_test.js`, *is* named as a test but has **both** of
+its `it()` blocks commented out, so it runs zero tests. Like `testin.js` it is
+dead scaffolding.
 
 No CI workflow runs the tests. The two GitHub Actions build Docker images only.
 
@@ -164,7 +174,9 @@ const API_ENDPOINT = process.env.API_ENDPOINT;   // DataTables, Integration, Kb,
 const TILEBOT_ENDPOINT = process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`
 ```
 
-This import-time binding is the same defect that forces static ports in Phase 0.
+This import-time binding is the same defect that forces Phase 0 to isolate tests
+by process rather than by port: 38 test files require `TilebotService` directly,
+so in a shared process the first one to load fixes the endpoint for all of them.
 If new services copy the pattern, every extraction makes the suite harder to
 configure.
 
@@ -219,31 +231,98 @@ that stops and reports rather than adjusting the contract.
 
 No source changes. This phase only makes the existing suite trustworthy.
 
-- Add `.mocharc.yml` with an explicit spec glob so the 41 `*_bot.js` fixtures
-  stop being loaded as suites.
-- Rename `testin.js` and `validate_variable_names.js` to `*_test.js` **before**
-  applying the glob, so their suites are not lost.
-- Give each of the 24 colliding test files a unique port pair from a shared
-  `test/helpers/ports.js` registry. Pairs are **static, not ephemeral**:
-  `services/TilebotService.js:3` reads `TILEBOT_ENDPOINT` at module load, so
-  dynamic ports would force a lazy-env refactor into Phase 0. Static unique
-  pairs fix the collision with no source change.
-- Extract the 24 near-identical `before` hooks into `test/helpers/bootTilebot.js`.
-- Add `docker-compose.test.yml` providing Redis, and wire `npm test` to the
+**Superseded approach.** An earlier draft of this phase assigned each of the 24
+colliding test files a unique static port pair. That cannot work.
+`services/TilebotService.js:3` freezes `TILEBOT_ENDPOINT` at module load — one
+value per *process* — and **38 test files require `TilebotService` directly while
+none set `process.env` themselves**. In a shared mocha process the first file to
+load binds the endpoint for all of them, so files 2–38 would post to the wrong
+port. The port fix must therefore come from process isolation, not port
+allocation.
+
+**Adopted approach: run mocha once per test file, each in its own process.**
+Fresh module state per file means the existing hardcoded `10001`/`10002` no
+longer collide, with **zero test-file edits and zero source changes** — stricter
+adherence to "Phase 0 touches no source" than the superseded approach. The cost
+is ~61 process startups (~3–4 min vs ~1 min). For integration tests that boot a
+full Express app this is the conventional approach, and it makes each file's
+result independent, which is what freezing a green set requires. Once Phase 4
+makes endpoints lazy, moving back in-process becomes an available optimisation
+rather than a prerequisite.
+
+Work items:
+
+- Add `scripts/run-tests.js`: runs each test file in a separate mocha process,
+  serially, aggregates results, emits JSON, exits non-zero on any failure or on
+  any regression against the recorded baseline.
+- Add `.mocharc.yml` with an explicit spec glob so a bare `mocha` invocation
+  stops loading the 41 `*_bot.js` fixtures as suites.
+- Rename `validate_variable_names.js` to `validate_variable_names_test.js` — it
+  is a real suite (4 tests on `TiledeskExpression.validateVariableName`) that the
+  glob would otherwise drop.
+- Add `docker-compose.test.yml` providing Redis; wire `npm test` to it and to the
   documented env recipe.
 - Add the CI workflow that runs the suite — none exists today.
-- Classify all 156 failures per-file into port-collision / missing-env / stale.
-- Record the resulting green set in a committed `docs/test-baseline.md`.
-- Move genuinely-stale tests to `test/quarantine/`, excluded from the spec glob,
-  each with a written reason.
+- Commit `docs/test-baseline.json` recording the frozen green set (machine-readable, so the runner can gate on it), plus `docs/testing.md` explaining how to run the suite.
+- Move genuinely-stale tests to `test/quarantine/`, excluded from the glob, each
+  with a written reason.
 
-**Verification:** full-suite run is deterministic across three consecutive runs,
-and the green set matches `docs/test-baseline.md` exactly.
+### Classification results
 
-**Sizing caveat:** this is the one phase whose size cannot be called precisely in
-advance, because the per-file classification has not yet been run. The
-implementation plan must treat Phase 0 sizing as provisional and re-estimate
-after classification.
+The per-file classification is complete. Running each file in its own process,
+with no other change:
+
+| | In one process | Per-file process |
+|---|---|---|
+| Passing | 264 | **337** |
+| Failing | 156 | **83** |
+
+Process isolation alone recovers 73 tests and eliminates 73 failures, confirming
+that roughly half the original failures were harness artefacts rather than real
+defects.
+
+Of 63 files: **50 are fully green (333 tests)** — this is the proposed frozen
+baseline. 12 files still fail (4 passing, 83 failing). One file,
+`close_directive_test.js`, contains **zero runnable tests** — both its `it()`
+blocks are entirely commented out.
+
+The 12 still-failing files map almost exactly onto the AI and vendor-integration
+directives that Phase 4 targets:
+
+| File | Pass | Fail |
+|---|---|---|
+| `conversation-askgptv2_test.js` | 0 | 19 |
+| `conversation-gpt_task_test.js` | 0 | 13 |
+| `conversation-ai_condition_test.js` | 0 | 8 |
+| `conversation-qapla_test.js` | 0 | 7 |
+| `conversation-form-test.js` | 0 | 7 |
+| `conversation-askgpt_test.js` | 0 | 7 |
+| `conversation-ai_prompt_test.js` | 4 | 7 |
+| `conversation-hubspot_test.js` | 0 | 4 |
+| `conversation-brevo_test.js` | 0 | 4 |
+| `conversation-make_test.js` | 0 | 3 |
+| `conversation-customerio_test.js` | 0 | 3 |
+| `conversation-locked-intent-test.js` | 0 | 1 |
+
+Within these files the failures also cascade: each `it()` opens a listener on
+`10002` and closes it only on the success path, so the first assertion failure
+leaves the port bound and every later test in that file dies with `EADDRINUSE`.
+The reported failure counts are therefore inflated — the root cause in each file
+is its *first* failure. `conversation-brevo_test.js` fails first on a genuine
+`AssertionError`, not on environment.
+
+Because these 12 files exercise exactly the code Phase 4 restructures, they are
+quarantined rather than repaired here, and Phase 4 is the natural place to
+revisit them.
+
+**Two files need a disposition decision** (flagged, not yet taken):
+`testin.js` contributes 1 passing test whose body is entirely commented out — it
+asserts nothing — and `close_directive_test.js` contributes none for the same
+reason. Both are dead scaffolding. They are left in place and excluded from the
+frozen count pending that decision; neither affects any other phase.
+
+**Verification:** three consecutive full runs are deterministic and match
+`docs/test-baseline.json` exactly — 332 tests across 49 collected files. (`testin.js` is one of the 50 green files but is not matched by the collection rule, so it is outside the frozen set.)
 
 ### Phase 1 — Delete dead code
 
@@ -320,8 +399,9 @@ single caller each and therefore stay where they are.
 First, `config/endpoints.js` resolving every endpoint env var **lazily at call
 time**, with all services — the five existing ones included — reading through it
 rather than binding at import. This is behaviour-preserving for normal boots,
-where env is set before first call. It also lifts the Phase 0 constraint, so
-dynamic test ports become possible later instead of permanently foreclosed.
+where env is set before first call. It also lifts the Phase 0 constraint: with
+endpoints resolved lazily, the suite may optionally move back to a single
+in-process run for speed, instead of that being permanently foreclosed.
 
 Then, in order:
 
