@@ -483,6 +483,62 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Phase 0 outcome and follow-ups
+
+**Status: complete.** Commits `c04f0f73`, `44c332f0`, `9e0508e7`, `cdd64e09`,
+`36909436`, `03fbe9ad` on `refactor/code-structure-migration`.
+
+Delivered: `tybotRoute/scripts/run-tests.js` (one mocha process per test file,
+gated against a frozen baseline), `.mocharc.yml`, `docker-compose.test.yml`,
+`docs/test-baseline.json` (**49 files, 332 tests**), `docs/testing.md`,
+`.github/workflows/test.yaml`, and `tybotRoute/test/quarantine/` holding the 12
+files that failed before any migration work.
+
+A plan defect was found and corrected during execution: mocha 8 **merges**
+`.mocharc.yml`'s `spec:` globs with positional file arguments rather than letting
+the argument override them, so the runner must spawn `_mocha` with
+`--no-config --no-package`. Without those flags it runs the entire suite once per
+file. The rationale is recorded as a comment in `run-tests.js` — do not remove
+those flags.
+
+The final whole-branch review found two Critical defects in the gate, both since
+fixed: it exited 0 when a *collected but un-baselined* file failed, and
+`--update-baseline` could silently shrink or empty the contract. The gate now
+also fails on any collected file's failure, refuses a shrinking baseline without
+`--force`, and never writes an empty one.
+
+### Open follow-ups, in priority order
+
+1. **The baseline records counts, not test identities.** `docs/test-baseline.json`
+   maps file → passing count. A refactor that deletes a real assertion and adds a
+   trivial one keeps the count and passes the gate — precisely the failure mode a
+   large mechanical refactor produces. Recording per-file test titles would make
+   the contract meaningfully stronger. **Decide this before Phase 3's fan-out**,
+   which is where that risk first bites.
+2. **Renames have no migration path.** `git mv`-ing a test file — near-certain in
+   Phase 6's `src/` move — reports `missing`, and the only remedy is
+   `--update-baseline`, which regenerates everything. A `--rename old=new` flag
+   would close this.
+3. **Nothing ever re-runs the quarantined files**, so nobody will notice if a
+   phase makes one worse, or if one starts passing. A non-gating `--quarantine`
+   mode would be cheap.
+4. **CI has never actually run.** The workflow is committed but the branch was
+   deliberately not pushed. Treat the first CI run as part of the merge, not as a
+   post-merge follow-up.
+5. **CI pins Node 22 while `Dockerfile` ships `node:18-bullseye`** — the safety net
+   validates a runtime production does not run. Resolve with the Phase 6 package
+   collapse.
+6. **The collection rule is duplicated** between the runner's regex and
+   `.mocharc.yml`'s globs. They agree today; nothing keeps them in sync.
+7. **Dead scaffolding left on disk by choice:** `testin.js` (one `it()` with a
+   commented-out body) and `close_directive_test.js` (both `it()` blocks commented
+   out, runs zero tests). Neither is in the baseline. Deletion is the user's call.
+8. Minor, recorded for completeness: the `failing`-count regex has no epilogue
+   anchor, so an app log line such as `42 failing lookups` could be misread — this
+   fails loudly rather than silently, and no current file triggers it;
+   `writeBaseline` writes before returning non-zero when a red file is offset by
+   growth elsewhere; and `gate()`'s `JSON.parse` of the baseline has no try/catch.
+
 ## Risks
 
 | Risk | Mitigation |
