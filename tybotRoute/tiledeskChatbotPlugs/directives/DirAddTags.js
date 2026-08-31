@@ -1,16 +1,13 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
-let https = require("https");
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const req = require("express/lib/request");
 const { update } = require("../../models/faq");
-const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
+const tiledeskApiService = require("../../services/TiledeskApiService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -22,8 +19,6 @@ class DirAddTags extends BaseDirective {
   constructor(context) {
     super(context);
     this.chatbot = this.context.chatbot;
-
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
@@ -108,7 +103,8 @@ class DirAddTags extends BaseDirective {
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
       this.logger.native("[Add Tag] Adding following tags to lead: ", newTags)
 
-      let request = await this.tdClient.getRequestById(this.requestId);
+      let request = await tiledeskApiService.getRequestById(
+        this.context.projectId, this.requestId, this.context.token);
       winston.debug('(DirAddTags) request detail: ', request)
       if(!request){
         winston.debug("(DirAddTags) - request not found for request_id: " + this.requestId);
@@ -156,101 +152,56 @@ class DirAddTags extends BaseDirective {
   }
 
   async addNewTag(tag){
-    return new Promise((resolve, reject)=> {
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/tags",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "POST",
-        json: {
-          tag: tag,
-          color: '#f0806f'
-        }
-      }
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            this.logger.error("[Add Tag] Add tags to list error ", err?.response?.data)
-            winston.error("(httprequest) DirAddTags add tags to list err: ", err);
-            resolve(true)
-          } else {
-            if (resbody) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
+    const { err, resbody } = await tiledeskApiService.addTag(
+      this.context.projectId,
+      this.context.token,
+      { tag: tag, color: '#f0806f' },
+      "(DirAddTags)"
+    );
+    if (err) {
+      this.logger.error("[Add Tag] Add tags to list error ", err?.response?.data)
+      winston.error("(httprequest) DirAddTags add tags to list err: ", err);
+      return true;
+    }
+    return resbody ? true : false;
   }
 
 
   async updateRequestWithTags(tags) {
-    return new Promise((resolve) => {
-      let json = []
-      let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
-      json.push(...filteredTags)
-      winston.debug('(httprequest) DirAddTags updateRequestWithTags tags: ', json)
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + '/tag',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "PUT",
-        json: json
-      }
+    let json = []
+    let filteredTags = tags.map((tag) => ({tag: tag, color: '#f0806f'}))
+    json.push(...filteredTags)
+    winston.debug('(httprequest) DirAddTags updateRequestWithTags tags: ', json)
 
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            this.logger.error("[Add Tag] Add tag to conversation error ", err?.response?.data);
-            winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
-            resolve(true)
-          } else {
-            if (resbody) {
-              resolve(resbody)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
+    const { err, resbody } = await tiledeskApiService.updateRequestTags(
+      this.context.projectId,
+      this.requestId,
+      this.context.token,
+      json,
+      "(DirAddTags)"
+    );
+    if (err) {
+      this.logger.error("[Add Tag] Add tag to conversation error ", err?.response?.data);
+      winston.error("(httprequest) DirAddTags patch request with new tags err: ", err);
+      return true;
+    }
+    return resbody ? resbody : false;
   }
 
   async updateLeadWithTags(lead_id, tags) {
-    return new Promise((resolve) => {
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/leads/" + lead_id + '/tag',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "PUT",
-        json: tags
-      }
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            this.logger.error("[Add Tag] Add tag to lead error ", err?.response?.data);
-            winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);
-            resolve(true)
-          } else {
-            if (resbody) {
-              resolve(resbody)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
+    const { err, resbody } = await tiledeskApiService.updateLeadTags(
+      this.context.projectId,
+      lead_id,
+      this.context.token,
+      tags,
+      "(DirAddTags)"
+    );
+    if (err) {
+      this.logger.error("[Add Tag] Add tag to lead error ", err?.response?.data);
+      winston.error("(httprequest) DirAddTags put lead with new tags err: ", err);
+      return true;
+    }
+    return resbody ? resbody : false;
   }
 
 

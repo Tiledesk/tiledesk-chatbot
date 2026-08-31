@@ -1,10 +1,7 @@
 const { DirIntent } = require('./DirIntent');
-const axios = require("axios").default;
-let https = require("https");
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
-const httpUtils = require('../../utils/HttpUtils');
+const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -18,7 +15,6 @@ class DirIfOnlineAgentsV2 extends BaseDirective {
     this.chatbot = context.chatbot;
 
     this.intentDir = new DirIntent(context);
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
@@ -161,7 +157,7 @@ class DirIfOnlineAgentsV2 extends BaseDirective {
 
   async openNow() {
     return new Promise( (resolve, reject) => {
-      this.tdClient.openNow(async (err, result) => {
+      tiledeskApiService.openNow(this.context.projectId, this.context.token, async (err, result) => {
         winston.debug("(DirIfOnlineAgentsV2) openNow(): ", result);
         if (err) {
           reject(err);
@@ -173,49 +169,17 @@ class DirIfOnlineAgentsV2 extends BaseDirective {
     });
   }
 
-  async getProjectAvailableAgents(departmentId, raw, callback) {
-    return new Promise( (resolve, reject) => {
-      let URL = `${this.API_ENDPOINT}/projects/${this.context.projectId}/users/availables?raw=${raw}`
-      if (departmentId) {
-        URL = URL + `&department=${departmentId}`
-      }
-      const HTTPREQUEST = {
-        url: URL,
-        headers: {
-          'Content-Type' : 'application/json',
-          'Authorization': this.fixToken(this.context.token)
-        },
-        // json: true,
-        method: 'GET',
-      };
-      httpUtils.request(
-        HTTPREQUEST,
-        function(err, resbody) {
-          if (err) {
-            if (callback) {
-              callback(err);
-            }
-            reject(err);
-          }
-          else {
-            if (callback) {
-              callback(null, resbody);
-            }
-            resolve(resbody);
-          }
-        });
-    });
-    
+  // Rejects on transport/status error, exactly as the inline httpUtils version
+  // did: go()'s try/catch is what turns that into the "An error occurred" path.
+  async getProjectAvailableAgents(departmentId, raw) {
+    const { err, resbody } = await tiledeskApiService.availableAgents(
+      this.context.projectId, this.context.token, departmentId, raw, "(DirIfOnlineAgentsV2)");
+    if (err) {
+      throw err;
+    }
+    return resbody;
   }
 
-  fixToken(token) {
-    if (token.startsWith('JWT ')) {
-      return token
-    }
-    else {
-      return 'JWT ' + token
-    }
-  }
 }
 
 module.exports = { DirIfOnlineAgentsV2 };

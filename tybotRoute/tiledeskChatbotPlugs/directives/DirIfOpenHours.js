@@ -1,8 +1,6 @@
-let axios = require('axios');
 const { DirIntent } = require('./DirIntent');
-let https = require("https");
 const winston = require('../../utils/winston');
-const httpUtils = require('../../utils/HttpUtils');
+const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -63,65 +61,54 @@ class DirIfOpenHours extends BaseDirective {
       slot_id = action.slotId;
     }
     
-    let isopen_url = this.API_ENDPOINT + "/projects/" + this.context.projectId + "/isopen";
-    if (slot_id) {
-      isopen_url = isopen_url.concat("?timeSlot=" + slot_id);
-    }
+    // NOTE: `go` is deliberately NOT async. The `trueIntent = null` assignments
+    // above target `const` bindings and therefore throw synchronously for an
+    // empty-string intent; making this method async would turn that throw into
+    // a silently rejected promise. The service call is chained instead.
+    tiledeskApiService.isOpen(
+      this.context.projectId, this.context.token, slot_id, "(DirIfOpenHours)"
+    ).then(async ({ err, resbody }) => {
 
-    const HTTPREQUEST = {
-      url: isopen_url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
-      },
-      method: 'GET'
-    }
-    winston.debug("(DirIfOpenHours) HttpRequest ", HTTPREQUEST);
-    
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
+      winston.debug("(DirIfOpenHours) resbody:", resbody);
 
-        winston.debug("(DirIfOpenHours) resbody:", resbody);
-        
-        if (err) {
-          this.logger.error("[If Operating Hours] Error response: ", err.response);
-          winston.debug("(DirIfOpenHours) error: ", err);
-          if (callback) {
-            if (falseIntent) {
-              let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-              winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
-              this.intentDir.execute(intentDirective, () => {
-                callback(stopOnConditionMet);
-              });
-            }
-          }
-        } else {
-          if (resbody.isopen && resbody.isopen === true) {
-            this.logger.native("[If Operating Hours] is open: true")
-            if (trueIntent) {
-              let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
-              winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
-              this.intentDir.execute(intentDirective, () => {
-                callback(stopOnConditionMet);
-              });
-            }
-            callback();
-            return;
-          } else {
-            this.logger.native("[If Operating Hours] is open: false")
-            if (falseIntent) {
-              let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-              winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
-              this.intentDir.execute(intentDirective, () => {
-                callback(stopOnConditionMet);
-              });
-            }
-            callback();
-            return;
+      if (err) {
+        this.logger.error("[If Operating Hours] Error response: ", err.response);
+        winston.debug("(DirIfOpenHours) error: ", err);
+        if (callback) {
+          if (falseIntent) {
+            let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+            winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
+            this.intentDir.execute(intentDirective, () => {
+              callback(stopOnConditionMet);
+            });
           }
         }
+      } else {
+        if (resbody.isopen && resbody.isopen === true) {
+          this.logger.native("[If Operating Hours] is open: true")
+          if (trueIntent) {
+            let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
+            winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
+            this.intentDir.execute(intentDirective, () => {
+              callback(stopOnConditionMet);
+            });
+          }
+          callback();
+          return;
+        } else {
+          this.logger.native("[If Operating Hours] is open: false")
+          if (falseIntent) {
+            let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+            winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
+            this.intentDir.execute(intentDirective, () => {
+              callback(stopOnConditionMet);
+            });
+          }
+          callback();
+          return;
+        }
       }
-    )
+    })
 
     // this.tdClient.openNow(action.slot_id, (err, result) => {
 
