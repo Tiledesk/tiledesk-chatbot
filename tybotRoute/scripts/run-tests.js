@@ -33,7 +33,7 @@ function runOne(file) {
   const res = spawnSync(
     process.execPath,
     [path.join(__dirname, '..', 'node_modules', '.bin', '_mocha'),
-     '--timeout', timeout, '--exit', path.join('test', file)],
+     '--no-config', '--no-package', '--timeout', timeout, '--exit', path.join('test', file)],
     {
       cwd: path.join(__dirname, '..'),
       env: { ...process.env, ...TEST_ENV },

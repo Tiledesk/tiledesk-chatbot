@@ -1,0 +1,5 @@
+spec:
+  - 'test/*_test.js'
+  - 'test/*-test.js'
+timeout: 20000
+exit: true
