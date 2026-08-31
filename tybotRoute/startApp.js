@@ -2,6 +2,7 @@ const winston = require('./utils/winston.js');
 const { TdCache } = require('./TdCache.js');
 let mongoose = require('mongoose');
 const { runtimeContext } = require('./routes/runtimeContext.js');
+const endpoints = require('./config/endpoints.js');
 
 /**
  * Application bootstrap: validates the settings, populates runtimeContext and
@@ -33,17 +34,24 @@ async function startApp(settings, completionCallback) {
     }
     throw error;
   }
-  else {
-    runtimeContext.API_ENDPOINT = settings.API_ENDPOINT;
-    winston.info("(Tilebot) settings.API_ENDPOINT:" + runtimeContext.API_ENDPOINT);
-  }
 
-  if (!settings.TILEBOT_ENDPOINT) {
-    runtimeContext.TILEBOT_ENDPOINT = `${runtimeContext.API_ENDPOINT}/modules/tilebot`
-  }
-  else {
-    runtimeContext.TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT
-  }
+  // Seed config/endpoints.js from the settings, then derive runtimeContext from
+  // it. Before this, startApp kept its OWN copy of the endpoints on
+  // runtimeContext (which is what reaches a directive as context.API_ENDPOINT)
+  // while every service resolved process.env through config/endpoints.js. The
+  // two agreed only because the root index.js passes process.env straight into
+  // settings; an embedder that configured an endpoint without exporting the
+  // variable had the directives and the services talking to different hosts.
+  // There is now one resolver: a configured value wins, an unconfigured key
+  // still falls back to process.env, and resolution stays lazy.
+  endpoints.configure(settings);
+
+  runtimeContext.API_ENDPOINT = endpoints.apiEndpoint();
+  winston.info("(Tilebot) settings.API_ENDPOINT:" + runtimeContext.API_ENDPOINT);
+
+  // Same `TILEBOT_ENDPOINT || `${API_ENDPOINT}/modules/tilebot`` fallback as
+  // before, now expressed once in config/endpoints.js.
+  runtimeContext.TILEBOT_ENDPOINT = endpoints.tilebotEndpoint();
   winston.info("(Tilebot) settings.TILEBOT_ENDPOINT:" + runtimeContext.TILEBOT_ENDPOINT);
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
