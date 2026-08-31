@@ -483,6 +483,76 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Migration outcome — all phases complete
+
+**Status: Phases 0-7 complete** on `refactor/code-structure-migration` (32 commits,
+not pushed). `npm test` exits 0 throughout.
+
+| Metric | Before | After |
+|---|---|---|
+| Source LOC | 23,765 | 19,509 (-18%) |
+| Copies of the directive constructor guard | 62 | 1 (`BaseDirective`) |
+| `#executeCondition` / `#assignAttributes` / `#myrequest` copies | 17 / 14 / 7 | 0 (3 documented overrides) |
+| Circular dependencies | 2 | 0 |
+| Files over 700 lines | 4 | 0 |
+| `package.json` files declaring dependencies | 2 (drifted) | 1 |
+| Adding a directive | 3 files | 1 file |
+| Test suite | 264 pass / 156 fail, no CI | 332 pass / 0 fail, gated + CI |
+
+**The invariant that made this safe:** no file under `tybotRoute/test/` was modified
+in any of Phases 1-7. `git diff 467fde6b HEAD -- tybotRoute/test/` is empty. Every
+phase was verified against the frozen baseline of 332 tests across 49 files.
+
+### Where the plan was wrong, and what the evidence said
+
+- **`executeCondition` needed one implementation, not "one base + 5 overrides".** The
+  9 apparent variants were whitespace; the 6 "behavioural" outliers differed only by
+  extra `logger.native` lines. Measured, not assumed.
+- **Per-vendor services were dropped.** Brevo/Hubspot/Customerio/Make/Qapla have one
+  caller each, and `BaseDirective` + `utils/http.js` had already absorbed their
+  duplication. Only `LLMKeyService`, `WhatsappService` and `TiledeskApiService`
+  earned their place. `LLMKeyService` needed *two* methods — the 6 directives had
+  three distinct key-resolution orders.
+- **A second circular dependency existed** that this document never identified: a
+  dead `TiledeskChatbot` require in `utils/TiledeskChatbotUtil.js`.
+- **The `src/` move was deferred.** It was never the user's choice (the package
+  collapse was), it is cosmetic beside it, and it would have forced relocating the
+  test tree — breaking the invariant above.
+
+### Consequences requiring a human decision
+
+1. **`@tiledesk/tiledesk-tybot-connector` can no longer be published from this repo.**
+   This follows directly from the approved package collapse. A dep-less stub manifest
+   was deliberately rejected: it installs cleanly and then fails at runtime in
+   consumers. `deploy.sh` lost its npm-auth/publish step with it.
+2. **CI has still never run.** The workflow is committed but the branch is unpushed.
+
+### Real bugs found and deliberately NOT fixed (behaviour was preserved)
+
+- `DirAiCondition.js` (lines ~153/168/180/197) reads `trueIntent`/`falseIntent`/
+  `*Attributes`, which `go()` never declares -> `ReferenceError` on the vLLM/ollama
+  "integration not found" paths.
+- `DirAskGPT.js:121` calls `this.checkQuoteAvailability()`, which exists on neither
+  the class nor `BaseDirective` -> TypeError on the public-GPTKEY path.
+- `DirReplyV2.js:229` calls `winston.errpr` (typo) inside a catch block.
+- `DirAiTask` is destructured from a module that never exported it -> `undefined`.
+- `ChatbotParametersClient.myrequest` calls an undefined `TiledeskClient.getErr`.
+- `DirCondition`, `DirMessageToBot` and `DirDisableInputText` are undispatched;
+  `Directives.DEFLECT_TO_HELP_CENTER` is undefined, so the deprecated inline branch
+  is dead and calls a stale 4-argument `execute`.
+
+### Top follow-ups
+
+1. **Un-quarantine the 12 test files.** Most directives touched in Phases 2-4 are
+   among them, so the gate proved nothing about that work — equivalence there rests
+   on purpose-built harnesses, not the suite. This is now the single largest risk.
+2. Fix the six bugs above, each in its own commit.
+3. Run CI (requires pushing the branch).
+4. `checkJs` reports 141 source errors, documented as a follow-up list, none fixed.
+5. `jsconfig.json` excludes `tybotRoute/test` pending `@types/mocha` (862 of the 1006
+   errors were mocha globals).
+6. The `src/` relocation, if still wanted.
+
 ## Phase 1 outcome
 
 **Status: complete.** Commit `50ae1876`. All 4,877 dead lines removed after
