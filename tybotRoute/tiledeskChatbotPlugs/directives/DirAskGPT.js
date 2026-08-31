@@ -6,8 +6,8 @@ const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
-const integrationService = require("../../services/IntegrationService");
-const kbSettingsService = require("../../services/KbSettingsService");
+const llmKeyService = require("../../services/LLMKeyService");
+const { kbEndpoint } = require("../../config/endpoints");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -91,20 +91,20 @@ class DirAskGPT extends BaseDirective {
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
 
-    const kb_endpoint = process.env.KB_ENDPOINT;
+    const kb_endpoint = kbEndpoint();
     winston.verbose("DirAskGPT KbEndpoint URL: ", kb_endpoint);
 
-    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
-    if (!key) {
-      winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
-      key = await kbSettingsService.getKeyFromKbSettings(this.projectId, this.token, "(DirAskGPT)");
-    }
-
-    if (!key) {
-      winston.debug("(DirAskGPT) - Retrieve public gptkey")
-      key = process.env.GPTKEY;
-      publicKey = true;
-    }
+    const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
+      caller: "(DirAskGPT)",
+      onIntegrationMiss: () => {
+        winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
+      },
+      onPublicKey: () => {
+        winston.debug("(DirAskGPT) - Retrieve public gptkey")
+      }
+    });
+    let key = resolved_key.key;
+    publicKey = resolved_key.publicKey;
 
     if (!key) {
       winston.error("(DirAskGPT) Error: gptkey is mandatory");

@@ -9,9 +9,9 @@ const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
-const integrationService = require("../../services/IntegrationService");
-const kbSettingsService = require("../../services/KbSettingsService");
 const quotasService = require("../../services/QuotasService");
+const llmKeyService = require("../../services/LLMKeyService");
+const { apiEndpoint } = require("../../config/endpoints");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -77,23 +77,24 @@ class DirAddKbContent extends BaseDirective {
     const filled_content = filler.fill(content, requestVariables);
     const filled_name = filler.fill(name, requestVariables);
 
-    const kb_endpoint = process.env.API_ENDPOINT;
+    const kb_endpoint = apiEndpoint();
     winston.verbose("[DirAddKbContent] KbEndpoint URL: " + kb_endpoint);
 
-    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
-    if (!key) {
-      this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
-      winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
-      key = await kbSettingsService.getKeyFromKbSettings(this.projectId, this.token, "(DirAddKbContent)");
-    }
-
-    if (!key) {
-      winston.verbose("[DirAddKbContent] - Retrieve public gptkey")
-      key = process.env.GPTKEY;
-      publicKey = true;
-    } else {
-      this.logger.native("[Add to KnwoledgeBase] Use your own OpenAI key")
-    }
+    const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
+      caller: "(DirAddKbContent)",
+      onIntegrationMiss: () => {
+        this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
+        winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
+      },
+      onPublicKey: () => {
+        winston.verbose("[DirAddKbContent] - Retrieve public gptkey")
+      },
+      onOwnKey: () => {
+        this.logger.native("[Add to KnwoledgeBase] Use your own OpenAI key")
+      }
+    });
+    let key = resolved_key.key;
+    publicKey = resolved_key.publicKey;
 
     if (!key) {
       winston.info("[DirAddKbContent] Error: gptkey is mandatory");

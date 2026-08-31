@@ -11,6 +11,8 @@ const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
+const llmKeyService = require("../../services/LLMKeyService");
+const { qaEndpoint } = require("../../config/endpoints");
 const path = require("path");
 const mime = require("mime-types");
 const { Directives } = require('./Directives');
@@ -114,7 +116,7 @@ class DirAiPrompt extends BaseDirective {
       }
     }
 
-    let AI_endpoint = process.env.KB_ENDPOINT_QA;
+    let AI_endpoint = qaEndpoint();
     winston.verbose("DirAiPrompt AI_endpoint " + AI_endpoint);
 
     let headers = {
@@ -201,13 +203,13 @@ class DirAiPrompt extends BaseDirective {
       }
 
     } else {
-      key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-      
-      if (!key && action.llm === "openai") {
-        this.logger.native("[AI Prompt] Using shared OpenAI key.")
-        key = process.env.GPTKEY;
-        publicKey = true;
-      }
+      const resolved_key = await llmKeyService.resolveLlmKey(this.projectId, action.llm, this.token, {
+        onPublicKey: () => {
+          this.logger.native("[AI Prompt] Using shared OpenAI key.")
+        }
+      });
+      key = resolved_key.key;
+      publicKey = resolved_key.publicKey;
 
       if (!key) {
         this.logger.error("[AI Prompt] llm key not found in integrations");

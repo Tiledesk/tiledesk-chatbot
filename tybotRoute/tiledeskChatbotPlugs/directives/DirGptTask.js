@@ -8,9 +8,9 @@ const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
-const integrationService = require("../../services/IntegrationService");
-const kbSettingsService = require("../../services/KbSettingsService");
 const quotasService = require("../../services/QuotasService");
+const llmKeyService = require("../../services/LLMKeyService");
+const { openaiEndpoint } = require("../../config/endpoints");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -116,22 +116,22 @@ class DirGptTask extends BaseDirective {
       }
     }
 
-    const openai_url = process.env.OPENAI_ENDPOINT + "/chat/completions";
+    const openai_url = openaiEndpoint() + "/chat/completions";
     winston.debug("(DirGptTask)  openai_url " + openai_url);
 
-    let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
-    if (!key) {
-      this.logger.native("[ChatGPT Task] Key not found in Integrations.");
-      winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
-      key = await kbSettingsService.getKeyFromKbSettings(this.projectId, this.token, "(DirGptTask)");
-    }
-
-    if (!key) {
-      this.logger.native("[ChatGPT Task] Retrieve shared gptkey.");
-      winston.debug("(DirGptTask) - Retrieve public gptkey")
-      key = process.env.GPTKEY;
-      publicKey = true;
-    }
+    const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
+      caller: "(DirGptTask)",
+      onIntegrationMiss: () => {
+        this.logger.native("[ChatGPT Task] Key not found in Integrations.");
+        winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
+      },
+      onPublicKey: () => {
+        this.logger.native("[ChatGPT Task] Retrieve shared gptkey.");
+        winston.debug("(DirGptTask) - Retrieve public gptkey")
+      }
+    });
+    let key = resolved_key.key;
+    publicKey = resolved_key.publicKey;
 
     if (!key) {
       this.logger.error("[ChatGPT Task] OpenAI key is mandatory");

@@ -10,10 +10,11 @@ const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
-const integrationService = require("../../services/IntegrationService");
 const { BaseDirective } = require("../BaseDirective");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
+const llmKeyService = require("../../services/LLMKeyService");
+const { qaEndpoint } = require("../../config/endpoints");
 const aiController = require("../../services/AIController");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
@@ -189,8 +190,12 @@ class DirAskGPTV2 extends BaseDirective {
       return;
     }
 
+    // Third key-resolution shape (single call site): the model is already
+    // resolved by AIController, and the public fallback keys off
+    // model.provider rather than off an action attribute. Only the env read is
+    // delegated to LLMKeyService; the branch stays here on purpose.
     if (!model.api_key && model.provider === 'openai') {
-      model.api_key = process.env.GPTKEY;
+      model.api_key = llmKeyService.publicGptKey();
       publicKey = true;
     }
 
@@ -278,7 +283,7 @@ class DirAskGPTV2 extends BaseDirective {
     }
 
     embedding = ns.embedding || default_embedding;
-    embedding.api_key = process.env.EMBEDDING_API_KEY || process.env.GPTKEY;
+    embedding.api_key = llmKeyService.embeddingApiKey();
 
     let json = {
       question: filled_question,
@@ -376,10 +381,7 @@ class DirAskGPTV2 extends BaseDirective {
     
     winston.debug("DirAskGPTV2 json:", json);
 
-    let kb_endpoint = process.env.KB_ENDPOINT_QA;
-    if (ns.hybrid === true) {
-      kb_endpoint = process.env.KB_ENDPOINT_QA_GPU;
-    }
+    let kb_endpoint = qaEndpoint(ns.hybrid);
     winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
     const HTTPREQUEST = {

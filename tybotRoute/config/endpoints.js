@@ -35,7 +35,50 @@ function tilebotEndpoint() {
   return process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`;
 }
 
+/**
+ * The knowledge-base "ask" service base url (the /qa and /ask routes).
+ *
+ * Three directives selected this url inline: DirAiPrompt and DirAiCondition
+ * always used KB_ENDPOINT_QA, while DirAskGPTV2 swapped to KB_ENDPOINT_QA_GPU
+ * for a hybrid namespace with
+ *
+ *   let kb_endpoint = process.env.KB_ENDPOINT_QA;
+ *   if (ns.hybrid === true) { kb_endpoint = process.env.KB_ENDPOINT_QA_GPU; }
+ *
+ * The strict `=== true` test is reproduced here, so a call with no argument
+ * (DirAiPrompt / DirAiCondition) resolves to KB_ENDPOINT_QA exactly as before,
+ * and only a literal `true` reaches the GPU endpoint.
+ *
+ * @param {*} [hybrid] the namespace's `hybrid` flag, passed through as-is.
+ * @returns {string|undefined}
+ */
+function qaEndpoint(hybrid) {
+  if (hybrid === true) {
+    return process.env.KB_ENDPOINT_QA_GPU;
+  }
+  return process.env.KB_ENDPOINT_QA;
+}
+
+/**
+ * The legacy knowledge-base base url used by DirAskGPT (the v1 /qa route).
+ * @returns {string|undefined} process.env.KB_ENDPOINT, as-is.
+ */
+function kbEndpoint() {
+  return process.env.KB_ENDPOINT;
+}
+
+/**
+ * The OpenAI-compatible completion service base url used by DirGptTask.
+ * @returns {string|undefined} process.env.OPENAI_ENDPOINT, as-is.
+ */
+function openaiEndpoint() {
+  return process.env.OPENAI_ENDPOINT;
+}
+
 module.exports = {
   apiEndpoint,
-  tilebotEndpoint
+  tilebotEndpoint,
+  qaEndpoint,
+  kbEndpoint,
+  openaiEndpoint
 };
