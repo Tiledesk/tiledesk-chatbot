@@ -109,6 +109,43 @@ class KBService {
     })
   }
 
+  /**
+   * POST /{projectId}/kb - add a piece of content to a namespace.
+   *
+   * Extracted verbatim from DirAddKbContent. The raw `{err, resbody}` goes
+   * back so the directive keeps its own three-way branch (`err`,
+   * `resbody.success === true`, and the else that does the same thing as the
+   * success case). It is deliberately NOT folded into the add*Question
+   * methods above: those reject, this one does not, and DirAddKbContent's
+   * error branch reads `err?.response` rather than the error itself.
+   *
+   * @param {string} id_project
+   * @param {string} token       raw JWT (sent as "JWT <token>")
+   * @param {object} json        the request body, assembled by the caller
+   * @param {string} [caller]    log prefix, e.g. "[DirAddKbContent]"
+   * @returns {Promise<{err: (Error|null), resbody: *}>} never rejects
+   */
+  async addContent(id_project, token, json, caller = "[KbService]") {
+    return new Promise((resolve) => {
+      const HTTPREQUEST = {
+        url: apiEndpoint() + "/" + id_project + "/kb",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT ' + token
+        },
+        json: json,
+        method: "POST"
+      }
+      winston.debug(caller + " HttpRequest: ", HTTPREQUEST);
+
+      httpUtils.request(
+        HTTPREQUEST, (err, resbody) => {
+          resolve({ err: err, resbody: resbody });
+        }
+      )
+    })
+  }
+
   async addUnansweredQuestion(id_project, data, token) {
     
     return new Promise((resolve, reject) => {

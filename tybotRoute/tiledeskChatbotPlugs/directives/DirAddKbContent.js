@@ -6,7 +6,6 @@ const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
 const quotasService = require("../../services/QuotasService");
 const kbService = require("../../services/KbService");
 const llmKeyService = require("../../services/LLMKeyService");
@@ -76,8 +75,7 @@ class DirAddKbContent extends BaseDirective {
     const filled_content = filler.fill(content, requestVariables);
     const filled_name = filler.fill(name, requestVariables);
 
-    const kb_endpoint = apiEndpoint();
-    winston.verbose("[DirAddKbContent] KbEndpoint URL: " + kb_endpoint);
+    winston.verbose("[DirAddKbContent] KbEndpoint URL: " + apiEndpoint());
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
       caller: "(DirAddKbContent)",
@@ -162,38 +160,24 @@ class DirAddKbContent extends BaseDirective {
     
     winston.debug("[DirAddKbContent] json:", json);
 
-    const HTTPREQUEST = {
-      url: kb_endpoint + "/" + this.projectId + "/kb",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
-      },
-      json: json,
-      method: "POST"
-    }
-    winston.debug("[DirAddKbContent] HttpRequest: ", HTTPREQUEST);
+    const { err, resbody } = await kbService.addContent(this.projectId, this.context.token, json, "[DirAddKbContent]");
 
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        
-        if (err) {
-          this.logger.error("[Add to KnwoledgeBase] error: " + JSON.stringify(err?.response));
-          winston.error("[DirAddKbContent] error: ", err?.response);
-          if (callback) {
-            callback();
-            return;
-          }
-        }
-        else if (resbody.success === true) {
-          winston.debug("[DirAddKbContent] resbody: ", resbody);
-          callback();
-          return;
-        } else {
-          callback();
-          return;
-        }
+    if (err) {
+      this.logger.error("[Add to KnwoledgeBase] error: " + JSON.stringify(err?.response));
+      winston.error("[DirAddKbContent] error: ", err?.response);
+      if (callback) {
+        callback();
+        return;
       }
-    )
+    }
+    else if (resbody.success === true) {
+      winston.debug("[DirAddKbContent] resbody: ", resbody);
+      callback();
+      return;
+    } else {
+      callback();
+      return;
+    }
   }
 
   // async setDefaultEngine() {
