@@ -4,8 +4,8 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston')
-const httpUtils = require('../../utils/HttpUtils');
 const integrationService = require('../../services/IntegrationService');
+const openAIAssistantsService = require('../../services/OpenAIAssistantsService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -149,7 +149,7 @@ class DirAssistant extends BaseDirective {
       if (!threadId || (threadId && threadId.trim() === '') ) {
         // create thread if it doesn't exist
         winston.debug("(DirAssistant) Creating thread");
-        const thread = await this.createThread(apikey);
+        const thread = await openAIAssistantsService.createThread(apikey, this.timeout, "(DirAssistant)");
         winston.debug("(DirAssistant) Thread crated.");
         threadId = thread.id;
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, threadIdAttribute, threadId);
@@ -159,10 +159,10 @@ class DirAssistant extends BaseDirective {
       else {
         winston.debug("(DirAssistant) Reusing threadId (used flow attribute: " + threadIdAttribute + "):" + threadId);
       }
-      await this.addMessage(prompt, threadId, apikey);
+      await openAIAssistantsService.addMessage(prompt, threadId, apikey, this.timeout, "(DirAssistant)");
       winston.debug("(DirAssistant) Message added.");
       await this.runThreadOnAssistant(assistantId, threadId, apikey);
-      let messages = await this.threadMessages(threadId, apikey);
+      let messages = await openAIAssistantsService.threadMessages(threadId, apikey, this.timeout, "(DirAssistant)");
       let lastMessage = null;
       if (messages && messages.data && messages.data.length > 0 && messages.data[0]) {
         if (messages.data[0].content.length > 0 && messages.data[0].content[0] && messages.data[0].content[0].text) {
@@ -230,93 +230,8 @@ class DirAssistant extends BaseDirective {
     }
   }
 
-  async createThread(apikey) {
-    winston.debug("(DirAssistant) creating thread...");
-    return new Promise( async (resolve, reject) => {
-      const url = "https://api.openai.com/v1/threads";
-      const headers = {
-        "Authorization": apikey,
-        "OpenAI-Beta": "assistants=v2"
-      }
-      const HTTPREQUEST = {
-        url: url,
-        headers: headers,
-        json: '', // no old messages on creation
-        method: "POST",
-        timeout: this.timeout
-      };
-      winston.debug("(DirAssistant) DirAssistant HttpRequest", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, res) => {
-
-          if (err) {
-            winston.error("(DirAssistant) error: ", err);
-            reject(err);
-          }
-          let thread = res;
-          winston.debug("(DirAssistant) got threadid res: ", res);
-          resolve(thread)
-        }
-      );
-    });
-  }
-  
-  async addMessage(prompt, threadId, apikey) {
-  
-    // POST https://api.openai.com/v1/threads/{{threadID}}/messages
-  
-    // JSON
-    /*
-    {
-      "role": "user",
-      "content": {{last_user_text | json}},
-      "attachments": [
-        {
-          "file_id": "file-9rf2OwoLy22Q6bePkO0Zmhlc",
-          "tools": [
-            {
-              "type": "code_interpreter"
-            }
-          ]
-        }
-      ]
-    }
-  */
-    const json_payload = {
-      "role": "user",
-      "content": prompt
-    }
-
-    return new Promise( async (resolve, reject) => {
-      const url = `https://api.openai.com/v1/threads/${threadId}/messages`;
-      const headers = {
-        "Authorization": apikey,
-        "OpenAI-Beta": "assistants=v2"
-      }
-      const HTTPREQUEST = {
-        url: url,
-        headers: headers,
-        json: json_payload,
-        method: "POST",
-        timeout: this.timeout
-      };
-      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, res) => {
-
-          if (err) {
-            winston.error("(DirAssistant) error: ", err);
-            reject(err);
-          }
-          winston.debug("(DirAssistant) got response data: ", res);
-          resolve();
-        }
-      );
-    });
-  }
-  
   async runThreadOnAssistant(assistantId, threadId, apikey) {
-    let _run = await this.createRun(threadId, assistantId, apikey);
+    let _run = await openAIAssistantsService.createRun(threadId, assistantId, apikey, this.timeout, "(DirAssistant)");
     winston.debug("(DirAssistant) Got run: ", _run);
     let runId = _run.id;
     winston.debug("(DirAssistant) runId: " + runId);
@@ -326,7 +241,7 @@ class DirAssistant extends BaseDirective {
       const wait_for = 2000;
       winston.debug("(DirAssistant) Waiting: " + wait_for);
       await new Promise(resolve => setTimeout(resolve, wait_for));
-      let run = await this.getRun(threadId, runId, apikey);
+      let run = await openAIAssistantsService.getRun(threadId, runId, apikey, this.timeout, "(DirAssistant)");
       status = run.status;
       winston.debug("(DirAssistant) Run status: " + status);
     }
@@ -336,94 +251,6 @@ class DirAssistant extends BaseDirective {
     winston.debug("(DirAssistant) Run end.");
   }
 
-  async createRun(threadId, assistantId, apikey) {
-    const json_payload = {
-      "assistant_id": assistantId
-    }
-
-    return new Promise( async (resolve, reject) => {
-      winston.debug("(DirAssistant) adding message to thread...");
-      const url = `https://api.openai.com/v1/threads/${threadId}/runs`;
-      const headers = {
-        "Authorization": apikey,
-        "OpenAI-Beta": "assistants=v2"
-      }
-      const HTTPREQUEST = {
-        url: url,
-        headers: headers,
-        json: json_payload,
-        method: "POST",
-        timeout: this.timeout
-      };
-      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, res) => {
-          if (err) {
-            winston.error("(DirAssistant) error: ", err);
-            reject(err);
-          }
-          winston.debug("(DirAddTags) got response data: ", res);
-          resolve(res);
-        }
-      );
-    });
-  }
-
-  async getRun(threadId, runId, apikey) {
-    return new Promise( async (resolve, reject) => {
-      const url = `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`;
-      const headers = {
-        "Authorization": apikey,
-        "OpenAI-Beta": "assistants=v2"
-      }
-      const HTTPREQUEST = {
-        url: url,
-        headers: headers,
-        json: null,
-        method: "GET",
-        timeout: this.timeout
-      };
-      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, res) => {
-          if (err) {
-            winston.error("(DirAssistant) error: ", err);
-            reject(err);
-          }
-          winston.debug("(DirAddTags) got response data: ", res);
-          resolve(res);
-        }
-      );
-    });
-  }
-
-  async threadMessages(threadId, apikey) {
-    return new Promise( async (resolve, reject) => {
-      const url = `https://api.openai.com/v1/threads/${threadId}/messages`;
-      const headers = {
-        "Authorization": apikey,
-        "OpenAI-Beta": "assistants=v2"
-      }
-      const HTTPREQUEST = {
-        url: url,
-        headers: headers,
-        json: null,
-        method: "GET",
-        timeout: this.timeout
-      };
-      winston.debug("(DirAssistant) HttpRequest: ", HTTPREQUEST);
-      httpUtils.request(
-        HTTPREQUEST, async (err, res) => {
-          if (err) {
-            winston.error("(DirAssistant) error: ", err);
-            reject(err);
-          }
-          winston.debug("(DirAddTags) got response data: ", res);
-          resolve(res);
-        }
-      );
-    });
-  }
 }
 
 
