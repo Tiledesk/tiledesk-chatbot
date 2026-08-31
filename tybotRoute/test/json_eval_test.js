@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { TiledeskJSONEval } = require('../TiledeskJSONEval');
+const { TiledeskJSONEval } = require('../expressions/TiledeskJSONEval');
 
 const data = { 
     "name": "Alan",

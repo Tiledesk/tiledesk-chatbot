@@ -1,5 +1,5 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskExpression } = require('../../TiledeskExpression');
+const { TiledeskExpression } = require('../../expressions/TiledeskExpression');
 const { Filler } = require('../Filler');
 const { parseArgsStringToArgv } = require('string-argv');
 const minimist = require('minimist');

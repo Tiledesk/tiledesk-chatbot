@@ -1,6 +1,6 @@
 var assert = require('assert');
 const exp = require('constants');
-const { TiledeskExpression } = require('../TiledeskExpression');
+const { TiledeskExpression } = require('../expressions/TiledeskExpression');
 
 describe('JSON to expression', function() {
 

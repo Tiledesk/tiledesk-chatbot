@@ -1,5 +1,5 @@
 const {VM} = require('vm2');
-const winston = require('./utils/winston');
+const winston = require('../utils/winston');
 
 class TiledeskExpression {
     // rules:

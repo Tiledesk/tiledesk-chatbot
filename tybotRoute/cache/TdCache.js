@@ -1,5 +1,5 @@
 const redis = require('redis');
-const winston = require('./utils/winston');
+const winston = require('../utils/winston');
 
 class TdCache {
 

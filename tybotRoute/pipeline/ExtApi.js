@@ -1,7 +1,7 @@
 let axios = require('axios');
 let https = require("https");
-const winston = require('./utils/winston');
-const httpUtils = require('./utils/HttpUtils');
+const winston = require('../utils/winston');
+const httpUtils = require('../utils/HttpUtils');
 
 class ExtApi {
 

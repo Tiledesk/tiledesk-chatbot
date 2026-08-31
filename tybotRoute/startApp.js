@@ -1,5 +1,5 @@
 const winston = require('./utils/winston.js');
-const { TdCache } = require('./TdCache.js');
+const { TdCache } = require('./cache/TdCache.js');
 let mongoose = require('mongoose');
 const { runtimeContext } = require('./routes/runtimeContext.js');
 const endpoints = require('./config/endpoints.js');

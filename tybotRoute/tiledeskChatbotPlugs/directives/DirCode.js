@@ -1,5 +1,5 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskExpression } = require('../../TiledeskExpression');
+const { TiledeskExpression } = require('../../expressions/TiledeskExpression');
 const { TiledeskRequestVariables } = require('../TiledeskRequestVariables');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');

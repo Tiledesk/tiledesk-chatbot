@@ -1,10 +1,10 @@
 // DEV
-const { MessagePipeline } = require('./tiledeskChatbotPlugs/MessagePipeline');
-const { DirectivesChatbotPlug } = require('./tiledeskChatbotPlugs/DirectivesChatbotPlug');
-const { SplitsChatbotPlug } = require('./tiledeskChatbotPlugs/SplitsChatbotPlug');
-const { MarkbotChatbotPlug } = require('./tiledeskChatbotPlugs/MarkbotChatbotPlug');
-const { FillParamsChatbotPlug } = require('./tiledeskChatbotPlugs/FillParamsChatbotPlug');
-//const { WebhookChatbotPlug } = require('./tiledeskChatbotPlugs/WebhookChatbotPlug');
+const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
+const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
+const { SplitsChatbotPlug } = require('../tiledeskChatbotPlugs/SplitsChatbotPlug');
+const { MarkbotChatbotPlug } = require('../tiledeskChatbotPlugs/MarkbotChatbotPlug');
+const { FillParamsChatbotPlug } = require('../tiledeskChatbotPlugs/FillParamsChatbotPlug');
+//const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
 
 // PROD
 /*const { MessagePipeline } =  require('@tiledesk/tiledesk-chatbot-plugs/MessagePipeline');

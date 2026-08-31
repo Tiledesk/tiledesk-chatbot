@@ -1,5 +1,5 @@
 const winston = require('../utils/winston');
-const { Logger } = require("../Logger");
+const { Logger } = require("../observability/Logger");
 
 /**
  * Shared shapes, declared once in tybotRoute/types/index.js. These are

@@ -1,7 +1,7 @@
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskExpression } = require('../../TiledeskExpression');
-const { TiledeskMath } = require('../../TiledeskMath');
-const { TiledeskString } = require('../../TiledeskString');
+const { TiledeskExpression } = require('../../expressions/TiledeskExpression');
+const { TiledeskMath } = require('../../expressions/TiledeskMath');
+const { TiledeskString } = require('../../expressions/TiledeskString');
 const { Filler } = require('../Filler');
 const validate = require('jsonschema').validate;
 const winston = require('../../utils/winston');

@@ -3,7 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
-const { AnalyticsClient } = require('../../AnalyticsClient');
+const { AnalyticsClient } = require('../../observability/AnalyticsClient');
 const { BaseDirective } = require('../BaseDirective');
 
 class DirMoveToAgent extends BaseDirective {

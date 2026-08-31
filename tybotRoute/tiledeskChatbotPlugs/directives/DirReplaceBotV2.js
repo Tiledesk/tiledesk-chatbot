@@ -2,7 +2,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 
 const winston = require('../../utils/winston');
-const { AnalyticsClient } = require('../../AnalyticsClient');
+const { AnalyticsClient } = require('../../observability/AnalyticsClient');
 const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');

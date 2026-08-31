@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { TiledeskExpression } = require('../TiledeskExpression');
+const { TiledeskExpression } = require('../expressions/TiledeskExpression');
 
 describe('Variable names validator regex', function() {
 

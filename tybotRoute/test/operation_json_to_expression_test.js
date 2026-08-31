@@ -1,9 +1,9 @@
 var assert = require('assert');
-const { TiledeskExpression } = require('../TiledeskExpression');
+const { TiledeskExpression } = require('../expressions/TiledeskExpression');
 
 
-const { TiledeskMath } = require('../TiledeskMath');
-const { TiledeskString } = require('../TiledeskString');
+const { TiledeskMath } = require('../expressions/TiledeskMath');
+const { TiledeskString } = require('../expressions/TiledeskString');
 
 describe('JSON operation to expression', function() {
 

@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { TiledeskWhenExpression, WhenSyntaxError, WhenEvalError } = require('../TiledeskWhenExpression');
+const { TiledeskWhenExpression, WhenSyntaxError, WhenEvalError } = require('../expressions/TiledeskWhenExpression');
 
 // Real expression taken from the new `when` field of a jsoncondition action.
 const WHEN = '(lastUserText == 1 || user_city == 2) || (user_country != "ita" && lastUserText >= 1) && (!startsWith(lastUserText, "dar"))';

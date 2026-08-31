@@ -8,7 +8,7 @@
  * The initial values are the ones index.js used to declare.
  */
 const runtimeContext = {
-  /** @type {import('../TdCache.js').TdCache} */
+  /** @type {import('../cache/TdCache.js').TdCache} */
   tdcache: null,
   API_ENDPOINT: null,
   TILEBOT_ENDPOINT: null,

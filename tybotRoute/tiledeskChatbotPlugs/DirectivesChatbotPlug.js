@@ -1,7 +1,7 @@
 const { TiledeskChatbotUtil } = require('@tiledesk/tiledesk-chatbot-util');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
-const { AnalyticsClient } = require('../AnalyticsClient');
+const { AnalyticsClient } = require('../observability/AnalyticsClient');
 const winston = require('../utils/winston');
 
 // The directive-name -> directive-class map. Built by directives/registry.js

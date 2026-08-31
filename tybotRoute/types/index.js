@@ -88,7 +88,7 @@
 /**
  * The cache surface the engine and the directives rely on.
  *
- * This is the subset of `TdCache` (tybotRoute/TdCache.js) that callers use; it
+ * This is the subset of `TdCache` (tybotRoute/cache/TdCache.js) that callers use; it
  * is declared structurally so the in-memory test doubles satisfy it too. Every
  * method listed here exists on TdCache -- nothing aspirational.
  *

@@ -9,7 +9,7 @@ const IntentLock = require('./IntentLock');
 const RequestParameters = require('./RequestParameters');
 const ExecutionGuard = require('./ExecutionGuard');
 const winston = require('../utils/winston');
-const { AnalyticsClient } = require('../AnalyticsClient');
+const { AnalyticsClient } = require('../observability/AnalyticsClient');
 
 class TiledeskChatbot {
 

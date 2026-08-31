@@ -26,7 +26,7 @@ after(() => {
 function resetCalls() { _calls = []; }
 
 // Now load AnalyticsClient — it will use the stubbed axios.post
-const { AnalyticsClient } = require('../AnalyticsClient');
+const { AnalyticsClient } = require('../observability/AnalyticsClient');
 
 // ---------------------------------------------------------------------------
 // Helpers to control env vars within tests

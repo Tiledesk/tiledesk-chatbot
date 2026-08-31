@@ -1,9 +1,9 @@
 const winston = require('../utils/winston.js');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
-const { ExtApi } = require('../ExtApi.js');
-const { ExtUtil } = require('../ExtUtil.js');
+const { ExtApi } = require('../pipeline/ExtApi.js');
+const { ExtUtil } = require('../pipeline/ExtUtil.js');
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
-const { AnalyticsClient } = require('../AnalyticsClient.js');
+const { AnalyticsClient } = require('../observability/AnalyticsClient.js');
 const { MongodbBotsDataSource } = require('../engine/MongodbBotsDataSource.js');
 const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource.js');
 const { IntentsMachineFactory } = require('../engine/IntentsMachineFactory.js');

@@ -1,7 +1,7 @@
 const { DirIntent } = require('./DirIntent');
 const { DirJSONCondition } = require('./DirJSONCondition');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskWhenExpression } = require('../../TiledeskWhenExpression');
+const { TiledeskWhenExpression } = require('../../expressions/TiledeskWhenExpression');
 const winston = require('../../utils/winston');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');

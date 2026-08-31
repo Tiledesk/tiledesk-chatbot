@@ -1,4 +1,4 @@
-const { TiledeskExpression } = require('../TiledeskExpression');
+const { TiledeskExpression } = require('../expressions/TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 const winston = require('./winston');
 
