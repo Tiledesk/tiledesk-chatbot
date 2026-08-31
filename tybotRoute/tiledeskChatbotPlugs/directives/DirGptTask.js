@@ -9,6 +9,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const kbSettingsService = require("../../services/KbSettingsService");
 const quotasService = require("../../services/QuotasService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
@@ -122,7 +123,7 @@ class DirGptTask extends BaseDirective {
     if (!key) {
       this.logger.native("[ChatGPT Task] Key not found in Integrations.");
       winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
-      key = await this.getKeyFromKbSettings();
+      key = await kbSettingsService.getKeyFromKbSettings(this.projectId, this.token, "(DirGptTask)");
     }
 
     if (!key) {
@@ -261,36 +262,6 @@ class DirGptTask extends BaseDirective {
       }
     })
 
-  }
-
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirGptTask) KB HttpRequest ", KB_HTTPREQUEST); 
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(DirGptTask) Get KnowledgeBase err:", err.message);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
   }
 
 }

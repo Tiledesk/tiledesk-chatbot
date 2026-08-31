@@ -1,10 +1,19 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const { apiEndpoint } = require('../config/endpoints');
+const kbSettingsService = require('./KbSettingsService');
 
 class KBService {
 
   constructor() { }
+
+  /**
+   * @deprecated Kept as a thin delegate to KbSettingsService, the single owner
+   * of GET /{projectId}/kbsettings. Currently has no callers.
+   */
+  async getKeyFromKbSettings(id_project, token) {
+    return kbSettingsService.getKeyFromKbSettings(id_project, token, "(KbService)");
+  }
 
   async getNamespace(id_project, token, name, id) {
     return new Promise((resolve) => {
@@ -37,36 +46,6 @@ class KBService {
               namespace = namespaces.find(n => n.id === id);
             }
             resolve(namespace || null);
-          }
-        }
-      )
-    })
-  }
-
-  async getKeyFromKbSettings(id_project, token) {
-
-    return new Promise((resolve) => {
-      const http_request = {
-        url: apiEndpoint() + "/" + id_project + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + token
-        },
-        method: "GET"
-      }
-      winston.debug("Kb HttpRequest", http_request);
-
-      httpUtils.request(
-        http_request, async (err, resbody) => {
-          if (err) {
-            winston.error("Error getting kb settings:", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody || !resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
           }
         }
       )

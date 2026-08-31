@@ -7,6 +7,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const kbSettingsService = require("../../services/KbSettingsService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -96,7 +97,7 @@ class DirAskGPT extends BaseDirective {
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
       winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
-      key = await this.getKeyFromKbSettings();
+      key = await kbSettingsService.getKeyFromKbSettings(this.projectId, this.token, "(DirAskGPT)");
     }
 
     if (!key) {
@@ -188,36 +189,6 @@ class DirAskGPT extends BaseDirective {
         }
       }
     )
-  }
-
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirAskGPT) KB HttpRequest ", KB_HTTPREQUEST);
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAskGPT Get kb settings error ", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
   }
 
 }
