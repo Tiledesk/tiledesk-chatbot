@@ -1,17 +1,14 @@
 const winston = require('../../utils/winston');
 const IntentLock = require('../../engine/IntentLock');
+const { BaseDirective } = require('../BaseDirective');
 
-class DirUnlockIntent {
+class DirUnlockIntent extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('config (TiledeskClient) object is mandatory.');
-    }
-    this.context = context;
+    super(context);
     if (!context.tdcache) {
       throw new Error('tdcache (TdCache) object is mandatory.');
     }
-    this.tdcache = context.tdcache;
   }
 
   async execute(directive, callback) {
@@ -45,7 +42,7 @@ class DirUnlockIntent {
   static async unlockIntent(tdcache, requestId) {
     return await IntentLock.unlockIntent(tdcache, requestId);
   }
-  
+
 }
 
 module.exports = { DirUnlockIntent };
