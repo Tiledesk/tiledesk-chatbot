@@ -119,6 +119,55 @@ touch only `_tdcache` and `requestId`. They hold zero instance state. Roughly
 them. Extracting them decouples directives from the engine almost entirely and
 provides the single most valuable surface to type.
 
+### Service layer
+
+The service layer exists but was only ever half-adopted. 29 directives import
+`axios` directly; **14 of those also import a service**, so there is no
+consistent boundary — only partial migration. `IntegrationService` caught on
+(11 callers); nothing else did.
+
+| Service | Directive callers |
+|---|---|
+| `IntegrationService` | 11 |
+| `TilebotService` | 3 |
+| `QuotasService` | 2 |
+| `KbService` | 1 |
+| `DataTablesService` | 1 |
+| `AIController` | 1 |
+
+The sharpest evidence: **`DirAiPrompt` imports `QuotasService` and also builds
+the same `/quotes/tokens` and `/quotes/incr/tokens` URLs inline.** Four
+directives (`DirAddKbContent`, `DirAiCondition`, `DirAiPrompt`, `DirGptTask`)
+duplicate logic `QuotasService` already implements.
+
+Tiledesk platform paths constructed inline inside directives:
+
+| Path | Directives |
+|---|---|
+| `/kbsettings` | 6 |
+| `/quotes/tokens` | 4 |
+| `/quotes/incr/tokens` | 4 |
+| `/requests/` | 3 |
+| `/kb/namespace/all` | 2 |
+| `/tags`, `/mcp/native`, `/leads/`, `/integration/name/openai` | 1 each |
+
+Third-party endpoints are read from `process.env` directly inside directives:
+`GPTKEY` (7), `KB_ENDPOINT_QA` (3), `WHATSAPP_ENDPOINT` (2),
+`PERSIST_API_ENDPOINT` (2), `OPENAI_ENDPOINT` (2), `MAKE_ENDPOINT` (2), plus
+`QAPLA_ENDPOINT`, `HUBSPOT_ENDPOINT`, `CUSTOMERIO_ENDPOINT`, `BREVO_ENDPOINT`,
+`KB_ENDPOINT_QA_GPU` and `KB_ENDPOINT`.
+
+**All five existing services capture their endpoint at module load:**
+
+```js
+const API_ENDPOINT = process.env.API_ENDPOINT;   // DataTables, Integration, Kb, Quotas
+const TILEBOT_ENDPOINT = process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`
+```
+
+This import-time binding is the same defect that forces static ports in Phase 0.
+If new services copy the pattern, every extraction makes the suite harder to
+configure.
+
 ### God files
 
 | File | LOC |
@@ -152,8 +201,8 @@ Three decisions were taken before design and shape everything below.
 ## Approach
 
 **Layered bottom-up.** Safety net → dead code → kernel → pilot → fan-out →
-structure. Each phase is independently verifiable and produces a reviewable
-diff.
+services → registry → structure. Each phase is independently verifiable and
+produces a reviewable diff.
 
 Two alternatives were rejected. *Directory-first* would rewrite every import
 path in one mechanical diff before the safety net is trustworthy — with 156
@@ -215,7 +264,7 @@ immediately before deleting, in case Phase 0 introduced a reference.
 
 - `engine/RequestParameters.js` — the five statics moved out verbatim.
   `TiledeskChatbot` keeps thin delegating statics so all ~110 call sites remain
-  untouched during migration. Delegates are removed in Phase 5, not here.
+  untouched during migration. Delegates are removed in Phase 6, not here.
 - `engine/IntentLock.js` — `lockIntent` / `unlockIntent`. Both the engine and the
   two directives then depend on this leaf, breaking the cycle. The runtime
   circular-dependency warning disappearing is the proof.
@@ -256,7 +305,49 @@ process output.
 **Verification:** green set unchanged after every batch. A batch that goes red is
 reverted, not patched forward.
 
-### Phase 4 — Registry
+### Phase 4 — Service extraction
+
+Placed after the `BaseDirective` fan-out so services can use the shared HTTP
+helper, and before the god-file split because extracting the AI services is
+precisely how `DirAiPrompt` gets from 943 LOC to something reviewable.
+
+**Extraction rule.** Extract only when two or more directives touch the same
+external system, *or* the call sequence is non-trivial (auth + quota + retry).
+One-off calls stay inline. This is what stops the phase sprawling into one
+service per directive: `/mcp/native` and `/integration/name/openai` have a
+single caller each and therefore stay where they are.
+
+First, `config/endpoints.js` resolving every endpoint env var **lazily at call
+time**, with all services — the five existing ones included — reading through it
+rather than binding at import. This is behaviour-preserving for normal boots,
+where env is set before first call. It also lifts the Phase 0 constraint, so
+dynamic test ports become possible later instead of permanently foreclosed.
+
+Then, in order:
+
+1. **Adopt what already exists.** Repoint the 4 quota duplicators at
+   `QuotasService`. No new code — this is pure deletion.
+2. **`KbSettingsService`** — replaces the 6 inline `/kbsettings` copies.
+3. **Vendor services** — `BrevoService`, `HubspotService`, `CustomerioService`,
+   `MakeService`, `QaplaService`, `WhatsappService`. Each owns its endpoint, key
+   retrieval and payload shape. These are the same directives that carry the 5
+   near-identical `#myrequest` copies, so this phase and Phase 2's HTTP helper
+   compound.
+4. **`LlmService`** — consolidates `OPENAI_ENDPOINT`, `KB_ENDPOINT_QA`,
+   `KB_ENDPOINT_QA_GPU` and `GPTKEY` handling shared by `DirAiPrompt` and
+   `DirAskGPTV2`.
+5. **`TiledeskApiService`** — the inline `/requests/`, `/tags` and `/leads/`
+   calls.
+
+This adds roughly 8 files. Net code decreases, net file count increases; the win
+is that directives stop knowing about HTTP, auth and endpoints, which is what
+makes the later TypeScript pass cheap.
+
+**Verification:** green set unchanged after each numbered step, committed
+separately. No directive that gained a service still imports `axios` for that
+same external system.
+
+### Phase 5 — Registry
 
 Each directive declares `static directiveNames = [...]`; `directives/registry.js`
 builds the dispatch map by iterating them. This deletes the ~100-entry map
@@ -266,7 +357,7 @@ a directive becomes a one-file change rather than a three-file change.
 **Verification:** the generated map is asserted equal to the current hardcoded
 map before the literal is deleted. Green set unchanged.
 
-### Phase 5 — Split god files, collapse packages, move to `src/`
+### Phase 6 — Split god files, collapse packages, move to `src/`
 
 - Split `TiledeskChatbotUtil.js` (1,106 LOC) by concern.
 - Split `tybotRoute/index.js` (813 LOC) into `routes/` modules plus `startApp`.
@@ -288,7 +379,9 @@ src/
   engine/              # TiledeskChatbot, RequestParameters, IntentLock, IntentForm
   directives/          # BaseDirective, registry, Dir*.js
   plugs/
-  services/
+  services/            # existing + KbSettings, Llm, TiledeskApi, per-vendor
+  config/
+    endpoints.js       # lazy env resolution, single source of endpoint truth
   models/
   cache/               # TdCache
   utils/
@@ -299,7 +392,7 @@ src/
 Package collapse and the `src/` move are separate commits — bisectability matters
 most here, where the diff is largest.
 
-### Phase 6 — JSDoc typedefs
+### Phase 7 — JSDoc typedefs
 
 `src/types/index.js` defining `DirectiveContext`, `Directive`, `Action`,
 `TdCacheLike` and `DirectiveCallback`. Annotate `BaseDirective`, the registry and
@@ -318,8 +411,11 @@ CI type gate, per the TypeScript-runway decision.
 | Collapsing `executeCondition`/`myrequest` variants changes behaviour | Diff each variant before merging; 5 known-divergent directives override; status codes become explicit parameters |
 | `#private` → `_protected` conversion is wide-reaching | Its own commit, no other change mixed in |
 | Package collapse breaks the published `@tiledesk/tiledesk-tybot-connector` | Separate commit; verify Docker build and `npm start` before proceeding |
-| Phase 5 `src/` move produces an unreviewable diff | Pure file moves committed separately from content edits |
+| Phase 6 `src/` move produces an unreviewable diff | Pure file moves committed separately from content edits |
 | Frozen baseline hides pre-existing bugs | Explicitly accepted — this migration preserves behaviour, including buggy behaviour. Quarantined tests are a written backlog |
+| Service extraction sprawls into one service per directive | The two-caller-or-non-trivial rule; single-caller paths (`/mcp/native`, `/integration/name/openai`) stay inline |
+| Lazy endpoint resolution changes behaviour where env is set after import | Behaviour-preserving for normal boots, where env is set before first call. Verified against the frozen green set, which exercises the import-time path today |
+| Vendor services drift from the directives they replaced | Each vendor service is extracted in the same commit that repoints its directive, never ahead of it |
 
 ## Success criteria
 
@@ -331,5 +427,8 @@ CI type gate, per the TypeScript-runway decision.
 5. No circular dependencies in the module graph.
 6. One `package.json`, one `node_modules`.
 7. Adding a directive touches one file.
-8. Core shapes carry JSDoc typedefs; `checkJs` runs clean enough to enumerate
-   remaining errors as a follow-up list.
+8. No directive constructs a Tiledesk platform URL or reads a third-party
+   endpoint env var directly; endpoints resolve through `config/endpoints.js`.
+9. No directive imports `axios` for an external system that has a service.
+10. Core shapes carry JSDoc typedefs; `checkJs` runs clean enough to enumerate
+    remaining errors as a follow-up list.
