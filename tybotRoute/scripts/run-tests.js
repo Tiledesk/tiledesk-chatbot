@@ -60,11 +60,39 @@ function parseArgs(argv) {
 
 const { opts, errors: argErrors } = parseArgs(process.argv.slice(2));
 
+// Every test file starts its own mock server on MOCK (10002) and registers the
+// routes it needs there — including the vendor and AI routes (/api/v3/contacts,
+// /crm/v3/objects/..., /1.2/getShipment/, /v1/chat/completions, /api/ask,
+// /api/qa). Those tests were previously quarantined purely because nothing
+// pointed the directives at the mock, so they called the real vendor hosts and
+// timed out. The bases below are derived from how each service builds its url:
+//
+//   BrevoService       brevoEndpoint()      + '/contacts'
+//   CustomerioService  customerioEndpoint() + '/forms/{id}/submit'
+//   HubspotService     hubspotEndpoint()    + 'objects/contacts/batch/create'  (note: trailing slash)
+//   QaplaService       qaplaEndpoint()      + '/getShipment/'
+//   MakeService        makeEndpoint()       + '/make/'
+//   OpenAIService      openaiEndpoint()     + '/chat/completions'
+//   LlmAskService      kbEndpoint()         + '/qa'   and  qaEndpoint() + '/ask'
+//
+// Change a service's url shape and the matching base here must change with it.
+const MOCK = process.env.API_ENDPOINT || 'http://localhost:10002';
+
 const TEST_ENV = {
   REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
   REDIS_PORT: process.env.REDIS_PORT || '6379',
-  API_ENDPOINT: process.env.API_ENDPOINT || 'http://localhost:10002',
+  API_ENDPOINT: MOCK,
   TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT || 'http://localhost:10001',
+
+  BREVO_ENDPOINT: process.env.BREVO_ENDPOINT || `${MOCK}/api/v3`,
+  CUSTOMERIO_ENDPOINT: process.env.CUSTOMERIO_ENDPOINT || `${MOCK}/api/v1`,
+  HUBSPOT_ENDPOINT: process.env.HUBSPOT_ENDPOINT || `${MOCK}/crm/v3/`,
+  QAPLA_ENDPOINT: process.env.QAPLA_ENDPOINT || `${MOCK}/1.2`,
+  MAKE_ENDPOINT: process.env.MAKE_ENDPOINT || `${MOCK}/1.3`,
+  OPENAI_ENDPOINT: process.env.OPENAI_ENDPOINT || `${MOCK}/v1`,
+  KB_ENDPOINT: process.env.KB_ENDPOINT || `${MOCK}/api`,
+  KB_ENDPOINT_QA: process.env.KB_ENDPOINT_QA || `${MOCK}/api`,
+  KB_ENDPOINT_QA_GPU: process.env.KB_ENDPOINT_QA_GPU || `${MOCK}/api`,
 };
 
 // ---------------------------------------------------------------- running

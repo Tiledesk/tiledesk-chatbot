@@ -3,3 +3,10 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+
+  # Only needed to boot the app end-to-end (npm start). The test suite uses
+  # static bots and never connects to MongoDB.
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"

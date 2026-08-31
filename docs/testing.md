@@ -102,6 +102,18 @@ The runner defaults these; override by exporting them first.
 | `REDIS_PORT` | `6379` |
 | `API_ENDPOINT` | `http://localhost:10002` |
 | `TILEBOT_ENDPOINT` | `http://localhost:10001` |
+| `BREVO_ENDPOINT` | `$API_ENDPOINT/api/v3` |
+| `CUSTOMERIO_ENDPOINT` | `$API_ENDPOINT/api/v1` |
+| `HUBSPOT_ENDPOINT` | `$API_ENDPOINT/crm/v3/` |
+| `QAPLA_ENDPOINT` | `$API_ENDPOINT/1.2` |
+| `MAKE_ENDPOINT` | `$API_ENDPOINT/1.3` |
+| `OPENAI_ENDPOINT` | `$API_ENDPOINT/v1` |
+| `KB_ENDPOINT`, `KB_ENDPOINT_QA`, `KB_ENDPOINT_QA_GPU` | `$API_ENDPOINT/api` |
+
+The endpoint variables point the vendor and AI directives at the mock server each
+test starts on port 10002. Without them those directives call the real vendor
+hosts and time out — which is why seven test files sat quarantined. If you change
+how a service builds its url, update the matching base in `TEST_ENV`.
 
 `API_ENDPOINT` is mandatory. Without it `startApp` throws inside an `async`
 function, the rejection is never surfaced, and every `before` hook times out —
@@ -110,7 +122,7 @@ which makes the suite look completely broken rather than misconfigured.
 ## The baseline
 
 `docs/test-baseline.json` maps each test file to the number of tests that must
-pass: **332 tests across 49 files**. It is a contract, not a snapshot. Raise it
+pass: **373 tests across 56 files**. It is a contract, not a snapshot. Raise it
 when you add tests; never lower it to make a run go green.
 
 Regenerate only when deliberately adding tests:
@@ -134,6 +146,7 @@ It *overwrites* `docs/test-baseline.json`.
 
 ## Quarantined tests
 
-`tybotRoute/test/quarantine/` holds 12 files that failed before any migration
-work began. See the README there for the reason per file. They are not
+`tybotRoute/test/quarantine/` holds 5 files that fail for reasons unrelated to
+configuration (7 of the original 12 were released once the endpoint variables
+above were set). See the README there for the reason per file. They are not
 collected. Fixing them is Phase 4 work.
