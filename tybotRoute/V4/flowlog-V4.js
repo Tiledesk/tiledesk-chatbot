@@ -32,6 +32,7 @@ const NODE_LABEL = {
   wait: 'Wait',
   delete: 'Delete Variable',
   'setattribute-v2': 'Set Variable',
+  set_variables: 'Set Variables',
   capture_user_reply: 'Capture User Reply',
   connect_block: 'Connect Block',
   hmessage: 'Hidden Message',

@@ -28,6 +28,7 @@ const HANDLERS = {
   capture_user_reply: require('./nodes/capture_user_reply-V4.js'),
   replacebotv3: require('./nodes/replacebotv3-V4.js'),
   'setattribute-v2': require('./nodes/setattribute-v2-V4.js'),
+  set_variables: require('./nodes/set_variables-V4.js'),
   condition: require('./nodes/condition-V4.js'),
   jsoncondition: require('./nodes/jsoncondition-V4.js'),
   iteration: require('./nodes/iteration-V4.js'),

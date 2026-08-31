@@ -45,6 +45,47 @@ const H = (t) => require('../nodes/' + t + '-V4.js');
     eq(await ctx.variables.get('punti'), 17, '10 + 7 = 17');
   });
 
+  await run('set_variables → più assegnazioni in un nodo', async () => {
+    const ctx = makeCtx();
+    const r = await H('set_variables').execute({ data: { assignments: [
+      { destination: 'stato', operation: { operands: [{ value: 'nuovo', isVariable: false }], operators: [] } },
+      { destination: 'punti', operation: { operands: [{ value: '5', isVariable: false }, { value: '3', isVariable: false }], operators: ['addAsNumber'] } },
+    ] } }, ctx);
+    eq(await ctx.variables.get('stato'), 'nuovo', 'prima assegnazione scritta');
+    eq(await ctx.variables.get('punti'), 8, 'seconda assegnazione calcolata');
+    eq(r.nextSlotKey, 'direct', 'prosegue direct');
+    ok(r.touchedVariables === true, 'touchedVariables true');
+  });
+
+  await run('set_variables → la riga N vede quello che ha scritto la N-1', async () => {
+    const ctx = makeCtx();
+    await H('set_variables').execute({ data: { assignments: [
+      { destination: 'punti', operation: { operands: [{ value: '200', isVariable: false }], operators: [] } },
+      { destination: 'livello', operation: { operands: [{ value: 'punti', isVariable: true }, { value: '100', isVariable: false }], operators: ['divideAsNumber'] } },
+    ] } }, ctx);
+    eq(await ctx.variables.get('livello'), 2, '200 / 100 = 2 usando la variabile appena scritta');
+  });
+
+  await run('set_variables → righe malformate saltate, nodo non cade', async () => {
+    const ctx = makeCtx();
+    const r = await H('set_variables').execute({ data: { assignments: [
+      null,
+      { destination: '', operation: { operands: [{ value: 'x', isVariable: false }], operators: [] } },
+      { destination: 'senza_operazione' },
+      { destination: 'ok', operation: { operands: [{ value: 'v', isVariable: false }], operators: [] } },
+    ] } }, ctx);
+    eq(await ctx.variables.get('ok'), 'v', 'la riga valida viene comunque eseguita');
+    eq(await ctx.variables.get('senza_operazione'), null, 'la riga senza operazione è saltata');
+    eq(r.nextSlotKey, 'direct', 'prosegue direct');
+  });
+
+  await run('set_variables → data senza assignments: nessun crash', async () => {
+    const ctx = makeCtx();
+    const r = await H('set_variables').execute({ data: {} }, ctx);
+    eq(r.nextSlotKey, 'direct', 'prosegue direct');
+    ok(r.touchedVariables === false, 'nessuna variabile toccata');
+  });
+
   await run('condition → ramo true vs else', async () => {
     const groups = [{ type: 'expression', conditions: [
       { type: 'condition', operand1: 'score', operator: 'greaterThan', operand2: { type: 'const', value: '10' } },
