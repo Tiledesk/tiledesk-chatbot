@@ -1,9 +1,8 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
-let axios = require('axios');
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston')
+const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -15,8 +14,6 @@ class DirReply extends BaseDirective {
   constructor(context) {
     super(context);
     this.log = context.log;
-
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   execute(directive, callback) {
@@ -158,8 +155,10 @@ class DirReply extends BaseDirective {
     this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
-    this.tdClient.sendSupportMessage(
+    tiledeskApiService.sendSupportMessage(
+      this.context.projectId,
       this.requestId,
+      this.context.token,
       cleanMessage,
       (err) => {
         if (err) {
@@ -176,7 +175,8 @@ class DirReply extends BaseDirective {
         else {
           callback();
         }
-    });
+    },
+      this.log);
 
   }
 

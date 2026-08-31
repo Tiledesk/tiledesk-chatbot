@@ -1,9 +1,6 @@
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 
-const axios = require("axios").default;
-let https = require("https");
 const winston = require('../../utils/winston');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const tiledeskApiService = require('../../services/TiledeskApiService');
@@ -17,8 +14,6 @@ class DirReplaceBotV2 extends BaseDirective {
 
   constructor(context) {
     super(context);
-
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
@@ -96,8 +91,10 @@ class DirReplaceBotV2 extends BaseDirective {
           subtype: "info"
         }
       }
-      this.tdClient.sendSupportMessage(
+      tiledeskApiService.sendSupportMessage(
+        this.context.projectId,
         this.requestId,
+        this.context.token,
         message, (err) => {
           if (err) {
             winston.debug("(DirReplaceBotV2) Error sending hidden message: " + err.message);

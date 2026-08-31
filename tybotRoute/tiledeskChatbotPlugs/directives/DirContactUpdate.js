@@ -1,10 +1,9 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
-let axios = require('axios');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
-const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
+const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -16,8 +15,6 @@ class DirContactUpdate extends BaseDirective {
   constructor(context) {
     super(context);
     this.supportRequest = context.supportRequest;
-
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
   }
 
   execute(directive, callback) {
@@ -77,7 +74,11 @@ class DirContactUpdate extends BaseDirective {
       }
     }
     const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
-    this.tdClient.updateLead(leadId, updateProperties, null, null, () => {
+    // NOTE (pre-existing): the service returns the tiledesk-client's promise,
+    // which REJECTS on an API error, and nothing here handles that rejection -
+    // so on failure `callback` is never invoked and the rejection is unhandled.
+    // Preserved as-is.
+    tiledeskApiService.updateLead(this.context.projectId, this.context.token, leadId, updateProperties, null, null, () => {
       // send hidden info to update widget lead fullname only if it is a conversation!
       winston.debug("(DirContactUpdate) requestId: " + this.requestId); 
       winston.debug("(DirContactUpdate) updateProperties: ", updateProperties); 
