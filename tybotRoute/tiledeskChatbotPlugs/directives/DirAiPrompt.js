@@ -16,6 +16,7 @@ const { qaEndpoint } = require("../../config/endpoints");
 const path = require("path");
 const mime = require("mime-types");
 const { Directives } = require('./Directives');
+const aiPromptRequestService = require("../../services/AiPromptRequestService");
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
@@ -447,104 +448,24 @@ class DirAiPrompt extends BaseDirective {
 
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   async checkMandatoryParameters(action) {
-    return new Promise((resolve, reject) => {
-      let params = ['question', 'llm', 'model']; // mandatory params
-      params.forEach((p) => {
-        if (!action[p]) {
-          reject(p)
-        }
-      })
-      resolve(true);
-    })
+    return await aiPromptRequestService.checkMandatoryParameters(action);
   }
 
-  /**
-   * Transforms the transcirpt array in a dictionary like '0': { "question": "xxx", "answer":"xxx"}
-   * merging consecutive messages with the same role in a single question or answer.
-   * If the first message was sent from assistant, this will be deleted.
-   */
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   async transcriptToLLM(transcript) {
-    
-    let objectTranscript = {};
-
-    if (transcript.length === 0) {
-      return objectTranscript;
-    }
-
-    let mergedTranscript = [];
-    let current = transcript[0];
-
-    for (let i = 1; i < transcript.length; i++) {
-      if (transcript[i].role === current.role) {
-        current.content += '\n' + transcript[i].content;
-      } else {
-        mergedTranscript.push(current);
-        current = transcript[i]
-      }
-    }
-    mergedTranscript.push(current);
-
-    if (mergedTranscript[0].role === 'assistant') {
-      mergedTranscript.splice(0, 1)
-    }
-
-    let counter = 0;
-    for (let i = 0; i < mergedTranscript.length - 1; i += 2) {
-      // Check if [i] is role user and [i+1] is role assistant??
-      assert(mergedTranscript[i].role === 'user');
-      assert(mergedTranscript[i+1].role === 'assistant');
-
-      if (!mergedTranscript[i].content.startsWith('/')) {
-        objectTranscript[counter] = {
-          question: mergedTranscript[i].content,
-          answer: mergedTranscript[i+1].content
-        }
-        counter++;
-      }
-    }
-
-    return objectTranscript;
+    return await aiPromptRequestService.transcriptToLLM(transcript);
   }
 
-  /**
-   * Builds the thinking object for reasoning based on the level and max_tokens
-   * @param {string} level - The reasoning level: 'low', 'medium', or 'high'
-   * @param {number} max_tokens - Maximum tokens available
-   * @returns {object} The thinking configuration object
-   */
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   #buildThinkingObject(level, max_tokens) {
-    // Calculate budget_tokens based on level
-    let budgetPercentage;
-    switch (level) {
-      case 'high':
-        budgetPercentage = 0.60; // 60%
-        break;
-      case 'medium':
-        budgetPercentage = 0.40; // 40%
-        break;
-      case 'low':
-      default:
-        budgetPercentage = 0.20; // 20%
-        break;
-    }
-
-    const budget_tokens = Math.floor(max_tokens * budgetPercentage);
-
-    return {
-      show_thinking_stream: true,
-      reasoning_effort: level,
-      reasoning_summary: "auto",
-      type: "enabled",
-      budget_tokens: budget_tokens,
-      thinkingBudget: budget_tokens,
-      thinkingLevel: level
-    };
+    return aiPromptRequestService.buildThinkingObject(level, max_tokens);
   }
 
   // Fields accepted by the LLM server schema. Everything else (id, native,
   // customHeaders, oauth, tools, ...) is internal and must not be forwarded.
-  static SERVER_ALLOWED_FIELDS = ['transport', 'url', 'command', 'args', 'api_key', 'headers', 'parameters'];
+  static SERVER_ALLOWED_FIELDS = aiPromptRequestService.SERVER_ALLOWED_FIELDS;
 
   arrayToObject(arr, mcp_integration, flowVariables) {
     if (!Array.isArray(arr)) {
@@ -579,105 +500,29 @@ class DirAiPrompt extends BaseDirective {
     }, {});
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   buildEnabledTools(server) {
-    if (!Array.isArray(server?.tools) || server.tools.length === 0) {
-      return [];
-    }
-    return server.tools
-      .map(t => (typeof t === 'string' ? t : t?.name))
-      .filter(name => typeof name === 'string' && name.length > 0);
+    return aiPromptRequestService.buildEnabledTools(server);
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   getIntegrationServer(integrationServers, server) {
-    if (!Array.isArray(integrationServers) || !server) return null;
-    if (server.id) {
-      const byId = integrationServers.find(s => s.id === server.id);
-      if (byId) return byId;
-    }
-    if (server.name) {
-      return integrationServers.find(s => s.name === server.name) || null;
-    }
-    return null;
+    return aiPromptRequestService.getIntegrationServer(integrationServers, server);
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   enrichServersFromIntegration(servers, mcp_integration) {
-    const integrationServers = mcp_integration?.value?.servers;
-    if (!Array.isArray(servers) || !Array.isArray(integrationServers)) return;
-
-    servers.forEach(server => {
-      const integrationServer = this.getIntegrationServer(integrationServers, server);
-      if (!integrationServer) return;
-
-      if (server.native) {
-        delete server.url;
-      } else if (integrationServer.url) {
-        server.url = integrationServer.url;
-      }
-      if (integrationServer.transport) {
-        server.transport = integrationServer.transport;
-      }
-      if (integrationServer.authorization?.key) {
-        server.api_key = integrationServer.authorization.key;
-      }
-
-      const integrationHeaders = this.customHeadersToObject(integrationServer.customHeaders);
-      if (Object.keys(integrationHeaders).length > 0) {
-        const existingHeaders =
-          server.headers &&
-          typeof server.headers === 'object' &&
-          !Array.isArray(server.headers)
-            ? server.headers
-            : {};
-        server.headers = { ...existingHeaders, ...integrationHeaders };
-      }
-    });
+    return aiPromptRequestService.enrichServersFromIntegration(servers, mcp_integration);
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   customHeadersToObject(customHeaders) {
-    if (!Array.isArray(customHeaders)) {
-      return {};
-    }
-    return customHeaders.reduce((acc, header) => {
-      if (header?.enabled === false || !header?.key) {
-        return acc;
-      }
-      acc[header.key] = header.value != null ? String(header.value) : '';
-      return acc;
-    }, {});
+    return aiPromptRequestService.customHeadersToObject(customHeaders);
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   mergeHeadersWithVariables(existingHeaders, variables) {
-    const base =
-      existingHeaders &&
-      typeof existingHeaders === 'object' &&
-      !Array.isArray(existingHeaders)
-        ? { ...existingHeaders }
-        : {};
-    for (const key of Object.keys(base)) {
-      const v = base[key];
-      if (v !== undefined && v !== null && typeof v !== 'string') {
-        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
-      }
-    }
-    if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
-      return base;
-    }
-    for (const key of Object.keys(variables)) {
-      try {
-        const v = variables[key];
-        if (v === undefined || typeof v === 'function') {
-          continue;
-        }
-        if (v === null) {
-          base[key] = '';
-          continue;
-        }
-        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
-      } catch (err) {
-        winston.warn("DirAiPrompt mergeHeadersWithVariables skip key:", key, err);
-      }
-    }
-    return base;
+    return aiPromptRequestService.mergeHeadersWithVariables(existingHeaders, variables);
   }
 
   async resolveNativeServerUrls(servers) {
@@ -764,36 +609,9 @@ class DirAiPrompt extends BaseDirective {
     });
   }
 
+  // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
   async detectAttach(source) {
-    let mime_type;
-    let type;
-  
-    const ext = path.extname(source);
-    mime_type = mime.lookup(ext) || "application/octet-stream";
-
-    if (mime_type === "application/octet-stream") {
-      try {
-        const res = await axios.head(source);
-        if (res.headers["content-type"]) {
-          mime_type = res.headers["content-type"];
-        }
-      } catch (err) {
-        mime_type = "application/octet-stream";
-      }
-    }
-  
-    if (mime_type.startsWith("image/")) type = "image";
-    else if (mime_type.startsWith("video/")) type = "video";
-    else if (mime_type.startsWith("audio/")) type = "audio";
-    else type = "file";
-
-    return {
-      type: type,
-      source: source,
-      mime_type: mime_type,
-      detail: "auto"
-    }
-
+    return await aiPromptRequestService.detectAttach(source);
   }
   
 }
