@@ -483,6 +483,51 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Follow-on: file structure reorganisation (user-requested)
+
+**Status: complete.** Commits `f57eedcb` (root modules) and `2f91264e` (directives).
+
+Two flat piles were the problem: 10 unrelated modules sitting beside the entry
+points at the `tybotRoute/` root, and 59 directives in one folder.
+
+```
+tybotRoute/
+  index.js  startApp.js        <- entry points only
+  routes/  engine/  services/  utils/  config/  models/  types/
+  expressions/                 TiledeskExpression, WhenExpression, JSONEval, Math, String
+  cache/                       TdCache
+  observability/               Logger, AnalyticsClient
+  pipeline/                    ExtUtil, ExtApi
+  tiledeskChatbotPlugs/directives/
+    Directives.js  registry.js
+    ai/ 7   integrations/ 7   conversation/ 9   flow/ 10
+    agents/ 8   data/ 10   bot/ 5   tiledesk/ 3
+```
+
+All 69 moves used `git mv`, so git records them as renames and history survives.
+
+**How this was kept safe.** The registry is the one place a mistake would be
+invisible — a silently dropped directive breaks production and no test covers it.
+So the map was captured before the move and asserted exactly equal after: 63 keys
+both sides, 0 missing, 0 extra, 0 mismatched, every value the same class object.
+`registry.js` now walks recursively.
+
+**The test invariant was deliberately lifted, narrowly.** Tests import source
+paths directly (7 root modules + 6 directives), so a move cannot avoid them; shim
+re-exports at the old paths would have defeated the point. Editing them is safe
+*now* in a way it was not earlier: the gate is green at 373 tests, the edits are
+`require` strings only, and a mistyped path fails loudly at module load. Verified
+per commit — changed lines in `git diff -- tybotRoute/test/` that are not require
+lines: **0**.
+
+**The trap worth remembering:** `DirAskGPTV2` built a prompt directory with
+`path.join(__dirname, '../../config/kb/prompt/rag')`. A require-only sweep cannot
+see that, and no test exercises it — it would have failed silently at runtime.
+Caught and fixed; re-verified that the path resolves and `PromptManager` loads.
+
+Gate green at 373/56 after each commit, and the app was booted end-to-end after
+each (`Hello Tilebot!`) rather than trusting the suite alone.
+
 ## Verification closed: local end-to-end + quarantine release
 
 **Retro-compatibility is now proven directly, not inferred.**
