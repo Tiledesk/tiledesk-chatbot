@@ -1,6 +1,6 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
-const API_ENDPOINT = process.env.API_ENDPOINT;
+const { apiEndpoint } = require('../config/endpoints');
 
 class QuotasService {
 
@@ -10,7 +10,7 @@ class QuotasService {
     return new Promise((resolve) => {
 
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/quotes/tokens",
+        url: apiEndpoint() + "/" + id_project + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -40,7 +40,7 @@ class QuotasService {
     return new Promise((resolve, reject) => {
 
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/quotes/incr/tokens",
+        url: apiEndpoint() + "/" + id_project + "/quotes/incr/tokens",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token

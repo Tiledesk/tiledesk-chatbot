@@ -1,6 +1,6 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
-const API_ENDPOINT = process.env.API_ENDPOINT;
+const { apiEndpoint } = require('../config/endpoints');
 
 class DataTablesService {
 
@@ -30,7 +30,7 @@ class DataTablesService {
       }
 
       const http_request = {
-        url: `${API_ENDPOINT}/${projectId}/tables/${tableId}/rows/list`,
+        url: `${apiEndpoint()}/${projectId}/tables/${tableId}/rows/list`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -61,7 +61,7 @@ class DataTablesService {
   async insertRow(projectId, tableId, token, body) {
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: `${API_ENDPOINT}/${projectId}/tables/${tableId}/row/insert`,
+        url: `${apiEndpoint()}/${projectId}/tables/${tableId}/row/insert`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -92,7 +92,7 @@ class DataTablesService {
   async updateRow(projectId, tableId, token, body) {
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: `${API_ENDPOINT}/${projectId}/tables/${tableId}/row/update`,
+        url: `${apiEndpoint()}/${projectId}/tables/${tableId}/row/update`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -123,7 +123,7 @@ class DataTablesService {
   async upsertRow(projectId, tableId, token, body) {
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: `${API_ENDPOINT}/${projectId}/tables/${tableId}/row/upsert`,
+        url: `${apiEndpoint()}/${projectId}/tables/${tableId}/row/upsert`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -154,7 +154,7 @@ class DataTablesService {
   async deleteRow(projectId, tableId, token, body) {
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: `${API_ENDPOINT}/${projectId}/tables/${tableId}/row/delete`,
+        url: `${apiEndpoint()}/${projectId}/tables/${tableId}/row/delete`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token

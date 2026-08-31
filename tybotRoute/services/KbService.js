@@ -1,6 +1,6 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
-const API_ENDPOINT = process.env.API_ENDPOINT;
+const { apiEndpoint } = require('../config/endpoints');
 
 class KBService {
 
@@ -9,7 +9,7 @@ class KBService {
   async getNamespace(id_project, token, name, id) {
     return new Promise((resolve) => {
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kb/namespace/all",
+        url: apiEndpoint() + "/" + id_project + "/kb/namespace/all",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -47,7 +47,7 @@ class KBService {
 
     return new Promise((resolve) => {
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kbsettings",
+        url: apiEndpoint() + "/" + id_project + "/kbsettings",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -77,7 +77,7 @@ class KBService {
     
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kb/unanswered/",
+        url: apiEndpoint() + "/" + id_project + "/kb/unanswered/",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -100,7 +100,7 @@ class KBService {
   async addAnsweredQuestion(id_project, data, token) {
     return new Promise((resolve, reject) => {
       const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kb/answered/",
+        url: apiEndpoint() + "/" + id_project + "/kb/answered/",
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token

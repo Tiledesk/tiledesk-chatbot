@@ -1,6 +1,6 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
-const API_ENDPOINT = process.env.API_ENDPOINT;
+const { apiEndpoint } = require('../config/endpoints');
 
 class IntegrationService {
 
@@ -10,7 +10,7 @@ class IntegrationService {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: API_ENDPOINT + "/" + id_project + "/integration/name/" + integration_name,
+        url: apiEndpoint() + "/" + id_project + "/integration/name/" + integration_name,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token
@@ -42,7 +42,7 @@ class IntegrationService {
     return new Promise((resolve) => {
 
       const INTEGRATIONS_HTTPREQUEST = {
-        url: API_ENDPOINT + "/" + id_project + "/integration/name/" + integration_name,
+        url: apiEndpoint() + "/" + id_project + "/integration/name/" + integration_name,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'JWT ' + token

@@ -1,6 +1,6 @@
 const httpUtils = require("../utils/HttpUtils");
 const winston = require('../utils/winston');
-const TILEBOT_ENDPOINT = process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`
+const { tilebotEndpoint } = require('../config/endpoints');
 
 class TilebotService {
 
@@ -15,7 +15,7 @@ class TilebotService {
      * @param {string} token. User token
      */
     sendMessageToBot(message, botId, callback) {
-        const url = `${TILEBOT_ENDPOINT}/ext/${botId}`;
+        const url = `${tilebotEndpoint()}/ext/${botId}`;
         winston.verbose("sendMessageToBot URL" + url);
         const HTTPREQUEST = {
             url: url,
@@ -51,7 +51,7 @@ class TilebotService {
      * @param {string} token. User token
      */
     executeBlock(message, botId, callback) {
-        const url = `${TILEBOT_ENDPOINT}/exec/${botId}`;
+        const url = `${tilebotEndpoint()}/exec/${botId}`;
         winston.verbose("sendMessageToBot URL" + url);
         const HTTPREQUEST = {
             url: url,
