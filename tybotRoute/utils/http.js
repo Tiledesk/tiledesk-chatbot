@@ -9,12 +9,19 @@ const https = require("https");
  * which response status codes count as a success, so that is an explicit parameter
  * here instead of being hardcoded (and silently unified).
  *
- * Behaviour is preserved byte-for-byte from the original copies:
+ * Behaviour is preserved from the original copies (one deliberate deviation,
+ * called out after the list):
  *  - `https:` URLs get an `https.Agent({ rejectUnauthorized: false })`
  *  - `options.json` is mapped onto `axios_options.data` when it is not `null`
  *    (note: `undefined !== null`, so an absent `json` still sets `data: undefined`)
  *  - a non accepted status (or an empty body) invokes `callback(new Error(...), null)`
  *  - a rejected request invokes `callback(error, null)` with the raw axios error
+ *
+ * ONE deliberate deviation from the originals: the response-body and the
+ * request-body branches are now mutually exclusive (`else if`). The copies
+ * tested them independently, so an accepted response that carried BOTH a body
+ * and `fallbackToRequestData: true` invoked the callback TWICE. See
+ * `fallbackToRequestData` below.
  *
  * @param {object} options                        request description
  * @param {string} options.url
@@ -30,6 +37,11 @@ const https = require("https");
  *        Preserves DirCustomerio's `res.data || res.config.data` shape: when the
  *        response carries no body the *request* body is handed back instead.
  *        Off by default because the other callers only ever looked at `res.data`.
+ *        The `||` is now honoured literally: the request body is a FALLBACK, not
+ *        a second callback. The original code ran the two `if`s in sequence, so
+ *        an accepted 200 that DID carry a body called back once with the
+ *        response and again with the request. Only Customer.io ever passed this
+ *        flag, and its real 204 answers are empty, so nothing else changes.
  * @param {string} [config.statusErrorMessage]
  *        Message of the Error raised on a non accepted status. Defaults to
  *        "Response status is not <first accepted code>".
@@ -64,7 +76,7 @@ function request(options, callback, config = {}) {
           if (res.data) {
             callback(null, res.data);
           }
-          if (requestData) {
+          else if (requestData) {
             callback(null, requestData);
           }
         }

@@ -7,7 +7,7 @@ const { customerioEndpoint } = require('../config/endpoints');
  *
  *   POST {CUSTOMERIO_ENDPOINT || https://track.customer.io/api/v1}/forms/{formId}/submit
  *
- * Extracted verbatim from DirCustomerio, including its two quirks:
+ * Extracted from DirCustomerio, including its two quirks:
  *
  *  - Customer.io answers a successful submit with 204 and an EMPTY body, so
  *    200 and 204 are both accepted and `fallbackToRequestData` hands the
@@ -19,6 +19,15 @@ const { customerioEndpoint } = require('../config/endpoints');
  * `submitForm` never throws and never interprets the response: the raw
  * `{err, resbody}` goes back so DirCustomerio keeps its own branching (which
  * reads `err.response.status` and `err.response.data.meta.error`) untouched.
+ *
+ * ONE behaviour change, deliberate. In the original directive the callback ran
+ * for the response body AND again for the request body, so an accepted 200 that
+ * DID carry a body invoked DirCustomerio's success branch TWICE and re-entered
+ * the directive pipeline twice. It now fires exactly once: `utils/http` makes
+ * the request-body path an `else if` (Customer.io is its only user), and this
+ * `new Promise` would in any case have made a second `resolve` a no-op. The
+ * real 204-with-empty-body path is unaffected - it never had a response body to
+ * take priority - and no other call site passes `fallbackToRequestData`.
  */
 
 const REQUEST_CONFIG = {
