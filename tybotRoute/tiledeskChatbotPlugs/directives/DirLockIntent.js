@@ -1,4 +1,5 @@
 const winston = require('../../utils/winston');
+const IntentLock = require('../../engine/IntentLock');
 
 class DirLockIntent {
 
@@ -47,17 +48,9 @@ class DirLockIntent {
     }
   }
 
+  // Delegates to IntentLock (engine/IntentLock.js).
   static async lockIntent(tdcache, requestId, intent_name) { //}, variable_name) {
-    if (tdcache != null && requestId != null && intent_name != null) {
-      await tdcache.set("tilebot:requests:"  + requestId + ":locked", intent_name);
-    }
-    else {
-      winston.error("(DirLockIntent) lockIntent recoverable error, one of requestId: " + requestId + " intent_name: " + intent_name + " is not valid");
-    }
-    
-    // if (variable_name) {
-    //   await this.tdcache.set("tilebot:requests:"  + requestId + ":lockedValue", variable_name);
-    // }
+    return await IntentLock.lockIntent(tdcache, requestId, intent_name);
   }
 
 }

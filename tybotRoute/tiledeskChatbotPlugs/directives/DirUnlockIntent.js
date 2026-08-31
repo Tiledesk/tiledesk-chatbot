@@ -1,4 +1,5 @@
 const winston = require('../../utils/winston');
+const IntentLock = require('../../engine/IntentLock');
 
 class DirUnlockIntent {
 
@@ -40,9 +41,9 @@ class DirUnlockIntent {
   //   callback();
   // }
 
+  // Delegates to IntentLock (engine/IntentLock.js).
   static async unlockIntent(tdcache, requestId) {
-    await tdcache.del("tilebot:requests:"  + requestId + ":locked");
-    // await this.tdcache.del("tilebot:requests:"  + requestId + ":locked");
+    return await IntentLock.unlockIntent(tdcache, requestId);
   }
   
 }

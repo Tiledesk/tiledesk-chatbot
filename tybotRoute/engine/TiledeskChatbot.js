@@ -5,8 +5,8 @@ const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPl
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
-const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
-const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
+const IntentLock = require('./IntentLock');
+const RequestParameters = require('./RequestParameters');
 const winston = require('../utils/winston');
 const { AnalyticsClient } = require('../AnalyticsClient');
 
@@ -478,7 +478,7 @@ class TiledeskChatbot {
 
   
   async lockIntent(requestId, intent_name) {
-    await DirLockIntent.lockIntent(this.tdcache, requestId, intent_name);
+    await IntentLock.lockIntent(this.tdcache, requestId, intent_name);
   }
   
   async currentLockedIntent(requestId) {
@@ -491,7 +491,7 @@ class TiledeskChatbot {
   }
   
   async unlockIntent(requestId) {
-    await DirUnlockIntent.unlockIntent(this.tdcache, requestId);
+    await IntentLock.unlockIntent(this.tdcache, requestId);
   }
 
   async lockAction(requestId, action_id) {
@@ -528,38 +528,18 @@ class TiledeskChatbot {
     await TiledeskChatbot.deleteParameterStatic(this.tdcache, this.requestId, parameter_name);
   }
 
+  // Delegates to RequestParameters (engine/RequestParameters.js).
   static async addParameterStatic(_tdcache, requestId, parameter_name, parameter_value) {
-    if (parameter_name === null || parameter_name === undefined) {
-      return;
-    }
-    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
-    const parameter_value_s = JSON.stringify(parameter_value);
-    if (parameter_value_s?.length > 20000000) {
-      return;
-    }
-    const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
-    await _tdcache.hset(parameter_key, parameter_name, parameter_value_s, { EX: ttl });
+    return await RequestParameters.addParameterStatic(_tdcache, requestId, parameter_name, parameter_value);
   }
 
   async allParameters() {
     return await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
   }
 
+  // Delegates to RequestParameters (engine/RequestParameters.js).
   static async allParametersStatic(_tdcache, requestId) {
-    const parameters_key = TiledeskChatbot.requestCacheKey(requestId) + ":parameters";
-    const attributes__as_string_map = await _tdcache.hgetall(parameters_key);
-    let attributes_native_values = {};
-    if (attributes__as_string_map !== null) {
-      for (const [key, value] of Object.entries(attributes__as_string_map)) {
-        try {
-          attributes_native_values[key] = JSON.parse(value);
-        }
-        catch(err) {
-          winston.error("(TiledeskChatbot) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
-        }
-      }
-    }
-    return attributes_native_values;
+    return await RequestParameters.allParametersStatic(_tdcache, requestId);
   }
 
   async allParametersInstance(_tdcache, requestId) {
@@ -567,21 +547,14 @@ class TiledeskChatbot {
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters");
   }
 
+  // Delegates to RequestParameters (engine/RequestParameters.js).
   static async getParameterStatic(_tdcache, requestId, key) {
-    let value = await _tdcache.hget(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", key);
-    try {
-      value = JSON.parse(value);
-    }
-    catch(error) {
-      winston.error("(TiledeskChatbot) Error parsing to JSON an Attribute:", error);
-    }
-    return value;
+    return await RequestParameters.getParameterStatic(_tdcache, requestId, key);
   }
 
+  // Delegates to RequestParameters (engine/RequestParameters.js).
   static async deleteParameterStatic(_tdcache, requestId, paramName) {
-    return await _tdcache.hdel(
-      TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
+    return await RequestParameters.deleteParameterStatic(_tdcache, requestId, paramName);
   }
 
   static async checkStep(_tdcache, requestId, max_steps, max_execution_time) {
@@ -647,9 +620,9 @@ class TiledeskChatbot {
     return await _tdcache.get(parameter_key);
   }
 
+  // Delegates to RequestParameters (engine/RequestParameters.js).
   static requestCacheKey(requestId) {
-    const request_key = "tilebot:requests:" + requestId;
-    return request_key;
+    return RequestParameters.requestCacheKey(requestId);
   }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
