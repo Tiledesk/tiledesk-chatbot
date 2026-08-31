@@ -1,5 +1,6 @@
 let axios = require('axios');
 const winston = require('./winston');
+const { tilebotEndpoint } = require('../config/endpoints');
 
 /**
  * Thin HTTP client used to read chatbot/request parameters from the tilebot
@@ -19,7 +20,15 @@ class ChatbotParametersClient {
      * @param {string} requestId. Tiledesk chatbot/requestId parameters
      */
     getChatbotParameters(requestId, callback) {
-        const url = `${process.env.TILEBOT_ENDPOINT}/ext/reserved/parameters/requests/${requestId}?all`;
+        // Resolved through config/endpoints.js, like every other consumer of
+        // this url (TilebotService, ExtApi, runtimeContext). Reading
+        // `process.env.TILEBOT_ENDPOINT` directly here left the ONE embedder
+        // shape the central resolver exists for - configures the endpoint in
+        // the startApp settings, exports no environment variable - building
+        // `undefined/ext/reserved/...`. It also picks up the historical
+        // `|| ${API_ENDPOINT}/modules/tilebot` fallback, which this call site
+        // never had. Still lazy: resolved per call, not at module load.
+        const url = `${tilebotEndpoint()}/ext/reserved/parameters/requests/${requestId}?all`;
         const HTTPREQUEST = {
             url: url,
             headers: {

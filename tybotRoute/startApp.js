@@ -49,8 +49,16 @@ async function startApp(settings, completionCallback) {
   runtimeContext.API_ENDPOINT = endpoints.apiEndpoint();
   winston.info("(Tilebot) settings.API_ENDPOINT:" + runtimeContext.API_ENDPOINT);
 
-  // Same `TILEBOT_ENDPOINT || `${API_ENDPOINT}/modules/tilebot`` fallback as
-  // before, now expressed once in config/endpoints.js.
+  // Deliberately WIDER than the line it replaces. This used to be
+  // `settings.TILEBOT_ENDPOINT || `${API_ENDPOINT}/modules/tilebot``, in which
+  // the environment was never a source; `endpoints.tilebotEndpoint()` resolves
+  // `configured || process.env.TILEBOT_ENDPOINT || `${API_ENDPOINT}/modules/tilebot``.
+  // So for an embedder that exports TILEBOT_ENDPOINT but passes no
+  // settings.TILEBOT_ENDPOINT, runtimeContext.TILEBOT_ENDPOINT now points at
+  // the environment's host instead of the API-derived one. That is the point:
+  // runtimeContext and the services previously disagreed for exactly that
+  // embedder, and there is now one answer for the whole process. The final
+  // fallback is unchanged.
   runtimeContext.TILEBOT_ENDPOINT = endpoints.tilebotEndpoint();
   winston.info("(Tilebot) settings.TILEBOT_ENDPOINT:" + runtimeContext.TILEBOT_ENDPOINT);
 

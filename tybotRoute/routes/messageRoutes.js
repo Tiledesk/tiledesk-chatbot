@@ -10,6 +10,7 @@ const { IntentsMachineFactory } = require('../engine/IntentsMachineFactory.js');
 const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const { runtimeContext } = require('./runtimeContext.js');
+const endpoints = require('../config/endpoints.js');
 
 /**
  * Conversation-driving routes: the webhook Tiledesk calls on every message,
@@ -405,7 +406,7 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   winston.debug("(tybotRoute) API_ENDPOINT: " + runtimeContext.API_ENDPOINT);
   winston.debug("(tybotRoute) request: " + runtimeContext.TILEBOT_ENDPOINT);
 
-  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: runtimeContext.API_ENDPOINT, TILEBOT_ENDPOINT: runtimeContext.TILEBOT_ENDPOINT, token: token, HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT, cache: runtimeContext.tdcache});
+  let directivesPlug = new DirectivesChatbotPlug({supportRequest: request, API_ENDPOINT: runtimeContext.API_ENDPOINT, TILEBOT_ENDPOINT: runtimeContext.TILEBOT_ENDPOINT, token: token, HELP_CENTER_API_ENDPOINT: endpoints.helpCenterApiEndpoint(), cache: runtimeContext.tdcache});
 
   const original_answer_text = answer.text;
   const bot_answer = await ExtUtil.execPipelineExt(request, answer, directivesPlug, runtimeContext.tdcache);

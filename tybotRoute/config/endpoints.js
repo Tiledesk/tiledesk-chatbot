@@ -47,7 +47,9 @@ const ENDPOINT_KEYS = [
   'CUSTOMERIO_ENDPOINT',
   'HUBSPOT_ENDPOINT',
   'MAKE_ENDPOINT',
-  'QAPLA_ENDPOINT'
+  'QAPLA_ENDPOINT',
+  'HELP_CENTER_API_ENDPOINT',
+  'PERSIST_API_ENDPOINT'
 ];
 
 /** Values seeded by `configure()`. Empty until startApp runs. */
@@ -217,6 +219,33 @@ function qaplaEndpoint() {
 }
 
 /**
+ * The Help Center API base url, handed to DirDeflectToHelpCenter through the
+ * DirectivesChatbotPlug config.
+ *
+ * Read straight off `process.env` at the plug's construction site until this
+ * key joined ENDPOINT_KEYS, so an embedder that set it in the `startApp`
+ * settings was silently ignored. No default: `undefined` reaches the directive
+ * exactly as it did before.
+ * @returns {string|undefined}
+ */
+function helpCenterApiEndpoint() {
+  return resolve('HELP_CENTER_API_ENDPOINT');
+}
+
+/**
+ * The attribute-persistence url used by DirSetAttributeV2.persistOnTiledesk.
+ *
+ * Same story as the Help Center url: read off `process.env` at the call site,
+ * so a settings-configured value was ignored - and here that also meant the
+ * `if (!...) return;` guard short-circuited the whole method. No default;
+ * unset still means "do not persist".
+ * @returns {string|undefined}
+ */
+function persistApiEndpoint() {
+  return resolve('PERSIST_API_ENDPOINT');
+}
+
+/**
  * The Make override base url, and the ONLY endpoint here with no default.
  *
  * DirMake posts to a webhook url supplied by the bot author, EXCEPT when
@@ -243,5 +272,7 @@ module.exports = {
   customerioEndpoint,
   hubspotEndpoint,
   qaplaEndpoint,
-  makeEndpoint
+  makeEndpoint,
+  helpCenterApiEndpoint,
+  persistApiEndpoint
 };

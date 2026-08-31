@@ -8,6 +8,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
+const { persistApiEndpoint } = require('../../config/endpoints');
 
 const schema = {
     "type": "object",
@@ -181,11 +182,14 @@ class DirSetAttributeV2 extends BaseDirective {
     }
 
     async persistOnTiledesk(key, value) {
-        if (!process.env.PERSIST_API_ENDPOINT) {
+        // Configured-first, env second, resolved at call time - see
+        // config/endpoints.js. Unset still means "do not persist".
+        const persist_api_endpoint = persistApiEndpoint();
+        if (!persist_api_endpoint) {
             return;
         }
         const HTTPREQUEST = {
-            url: process.env.PERSIST_API_ENDPOINT,
+            url: persist_api_endpoint,
             headers: {
               'Content-Type': 'application/json',
               'Authorization': this.fixToken(this.context.token)
