@@ -7,6 +7,7 @@ const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
 const IntentLock = require('./IntentLock');
 const RequestParameters = require('./RequestParameters');
+const ExecutionGuard = require('./ExecutionGuard');
 const winston = require('../utils/winston');
 const { AnalyticsClient } = require('../AnalyticsClient');
 
@@ -557,67 +558,24 @@ class TiledeskChatbot {
     return await RequestParameters.deleteParameterStatic(_tdcache, requestId, paramName);
   }
 
+  // Delegates to ExecutionGuard (engine/ExecutionGuard.js).
   static async checkStep(_tdcache, requestId, max_steps, max_execution_time) {
-    winston.verbose("(TiledeskChatbot) Checking on MAX_STEPS: " + max_steps);
-    // let go_on = true; // continue
-    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    winston.verbose("(TiledeskChatbot) __parameter_key:", parameter_key);
-    await _tdcache.incr(parameter_key);
-    let _current_step = await _tdcache.get(parameter_key);
-    let current_step = Number(_current_step);
-    if (current_step > max_steps) {
-      winston.verbose("(TiledeskChatbot) max_steps limit just violated");
-      winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
-      return {
-        error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded.",
-        error_code: 'max_steps_exceeded',
-        step_count: current_step
-      };
-    }
-    // else {
-    //   go_on = true;
-    // }
-
-    // check execution_time
-    // const TOTAL_ALLOWED_EXECUTION_TIME = 1000 * 60 // * 60 * 12 // 12 hours
-    let start_time_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
-    let start_time = await _tdcache.get(start_time_key);
-    const now = Date.now();
-    if (start_time === null || Number(start_time) === 0) {
-      await _tdcache.set(start_time_key, now);
-      return {};
-    }
-    else {
-      const execution_time = now - Number(start_time);
-      if (execution_time > max_execution_time) {
-        winston.verbose("(TiledeskChatbot) execution_time > TOTAL_ALLOWED_EXECUTION_TIME. Stopping flow");
-        return {
-          error: "Anomaly detection. MAX EXECUTION TIME (" + max_execution_time + " ms) exeeded.",
-          error_code: 'max_time_exceeded',
-          step_count: current_step
-        };
-      }
-    }
-    return {};
+    return await ExecutionGuard.checkStep(_tdcache, requestId, max_steps, max_execution_time);
   }
 
+  // Delegates to ExecutionGuard (engine/ExecutionGuard.js).
   static async resetStep(_tdcache, requestId) {
-    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    if (_tdcache) {
-      await _tdcache.set(parameter_key, 0);
-    }
+    return await ExecutionGuard.resetStep(_tdcache, requestId);
   }
 
+  // Delegates to ExecutionGuard (engine/ExecutionGuard.js).
   static async resetStarted(_tdcache, requestId) {
-    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":started";
-    if (_tdcache) {
-      await _tdcache.set(parameter_key, 0);
-    }
+    return await ExecutionGuard.resetStarted(_tdcache, requestId);
   }
 
+  // Delegates to ExecutionGuard (engine/ExecutionGuard.js).
   static async currentStep(_tdcache, requestId) {
-    const parameter_key = TiledeskChatbot.requestCacheKey(requestId) + ":step";
-    return await _tdcache.get(parameter_key);
+    return await ExecutionGuard.currentStep(_tdcache, requestId);
   }
 
   // Delegates to RequestParameters (engine/RequestParameters.js).
