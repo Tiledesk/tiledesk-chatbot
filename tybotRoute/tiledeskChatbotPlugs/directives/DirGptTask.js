@@ -10,7 +10,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
-const { openaiEndpoint } = require("../../config/endpoints");
+const openAIService = require("../../services/OpenAIService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
 
@@ -116,8 +116,7 @@ class DirGptTask extends BaseDirective {
       }
     }
 
-    const openai_url = openaiEndpoint() + "/chat/completions";
-    winston.debug("(DirGptTask)  openai_url " + openai_url);
+    winston.debug("(DirGptTask)  openai_url " + openAIService.completionsUrl());
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
       caller: "(DirGptTask)",
@@ -191,62 +190,49 @@ class DirGptTask extends BaseDirective {
     
     winston.debug("(DirGptTask) json: ", json)
 
-    const HTTPREQUEST = {
-      url: openai_url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
-      },
-      json: json,
-      method: 'POST'
-    }
-    winston.debug("(DirGptTask) HttpRequest: ", HTTPREQUEST);
-    
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.debug("(DirGptTask) openai err: ", err);
-          winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
-          this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-          if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        } else {
-          winston.debug("(DirGptTask) resbody: ", resbody);
-          answer = resbody.choices[0].message.content;
+    const { err, resbody } = await openAIService.chatCompletions(key, json, "(DirGptTask)");
 
-          if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
-            answer = await this.convertToJson(answer);
-          }
-        
-          this.logger.native("[ChatGPT Task] Completions answer: ", answer);
-          
-          await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
-
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.usage.total_tokens,
-              model: json.model
-            }
-            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          }
-
-          if (trueIntent) {
-            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
+    if (err) {
+      winston.debug("(DirGptTask) openai err: ", err);
+      winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
+      this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
       }
-    )
+      callback();
+      return;
+    } else {
+      winston.debug("(DirGptTask) resbody: ", resbody);
+      answer = resbody.choices[0].message.content;
+
+      if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
+        answer = await this.convertToJson(answer);
+      }
+
+      this.logger.native("[ChatGPT Task] Completions answer: ", answer);
+
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+
+      if (publicKey === true) {
+        let tokens_usage = {
+          tokens: resbody.usage.total_tokens,
+          model: json.model
+        }
+        quotasService.updateQuote(this.projectId, this.token, tokens_usage);
+      }
+
+      if (trueIntent) {
+        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
 
   }
 
