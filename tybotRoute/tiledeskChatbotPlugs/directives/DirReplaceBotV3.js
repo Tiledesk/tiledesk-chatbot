@@ -5,8 +5,8 @@ const { Filler } = require('../Filler');
 const axios = require("axios").default;
 let https = require("https");
 const winston = require('../../utils/winston');
-const httpUtils = require('../../utils/HttpUtils');
 const { AnalyticsClient } = require('../../AnalyticsClient');
+const tiledeskApiService = require('../../services/TiledeskApiService');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
@@ -62,62 +62,51 @@ class DirReplaceBotV3 extends BaseDirective {
       data.id = botId;
     }
 
-    const HTTPREQUEST = {
-      url: this.API_ENDPOINT + "/" + this.context.projectId + "/requests/" + this.requestId + "/replace",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'JWT ' + this.context.token
-      },
-      json: data,
-      method: 'PUT'
+    const { err, resbody } = await tiledeskApiService.replaceBot(
+      this.context.projectId, this.requestId, this.context.token, data, "(DirReplaceBotV3)");
+
+    if (err) {
+      winston.error("(DirReplaceBotV3) error: ", err);
+      if (callback) {
+        callback();
+        return;
+      }
     }
 
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.error("(DirReplaceBotV3) error: ", err);
-          if (callback) {
-            callback();
-            return;
-          }
-        }
+    winston.debug("(DirReplaceBotV3)  replace resbody: ", resbody);
 
-        winston.debug("(DirReplaceBotV3)  replace resbody: ", resbody);
+    // Emit analytics event for bot switch. Only track published (production)
+    // runs (root/draft copy has no root_id).
+    if (this.context.chatbot?.bot.root_id) {
+      AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
+        from_agent_id:  this.context.chatbot?.bot.root_id,
+        to_agent_id:    resbody?.replaced_bot_root_id || (useSlug ? botSlug : botId) || '',
+        intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
+        request_id:     this.requestId || null
+      });
+    }
 
-        // Emit analytics event for bot switch. Only track published (production)
-        // runs (root/draft copy has no root_id).
-        if (this.context.chatbot?.bot.root_id) {
-          AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
-            from_agent_id:  this.context.chatbot?.bot.root_id,
-            to_agent_id:    resbody?.replaced_bot_root_id || (useSlug ? botSlug : botId) || '',
-            intent_name:    this.context.reply?.attributes?.intent_info?.intent_name || null,
-            request_id:     this.requestId || null
-          });
-        }
-
-        if (blockName) {
-          winston.debug("(DirReplaceBotV3) Sending hidden /start message to bot in dept");
-          const message = {
-            type: "text",
-            text: "/" + blockName,
-            attributes: {
-              subtype: "info"
-            }
-          }
-          this.tdClient.sendSupportMessage(
-            this.requestId,
-            message, (err) => {
-              if (err) {
-                winston.debug("(DirReplaceBotV3) Error sending hidden message: " + err.message);
-              }
-              callback();
-            });
-        }
-        else {
-          callback();
+    if (blockName) {
+      winston.debug("(DirReplaceBotV3) Sending hidden /start message to bot in dept");
+      const message = {
+        type: "text",
+        text: "/" + blockName,
+        attributes: {
+          subtype: "info"
         }
       }
-    )
+      this.tdClient.sendSupportMessage(
+        this.requestId,
+        message, (err) => {
+          if (err) {
+            winston.debug("(DirReplaceBotV3) Error sending hidden message: " + err.message);
+          }
+          callback();
+        });
+    }
+    else {
+      callback();
+    }
   }
 
 }
