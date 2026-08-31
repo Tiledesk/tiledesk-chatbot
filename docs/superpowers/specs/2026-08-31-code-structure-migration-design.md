@@ -483,6 +483,17 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Phase 1 outcome
+
+**Status: complete.** Commit `50ae1876`. All 4,877 dead lines removed after
+re-verifying zero inbound references for each file, including from the
+quarantined tests. Source LOC fell from 23,765 to 19,461 (-18%). The frozen
+baseline is unchanged at 332 tests across 49 files, and `tybotRoute`,
+`templatesRoute` and `DirectivesChatbotPlug` all still resolve.
+
+The root `index.js` also lost the commented-out `chooserChatbotRoute` require
+block, which would otherwise have referenced a deleted directory.
+
 ## Phase 0 outcome and follow-ups
 
 **Status: complete.** Commits `c04f0f73`, `44c332f0`, `9e0508e7`, `cdd64e09`,
