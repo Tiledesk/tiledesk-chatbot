@@ -86,11 +86,6 @@ class DirAddKbContent {
     let key = await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
     if (!key) {
       this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
-      winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
-      key = await this.getKeyFromKbSettings();
-    }
-
-    if (!key) {
       winston.verbose("[DirAddKbContent] - Retrieve public gptkey")
       key = process.env.GPTKEY;
       publicKey = true;
@@ -197,36 +192,6 @@ class DirAddKbContent {
         }
       }
     )
-  }
-
-  async getKeyFromKbSettings() {
-    return new Promise((resolve) => {
-
-      const KB_HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAddKbContent KB HttpRequest", KB_HTTPREQUEST);
-
-      httpUtils.request(
-        KB_HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAddKbContent Get kb settings error ", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
   }
 
   async checkQuoteAvailability() {
