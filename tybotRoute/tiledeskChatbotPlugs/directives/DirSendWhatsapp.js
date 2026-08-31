@@ -3,11 +3,9 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('./Directives');
-
-let whatsapp_api_url;
+const whatsappService = require("../../services/WhatsappService");
 
 class DirSendWhatsapp extends BaseDirective {
 
@@ -76,64 +74,44 @@ class DirSendWhatsapp extends BaseDirective {
     payload.transaction_id = this.context.requestId;
     payload.broadcast = false;
     
-    const whatsapp_api_url_pre = process.env.WHATSAPP_ENDPOINT;
+    winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsappService.apiUrl());
 
-    if (whatsapp_api_url_pre) {
-      whatsapp_api_url = whatsapp_api_url_pre;
-    } else {
-      whatsapp_api_url = this.API_ENDPOINT + "/modules/whatsapp/api"
-    }
-    winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsapp_api_url);
+    const { err, resbody } = await whatsappService.broadcast(payload, "(DirSendWhatsapp)");
 
-    const HTTPREQUEST = {
-      url: whatsapp_api_url + "/tiledesk/broadcast",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      json: payload,
-      method: 'POST'
-    }
-
-    winston.debug("(DirSendWhatsapp) HttpRequest:  ", HTTPREQUEST);
-
-    httpUtils.request(
-      HTTPREQUEST, async (err, resbody) => {
-        if (err) {
-          winston.error("(DirSendWhatsapp)  error: ", err)
-          await this.chatbot.addParameter("flowError", "SendWhatsapp Error: " + err);
-          if (callback) {
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, null, falseIntent, null);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else if (resbody.success === true) {
-          if (callback) {
-            if (trueIntent) {
-              await this._executeCondition(true, trueIntent, null, falseIntent, null);
-              callback(true);
-              return;
-            }
-            callback();
-            return;
-          }
-        } else {
-          winston.debug("(DirSendWhatsapp) unexpected resbody: ", resbody);
-          if (callback) {
-            if (falseIntent) {
-              await this._executeCondition(false, trueIntent, null, falseIntent, null);
-              callback(true);
-              return
-            }
-            callback();
-            return;
-          }
+    if (err) {
+      winston.error("(DirSendWhatsapp)  error: ", err)
+      await this.chatbot.addParameter("flowError", "SendWhatsapp Error: " + err);
+      if (callback) {
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, null, falseIntent, null);
+          callback(true);
+          return;
         }
+        callback();
+        return;
       }
-    )
+    } else if (resbody.success === true) {
+      if (callback) {
+        if (trueIntent) {
+          await this._executeCondition(true, trueIntent, null, falseIntent, null);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+    } else {
+      winston.debug("(DirSendWhatsapp) unexpected resbody: ", resbody);
+      if (callback) {
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, null, falseIntent, null);
+          callback(true);
+          return
+        }
+        callback();
+        return;
+      }
+    }
   }
 
   async fillWholeReceiver(receiver, requestVariables) {

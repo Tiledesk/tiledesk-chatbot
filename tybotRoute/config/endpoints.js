@@ -75,10 +75,32 @@ function openaiEndpoint() {
   return process.env.OPENAI_ENDPOINT;
 }
 
+/**
+ * The Whatsapp module base url.
+ *
+ * DirSendWhatsapp and DirWhatsappByAttribute both carried the same fallback:
+ *
+ *   const pre = process.env.WHATSAPP_ENDPOINT;
+ *   if (pre) { url = pre; } else { url = API_ENDPOINT + "/modules/whatsapp/api"; }
+ *
+ * Reproduced exactly, so an unset OR empty WHATSAPP_ENDPOINT still derives the
+ * url from the API endpoint, and an unset API_ENDPOINT still yields the literal
+ * "undefined/modules/whatsapp/api".
+ * @returns {string}
+ */
+function whatsappEndpoint() {
+  const whatsapp_api_url_pre = process.env.WHATSAPP_ENDPOINT;
+  if (whatsapp_api_url_pre) {
+    return whatsapp_api_url_pre;
+  }
+  return apiEndpoint() + "/modules/whatsapp/api";
+}
+
 module.exports = {
   apiEndpoint,
   tilebotEndpoint,
   qaEndpoint,
   kbEndpoint,
-  openaiEndpoint
+  openaiEndpoint,
+  whatsappEndpoint
 };
