@@ -1,28 +1,25 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
-let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
+const http = require("../../utils/http");
 
-class DirCustomerio {
+// Customer.io answers a successful form submit with 204 and an empty body, so
+// the *request* body is handed back to the callback in that case.
+const REQUEST_CONFIG = {
+  acceptedStatusCodes: [200, 204],
+  fallbackToRequestData: true,
+  statusErrorMessage: "Response status is not 204"
+};
+
+class DirCustomerio extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+    super(context);
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -85,9 +82,12 @@ class DirCustomerio {
       winston.debug("(DirCustomerio) - Key not found in Integrations.");
       let status = 422;
       let error = 'Missing customerio access token';
-      await this.#assignAttributes(action, status, error);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignErrorTo', error]
+      ]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
         callback(true);
         return;
       }
@@ -119,8 +119,9 @@ class DirCustomerio {
     }
     winston.debug("(DirCustomerio) HttpRequest: ", CUSTOMERIO_HTTPREQUEST); 
 
-    this.#myrequest(
-      CUSTOMERIO_HTTPREQUEST, async (err, resbody) => {
+    http.request(
+      CUSTOMERIO_HTTPREQUEST,
+      async (err, resbody) => {
         if (err) {
           if (callback) {
             this.logger.error("[Customer.io] Error response: ", err.response);
@@ -143,9 +144,12 @@ class DirCustomerio {
             winston.debug("(DirCustomerio) err data status: " + status);
             winston.debug("(DirCustomerio) err data error: ", error);
 
-            await this.#assignAttributes(action, status, error);
+            await this._assignAttributes(action, [
+              ['assignStatusTo', status],
+              ['assignErrorTo', error]
+            ]);
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, null, falseIntent, null);
+              await this._executeCondition(false, trueIntent, null, falseIntent, null);
               callback(true);
               return;
             }
@@ -159,115 +163,24 @@ class DirCustomerio {
           let status = 204;
           let error = null;
           this.logger.error("[Customer.io] Response status: ", status);
-          await this.#assignAttributes(action, status, error);
+          await this._assignAttributes(action, [
+            ['assignStatusTo', status],
+            ['assignErrorTo', error]
+          ]);
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, null, falseIntent, null);
+            await this._executeCondition(true, trueIntent, null, falseIntent, null);
             callback(true);
             return;
           }
           callback();
           return;
         }
-      }
+      },
+      REQUEST_CONFIG
     );
 
   }
 
-  async #assignAttributes(action, status, error) {
-    winston.debug("(DirCustomerio)  assignAttributes action: ", action)
-    winston.debug("(DirCustomerio)  assignAttributes status: " + status)
-    winston.debug("(DirCustomerio)  assignAttributes error: ", error)
-    if (this.context.tdcache) {
-      if (action.assignStatusTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      if (action.assignErrorTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
-      }
-    }
-  }
-
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && (res.status == 200 || res.status == 204) && (res.data || res.config.data)) {
-          if (callback) {
-            if (res.data) {
-              callback(null, res.data);
-            }
-            if (res.config.data) {
-              callback(null, res.config.data);
-            }
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 204"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirCustomerio) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirCustomerio) No falseIntentDirective specified"); 
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
 }
 
 module.exports = { DirCustomerio }

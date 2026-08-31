@@ -1,28 +1,19 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
-let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
+const http = require("../../utils/http");
 
-class DirBrevo {
+const ACCEPTED_STATUS_CODES = [200, 201];
+
+class DirBrevo extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    this.projectId = this.context.projectId;
-    this.token = this.context.token;
-    this.API_ENDPOINT = this.context.API_ENDPOINT;
-    
+    super(context);
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -88,7 +79,7 @@ class DirBrevo {
       this.logger.error("[Brevo] Key not found in Integrations");
       winston.debug("(DirBrevo)  - Key not found in Integrations.");
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -142,8 +133,9 @@ class DirBrevo {
     }
     winston.debug("(DirBrevo) HttpRequest ", BREVO_HTTPREQUEST);
 
-    this.#myrequest(
-      BREVO_HTTPREQUEST, async (err, resbody) => {
+    http.request(
+      BREVO_HTTPREQUEST,
+      async (err, resbody) => {
         if (err) {
           if (callback) {
             this.logger.error("[Brevo] Error response: ", err.response);
@@ -165,9 +157,13 @@ class DirBrevo {
                   error = err.response.data.message;
             }
 
-            await this.#assignAttributes(action, status, result, error);
+            await this._assignAttributes(action, [
+              ['assignStatusTo', status],
+              ['assignResultTo', result],
+              ['assignErrorTo', error]
+            ]);
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -181,115 +177,25 @@ class DirBrevo {
           let error = null;
           let result = JSON.stringify(resbody, null, 2).slice(2, -1);
           this.logger.error("[Brevo] Result: ", result);
-          await this.#assignAttributes(action, status, result, error);
+          await this._assignAttributes(action, [
+            ['assignStatusTo', status],
+            ['assignResultTo', result],
+            ['assignErrorTo', error]
+          ]);
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes)
             callback(true);
             return;
           }
           callback();
           return;
         }
-      }
+      },
+      { acceptedStatusCodes: ACCEPTED_STATUS_CODES }
     );
 
   }
 
-  async #assignAttributes(action, status, result, error) {
-    winston.debug("(DirBrevo) assignAttributes action: ", action)
-    winston.debug("(DirBrevo) assignAttributes status: " + status)
-    winston.debug("(DirBrevo) assignAttributes result: ", result)
-    winston.debug("(DirBrevo) assignAttributes error: ", error)
-    if (this.context.tdcache) {
-      if (action.assignStatusTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      if (action.assignResultTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignResultTo, result);
-      }
-      if (action.assignErrorTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
-      }
-    }
-  }
-
-  #myrequest(options, callback) {
-    let axios_options = {
-      url: options.url,
-      method: options.method,
-      params: options.params,
-      headers: options.headers
-    }
-    if (options.json !== null) {
-      axios_options.data = options.json
-    }
-    if (options.url.startsWith("https:")) {
-      const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-      });
-      axios_options.httpsAgent = httpsAgent;
-    }
-    axios(axios_options)
-      .then((res) => {
-        if (res && (res.status == 200 || res.status == 201) && res.data) {
-          if (callback) {
-            callback(null, res.data);
-          }
-        }
-        else {
-          if (callback) {
-            callback(new Error("Response status is not 200"), null);
-          }
-        }
-      })
-      .catch((error) => {
-        if (callback) {
-          callback(error, null);
-        }
-      });
-  }
-
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirBrevo) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirBrevo) No falseIntentDirective specified"); 
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
 }
 
 module.exports = { DirBrevo }

@@ -5,20 +5,13 @@ const { DirIntent } = require("./DirIntent");
 let https = require("https");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const { Logger } = require("../../Logger");
+const { BaseDirective } = require("../BaseDirective");
 
-class DirMake {
+class DirMake extends BaseDirective {
 
   constructor(context) {
-    if (!context) {
-      throw new Error('context object is mandatory');
-    }
-    this.context = context;
-    this.tdcache = this.context.tdcache;
-    this.requestId = this.context.requestId;
-    
+    super(context);
     this.intentDir = new DirIntent(context);
-    this.logger = new Logger({ request_id: this.requestId, dev: this.context.supportRequest?.draft, intent_id: this.context.reply?.intent_id || this.context.reply?.attributes?.intent_info?.intent_id });
   }
 
   execute(directive, callback) {
@@ -70,9 +63,12 @@ class DirMake {
     if (!bodyParameters) {
       winston.error("(DirMake) Error: bodyParameters is undefined");
       error = "Missing body parameters";
-      await this.#assignAttributes(action, status, error);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignErrorTo', error]
+      ]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -84,9 +80,12 @@ class DirMake {
       winston.error("(DirMake) Error: webhook_url is undefined or null or empty string:")
       let status = 422;   
       let error = 'Missing make webhook url';
-      await this.#assignAttributes(action, status, error);
+      await this._assignAttributes(action, [
+        ['assignStatusTo', status],
+        ['assignErrorTo', error]
+      ]);
       if (falseIntent) {
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
         callback(true);
         return;
       }
@@ -131,9 +130,12 @@ class DirMake {
             // let error = 'Make url not found';
             status = res.status;
             error = res.error;
-            await this.#assignAttributes(action, status, error);
+            await this._assignAttributes(action, [
+              ['assignStatusTo', status],
+              ['assignErrorTo', error]
+            ]);
             if (falseIntent) {
-              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
             }
@@ -148,9 +150,12 @@ class DirMake {
           if (res.error) {
             error = res.error
           }
-          await this.#assignAttributes(action, status, error);
+          await this._assignAttributes(action, [
+            ['assignStatusTo', status],
+            ['assignErrorTo', error]
+          ]);
           if (trueIntent) {
-            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+            await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
               callback(true);
               return;
           }
@@ -162,22 +167,14 @@ class DirMake {
 
   }
 
-  async #assignAttributes(action, status, error) {
-    winston.debug("(DirMake) assignAttributes action: ", action)
-    winston.debug("(DirMake) assignAttributes status: " + status)
-    winston.debug("(DirMake) assignAttributes error: ", error)
-
-    if (this.context.tdcache) {
-      if (action.assignStatusTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignStatusTo, status);
-      }
-      if (action.assignErrorTo) {
-        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignErrorTo, error);
-      }
-    }
-  }
-
-  // Advanced #myrequest function
+  /**
+   * DirMake deliberately keeps its own request implementation instead of
+   * utils/http.js: its contract is different, not just its accepted status
+   * codes. It performs no status check at all, hands the *whole* axios response
+   * to the callback (not `res.data`), and swallows rejections into a synthetic
+   * `{ status, data, error }` success payload. Folding that into the shared
+   * helper would change behaviour, so it stays local.
+   */
   #myrequest(options, callback) {
     let axios_options = {
       url: options.url,
@@ -235,46 +232,6 @@ class DirMake {
       });
   }
 
-  async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    let trueIntentDirective = null;
-    if (trueIntent) {
-      trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
-    }
-    let falseIntentDirective = null;
-    if (falseIntent) {
-      falseIntentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-    }
-    if (result === true) {
-      if (trueIntentDirective) {
-        this.intentDir.execute(trueIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirMake) No trueIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    else {
-      if (falseIntentDirective) {
-        this.intentDir.execute(falseIntentDirective, () => {
-          if (callback) {
-            callback();
-          }
-        });
-      }
-      else {
-        winston.debug("(DirMake) No falseIntentDirective specified");
-        if (callback) {
-          callback();
-        }
-      }
-    }
-  }
 }
 
 module.exports = { DirMake }
