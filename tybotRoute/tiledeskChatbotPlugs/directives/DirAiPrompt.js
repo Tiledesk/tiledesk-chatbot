@@ -1,4 +1,3 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
@@ -9,12 +8,9 @@ const winston = require('../../utils/winston');
 const integrationService = require("../../services/IntegrationService");
 const mcpService = require("../../services/McpService");
 const { BaseDirective } = require("../BaseDirective");
-const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const llmKeyService = require("../../services/LLMKeyService");
 const llmAskService = require("../../services/LlmAskService");
-const path = require("path");
-const mime = require("mime-types");
 const { Directives } = require('./Directives');
 const aiPromptRequestService = require("../../services/AiPromptRequestService");
 

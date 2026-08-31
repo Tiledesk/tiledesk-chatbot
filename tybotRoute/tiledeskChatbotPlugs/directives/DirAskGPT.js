@@ -1,11 +1,8 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
-let https = require("https");
 const { DirIntent } = require("./DirIntent");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
 const llmKeyService = require("../../services/LLMKeyService");
 const llmAskService = require("../../services/LlmAskService");
 const { BaseDirective } = require("../BaseDirective");

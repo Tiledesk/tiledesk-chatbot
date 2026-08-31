@@ -1,7 +1,5 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
-let https = require("https");
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");

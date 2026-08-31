@@ -1,7 +1,5 @@
-const axios = require("axios").default;
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
-let https = require("https");
 var path = require('path');
 const { DirIntent } = require("./DirIntent");
 const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
@@ -9,7 +7,6 @@ const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
 const { BaseDirective } = require("../BaseDirective");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
