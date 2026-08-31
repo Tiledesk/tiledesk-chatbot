@@ -6,8 +6,8 @@ const { TiledeskChatbotConst } = require("../../engine/TiledeskChatbotConst");
 const { TiledeskChatbotUtil } = require("../../utils/TiledeskChatbotUtil");
 require('dotenv').config();
 const winston = require('../../utils/winston');
-const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const mcpService = require("../../services/McpService");
 const { BaseDirective } = require("../BaseDirective");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
@@ -574,25 +574,11 @@ class DirAiPrompt extends BaseDirective {
   }
 
   async fetchNativeMcpServers() {
-    return new Promise((resolve) => {
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.token
-        },
-        method: "GET"
-      };
-      winston.debug("DirAiPrompt fetch native MCP servers HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(HTTPREQUEST, (err) => {
-        if (err) {
-          this.logger.error("[AI Prompt] Error fetching native MCP servers: ", err);
-          winston.error("DirAiPrompt Error fetching native MCP servers: ", err);
-        }
-        resolve();
-      });
-    });
+    const { err } = await mcpService.fetchNativeServers(this.projectId, this.token, "DirAiPrompt");
+    if (err) {
+      this.logger.error("[AI Prompt] Error fetching native MCP servers: ", err);
+      winston.error("DirAiPrompt Error fetching native MCP servers: ", err);
+    }
   }
 
   // Delegates to AiPromptRequestService (services/AiPromptRequestService.js).
