@@ -3,9 +3,12 @@
  *
  * This module deliberately contains NO runtime code. It exists so the shapes a
  * later TypeScript conversion needs are declared once, in one place, and can be
- * pulled into any file with:
- *
- *   /** @typedef {import('../types').DirectiveContext} DirectiveContext *\/
+ * pulled into any file with a JSDoc typedef-import line naming this module,
+ * e.g. `import('../types').DirectiveContext` -- see the headers of
+ * BaseDirective.js, directives/registry.js and engine/RequestParameters.js for
+ * the exact form. (The line is not spelled out here: a typedef tag written
+ * inside this file's own doc comment would be parsed as a real declaration and
+ * would collide with the definition below.)
  *
  * There is no build step and no `.ts` file: the typedefs below are read by the
  * editor (see `jsconfig.json` at the repo root, `checkJs` on) and are inert at

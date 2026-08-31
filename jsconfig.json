@@ -1,0 +1,55 @@
+{
+  "//": [
+    "EDITOR FEEDBACK ONLY. This file is not a build step and is not wired into",
+    "`npm test` or CI -- nothing in the repo reads it except your editor's",
+    "TypeScript language service. There is no TypeScript dependency, no .ts",
+    "file and no compile: `noEmit` is on and the code stays plain runnable",
+    "JavaScript.",
+    "",
+    "Its purpose is to make the JSDoc typedefs in tybotRoute/types/index.js",
+    "actually do something: with `checkJs` on, the editor checks the annotated",
+    "call sites as you type. The codebase does NOT type-check clean today, and",
+    "it is not expected to -- treat the squiggles as a to-do list, never as a",
+    "gate. If you want the current count, run a tsc you already have against",
+    "this file with --noEmit; do not add TypeScript to package.json to do it.",
+    "",
+    "Settings are deliberately lenient (strict off, no implicit-any errors):",
+    "the goal is signal on the shapes we have declared, not a wall of noise",
+    "from the ones we have not.",
+    "",
+    "tybotRoute/test is excluded for the same reason: mocha's globals",
+    "(describe/it/before/after) have no type declarations here -- @types/mocha",
+    "is not installed and adding a dependency for an editor convenience is not",
+    "worth it -- so including the tests would bury the real findings under ~540",
+    "'Cannot find name describe' errors. Excluding them costs nothing at",
+    "runtime; it only means the editor does not type-check test files."
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+    "maxNodeModuleJsDepth": 0
+  },
+  "include": [
+    "index.js",
+    "tybotRoute/**/*.js",
+    "templatesRoute/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "logs",
+    "tybotRoute/logs",
+    "tybotRoute/uploads",
+    "tybotRoute/test"
+  ]
+}
