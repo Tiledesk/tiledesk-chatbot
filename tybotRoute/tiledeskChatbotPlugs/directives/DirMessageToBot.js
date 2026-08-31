@@ -1,5 +1,3 @@
-let axios = require('axios');
-let https = require("https");
 const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const tilebotService = require('../../services/TilebotService');

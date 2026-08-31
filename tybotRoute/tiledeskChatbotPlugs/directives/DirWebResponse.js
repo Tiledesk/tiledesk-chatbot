@@ -2,7 +2,6 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
-let axios = require('axios');
 const { BaseDirective } = require('../BaseDirective');
 const { Directives } = require('./Directives');
 
