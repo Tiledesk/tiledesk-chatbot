@@ -89,14 +89,14 @@ class DirConnectBlock extends BaseDirective {
     return intentDirective;
   }
 
+  /**
+   * Same as intentDirectiveFor: DirConnectBlock.go() prefixes the "/" itself,
+   * so the directive carries the bare block name. `JSON.stringify(params)` here
+   * read a name that exists nowhere in the function, the class or the module,
+   * so every call threw "ReferenceError: params is not defined".
+   */
   static fullIntentDirectiveFor(intent, json_params) {
-    let string_params = JSON.stringify(params);
-    let intentDirective = {
-      action: {
-        intentName: intent
-      }
-    }
-    return intentDirective;
+    return DirConnectBlock.intentDirectiveFor(intent, json_params);
   }
 
   

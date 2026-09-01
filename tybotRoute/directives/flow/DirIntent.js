@@ -100,13 +100,15 @@ class DirIntent extends BaseDirective {
     return intentDirective;
   }
 
+  /**
+   * Like intentDirectiveFor, but the intentName carries the leading "/" of the
+   * full intent command. `JSON.stringify(params)` here read a name that exists
+   * nowhere in the function, the class or the module, so every call threw
+   * "ReferenceError: params is not defined"; `json_params` was never read.
+   */
   static fullIntentDirectiveFor(intent, json_params) {
-    let string_params = JSON.stringify(params);
-    let intentDirective = {
-      action: {
-        intentName: intent
-      }
-    }
+    const intentDirective = DirIntent.intentDirectiveFor(intent, json_params);
+    intentDirective.action.intentName = "/" + intentDirective.action.intentName;
     return intentDirective;
   }
 

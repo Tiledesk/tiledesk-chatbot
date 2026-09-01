@@ -198,7 +198,7 @@ describe('Directives directives/flow', function () {
     // "ReferenceError: params is not defined". `json_params` is never read, so
     // even the ReferenceError aside the method could not do what it says. It has
     // no caller in the tree today, which is the only reason this is latent.
-    it.skip('fullIntentDirectiveFor builds a directive carrying the JSON parameters', () => {
+    it('fullIntentDirectiveFor builds a directive carrying the JSON parameters', () => {
       const directive = DirIntent.fullIntentDirectiveFor("NEXT_BLOCK", { city: "Rome" });
       assert.deepStrictEqual(directive, { action: { intentName: '/NEXT_BLOCK{"city":"Rome"}' } });
     });
@@ -247,7 +247,7 @@ describe('Directives directives/flow', function () {
 
     // QUARANTINED -- see the DirIntent case above: DirConnectBlock.js:92-100 has
     // the same `JSON.stringify(params)` ReferenceError.
-    it.skip('fullIntentDirectiveFor builds a directive carrying the JSON parameters', () => {
+    it('fullIntentDirectiveFor builds a directive carrying the JSON parameters', () => {
       const directive = DirConnectBlock.fullIntentDirectiveFor("SECOND_BLOCK", { n: 1 });
       assert.deepStrictEqual(directive, { action: { intentName: 'SECOND_BLOCK{"n":1}' } });
     });
