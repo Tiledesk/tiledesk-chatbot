@@ -6,29 +6,41 @@
     "Floors sit 1 point below the measured figure: the merged per-file-process run",
     "is not bit-identical between invocations (observed drift: 62.93 vs 62.92).",
     "Numbers come from coverage/coverage-summary.json; see .c8rc.json for what is",
-    "excluded and why, and docs/testing.md for the procedure."
+    "excluded and why, and docs/testing.md for the procedure.",
+    "",
+    "2026-09-01, releasing the last 5 quarantined files: the BRANCH floor was",
+    "lowered 77.80 -> 76.40 with --force. That is not a regression. V8 emits no",
+    "granular branch records for a file nothing exercises, so an unrun file used to",
+    "contribute its lines to the denominator but almost no branches -- DirAiCondition",
+    "reported 1/1 branches, DirAiPrompt 1/1, DirAskGPTV2 2/2, i.e. a fake 100%. Now",
+    "that those files actually run they report 54, 78 and 98 branches. Covered",
+    "branches ROSE 1552 -> 1845 and not one file lost a covered branch; the",
+    "percentage fell only because the denominator became honest (1969 -> 2381).",
+    "Same artefact family as the class-initialiser merge documented in",
+    "scripts/coverage.js. Verified by running the full coverage report at 6cd0e653",
+    "and diffing per file."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 62.92,
-    "statements": 62.92,
-    "functions": 67.63,
-    "branches": 78.81,
-    "linesCovered": 12346,
-    "linesTotal": 19619,
-    "functionsCovered": 464,
-    "functionsTotal": 686,
-    "branchesCovered": 1551,
-    "branchesTotal": 1968
+    "lines": 71,
+    "statements": 71,
+    "functions": 73.55,
+    "branches": 77.48,
+    "linesCovered": 13953,
+    "linesTotal": 19651,
+    "functionsCovered": 523,
+    "functionsTotal": 711,
+    "branchesCovered": 1845,
+    "branchesTotal": 2381
   },
   "floor": {
-    "lines": 61.9,
-    "statements": 61.9,
-    "functions": 66.6,
-    "branches": 77.8
+    "lines": 70,
+    "statements": 70,
+    "functions": 72.5,
+    "branches": 76.4
   },
   "areas": {
     "tybotRoute": {
@@ -41,16 +53,16 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 75.14,
-      "branches": 83.33,
+      "branches": 82.61,
       "functions": 75,
       "floorLines": 74.1
     },
     "tybotRoute/config": {
       "files": 1,
-      "lines": 94.96,
-      "branches": 75,
-      "functions": 80,
-      "floorLines": 93.9
+      "lines": 98.2,
+      "branches": 78.57,
+      "functions": 93.33,
+      "floorLines": 97.2
     },
     "tybotRoute/config/kb": {
       "files": 3,
@@ -61,10 +73,10 @@
     },
     "tybotRoute/config/kb/prompt/rag": {
       "files": 1,
-      "lines": 64.91,
-      "branches": 100,
-      "functions": 50,
-      "floorLines": 63.9
+      "lines": 91.23,
+      "branches": 87.5,
+      "functions": 100,
+      "floorLines": 90.2
     },
     "tybotRoute/directives": {
       "files": 3,
@@ -82,10 +94,10 @@
     },
     "tybotRoute/directives/ai": {
       "files": 7,
-      "lines": 24.75,
-      "branches": 80.77,
-      "functions": 45.71,
-      "floorLines": 23.7
+      "lines": 63.39,
+      "branches": 69.74,
+      "functions": 72.88,
+      "floorLines": 62.3
     },
     "tybotRoute/directives/bot": {
       "files": 5,
@@ -96,24 +108,24 @@
     },
     "tybotRoute/directives/conversation": {
       "files": 9,
-      "lines": 65.74,
-      "branches": 80.99,
+      "lines": 67.36,
+      "branches": 80.8,
       "functions": 64.71,
-      "floorLines": 64.7
+      "floorLines": 66.3
     },
     "tybotRoute/directives/data": {
       "files": 10,
-      "lines": 65.33,
-      "branches": 69.46,
-      "functions": 70.37,
-      "floorLines": 64.3
+      "lines": 71.05,
+      "branches": 67.58,
+      "functions": 79.63,
+      "floorLines": 70
     },
     "tybotRoute/directives/flow": {
       "files": 10,
-      "lines": 57,
-      "branches": 73.33,
-      "functions": 64.29,
-      "floorLines": 56
+      "lines": 58.29,
+      "branches": 72.61,
+      "functions": 67.86,
+      "floorLines": 57.2
     },
     "tybotRoute/directives/integrations": {
       "files": 7,
@@ -131,10 +143,10 @@
     },
     "tybotRoute/engine": {
       "files": 10,
-      "lines": 64.36,
-      "branches": 81.1,
-      "functions": 70.49,
-      "floorLines": 63.3
+      "lines": 67.08,
+      "branches": 81.97,
+      "functions": 72.13,
+      "floorLines": 66
     },
     "tybotRoute/engine/mock": {
       "files": 3,
@@ -166,38 +178,38 @@
     },
     "tybotRoute/pipeline": {
       "files": 3,
-      "lines": 80,
-      "branches": 100,
-      "functions": 62.5,
-      "floorLines": 79
+      "lines": 96.5,
+      "branches": 90,
+      "functions": 100,
+      "floorLines": 95.5
     },
     "tybotRoute/pipeline/plugs": {
       "files": 5,
-      "lines": 81.92,
-      "branches": 71.58,
+      "lines": 87.32,
+      "branches": 81.02,
       "functions": 100,
-      "floorLines": 80.9
+      "floorLines": 86.3
     },
     "tybotRoute/routes": {
       "files": 5,
-      "lines": 34.75,
-      "branches": 69.05,
+      "lines": 47.09,
+      "branches": 69.64,
       "functions": 100,
-      "floorLines": 33.7
+      "floorLines": 46
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 69.14,
-      "branches": 89.93,
-      "functions": 55.29,
-      "floorLines": 68.1
+      "lines": 78.63,
+      "branches": 82.3,
+      "functions": 75.58,
+      "floorLines": 77.6
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 84.54,
-      "branches": 77.27,
+      "lines": 84.66,
+      "branches": 77.59,
       "functions": 77.42,
-      "floorLines": 83.5
+      "floorLines": 83.6
     },
     "tybotRoute/variables": {
       "files": 3,
