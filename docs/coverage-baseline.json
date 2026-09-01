@@ -38,22 +38,22 @@
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 80.84,
-    "statements": 80.84,
-    "functions": 82.86,
-    "branches": 82.09,
-    "linesCovered": 15907,
+    "lines": 82.02,
+    "statements": 82.02,
+    "functions": 84.69,
+    "branches": 82.74,
+    "linesCovered": 16139,
     "linesTotal": 19676,
-    "functionsCovered": 590,
+    "functionsCovered": 603,
     "functionsTotal": 712,
-    "branchesCovered": 2380,
-    "branchesTotal": 2899
+    "branchesCovered": 2446,
+    "branchesTotal": 2956
   },
   "floor": {
-    "lines": 79.8,
-    "statements": 79.8,
-    "functions": 81.8,
-    "branches": 81
+    "lines": 81,
+    "statements": 81,
+    "functions": 83.6,
+    "branches": 81.7
   },
   "areas": {
     "tybotRoute": {
@@ -66,7 +66,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 76.47,
+      "branches": 75.76,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -121,10 +121,10 @@
     },
     "tybotRoute/directives/conversation": {
       "files": 9,
-      "lines": 67.99,
-      "branches": 83.72,
-      "functions": 64.71,
-      "floorLines": 66.9
+      "lines": 88.22,
+      "branches": 93.37,
+      "functions": 97.06,
+      "floorLines": 87.2
     },
     "tybotRoute/directives/data": {
       "files": 10,
@@ -157,7 +157,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.03,
-      "branches": 82.99,
+      "branches": 83.25,
       "functions": 73.77,
       "floorLines": 70
     },
@@ -206,7 +206,7 @@
     "tybotRoute/routes": {
       "files": 5,
       "lines": 89.5,
-      "branches": 88.62,
+      "branches": 88.71,
       "functions": 100,
       "floorLines": 88.5
     },
@@ -219,10 +219,10 @@
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 85.98,
-      "branches": 77.25,
-      "functions": 79.03,
-      "floorLines": 84.9
+      "lines": 86.4,
+      "branches": 77.43,
+      "functions": 82.26,
+      "floorLines": 85.4
     },
     "tybotRoute/variables": {
       "files": 3,

@@ -45,6 +45,7 @@
   "conversation-web_request_assign_json_test.js": 2,
   "conversation-web_requestv2_test.js": 7,
   "conversation-webhook_test.js": 1,
+  "conversation_directives_units_test.js": 37,
   "deflect_to_helpcenter_directive_test.js": 9,
   "dir_json_condition_v2_test.js": 13,
   "dir_replyv2_flow_attributes_error_test.js": 1,
