@@ -35,29 +35,31 @@
     "",
     "2026-09-01, fixing the catalogued runtime defects: no floor was forced. Worth recording that utils/ChatbotReplyUtil.js drifts by 2 lines (254 vs 256 of 302) between otherwise identical runs, i.e. ~0.12 points on the utils area. That is the same per-file-process merge noise the headroom exists for; a run that samples low is not a regression, re-measure before reaching for --force.",
     "",
-    "2026-09-01, stage 1 of the final wave: the 12 catalogued runtime defects fixed and their it.skip() tests released, plus 4 new tests for the unhandled rejection raised by the checkMandatoryParameters abort. No floor was forced -- every floor ratcheted UP. Overall lines 91.97 -> 92.22, directives/ai 96.40 -> 97.14, directives/data 96.19 -> 97.67. The line TOTAL grew (19857 -> 19979) because the fixes add real error-handling code, so a rising percentage here is a genuine gain twice over."
+    "2026-09-01, stage 1 of the final wave: the 12 catalogued runtime defects fixed and their it.skip() tests released, plus 4 new tests for the unhandled rejection raised by the checkMandatoryParameters abort. No floor was forced -- every floor ratcheted UP. Overall lines 91.97 -> 92.22, directives/ai 96.40 -> 97.14, directives/data 96.19 -> 97.67. The line TOTAL grew (19857 -> 19979) because the fixes add real error-handling code, so a rising percentage here is a genuine gain twice over.",
+    "",
+    "2026-09-01, stage 2 of the final wave (integrations + utils): no floor forced, every floor ratcheted UP. directives/integrations 74.04 -> 96.92, utils 87.50 -> 97.60, overall 92.22 -> 94.26. The integrations ratchet was deferred one commit because utils sampled 87.38 against its 86.50 floor on that run (the ChatbotReplyUtil merge drift already recorded above); the new utils tests removed the drift's headroom problem outright."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 92.22,
-    "statements": 92.22,
-    "functions": 91.48,
-    "branches": 90.46,
-    "linesCovered": 18426,
+    "lines": 94.26,
+    "statements": 94.26,
+    "functions": 93.15,
+    "branches": 92.69,
+    "linesCovered": 18833,
     "linesTotal": 19979,
-    "functionsCovered": 655,
+    "functionsCovered": 667,
     "functionsTotal": 716,
-    "branchesCovered": 3300,
-    "branchesTotal": 3648
+    "branchesCovered": 3530,
+    "branchesTotal": 3808
   },
   "floor": {
-    "lines": 91.2,
-    "statements": 91.2,
-    "functions": 90.4,
-    "branches": 89.4
+    "lines": 93.2,
+    "statements": 93.2,
+    "functions": 92.1,
+    "branches": 91.6
   },
   "areas": {
     "tybotRoute": {
@@ -70,7 +72,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 77.14,
+      "branches": 75.76,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -146,10 +148,10 @@
     },
     "tybotRoute/directives/integrations": {
       "files": 7,
-      "lines": 74.04,
-      "branches": 68.14,
-      "functions": 92.86,
-      "floorLines": 73
+      "lines": 96.92,
+      "branches": 97.3,
+      "functions": 100,
+      "floorLines": 95.9
     },
     "tybotRoute/directives/tiledesk": {
       "files": 3,
@@ -161,7 +163,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.16,
-      "branches": 83.84,
+      "branches": 83.76,
       "functions": 73.77,
       "floorLines": 70.1
     },
@@ -223,10 +225,10 @@
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 87.5,
-      "branches": 80.6,
-      "functions": 82.26,
-      "floorLines": 86.5
+      "lines": 97.61,
+      "branches": 96.39,
+      "functions": 98.39,
+      "floorLines": 96.6
     },
     "tybotRoute/variables": {
       "files": 3,
