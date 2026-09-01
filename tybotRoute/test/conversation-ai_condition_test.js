@@ -64,12 +64,22 @@ describe('Conversation for AiCondition test', async () => {
 
   describe('Missing parameters tests', async () => {
 
-    it('AiCondition fail - missing question parameter', (done) => {
-      
+    // WAS: 'AiCondition fail - missing question parameter', asserting
+    //   "AiCondition Error: 'question' attribute is undefined".
+    // That requirement was deliberately deleted in a30ceb21 ("removed question
+    // from mandatory parameters in AiCondition"): DirAiCondition.checkMandatoryParameters
+    // now lists only ['llm', 'model'], and the directive never reads action.question
+    // at all -- it builds its prompt from `intents` + `instructions`. The old test
+    // asserted a rule the code had stopped promising, so it is replaced here by one
+    // covering the behaviour that replaced it: an action with no `question` runs
+    // normally, and a returned label routes to that label's connector.
+    // ('llm' and 'model' still being mandatory is covered by the next two tests.)
+    it('AiCondition runs an action with no question attribute and routes to the matching label', (done) => {
+
       let listener;
       let endpointServer = express();
       endpointServer.use(bodyParser.json());
-      
+
       endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
         res.send({ success: true });
         const message = req.body;
@@ -77,7 +87,7 @@ describe('Conversation for AiCondition test', async () => {
         assert(message.attributes.commands.length === 2);
         const command2 = message.attributes.commands[1];
         assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiCondition Error: 'question' attribute is undefined");
+        assert(command2.message.text === "Answer: medical");
 
         util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
           if (err) {
@@ -85,13 +95,51 @@ describe('Conversation for AiCondition test', async () => {
           }
           else {
             assert(attributes);
-            assert(attributes["flowError"] === "AiCondition Error: 'question' attribute is undefined");
+            assert(attributes["ai_reply"] === "medical");
             listener.close(() => {
               done();
             });
           }
         });
 
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'myllm');
+
+        let http_code = 200;
+        let reply = {
+          _id: "656728224b45965b69111111",
+          id_project: "62c3f10152dc740035000000",
+          name: "myllm",
+          value: {
+            apikey: "example_api_key",
+          }
+        }
+
+        res.status(http_code).send(reply);
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "myllm");
+        assert(req.body.model === "llmmodel");
+        assert(req.body.llm_key === "example_api_key");
+        // The prompt is built from the action's intents + instructions, never
+        // from an action `question` attribute.
+        assert(typeof req.body.question === "string");
+        assert(req.body.question.includes("label: medical"));
+
+        let reply = {}
+        let http_code = 200;
+        reply = {
+          answer: "medical",
+          chat_history_dict: {}
+        }
+
+        res.status(http_code).send(reply);
       });
 
       listener = endpointServer.listen(10002, '0.0.0.0', () => {
@@ -102,7 +150,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_question',
+            "text": '/ai_condition_no_question',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {

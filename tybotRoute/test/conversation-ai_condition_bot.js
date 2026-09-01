@@ -4,25 +4,43 @@ const bot = {
 	"name": "Your bot",
 	"type": "tilebot",
 	"intents": [
-		// blocks with conditions
+		// Every block below is an `ai_condition` action. They used to be
+		// `_tdActionType: "ai_prompt"` -- a verbatim copy of the first five blocks of
+		// conversation-ai_prompt_bot.js -- so conversation-ai_condition_test.js drove
+		// DirAiPrompt while asserting "AiCondition Error: ..." strings and could never
+		// pass. The display names are kept because the test sends them as /commands.
+		//
+		// DirAiCondition has no `question`: it builds its prompt from `intents` +
+		// `instructions`, and iterates `action.intents` unconditionally, so every
+		// block needs one. `errorIntent` is the connector DirAiCondition follows on
+		// failure (DirAiPrompt uses trueIntent/falseIntent); `fallbackIntent` is the
+		// one it follows when the model's answer matches no label.
 		{
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "ai_prompt_missing_question",
+			"intent_display_name": "ai_condition_no_question",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
+				"_tdActionTitle": "ai condition",
 				"assignReplyTo": "ai_reply",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#FALLBACK",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{
@@ -34,15 +52,22 @@ const bot = {
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
+				"_tdActionTitle": "ai condition",
 				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#FALLBACK",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{
@@ -54,18 +79,28 @@ const bot = {
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
+				"_tdActionTitle": "ai condition",
 				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "myllm",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#FALLBACK",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{
+			// Driven by three tests: the missing-key one (404 on the integration),
+			// the success one (answer matches no label -> fallbackIntent) and the
+			// /api/ask-fails one (422 -> errorIntent).
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
@@ -74,16 +109,23 @@ const bot = {
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
+				"_tdActionTitle": "ai condition",
 				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#MEDICAL"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#SUCCESS",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{
@@ -95,16 +137,23 @@ const bot = {
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
+				"_tdActionTitle": "ai condition",
 				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#MEDICAL"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "ollama",
 				"model": "mymodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#SUCCESS",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{

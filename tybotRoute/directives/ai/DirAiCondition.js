@@ -130,14 +130,21 @@ class DirAiCondition extends BaseDirective {
       });
 
     } else if(action.llm === 'vllm'){
+      // The four error exits in this branch used to read `falseIntent`,
+      // `trueIntent`, `trueIntentAttributes` and `falseIntentAttributes` and call
+      // this._executeCondition(). `go()` declares none of them -- they are
+      // DirAiPrompt's connector names, pasted in from there -- so reading
+      // `falseIntent` threw ReferenceError and every one of these paths crashed
+      // instead of routing. DirAiCondition's error connector is `errorIntent`,
+      // used by all nine of its other error exits; these now match.
       const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
       
       if (!vllm_integration?.value) {
         this.logger.error("[AI Condition] Error getting vllm integration.");
         winston.error("DirAiCondition Error getting vllm integration");
         await this.chatbot.addParameter("flowError", "Vllm integration not found");
-        if (falseIntent) {
-          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -151,8 +158,8 @@ class DirAiCondition extends BaseDirective {
         if (!filled_vllm_server) {
           this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
           await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
-          if (falseIntent) {
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -163,8 +170,8 @@ class DirAiCondition extends BaseDirective {
         if (!vllm_server_config) {
           this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
-          if (falseIntent) {
-            await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -180,8 +187,8 @@ class DirAiCondition extends BaseDirective {
         this.logger.error("[AI Condition] llm key not found in vllm integration");
         winston.error("Error: DirAiCondition llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
-        if (falseIntent) {
-          await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -297,7 +304,15 @@ class DirAiCondition extends BaseDirective {
       }
       this.logger.error("[AI Condition] error executing action: ", error);
       if (errorIntent) {
-        await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+        // `error` above is the message the LLM service actually returned. It used
+        // to be dropped here and flowError set to "...condition label not found in
+        // intents list" instead -- a copy of the string that belongs to the
+        // no-matching-label branch at the end of the success path (see 9b8ef745,
+        // where that was its only use). An /ask failure has nothing to do with
+        // label matching, so the flow surfaced a wrong reason to the user and
+        // discarded the real one. Prefix matches the directive's other flowErrors
+        // and its sibling DirAiPrompt ("AiPrompt Error: " + error).
+        await this.chatbot.addParameter("flowError", "AiCondition Error: " + error);
         await this.#executeIntent(errorIntent);
         callback(true);
         return;
