@@ -84,6 +84,15 @@ const TEST_ENV = {
   API_ENDPOINT: MOCK,
   TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT || 'http://localhost:10001',
 
+  // The bot token the tests put in the message envelope. Most files hardcode
+  // "XXX"; conversation-form-test.js and conversation-locked-intent-test.js read
+  // it from the environment instead, and with it unset they send `token:
+  // undefined`. The plain-text reply path then reaches ExtApi.fixToken(undefined),
+  // which throws inside the route's async handler, so the reply is dropped with no
+  // log at all and the test simply times out. Any non-empty value works: nothing
+  // in the suite verifies it.
+  CHATBOT_TOKEN: process.env.CHATBOT_TOKEN || 'XXX',
+
   BREVO_ENDPOINT: process.env.BREVO_ENDPOINT || `${MOCK}/api/v3`,
   CUSTOMERIO_ENDPOINT: process.env.CUSTOMERIO_ENDPOINT || `${MOCK}/api/v1`,
   HUBSPOT_ENDPOINT: process.env.HUBSPOT_ENDPOINT || `${MOCK}/crm/v3/`,
