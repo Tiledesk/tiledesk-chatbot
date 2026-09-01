@@ -3083,4 +3083,61 @@ describe('Directives directives/ai, the error and edge paths', function () {
 
   });
 
+  describe('two last connector shapes', function () {
+
+    it('DirAiPrompt: an unknown vllm server WITH a false connector routes there', async () => {
+      const mock = await startMock({
+        integrations: { vllm: { value: { servers: [{ name: "eu-1", url: "u", apikey: "k" }] } } }
+      });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, {
+          name: "aiPrompt",
+          action: { question: "q", llm: "vllm", model: "m", vllmServer: "us-2", falseIntent: "KO" }
+        });
+
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: vllm server 'us-2' not found");
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+        assert.deepStrictEqual(stops, [true]);
+        assert.strictEqual(mock.seen.ask.length, 0);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAssistant: connectors that are only whitespace count as not wired', async () => {
+      // A designer that saves an empty connector writes "" or "  ", not null.
+      // Without the trim() those would be truthy and the directive would try to
+      // jump to an intent whose name is blank.
+      const names = ['createThread', 'addMessage', 'createRun', 'getRun', 'threadMessages'];
+      const original = {};
+      for (const name of names) original[name] = openAIAssistantsService[name];
+      openAIAssistantsService.createThread = async () => ({ id: "th-1" });
+      openAIAssistantsService.addMessage = async () => undefined;
+      openAIAssistantsService.createRun = async () => ({ id: "run-1" });
+      openAIAssistantsService.getRun = async () => ({ status: "completed" });
+      openAIAssistantsService.threadMessages = async () => ({ data: [{ content: [{ text: { value: "hi back" } }] }] });
+
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, tdcache } = build(DirAssistant, null, { vars: { firstThread: "th-existing" } });
+        const stops = await run(dir, {
+          name: "gptassistant",
+          action: {
+            assistantId: "asst_1", prompt: "hi", assignResultTo: "ass_reply",
+            trueIntent: "   ", falseIntent: ""
+          }
+        }, 400);
+
+        assert.strictEqual(tdcache.attrs().ass_reply, "hi back");
+        assert.deepStrictEqual(dispatched, [], 'a blank connector name must not be dispatched');
+        assert.deepStrictEqual(stops, [false]);
+      } finally {
+        for (const name of names) openAIAssistantsService[name] = original[name];
+        await mock.close();
+      }
+    });
+
+  });
+
 });
