@@ -40,22 +40,22 @@
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 91.28,
-    "statements": 91.28,
-    "functions": 91.34,
-    "branches": 89.43,
-    "linesCovered": 18126,
+    "lines": 91.94,
+    "statements": 91.94,
+    "functions": 91.48,
+    "branches": 90.33,
+    "linesCovered": 18258,
     "linesTotal": 19857,
-    "functionsCovered": 654,
+    "functionsCovered": 655,
     "functionsTotal": 716,
-    "branchesCovered": 3218,
-    "branchesTotal": 3598
+    "branchesCovered": 3262,
+    "branchesTotal": 3611
   },
   "floor": {
-    "lines": 90.2,
-    "statements": 90.2,
-    "functions": 90.3,
-    "branches": 88.4
+    "lines": 90.9,
+    "statements": 90.9,
+    "functions": 90.4,
+    "branches": 89.3
   },
   "areas": {
     "tybotRoute": {
@@ -68,7 +68,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 75.76,
+      "branches": 76.47,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -109,10 +109,10 @@
     },
     "tybotRoute/directives/ai": {
       "files": 7,
-      "lines": 91.67,
-      "branches": 90.56,
-      "functions": 98.39,
-      "floorLines": 90.6
+      "lines": 96.17,
+      "branches": 95.34,
+      "functions": 100,
+      "floorLines": 95.1
     },
     "tybotRoute/directives/bot": {
       "files": 5,
@@ -130,10 +130,10 @@
     },
     "tybotRoute/directives/data": {
       "files": 10,
-      "lines": 95.57,
-      "branches": 95.93,
+      "lines": 96.19,
+      "branches": 97.07,
       "functions": 100,
-      "floorLines": 94.5
+      "floorLines": 95.1
     },
     "tybotRoute/directives/flow": {
       "files": 10,
@@ -159,7 +159,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.16,
-      "branches": 84.08,
+      "branches": 83.76,
       "functions": 73.77,
       "floorLines": 70.1
     },
@@ -201,28 +201,28 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.81,
+      "branches": 85.9,
       "functions": 100,
       "floorLines": 88.2
     },
     "tybotRoute/routes": {
       "files": 5,
       "lines": 92.91,
-      "branches": 89.55,
+      "branches": 89.47,
       "functions": 100,
       "floorLines": 91.9
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 99.69,
-      "branches": 97.66,
+      "lines": 99.92,
+      "branches": 98.19,
       "functions": 100,
-      "floorLines": 98.6
+      "floorLines": 98.9
     },
     "tybotRoute/utils": {
       "files": 13,
       "lines": 87.5,
-      "branches": 80.52,
+      "branches": 80.45,
       "functions": 82.26,
       "floorLines": 86.5
     },

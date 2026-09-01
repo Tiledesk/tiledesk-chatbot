@@ -1444,4 +1444,86 @@ describe('Directives directives/data, the error and edge paths', function () {
 
   });
 
+  // ------------------------------- the remaining assignment and transport paths
+
+  describe('assignment and transport corner cases', function () {
+
+    it('DirWebRequest: an assignment expression that will not compile is skipped, the others still run', async () => {
+      const mock = await startMock({ echoBody: { name: "Ada" } });
+      try {
+        const { dir, tdcache } = build(DirWebRequest);
+        const stops = await run(dir, {
+          name: "webRequest",
+          action: {
+            url: MOCK + "/echo", method: "GET",
+            assignments: { broken: "{{#each}}", good: "name" }
+          }
+        });
+
+        assert.strictEqual(tdcache.attrs().good, "Ada", 'one bad expression must not lose the others');
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirWebRequest: a cache that refuses one write does not stop the rest', async () => {
+      const mock = await startMock({ echoBody: { name: "Ada", town: "Rome" } });
+      try {
+        const { dir, tdcache } = build(DirWebRequest, {
+          cache: {
+            async hset(k, f, v) {
+              if (f === "who") throw new Error("redis refused that key");
+              (this.hashes[k] || (this.hashes[k] = {}))[f] = v;
+            }
+          }
+        });
+        const stops = await run(dir, {
+          name: "webRequest",
+          action: { url: MOCK + "/echo", method: "GET", assignments: { who: "name", where: "town" } }
+        });
+
+        assert.strictEqual('who' in tdcache.attrs(), false);
+        assert.strictEqual(tdcache.attrs().where, "Rome", 'the write after the failed one still happens');
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirWebRequestV2: an https url that cannot be reached is reported, not thrown', async () => {
+      const { dir, tdcache } = build(DirWebRequestV2);
+      const stops = await run(dir, {
+        name: "webRequestV2",
+        action: {
+          url: "https://127.0.0.1:10099/nothing", method: "GET",
+          assignStatusTo: "status", assignErrorTo: "err", falseIntent: "KO"
+        }
+      });
+
+      assert.ok(typeof tdcache.attrs().err === 'string' && tdcache.attrs().err.length > 0, tdcache.attrs().err);
+      assert.deepStrictEqual(dispatched, ["/KO"]);
+      assert.deepStrictEqual(stops, [true]);
+    });
+
+    it('DirDataTables: a rejection that is not an Error at all is still reported as text', async () => {
+      const dataTablesService = require('../services/DataTablesService');
+      const original = dataTablesService.listRows;
+      dataTablesService.listRows = async () => { throw "the table service said no"; };
+      try {
+        const { dir, tdcache } = build(DirDataTables);
+        const stops = await run(dir, {
+          name: "datatables",
+          action: { tableId: "T1", operation: "get", assignErrorTo: "dt_error" }
+        }, 50);
+
+        assert.strictEqual(tdcache.attrs().dt_error, "the table service said no");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        dataTablesService.listRows = original;
+      }
+    });
+
+  });
+
 });

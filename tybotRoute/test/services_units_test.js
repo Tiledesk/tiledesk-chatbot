@@ -747,6 +747,19 @@ describe('Services tybotRoute/services', function () {
       }
     });
 
+    it('an unreachable https webhook goes through the permissive agent and is still reported', async () => {
+      const was = process.env.MAKE_ENDPOINT;
+      delete process.env.MAKE_ENDPOINT;
+      try {
+        const out = await makeService.trigger("https://127.0.0.1:10099/nothing", { a: 1 });
+        assert.strictEqual(out.err, null);
+        assert.strictEqual(out.res.status, 1000);
+        assert.ok(typeof out.res.error === 'string' && out.res.error.length > 0, out.res.error);
+      } finally {
+        if (was === undefined) delete process.env.MAKE_ENDPOINT; else process.env.MAKE_ENDPOINT = was;
+      }
+    });
+
     it('an unreachable webhook is reported with the synthetic 1000 status', async () => {
       const was = process.env.MAKE_ENDPOINT;
       delete process.env.MAKE_ENDPOINT;

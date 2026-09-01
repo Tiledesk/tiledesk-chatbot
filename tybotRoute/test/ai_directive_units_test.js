@@ -19,6 +19,10 @@
 // directives/ai/DirAskGPTV2 at REQUIRE time, so they have to be set before the
 // requires. Scoped to this file on purpose: they are product settings, not
 // suite-wide ones.
+//
+// PINECONE_RERANKING is read into a module-level const by DirAskGPTV2 for the
+// same reason, and gates the non-hybrid reranking branch exercised below.
+process.env.PINECONE_RERANKING = 'true';
 process.env.GPT_4_CONTEXT = 'RAG CONTEXT FOR GPT-4, FROM THE ENVIRONMENT';
 process.env.GENERAL_CONTEXT = 'GENERAL RAG CONTEXT, FROM THE ENVIRONMENT';
 
@@ -2589,6 +2593,489 @@ describe('Directives directives/ai, the error and edge paths', function () {
         const { dir } = build(DirAddKbContent, null, { vars: { who: "Ada" } });
         const stops = await run(dir, { name: "addkbcontent", action: ADD });
         assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+  });
+
+  // ------------------------- the "no connector wired" half of the error exits
+
+  describe('the exits taken when no connector is wired', function () {
+
+    it('DirAskGPT without a cache calls back and asks nothing', async () => {
+      const mock = await startMock({});
+      try {
+        const dir = new DirAskGPT(contextFor({ chatbot: fakeChatbot() }));
+        dir.logger = recordingLogger();
+        const stops = await run(dir, { name: "askgpt", action: { question: "q", kbid: "kb1" } });
+        assert.deepStrictEqual(stops, [undefined]);
+        assert.strictEqual(mock.seen.qa.length, 0);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirGptTask without a cache calls back and calls no completion', async () => {
+      const mock = await startMock({});
+      try {
+        const dir = new DirGptTask(contextFor({ chatbot: fakeChatbot() }));
+        dir.logger = recordingLogger();
+        const stops = await run(dir, { name: "gptTask", action: { question: "q", model: "gpt-4o" } });
+        assert.deepStrictEqual(stops, [undefined]);
+        assert.strictEqual(mock.seen.completions.length, 0);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirGptTask with history but no transcript sends only the question', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir } = build(DirGptTask, null);
+        await run(dir, { name: "gptTask", action: { question: "q", model: "gpt-4o", history: true } });
+
+        assert.deepStrictEqual(mock.seen.completions[0].body.messages, [{ role: "user", content: "q" }]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt sends the transcript as a question/answer dictionary', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir } = build(DirAiPrompt, null, { vars: { transcript: TRANSCRIPT } });
+        await run(dir, {
+          name: "aiPrompt",
+          action: { question: "q", llm: "openai", model: "gpt-4o", history: true }
+        });
+
+        assert.deepStrictEqual(mock.seen.ask[0].chat_history_dict, { 0: { question: "hello", answer: "hi" } });
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt with history but no transcript warns and sends no history', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, logger } = build(DirAiPrompt, null);
+        await run(dir, { name: "aiPrompt", action: { question: "q", llm: "openai", model: "gpt-4o", history: true } });
+
+        assert.strictEqual(mock.seen.ask[0].chat_history_dict, undefined);
+        assert.ok(logger.at('warn').includes('no chat transcript found'), logger.at('warn'));
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: each vllm failure with no false connector still sets flowError and asks nothing', async () => {
+      const noIntegration = await startMock({ integrations: {} });
+      try {
+        const a = build(DirAiPrompt, null);
+        const stops = await run(a.dir, { name: "aiPrompt", action: { question: "q", llm: "vllm", model: "m" } });
+        assert.strictEqual(a.chatbot.params.flowError, "Vllm integration not found");
+        assert.deepStrictEqual(stops, [undefined]);
+        assert.strictEqual(noIntegration.seen.ask.length, 0);
+      } finally {
+        await noIntegration.close();
+      }
+    });
+
+    it('DirAiPrompt: a missing vllmServer with no false connector still sets flowError', async () => {
+      const mock = await startMock({
+        integrations: { vllm: { value: { servers: [{ name: "eu-1", url: "u", apikey: "k" }] } } }
+      });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, { name: "aiPrompt", action: { question: "q", llm: "vllm", model: "m" } });
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: 'vllmServer' attribute is undefined");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: an unknown vllm server with no false connector still sets flowError', async () => {
+      const mock = await startMock({
+        integrations: { vllm: { value: { servers: [{ name: "eu-1", url: "u", apikey: "k" }] } } }
+      });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, { name: "aiPrompt", action: { question: "q", llm: "vllm", model: "m", vllmServer: "us-2" } });
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: vllm server 'us-2' not found");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: a keyless vllm integration with no false connector still sets flowError', async () => {
+      const mock = await startMock({ integrations: { vllm: { value: { url: "http://vllm.test" } } } });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, { name: "aiPrompt", action: { question: "q", llm: "vllm", model: "m" } });
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: missing key for llm vllm");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: an exhausted quota with no false connector still sets flowError and asks nothing', async () => {
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({ integrations: {}, quotaAvailable: false });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, { name: "aiPrompt", action: { question: "q", llm: "openai", model: "gpt-4o" } });
+        assert.strictEqual(chatbot.params.flowError, "GPT Error: tokens quota exceeded");
+        assert.strictEqual(mock.seen.ask.length, 0);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: unprocessable servers with no false connector still set flowError and ask nothing', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        const stops = await run(dir, {
+          name: "aiPrompt",
+          action: { question: "q", llm: "openai", model: "gpt-4o", servers: "not-an-array" }
+        });
+        assert.strictEqual(chatbot.params.flowError, "Can't process MCP Servers");
+        assert.strictEqual(mock.seen.ask.length, 0);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: a native mcp cache holding neither an array nor an object resolves no url', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot, tdcache } = build(DirAiPrompt, null);
+        tdcache.strings['native_mcp:servers'] = '42';
+
+        await run(dir, {
+          name: "aiPrompt",
+          action: { question: "q", llm: "openai", model: "gpt-4o", servers: [{ id: "N1", name: "calendar", native: true }] }
+        });
+
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: native MCP server url not found for calendar");
+        assert.strictEqual(mock.seen.ask.length, 0);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: a failing native mcp refetch is logged and still reported as unavailable', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION }, mcpNativeStatus: 500 });
+      try {
+        const { dir, chatbot, logger } = build(DirAiPrompt, null);
+        await run(dir, {
+          name: "aiPrompt",
+          action: { question: "q", llm: "openai", model: "gpt-4o", servers: [{ id: "N1", name: "calendar", native: true }] }
+        });
+
+        assert.deepStrictEqual(mock.seen.mcpNative, [PROJECT_ID]);
+        assert.ok(logger.at('error').includes('Error fetching native MCP servers'), logger.at('error'));
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: native MCP servers not available");
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a missing vllm integration with no error connector still sets flowError', async () => {
+      const mock = await startMock({ integrations: {} });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "vllm", model: "m", intents: [] } });
+        assert.strictEqual(chatbot.params.flowError, "Vllm integration not found");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a missing vllmServer with no error connector still sets flowError', async () => {
+      const mock = await startMock({
+        integrations: { vllm: { value: { servers: [{ name: "eu-1", url: "u", apikey: "k" }] } } }
+      });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "vllm", model: "m", intents: [] } });
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: 'vllmServer' attribute is undefined");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: an unknown vllm server with no error connector still sets flowError', async () => {
+      const mock = await startMock({
+        integrations: { vllm: { value: { servers: [{ name: "eu-1", url: "u", apikey: "k" }] } } }
+      });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "vllm", model: "m", intents: [], vllmServer: "us-2" } });
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: vllm server 'us-2' not found");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a keyless vllm integration with no error connector still sets flowError', async () => {
+      const mock = await startMock({ integrations: { vllm: { value: { url: "http://vllm.test" } } } });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "vllm", model: "m", intents: [] } });
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: missing key for llm vllm");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: no key with no error connector still sets flowError and asks nothing', async () => {
+      const mock = await startMock({ integrations: {} });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "anthropic", model: "m", intents: [] } });
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: missing key for llm anthropic");
+        assert.strictEqual(mock.seen.ask.length, 0);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: an exhausted quota with no error connector still sets flowError', async () => {
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({ integrations: {}, quotaAvailable: false });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "openai", model: "m", intents: [] } });
+        assert.strictEqual(chatbot.params.flowError, "GPT Error: tokens quota exceeded");
+        assert.strictEqual(mock.seen.ask.length, 0);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a 400 whose detail carries an answer surfaces that answer', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION },
+        ask: (req, res) => res.status(400).send({ detail: { answer: "I cannot classify that" } })
+      });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        await run(dir, { name: "aiCondition", action: { llm: "openai", model: "m", intents: [], errorIntent: "ERR" } });
+
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: I cannot classify that");
+        assert.deepStrictEqual(dispatched, ["/ERR"]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a failing ask with no error connector sets no flowError and carries on', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION },
+        ask: (req, res) => res.status(400).send({ detail: [{ msg: "too long" }] })
+      });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        const stops = await run(dir, { name: "aiCondition", action: { llm: "openai", model: "m", intents: [] } });
+
+        assert.strictEqual(chatbot.params.flowError, undefined);
+        assert.deepStrictEqual(dispatched, []);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: a matched label whose connector is not wired logs it and stops the flow', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION },
+        ask: (req, res) => res.status(200).send({ success: true, answer: "orphan" })
+      });
+      try {
+        const { dir, logger } = build(DirAiCondition, null);
+        const stops = await run(dir, {
+          name: "aiCondition",
+          action: {
+            llm: "openai", model: "m",
+            intents: [{ label: "orphan", prompt: "p" }],
+            fallbackIntent: "FALLBACK"
+          }
+        });
+
+        assert.deepStrictEqual(dispatched, [], 'a label with no conditionIntentId goes nowhere');
+        assert.ok(logger.at('native').includes('no block connected to intentId'), logger.at('native'));
+        assert.deepStrictEqual(stops, [true]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: an unresolvable llm with no false connector still sets flowError', async () => {
+      const mock = await startMock({ integrations: {} });
+      try {
+        const { dir, chatbot } = build(DirAskGPTV2, null);
+        const stops = await run(dir, { name: "askgptv2", action: { question: "q", llm: "ollama", model: "m" } });
+        assert.strictEqual(chatbot.params.flowError, "AskKnowledgeBase Error: ollama integration not found");
+        assert.deepStrictEqual(stops, [undefined]);
+        assert.strictEqual(mock.seen.qa.length, 0);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: an exhausted quota with no false connector still sets flowError', async () => {
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({ integrations: {}, quotaAvailable: false, namespaces: NAMESPACES });
+      try {
+        const { dir, chatbot } = build(DirAskGPTV2, null);
+        const stops = await run(dir, { name: "askgptv2", action: { question: "q", llm: "openai", model: "gpt-4" } });
+        assert.strictEqual(chatbot.params.flowError, "GPT Error: tokens quota exceeded");
+        assert.strictEqual(mock.seen.qa.length, 0);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: a project with no id at all reports an undefined namespace', async () => {
+      // With no project id the integration and quota urls have an empty path
+      // segment and 404; the shared key and the fail-open quota check carry the
+      // directive as far as the namespace guard, which is what is under test.
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES });
+      try {
+        const { dir, chatbot } = build(DirAskGPTV2, null, { context: { projectId: "" } });
+        const stops = await run(dir, {
+          name: "askgptv2",
+          action: { question: "q", llm: "openai", model: "gpt-4", falseIntent: "KO" }
+        });
+
+        assert.strictEqual(chatbot.params.flowError, "AskGPT Error: namespace is undefined");
+        assert.strictEqual(mock.seen.namespaces, 0, 'no namespace lookup is attempted');
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+        assert.deepStrictEqual(stops, [true]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: pinecone reranking is declared and its multiplier clamped to 100 chunks', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES });
+      try {
+        const a = build(DirAskGPTV2, null);
+        await run(a.dir, {
+          name: "askgptv2",
+          action: { question: "q", llm: "openai", model: "gpt-4", reranking: true, reranking_multiplier: 50, top_k: 30 }
+        });
+        assert.strictEqual(mock.seen.qa[0].search_type, undefined, 'a non-hybrid namespace stays on dense search');
+        assert.strictEqual(mock.seen.qa[0].reranking.provider, "pinecone");
+        assert.strictEqual(mock.seen.qa[0].reranking.model, "bge-reranker-v2-m3");
+        assert.strictEqual(mock.seen.qa[0].reranking_multiplier, 3, 'floor(100 / 30)');
+
+        const b = build(DirAskGPTV2, null);
+        await run(b.dir, {
+          name: "askgptv2",
+          action: { question: "q", llm: "openai", model: "gpt-4", reranking: true, reranking_multiplier: 2, top_k: 200 }
+        });
+        assert.strictEqual(mock.seen.qa[1].reranking_multiplier, 1, 'floor(100 / 200) is 0, which is not allowed');
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: chunks_only with no true connector lets the flow carry on', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES,
+        qa: (req, res) => res.status(200).send({ success: true, answer: "a", chunks: ["c1"] })
+      });
+      try {
+        const { dir, tdcache } = build(DirAskGPTV2, null);
+        const stops = await run(dir, {
+          name: "askgptv2",
+          action: { question: "q", llm: "openai", model: "gpt-4", chunks_only: true, assignChunksTo: "kb_chunks" }
+        });
+
+        assert.deepStrictEqual(tdcache.attrs().kb_chunks, ["c1"]);
+        assert.deepStrictEqual(dispatched, []);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: a quota or answered-question call that fails does not disturb the reply', async () => {
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({
+        integrations: {}, namespaces: NAMESPACES,
+        extra: (server) => {
+          server.post('/:project_id/quotes/incr/tokens', (req, res) => res.status(500).send({ error: "quota down" }));
+          server.post('/:project_id/kb/answered', (req, res) => res.status(500).send({ error: "kb down" }));
+        }
+      });
+      try {
+        const { dir, tdcache } = build(DirAskGPTV2, null);
+        const stops = await run(dir, {
+          name: "askgptv2",
+          action: { question: "q", llm: "openai", model: "gpt-4", assignReplyTo: "kb_reply", trueIntent: "OK" }
+        }, 400);
+
+        assert.strictEqual(tdcache.attrs().kb_reply, "the kb answer",
+          'the bookkeeping calls are fire-and-forget: their failure must not lose the answer');
+        assert.deepStrictEqual(dispatched, ["/OK"]);
+        assert.deepStrictEqual(stops, [true]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAskGPTV2: an unanswered-question call that fails is warned about, not fatal', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES,
+        qa: (req, res) => res.status(200).send({ success: false }),
+        extra: (server) => {
+          server.post('/:project_id/kb/unanswered', (req, res) => res.status(500).send({ error: "kb down" }));
+        }
+      });
+      try {
+        const { dir, logger, tdcache } = build(DirAskGPTV2, null);
+        const stops = await run(dir, {
+          name: "askgptv2",
+          action: { question: "why", llm: "openai", model: "gpt-4", assignReplyTo: "kb_reply", falseIntent: "KO" }
+        }, 400);
+
+        assert.strictEqual(tdcache.attrs().kb_reply, "No answers");
+        assert.ok(logger.at('warn').includes('Unable to add unanswered question'), logger.at('warn'));
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+        assert.deepStrictEqual(stops, [true]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAddKbContent: a project with no id at all reports an undefined namespace', async () => {
+      process.env.GPTKEY = "sk-shared";
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES });
+      try {
+        const { dir, chatbot } = build(DirAddKbContent, null, { context: { projectId: "" } });
+        const stops = await run(dir, { name: "addkbcontent", action: { type: "text", name: "n", content: "c" } });
+
+        assert.strictEqual(chatbot.params.flowError, "[DirAddKbContent] Error: namespace is undefined");
+        assert.strictEqual(mock.seen.kbContent.length, 0);
+        assert.deepStrictEqual(stops, [true]);
       } finally {
         await mock.close();
       }
