@@ -174,3 +174,115 @@ It *overwrites* `docs/test-baseline.json`.
 configuration (7 of the original 12 were released once the endpoint variables
 above were set). See the README there for the reason per file. They are not
 collected. Fixing them is Phase 4 work.
+
+## Coverage
+
+```bash
+npm run test:coverage     # run the suite under V8 coverage, write coverage/
+npm run coverage:check    # gate the result against docs/coverage-baseline.json
+```
+
+`test:coverage` goes through `tybotRoute/scripts/coverage.js`, not `c8 npm test`.
+`npm test` is untouched by all of this: same command, same 56 files / 373 tests,
+no c8 anywhere in its path, no extra work.
+
+Reports land in `coverage/` (gitignored): `index.html` to browse, `coverage-summary.json`
+for the gate, plus the text table on stdout.
+
+### Why a wrapper instead of `c8 npm test`
+
+Two things have to be true for the number to mean anything.
+
+**The child processes have to be merged.** `run-tests.js` spawns one mocha process
+per test file. c8 works by exporting `NODE_V8_COVERAGE`, which those children
+inherit, so each writes its own V8 profile into `coverage/tmp` and all of them are
+merged into one report. That much plain c8 does correctly.
+
+**The merge has to not lie.** It does, out of the box. `@bcoe/v8-coverage`'s
+`mergeFunctionCovs` groups function records by their *root range* and sums the
+counts of everything in a group. A class that declares an instance field emits two
+synthetic functions with an **identical** root range spanning the whole class body:
+
+```
+<static_initializer>            count 1    the static field ran at require time
+<instance_members_initializer>  count 0    the class was never constructed
+```
+
+Merged, those two collapse into a single count-1 range covering every method in the
+class. V8 emits no per-method records for such a class until it is actually
+instantiated, so there is nothing left to carve the truth back out, and the file
+reports 100%.
+
+Measured here: `directives/ai/DirAiPrompt.js` reads **3.93%** from a single process
+and **100%** after merging the 37 processes that require it.
+
+`coverage.js` therefore drops the `<static_initializer>` record whenever it collides
+with an `<instance_members_initializer>` over the same range, before handing the
+profiles to `c8 report`. The count-0 sibling then survives the merge and the class
+body reports honestly. The cost is that the one static-field line reads uncovered
+though it ran — that errs *downwards*, which is the safe direction for a floor. A
+class that *is* instantiated keeps a count>0 initialiser and is unaffected, and any
+method that ran keeps its own count>0 record and carves itself back in.
+
+Two files were affected at the time this was written (`DirAiPrompt.js`,
+`DirAiCondition.js`), together worth about five points of fake coverage.
+
+**If you ever change the coverage plumbing, sanity-check it against a file you know
+is barely tested** rather than trusting the total. The three used here:
+
+| File | Expected |
+|---|---|
+| `directives/ai/DirAiPrompt.js` | ~4% |
+| `directives/ai/DirAiCondition.js` | ~4% |
+| `directives/ai/DirAskGPTV2.js` | ~13% |
+
+If any of them reports near 100%, the merge is broken again. Stop and fix it; do
+not record the comfortable number.
+
+### What is excluded, and why
+
+Every exclusion is listed in `.c8rc.json` with its reason. Being badly covered is
+not a reason — the AI directives, the Mongo data sources and the HTTP routes are the
+actual gap and stay in the denominator where they are visible.
+
+| Excluded | Why |
+|---|---|
+| `tybotRoute/test/**` | the tests are the instrument, not the subject |
+| `tybotRoute/scripts/**` | the test runner and the coverage wrapper, same reason |
+| `tybotRoute/types/**` | pure JSDoc typedefs, no runtime code to execute |
+| `tybotRoute/routes/legacyHelpers.js` | dead code, moved verbatim, zero callers |
+| `tybotRoute/logs/**`, `tybotRoute/uploads/**` | runtime output directories, not source |
+| `node_modules` | c8's own default |
+
+`all: true` is set, so a source file no test ever requires counts as 0% instead of
+disappearing from the denominator. 144 source files are measured.
+
+### The floor
+
+`docs/coverage-baseline.json` records the measured figures and a floor per metric
+and per area. `npm run coverage:check` fails if any of them slipped.
+
+**The floor ratchets UP and is never lowered to make a run pass.** A red check means
+something stopped being exercised — that is a bug in the change that caused it, not
+in the number. `--update` refuses to write a lower floor; `--force` overrides it and
+is for deliberate drops only (code deleted, area renamed), with the reason in the
+commit message.
+
+Floors sit one point below the measured figure. The per-file-process run is not
+bit-identical between invocations (62.93 and 62.92 on two consecutive runs), so a
+zero-headroom floor would flap on noise. That point is slack against nondeterminism,
+not a coverage allowance.
+
+When coverage improves, lock it in:
+
+```bash
+npm run test:coverage
+node tybotRoute/scripts/coverage-check.js --update
+```
+
+The check prints a nudge when any floor drifts more than two points below actual.
+
+The target is 98%, per area, honestly — reached by writing tests, one area at a
+time, raising that area's floor as it lands. It is deliberately *not* the floor
+today: a single global 98% would fail on day one and, once it did pass, would say
+much less than it appears to.

@@ -1,0 +1,210 @@
+{
+  "$comment": [
+    "Coverage floor for npm run coverage:check. Measured on the commit that added it.",
+    "This RATCHETS UP ONLY. Raise the floors when coverage improves; never lower one",
+    "to make a run pass -- a red check means coverage regressed, fix the tests.",
+    "Floors sit 1 point below the measured figure: the merged per-file-process run",
+    "is not bit-identical between invocations (observed drift: 62.93 vs 62.92).",
+    "Numbers come from coverage/coverage-summary.json; see .c8rc.json for what is",
+    "excluded and why, and docs/testing.md for the procedure."
+  ],
+  "recordedAt": "2026-09-01",
+  "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
+  "headroomPoints": 1,
+  "measured": {
+    "files": 144,
+    "lines": 62.92,
+    "statements": 62.92,
+    "functions": 67.63,
+    "branches": 78.81,
+    "linesCovered": 12346,
+    "linesTotal": 19619,
+    "functionsCovered": 464,
+    "functionsTotal": 686,
+    "branchesCovered": 1551,
+    "branchesTotal": 1968
+  },
+  "floor": {
+    "lines": 61.9,
+    "statements": 61.9,
+    "functions": 66.6,
+    "branches": 77.8
+  },
+  "areas": {
+    "tybotRoute": {
+      "files": 2,
+      "lines": 74.38,
+      "branches": 40,
+      "functions": 100,
+      "floorLines": 73.3
+    },
+    "tybotRoute/cache": {
+      "files": 1,
+      "lines": 75.14,
+      "branches": 83.33,
+      "functions": 75,
+      "floorLines": 74.1
+    },
+    "tybotRoute/config": {
+      "files": 1,
+      "lines": 94.96,
+      "branches": 75,
+      "functions": 80,
+      "floorLines": 93.9
+    },
+    "tybotRoute/config/kb": {
+      "files": 3,
+      "lines": 100,
+      "branches": 60,
+      "functions": 100,
+      "floorLines": 99
+    },
+    "tybotRoute/config/kb/prompt/rag": {
+      "files": 1,
+      "lines": 64.91,
+      "branches": 100,
+      "functions": 50,
+      "floorLines": 63.9
+    },
+    "tybotRoute/directives": {
+      "files": 3,
+      "lines": 93.68,
+      "branches": 83.05,
+      "functions": 100,
+      "floorLines": 92.6
+    },
+    "tybotRoute/directives/agents": {
+      "files": 8,
+      "lines": 34.15,
+      "branches": 77.78,
+      "functions": 37.14,
+      "floorLines": 33.1
+    },
+    "tybotRoute/directives/ai": {
+      "files": 7,
+      "lines": 24.75,
+      "branches": 80.77,
+      "functions": 45.71,
+      "floorLines": 23.7
+    },
+    "tybotRoute/directives/bot": {
+      "files": 5,
+      "lines": 32.32,
+      "branches": 93.33,
+      "functions": 36.84,
+      "floorLines": 31.3
+    },
+    "tybotRoute/directives/conversation": {
+      "files": 9,
+      "lines": 65.74,
+      "branches": 80.99,
+      "functions": 64.71,
+      "floorLines": 64.7
+    },
+    "tybotRoute/directives/data": {
+      "files": 10,
+      "lines": 65.33,
+      "branches": 69.46,
+      "functions": 70.37,
+      "floorLines": 64.3
+    },
+    "tybotRoute/directives/flow": {
+      "files": 10,
+      "lines": 57,
+      "branches": 73.33,
+      "functions": 64.29,
+      "floorLines": 56
+    },
+    "tybotRoute/directives/integrations": {
+      "files": 7,
+      "lines": 74.04,
+      "branches": 68.14,
+      "functions": 92.86,
+      "floorLines": 73
+    },
+    "tybotRoute/directives/tiledesk": {
+      "files": 3,
+      "lines": 49.87,
+      "branches": 63.16,
+      "functions": 56.25,
+      "floorLines": 48.8
+    },
+    "tybotRoute/engine": {
+      "files": 10,
+      "lines": 64.36,
+      "branches": 81.1,
+      "functions": 70.49,
+      "floorLines": 63.3
+    },
+    "tybotRoute/engine/mock": {
+      "files": 3,
+      "lines": 87.38,
+      "branches": 87.18,
+      "functions": 82.35,
+      "floorLines": 86.3
+    },
+    "tybotRoute/expressions": {
+      "files": 5,
+      "lines": 94.79,
+      "branches": 86.22,
+      "functions": 80,
+      "floorLines": 93.7
+    },
+    "tybotRoute/models": {
+      "files": 2,
+      "lines": 98.11,
+      "branches": 66.67,
+      "functions": 0,
+      "floorLines": 97.1
+    },
+    "tybotRoute/observability": {
+      "files": 2,
+      "lines": 76.06,
+      "branches": 74.07,
+      "functions": 46.15,
+      "floorLines": 75
+    },
+    "tybotRoute/pipeline": {
+      "files": 3,
+      "lines": 80,
+      "branches": 100,
+      "functions": 62.5,
+      "floorLines": 79
+    },
+    "tybotRoute/pipeline/plugs": {
+      "files": 5,
+      "lines": 81.92,
+      "branches": 71.58,
+      "functions": 100,
+      "floorLines": 80.9
+    },
+    "tybotRoute/routes": {
+      "files": 5,
+      "lines": 34.75,
+      "branches": 69.05,
+      "functions": 100,
+      "floorLines": 33.7
+    },
+    "tybotRoute/services": {
+      "files": 23,
+      "lines": 69.14,
+      "branches": 89.93,
+      "functions": 55.29,
+      "floorLines": 68.1
+    },
+    "tybotRoute/utils": {
+      "files": 13,
+      "lines": 84.54,
+      "branches": 77.27,
+      "functions": 77.42,
+      "floorLines": 83.5
+    },
+    "tybotRoute/variables": {
+      "files": 3,
+      "lines": 85.11,
+      "branches": 95.45,
+      "functions": 63.64,
+      "floorLines": 84.1
+    }
+  }
+}

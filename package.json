@@ -7,6 +7,7 @@
     "test": "node tybotRoute/scripts/run-tests.js",
     "test:baseline": "node tybotRoute/scripts/run-tests.js --update-baseline",
     "test:coverage": "node tybotRoute/scripts/coverage.js",
+    "coverage:check": "node tybotRoute/scripts/coverage-check.js",
     "start": "node index.js"
   },
   "keywords": [],
