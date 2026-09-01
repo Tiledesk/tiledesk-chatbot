@@ -101,7 +101,12 @@ class DirCondition extends BaseDirective {
     }
     else if (jsonCondition) {
       const expression = TiledeskExpression.JSONGroupsToExpression(jsonCondition.groups, variables);
-      result = new TiledeskExpression().evaluateStaticExpression(expression);
+      // `variables` is mandatory here: JSONGroupsToExpression does NOT inline the
+      // values, it emits `Number($data.age) > Number("18")`. Without them the
+      // sandbox has no $data at all, every attribute reads as undefined and the
+      // condition ALWAYS evaluated false. The sibling DirJSONCondition passes
+      // them too.
+      result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
     }
     winston.debug("(DirCondition) executed condition: " + JSON.stringify(scriptCondition) + " result: " + JSON.stringify(result));
     if (result === true) {

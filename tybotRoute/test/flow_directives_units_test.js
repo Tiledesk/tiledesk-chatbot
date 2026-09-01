@@ -350,7 +350,7 @@ describe('Directives directives/flow', function () {
     // attributes hold, silently. The sibling DirJSONCondition.js:90 passes
     // `variables` and is correct; measured here, the same groups and the same
     // variables give `true` with them and `false` without.
-    it.skip('evaluates a jsonCondition when no script is given', async () => {
+    it('evaluates a jsonCondition when no script is given', async () => {
       const groups = [{
         type: "expression",
         conditions: [{
@@ -630,7 +630,7 @@ describe('Directives directives/flow', function () {
     // the conversation stalls. DirCondition.js:42-50 does the same thing with
     // `let` and is correct; only this file uses `const`. Correct behaviour is
     // what this test asserts: a blank intent name counts as absent.
-    it.skip('treats a whitespace-only true intent as absent', async () => {
+    it('treats a whitespace-only true intent as absent', async () => {
       const dir = jsonConditionDir({ age: 20 });
       const stops = await run(dir, {
         name: "jsoncondition",

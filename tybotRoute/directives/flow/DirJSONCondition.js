@@ -40,8 +40,12 @@ class DirJSONCondition extends BaseDirective {
     winston.debug("(DirJSONCondition) Action: ", action);
 
     const groups = action.groups; // NEXT
-    const trueIntent = action.trueIntent;
-    const falseIntent = action.falseIntent;
+    // `let`, not `const`: both are reassigned below when the designer left the
+    // field as whitespace. With `const` that assignment threw "TypeError:
+    // Assignment to constant variable" inside the async go(), i.e. an unhandled
+    // rejection, and the callback never fired so the conversation stalled.
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     let stopOnConditionMet = true; //action.stopOnConditionMet;
