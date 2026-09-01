@@ -119,13 +119,30 @@ function buildThinkingObject(level, max_tokens) {
   };
 }
 
+/**
+ * Names of the tools a server is allowed to expose.
+ *
+ * The action stores the selection under `enabled_tools` (that is the key the
+ * flow designer writes and the key this function's own output uses); `tools`
+ * is the older shape and is still accepted. Reading only `tools` — as this did
+ * between 0c2173e1 and now — silently dropped every per-server tool selection
+ * made in the designer and sent `enabled_tools: []` to the LLM instead.
+ *
+ * Entries may be plain strings or objects carrying a `name`.
+ */
 function buildEnabledTools(server) {
-  if (!Array.isArray(server?.tools) || server.tools.length === 0) {
-    return [];
+  const toNames = (tools) =>
+    Array.isArray(tools)
+      ? tools
+          .map(t => (typeof t === 'string' ? t : t?.name))
+          .filter(name => typeof name === 'string' && name.length > 0)
+      : [];
+
+  const fromEnabled = toNames(server?.enabled_tools);
+  if (fromEnabled.length > 0) {
+    return fromEnabled;
   }
-  return server.tools
-    .map(t => (typeof t === 'string' ? t : t?.name))
-    .filter(name => typeof name === 'string' && name.length > 0);
+  return toNames(server?.tools);
 }
 
 function getIntegrationServer(integrationServers, server) {
