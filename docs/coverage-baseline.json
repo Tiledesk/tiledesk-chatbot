@@ -37,29 +37,31 @@
     "",
     "2026-09-01, stage 1 of the final wave: the 12 catalogued runtime defects fixed and their it.skip() tests released, plus 4 new tests for the unhandled rejection raised by the checkMandatoryParameters abort. No floor was forced -- every floor ratcheted UP. Overall lines 91.97 -> 92.22, directives/ai 96.40 -> 97.14, directives/data 96.19 -> 97.67. The line TOTAL grew (19857 -> 19979) because the fixes add real error-handling code, so a rising percentage here is a genuine gain twice over.",
     "",
-    "2026-09-01, stage 2 of the final wave (integrations + utils): no floor forced, every floor ratcheted UP. directives/integrations 74.04 -> 96.92, utils 87.50 -> 97.60, overall 92.22 -> 94.26. The integrations ratchet was deferred one commit because utils sampled 87.38 against its 86.50 floor on that run (the ChatbotReplyUtil merge drift already recorded above); the new utils tests removed the drift's headroom problem outright."
+    "2026-09-01, stage 2 of the final wave (integrations + utils): no floor forced, every floor ratcheted UP. directives/integrations 74.04 -> 96.92, utils 87.50 -> 97.60, overall 92.22 -> 94.26. The integrations ratchet was deferred one commit because utils sampled 87.38 against its 86.50 floor on that run (the ChatbotReplyUtil merge drift already recorded above); the new utils tests removed the drift's headroom problem outright.",
+    "",
+    "2026-09-01, stage 2 (engine): engine 71.16 -> 96.37, overall 94.26 -> 96.21. No floor forced. The two Mongo-backed sources are covered by stubbing the mongoose MODELS (Faq.find / Faq_kb.findById) rather than by connecting: the suite still never talks to MongoDB, which is what .c8rc.json and docker-compose.test.yml assume."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 94.26,
-    "statements": 94.26,
-    "functions": 93.15,
-    "branches": 92.69,
-    "linesCovered": 18833,
+    "lines": 96.21,
+    "statements": 96.21,
+    "functions": 95.39,
+    "branches": 93.51,
+    "linesCovered": 19222,
     "linesTotal": 19979,
-    "functionsCovered": 667,
+    "functionsCovered": 683,
     "functionsTotal": 716,
-    "branchesCovered": 3530,
-    "branchesTotal": 3808
+    "branchesCovered": 3661,
+    "branchesTotal": 3915
   },
   "floor": {
-    "lines": 93.2,
-    "statements": 93.2,
-    "functions": 92.1,
-    "branches": 91.6
+    "lines": 95.2,
+    "statements": 95.2,
+    "functions": 94.3,
+    "branches": 92.5
   },
   "areas": {
     "tybotRoute": {
@@ -72,7 +74,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 75.76,
+      "branches": 76.47,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -162,10 +164,10 @@
     },
     "tybotRoute/engine": {
       "files": 10,
-      "lines": 71.16,
-      "branches": 83.76,
-      "functions": 73.77,
-      "floorLines": 70.1
+      "lines": 96.37,
+      "branches": 97.37,
+      "functions": 100,
+      "floorLines": 95.3
     },
     "tybotRoute/engine/mock": {
       "files": 3,
@@ -205,7 +207,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.81,
+      "branches": 85.62,
       "functions": 100,
       "floorLines": 88.2
     },
@@ -226,7 +228,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 97.61,
-      "branches": 96.39,
+      "branches": 96.4,
       "functions": 98.39,
       "floorLines": 96.6
     },
