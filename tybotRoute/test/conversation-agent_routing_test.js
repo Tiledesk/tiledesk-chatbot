@@ -256,7 +256,7 @@ describe('Conversation for the agent-routing directives', async () => {
   // rejection, which under Node's default --unhandled-rejections=throw kills
   // the process. The error branch it does have (DirClose.js:23-26) is therefore
   // unreachable in practice. Un-skip once the rejection is handled.
-  it.skip('close logs and continues when the close call fails', (done) => {
+  it('close logs and continues when the close call fails', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -438,7 +438,7 @@ describe('Conversation for the agent-routing directives', async () => {
   // name, nothing calls back, `go()` never resolves and the conversation stalls
   // silently - no reply, no log, no error. The directive even has a
   // "Department not found" warning at :63-68 which can therefore never fire.
-  it.skip('department continues when no department carries the configured name', (done) => {
+  it('department continues when no department carries the configured name', (done) => {
 
     let listener;
     let endpointServer = express();
@@ -465,7 +465,7 @@ describe('Conversation for the agent-routing directives', async () => {
   // triggerBot true, the callback is only reached inside
   // `if (dep && dep.hasBot === true && dep.id_bot)`. Routing to a department
   // that has no bot therefore stalls the conversation in exactly the same way.
-  it.skip('department with triggerBot continues when the target department has no bot', (done) => {
+  it('department with triggerBot continues when the target department has no bot', (done) => {
 
     let listener;
     let endpointServer = express();

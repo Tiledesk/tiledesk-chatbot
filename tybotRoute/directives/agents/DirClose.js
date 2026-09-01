@@ -19,7 +19,9 @@ class DirClose extends BaseDirective {
 
     execute(directive, callback) {
         winston.verbose("Execute Close directive");
-        this.tdClient.closeRequest(this.requestId, async (err) => {
+        // Promise.resolve(...) rather than a direct .catch: closeRequest()
+        // returns a promise in production, but a test double may return nothing.
+        Promise.resolve(this.tdClient.closeRequest(this.requestId, async (err) => {
             if (err) {
                 this.logger.error("[Close] Closing request");
                 winston.error("(DirClose) Error: ", err);
@@ -30,6 +32,13 @@ class DirClose extends BaseDirective {
             }
             this.logger.native("[Close] Executed");
             callback();
+        })).catch((err) => {
+            // closeRequest() BOTH rejects its promise and invokes the callback
+            // on a non-2xx answer. The callback above already logs and releases
+            // the flow; without this catch the rejection went unhandled and
+            // killed the process under Node's default --unhandled-rejections=throw,
+            // which also made the error branch above unreachable in practice.
+            winston.debug("(DirClose) closeRequest rejected, already handled in the callback: ", err && err.message);
         });
     }
 

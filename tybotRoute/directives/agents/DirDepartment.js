@@ -100,6 +100,14 @@ class DirDepartment extends BaseDirective {
               callback();
           });
         }
+        else {
+          // Without this the callback was only reachable inside
+          // `if (dep && dep.hasBot === true && dep.id_bot)`: routing to a
+          // department that has no bot stalled the conversation silently.
+          this.logger.native("[Change Department] No bot to trigger in the department");
+          winston.debug("(DirDepartment) No bot to trigger in dept: " + depName);
+          callback();
+        }
       }
       else {
         this.logger.native("[Change Department] No triggering bot");
@@ -137,6 +145,14 @@ class DirDepartment extends BaseDirective {
             callback(deps);
           }
         });
+      }
+      else {
+        // Without this the `if (dep)` had no else: when no department carried
+        // the configured name nothing called back, go() never resolved and the
+        // conversation stalled silently. Calling back with no deps reaches the
+        // "Department not found" warning in go(), which was unreachable before.
+        winston.warn("(DirDepartment) No department named: " + depName);
+        callback();
       }
     });
   }
