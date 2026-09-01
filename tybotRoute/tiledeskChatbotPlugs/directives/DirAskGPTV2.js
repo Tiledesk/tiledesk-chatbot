@@ -15,6 +15,7 @@ const { Logger } = require("../../Logger");
 const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
+const namespaceService = require("../../services/NamespaceService");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
@@ -277,7 +278,7 @@ class DirAskGPTV2 {
     }
     
     if (ns.engine) {
-      engine = ns.engine;
+      engine = await this.resolveEngineApikey(ns);
     } else {
       engine = await this.setDefaultEngine(ns.hybrid);
     }
@@ -672,6 +673,48 @@ class DirAskGPTV2 {
       return default_engine_hybrid
     }
     return default_engine;
+  }
+
+  /**
+   * Returns the namespace engine with its vector store credential.
+   *
+   * GET /kb/namespace/all does not return engine.apikey any more
+   * (tiledesk-server 2.22.7 stopped handing the platform key to API callers),
+   * but the LLM microservice still requires it: without it /api/qa fails with
+   * "'NoneType' object has no attribute 'get_secret_value'" and answers 400.
+   * So the key is read from the namespace document in MongoDB, which this
+   * connector is already connected to, and never travels over the API.
+   *
+   * Falls back to the local VECTOR_STORE_APIKEY configuration when the database
+   * cannot answer (static-bots mode, no connection, namespace not found).
+   * The engine is copied rather than patched in place: `ns` comes from the API
+   * response and is reused by the caller.
+   */
+  async resolveEngineApikey(ns) {
+    if (ns.engine.apikey) {
+      // Older server, or a key the API still provides: nothing to resolve.
+      return ns.engine;
+    }
+
+    let engine = Object.assign({}, ns.engine);
+
+    let storedEngine = await namespaceService.getEngine(ns.id, this.context.projectId);
+    if (storedEngine && storedEngine.apikey) {
+      engine.apikey = storedEngine.apikey;
+      return engine;
+    }
+
+    let fallbackEngine = await this.setDefaultEngine(ns.hybrid);
+    engine.apikey = fallbackEngine.apikey;
+
+    if (!engine.apikey) {
+      winston.error("DirAskGPTV2 - Unable to resolve the vector store apikey for namespace " + ns.id);
+      this.logger.error("[Ask Knowledge Base] Vector store api key not found for namespace ", ns.id);
+    } else {
+      winston.verbose("DirAskGPTV2 - Vector store apikey resolved from the local configuration for namespace " + ns.id);
+    }
+
+    return engine;
   }
 
 }
