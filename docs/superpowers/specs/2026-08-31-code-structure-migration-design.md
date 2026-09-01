@@ -483,6 +483,81 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Coverage target reached: 98.06%
+
+**Status: 98% achieved.** Lines **98.06%** (19,592/19,979), functions 97.90%,
+branches 95.19%. Suite **1,373 tests across 90 files**, up from 419/61 when the
+coverage work began. `npm run coverage:check` gates every area and ratchets up
+only; no floor was forced except two documented ~0.1 merge-drift corrections.
+
+### What the push actually bought
+
+Not the number — the **49 real runtime defects it found and fixed**, plus 19 more
+still catalogued. Every one was found by writing an assertion on an error path,
+never by executing a line. A representative sample of what was shipping:
+
+- `ChatbotRequestAttributesUtil.js:255` called `process.exit(1)` inside a catch —
+  one failed Redis write killed the entire chatbot process.
+- `DirCondition.js:104` dropped `variables` when evaluating, so a JSON condition
+  **always took the false branch**.
+- `DirAskGPT.js:116` called `this.checkQuoteAvailability()`, which existed on
+  neither the class nor `BaseDirective` — a guaranteed `TypeError`.
+- Roughly twenty **conversation stalls**: a callback that never fires, leaving the
+  bot silently dead mid-flow. `DirForm.go()` could not run at all.
+- Several **unhandled rejections** that are process-fatal under Node's defaults,
+  masked in development because `utils/winston.js` sets `handleExceptions: true`.
+
+### What 98% does not mean
+
+The goal was stated as "guarantee that all works correctly, there will not be
+error during runtime execution". Coverage cannot carry that weight, and this repo
+is the proof rather than the counter-example:
+
+- **`DirAskGPT.js` sat at 100% function coverage while calling a method that did
+  not exist.** Covered, executed, and certain to throw — because the covering test
+  asserted nothing on that path.
+- **19 known defects remain in the code right now, at 98.06% coverage**, each
+  marked by a skipped test asserting the correct behaviour. Among them:
+  `WebhookChatbotPlug.js:133` and `ChatbotParametersClient.js:87` dereference
+  `error.response.data` on transport errors that have no `.response`, hanging the
+  pipeline; `ChatbotParametersClient.js:81` calls `TiledeskClient.getErr()` in a
+  module that never requires `TiledeskClient`.
+
+Coverage measures whether a line ran. Whether it ran *correctly* is carried
+entirely by the assertions — which is why the value here came from the defects,
+and why the remaining 19 are the real backlog, not the last 1.94%.
+
+### The residue is unreachable, not untested
+
+Areas still under 98% are dominated by genuinely dead code the source itself
+documents: `DirCondition:65-69` compares `scriptCondition.trim` (the function) to
+`""`; `parametersRoutes:29-31` tests `allParametersStatic() === null`, which
+always resolves an object; `DirMake:114-131` and `DirWebRequestV2:130-141` are
+`if (err)` halves marked dead in comments. Chasing those would mean tests that
+assert nothing.
+
+### Measurement traps, both of which reported a comfortable lie
+
+1. My dependency-free reporter said **99.5%**, then **40.2%** after a partial fix.
+   It concatenated V8 ranges from all test processes before painting, so a
+   `count: 0` range from a process that merely *required* a file stomped the
+   `count: 1` ranges from the process that exercised it.
+2. Plain `c8 npm test` said **67.99% with `DirAiPrompt` at 100%** — a file whose
+   tests were quarantined. c8's merge *sums* function records sharing a range, and
+   a class with instance fields emits both a `<static_initializer>` (count 1, ran
+   at require) and an `<instance_members_initializer>` (count 0) spanning the whole
+   class body. `tybotRoute/scripts/coverage.js` drops the colliding record.
+
+**Always sanity-check a coverage setup against a file you know is untested.**
+`DirAiPrompt` read 100% under two independent broken configurations.
+
+### One structural note
+
+`test/startapp_mongo_test.js` is the only file that boots without `settings.bots`,
+covering the MongoDB path in `startApp`. Mongoose has one default connection per
+process, so the runner's per-file process isolation is what keeps it from
+affecting the other 90 files. It uses its own database and drops it in `after()`.
+
 ## Follow-on: code coverage (user-requested)
 
 **Goal as stated:** 98% "so we are sure that all the code has been tested and all
