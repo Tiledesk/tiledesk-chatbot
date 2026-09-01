@@ -18,29 +18,35 @@
     "percentage fell only because the denominator became honest (1969 -> 2381).",
     "Same artefact family as the class-initialiser merge documented in",
     "scripts/coverage.js. Verified by running the full coverage report at 6cd0e653",
-    "and diffing per file."
+    "and diffing per file.",
+    "",
+    "2026-09-01, after fixing three catalogued runtime defects: the utils floor",
+    "was re-recorded 83.60 -> 83.50 with --force. NOT a regression. The 84.66",
+    "figure recorded at dfc6a990 never matched reality: checking out the source",
+    "files at 3f93eaaf and removing the new tests measures utils at 84.54,",
+    "identical to HEAD. The stale 0.12 was blocking every future --update."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 71,
-    "statements": 71,
+    "lines": 71.07,
+    "statements": 71.07,
     "functions": 73.55,
-    "branches": 77.48,
-    "linesCovered": 13953,
-    "linesTotal": 19651,
+    "branches": 77.66,
+    "linesCovered": 13985,
+    "linesTotal": 19676,
     "functionsCovered": 523,
     "functionsTotal": 711,
-    "branchesCovered": 1845,
-    "branchesTotal": 2381
+    "branchesCovered": 1857,
+    "branchesTotal": 2391
   },
   "floor": {
     "lines": 70,
     "statements": 70,
     "functions": 72.5,
-    "branches": 76.4
+    "branches": 76.6
   },
   "areas": {
     "tybotRoute": {
@@ -94,10 +100,10 @@
     },
     "tybotRoute/directives/ai": {
       "files": 7,
-      "lines": 63.39,
-      "branches": 69.74,
+      "lines": 63.52,
+      "branches": 69.84,
       "functions": 72.88,
-      "floorLines": 62.3
+      "floorLines": 62.5
     },
     "tybotRoute/directives/bot": {
       "files": 5,
@@ -108,10 +114,10 @@
     },
     "tybotRoute/directives/conversation": {
       "files": 9,
-      "lines": 67.36,
-      "branches": 80.8,
+      "lines": 67.81,
+      "branches": 82.81,
       "functions": 64.71,
-      "floorLines": 66.3
+      "floorLines": 66.8
     },
     "tybotRoute/directives/data": {
       "files": 10,
@@ -144,7 +150,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 67.08,
-      "branches": 81.97,
+      "branches": 81.87,
       "functions": 72.13,
       "floorLines": 66
     },
@@ -178,15 +184,15 @@
     },
     "tybotRoute/pipeline": {
       "files": 3,
-      "lines": 96.5,
-      "branches": 90,
+      "lines": 96.88,
+      "branches": 91.67,
       "functions": 100,
-      "floorLines": 95.5
+      "floorLines": 95.8
     },
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 87.32,
-      "branches": 81.02,
+      "branches": 81.16,
       "functions": 100,
       "floorLines": 86.3
     },
@@ -199,17 +205,17 @@
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 78.63,
-      "branches": 82.3,
+      "lines": 78.67,
+      "branches": 82.86,
       "functions": 75.58,
       "floorLines": 77.6
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 84.66,
-      "branches": 77.59,
+      "lines": 84.54,
+      "branches": 77.27,
       "functions": 77.42,
-      "floorLines": 83.6
+      "floorLines": 83.5
     },
     "tybotRoute/variables": {
       "files": 3,
