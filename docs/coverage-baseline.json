@@ -31,21 +31,21 @@
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 72.08,
-    "statements": 72.08,
-    "functions": 74.68,
-    "branches": 78.21,
-    "linesCovered": 14183,
+    "lines": 73.41,
+    "statements": 73.41,
+    "functions": 76.51,
+    "branches": 78.29,
+    "linesCovered": 14445,
     "linesTotal": 19676,
-    "functionsCovered": 531,
+    "functionsCovered": 544,
     "functionsTotal": 711,
-    "branchesCovered": 1903,
-    "branchesTotal": 2433
+    "branchesCovered": 1952,
+    "branchesTotal": 2493
   },
   "floor": {
-    "lines": 71,
-    "statements": 71,
-    "functions": 73.6,
+    "lines": 72.4,
+    "statements": 72.4,
+    "functions": 75.5,
     "branches": 77.2
   },
   "areas": {
@@ -107,10 +107,10 @@
     },
     "tybotRoute/directives/bot": {
       "files": 5,
-      "lines": 32.32,
-      "branches": 93.33,
-      "functions": 36.84,
-      "floorLines": 31.3
+      "lines": 93.43,
+      "branches": 83.1,
+      "functions": 100,
+      "floorLines": 92.4
     },
     "tybotRoute/directives/conversation": {
       "files": 9,
@@ -150,7 +150,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 67.08,
-      "branches": 81.56,
+      "branches": 81.67,
       "functions": 72.13,
       "floorLines": 66
     },
@@ -178,7 +178,7 @@
     "tybotRoute/observability": {
       "files": 2,
       "lines": 76.06,
-      "branches": 74.07,
+      "branches": 75,
       "functions": 46.15,
       "floorLines": 75
     },
@@ -192,7 +192,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 87.32,
-      "branches": 81.16,
+      "branches": 81.02,
       "functions": 100,
       "floorLines": 86.3
     },
@@ -205,10 +205,10 @@
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 78.75,
-      "branches": 82.94,
-      "functions": 76.74,
-      "floorLines": 77.7
+      "lines": 79.54,
+      "branches": 83.18,
+      "functions": 77.91,
+      "floorLines": 78.5
     },
     "tybotRoute/utils": {
       "files": 13,
