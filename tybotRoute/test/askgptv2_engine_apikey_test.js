@@ -118,6 +118,27 @@ describe('AskKnowledgeBase engine apikey', () => {
       assert.strictEqual(engine.apikey, 'pcsk_from_api');
     });
 
+    it('keeps an EMPTY apikey: that is the normal setup, the microservice uses its own key', async () => {
+      const captured = {};
+      namespaceService.isConnected = () => true;
+      namespaceService.model = modelStub({ engine: { apikey: 'pcsk_stored' } }, captured);
+
+      const ns = namespace({ name: 'pinecone', apikey: '' });
+      const engine = await directive().resolveEngineApikey(ns);
+
+      assert.strictEqual(engine.apikey, '');
+      assert.strictEqual(captured.query, undefined, "an empty apikey is valid, the database must not be queried");
+    });
+
+    it('uses an empty apikey stored in the database rather than the local configuration', async () => {
+      namespaceService.isConnected = () => true;
+      namespaceService.model = modelStub({ engine: { name: 'pinecone', apikey: '' } }, {});
+
+      const engine = await directive().resolveEngineApikey(namespace({ name: 'pinecone' }));
+
+      assert.strictEqual(engine.apikey, '');
+    });
+
     it('falls back to the local configuration when the database has no answer', async () => {
       namespaceService.isConnected = () => false;
 
@@ -138,25 +159,15 @@ describe('AskKnowledgeBase engine apikey', () => {
       assert.strictEqual(engine.apikey, default_engine_hybrid.apikey);
     });
 
-    it('names the reason when the credential cannot be read', async () => {
-      const d = directive();
-      const ns = namespace({ name: 'pinecone' });
-
-      namespaceService.isConnected = () => false;
-      assert.match(d.describeApikeyGap(null, ns), /no database connection/);
-
-      namespaceService.isConnected = () => true;
-      assert.match(d.describeApikeyGap(null, ns), /not in the database for project project-1/);
-      assert.match(d.describeApikeyGap({ name: 'pinecone' }, ns), /empty apikey/);
-      assert.match(d.describeApikeyGap({ apikey: 'pcsk_stored' }, ns), /^$/);
-    });
-
-    it('always puts an apikey field in the engine it returns', async () => {
+    it('always puts a string apikey in the engine it returns', async () => {
       namespaceService.isConnected = () => false;
 
       const engine = await directive().resolveEngineApikey(namespace({ name: 'pinecone' }));
 
-      assert.ok('apikey' in engine, "engine must carry an apikey field, tilellm dereferences it");
+      // tilellm dereferences engine.apikey: absent parses as None and crashes,
+      // the empty string parses as SecretStr('') and is what it expects.
+      assert.ok('apikey' in engine, "engine must carry an apikey field");
+      assert.strictEqual(typeof engine.apikey, 'string');
     });
 
   });

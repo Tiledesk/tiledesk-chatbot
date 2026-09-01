@@ -676,66 +676,46 @@ class DirAskGPTV2 {
   }
 
   /**
-   * Returns the namespace engine with its vector store credential.
+   * Returns the namespace engine with an apikey field that tilellm can read.
    *
-   * GET /kb/namespace/all does not return engine.apikey any more
-   * (tiledesk-server 2.22.7 stopped handing the platform key to API callers),
-   * but the LLM microservice still requires it: without it /api/qa fails with
-   * "'NoneType' object has no attribute 'get_secret_value'" and answers 400.
-   * So the key is read from the namespace document in MongoDB, which this
-   * connector is already connected to, and never travels over the API.
+   * An EMPTY apikey is the normal Tiledesk setup: the vector store credential
+   * lives in the LLM microservice environment (PINECONE_API_KEY) and the client
+   * falls back to it, which is why every namespace is stored with apikey "".
+   * What breaks tilellm is the field being ABSENT: it parses as None and the
+   * pinecone path dereferences it unguarded, so /api/qa answers 400 with
+   * "'NoneType' object has no attribute 'get_secret_value'". That is what
+   * tiledesk-server 2.22.7 introduced, by deleting engine.apikey from
+   * GET /kb/namespace/all.
    *
-   * Falls back to the local VECTOR_STORE_APIKEY configuration when the database
-   * cannot answer (static-bots mode, no connection, namespace not found).
+   * So: a value the API provides is kept as it is, empty included. Only a
+   * missing one is resolved — from the namespace document in MongoDB, which
+   * this connector is already connected to and which holds the credential for
+   * the deployments that set one per namespace, then from the local
+   * configuration, and finally as the empty string the microservice expects.
+   *
    * The engine is copied rather than patched in place: `ns` comes from the API
    * response and is reused by the caller.
    */
   async resolveEngineApikey(ns) {
-    if (ns.engine.apikey) {
-      // Older server, or a key the API still provides: nothing to resolve.
+    if (typeof ns.engine.apikey === 'string') {
       return ns.engine;
     }
 
     let engine = Object.assign({}, ns.engine);
 
     let storedEngine = await namespaceService.getEngine(ns.id, this.context.projectId);
-    if (storedEngine && storedEngine.apikey) {
+    if (storedEngine && typeof storedEngine.apikey === 'string') {
       engine.apikey = storedEngine.apikey;
+      winston.verbose("DirAskGPTV2 - Vector store apikey read from the database for namespace " + ns.id);
       return engine;
     }
 
     let fallbackEngine = await this.setDefaultEngine(ns.hybrid);
-    engine.apikey = fallbackEngine.apikey;
-
-    let reason = this.describeApikeyGap(storedEngine, ns);
-
-    if (!engine.apikey) {
-      winston.error("DirAskGPTV2 - Unable to resolve the vector store apikey for namespace " + ns.id +
-        ": " + reason + ", and VECTOR_STORE_APIKEY is not set on the connector either");
-      this.logger.error("[Ask Knowledge Base] Vector store api key not found for namespace ", ns.id, reason);
-    } else {
-      winston.warn("DirAskGPTV2 - Vector store apikey taken from the local configuration for namespace " +
-        ns.id + ": " + reason);
-    }
+    engine.apikey = fallbackEngine.apikey || "";
+    winston.verbose("DirAskGPTV2 - Vector store apikey taken from the local configuration for namespace " +
+      ns.id + (engine.apikey ? "" : " (empty: the LLM microservice uses its own key)"));
 
     return engine;
-  }
-
-  /**
-   * Why the credential could not be read from the database. The three cases are
-   * fixed in three different places, so the log has to name which one it is.
-   */
-  describeApikeyGap(storedEngine, ns) {
-    if (!namespaceService.isConnected()) {
-      return "the connector has no database connection (check MONGODB_URI)";
-    }
-    if (!storedEngine) {
-      return "namespace " + ns.id + " is not in the database for project " + this.context.projectId;
-    }
-    if (!storedEngine.apikey) {
-      return "the engine stored for this namespace has an empty apikey";
-    }
-    return "";
   }
 
 }
