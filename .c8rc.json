@@ -1,0 +1,38 @@
+{
+  "$comment": [
+    "Coverage config for `npm run test:coverage` (tybotRoute/scripts/coverage.js).",
+    "",
+    "scripts/run-tests.js spawns one mocha process PER TEST FILE. Those children",
+    "inherit NODE_V8_COVERAGE, so each writes its own V8 profile into temp-directory",
+    "and c8 merges all of them into a single report.",
+    "",
+    "`clean` is false on purpose: coverage.js empties temp-directory itself before",
+    "the run and then renders with `c8 report`, which must NOT wipe what it reads.",
+    "",
+    "`all: true` makes never-required files report 0% instead of vanishing.",
+    "",
+    "Exclusions. Each needs a reason; being badly covered is NOT one. The AI",
+    "directives, the Mongo data sources and the routes are the real gap and stay in.",
+    "  tybotRoute/test/**                  the tests are the instrument, not the subject",
+    "  tybotRoute/scripts/**               the test runner and this coverage wrapper, same reason",
+    "  tybotRoute/types/**                 pure JSDoc typedefs, no runtime code to execute",
+    "  tybotRoute/routes/legacyHelpers.js  dead code, moved verbatim, zero callers",
+    "  tybotRoute/logs/**, uploads/**      runtime output directories, not source",
+    "node_modules is excluded by c8's own default."
+  ],
+  "all": true,
+  "clean": false,
+  "include": ["tybotRoute/**/*.js"],
+  "exclude": [
+    "tybotRoute/test/**",
+    "tybotRoute/scripts/**",
+    "tybotRoute/types/**",
+    "tybotRoute/routes/legacyHelpers.js",
+    "tybotRoute/logs/**",
+    "tybotRoute/uploads/**",
+    "**/node_modules/**"
+  ],
+  "reporter": ["text", "html", "json-summary"],
+  "reports-dir": "coverage",
+  "temp-directory": "coverage/tmp"
+}
