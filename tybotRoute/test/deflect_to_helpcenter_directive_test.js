@@ -342,7 +342,7 @@ describe('Directive DirDeflectToHelpCenter', function () {
   //        callback(true)
   //
   // Each test asserts that exactly one value reaches the callback.
-  it.skip('calls back exactly once when the workspace listing comes back empty', async () => {
+  it('calls back exactly once when the workspace listing comes back empty', async () => {
     const mock = await startMock((server) => {
       server.get('/:projectId/workspaces/', (req, res) => res.status(200).send({ empty: true }));
       server.get('/:projectId/:workspaceId/contents/search', (req, res) => res.status(200).send([]));
@@ -356,7 +356,7 @@ describe('Directive DirDeflectToHelpCenter', function () {
     }
   });
 
-  it.skip('calls back exactly once when the workspace listing fails', async () => {
+  it('calls back exactly once when the workspace listing fails', async () => {
     const mock = await startMock((server) => {
       server.get('/:projectId/workspaces/', (req, res) => res.status(500).send({ success: false }));
       server.get('/:projectId/:workspaceId/contents/search', (req, res) => res.status(200).send([]));
@@ -370,7 +370,7 @@ describe('Directive DirDeflectToHelpCenter', function () {
     }
   });
 
-  it.skip('calls back exactly once when the Help Center reply cannot be delivered', async () => {
+  it('calls back exactly once when the Help Center reply cannot be delivered', async () => {
     const mock = await startMock((server) => {
       server.get('/:projectId/:workspaceId/contents/search', (req, res) => {
         res.status(200).send([{ title: "T", url: "https://help.example.com/t" }]);
@@ -393,7 +393,7 @@ describe('Directive DirDeflectToHelpCenter', function () {
   // `action.hcReply` and, because `go` is async, the TypeError becomes an
   // unhandled promise rejection - process-fatal under Node's default
   // --unhandled-rejections=throw. Every other directive in the tree guards this.
-  it.skip('calls back without crashing on a directive with no action', async () => {
+  it('calls back without crashing on a directive with no action', async () => {
     const dir = directiveFor("anything");
     const stops = await run(dir, { name: "askhelpcenter" });
     assert.strictEqual(stops.length, 1);

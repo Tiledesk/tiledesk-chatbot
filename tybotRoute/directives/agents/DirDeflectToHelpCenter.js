@@ -14,12 +14,20 @@ class DirDeflectToHelpCenter extends BaseDirective {
   constructor(context) {
     super(context);
 
+    /** Help Center API base url. The context carries it as HELP_CENTER_API_ENDPOINT;
+     *  without this assignment `go()` read an always-undefined field and every
+     *  query fell back to the client's hardcoded default host. */
+    this.helpcenter_api_endpoint = this.context.HELP_CENTER_API_ENDPOINT;
+
     this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
   }
 
   async execute(directive, callback) {
     winston.verbose("Execute DeflectToHelpCenter directive");
-    let action;
+    // A directive with no action must not reach go() undefined: go() is async,
+    // so the TypeError would surface as an unhandled rejection instead of a
+    // callback. An empty action makes every lookup below fall back to a default.
+    let action = {};
     if (directive.action) {
       action = directive.action
     }
@@ -71,12 +79,12 @@ class DirDeflectToHelpCenter extends BaseDirective {
           }
           else {
             winston.debug("(DirDeflectToHelpCenter) No Workspaces found");
-            callback(false);
+            return callback(false);
           }
         }
         catch(err) {
           winston.error("(DirDeflectToHelpCenter) Error search workspaces: ", err);
-          callback(false);
+          return callback(false);
         }
       }
       winston.debug("(DirDeflectToHelpCenter) searching on workspace_id: " + workspace_id);
@@ -133,7 +141,7 @@ class DirDeflectToHelpCenter extends BaseDirective {
             (err) => {
               if (err) {
                 winston.error("(DirDeflectToHelpCenter) Error sending reply: " + err.message);
-                callback(false);
+                return callback(false);
               }
               winston.debug("(DirDeflectToHelpCenter) Reply message sent.");
               callback(true);
