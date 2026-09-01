@@ -1,7 +1,7 @@
 var assert = require('assert');
 const { ExtUtil } = require('../pipeline/ExtUtil');
-const { DirectivesChatbotPlug } = require('../tiledeskChatbotPlugs/DirectivesChatbotPlug');
-const { DirSendEmail } = require('../tiledeskChatbotPlugs/directives/conversation/DirSendEmail');
+const { DirectivesChatbotPlug } = require('../pipeline/plugs/DirectivesChatbotPlug');
+const { DirSendEmail } = require('../directives/conversation/DirSendEmail');
 const supportRequest = require('./support_request.js').request;
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 

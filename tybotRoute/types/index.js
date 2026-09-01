@@ -134,7 +134,7 @@
  * A single directive as parsed out of a reply and handed to `execute()`.
  *
  * `name` is matched case-insensitively against the directive registry
- * (see tybotRoute/tiledeskChatbotPlugs/directives/registry.js).
+ * (see tybotRoute/directives/registry.js).
  *
  * @typedef {{ name: string, action?: Action }} Directive
  */

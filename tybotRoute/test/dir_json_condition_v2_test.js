@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { DirJSONConditionV2 } = require('../tiledeskChatbotPlugs/directives/flow/DirJSONConditionV2');
+const { DirJSONConditionV2 } = require('../directives/flow/DirJSONConditionV2');
 
 // --- Test doubles (no Redis, no network) --------------------------------------
 

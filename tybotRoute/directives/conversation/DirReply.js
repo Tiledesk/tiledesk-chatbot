@@ -1,0 +1,185 @@
+const { Filler } = require('../../variables/Filler');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const winston = require('../../utils/winston')
+const tiledeskApiService = require('../../services/TiledeskApiService');
+const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('../Directives');
+
+class DirReply extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.REPLY, Directives.DTMF_FORM, Directives.DTMF_MENU, Directives.BLIND_TRANSFER, Directives.SPEECH_FORM, Directives.PLAY_PROMPT, Directives.AUDIO_RECORD];
+
+  constructor(context) {
+    super(context);
+    this.log = context.log;
+  }
+
+  execute(directive, callback) {
+    let action;
+    if (directive.action) {
+      action = directive.action;
+      if (!action.attributes) {
+        action.attributes = {}
+      }
+      action.attributes.fillParams = true;
+    }
+    else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.error("DirReply Incorrect directive (no action provided):", directive);
+      callback();
+      return;
+    }
+
+    this.go(action, () => {
+      this.logger.native("[Reply] Executed");
+      callback();
+    });
+  }
+
+  async go(action, callback) {
+    const message = action;
+
+    // fill
+    let requestAttributes = null;
+    if (this.tdcache) {
+      requestAttributes = 
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+      );
+
+      TiledeskChatbotUtil.replaceJSONButtons(message, requestAttributes);
+      TiledeskChatbotUtil.replaceJSONGalleries(message, requestAttributes);
+
+      const filler = new Filler();
+      // fill text attribute
+      message.text = filler.fill(message.text, requestAttributes);
+      this.logger.native("[Reply] Reply with: " + message.text);
+
+      if (message.metadata) {
+        winston.debug("DirReply filling message 'metadata':", message.metadata);
+        if (message.metadata.src) {
+          message.metadata.src = filler.fill(message.metadata.src, requestAttributes);
+          this.logger.native("Filled metadata.src with ", message.metadata.src);
+        }
+        if (message.metadata.name) {
+          message.metadata.name = filler.fill(message.metadata.name, requestAttributes);
+          this.logger.native("Filled metadata.name with ", message.metadata.name);
+        }
+      }
+      winston.debug("DirReply filling commands'. Message:", message);
+      if (message.attributes && message.attributes.commands) {
+        let commands = message.attributes.commands;
+        winston.debug("DirReply commands: " + JSON.stringify(commands) + " length: " + commands.length);
+        
+        if (commands.length > 0) {
+          for (let i = 0; i < commands.length; i++) {
+            let command = commands[i];
+
+            if (command.type === 'message' && command.message && command.message.text) {
+              command.message.text = filler.fill(command.message.text, requestAttributes);
+              TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
+              winston.debug("DirReply command filled: " + command.message.text);
+            }
+
+            if (command.type === 'message' && command.message && command.message.metadata) {
+              command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
+              command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
+              winston.debug("DirReply command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("DirReply command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
+            if (command.type === 'settings' && command.settings) {
+              Object.keys(command.settings).forEach(k => {
+                command.settings[k] = filler.fill(command.settings[k], requestAttributes)
+                winston.debug("DirReply settings command filled: " + command.settings[k]);
+              })
+            }
+          }
+        }
+      }
+
+      // EVALUATE EXPRESSION AND REMOVE BASED ON EVALUATION
+      winston.debug("DirReply message before filters: ", message);
+      if (message.attributes && message.attributes.commands) {
+        winston.debug("DirReply filterOnVariables...on commands", message.attributes.commands)
+        winston.debug("DirReply filterOnVariables...on attributes", requestAttributes);
+        TiledeskChatbotUtil.filterOnVariables(message, requestAttributes);
+      }
+      // temporary send back of reserved attributes
+      if (!message.attributes) {
+        message.attributes = {}
+      }
+      // Reserved names: userEmail, userFullname
+      // if (requestAttributes['userEmail']) {
+      //     message.attributes.updateUserEmail = requestAttributes['userEmail'];
+      // }
+      // if (requestAttributes['userFullname']) {
+      //   message.attributes.updateUserFullname = requestAttributes['userFullname'];
+      // }
+      // intent_info
+      
+      // REFACTOR - START
+      if (this.context.reply.intent_display_name) {
+        message.attributes.intentName = this.context.reply.intent_display_name;
+      }
+      else if (this.context.reply && this.context.reply.attributes && this.context.reply.attributes.intent_info) {
+        message.attributes.intentName = this.context.reply.attributes.intent_info.intent_name;
+      }
+      // REFACTOR - END
+
+
+      // userFlowAttributes
+      let userFlowAttributes = TiledeskChatbotUtil.userFlowAttributes(requestAttributes);
+      winston.debug("DirReply userFlowAttributes:", userFlowAttributes);
+      if (userFlowAttributes) {
+        message.attributes["flowAttributes"] = {};
+        for (const [key, value] of Object.entries(userFlowAttributes)) {
+          try {
+            if(typeof value === 'string' && value.length <= 1000){
+              message.attributes["flowAttributes"][key] = value;
+            }
+          }
+          catch(err) {
+            winston.error("DirReply An error occurred while JSON.parse(). Parsed value:" + value + " in allParametersStatic(). Error:", err);
+          }
+        }
+      }
+    }
+
+    let cleanMessage = message;
+      
+    cleanMessage.senderFullname = this.context.chatbot.bot.name;
+    winston.debug("DirReply reply with clean message: ", cleanMessage);
+    this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
+
+    await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
+    tiledeskApiService.sendSupportMessage(
+      this.context.projectId,
+      this.requestId,
+      this.context.token,
+      cleanMessage,
+      (err) => {
+        if (err) {
+          winston.error("DirReply Error sending reply: ", err);
+          this.logger.error("[Reply] Error sending reply: " + err);
+        }
+        winston.verbose("DirReply reply message sent")
+        const delay = TiledeskChatbotUtil.totalMessageWait(cleanMessage);
+        if (delay > 0 && delay <= 30000) { // prevent long delays
+          setTimeout(() => {
+            callback();
+          }, delay);
+        }
+        else {
+          callback();
+        }
+    },
+      this.log);
+
+  }
+
+}
+
+module.exports = { DirReply };

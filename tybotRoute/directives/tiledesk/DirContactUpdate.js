@@ -1,0 +1,110 @@
+const { Filler } = require('../../variables/Filler');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
+const winston = require('../../utils/winston');
+const tiledeskApiService = require('../../services/TiledeskApiService');
+const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('../Directives');
+
+class DirContactUpdate extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.CONTACT_UPDATE];
+
+  constructor(context) {
+    super(context);
+    this.supportRequest = context.supportRequest;
+  }
+
+  execute(directive, callback) {
+    winston.verbose("Execute ContactUpdate directive")
+    let action;
+    if (directive.action) {
+      action = directive.action;
+      if (!action.attributes) {
+        action.attributes = {}
+      }
+      action.attributes.fillParams = true;
+    }
+    else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.warn("DirContactUpdate Incorrect directive: ", directive);
+      callback();
+      return;
+    }
+    this.go(action, () => {
+      this.logger.native("[Lead Update] Executed");
+      callback();
+    });
+  }
+
+  async go(action, callback) {
+    winston.debug("(DirContactUpdate) Action: ", action);
+    const contactProperties = action.update;
+    
+    // fill
+    let requestAttributes = null;
+    if (this.tdcache) {
+      requestAttributes = 
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+      );
+    }
+    const filler = new Filler();
+    let updateProperties = {}
+
+    //map the key from the action to the chatbot const variable key
+    const keyToChatbotConstMap = {
+      fullname: TiledeskChatbotConst.REQ_LEAD_USERFULLNAME_KEY,
+      email: TiledeskChatbotConst.REQ_LEAD_EMAIL_KEY,
+      phone: TiledeskChatbotConst.REQ_USER_PHONE_KEY,
+      currentPhoneNumber: TiledeskChatbotConst.REQ_CURRENT_PHONE_NUMBER_KEY,
+      userLeadId: TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY,
+      company: TiledeskChatbotConst.REQ_USER_COMPANY_KEY
+    };
+
+    for (const [key, value] of Object.entries(contactProperties)) {
+      let filled_value = filler.fill(value, requestAttributes);
+      updateProperties[key] = filled_value;
+      // it's important that all the lead's properties are immediatly updated in the current flow invocation so the updated values will be available in the next actions
+      const chatbotKey = keyToChatbotConstMap[key];
+      if (chatbotKey) {
+        await this.context.chatbot.addParameter(chatbotKey, filled_value);
+      }
+    }
+    const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
+    // NOTE (pre-existing): the service returns the tiledesk-client's promise,
+    // which REJECTS on an API error, and nothing here handles that rejection -
+    // so on failure `callback` is never invoked and the rejection is unhandled.
+    // Preserved as-is.
+    tiledeskApiService.updateLead(this.context.projectId, this.context.token, leadId, updateProperties, null, null, () => {
+      // send hidden info to update widget lead fullname only if it is a conversation!
+      winston.debug("(DirContactUpdate) requestId: " + this.requestId); 
+      winston.debug("(DirContactUpdate) updateProperties: ", updateProperties); 
+      winston.debug("(DirContactUpdate) updateProperties['fullname']: " + updateProperties['fullname']); 
+      callback();
+      // if (this.requestId.startsWith("support-group") && updateProperties['userFullname']) {
+      //   const userFullname = updateProperties['fullname'];
+      //   const updateLeadDataOnWidgetMessage = {
+      //     type: "text",
+      //     text: "Updated lead fullname on widget with: " + userFullname,
+      //     attributes: {
+      //       // subtype: "info",
+      //       updateUserFullname: userFullname
+      //     }
+      //   };
+      //   this.tdClient.sendSupportMessage(
+      //     this.requestId,
+      //     updateLeadDataOnWidgetMessage,
+      //     (err) => {
+      //       callback();
+      //   });
+      // }
+      // else {
+      //   callback();
+      // }
+    });
+  }
+}
+
+module.exports = { DirContactUpdate };

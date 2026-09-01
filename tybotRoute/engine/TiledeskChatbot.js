@@ -1,7 +1,7 @@
 // let Faq = require('./faq');
 // let Faq_kb = require('./faq_kb');
-const { MessagePipeline } = require('../tiledeskChatbotPlugs/MessagePipeline');
-const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPlug');
+const { MessagePipeline } = require('../pipeline/MessagePipeline');
+const { WebhookChatbotPlug } = require('../pipeline/plugs/WebhookChatbotPlug');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');

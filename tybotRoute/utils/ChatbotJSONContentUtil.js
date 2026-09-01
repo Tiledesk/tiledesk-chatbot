@@ -1,4 +1,4 @@
-const { Filler } = require('../tiledeskChatbotPlugs/Filler');
+const { Filler } = require('../variables/Filler');
 const winston = require('./winston');
 
 /**

@@ -13,7 +13,7 @@ const winston = require('../utils/winston');
  * validating the mandatory action parameters, and normalising the MCP server
  * declarations that are forwarded to the LLM server.
  *
- * Extracted verbatim from tiledeskChatbotPlugs/directives/ai/DirAiPrompt.js
+ * Extracted verbatim from directives/ai/DirAiPrompt.js
  * (Phase 6a). These functions never touched directive state (`this`), which is
  * exactly why they could be moved out of a quarantined file safely; the
  * stateful parts of the directive (go/execute, the cache and HTTP calls that

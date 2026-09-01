@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { TiledeskVarSplitter } = require("../tiledeskChatbotPlugs/TiledeskVarSplitter");
+const { TiledeskVarSplitter } = require("../variables/TiledeskVarSplitter");
 
 describe('Split vars', function() {
   

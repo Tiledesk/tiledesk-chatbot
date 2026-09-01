@@ -1,0 +1,340 @@
+const { Filler } = require('../../variables/Filler');
+const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { DirIntent } = require('../flow/DirIntent');
+const winston = require('../../utils/winston')
+const integrationService = require('../../services/IntegrationService');
+const openAIAssistantsService = require('../../services/OpenAIAssistantsService');
+const { BaseDirective } = require('../BaseDirective');
+const { Directives } = require('../Directives');
+
+class DirAssistant extends BaseDirective {
+
+  /** Directive names dispatched to this class (see directives/registry.js). */
+  static directiveNames = [Directives.GPT_ASSISTANT];
+  constructor(context) {
+    super(context);
+    this.intentDir = new DirIntent(context);
+  }
+
+  execute(directive, callback) {
+    winston.verbose("Execute Assistant directive");
+    let action;
+    if (directive.action) {
+      action = directive.action;
+    }
+    else {
+      this.logger.error("Incorrect action for ", directive.name, directive)
+      winston.debug("Incorrect directive: ", directive);
+      callback();
+      return;
+    }
+    this.go(action, (stop) => {
+      this.logger.native("[ChatGPT Assistant] Executed");
+      callback(stop);
+    });
+  }
+
+  async go(action, callback) {
+    winston.debug("(DirAssistant) Action: ", action);
+    let requestAttributes = null;
+    if (this.tdcache) {
+      requestAttributes = 
+      await TiledeskChatbot.allParametersStatic(
+        this.tdcache, this.requestId
+      );
+    }
+    
+    const filler = new Filler();
+    const url = filler.fill(action.url, requestAttributes);
+    // prompt => Mandatory
+    // assistantId => Mandatory
+    // threadIdAttribute => Optional // default "firstThread"
+    // assignResultTo => Optional // default "assistantReply"
+    // assignErrorTo => Optional // default "assistantError"
+    // action.settings.timeout => Optional
+  
+    let assignResultTo = "assistantReply";
+    if (action.assignResultTo) {
+      assignResultTo = action.assignResultTo;
+    }
+
+    let assignErrorTo = "assistantError";
+    if (action.assignErrorTo) {
+      assignErrorTo = action.assignErrorTo;
+    }
+
+    let threadIdAttribute = "firstThread";
+    if (action.threadIdAttribute) {
+      threadIdAttribute = action.threadIdAttribute;
+    }
+
+    let _assistantId = null;
+    if (action.assistantId) { // mandatory
+      _assistantId = action.assistantId;
+    }
+    else {
+      // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No assistantId provided");
+      winston.error("(DirAssistant) Error: no assistantId.");
+      callback();
+      return;
+    }
+
+    let _prompt = null;
+    if (action.prompt) { // mandatory
+      _prompt = action.prompt;
+    }
+    else {
+      // TODO: LOG SETTINGS ERROR
+      this.logger.error("[ChatGPT Assistant] No prompt provided");
+      winston.error("(DirAssistant) Error: no prompt.");
+      callback();
+      return;
+    }
+
+    let assistantId = _assistantId;
+    try {
+      assistantId = filler.fill(_assistantId, requestAttributes);
+    }
+    catch(error) {
+      this.logger.error("[ChatGPT Assistant] Error while filling assistantId");
+      winston.error("(DirAssistant) Error while filling assistantId:", error);
+    }
+
+    let prompt = _prompt;
+    try {
+      prompt = filler.fill(_prompt, requestAttributes);
+    }
+    catch(error) {
+      this.logger.error("[ChatGPT Assistant] Error while filling prompt");
+      winston.error("(DirAssistant) Error while filling prompt:", error);
+    }
+
+    winston.debug("(DirAssistant) settings ok");
+    winston.debug("(DirAssistant) prompt: " + prompt);
+    winston.debug("(DirAssistant) assistantId: " + assistantId);
+    
+    // Condition branches
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
+    if (trueIntent && trueIntent.trim() === "") {
+      trueIntent = null;
+    }
+    if (falseIntent && falseIntent.trim() === "") {
+      falseIntent = null;
+    }
+
+    this.timeout = this.#webrequest_timeout(action, 20000, 1, 300000);
+    
+    let apikey = await this.getGPT_APIKEY();
+    if (!apikey) {
+      const reply = "OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations";
+      this.logger.error("[ChatGPT Assistant] OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations");
+      winston.error("(DirAssistant) Error: " + reply)
+      await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
+      if (falseIntent) {
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
+        callback(true);
+      }
+      return;
+    }
+    else {
+      apikey = "Bearer " + apikey;
+    }
+    let threadId = null;
+    try {
+      threadId = requestAttributes[threadIdAttribute];
+      if (!threadId || (threadId && threadId.trim() === '') ) {
+        // create thread if it doesn't exist
+        winston.debug("(DirAssistant) Creating thread");
+        const thread = await openAIAssistantsService.createThread(apikey, this.timeout, "(DirAssistant)");
+        winston.debug("(DirAssistant) Thread crated.");
+        threadId = thread.id;
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, threadIdAttribute, threadId);
+        winston.debug("(DirAssistant) thread: ", thread);
+        winston.debug("(DirAssistant) threadId: " + threadId);
+      }
+      else {
+        winston.debug("(DirAssistant) Reusing threadId (used flow attribute: " + threadIdAttribute + "):" + threadId);
+      }
+      await openAIAssistantsService.addMessage(prompt, threadId, apikey, this.timeout, "(DirAssistant)");
+      winston.debug("(DirAssistant) Message added.");
+      await this.runThreadOnAssistant(assistantId, threadId, apikey);
+      let messages = await openAIAssistantsService.threadMessages(threadId, apikey, this.timeout, "(DirAssistant)");
+      let lastMessage = null;
+      if (messages && messages.data && messages.data.length > 0 && messages.data[0]) {
+        if (messages.data[0].content.length > 0 && messages.data[0].content[0] && messages.data[0].content[0].text) {
+          lastMessage = messages.data[0].content[0].text.value;
+        }
+      }
+
+      // process.exit(0);
+      if (lastMessage !== null) {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, lastMessage);
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, "lastMessageData", messages.data[0].content); // content is an array, see on this source end for messages structure example, including content. Ex get annotation[0]: content[0].text.annotations[0]
+        if (trueIntent) {
+          await this._executeCondition(true, trueIntent, null, falseIntent, null);
+          callback(true);
+        }
+        else {
+          callback(false);
+          return;
+        }
+      }
+      else {
+        await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignResultTo, null);
+        if (falseIntent) {
+          await this._executeCondition(false, trueIntent, null, falseIntent, null);
+          callback(true);
+        }
+        else {
+          callback(false);
+          return;
+        }
+      }
+    }
+    catch (error) {
+      winston.error("(DirAssistant) error:", error);
+      await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, error);
+      if (falseIntent) {
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
+      }
+      callback(true);
+      return;
+    }
+    
+  }
+
+  #webrequest_timeout(action, default_timeout, min, max) {
+    let timeout = default_timeout;
+    if (!action.settings) {
+      return timeout;
+    }
+    
+    if (action.settings.timeout) {
+      if ((typeof action.settings.timeout === "number") && action.settings.timeout > min && action.settings.timeout < max) {
+        timeout = Math.round(action.settings.timeout)
+      }
+    }
+    return timeout
+  }
+
+  async getGPT_APIKEY() {
+    if (process.env.TEST_OPENAI_APIKEY) {
+      return process.env.TEST_OPENAI_APIKEY
+    }
+    else {
+      return await integrationService.getKeyFromIntegrations(this.projectId, 'openai', this.token);
+    }
+  }
+
+  async runThreadOnAssistant(assistantId, threadId, apikey) {
+    let _run = await openAIAssistantsService.createRun(threadId, assistantId, apikey, this.timeout, "(DirAssistant)");
+    winston.debug("(DirAssistant) Got run: ", _run);
+    let runId = _run.id;
+    winston.debug("(DirAssistant) runId: " + runId);
+    let status = null;
+    do {
+      winston.debug("(DirAssistant) Getting run...");
+      const wait_for = 2000;
+      winston.debug("(DirAssistant) Waiting: " + wait_for);
+      await new Promise(resolve => setTimeout(resolve, wait_for));
+      let run = await openAIAssistantsService.getRun(threadId, runId, apikey, this.timeout, "(DirAssistant)");
+      status = run.status;
+      winston.debug("(DirAssistant) Run status: " + status);
+    }
+    while (status === "queued" || status === "in_progress" || status === "requires_action" && status === "cancelling");
+    // while (status != "completed" && status != "cancelled" && status != "failed" && status != "expired");
+    // queued, in_progress, requires_action, cancelling
+    winston.debug("(DirAssistant) Run end.");
+  }
+
+}
+
+
+
+module.exports = { DirAssistant };
+
+// Messages list response example
+
+/*
+{
+  "object": "list",
+  "data": [
+      {
+          "id": "msg_FfKaNU82uBYQU9gANFkKJ5Wi",
+          "object": "thread.message",
+          "created_at": 1721681044,
+          "assistant_id": null,
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": null,
+          "role": "user",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "vendete sedie di altezza superiore o uguale a 50 cm?",
+                      "annotations": []
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      },
+      {
+          "id": "msg_Ddxnqi7M9vvLdS9YYO4FHjVt",
+          "object": "thread.message",
+          "created_at": 1721680934,
+          "assistant_id": "asst_qNjiwCVxo3kL2mnN1QyP50Zb",
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": "run_k8mPIrZPnsO0hAiezD9y2f1t",
+          "role": "assistant",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "Una delle best practices raccomandate per garantire un alto livello di sicurezza informatica per la linea di prodotti \"boss\" è la seguente:\n\n- Aggiornare i dispositivi con l'ultima versione del firmware disponibile. È possibile consultare il portale KSA per verificare la disponibilità degli aggiornamenti【6:0†source】.\n\nSe hai altri dubbi o necessiti di ulteriori informazioni, non esitare a chiedere!",
+                      "annotations": [
+                          {
+                              "type": "file_citation",
+                              "text": "【6:0†source】",
+                              "start_index": 305,
+                              "end_index": 317,
+                              "file_citation": {
+                                  "file_id": "file-dwR6qSwVUIrhImd9espzExGw",
+                                  "quote": ""
+                              }
+                          }
+                      ]
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      },
+      {
+          "id": "msg_ng244T4mymroFWZ912r9DvWZ",
+          "object": "thread.message",
+          "created_at": 1721680931,
+          "assistant_id": null,
+          "thread_id": "thread_fN0rAdyJlPmN9uteMP0yWsCl",
+          "run_id": null,
+          "role": "user",
+          "content": [
+              {
+                  "type": "text",
+                  "text": {
+                      "value": "dimmi una delle best practices  che conosci",
+                      "annotations": []
+                  }
+              }
+          ],
+          "file_ids": [],
+          "metadata": {}
+      }
+  ],
+  "first_id": "msg_FfKaNU82uBYQU9gANFkKJ5Wi",
+  "last_id": "msg_ng244T4mymroFWZ912r9DvWZ",
+  "has_more": false
+}
+*/

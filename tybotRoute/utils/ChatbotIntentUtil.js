@@ -1,4 +1,4 @@
-const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
+const { Directives } = require('../directives/Directives.js');
 
 /**
  * Intent parsing and intent/action -> directive conversion helpers.

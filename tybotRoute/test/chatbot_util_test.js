@@ -1,6 +1,6 @@
 var assert = require('assert');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil');
-const { Filler } = require('../tiledeskChatbotPlugs/Filler');
+const { Filler } = require('../variables/Filler');
 
 describe('Intent name parsing', function() {
   

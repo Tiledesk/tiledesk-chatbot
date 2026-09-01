@@ -1,5 +1,5 @@
 var assert = require('assert');
-const { Filler } = require('../tiledeskChatbotPlugs/Filler');
+const { Filler } = require('../variables/Filler');
 
 describe('filler with liquidJS syntax {{}}', function() {
   
