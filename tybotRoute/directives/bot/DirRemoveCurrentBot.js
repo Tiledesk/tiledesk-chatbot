@@ -26,6 +26,7 @@ class DirRemoveCurrentBot extends BaseDirective {
     else {
       winston.warn("DirRemoveCurrentBot Incorrect directive: ", directive);
       callback();
+      return;
     }
     this.go(action, () => {
       callback();

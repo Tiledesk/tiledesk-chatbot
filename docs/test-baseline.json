@@ -67,7 +67,7 @@
   "mock_query_test.js": 7,
   "operation_json_to_expression_test.js": 32,
   "performance-wait_test.js": 1,
-  "replace_bot_directive_test.js": 6,
+  "replace_bot_directive_test.js": 9,
   "replace_json_buttons_test.js": 7,
   "replace_json_gallery_test.js": 1,
   "routes_http_test.js": 41,

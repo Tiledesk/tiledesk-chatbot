@@ -246,19 +246,19 @@ describe('Directives directives/bot, paths a flow cannot reach', function () {
   //
   // Un-skip once each `callback()` in those else-branches is followed by
   // `return`.
-  it.skip('DirReplaceBot calls back once and does nothing on a directive with neither action nor parameter', async () => {
+  it('DirReplaceBot calls back once and does nothing on a directive with neither action nor parameter', async () => {
     const dir = new DirReplaceBot(contextFor({}));
     const called = await run(dir, { name: "replacebot" });
     assert.strictEqual(called, 1);
   });
 
-  it.skip('DirReplaceBotV2 calls back once and does nothing on a directive with neither action nor parameter', async () => {
+  it('DirReplaceBotV2 calls back once and does nothing on a directive with neither action nor parameter', async () => {
     const dir = new DirReplaceBotV2(contextFor({}));
     const called = await run(dir, { name: "replacebotv2" });
     assert.strictEqual(called, 1);
   });
 
-  it.skip('DirRemoveCurrentBot calls back once on a directive with neither action nor parameter', async () => {
+  it('DirRemoveCurrentBot calls back once on a directive with neither action nor parameter', async () => {
     const mock = await startMock((server) => {
       server.get('/:projectId/requests/:requestId', (req, res) => {
         res.status(200).send({ request_id: req.params.requestId, participantsBots: ["BOT-9"] });

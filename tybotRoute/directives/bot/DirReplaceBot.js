@@ -32,6 +32,7 @@ class DirReplaceBot extends BaseDirective {
       this.logger.error("Incorrect action for ", directive.name, directive)
       winston.warn("DirReplaceBot Incorrect directive: ", directive);
       callback();
+      return;
     }
     this.go(action, () => {
       this.logger.native("[Replace Bot] Executed");
