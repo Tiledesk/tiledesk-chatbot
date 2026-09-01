@@ -985,7 +985,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     // Correct behaviour, asserted here: leave the reply at its "No answers"
     // default and take the false connector, exactly like the sibling failure
     // paths above.
-    it.skip('a 500 from the kb takes the false connector instead of throwing on a null body', async () => {
+    it('a 500 from the kb takes the false connector instead of throwing on a null body', async () => {
       const mock = await startMock({
         integrations: { openai: OPENAI_INTEGRATION },
         qa: (req, res) => res.status(500).send({ error: "kb down" })
@@ -1403,7 +1403,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: the same shape as the vllm branch
     // right below it - flowError, then the false connector.
-    it.skip('a missing ollama integration sets flowError instead of throwing on a null integration', async () => {
+    it('a missing ollama integration sets flowError instead of throwing on a null integration', async () => {
       const mock = await startMock({ integrations: {} });
       try {
         const { dir, chatbot } = build(DirAiPrompt, null);
@@ -2050,7 +2050,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: the same as the detail-carrying case
     // above, with the serialised body as the reason.
-    it.skip('a non-2xx body without a detail field takes the error connector instead of throwing', async () => {
+    it('a non-2xx body without a detail field takes the error connector instead of throwing', async () => {
       const mock = await startMock({
         integrations: { openai: OPENAI_INTEGRATION },
         ask: (req, res) => res.status(500).send({ oops: true })
@@ -2075,7 +2075,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     // throws "TypeError: Cannot read properties of undefined (reading
     // 'data')". Same consequence: the callback is never called and the
     // conversation stalls. DirAiPrompt.js:385 falls back to `err.message`.
-    it.skip('a transport failure takes the error connector instead of throwing', async () => {
+    it('a transport failure takes the error connector instead of throwing', async () => {
       const mock = await startMock({
         integrations: { openai: OPENAI_INTEGRATION },
         ask: (req, res) => { res.socket.destroy(); }
@@ -2104,7 +2104,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: treat it like the other missing
     // mandatory attributes.
-    it.skip('an action with no intents list sets flowError instead of throwing', async () => {
+    it('an action with no intents list sets flowError instead of throwing', async () => {
       const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
       try {
         const { dir, chatbot } = build(DirAiCondition, null);
@@ -2241,7 +2241,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: still write the error attribute, then
     // call back so the flow carries on.
-    it.skip('no OpenAI key and no false connector still calls back', async () => {
+    it('no OpenAI key and no false connector still calls back', async () => {
       const stub = stubAssistants(HAPPY);
       const mock = await startMock({ integrations: {} });
       try {
@@ -2567,7 +2567,7 @@ describe('Directives directives/ai, the error and edge paths', function () {
     // response - see DirAskGPTV2.js:384-388.
     //
     // Correct behaviour, asserted here: log it and let the flow carry on.
-    it.skip('a 500 from the kb is logged and the flow carries on', async () => {
+    it('a 500 from the kb is logged and the flow carries on', async () => {
       const mock = await startMock({
         integrations: { openai: OPENAI_INTEGRATION }, namespaces: NAMESPACES,
         addContent: (req, res) => res.status(500).send({ error: "kb down" })
@@ -3134,6 +3134,127 @@ describe('Directives directives/ai, the error and edge paths', function () {
         assert.deepStrictEqual(stops, [false]);
       } finally {
         for (const name of names) openAIAssistantsService[name] = original[name];
+        await mock.close();
+      }
+    });
+
+  });
+
+  // ------------------------------------- the missing-mandatory-attribute abort
+
+  // DirAskGPTV2, DirAiPrompt and DirAiCondition all abort go() the same way
+  // when a mandatory attribute is missing:
+  //
+  //   await this.checkMandatoryParameters(action).catch(async (missing) => {
+  //     ...callback...
+  //     return Promise.reject();     <-- rejects the awaited expression
+  //   })
+  //
+  // The catch handler returning a rejected promise is deliberate: it is how
+  // go() stops after it has already called back. But execute() called go()
+  // without a .catch(), so that rejection was UNHANDLED - and an unhandled
+  // rejection terminates a default node process, so every Ask KB / AI Prompt /
+  // AI Condition block saved with an attribute still blank could take the
+  // whole worker down. DirWebRequestV2.execute has the .catch() that makes the
+  // same pattern safe; these three now do too.
+  //
+  // Each case below asserts the visible outcome (flowError, false connector,
+  // nothing asked) AND that no unhandledRejection was emitted for it.
+  describe('a missing mandatory attribute aborts without an unhandled rejection', function () {
+
+    /** Runs `fn` with mocha's own handler off, collecting any unhandled rejection. */
+    async function withoutUnhandledRejectionHandlers(fn) {
+      const previous = process.listeners('unhandledRejection');
+      const seen = [];
+      process.removeAllListeners('unhandledRejection');
+      process.on('unhandledRejection', (reason) => { seen.push(reason); });
+      try {
+        await fn();
+        // An unhandled rejection is reported one macrotask after the promise
+        // is abandoned; the 250ms settle inside run() is already past that,
+        // but give the loop one more turn before reading the list.
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setTimeout(r, 50));
+      } finally {
+        process.removeAllListeners('unhandledRejection');
+        for (const l of previous) process.on('unhandledRejection', l);
+      }
+      return seen;
+    }
+
+    it('DirAskGPTV2: no question sets flowError, takes the false connector and never rejects', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot, tdcache } = build(DirAskGPTV2, null);
+        let stops;
+        const unhandled = await withoutUnhandledRejectionHandlers(async () => {
+          stops = await run(dir, { name: "askgptv2", action: { llm: "openai", model: "gpt-4o", falseIntent: "KO" } });
+        });
+
+        assert.deepStrictEqual(unhandled, [], 'the abort must not surface as an unhandled rejection');
+        assert.strictEqual(chatbot.params.flowError, "AskKnowledgeBase Error: 'question' attribute is undefined");
+        assert.strictEqual(tdcache.attrs().kb_reply, undefined);
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+        assert.deepStrictEqual(stops, [true]);
+        assert.strictEqual(mock.seen.qa.length, 0, 'nothing may be asked without a question');
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiPrompt: no question sets flowError, takes the false connector and never rejects', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        let stops;
+        const unhandled = await withoutUnhandledRejectionHandlers(async () => {
+          stops = await run(dir, { name: "aiPrompt", action: { llm: "openai", model: "gpt-4o", falseIntent: "KO" } });
+        });
+
+        assert.deepStrictEqual(unhandled, [], 'the abort must not surface as an unhandled rejection');
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: 'question' attribute is undefined");
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+        assert.deepStrictEqual(stops, [true]);
+        assert.strictEqual(mock.seen.ask.length, 0, 'nothing may be asked without a question');
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('DirAiCondition: no model sets flowError, takes the error connector and never rejects', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot } = build(DirAiCondition, null);
+        let stops;
+        const unhandled = await withoutUnhandledRejectionHandlers(async () => {
+          stops = await run(dir, { name: "aiCondition", action: { llm: "openai", intents: [{ label: "a", prompt: "p" }], errorIntent: "ERR" } });
+        });
+
+        assert.deepStrictEqual(unhandled, [], 'the abort must not surface as an unhandled rejection');
+        assert.strictEqual(chatbot.params.flowError, "AiCondition Error: 'model' attribute is undefined");
+        assert.deepStrictEqual(dispatched, ["/ERR"]);
+        assert.deepStrictEqual(stops, [true]);
+        assert.strictEqual(mock.seen.ask.length, 0, 'nothing may be asked without a model');
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('an abort with no connector wired still calls back exactly once and never rejects', async () => {
+      const mock = await startMock({ integrations: { openai: OPENAI_INTEGRATION } });
+      try {
+        const { dir, chatbot } = build(DirAiPrompt, null);
+        let stops;
+        const unhandled = await withoutUnhandledRejectionHandlers(async () => {
+          stops = await run(dir, { name: "aiPrompt", action: { llm: "openai", model: "gpt-4o" } });
+        });
+
+        assert.deepStrictEqual(unhandled, []);
+        assert.strictEqual(chatbot.params.flowError, "AiPrompt Error: 'question' attribute is undefined");
+        assert.deepStrictEqual(dispatched, []);
+        assert.deepStrictEqual(stops, [undefined]);
+        assert.strictEqual(mock.seen.ask.length, 0);
+      } finally {
         await mock.close();
       }
     });

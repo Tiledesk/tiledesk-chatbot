@@ -64,10 +64,14 @@ class DirDeleteVariable extends BaseDirective {
         }
       }
       catch(err) {
+        // `completion` was a leftover from an older signature: the parameter
+        // is `callback`. Reading the undeclared identifier threw a
+        // ReferenceError, so the one path that exists to recover from a cache
+        // failure never called back and the conversation stalled.
         this.logger.error("[Delete Attribute] Error deleting attribute");
         winston.error("(DirDeleteVariable)  error: ", err);
-        if (completion) {
-          completion();
+        if (callback) {
+          callback();
         }
       }
     }

@@ -132,10 +132,16 @@ class DirAssistant extends BaseDirective {
       this.logger.error("[ChatGPT Assistant] OpenAI APIKEY is mandatory for ChatGPT Assistants. Add your personal OpenAI APIKEY in Settings > Integrations");
       winston.error("(DirAssistant) Error: " + reply)
       await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, assignErrorTo, reply);
+      // callback(true) used to sit INSIDE the `if`, so a block with no false
+      // connector wired - the default for a freshly dropped ChatGPT Assistant
+      // - returned without calling back at all and the directive queue never
+      // advanced. Every other exit in this method calls back unconditionally.
       if (falseIntent) {
         await this._executeCondition(false, trueIntent, null, falseIntent, null);
         callback(true);
+        return;
       }
+      callback();
       return;
     }
     else {

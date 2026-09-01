@@ -194,7 +194,11 @@ class DirSetAttributeV2 extends BaseDirective {
               'Content-Type': 'application/json',
               'Authorization': this.fixToken(this.context.token)
             },
-            json: json,
+            // There was no `json` in scope here: persistOnTiledesk(key, value)
+            // never built one, so the first statement past the guard threw a
+            // ReferenceError and persistence could not work at all the moment
+            // PERSIST_API_ENDPOINT was set.
+            json: { [key]: value },
             method: 'POST'
         }
         winston.debug("(DirSetAttributeV2) HttpRequest: ", HTTPREQUEST);

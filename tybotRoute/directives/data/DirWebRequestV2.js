@@ -250,6 +250,19 @@ class DirWebRequestV2 extends BaseDirective {
    */
   #myrequest(options, callback) {
     try {
+      // A Web Request block whose url attribute resolved to nothing (an unset
+      // flow attribute, say) reached `options.url.startsWith` with undefined
+      // and threw; the outer catch below then returned WITHOUT calling back
+      // and the conversation stalled. Report it the way a failed request is
+      // reported, so the error attribute and the false connector still fire.
+      if (!options.url) {
+        winston.error("DirWebRequestV2 Error: url is undefined");
+        if (callback) {
+          callback(null, { status: 1000, data: null, error: "Error: url is undefined" });
+        }
+        return;
+      }
+
       let axios_options = {
         url: options.url,
         method: options.method,
@@ -313,7 +326,13 @@ class DirWebRequestV2 extends BaseDirective {
         });
     }
     catch (error) {
+      // This was the only exit in the file that did not call back. Anything
+      // that throws while the request is being built has to be reported, or
+      // the directive queue never advances.
       winston.error("DirWebRequestV2 Error:", error);
+      if (callback) {
+        callback(null, { status: 1000, data: null, error: error.message });
+      }
     }
   }
 

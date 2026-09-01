@@ -25,6 +25,11 @@ class DirWebResponse extends BaseDirective {
     this.go(action, () => {
       this.logger.native("[Web Response] Executed");
         callback();
+    }).catch((err) => {
+      // go() rejects only to abort itself after an error exit has already
+      // called back (the shape DirWebRequestV2.execute uses). Anything else
+      // would otherwise become an unhandled rejection.
+      winston.debug("DirWebResponse go() aborted: ", err);
     });
   }
 
@@ -45,7 +50,16 @@ class DirWebResponse extends BaseDirective {
     
     const filler = new Filler();
     const filled_status = filler.fill(action.status, requestAttributes);
-    const json = await this.getJsonFromAction(action, filler, requestAttributes)
+    // getJsonFromAction REJECTS on a payload that is not valid json. Awaiting
+    // it with no .catch() rejected go(), and since execute() did not await
+    // go() the rejection was unhandled: nothing was published and the callback
+    // never fired. Same .catch() shape as the identical helper in
+    // DirWebRequestV2.
+    const json = await this.getJsonFromAction(action, filler, requestAttributes).catch((err) => {
+      winston.error("DirWebResponse Error parsing json payload: ", err);
+      callback();
+      return Promise.reject(err);
+    })
 
     let webResponse = {
       status: filled_status,

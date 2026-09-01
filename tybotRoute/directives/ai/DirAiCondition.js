@@ -43,9 +43,16 @@ class DirAiCondition extends BaseDirective {
       callback();
       return;
     }
+    // checkMandatoryParameters' handler aborts go() with Promise.reject()
+    // AFTER it has already called back, so go() rejects by design on every
+    // missing mandatory attribute. Without this .catch() that was an
+    // unhandled rejection - fatal on a default node runtime. Same shape as
+    // DirWebRequestV2.execute.
     this.go(action, (stop) => {
       this.logger.native("[Ai Condition] Executed");
       callback(stop);
+    }).catch((err) => {
+      if (err) winston.error("DirAiCondition unexpected error: ", err);
     })
   }
 
@@ -116,9 +123,17 @@ class DirAiCondition extends BaseDirective {
     let vllm_server_config;
 
     if (action.llm === 'ollama') {
-      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[AI Condition] Error getting ollama integration.")
+      // Same as DirAiPrompt: getIntegration resolves null instead of
+      // rejecting, so the .catch() never ran and `ollama_integration.value`
+      // below threw inside the unawaited go(), stalling the conversation.
+      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch((err) => {
         winston.error("DirAiCondition Error getting ollama integration: ", err);
+        return null;
+      });
+
+      if (!ollama_integration?.value) {
+        this.logger.error("[AI Condition] Error getting ollama integration.")
+        winston.error("DirAiCondition Error getting ollama integration");
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (errorIntent) {
           await this.#executeIntent(errorIntent);
@@ -127,7 +142,7 @@ class DirAiCondition extends BaseDirective {
         }
         callback();
         return;
-      });
+      }
 
     } else if(action.llm === 'vllm'){
       // The four error exits in this branch used to read `falseIntent`,
@@ -294,13 +309,20 @@ class DirAiCondition extends BaseDirective {
     if (err) {
       winston.error("DirAiCondition openai err: ", err);
       await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }]]);
+      // `data?.detail` may be absent (a non-2xx body of another shape) and
+      // `response` may be absent altogether (a transport failure - which is
+      // precisely what this branch exists for). Both used to throw here,
+      // inside an unawaited go(), so the callback never fired. Guarded the
+      // way the sibling DirAiPrompt guards the same three cases.
       let error;
-      if (err.response?.data?.detail[0]) {
+      if (err.response?.data?.detail && err.response.data.detail[0]) {
         error = err.response.data.detail[0]?.msg;
       } else if (err.response?.data?.detail?.answer) {
         error = err.response.data.detail.answer;
-      } else {
+      } else if (err.response?.data !== undefined) {
         error = JSON.stringify(err.response.data);
+      } else {
+        error = err.message;
       }
       this.logger.error("[AI Condition] error executing action: ", error);
       if (errorIntent) {
@@ -379,7 +401,14 @@ class DirAiCondition extends BaseDirective {
 
   async checkMandatoryParameters(action) {
     return new Promise((resolve, reject) => {
-      let params = ['llm', 'model']; // mandatory params
+      // 'intents' is the list of label/prompt pairs go() iterates with
+      // forEach immediately after this check. A block whose connectors have
+      // not been wired yet has none, and the bare forEach threw inside the
+      // unawaited go(), stalling the conversation with no flowError and no
+      // error connector. Guarding it here reports it like any other missing
+      // mandatory attribute. Kept LAST so the reason reported for an action
+      // missing several of them does not change.
+      let params = ['llm', 'model', 'intents']; // mandatory params
       params.forEach((p) => {
         if (!action[p]) {
           reject(p)

@@ -135,16 +135,17 @@ class DirAskGPT extends BaseDirective {
     const { err, resbody } = await llmAskService.askLegacyKb(json, "(DirAskGPT)");
 
     winston.debug("(DirAskGPT) resbody:", resbody);
-    // These two shadowed the outer `answer`/`source` while the body lived
-    // inside the request callback; renamed now that it does not. Nothing but
-    // the _assignAttributes call below ever read them - including on the error
-    // path, where `resbody` is null and this line throws, exactly as before.
-    let kb_answer = resbody.answer;
-    let kb_source = resbody.source_url;
-    await this._assignAttributes(action, [['assignReplyTo', kb_answer, { onlyIfTruthy: true }], ['assignSourceTo', kb_source, { onlyIfTruthy: true }]]);
 
+    // askLegacyKb resolves { err, resbody: null } for every non-2xx answer and
+    // for a transport failure, so the body may only be read AFTER `err` has
+    // been ruled out. Reading it first threw a TypeError inside go(), and
+    // because execute() does not await go() the rejection was unhandled: the
+    // callback never fired and the conversation stalled. The error exit now
+    // assigns the same "No answers"/null defaults the other failure paths in
+    // this method use, then takes the false connector.
     if (err) {
       winston.error("(DirAskGPT) error: ", err);
+      await this._assignAttributes(action, [['assignReplyTo', answer, { onlyIfTruthy: true }], ['assignSourceTo', source, { onlyIfTruthy: true }]]);
       if (callback) {
         if (falseIntent) {
           await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -154,8 +155,14 @@ class DirAskGPT extends BaseDirective {
         callback();
         return;
       }
+      return;
     }
-    else if (resbody.success === true) {
+
+    let kb_answer = resbody?.answer;
+    let kb_source = resbody?.source_url;
+    await this._assignAttributes(action, [['assignReplyTo', kb_answer, { onlyIfTruthy: true }], ['assignSourceTo', kb_source, { onlyIfTruthy: true }]]);
+
+    if (resbody?.success === true) {
 
       // if (publicKey === true) {
       //   let token_usage = resbody.usage.total_tokens;

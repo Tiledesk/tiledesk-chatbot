@@ -76,9 +76,16 @@ class DirAskGPTV2 extends BaseDirective {
       callback();
       return;
     }
+    // checkMandatoryParameters' handler aborts go() with Promise.reject()
+    // AFTER it has already called back, so go() rejects by design on every
+    // missing mandatory attribute. Without this .catch() that was an
+    // unhandled rejection - fatal on a default node runtime. Same shape as
+    // DirWebRequestV2.execute.
     this.go(action, (stop) => {
       this.logger.native("[Ask Knowledge Base] Executed");
       callback(stop);
+    }).catch((err) => {
+      if (err) winston.error("DirAskGPTV2 unexpected error: ", err);
     })
   }
 

@@ -49,9 +49,16 @@ class DirAiPrompt extends BaseDirective {
       callback();
       return;
     }
+    // checkMandatoryParameters' handler aborts go() with Promise.reject()
+    // AFTER it has already called back, so go() rejects by design on every
+    // missing mandatory attribute. Without this .catch() that was an
+    // unhandled rejection - fatal on a default node runtime. Same shape as
+    // DirWebRequestV2.execute.
     this.go(action, (stop) => {
       this.logger.native("[AI Prompt] Executed");
       callback(stop);
+    }).catch((err) => {
+      if (err) winston.error("DirAiPrompt unexpected error: ", err);
     })
   }
 
@@ -119,9 +126,20 @@ class DirAiPrompt extends BaseDirective {
     let vllm_server_config;
 
     if (action.llm === 'ollama') {
-      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
-        this.logger.error("[AI Prompt] Error getting ollama integration.")
+      // IntegrationService.getIntegration NEVER rejects - its httpUtils
+      // callback resolves(null) on error - so a .catch() alone let a project
+      // with no ollama integration fall through to `ollama_integration.value`
+      // further down and throw. go() is not awaited by execute(), so that
+      // rejection was unhandled and the conversation stalled. Test the
+      // resolved value instead, exactly like the vllm branch below.
+      ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch((err) => {
         winston.error("DirAiPrompt Error getting ollama integration: ", err);
+        return null;
+      });
+
+      if (!ollama_integration?.value) {
+        this.logger.error("[AI Prompt] Error getting ollama integration.")
+        winston.error("DirAiPrompt Error getting ollama integration");
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (falseIntent) {
           await this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -130,7 +148,7 @@ class DirAiPrompt extends BaseDirective {
         }
         callback();
         return;
-      });
+      }
 
     } else if (action.llm === 'vllm') {
       const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);

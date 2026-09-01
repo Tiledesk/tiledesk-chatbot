@@ -150,7 +150,11 @@ class DirWebRequest extends BaseDirective {
       }
     })
     .catch( (error) => {
-      winston.error("(DirWebRequest) Axios error: ", error.response.data);
+      // A TRANSPORT failure - connection refused, DNS, socket reset, timeout -
+      // has no `response` at all, and that is exactly the case this catch
+      // exists for. Reading `.data` off it threw here, so callback(error,
+      // null) below never ran and the conversation stalled.
+      winston.error("(DirWebRequest) Axios error: ", error.response ? error.response.data : error.message);
       if (callback) {
         callback(error, null);
       }

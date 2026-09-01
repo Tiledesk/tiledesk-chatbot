@@ -33,27 +33,29 @@
     "gains (agents 34->99.00, bot 32->96.46, tiledesk 50->96.85) which would",
     "otherwise stay unratcheted because one unrelated area sampled 0.10 low.",
     "",
-    "2026-09-01, fixing the catalogued runtime defects: no floor was forced. Worth recording that utils/ChatbotReplyUtil.js drifts by 2 lines (254 vs 256 of 302) between otherwise identical runs, i.e. ~0.12 points on the utils area. That is the same per-file-process merge noise the headroom exists for; a run that samples low is not a regression, re-measure before reaching for --force."
+    "2026-09-01, fixing the catalogued runtime defects: no floor was forced. Worth recording that utils/ChatbotReplyUtil.js drifts by 2 lines (254 vs 256 of 302) between otherwise identical runs, i.e. ~0.12 points on the utils area. That is the same per-file-process merge noise the headroom exists for; a run that samples low is not a regression, re-measure before reaching for --force.",
+    "",
+    "2026-09-01, stage 1 of the final wave: the 12 catalogued runtime defects fixed and their it.skip() tests released, plus 4 new tests for the unhandled rejection raised by the checkMandatoryParameters abort. No floor was forced -- every floor ratcheted UP. Overall lines 91.97 -> 92.22, directives/ai 96.40 -> 97.14, directives/data 96.19 -> 97.67. The line TOTAL grew (19857 -> 19979) because the fixes add real error-handling code, so a rising percentage here is a genuine gain twice over."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 91.97,
-    "statements": 91.97,
+    "lines": 92.22,
+    "statements": 92.22,
     "functions": 91.48,
-    "branches": 90.41,
-    "linesCovered": 18264,
-    "linesTotal": 19857,
+    "branches": 90.46,
+    "linesCovered": 18426,
+    "linesTotal": 19979,
     "functionsCovered": 655,
     "functionsTotal": 716,
-    "branchesCovered": 3272,
-    "branchesTotal": 3619
+    "branchesCovered": 3300,
+    "branchesTotal": 3648
   },
   "floor": {
-    "lines": 90.9,
-    "statements": 90.9,
+    "lines": 91.2,
+    "statements": 91.2,
     "functions": 90.4,
     "branches": 89.4
   },
@@ -68,7 +70,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 76.47,
+      "branches": 77.14,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -109,10 +111,10 @@
     },
     "tybotRoute/directives/ai": {
       "files": 7,
-      "lines": 96.4,
-      "branches": 95.71,
+      "lines": 97.14,
+      "branches": 95.34,
       "functions": 100,
-      "floorLines": 95.4
+      "floorLines": 96.1
     },
     "tybotRoute/directives/bot": {
       "files": 5,
@@ -130,10 +132,10 @@
     },
     "tybotRoute/directives/data": {
       "files": 10,
-      "lines": 96.19,
-      "branches": 97.07,
+      "lines": 97.67,
+      "branches": 97.73,
       "functions": 100,
-      "floorLines": 95.1
+      "floorLines": 96.6
     },
     "tybotRoute/directives/flow": {
       "files": 10,
@@ -159,7 +161,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.16,
-      "branches": 84.24,
+      "branches": 83.84,
       "functions": 73.77,
       "floorLines": 70.1
     },
@@ -201,14 +203,14 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.9,
+      "branches": 85.81,
       "functions": 100,
       "floorLines": 88.2
     },
     "tybotRoute/routes": {
       "files": 5,
       "lines": 92.91,
-      "branches": 89.55,
+      "branches": 89.47,
       "functions": 100,
       "floorLines": 91.9
     },
@@ -222,7 +224,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 87.5,
-      "branches": 80.38,
+      "branches": 80.6,
       "functions": 82.26,
       "floorLines": 86.5
     },

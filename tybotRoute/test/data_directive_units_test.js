@@ -382,7 +382,7 @@ describe('Directives directives/data, the error and edge paths', function () {
     // stalls. execute() does not await go(), so nothing catches it either.
     //
     // Correct behaviour, asserted here: log it and call back.
-    it.skip('a cache failure while deleting is logged and the flow carries on', async () => {
+    it('a cache failure while deleting is logged and the flow carries on', async () => {
       const { dir, logger } = build(DirDeleteVariable, {
         cache: { hgetall: async () => { throw new Error("redis is gone"); } }
       });
@@ -592,7 +592,7 @@ describe('Directives directives/data, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: POST the key/value pair to the
     // configured endpoint with the project token.
-    it.skip('persistOnTiledesk posts the attribute to the configured endpoint', async () => {
+    it('persistOnTiledesk posts the attribute to the configured endpoint', async () => {
       const was = process.env.PERSIST_API_ENDPOINT;
       process.env.PERSIST_API_ENDPOINT = MOCK + '/echo';
       const mock = await startMock({});
@@ -767,7 +767,7 @@ describe('Directives directives/data, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: log it and carry on, as the non-2xx
     // path already does.
-    it.skip('a connection that is refused is logged and the flow carries on', async () => {
+    it('a connection that is refused is logged and the flow carries on', async () => {
       const { dir, tdcache } = build(DirWebRequest);
       // Nothing is listening on this port: axios rejects with no `response`.
       const stops = await run(dir, {
@@ -1019,7 +1019,7 @@ describe('Directives directives/data, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: report it like any other failed
     // request - the error attribute plus the false connector.
-    it.skip('an action with no url reports the failure instead of stalling', async () => {
+    it('an action with no url reports the failure instead of stalling', async () => {
       const mock = await startMock({});
       try {
         const { dir, tdcache } = build(DirWebRequestV2);
@@ -1098,7 +1098,7 @@ describe('Directives directives/data, the error and edge paths', function () {
     // (line 90-100) that sets flowError and routes.
     //
     // Correct behaviour, asserted here: at minimum, still call back.
-    it.skip('a payload that is not valid json is reported instead of stalling', async () => {
+    it('a payload that is not valid json is reported instead of stalling', async () => {
       const { dir, tdcache, logger } = build(DirWebResponse);
       const stops = await run(dir, {
         name: "webResponse",

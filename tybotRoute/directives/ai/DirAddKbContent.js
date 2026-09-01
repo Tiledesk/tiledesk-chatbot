@@ -160,14 +160,24 @@ class DirAddKbContent extends BaseDirective {
     const { err, resbody } = await kbService.addContent(this.projectId, this.context.token, json, "[DirAddKbContent]");
 
     if (err) {
-      this.logger.error("[Add to KnwoledgeBase] error: " + JSON.stringify(err?.response));
-      winston.error("[DirAddKbContent] error: ", err?.response);
+      // `err.response` is the raw axios response and its request -> res -> req
+      // chain is circular, so JSON.stringify(err?.response) threw "Converting
+      // circular structure to JSON" while EVALUATING the argument - before the
+      // callback below - and the conversation stalled on any non-2xx. Log the
+      // parts that matter instead, the way DirAskGPTV2 does.
+      const failure = {
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        data: err?.response?.data
+      };
+      this.logger.error("[Add to KnwoledgeBase] error: " + JSON.stringify(failure));
+      winston.error("[DirAddKbContent] error: ", failure);
       if (callback) {
         callback();
-        return;
       }
+      return;
     }
-    else if (resbody.success === true) {
+    else if (resbody?.success === true) {
       winston.debug("[DirAddKbContent] resbody: ", resbody);
       callback();
       return;
