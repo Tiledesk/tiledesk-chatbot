@@ -68,6 +68,7 @@
   "json_condition_object_properties_test.js": 14,
   "json_condition_test.js": 29,
   "json_eval_test.js": 11,
+  "logger_units_test.js": 11,
   "mock_query_test.js": 7,
   "operation_json_to_expression_test.js": 32,
   "performance-wait_test.js": 1,

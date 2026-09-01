@@ -41,29 +41,31 @@
     "",
     "2026-09-01, stage 2 (engine): engine 71.16 -> 96.37, overall 94.26 -> 96.21. No floor forced. The two Mongo-backed sources are covered by stubbing the mongoose MODELS (Faq.find / Faq_kb.findById) rather than by connecting: the suite still never talks to MongoDB, which is what .c8rc.json and docker-compose.test.yml assume.",
     "",
-    "2026-09-01, stage 2 (platform layer): cache 84.53 -> 93.37, engine/mock 88.32 -> 98.13, variables 86.52 -> 99.29, expressions 94.83 -> 96.95; overall 96.21 -> 96.60. No floor forced. The TdCache tests talk to the same redis the suite already needs (REDIS_HOST/REDIS_PORT); every key they touch is namespaced under their own request id and deleted in after()."
+    "2026-09-01, stage 2 (platform layer): cache 84.53 -> 93.37, engine/mock 88.32 -> 98.13, variables 86.52 -> 99.29, expressions 94.83 -> 96.95; overall 96.21 -> 96.60. No floor forced. The TdCache tests talk to the same redis the suite already needs (REDIS_HOST/REDIS_PORT); every key they touch is namespaced under their own request id and deleted in after().",
+    "",
+    "2026-09-01, stage 2 (observability): Logger 55 -> 100, the area 76.06 -> 100.00 lines / 46.15 -> 100 functions; overall 96.60 -> 96.82. No floor forced. The publishing half of Logger only exists when FLOW_LOGS_ENABLED and AMQP_MANAGER_URL are set at REQUIRE time, so logger_units_test.js sets them for itself and stubs Publisher.prototype.publish before requiring Logger. Nothing connects to a broker."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 96.6,
-    "statements": 96.6,
-    "functions": 96.78,
-    "branches": 93.83,
-    "linesCovered": 19300,
+    "lines": 96.82,
+    "statements": 96.82,
+    "functions": 97.76,
+    "branches": 93.95,
+    "linesCovered": 19345,
     "linesTotal": 19979,
-    "functionsCovered": 693,
+    "functionsCovered": 700,
     "functionsTotal": 716,
-    "branchesCovered": 3715,
-    "branchesTotal": 3959
+    "branchesCovered": 3743,
+    "branchesTotal": 3984
   },
   "floor": {
-    "lines": 95.6,
-    "statements": 95.6,
-    "functions": 95.7,
-    "branches": 92.8
+    "lines": 95.8,
+    "statements": 95.8,
+    "functions": 96.7,
+    "branches": 92.9
   },
   "areas": {
     "tybotRoute": {
@@ -194,10 +196,10 @@
     },
     "tybotRoute/observability": {
       "files": 2,
-      "lines": 76.06,
-      "branches": 75,
-      "functions": 46.15,
-      "floorLines": 75
+      "lines": 100,
+      "branches": 92.16,
+      "functions": 100,
+      "floorLines": 99
     },
     "tybotRoute/pipeline": {
       "files": 3,
@@ -209,7 +211,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.81,
+      "branches": 85.9,
       "functions": 100,
       "floorLines": 88.2
     },
@@ -230,7 +232,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 97.61,
-      "branches": 96.39,
+      "branches": 96.4,
       "functions": 98.39,
       "floorLines": 96.6
     },
