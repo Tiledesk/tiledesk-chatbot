@@ -485,7 +485,8 @@ CI type gate, per the TypeScript-runway decision.
 
 ## Follow-on: file structure reorganisation (user-requested)
 
-**Status: complete.** Commits `f57eedcb` (root modules) and `2f91264e` (directives).
+**Status: complete.** Commits `f57eedcb` (root modules), `2f91264e` (directives),
+`ccc7ab37` (dead packaging), `7a828593` (folder dissolved).
 
 Two flat piles were the problem: 10 unrelated modules sitting beside the entry
 points at the `tybotRoute/` root, and 59 directives in one folder.
@@ -504,7 +505,34 @@ tybotRoute/
     agents/ 8   data/ 10   bot/ 5   tiledesk/ 3
 ```
 
-All 69 moves used `git mv`, so git records them as renames and history survives.
+The legacy `tiledeskChatbotPlugs/` folder was then dissolved entirely — its name
+was an artifact of an old external package. `directives/` was promoted to the top
+level (it is a primary domain concept and was buried two levels deep),
+`BaseDirective.js` moved in beside the 59 subclasses that extend it, the five
+pipeline stages went to `pipeline/plugs/` next to `MessagePipeline`, and the
+variable helpers to `variables/`. Final shape:
+
+```
+tybotRoute/
+  index.js  startApp.js        <- entry points only
+  directives/                  BaseDirective, Directives, registry
+    ai/ 7  integrations/ 7  conversation/ 9  flow/ 10
+    agents/ 8  data/ 10  bot/ 5  tiledesk/ 3
+  pipeline/                    MessagePipeline, ExtUtil, ExtApi
+    plugs/ 5                   Directives, Markbot, Webhook, Splits, FillParams
+  variables/                   Filler, TiledeskVarSplitter, TiledeskRequestVariables
+  routes/  engine/  services/  expressions/  cache/
+  observability/  utils/  config/  models/  types/
+```
+
+Every move used `git mv`, so git records them as renames and history survives.
+
+**Dead weight removed along the way.** `tiledeskChatbotPlugs/package.json`
+declared `@tiledesk/tiledesk-chatbot-plugs` with `main: index.js` while **no
+`index.js` existed** — publishing it would have shipped a package that installs
+and then fails on require. That manifest, its `publish.sh` and `CHANGELOG.md`, the
+stray `_package_deps_from_plugs.json`, and `TildeskContextForCodeOrchestrator.js`
+(0 references, self-described prototype, misspelled name) were all deleted.
 
 **How this was kept safe.** The registry is the one place a mistake would be
 invisible — a silently dropped directive breaks production and no test covers it.
@@ -525,8 +553,16 @@ lines: **0**.
 see that, and no test exercises it — it would have failed silently at runtime.
 Caught and fixed; re-verified that the path resolves and `PromptManager` loads.
 
-Gate green at 373/56 after each commit, and the app was booted end-to-end after
-each (`Hello Tilebot!`) rather than trusting the suite alone.
+Gate green at 373/56 after every commit, and the app was booted end-to-end after
+each (`Hello Tilebot!`) rather than trusting the suite alone. The registry was
+asserted exactly equal across both structural moves — 63 keys, 0 missing, 0 extra,
+0 mismatched. `BaseDirective` now sits inside the tree the registry walks and
+correctly contributes nothing, since it declares no `directiveNames`.
+
+Note on the counts: the runner reports 57 collected files against a 56-entry
+baseline. That is correct, not an off-by-one — `close_directive_test.js` has both
+its `it()` blocks commented out, so it runs zero tests and the baseline (which
+records only files with passing tests) has no entry for it.
 
 ## Verification closed: local end-to-end + quarantine release
 
