@@ -3,6 +3,7 @@
   "ai_directive_units_test.js": 163,
   "analytics_test.js": 19,
   "anomaly-detection-test.js": 1,
+  "base_directive_units_test.js": 16,
   "chatbot_util_test.js": 21,
   "check_steps_test.js": 1,
   "conversation-add-tags_test.js": 9,
@@ -52,6 +53,7 @@
   "dir_json_condition_v2_test.js": 13,
   "dir_replyv2_flow_attributes_error_test.js": 1,
   "dir_set_attribute_test.js": 17,
+  "directive_gaps_units_test.js": 11,
   "directives_test.js": 1,
   "engine_units_test.js": 87,
   "expression_evaluator_test.js": 13,
@@ -59,6 +61,7 @@
   "filler_test.js": 8,
   "fire_tiledesk_event_directive_test.js": 7,
   "flow_directives_units_test.js": 66,
+  "http_clients_units_test.js": 10,
   "if_online_agents_directive_test.js": 2,
   "integrations_directive_units_test.js": 56,
   "intent_form_pre_filled_test.js": 4,
@@ -84,5 +87,6 @@
   "utils_units_test.js": 89,
   "validate_variable_names_test.js": 4,
   "var_splitter_test.js": 5,
+  "when_expression_corners_test.js": 19,
   "when_expression_test.js": 40
 }
