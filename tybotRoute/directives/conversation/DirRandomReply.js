@@ -56,7 +56,13 @@ class DirRandomReply extends BaseDirective {
       winston.debug("(DirRandomReply) filling commands. Message: ", message);
       if (message.attributes && message.attributes.commands) {
         const rnd_commands = TiledeskChatbotUtil.chooseRandomReply(message);
-        message.attributes.commands = rnd_commands;
+        // chooseRandomReply returns null when the command list has an odd length
+        // (it pairs each message with the wait in front of it). Assigning that
+        // null over the real commands and then reading `.length` was a TypeError
+        // inside the async go(): the conversation stalled with no reply at all.
+        if (rnd_commands) {
+          message.attributes.commands = rnd_commands;
+        }
         let commands = message.attributes.commands;
         if (commands.length > 0) {
           for (let i = 0; i < commands.length; i++) {

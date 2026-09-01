@@ -84,6 +84,13 @@ class DirCaptureUserReply extends BaseDirective {
     catch(error) {
       this.logger.error("[Capture User Reply] Error: ", error);
       winston.error("(DirCaptureUserReply) error: ", error);
+      // Without this the method simply fell off its end: anything thrown in the
+      // block above -- `this.message` absent, which is what happens when the
+      // capture is re-entered from a context with no incoming message -- left
+      // the directive pipeline waiting forever. Every other catch here calls back.
+      if (callback) {
+        callback();
+      }
     }
   }
 

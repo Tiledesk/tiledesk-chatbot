@@ -434,7 +434,7 @@ describe('Directives directives/conversation', function () {
     // with no reply. An odd command list is exactly what a randomreply node with
     // a leading or trailing stray command produces. Correct behaviour is what
     // this test asserts: keep the original commands and still send something.
-    it.skip('keeps the reply intact when the alternatives cannot be paired', async () => {
+    it('keeps the reply intact when the alternatives cannot be paired', async () => {
       const mock = await startMock();
       try {
         const action = randomReplyAction(["A", "B"]);
@@ -486,7 +486,7 @@ describe('Directives directives/conversation', function () {
     // sibling guard two lines earlier (`if (message.attributes && message.attributes.commands)`)
     // shows the shape the missing check should have. Correct behaviour is what
     // this test asserts: send the reply and release the flow.
-    it.skip('creates the attributes when the action has none, and marks fillParams', async () => {
+    it('creates the attributes when the action has none, and marks fillParams', async () => {
       const mock = await startMock();
       try {
         const dir = replyDir({ userFullname: "Nico" });
@@ -799,7 +799,7 @@ describe('Directives directives/conversation', function () {
     // conversation hangs with no reply and no user-visible log. Every other
     // catch in this tree calls back. Correct behaviour is what this test
     // asserts: report and release the flow.
-    it.skip('releases the flow when the captured reply cannot be read', async () => {
+    it('releases the flow when the captured reply cannot be read', async () => {
       const dir = captureDir({ message: undefined });
       dir._chatbot.locked = "CAP-1";
 
@@ -916,7 +916,7 @@ describe('Directives directives/conversation', function () {
     // directive pipeline stalls. A message the API rejects therefore takes the
     // whole conversation down with it, which is the opposite of what the branch
     // was written for. Correct behaviour is what this test asserts.
-    it.skip('carries on when the API refuses the message', async () => {
+    it('carries on when the API refuses the message', async () => {
       let attempts = 0;
       const mock = await startMock((server) => {
         server.post('/:projectId/requests/:requestId/messages', (req, res) => {
@@ -1031,7 +1031,7 @@ describe('Directives directives/conversation', function () {
     // carrying a SINGLE command. The variable it computes, `current`, is used
     // only in two winston.debug calls. Correct behaviour is what this test
     // asserts: send the reply.
-    it.skip('sends a reply that carries a single command', async () => {
+    it('sends a reply that carries a single command', async () => {
       const mock = await startMock();
       try {
         const dir = replyV2Dir({});

@@ -112,7 +112,11 @@ class DirMessage extends BaseDirective {
       message,
       (err) => {
         if (err) {
-          winston.err("(DirMessage) Error sending reply: ", err);
+          // winston.error, not winston.err: utils/winston.js exports no `err`,
+          // so this ONE line -- the only thing that runs when the API refuses
+          // the message -- was itself a TypeError thrown inside the client's
+          // callback, and the callback() below was never reached.
+          winston.error("(DirMessage) Error sending reply: ", err);
         }
         winston.debug("(DirMessage) Reply message sent: ", message);
         callback();

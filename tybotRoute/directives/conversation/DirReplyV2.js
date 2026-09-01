@@ -52,10 +52,11 @@ class DirReplyV2 extends BaseDirective {
     winston.debug("(DirReplyV2) Action: ", action);
     const message = action;
 
-    let current; // debug only
-    if (message.attributes.commands[1].message.text) {
-      current = message.attributes.commands[1].message.text
-    }
+    // Debug only, and optional at every step: reading commands[1] unguarded was
+    // a TypeError on the very first statement of go() both for an action with no
+    // attributes and for a perfectly valid reply carrying a SINGLE command, so
+    // the reply was never sent and the callback never ran.
+    const current = message.attributes.commands?.[1]?.message?.text; // debug only
     
     let must_stop = false;
     // fill

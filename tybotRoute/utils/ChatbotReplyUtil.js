@@ -198,7 +198,11 @@ class ChatbotReplyUtil {
 
 
     static totalMessageWait(message) {
-        if (!message) {
+        if (!message || !message.attributes || !message.attributes.commands) {
+          // A reply whose action carried no attributes reaches here with
+          // `commands` undefined. Dereferencing it threw inside the
+          // sendSupportMessage callback, AFTER the message had been posted, so
+          // the reply was delivered but the flow never resumed.
           return;
         }
         if (message.attributes.commands.length > 0) {
