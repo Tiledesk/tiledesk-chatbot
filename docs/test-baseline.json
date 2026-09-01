@@ -74,6 +74,7 @@
   "replace_json_gallery_test.js": 1,
   "routes_http_test.js": 44,
   "send_email_directive_test.js": 1,
+  "services_units_test.js": 48,
   "validate_variable_names_test.js": 4,
   "var_splitter_test.js": 5,
   "when_expression_test.js": 40

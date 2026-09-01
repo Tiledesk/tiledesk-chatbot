@@ -40,22 +40,22 @@
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 89.61,
-    "statements": 89.61,
-    "functions": 89.52,
-    "branches": 88.37,
-    "linesCovered": 17795,
+    "lines": 91.28,
+    "statements": 91.28,
+    "functions": 91.34,
+    "branches": 89.43,
+    "linesCovered": 18126,
     "linesTotal": 19857,
-    "functionsCovered": 641,
+    "functionsCovered": 654,
     "functionsTotal": 716,
-    "branchesCovered": 3086,
-    "branchesTotal": 3492
+    "branchesCovered": 3218,
+    "branchesTotal": 3598
   },
   "floor": {
-    "lines": 88.6,
-    "statements": 88.6,
-    "functions": 88.5,
-    "branches": 87.3
+    "lines": 90.2,
+    "statements": 90.2,
+    "functions": 90.3,
+    "branches": 88.4
   },
   "areas": {
     "tybotRoute": {
@@ -68,7 +68,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 84.53,
-      "branches": 76.47,
+      "branches": 75.76,
       "functions": 93.75,
       "floorLines": 83.5
     },
@@ -159,7 +159,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.16,
-      "branches": 83.67,
+      "branches": 84.08,
       "functions": 73.77,
       "floorLines": 70.1
     },
@@ -208,23 +208,23 @@
     "tybotRoute/routes": {
       "files": 5,
       "lines": 92.91,
-      "branches": 89.47,
+      "branches": 89.55,
       "functions": 100,
       "floorLines": 91.9
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 86.74,
-      "branches": 88.11,
-      "functions": 84.88,
-      "floorLines": 85.7
+      "lines": 99.69,
+      "branches": 97.66,
+      "functions": 100,
+      "floorLines": 98.6
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 87.38,
-      "branches": 80,
+      "lines": 87.5,
+      "branches": 80.52,
       "functions": 82.26,
-      "floorLines": 86.3
+      "floorLines": 86.5
     },
     "tybotRoute/variables": {
       "files": 3,
