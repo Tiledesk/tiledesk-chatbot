@@ -1075,7 +1075,7 @@ describe('Directives directives/conversation', function () {
     // calls `this.unlockAction`, which lives on the chatbot, not here. Every one
     // of those throws inside an async method, i.e. an unhandled rejection.
     // The two tests below assert the correct behaviour of each half.
-    it.skip('calls back when the form is not valid', async () => {
+    it('calls back when the form is not valid', async () => {
       const dir = new DirForm(contextFor({ tdcache: fakeCache({}), chatbot: fakeChatbot() }));
       dir.logger = recordingLogger();
       const stops = await run(dir, { name: "form", action: { form: { fields: [] } } }, 0);
@@ -1084,7 +1084,7 @@ describe('Directives directives/conversation', function () {
         'an unusable form must release the flow, not hang it');
     });
 
-    it.skip('asks the first field question when the form is valid', async () => {
+    it('asks the first field question when the form is valid', async () => {
       const mock = await startMock();
       try {
         const dir = new DirForm(contextFor({

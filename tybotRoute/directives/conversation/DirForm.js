@@ -64,81 +64,78 @@ class DirForm extends BaseDirective {
     // }
     const trueIntent = action.trueIntent; // edit-end (success)
     const falseIntent = action.falseIntent; // cancel
+    const trueIntentAttributes = action.trueIntentAttributes;
+    const falseIntentAttributes = action.falseIntentAttributes;
     let form = action.form;
     winston.debug("(DirForm) IntentForm.isValidForm(intent_form) " + IntentForm.isValidForm(form));
-    
-    let clientUpdateUserFullname = null;
-    if (IntentForm.isValidForm(form)) {
-      await this.chatbot.lockAction(this.requestId, action.action_id);
-      const user_reply = message.text;
-      let form_reply = await this.execIntentForm(user_reply, form);
-      if (!form_reply.canceled && form_reply.message) {
-        winston.debug("(DirForm) Sending form reply...", form_reply.message)
-        // reply with this message (ex. please enter your fullname)
-        if (!form_reply.message.attributes) {
-          form_reply.message.attributes = {}
-        }
-        form_reply.message.attributes.fillParams = true;
-        form_reply.message.attributes.splits = true;
-        form_reply.message.attributes.markbot = true;
-        // return form_reply.message;
 
-        this.tdClient.sendSupportMessage(
-          this.requestId,
-          form_reply.message,
-          (err) => {
-            if (err) {
-              winston.error("(DirForm) Error sending form reply: " + err.message);
-            }
-            winston.debug("(DirForm) Form reply message sent.");
-            callback(true);
-        });
+    if (!IntentForm.isValidForm(form)) {
+      // Without this the whole body was skipped and `callback` was never
+      // called, so the directive pipeline stopped for good and the
+      // conversation hung with no reply and no log.
+      this.logger.error("[Form] Invalid form");
+      winston.warn("(DirForm) Invalid form: ", form);
+      callback();
+      return;
+    }
+
+    await this.chatbot.lockAction(this.requestId, action.action_id);
+
+    // The user's answer to the field asked last time round.
+    const user_reply = this.context.message ? this.context.message.text : null;
+
+    // IntentForm uses exactly two capabilities of the object it is given as
+    // `chatbot`: `tdcache` (its key/value store) and `addParameter`. The cache
+    // comes from this directive's own context, as in every other directive.
+    const requestParameters = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+    const intentForm = new IntentForm({
+      form: form,
+      requestId: this.requestId,
+      chatbot: {
+        tdcache: this.tdcache,
+        addParameter: (key, value) => this.chatbot.addParameter(key, value)
+      },
+      requestParameters: requestParameters
+    });
+    const form_reply = await intentForm.getMessage(user_reply);
+
+    if (!form_reply.canceled && form_reply.message) {
+      winston.debug("(DirForm) Sending form reply...", form_reply.message)
+      // reply with this message (ex. please enter your fullname)
+      if (!form_reply.message.attributes) {
+        form_reply.message.attributes = {}
       }
-      else if (form_reply.end) {
-        winston.debug("(DirForm) FORM end.", );
-        winston.debug("(DirForm) unlocking intent for request: " + this.requestId);
-        winston.debug("(DirForm) populate data on lead: ", lead);
+      form_reply.message.attributes.fillParams = true;
+      form_reply.message.attributes.splits = true;
+      form_reply.message.attributes.markbot = true;
 
-        this.chatbot.unlockAction(this.requestId);
+      this.tdClient.sendSupportMessage(
+        this.requestId,
+        form_reply.message,
+        (err) => {
+          if (err) {
+            winston.error("(DirForm) Error sending form reply: " + err.message);
+          }
+          winston.debug("(DirForm) Form reply message sent.");
+          callback(true); // stop the flow: the form waits for the answer
+      });
+    }
+    else if (form_reply.end) {
+      winston.debug("(DirForm) FORM end.");
+      winston.debug("(DirForm) unlocking action for request: " + this.requestId);
+      await this.chatbot.unlockAction(this.requestId);
 
-        if (callback) {
-          this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-            callback(false); // continue the flow
-          });
-        }
-        // TODO: INVOKE DIR_INTENT FOR END-FORM (SUCCESS)
-        // if (lead) {
-        //   this.populatePrechatFormAndLead(lead._id, this.requestId);
-        // }
-        // const all_parameters = await this.chatbot.allParameters();
-        // if (all_parameters && all_parameters["userFullname"]) {
-        //   clientUpdateUserFullname = all_parameters["userFullname"];
-        // }
-      }
-      else if (form_reply.canceled) {
-        winston.debug("(DirForm) unlocking intent due to canceling, for request " + this.requestId);
-        this.unlockAction(this.requestId);
+      this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+        callback(false); // continue the flow
+      });
+    }
+    else {
+      winston.debug("(DirForm) unlocking action due to canceling, for request " + this.requestId);
+      await this.chatbot.unlockAction(this.requestId);
 
-        // TODO: INVOKE DIR_INTENT FOR CANCEL.
-        if (callback) {
-          this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
-            callback(false); // continue the flow
-          });
-        }
-
-        // TODO: REMOVE CANCEL REPLY
-        // reply with this message (ex. please enter your fullname)
-        // if (!form_reply.message.attributes) {
-        //   form_reply.message.attributes = {}
-        // }
-        // form_reply.message.attributes.fillParams = true;
-        // form_reply.message.attributes.splits = true;
-        // form_reply.message.attributes.directives = true;
-        // // used by the Clients to get some info about the intent that generated this reply
-        // form_reply.message.attributes.intent_display_name = faq.intent_display_name;
-        // form_reply.message.attributes.intent_id = faq.intent_id;
-        // return form_reply.message
-      }
+      this._executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, () => {
+        callback(false); // continue the flow
+      });
     }
     // FORM END
   }
