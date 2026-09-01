@@ -73,11 +73,13 @@ class DirContactUpdate extends BaseDirective {
       }
     }
     const leadId = requestAttributes[TiledeskChatbotConst.REQ_USER_LEAD_ID_KEY];
-    // NOTE (pre-existing): the service returns the tiledesk-client's promise,
-    // which REJECTS on an API error, and nothing here handles that rejection -
-    // so on failure `callback` is never invoked and the rejection is unhandled.
-    // Preserved as-is.
-    tiledeskApiService.updateLead(this.context.projectId, this.context.token, leadId, updateProperties, null, null, () => {
+    // The service returns the tiledesk-client's promise, which on a non-2xx
+    // answer BOTH rejects and invokes the callback. The callback below already
+    // releases the flow; the rejection needs handling too, or it goes unhandled
+    // and kills the process under Node's default --unhandled-rejections=throw.
+    // Promise.resolve(...) rather than a direct .catch, so a test double that
+    // returns nothing still works.
+    Promise.resolve(tiledeskApiService.updateLead(this.context.projectId, this.context.token, leadId, updateProperties, null, null, () => {
       // send hidden info to update widget lead fullname only if it is a conversation!
       winston.debug("(DirContactUpdate) requestId: " + this.requestId); 
       winston.debug("(DirContactUpdate) updateProperties: ", updateProperties); 
@@ -103,6 +105,8 @@ class DirContactUpdate extends BaseDirective {
       // else {
       //   callback();
       // }
+    })).catch((err) => {
+      winston.debug("(DirContactUpdate) updateLead rejected, already handled in the callback: ", err && err.message);
     });
   }
 }

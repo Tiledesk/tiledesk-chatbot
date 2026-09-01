@@ -43,13 +43,13 @@
     "lines": 82.35,
     "statements": 82.35,
     "functions": 84.97,
-    "branches": 83.16,
-    "linesCovered": 16285,
-    "linesTotal": 19774,
+    "branches": 83.17,
+    "linesCovered": 16289,
+    "linesTotal": 19778,
     "functionsCovered": 605,
     "functionsTotal": 712,
-    "branchesCovered": 2484,
-    "branchesTotal": 2987
+    "branchesCovered": 2486,
+    "branchesTotal": 2989
   },
   "floor": {
     "lines": 81.3,
@@ -151,15 +151,15 @@
     },
     "tybotRoute/directives/tiledesk": {
       "files": 3,
-      "lines": 96.85,
-      "branches": 90.54,
+      "lines": 96.88,
+      "branches": 90.67,
       "functions": 100,
       "floorLines": 95.8
     },
     "tybotRoute/engine": {
       "files": 10,
       "lines": 71.03,
-      "branches": 82.99,
+      "branches": 83.08,
       "functions": 73.77,
       "floorLines": 70
     },

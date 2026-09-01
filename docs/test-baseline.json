@@ -15,7 +15,7 @@
   "conversation-brevo_test.js": 4,
   "conversation-capture_test.js": 1,
   "conversation-code_action_test.js": 1,
-  "conversation-contact_update_test.js": 3,
+  "conversation-contact_update_test.js": 4,
   "conversation-customerio_test.js": 3,
   "conversation-data_table_test.js": 5,
   "conversation-empty_text_in_reply_bug_test.js": 1,

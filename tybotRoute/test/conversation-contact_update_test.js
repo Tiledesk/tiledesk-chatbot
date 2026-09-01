@@ -218,7 +218,7 @@ describe('Conversation for ContactUpdate (leadupdate) test', async () => {
   //
   // Un-skip once the rejection is handled (e.g. `.catch()` on the returned
   // promise); the assertions below are what correct behaviour looks like.
-  it.skip('leadupdate survives a non-2xx answer from the leads API and lets the flow continue', (done) => {
+  it('leadupdate survives a non-2xx answer from the leads API and lets the flow continue', (done) => {
 
     let listener;
     let endpointServer = express();
