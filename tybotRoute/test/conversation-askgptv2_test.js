@@ -1,3 +1,11 @@
+// The pinecone reranking branch in directives/ai/DirAskGPTV2.js is behind the
+// PINECONE_RERANKING feature flag, which that module reads ONCE into a
+// module-level const at require time. '/gpt_success_pinecone_reranking' below
+// exercises that branch, so the flag has to be set before the first require of
+// the app -- setting it later has no effect. Scoped to this file on purpose:
+// it is a product flag, not a suite-wide setting.
+process.env.PINECONE_RERANKING = 'true';
+
 var assert = require('assert');
 let axios = require('axios');
 const tybot = require("..");
