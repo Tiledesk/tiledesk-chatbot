@@ -227,6 +227,74 @@ describe('Directives directives/bot, paths a flow cannot reach', function () {
     }
   });
 
+  // The three error paths of DirRemoveCurrentBot.go(). go() drives the removal
+  // itself rather than calling TiledeskClient.removeCurrentBot(), which never
+  // calls back on a request with no participant bot; these cover the paths that
+  // rewrite introduced. In every case the flow must be released, not stalled.
+
+  it('DirRemoveCurrentBot releases the flow when the request cannot be read', async () => {
+    const mock = await startMock((server, calls) => {
+      server.get('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('get-request');
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = new DirRemoveCurrentBot(contextFor({}));
+      const called = await run(dir, { name: "removecurrentbot", action: {} });
+      assert.deepStrictEqual(mock.calls, ['get-request']);
+      assert.strictEqual(called, 1);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirRemoveCurrentBot releases the flow when the participant cannot be deleted', async () => {
+    const mock = await startMock((server, calls) => {
+      server.get('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('get-request');
+        res.status(200).send({ request_id: req.params.requestId, participantsBots: ["BOT-9"] });
+      });
+      server.delete('/:projectId/requests/:requestId/participants/:participantId', (req, res) => {
+        calls.push('delete-participant');
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = new DirRemoveCurrentBot(contextFor({}));
+      const called = await run(dir, { name: "removecurrentbot", action: {} });
+      assert.deepStrictEqual(mock.calls, ['get-request', 'delete-participant']);
+      assert.strictEqual(called, 1);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirRemoveCurrentBot releases the flow when the handover status cannot be set', async () => {
+    const mock = await startMock((server, calls) => {
+      server.get('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('get-request');
+        res.status(200).send({ request_id: req.params.requestId, participantsBots: ["BOT-9"] });
+      });
+      server.delete('/:projectId/requests/:requestId/participants/:participantId', (req, res) => {
+        calls.push('delete-participant');
+        res.status(200).send({ success: true });
+      });
+      server.patch('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('patch-request');
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = new DirRemoveCurrentBot(contextFor({}));
+      const called = await run(dir, { name: "removecurrentbot", action: {} });
+      assert.deepStrictEqual(mock.calls, ['get-request', 'delete-participant', 'patch-request']);
+      assert.strictEqual(called, 1);
+    } finally {
+      await mock.close();
+    }
+  });
+
   // QUARANTINED -- these three assert the CORRECT behaviour and are red today.
   //
   // DirReplaceBot.execute (directives/bot/DirReplaceBot.js:31-35),

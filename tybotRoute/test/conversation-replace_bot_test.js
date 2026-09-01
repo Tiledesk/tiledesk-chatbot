@@ -430,7 +430,7 @@ describe('Conversation for the bot-replacement directives', async () => {
   // -- therefore never reaches the callback, DirRemoveCurrentBot.go() never
   // returns, and the flow stalls silently: no reply, no log, no error. The test
   // below times out today; the assertion is what correct behaviour looks like.
-  it.skip('removecurrentbot lets the flow continue when the request has no participant bot', (done) => {
+  it('removecurrentbot lets the flow continue when the request has no participant bot', (done) => {
 
     let listener;
     let endpointServer = express();
