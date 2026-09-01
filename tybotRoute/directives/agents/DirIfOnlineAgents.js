@@ -98,7 +98,10 @@ class DirIfOnlineAgents extends BaseDirective {
             let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
             winston.debug("(DirIfOnlineAgents) !agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
             this.intentDir.execute(intentDirective, () => {
-              callback();
+              // stopOnConditionMet, like every sibling branch: without it the
+              // block ran its false branch AND the actions that follow it, so
+              // the visitor got the fall-through reply as well.
+              callback(stopOnConditionMet);
             });
           }
           else {

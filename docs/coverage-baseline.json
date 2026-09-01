@@ -31,29 +31,31 @@
     "measuring HEAD with the new tests stashed gives utils 1427/1662 = 85.86%,",
     "byte-identical per file to the run with them. Forcing here LOCKS IN the real",
     "gains (agents 34->99.00, bot 32->96.46, tiledesk 50->96.85) which would",
-    "otherwise stay unratcheted because one unrelated area sampled 0.10 low."
+    "otherwise stay unratcheted because one unrelated area sampled 0.10 low.",
+    "",
+    "2026-09-01, fixing the catalogued runtime defects: no floor was forced. Worth recording that utils/ChatbotReplyUtil.js drifts by 2 lines (254 vs 256 of 302) between otherwise identical runs, i.e. ~0.12 points on the utils area. That is the same per-file-process merge noise the headroom exists for; a run that samples low is not a regression, re-measure before reaching for --force."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 82.29,
-    "statements": 82.29,
+    "lines": 82.32,
+    "statements": 82.32,
     "functions": 84.97,
-    "branches": 83.07,
-    "linesCovered": 16238,
-    "linesTotal": 19732,
+    "branches": 83.12,
+    "linesCovered": 16252,
+    "linesTotal": 19741,
     "functionsCovered": 605,
     "functionsTotal": 712,
-    "branchesCovered": 2473,
-    "branchesTotal": 2977
+    "branchesCovered": 2478,
+    "branchesTotal": 2981
   },
   "floor": {
-    "lines": 81.2,
-    "statements": 81.2,
+    "lines": 81.3,
+    "statements": 81.3,
     "functions": 83.9,
-    "branches": 82
+    "branches": 82.1
   },
   "areas": {
     "tybotRoute": {
@@ -100,10 +102,10 @@
     },
     "tybotRoute/directives/agents": {
       "files": 8,
-      "lines": 99,
-      "branches": 97.35,
+      "lines": 99.56,
+      "branches": 97.91,
       "functions": 100,
-      "floorLines": 98
+      "floorLines": 98.5
     },
     "tybotRoute/directives/ai": {
       "files": 7,
@@ -199,7 +201,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.71,
+      "branches": 85.99,
       "functions": 100,
       "floorLines": 88.2
     },
@@ -220,7 +222,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 86.4,
-      "branches": 77.52,
+      "branches": 77.43,
       "functions": 82.26,
       "floorLines": 85.4
     },

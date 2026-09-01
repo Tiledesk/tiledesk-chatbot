@@ -129,7 +129,11 @@ class DirIfOnlineAgentsV2 extends BaseDirective {
           });
         }
         else {
-          winston.error("(DirIfOnlineAgentsV2) Error: No falseIntent defined", intentDirective);
+          // No `intentDirective` exists in this scope: the two `let
+          // intentDirective` declarations are block-scoped to the sibling
+          // branches above, so logging it threw ReferenceError, the surrounding
+          // try/catch swallowed it and the user saw a generic flowError.
+          winston.error("(DirIfOnlineAgentsV2) Error: No falseIntent defined");
           this.chatbot.addParameter("flowError", "(If online Agents) No path for 'no available agents' defined.");
           callback();
         }
@@ -138,7 +142,9 @@ class DirIfOnlineAgentsV2 extends BaseDirective {
           let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
           winston.debug("(DirIfOnlineAgentsV2) !agents (!openHours) => falseIntent");
           this.intentDir.execute(intentDirective, () => {
-            callback();
+            // stopOnConditionMet, like every sibling branch: without it the
+            // block ran its false branch AND the actions that follow it.
+            callback(stopOnConditionMet);
           });
         }
         else {

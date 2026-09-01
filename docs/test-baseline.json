@@ -32,7 +32,7 @@
   "conversation-message-hidden_test.js": 3,
   "conversation-message_metadata_test.js": 1,
   "conversation-native_block_connector_test.js": 2,
-  "conversation-online_agents_test.js": 22,
+  "conversation-online_agents_test.js": 25,
   "conversation-open_hours_test.js": 4,
   "conversation-qapla_test.js": 7,
   "conversation-replace_bot_test.js": 12,

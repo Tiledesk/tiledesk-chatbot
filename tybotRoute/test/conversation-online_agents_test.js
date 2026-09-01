@@ -192,7 +192,7 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
   // false branch AND the actions that follow it, so the visitor gets two
   // replies, the fall-through one first. Observed: ["v2-fallthrough",
   // "offline-branch"].
-  it.skip('v2 outside operating hours runs the false branch and nothing else', (done) => {
+  it('v2 outside operating hours runs the false branch and nothing else', (done) => {
 
     const requestId = newRequestId();
     let listener;
@@ -415,7 +415,7 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
   //   "(If online Agents) An error occurred: ReferenceError: intentDirective is not defined"
   // instead of the intended message asserted below. Same defect family as the
   // DirAiCondition ReferenceErrors fixed earlier (see test/quarantine/README.md).
-  it.skip('v2 with no agents and no false branch reports the "no path" flowError', (done) => {
+  it('v2 with no agents and no false branch reports the "no path" flowError', (done) => {
 
     const requestId = newRequestId();
     let listener;
@@ -619,7 +619,7 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
   // call `callback(stopOnConditionMet)`. With stopOnConditionMet true in the
   // action, the block runs its false branch AND the actions after it. Observed:
   // ["v1-fallthrough", "offline-branch"]. Identical to the V2 defect.
-  it.skip('v1 with the project closed runs the false branch and nothing else', (done) => {
+  it('v1 with the project closed runs the false branch and nothing else', (done) => {
 
     const requestId = newRequestId();
     let listener;
