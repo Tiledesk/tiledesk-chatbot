@@ -1,5 +1,6 @@
 {
   "agents_directive_units_test.js": 10,
+  "ai_directive_units_test.js": 120,
   "analytics_test.js": 19,
   "anomaly-detection-test.js": 1,
   "chatbot_util_test.js": 21,
