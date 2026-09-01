@@ -24,29 +24,36 @@
     "was re-recorded 83.60 -> 83.50 with --force. NOT a regression. The 84.66",
     "figure recorded at dfc6a990 never matched reality: checking out the source",
     "files at 3f93eaaf and removing the new tests measures utils at 84.54,",
-    "identical to HEAD. The stale 0.12 was blocking every future --update."
+    "identical to HEAD. The stale 0.12 was blocking every future --update.",
+    "",
+    "2026-09-01, coverage wave 1 (tiledesk/bot/agents): the utils floor moved down",
+    "0.10 again under --force. Same documented merge drift, not a regression:",
+    "measuring HEAD with the new tests stashed gives utils 1427/1662 = 85.86%,",
+    "byte-identical per file to the run with them. Forcing here LOCKS IN the real",
+    "gains (agents 34->99.00, bot 32->96.46, tiledesk 50->96.85) which would",
+    "otherwise stay unratcheted because one unrelated area sampled 0.10 low."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 76.2,
-    "statements": 76.2,
+    "lines": 76.58,
+    "statements": 76.58,
     "functions": 80.02,
-    "branches": 79.06,
-    "linesCovered": 14994,
+    "branches": 79.74,
+    "linesCovered": 15069,
     "linesTotal": 19676,
     "functionsCovered": 569,
     "functionsTotal": 711,
-    "branchesCovered": 2081,
-    "branchesTotal": 2632
+    "branchesCovered": 2118,
+    "branchesTotal": 2656
   },
   "floor": {
-    "lines": 75.2,
-    "statements": 75.2,
+    "lines": 75.5,
+    "statements": 75.5,
     "functions": 79,
-    "branches": 78
+    "branches": 78.7
   },
   "areas": {
     "tybotRoute": {
@@ -59,7 +66,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 75.14,
-      "branches": 84,
+      "branches": 83.33,
       "functions": 75,
       "floorLines": 74.1
     },
@@ -93,10 +100,10 @@
     },
     "tybotRoute/directives/agents": {
       "files": 8,
-      "lines": 91.74,
-      "branches": 89.16,
+      "lines": 99,
+      "branches": 97.3,
       "functions": 100,
-      "floorLines": 90.7
+      "floorLines": 98
     },
     "tybotRoute/directives/ai": {
       "files": 7,
@@ -107,10 +114,10 @@
     },
     "tybotRoute/directives/bot": {
       "files": 5,
-      "lines": 93.43,
-      "branches": 83.1,
+      "lines": 96.46,
+      "branches": 85.53,
       "functions": 100,
-      "floorLines": 92.4
+      "floorLines": 95.4
     },
     "tybotRoute/directives/conversation": {
       "files": 9,
@@ -212,10 +219,10 @@
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 85.98,
-      "branches": 76.8,
+      "lines": 85.86,
+      "branches": 76.49,
       "functions": 79.03,
-      "floorLines": 84.9
+      "floorLines": 84.8
     },
     "tybotRoute/variables": {
       "files": 3,
