@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.12
+- Improved api key management from integration
+
 # 2.1.10
 - Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
 
