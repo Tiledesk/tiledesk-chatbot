@@ -24,7 +24,12 @@ class DirWait extends BaseDirective {
     else if (directive.parameter) {
       let millis = 500;
       const _millis = parseInt(directive.parameter.trim());
-      if (!Number.isNaN(millis)) {
+      // `_millis`, not `millis`: `millis` is the literal 500 assigned just above
+      // and can never be NaN, so a non-numeric parameter used to assign NaN
+      // unconditionally. Neither clamp below fires on NaN, and the directive
+      // ended up calling setTimeout(callback, NaN), which fires on the next
+      // tick: the wait silently did not happen.
+      if (!Number.isNaN(_millis)) {
         millis = _millis;
       }
       if (millis > 20000) {

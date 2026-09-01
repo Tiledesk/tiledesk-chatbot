@@ -44,11 +44,13 @@ class DirFlowLog extends BaseDirective {
       winston.warn("Invalid log level " + level);
       this.logger.error("Invalid log level: " + level);
       callback();
+      return;
     }
 
     if (!action.log) {
       winston.debug("Log text is empty");
       callback();
+      return;
     }
 
     let requestVariables = null;

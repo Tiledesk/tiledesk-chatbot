@@ -770,7 +770,7 @@ describe('Directives directives/flow', function () {
     // up calling `setTimeout(callback, NaN)`, which fires on the next tick. The
     // wait silently does not happen. Correct behaviour is what this test
     // asserts: fall back to the 500ms default.
-    it.skip('falls back to the default when the parameter is not a number', async () => {
+    it('falls back to the default when the parameter is not a number', async () => {
       const cache = fakeCache();
       const dir = new DirWait(contextFor({ tdcache: cache }));
       const started = Date.now();
@@ -840,7 +840,7 @@ describe('Directives directives/flow', function () {
     // level path the fall-through also reaches `filler.fill(action.log, ...)`
     // and then matches no level branch, so nothing is even logged. Each test
     // asserts that exactly one value reaches the callback.
-    it.skip('calls back exactly once on an unknown log level', async () => {
+    it('calls back exactly once on an unknown log level', async () => {
       const dir = flowLogDir({});
       const stops = await run(dir, { name: "flowlog", action: { level: "trace", log: "x" } });
 
@@ -848,7 +848,7 @@ describe('Directives directives/flow', function () {
       assert.ok(dir.logger.lines.some(([lvl, t]) => lvl === 'error' && /Invalid log level/.test(t)));
     });
 
-    it.skip('calls back exactly once when the log text is empty', async () => {
+    it('calls back exactly once when the log text is empty', async () => {
       const dir = flowLogDir({});
       const stops = await run(dir, { name: "flowlog", action: { level: "info", log: "" } });
 
