@@ -399,7 +399,7 @@ describe('Route layer over HTTP', function () {
     // Correct behaviour is what this test asserts: log, abort this message, stay
     // up. Running it as written takes the mocha process down with exit code 1
     // and no summary.
-    it.skip('stops the flow when the request attributes cannot be stored', async () => {
+    it('stops the flow when the request attributes cannot be stored', async () => {
       const requestId = newRequestId();
       const mock = await startMock();
       const original = runtimeContext.tdcache.hset;

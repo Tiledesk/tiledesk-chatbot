@@ -252,7 +252,13 @@ class ChatbotRequestAttributesUtil {
             
         } catch(error) {
             winston.error("(TiledeskChatbotUtil) updateRequestAttributes Error: ", error);
-            process.exit(1)
+            // Rethrow, never process.exit(1): ONE failed Redis write (a
+            // reconnect, a timeout, a full instance) used to kill the whole
+            // chatbot process and every conversation in flight with it, and the
+            // caller's own try/catch -- which exists precisely to abort just
+            // this message -- was never reached. A library helper must not
+            // terminate its host.
+            throw error;
         }
     }
 
