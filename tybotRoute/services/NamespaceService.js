@@ -38,7 +38,7 @@ class NamespaceService {
     }
 
     if (!this.isConnected()) {
-      winston.verbose("NamespaceService getEngine: no database connection");
+      winston.warn("NamespaceService getEngine: no database connection, the vector store apikey cannot be read (check MONGODB_URI)");
       return null;
     }
 
@@ -50,7 +50,7 @@ class NamespaceService {
         .exec();
 
       if (!namespace) {
-        winston.verbose("NamespaceService getEngine: namespace " + namespace_id + " not found for project " + id_project);
+        winston.warn("NamespaceService getEngine: namespace " + namespace_id + " not found for project " + id_project);
         return null;
       }
 

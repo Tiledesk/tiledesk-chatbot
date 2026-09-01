@@ -707,14 +707,35 @@ class DirAskGPTV2 {
     let fallbackEngine = await this.setDefaultEngine(ns.hybrid);
     engine.apikey = fallbackEngine.apikey;
 
+    let reason = this.describeApikeyGap(storedEngine, ns);
+
     if (!engine.apikey) {
-      winston.error("DirAskGPTV2 - Unable to resolve the vector store apikey for namespace " + ns.id);
-      this.logger.error("[Ask Knowledge Base] Vector store api key not found for namespace ", ns.id);
+      winston.error("DirAskGPTV2 - Unable to resolve the vector store apikey for namespace " + ns.id +
+        ": " + reason + ", and VECTOR_STORE_APIKEY is not set on the connector either");
+      this.logger.error("[Ask Knowledge Base] Vector store api key not found for namespace ", ns.id, reason);
     } else {
-      winston.verbose("DirAskGPTV2 - Vector store apikey resolved from the local configuration for namespace " + ns.id);
+      winston.warn("DirAskGPTV2 - Vector store apikey taken from the local configuration for namespace " +
+        ns.id + ": " + reason);
     }
 
     return engine;
+  }
+
+  /**
+   * Why the credential could not be read from the database. The three cases are
+   * fixed in three different places, so the log has to name which one it is.
+   */
+  describeApikeyGap(storedEngine, ns) {
+    if (!namespaceService.isConnected()) {
+      return "the connector has no database connection (check MONGODB_URI)";
+    }
+    if (!storedEngine) {
+      return "namespace " + ns.id + " is not in the database for project " + this.context.projectId;
+    }
+    if (!storedEngine.apikey) {
+      return "the engine stored for this namespace has an empty apikey";
+    }
+    return "";
   }
 
 }

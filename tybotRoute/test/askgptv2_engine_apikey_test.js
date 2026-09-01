@@ -138,6 +138,19 @@ describe('AskKnowledgeBase engine apikey', () => {
       assert.strictEqual(engine.apikey, default_engine_hybrid.apikey);
     });
 
+    it('names the reason when the credential cannot be read', async () => {
+      const d = directive();
+      const ns = namespace({ name: 'pinecone' });
+
+      namespaceService.isConnected = () => false;
+      assert.match(d.describeApikeyGap(null, ns), /no database connection/);
+
+      namespaceService.isConnected = () => true;
+      assert.match(d.describeApikeyGap(null, ns), /not in the database for project project-1/);
+      assert.match(d.describeApikeyGap({ name: 'pinecone' }, ns), /empty apikey/);
+      assert.match(d.describeApikeyGap({ apikey: 'pcsk_stored' }, ns), /^$/);
+    });
+
     it('always puts an apikey field in the engine it returns', async () => {
       namespaceService.isConnected = () => false;
 
