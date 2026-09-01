@@ -6,6 +6,7 @@
   "conversation-add-tags_test.js": 9,
   "conversation-ai_condition_test.js": 8,
   "conversation-ai_prompt_test.js": 11,
+  "conversation-askgpt_public_key_test.js": 1,
   "conversation-askgpt_test.js": 7,
   "conversation-askgptv2_test.js": 19,
   "conversation-brevo_test.js": 4,

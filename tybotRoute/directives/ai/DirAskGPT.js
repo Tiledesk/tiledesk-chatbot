@@ -5,6 +5,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const llmKeyService = require("../../services/LLMKeyService");
 const llmAskService = require("../../services/LlmAskService");
+const quotasService = require("../../services/QuotasService");
 const { BaseDirective } = require("../BaseDirective");
 const { Directives } = require('../Directives');
 
@@ -113,7 +114,7 @@ class DirAskGPT extends BaseDirective {
     }
 
     if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
+      let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token);
       if (keep_going === false) {
         winston.debug("(DirAskGPT) - Quota exceeded for tokens. Skip the action")
         callback();
