@@ -43,49 +43,51 @@
     "",
     "2026-09-01, stage 2 (platform layer): cache 84.53 -> 93.37, engine/mock 88.32 -> 98.13, variables 86.52 -> 99.29, expressions 94.83 -> 96.95; overall 96.21 -> 96.60. No floor forced. The TdCache tests talk to the same redis the suite already needs (REDIS_HOST/REDIS_PORT); every key they touch is namespaced under their own request id and deleted in after().",
     "",
-    "2026-09-01, stage 2 (observability): Logger 55 -> 100, the area 76.06 -> 100.00 lines / 46.15 -> 100 functions; overall 96.60 -> 96.82. No floor forced. The publishing half of Logger only exists when FLOW_LOGS_ENABLED and AMQP_MANAGER_URL are set at REQUIRE time, so logger_units_test.js sets them for itself and stubs Publisher.prototype.publish before requiring Logger. Nothing connects to a broker."
+    "2026-09-01, stage 2 (observability): Logger 55 -> 100, the area 76.06 -> 100.00 lines / 46.15 -> 100 functions; overall 96.60 -> 96.82. No floor forced. The publishing half of Logger only exists when FLOW_LOGS_ENABLED and AMQP_MANAGER_URL are set at REQUIRE time, so logger_units_test.js sets them for itself and stubs Publisher.prototype.publish before requiring Logger. Nothing connects to a broker.",
+    "",
+    "2026-09-01, stage 3a (the MongoDB boot path and the message pipeline): overall lines 96.82 -> 97.54, startApp/index 74.38 -> 100.00, pipeline 96.88 -> 100.00, pipeline/plugs 89.21 -> 98.83, routes 92.91 -> 95.63, engine 96.37 -> 97.02. No floor forced. Two new files. test/startapp_mongo_test.js is the ONE file that boots the connector WITHOUT settings.bots: it connects to the mongo of docker-compose.test.yml on its own database (tilebot_startapp_test, dropped in after()), seeds a faq_kb and its faqs through the real models, and drives POST /ext/:botid and /exec/:botid through the Mongo data source and the IntentsMachineFactory. It must stay the only one -- mongoose has a single default connection per process, and the per-file process isolation of scripts/run-tests.js is what keeps the other 85 files on their static-bot contract. test/pipeline_units_test.js runs each plug inside a real MessagePipeline and asserts on the resolved message and on what the mock server received. Overall BRANCH coverage rose 93.95 -> 94.31 even though the engine area's branch figure fell 97.37 -> 96.17: newly-executed code makes previously-invisible branches countable, the same denominator effect recorded above for the quarantine release."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 96.82,
-    "statements": 96.82,
+    "lines": 97.54,
+    "statements": 97.54,
     "functions": 97.76,
-    "branches": 93.95,
-    "linesCovered": 19345,
+    "branches": 94.31,
+    "linesCovered": 19489,
     "linesTotal": 19979,
     "functionsCovered": 700,
     "functionsTotal": 716,
-    "branchesCovered": 3743,
-    "branchesTotal": 3984
+    "branchesCovered": 3816,
+    "branchesTotal": 4046
   },
   "floor": {
-    "lines": 95.8,
-    "statements": 95.8,
+    "lines": 96.5,
+    "statements": 96.5,
     "functions": 96.7,
-    "branches": 92.9
+    "branches": 93.3
   },
   "areas": {
     "tybotRoute": {
       "files": 2,
-      "lines": 74.38,
-      "branches": 40,
+      "lines": 100,
+      "branches": 100,
       "functions": 100,
-      "floorLines": 73.3
+      "floorLines": 99
     },
     "tybotRoute/cache": {
       "files": 1,
       "lines": 93.37,
-      "branches": 91.11,
+      "branches": 90.91,
       "functions": 100,
       "floorLines": 92.3
     },
     "tybotRoute/config": {
       "files": 1,
       "lines": 99.28,
-      "branches": 79.31,
+      "branches": 80,
       "functions": 100,
       "floorLines": 98.2
     },
@@ -168,10 +170,10 @@
     },
     "tybotRoute/engine": {
       "files": 10,
-      "lines": 96.37,
-      "branches": 97.37,
+      "lines": 97.02,
+      "branches": 96.17,
       "functions": 100,
-      "floorLines": 95.3
+      "floorLines": 96
     },
     "tybotRoute/engine/mock": {
       "files": 3,
@@ -203,24 +205,24 @@
     },
     "tybotRoute/pipeline": {
       "files": 3,
-      "lines": 96.88,
-      "branches": 91.67,
+      "lines": 100,
+      "branches": 100,
       "functions": 100,
-      "floorLines": 95.8
+      "floorLines": 99
     },
     "tybotRoute/pipeline/plugs": {
       "files": 5,
-      "lines": 89.21,
-      "branches": 85.9,
+      "lines": 98.83,
+      "branches": 91.4,
       "functions": 100,
-      "floorLines": 88.2
+      "floorLines": 97.8
     },
     "tybotRoute/routes": {
       "files": 5,
-      "lines": 92.91,
-      "branches": 89.47,
+      "lines": 95.63,
+      "branches": 90.78,
       "functions": 100,
-      "floorLines": 91.9
+      "floorLines": 94.6
     },
     "tybotRoute/services": {
       "files": 23,
@@ -232,7 +234,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 97.61,
-      "branches": 96.4,
+      "branches": 96.39,
       "functions": 98.39,
       "floorLines": 96.6
     },
