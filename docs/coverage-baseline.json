@@ -39,29 +39,31 @@
     "",
     "2026-09-01, stage 2 of the final wave (integrations + utils): no floor forced, every floor ratcheted UP. directives/integrations 74.04 -> 96.92, utils 87.50 -> 97.60, overall 92.22 -> 94.26. The integrations ratchet was deferred one commit because utils sampled 87.38 against its 86.50 floor on that run (the ChatbotReplyUtil merge drift already recorded above); the new utils tests removed the drift's headroom problem outright.",
     "",
-    "2026-09-01, stage 2 (engine): engine 71.16 -> 96.37, overall 94.26 -> 96.21. No floor forced. The two Mongo-backed sources are covered by stubbing the mongoose MODELS (Faq.find / Faq_kb.findById) rather than by connecting: the suite still never talks to MongoDB, which is what .c8rc.json and docker-compose.test.yml assume."
+    "2026-09-01, stage 2 (engine): engine 71.16 -> 96.37, overall 94.26 -> 96.21. No floor forced. The two Mongo-backed sources are covered by stubbing the mongoose MODELS (Faq.find / Faq_kb.findById) rather than by connecting: the suite still never talks to MongoDB, which is what .c8rc.json and docker-compose.test.yml assume.",
+    "",
+    "2026-09-01, stage 2 (platform layer): cache 84.53 -> 93.37, engine/mock 88.32 -> 98.13, variables 86.52 -> 99.29, expressions 94.83 -> 96.95; overall 96.21 -> 96.60. No floor forced. The TdCache tests talk to the same redis the suite already needs (REDIS_HOST/REDIS_PORT); every key they touch is namespaced under their own request id and deleted in after()."
   ],
   "recordedAt": "2026-09-01",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 96.21,
-    "statements": 96.21,
-    "functions": 95.39,
-    "branches": 93.51,
-    "linesCovered": 19222,
+    "lines": 96.6,
+    "statements": 96.6,
+    "functions": 96.78,
+    "branches": 93.83,
+    "linesCovered": 19300,
     "linesTotal": 19979,
-    "functionsCovered": 683,
+    "functionsCovered": 693,
     "functionsTotal": 716,
-    "branchesCovered": 3661,
-    "branchesTotal": 3915
+    "branchesCovered": 3715,
+    "branchesTotal": 3959
   },
   "floor": {
-    "lines": 95.2,
-    "statements": 95.2,
-    "functions": 94.3,
-    "branches": 92.5
+    "lines": 95.6,
+    "statements": 95.6,
+    "functions": 95.7,
+    "branches": 92.8
   },
   "areas": {
     "tybotRoute": {
@@ -73,10 +75,10 @@
     },
     "tybotRoute/cache": {
       "files": 1,
-      "lines": 84.53,
-      "branches": 76.47,
-      "functions": 93.75,
-      "floorLines": 83.5
+      "lines": 93.37,
+      "branches": 91.11,
+      "functions": 100,
+      "floorLines": 92.3
     },
     "tybotRoute/config": {
       "files": 1,
@@ -171,17 +173,17 @@
     },
     "tybotRoute/engine/mock": {
       "files": 3,
-      "lines": 88.32,
-      "branches": 90,
-      "functions": 82.35,
-      "floorLines": 87.3
+      "lines": 98.13,
+      "branches": 96,
+      "functions": 100,
+      "floorLines": 97.1
     },
     "tybotRoute/expressions": {
       "files": 5,
-      "lines": 94.83,
-      "branches": 86.26,
-      "functions": 80,
-      "floorLines": 93.8
+      "lines": 96.95,
+      "branches": 87.74,
+      "functions": 85,
+      "floorLines": 95.9
     },
     "tybotRoute/models": {
       "files": 2,
@@ -207,7 +209,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 89.21,
-      "branches": 85.62,
+      "branches": 85.81,
       "functions": 100,
       "floorLines": 88.2
     },
@@ -228,16 +230,16 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 97.61,
-      "branches": 96.4,
+      "branches": 96.39,
       "functions": 98.39,
       "floorLines": 96.6
     },
     "tybotRoute/variables": {
       "files": 3,
-      "lines": 86.52,
-      "branches": 95.65,
-      "functions": 72.73,
-      "floorLines": 85.5
+      "lines": 99.29,
+      "branches": 100,
+      "functions": 90.91,
+      "floorLines": 98.2
     }
   }
 }
