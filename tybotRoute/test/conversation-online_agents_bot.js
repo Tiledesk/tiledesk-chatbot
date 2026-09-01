@@ -111,6 +111,27 @@ const bot = {
 			}, branchReply("v2-no-false-done")]
 		},
 
+		{
+			"webhook_enabled": false, "enabled": true, "language": "en",
+			"intent_display_name": "v2_current_dep_true_only", "intent_id": "v2-current-dep-true-only",
+			"actions": [{
+				"_tdActionId": "v2-current-dep-true-only-action",
+				"_tdActionType": "ifonlineagentsv2",
+				"ignoreOperatingHours": true,
+				"selectedOption": "currentDep",
+				"trueIntent": "#ONLINE"
+			}, branchReply("v2-currentdep-true-only-done")]
+		},
+		{
+			"webhook_enabled": false, "enabled": true, "language": "en",
+			"intent_display_name": "v2_closed_true_only", "intent_id": "v2-closed-true-only",
+			"actions": [{
+				"_tdActionId": "v2-closed-true-only-action",
+				"_tdActionType": "ifonlineagentsv2",
+				"trueIntent": "#ONLINE"
+			}, branchReply("v2-closed-true-only-done")]
+		},
+
 		// ------------------------------------------------------ ifonlineagents
 		{
 			"webhook_enabled": false, "enabled": true, "language": "en",

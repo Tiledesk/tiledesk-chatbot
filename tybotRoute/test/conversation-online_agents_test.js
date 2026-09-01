@@ -441,6 +441,92 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
     });
   });
 
+  it('v2 with currentDep, no department_id and no false branch just falls through', (done) => {
+
+    const requestId = newRequestId();
+    let listener;
+    let availablesCalls = 0;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.get('/projects/:projectId/users/availables', function (req, res) {
+      availablesCalls += 1;
+      res.status(200).send([{ id_user: "AGENT-1" }]);
+    });
+
+    repliesRoute(endpointServer, (replies) => {
+      util.getChatbotParameters(requestId, (err, attributes) => {
+        finish(listener, done, () => {
+          assert.strictEqual(availablesCalls, 0);
+          assert.strictEqual(attributes.flowError,
+            "(If online Agents) No departmentId found in attributes.");
+          assert.deepStrictEqual(replies.map(textOf), ["v2-currentdep-true-only-done"]);
+        });
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor(requestId, '/v2_current_dep_true_only'), BOT_ID, () => { });
+    });
+  });
+
+  it('v2 outside operating hours with no false branch falls through', (done) => {
+
+    const requestId = newRequestId();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.get('/projects/:projectId/isopen', function (req, res) {
+      res.status(200).send({ isopen: false });
+    });
+
+    repliesRoute(endpointServer, (replies) => {
+      finish(listener, done, () => {
+        assert.deepStrictEqual(replies.map(textOf), ["v2-closed-true-only-done"]);
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor(requestId, '/v2_closed_true_only'), BOT_ID, () => { });
+    });
+  });
+
+  it('v2 reports a flowError and falls through when the operating-hours call fails', (done) => {
+
+    const requestId = newRequestId();
+    let listener;
+    let availablesCalls = 0;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.get('/projects/:projectId/isopen', function (req, res) {
+      res.status(500).send({ success: false });
+    });
+    endpointServer.get('/projects/:projectId/users/availables', function (req, res) {
+      availablesCalls += 1;
+      res.status(200).send([{ id_user: "AGENT-1" }]);
+    });
+
+    repliesRoute(endpointServer, (replies) => {
+      util.getChatbotParameters(requestId, (err, attributes) => {
+        finish(listener, done, () => {
+          assert.strictEqual(availablesCalls, 0);
+          assert.ok(
+            typeof attributes.flowError === 'string' &&
+            attributes.flowError.startsWith("(If online Agents) An error occurred:"),
+            'openNow() rejects and must surface as the catch-all flowError, got: ' + attributes.flowError
+          );
+          assert.deepStrictEqual(replies.map(textOf), ["v2-fallthrough"]);
+        });
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor(requestId, '/v2_with_hours'), BOT_ID, () => { });
+    });
+  });
+
   // ====================================================== ifonlineagents (v1)
 
   it('v1 takes the true branch when the project is open and an agent is available', (done) => {
@@ -617,6 +703,31 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
 
     endpointServer.get('/projects/:projectId/isopen', function (req, res) {
       res.status(200).send({ isopen: false });
+    });
+
+    repliesRoute(endpointServer, (replies) => {
+      finish(listener, done, () => {
+        assert.deepStrictEqual(replies.map(textOf), ["v1-true-only-done"]);
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor(requestId, '/v1_true_only'), BOT_ID, () => { });
+    });
+  });
+
+  it('v1 configured with only a true branch falls through when no agent is available', (done) => {
+
+    const requestId = newRequestId();
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.get('/projects/:projectId/isopen', function (req, res) {
+      res.status(200).send({ isopen: true });
+    });
+    endpointServer.get('/projects/:projectId/users/availables', function (req, res) {
+      res.status(200).send({ length: 0 });
     });
 
     repliesRoute(endpointServer, (replies) => {

@@ -224,6 +224,109 @@ describe('Directive DirDeflectToHelpCenter', function () {
     }
   });
 
+  it('searches the project configured on the action rather than the conversation project', async () => {
+    const mock = await startMock((server, seen) => {
+      server.get('/:projectId/:workspaceId/contents/search', (req, res) => {
+        seen.search = req.params;
+        res.status(200).send([{ title: "T", url: "https://help.example.com/t" }]);
+      });
+      server.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        seen.messageProject = req.params.projectId;
+        res.status(200).send({ success: true });
+      });
+    });
+    try {
+      const dir = directiveFor("anything");
+      const stops = await run(dir, {
+        name: "askhelpcenter",
+        action: { workspaceId: "WS-1", projectId: "OTHER-PROJECT" }
+      });
+
+      assert.strictEqual(mock.seen.search.projectId, "OTHER-PROJECT",
+        'action.projectId overrides the conversation project for the Help Center query');
+      assert.strictEqual(mock.seen.messageProject, PROJECT_ID,
+        '...but the reply still goes to the conversation project');
+      assert.deepStrictEqual(stops, [true]);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  // The next three exercise paths where the directive calls back MORE than once
+  // (see the quarantined tests below for that defect). They assert the first
+  // value and the observable side effects, which are correct as they stand.
+
+  it('sends no reply when the workspace listing comes back empty', async () => {
+    const mock = await startMock((server, seen) => {
+      server.get('/:projectId/workspaces/', (req, res) => {
+        seen.listed = true;
+        res.status(200).send({ empty: true });
+      });
+      server.get('/:projectId/:workspaceId/contents/search', (req, res) => {
+        res.status(200).send({ empty: true });
+      });
+      server.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        seen.message = req.body;
+        res.status(200).send({ success: true });
+      });
+    });
+    try {
+      const dir = directiveFor("anything");
+      const stops = await run(dir, { name: "askhelpcenter", action: {} });
+
+      assert.ok(mock.seen.listed);
+      assert.strictEqual(mock.seen.message, undefined);
+      assert.strictEqual(stops[0], false, 'The flow carries on to the next directive');
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('sends no reply when the workspace listing fails', async () => {
+    const mock = await startMock((server, seen) => {
+      server.get('/:projectId/workspaces/', (req, res) => res.status(500).send({ success: false }));
+      server.get('/:projectId/:workspaceId/contents/search', (req, res) => {
+        res.status(200).send({ empty: true });
+      });
+      server.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        seen.message = req.body;
+        res.status(200).send({ success: true });
+      });
+    });
+    try {
+      const dir = directiveFor("anything");
+      const stops = await run(dir, { name: "askhelpcenter", action: {} });
+
+      assert.strictEqual(mock.seen.message, undefined);
+      assert.strictEqual(stops[0], false);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('does not stop the flow when the Help Center reply cannot be delivered', async () => {
+    let attempts = 0;
+    const mock = await startMock((server) => {
+      server.get('/:projectId/:workspaceId/contents/search', (req, res) => {
+        res.status(200).send([{ title: "T", url: "https://help.example.com/t" }]);
+      });
+      server.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        attempts += 1;
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = directiveFor("anything");
+      const stops = await run(dir, { name: "askhelpcenter", action: { workspaceId: "WS-1" } });
+
+      assert.strictEqual(attempts, 1, 'The reply is attempted exactly once');
+      assert.strictEqual(stops[0], false,
+        'An undelivered Help Center reply must not stop the directive chain');
+    } finally {
+      await mock.close();
+    }
+  });
+
   // QUARANTINED -- the three below assert the CORRECT behaviour and are red.
   //
   // directives/agents/DirDeflectToHelpCenter.js has three `callback(...)` calls

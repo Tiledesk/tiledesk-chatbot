@@ -168,6 +168,34 @@ describe('Directives directives/bot, paths a flow cannot reach', function () {
     }
   });
 
+  it('DirReplaceBotV2 accepts the bot name as a directive parameter and trims it', async () => {
+    let replaceBody = null;
+    const mock = await startMock((server) => {
+      server.put('/:projectId/requests/:requestId/replace', (req, res) => {
+        replaceBody = req.body;
+        res.status(200).send({ success: true });
+      });
+    });
+    try {
+      const dir = new DirReplaceBotV2(contextFor({}));
+      const called = await run(dir, { name: "replacebotv2", parameter: "  Second Bot  " });
+
+      assert.deepStrictEqual(replaceBody, { name: "Second Bot" });
+      assert.strictEqual(called, 1);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirReplaceBotV3 calls back once and replaces nothing when the directive has no action', async () => {
+    // V3 is the only one of the three whose else-branch has the `return`, so
+    // this path is safe to drive: nothing is listening on 10002, and any request
+    // the directive attempted would surface here rather than pass unnoticed.
+    const dir = new DirReplaceBotV3(contextFor({}));
+    const called = await run(dir, { name: "replacebotv3" });
+    assert.strictEqual(called, 1);
+  });
+
   it('DirRemoveCurrentBot accepts a directive parameter instead of an action', async () => {
     let patchBody = null;
     const mock = await startMock((server, calls) => {
