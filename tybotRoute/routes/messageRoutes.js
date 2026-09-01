@@ -79,10 +79,20 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, runtimeContext.tdcache).catch((err)=> {
-    Promise.reject(err);
+  // A failed lookup must stop this message. The previous
+  // `.catch((err) => { Promise.reject(err); return; })` built a NEW rejected
+  // promise nobody awaited (unhandled rejection #1) and its `return` only left
+  // the arrow function, so the handler carried on with `bot === undefined` and
+  // `new TiledeskChatbot({... bot: undefined ...})` threw "config.bot is
+  // mandatory" inside the async handler (unhandled rejection #2).
+  let bot;
+  try {
+    bot = await botsDS.getBotByIdCache(botId, runtimeContext.tdcache);
+  }
+  catch (err) {
+    winston.error("(tybotRoute) Error getting the bot " + botId + ": ", err);
     return;
-  });
+  }
   
   let intentsMachine;
   let backupMachine;
@@ -276,10 +286,20 @@ router.post('/exec/:botid', async (req, res) => {
   }
 
   // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, runtimeContext.tdcache).catch((err)=> {
-    Promise.reject(err);
+  // A failed lookup must stop this message. The previous
+  // `.catch((err) => { Promise.reject(err); return; })` built a NEW rejected
+  // promise nobody awaited (unhandled rejection #1) and its `return` only left
+  // the arrow function, so the handler carried on with `bot === undefined` and
+  // `new TiledeskChatbot({... bot: undefined ...})` threw "config.bot is
+  // mandatory" inside the async handler (unhandled rejection #2).
+  let bot;
+  try {
+    bot = await botsDS.getBotByIdCache(botId, runtimeContext.tdcache);
+  }
+  catch (err) {
+    winston.error("(tybotRoute) Error getting the bot " + botId + ": ", err);
     return;
-  });
+  }
 
   let intentsMachine;
   let backupMachine;

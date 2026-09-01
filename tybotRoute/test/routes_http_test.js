@@ -336,7 +336,7 @@ describe('Route layer over HTTP', function () {
     // --unhandled-rejections=throw. The same three lines are repeated at :279-282
     // for POST /exec/:botid. Correct behaviour is what this test asserts: log the
     // failure, send nothing, keep serving.
-    it.skip('stops without replying when the bot cannot be loaded', async () => {
+    it('stops without replying when the bot cannot be loaded', async () => {
       const requestId = newRequestId();
       const mock = await startMock();
       try {
