@@ -126,6 +126,7 @@ The runner defaults these; override by exporting them first.
 | `REDIS_PORT` | `6379` |
 | `API_ENDPOINT` | `http://localhost:10002` |
 | `TILEBOT_ENDPOINT` | `http://localhost:10001` |
+| `CHATBOT_TOKEN` | `XXX` |
 | `BREVO_ENDPOINT` | `$API_ENDPOINT/api/v3` |
 | `CUSTOMERIO_ENDPOINT` | `$API_ENDPOINT/api/v1` |
 | `HUBSPOT_ENDPOINT` | `$API_ENDPOINT/crm/v3/` |
@@ -139,6 +140,13 @@ test starts on port 10002. Without them those directives call the real vendor
 hosts and time out — which is why seven test files sat quarantined. If you change
 how a service builds its url, update the matching base in `TEST_ENV`.
 
+`CHATBOT_TOKEN` is the bot token the tests put in the message envelope. Most
+files hardcode `"XXX"`; two read it from the environment, and with it unset they
+send `token: undefined`. The plain-text answer path then reaches
+`ExtApi.fixToken(undefined)`, which throws inside the route's async handler, so
+the reply is dropped **with nothing logged** and the test just times out. Any
+non-empty value works; nothing in the suite verifies it.
+
 `API_ENDPOINT` is mandatory. Without it `startApp` throws inside an `async`
 function, the rejection is never surfaced, and every `before` hook times out —
 which makes the suite look completely broken rather than misconfigured.
@@ -146,7 +154,7 @@ which makes the suite look completely broken rather than misconfigured.
 ## The baseline
 
 `docs/test-baseline.json` maps each test file to the number of tests that must
-pass: **373 tests across 56 files**. It is a contract, not a snapshot. Raise it
+pass: **419 tests across 61 files**. It is a contract, not a snapshot. Raise it
 when you add tests; never lower it to make a run go green.
 
 Regenerate only when deliberately adding tests:
@@ -170,10 +178,12 @@ It *overwrites* `docs/test-baseline.json`.
 
 ## Quarantined tests
 
-`tybotRoute/test/quarantine/` holds 5 files that fail for reasons unrelated to
-configuration (7 of the original 12 were released once the endpoint variables
-above were set). See the README there for the reason per file. They are not
-collected. Fixing them is Phase 4 work.
+`tybotRoute/test/quarantine/` is **empty**: all 12 files that once sat there have
+been released. Seven went back when the endpoint variables above were set, two
+when `CHATBOT_TOKEN` was, and the last three once the product defects they were
+actually reporting — in `DirAiPrompt`, `DirAiCondition` and the AiCondition bot
+fixture — were fixed. The README there records what each wave turned out to be,
+and is the place to document anything you have to park in future.
 
 ## Coverage
 
@@ -183,7 +193,7 @@ npm run coverage:check    # gate the result against docs/coverage-baseline.json
 ```
 
 `test:coverage` goes through `tybotRoute/scripts/coverage.js`, not `c8 npm test`.
-`npm test` is untouched by all of this: same command, same 56 files / 373 tests,
+`npm test` is untouched by all of this: same command, same 61 files / 419 tests,
 no c8 anywhere in its path, no extra work.
 
 Reports land in `coverage/` (gitignored): `index.html` to browse, `coverage-summary.json`
