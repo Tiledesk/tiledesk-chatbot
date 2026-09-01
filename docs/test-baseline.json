@@ -44,6 +44,7 @@
   "dir_set_attribute_test.js": 17,
   "directives_test.js": 1,
   "expression_evaluator_test.js": 13,
+  "ext_api_fix_token_test.js": 2,
   "filler_test.js": 8,
   "if_online_agents_directive_test.js": 2,
   "intent_form_pre_filled_test.js": 4,
