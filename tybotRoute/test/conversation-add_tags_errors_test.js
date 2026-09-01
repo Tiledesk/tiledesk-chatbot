@@ -238,6 +238,40 @@ describe('Conversation for AddTags failure paths', async () => {
     });
   });
 
+  it('target "lead" with a request lookup that fails (non-404) tags nothing and lets the flow continue', (done) => {
+
+    let listener;
+    let leadTagRequests = 0;
+    let requestLookups = 0;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    // getRequestById resolves null on a 404 but REJECTS on any other error.
+    endpointServer.get('/:projectId/requests/:requestId', function (req, res) {
+      requestLookups += 1;
+      res.status(500).send({ success: false, msg: "boom" });
+    });
+
+    endpointServer.put('/:projectId/leads/:leadId/tag', function (req, res) {
+      leadTagRequests += 1;
+      res.status(200).send({ success: true });
+    });
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      finish(listener, done, () => {
+        assert.strictEqual(requestLookups, 1, 'The lead branch must look the request up first');
+        assert.strictEqual(leadTagRequests, 0, 'No lead can be tagged when the lookup failed');
+        assert.strictEqual(message.attributes.commands[1].message.text, "lead-missing-done");
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor('/add_tags_lead_missing_request'), BOT_ID, () => { });
+    });
+  });
+
   it('target "lead" sends the plain tag names to the lead and continues when that PUT fails', (done) => {
 
     let listener;

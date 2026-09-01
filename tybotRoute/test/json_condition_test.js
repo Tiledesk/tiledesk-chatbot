@@ -893,4 +893,22 @@ describe('Bugs', function() {
 
   });
 
+  it('returns null when a joining operator is not recognised', async () => {
+    const group = {
+      type: "expression",
+      conditions: [{
+        "type": "condition",
+        "operand1": "height",
+        "operator": TiledeskExpression.OPERATORS.greaterThan.name,
+        "operand2": { "type": "const", "value": "1" }
+      }]
+    }
+    const groups = [group, { type: "operator", operator: "NO_SUCH_OPERATOR" }, group];
+
+    // The sibling JSONGroupToExpression already returns null for a group it
+    // cannot render; an unknown joining operator must not throw instead.
+    const expression = TiledeskExpression.JSONGroupsToExpression(groups);
+    assert(expression === null);
+  });
+
 });

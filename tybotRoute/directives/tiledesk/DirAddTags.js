@@ -98,8 +98,20 @@ class DirAddTags extends BaseDirective {
       let newTags = filled_tags.split(',').filter(tag => tag !== '').map(el => el.trim())
       this.logger.native("[Add Tag] Adding following tags to lead: ", newTags)
 
-      let request = await tiledeskApiService.getRequestById(
-        this.context.projectId, this.requestId, this.context.token);
+      // getRequestById resolves null on a 404 but REJECTS on every other error.
+      // Unguarded, that rejection escaped the async go() unhandled and the
+      // callback never ran, so the conversation stalled with no reply.
+      let request;
+      try {
+        request = await tiledeskApiService.getRequestById(
+          this.context.projectId, this.requestId, this.context.token);
+      }
+      catch (err) {
+        this.logger.error("[Add Tag] Error reading the request: ", err);
+        winston.error("(DirAddTags) Error getting request " + this.requestId + ": ", err);
+        callback();
+        return;
+      }
       winston.debug('(DirAddTags) request detail: ', request)
       if(!request){
         winston.debug("(DirAddTags) - request not found for request_id: " + this.requestId);

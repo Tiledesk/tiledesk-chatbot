@@ -396,6 +396,14 @@ class TiledeskExpression {
             }
             else if (g.type === "operator") {
                 const operator = TiledeskExpression.OPERATORS[g.operator];
+                if (!operator) {
+                    // Return null, like the group branch above: reading
+                    // `applyPattern` off an unrecognised operator threw a
+                    // TypeError out of this static method, into whichever
+                    // directive was evaluating the condition.
+                    winston.error("(TiledeskExpression) Invalid JSON Group operator ", g.operator);
+                    return null;
+                }
                 full_expression += operator.applyPattern;
             }
         }

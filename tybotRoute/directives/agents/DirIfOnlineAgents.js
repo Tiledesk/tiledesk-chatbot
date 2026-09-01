@@ -59,7 +59,11 @@ class DirIfOnlineAgents extends BaseDirective {
       }
       else {
         if (result && result.isopen) {
-          this.tdClient.getProjectAvailableAgents((err, agents) => {
+          // Promise.resolve(...).catch: getProjectAvailableAgents BOTH calls
+          // back with the error and rejects its promise, and nothing awaited
+          // that rejection. The callback below already logs and releases the
+          // flow; the rejection needs handling too or it goes unhandled.
+          Promise.resolve(this.tdClient.getProjectAvailableAgents((err, agents) => {
             if (err) {
               winston.error("(DirIfOnlineAgents) Error getting available agents: ", err);
               callback();
@@ -91,6 +95,8 @@ class DirIfOnlineAgents extends BaseDirective {
                 callback();
               }
             }
+          })).catch((err) => {
+            winston.debug("(DirIfOnlineAgents) getProjectAvailableAgents rejected, already handled in the callback: ", err && err.message);
           });
         }
         else if (result && !result.isopen) {

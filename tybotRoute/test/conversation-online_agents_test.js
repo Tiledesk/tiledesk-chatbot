@@ -669,6 +669,36 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
     });
   });
 
+  it('v1 falls through when the available-agents call fails', (done) => {
+
+    const requestId = newRequestId();
+    let listener;
+    let availablesCalls = 0;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.get('/projects/:projectId/isopen', function (req, res) {
+      res.status(200).send({ isopen: true });
+    });
+    // getProjectAvailableAgents both calls back with the error AND rejects its
+    // promise, which nothing awaited.
+    endpointServer.get('/projects/:projectId/users/availables', function (req, res) {
+      availablesCalls += 1;
+      res.status(500).send({ success: false });
+    });
+
+    repliesRoute(endpointServer, (replies) => {
+      finish(listener, done, () => {
+        assert.strictEqual(availablesCalls, 1);
+        assert.deepStrictEqual(replies.map(textOf), ["v1-fallthrough"]);
+      });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      tilebotService.sendMessageToBot(messageFor(requestId, '/v1_agents'), BOT_ID, () => { });
+    });
+  });
+
   it('v1 with neither intent configured never calls the API and falls through', (done) => {
 
     const requestId = newRequestId();
