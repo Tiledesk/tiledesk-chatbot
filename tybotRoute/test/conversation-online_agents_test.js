@@ -823,7 +823,7 @@ describe('Conversation for the online-agents / operating-hours conditions', asyn
   // `if (falseIntent)`. A block configured with only a true branch therefore
   // never calls back and the conversation stalls silently when the
   // operating-hours API is down - no reply, no log, no error.
-  it.skip('ifopenhours with only a true branch falls through when the isopen call fails', (done) => {
+  it('ifopenhours with only a true branch falls through when the isopen call fails', (done) => {
 
     const requestId = newRequestId();
     let listener;

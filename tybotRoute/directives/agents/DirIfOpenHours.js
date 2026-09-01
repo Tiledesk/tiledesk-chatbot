@@ -82,6 +82,14 @@ class DirIfOpenHours extends BaseDirective {
               callback(stopOnConditionMet);
             });
           }
+          else {
+            // Without this the callback was only reachable inside
+            // `if (falseIntent)`: a block configured with only a true branch
+            // never called back and the conversation stalled silently whenever
+            // the operating-hours API was down -- no reply, no log, no error.
+            winston.debug("(DirIfOpenHours) No falseIntent to run after the isopen error");
+            callback();
+          }
         }
       } else {
         if (resbody.isopen && resbody.isopen === true) {
