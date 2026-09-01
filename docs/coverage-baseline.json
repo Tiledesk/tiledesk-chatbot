@@ -31,22 +31,22 @@
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 73.41,
-    "statements": 73.41,
-    "functions": 76.51,
-    "branches": 78.29,
-    "linesCovered": 14445,
+    "lines": 76.2,
+    "statements": 76.2,
+    "functions": 80.02,
+    "branches": 79.06,
+    "linesCovered": 14994,
     "linesTotal": 19676,
-    "functionsCovered": 544,
+    "functionsCovered": 569,
     "functionsTotal": 711,
-    "branchesCovered": 1952,
-    "branchesTotal": 2493
+    "branchesCovered": 2081,
+    "branchesTotal": 2632
   },
   "floor": {
-    "lines": 72.4,
-    "statements": 72.4,
-    "functions": 75.5,
-    "branches": 77.2
+    "lines": 75.2,
+    "statements": 75.2,
+    "functions": 79,
+    "branches": 78
   },
   "areas": {
     "tybotRoute": {
@@ -59,7 +59,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 75.14,
-      "branches": 83.33,
+      "branches": 84,
       "functions": 75,
       "floorLines": 74.1
     },
@@ -93,10 +93,10 @@
     },
     "tybotRoute/directives/agents": {
       "files": 8,
-      "lines": 34.15,
-      "branches": 77.78,
-      "functions": 37.14,
-      "floorLines": 33.1
+      "lines": 91.74,
+      "branches": 89.16,
+      "functions": 100,
+      "floorLines": 90.7
     },
     "tybotRoute/directives/ai": {
       "files": 7,
@@ -192,7 +192,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 87.32,
-      "branches": 81.02,
+      "branches": 81.29,
       "functions": 100,
       "floorLines": 86.3
     },
@@ -205,17 +205,17 @@
     },
     "tybotRoute/services": {
       "files": 23,
-      "lines": 79.54,
-      "branches": 83.18,
-      "functions": 77.91,
-      "floorLines": 78.5
+      "lines": 80.56,
+      "branches": 83.56,
+      "functions": 80.23,
+      "floorLines": 79.5
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 85.56,
-      "branches": 76.71,
-      "functions": 77.42,
-      "floorLines": 84.5
+      "lines": 85.98,
+      "branches": 76.8,
+      "functions": 79.03,
+      "floorLines": 84.9
     },
     "tybotRoute/variables": {
       "files": 3,
