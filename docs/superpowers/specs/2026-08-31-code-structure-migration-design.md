@@ -483,6 +483,99 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Follow-on: code coverage (user-requested)
+
+**Goal as stated:** 98% "so we are sure that all the code has been tested and all
+works correctly." Approach agreed after pushback: **ratchet** from the measured
+number, hold 98% per-area only where honest, with a written exclusion list —
+rather than one global gate that would overstate safety.
+
+**Why the pushback.** Coverage proves code *ran*, not that it is *correct*. This
+repo is the proof: the suite was 100% green while containing six catalogued
+runtime bugs. That said, the coverage push has already justified itself — see the
+defects below, all found by making untested code run.
+
+### Two measurement traps, both of which reported a comfortable lie
+
+1. My own dependency-free reporter said **99.5%**. It concatenated V8 ranges from
+   all 59 test processes into one list before painting, so a `count: 0` range from
+   a process that merely *required* a file stomped the `count: 1` ranges from the
+   process that exercised it. After a partial fix it swung to **40.2%** — also
+   wrong, under-reporting for the same reason.
+2. Plain `c8 npm test` said **67.99% with `DirAiPrompt` at 100%** — a file whose
+   tests were quarantined. Cause: c8's merge *sums* function records sharing an
+   identical range. A class with instance fields emits both a
+   `<static_initializer>` (count 1, ran at require) and an
+   `<instance_members_initializer>` (count 0, never constructed) spanning the whole
+   class body; merged, they read as fully covered.
+   `tybotRoute/scripts/coverage.js` drops the colliding record.
+
+**The lesson worth keeping:** always sanity-check a coverage setup against a file
+you *know* is untested. `DirAiPrompt` read 100% under two separate broken
+configurations before reading its true 3.93%.
+
+### Where it stands
+
+| Metric | Before | After releasing the quarantine |
+|---|---|---|
+| Lines | 62.92% | **71.00%** (13,953/19,651) |
+| Functions | 67.63% | **73.55%** |
+| Branches | 78.81% | **77.48%** |
+
+Branch percentage *fell while coverage improved*: covered branches rose
+1,552 → 1,845, but the denominator became honest (1,969 → 2,381) because V8 emits
+no granular branch records for a file nothing runs — `DirAiCondition` used to
+report `1/1` branches, a fake 100%. The branch floor was lowered once, with
+`--force` and a recorded justification. That is the only permitted direction of
+travel for a floor, and only for this reason.
+
+`npm run coverage:check` gates every area against `docs/coverage-baseline.json`.
+It ratchets **up only**.
+
+### The quarantine is empty
+
+All 12 originally-quarantined files now run. Test baseline **373 → 419 tests
+across 61 files**. The three worst-covered files moved most:
+`DirAiPrompt` 3.93 → 58.46%, `DirAiCondition` 3.78 → 72.41%,
+`DirAskGPTV2` 12.63 → 77.22%.
+
+No assertion was weakened to achieve this. One stale test was *replaced*: it
+asserted that a missing `question` attribute errors, but `a30ceb21` had
+deliberately removed `question` from `checkMandatoryParameters`. The replacement
+covers real behaviour and a previously-unreached branch — assertions in that file
+went 71 → 77.
+
+### Real defects the coverage work uncovered
+
+- **`AiPromptRequestService.buildEnabledTools()` read only `server.tools`** while
+  the designer writes `enabled_tools`. Support existed at `b4601b04` and was
+  dropped by `0c2173e1`; since then every MCP server with a tool selection was
+  sent `enabled_tools: []`.
+- **`DirAiCondition` discarded the real `/ask` error**, storing a copy of the
+  success-path string as `flowError`.
+- **`DirAiCondition`'s vllm branch had four dead error exits** reading
+  `trueIntent`/`falseIntent` that `go()` never declares — every one threw
+  `ReferenceError`.
+- **`ExtApi.fixToken` crashes on a missing token with zero logging**, silently
+  dropping the reply. This is why two tests "timed out" for years.
+- **`\_tdLockIntent` text syntax is a no-op** — `DirLockIntent.execute` requires
+  `directive.action` and the `directive.parameter` branch is commented out.
+
+Still unfixed and untested: `DirAskGPT:121` calls a non-existent
+`this.checkQuoteAvailability()`; `DirReplyV2:229` calls `winston.errpr`;
+`buildEnabledTools` no longer honours the integration's project-level
+`selectedTools` (precedence is a product decision).
+
+### Remaining gap to 98%
+
+**+5,305 lines**, concentrated in: `directives/bot` 32%, `directives/agents` 34%,
+`routes` 47%, `directives/tiledesk` 50%, `directives/flow` 58%, `directives/ai`
+63%. `models` already meets 98%; `config` is 3 lines away.
+
+Note that `config/kb` and `models` sit near 100% on module-level config and schema
+code — high percentage, near-zero assurance. Per-area targets should weight
+function and branch coverage, not lines, where that is the shape of the code.
+
 ## Follow-on: file structure reorganisation (user-requested)
 
 **Status: complete.** Commits `f57eedcb` (root modules), `2f91264e` (directives),
