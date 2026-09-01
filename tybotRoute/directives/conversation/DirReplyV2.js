@@ -226,7 +226,7 @@ class DirReplyV2 extends BaseDirective {
             }
           }
           catch(err) {
-            winston.errpr("(DirReplyV2) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
+            winston.error("(DirReplyV2) An error occurred while JSON.parse(). Parsed value: " + value + " in allParametersStatic(). Error: " + JSON.stringify(err));
           }
         }
       }
