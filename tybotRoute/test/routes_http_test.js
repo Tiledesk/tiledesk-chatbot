@@ -512,7 +512,7 @@ describe('Route layer over HTTP', function () {
     // pipeline's MarkbotChatbotPlug drops a message with no text
     // (MarkbotChatbotPlug.js:23-27), so the block's answer is silently lost.
     // The route even logs it: "No actions. Reply text: undefined".
-    it.skip('sends an action-less block through the ext message pipeline', async () => {
+    it('sends an action-less block through the ext message pipeline', async () => {
       const requestId = newRequestId();
       const mock = await startMock();
       try {

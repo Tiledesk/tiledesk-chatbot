@@ -70,7 +70,7 @@
   "replace_bot_directive_test.js": 12,
   "replace_json_buttons_test.js": 7,
   "replace_json_gallery_test.js": 1,
-  "routes_http_test.js": 43,
+  "routes_http_test.js": 44,
   "send_email_directive_test.js": 1,
   "validate_variable_names_test.js": 4,
   "var_splitter_test.js": 5,

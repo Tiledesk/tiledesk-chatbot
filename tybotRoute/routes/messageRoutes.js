@@ -362,6 +362,14 @@ router.post('/exec/:botid', async (req, res) => {
     }
   }
   else { // text answer (parse text directives to get actions)
+    // findBlock() resolves the RAW intent: its answer sits on `.answer`, while
+    // `.text` -- what ExtApi and the pipeline's MarkbotChatbotPlug read -- is
+    // undefined. Without this the plug dropped the message for having no text
+    // and the block's answer was silently lost; the route even logged
+    // "No actions. Reply text: undefined".
+    if (reply.text === undefined || reply.text === null) {
+      reply.text = reply.answer;
+    }
     winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
     reply.triggeredByMessageId = messageId;
     if (!reply.attributes) {
