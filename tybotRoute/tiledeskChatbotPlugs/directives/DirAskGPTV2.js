@@ -380,6 +380,7 @@ class DirAskGPTV2 {
     }
     
     winston.debug("DirAskGPTV2 json:", json);
+    console.log("DirAskGPTV2 json:", JSON.stringify(json));
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
     if (ns.hybrid === true) {
