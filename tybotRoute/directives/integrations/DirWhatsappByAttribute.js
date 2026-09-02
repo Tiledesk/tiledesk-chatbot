@@ -53,22 +53,24 @@ class DirWhatsappByAttribute extends BaseDirective {
     // parameters and ignored it, so dropping it changes nothing.
     const { err, resbody } = await whatsappService.broadcast(attribute_value, "(DirWhatsappByAttribute)");
 
-    return new Promise((resolve, reject) => {
-      if (err) {
-        if (callback) {
-          callback(err);
-        }
-        reject(err);
+    // This used to return a promise that REJECTED whenever the whatsapp module
+    // answered anything but a 2xx. execute() calls go() without a .catch(), so
+    // that rejection was unhandled - which terminates a default node process -
+    // even though the callback had already fired and the flow carried on. The
+    // resolve/reject pair was vestigial in any case: execute() ignores the
+    // returned promise entirely, and nothing else calls go().
+    if (err) {
+      winston.error("(DirWhatsappByAttribute) broadcast failed: ", err.message ? err.message : err);
+      if (callback) {
+        callback(err);
       }
-      else {
-        if (callback) {
-          callback(null, resbody);
-        }
-        winston.debug("(DirWhatsappByAttribute) broadcast sent: ", resbody);
-        resolve(resbody);
-      }
-    })
+      return;
+    }
 
+    winston.debug("(DirWhatsappByAttribute) broadcast sent: ", resbody);
+    if (callback) {
+      callback(null, resbody);
+    }
   }
 }
 

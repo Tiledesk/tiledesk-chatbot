@@ -1373,7 +1373,7 @@ describe('Directives directives/integrations, the error and edge paths', functio
     //
     // Correct behaviour, asserted here: a failed broadcast is logged and the
     // flow carries on, with no unhandled rejection.
-    it.skip('a 500 from the whatsapp module carries on without an unhandled rejection', async () => {
+    it('a 500 from the whatsapp module carries on without an unhandled rejection', async () => {
       const mock = await startMock({ broadcast: (req, res) => res.status(500).send({ error: "module down" }) });
       const previous = process.listeners('unhandledRejection');
       const unhandled = [];
