@@ -56,17 +56,17 @@
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
-    "files": 144,
-    "lines": 98.15,
-    "statements": 98.15,
-    "functions": 97.9,
-    "branches": 95.38,
-    "linesCovered": 19789,
-    "linesTotal": 20160,
-    "functionsCovered": 701,
-    "functionsTotal": 716,
-    "branchesCovered": 3964,
-    "branchesTotal": 4156
+    "files": 145,
+    "lines": 98.16,
+    "statements": 98.16,
+    "functions": 97.91,
+    "branches": 95.37,
+    "linesCovered": 19943,
+    "linesTotal": 20315,
+    "functionsCovered": 705,
+    "functionsTotal": 720,
+    "branchesCovered": 4017,
+    "branchesTotal": 4212
   },
   "floor": {
     "lines": 97.1,
@@ -218,16 +218,16 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 99.57,
-      "branches": 92.11,
+      "branches": 92.15,
       "functions": 100,
       "floorLines": 98.5
     },
     "tybotRoute/routes": {
-      "files": 5,
-      "lines": 95.71,
-      "branches": 90.91,
+      "files": 6,
+      "lines": 96.28,
+      "branches": 91.75,
       "functions": 100,
-      "floorLines": 94.7
+      "floorLines": 95.2
     },
     "tybotRoute/services": {
       "files": 23,
@@ -239,7 +239,7 @@
     "tybotRoute/utils": {
       "files": 13,
       "lines": 99.35,
-      "branches": 98.37,
+      "branches": 98.39,
       "functions": 98.39,
       "floorLines": 98.3
     },
