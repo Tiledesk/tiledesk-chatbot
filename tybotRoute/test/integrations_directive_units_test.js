@@ -1279,7 +1279,7 @@ describe('Directives directives/integrations, the error and edge paths', functio
     // Correct behaviour, asserted here: the same shape as the directive's own
     // "unexpected resbody" exit - nothing broadcast, the false connector
     // taken, and the callback called.
-    it.skip('an action with no payload reports the failure instead of stalling', async () => {
+    it('an action with no payload reports the failure instead of stalling', async () => {
       const mock = await startMock({});
       try {
         const { dir } = build(DirSendWhatsapp);

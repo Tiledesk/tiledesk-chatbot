@@ -57,6 +57,24 @@ class DirSendWhatsapp extends BaseDirective {
     // Declarations
     let payload = action.payload;
 
+    // A Send Whatsapp block saved before its template was picked carries no
+    // payload at all. Reading `payload.receiver_list` off it threw a TypeError
+    // out of this async go(), and execute() neither awaits nor catches the
+    // promise: the rejection was unhandled, the callback never fired and the
+    // conversation stalled there. Take the same exit as the "unexpected
+    // resbody" branch below.
+    if (!payload || !Array.isArray(payload.receiver_list) || payload.receiver_list.length === 0) {
+      this.logger.error("[Send Whatsapp] payload has no receiver_list");
+      winston.error("(DirSendWhatsapp) Error: payload is undefined or has no receiver_list");
+      if (falseIntent) {
+        await this._executeCondition(false, trueIntent, null, falseIntent, null);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
     const filler = new Filler();
     
     // receiver_list will be of just one element, so we can pick up only the first element, if exists.
