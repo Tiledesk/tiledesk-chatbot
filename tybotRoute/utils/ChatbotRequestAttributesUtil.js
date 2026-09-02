@@ -265,6 +265,14 @@ class ChatbotRequestAttributesUtil {
 
     static validateRequestId(requestId, projectId) {
         let isValid = false;
+        // An absent (or non-string) id is not a valid one. Going straight to
+        // `.startsWith` threw "Cannot read properties of undefined (reading
+        // 'startsWith')" for a message payload with no request_id, out of the
+        // async route handler that calls this: the caller was never answered
+        // and the worker died. Answering the question asked is the fix.
+        if (typeof requestId !== 'string') {
+            return false;
+        }
         if (requestId.startsWith("support-group-")) {
             const parts = requestId.split("-");
             if (parts.length >= 4) {

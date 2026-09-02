@@ -863,6 +863,19 @@ describe('utils, the error and edge paths', function () {
       assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId("automation-request-P2-abcd", "P1"), false);
     });
 
+    // The function answers "is this a valid request id?", and an absent one is
+    // not valid. It went straight to `requestId.startsWith(...)`, so a message
+    // whose payload carries no request_id -- which POST /ext/:botid hands
+    // through unchecked -- threw "Cannot read properties of undefined (reading
+    // 'startsWith')" out of the async route handler: the caller was never
+    // answered and the worker died.
+    it('validateRequestId refuses a missing or non-string id instead of throwing', function () {
+      assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId(undefined, "P1"), false);
+      assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId(null, "P1"), false);
+      assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId(42, "P1"), false);
+      assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId({}, "P1"), false);
+    });
+
     it('validateRequestId refuses anything with neither prefix', function () {
       assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId("whatever", "P1"), false);
       assert.strictEqual(ChatbotRequestAttributesUtil.validateRequestId("", "P1"), false);
