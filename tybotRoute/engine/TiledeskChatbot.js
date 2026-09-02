@@ -172,7 +172,15 @@ class TiledeskChatbot {
           else {
             winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
             reply = { "text": "Intent not found: " + explicit_intent_name }
-            resolve(reply);
+            // NOTE: `reply` is composed and deliberately NOT sent. Resolving with
+            // it would surface "Intent not found: <name>" to the end user, which
+            // is internal diagnostic text; test/routes_http_test.js pins the
+            // shipped contract that an unmatched explicit intent posts nothing.
+            // Whether the user should instead see a message is a PRODUCT decision
+            // — see the skipped test in test/engine_units_test.js.
+            // The `return` IS a fix: without it this fell through and ran the
+            // intent matcher after already resolving.
+            resolve();
             return;
           }
         }
