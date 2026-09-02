@@ -104,6 +104,48 @@ describe('The message pipeline', function () {
 
   beforeEach(() => { seen = { webhook: [], ext: [] }; });
 
+  // --------------------------------------------------- MessagePipeline itself
+
+  describe('MessagePipeline', function () {
+
+    // nextplug() advances `this.counter` and then logged `this.coounter` -- a
+    // property that does not exist. Every "processing plug: undefined" line in
+    // a production log came from here, so the one trace of where a pipeline
+    // stopped carried no position at all.
+    it('logs the index of the plug it is about to run, not undefined', async function () {
+      const winston = require('../utils/winston');
+      const original = winston.verbose;
+      const lines = [];
+      winston.verbose = function (...args) { lines.push(args[0]); return original.apply(this, args); };
+      try {
+        const pipeline = new MessagePipeline({ text: "x" }, null);
+        pipeline.addPlug({ exec: (p) => p.nextplug() });
+        pipeline.addPlug({ exec: (p) => p.nextplug() });
+        await pipeline.exec();
+      } finally {
+        winston.verbose = original;
+      }
+
+      const positions = lines.filter((l) => typeof l === 'string' && l.startsWith("(MessagePipeline) processing plug: "));
+      assert.deepStrictEqual(positions, [
+        "(MessagePipeline) processing plug: 0",
+        "(MessagePipeline) processing plug: 1",
+        "(MessagePipeline) processing plug: 2"
+      ], 'the counter is reported, and it is the index nextplug just moved to');
+    });
+
+    it('resolves with the message once every plug has run', async function () {
+      const pipeline = new MessagePipeline({ text: "x" }, null);
+      const order = [];
+      pipeline.addPlug({ exec: (p) => { order.push('a'); p.nextplug(); } });
+      pipeline.addPlug({ exec: (p) => { order.push('b'); p.nextplug(); } });
+      const message = await pipeline.exec();
+      assert.deepStrictEqual(order, ['a', 'b']);
+      assert.deepStrictEqual(message, { text: "x" });
+    });
+
+  });
+
   // ------------------------------------------------------------ ExtApi
 
   describe('ExtApi', function () {

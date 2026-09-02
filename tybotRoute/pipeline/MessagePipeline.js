@@ -76,7 +76,7 @@ exec(completionCallback) {
 
   nextplug() {
     this.counter += 1;
-    winston.verbose("(MessagePipeline) processing plug: " + this.coounter);
+    winston.verbose("(MessagePipeline) processing plug: " + this.counter);
     if (this.counter < this.plugs.length) {
       winston.verbose("(MessagePipeline) Still plugs...")
       let nextp = this.plugs[this.counter];
