@@ -12,7 +12,7 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 
-const SUITES = ['run.js', 'control-api.js'];
+const SUITES = ['run.js', 'control-api.js', 'ai-and-vendors.js'];
 
 let failed = 0;
 for (const suite of SUITES) {

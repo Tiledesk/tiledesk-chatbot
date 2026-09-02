@@ -93,6 +93,33 @@ services:
       CACHE_REDIS_HOST: "redis"
       CACHE_REDIS_PORT: "6379"
       LOG_LEVEL: "info"
+      # The LLM server and the vendor APIs, all served by the same mock under
+      # DISTINCT PATH PREFIXES -- "/qa" is both KB_ENDPOINT's route and
+      # KB_ENDPOINT_QA's and they answer different shapes, so they cannot share
+      # a base url. The prefixes are hard-coded in the mock's route table
+      # (integration/mock-tiledesk/server.js, "AI / LLM" section); change one
+      # here and you must change it there.
+      KB_ENDPOINT: "http://mock-tiledesk:3001/llm/kb"
+      KB_ENDPOINT_QA: "http://mock-tiledesk:3001/llm/qa"
+      KB_ENDPOINT_QA_GPU: "http://mock-tiledesk:3001/llm/gpu"
+      OPENAI_ENDPOINT: "http://mock-tiledesk:3001/llm/openai/v1"
+      BREVO_ENDPOINT: "http://mock-tiledesk:3001/vendor/brevo/v3"
+      CUSTOMERIO_ENDPOINT: "http://mock-tiledesk:3001/vendor/customerio/v1"
+      # The trailing slash is load bearing: HubspotService appends
+      # "objects/contacts/batch/create" with no separator of its own.
+      HUBSPOT_ENDPOINT: "http://mock-tiledesk:3001/vendor/hubspot/v3/"
+      QAPLA_ENDPOINT: "http://mock-tiledesk:3001/vendor/qapla"
+      # MAKE_ENDPOINT is a test hook by design: when it is set, DirMake IGNORES
+      # the bot author's webhook url entirely. It must never be set in
+      # production, which is precisely why it exists.
+      MAKE_ENDPOINT: "http://mock-tiledesk:3001/vendor/make"
+      WHATSAPP_ENDPOINT: "http://mock-tiledesk:3001/vendor/whatsapp"
+      # The shared/public LLM key. Its PRESENCE is what makes
+      # LLMKeyService.resolveOpenAIKey report `publicKey: true` when a project
+      # has neither an "openai" integration nor a kbsettings gptkey -- which is
+      # the only path on which the token quota is checked at all. The quota
+      # journey depends on it.
+      GPTKEY: "integration-public-gptkey"
     ports:
       - "13000:3000"
     depends_on:

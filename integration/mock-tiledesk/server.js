@@ -1,6 +1,7 @@
 'use strict';
 
-// A stand-in for the Tiledesk platform API, for docker-compose.integration.yml.
+// A stand-in for the Tiledesk platform API -- and, since stage 2, for the LLM
+// server and the six vendor APIs as well -- for docker-compose.integration.yml.
 //
 // The connector talks to the platform for everything the visitor actually
 // sees: a reply is a POST to `/:projectId/requests/:requestId/messages`. So
@@ -101,6 +102,72 @@ function freshState() {
     bots: {},
     // the body POST /:projectId/llm/transcription answers with, when seeded
     transcription: null,
+
+    // ------------------------------------------------------------------- AI
+    //
+    // What each LLM route answers with, and what it was asked. EVERY default
+    // below is copied from the stub the unit suite already runs these
+    // directives against -- the file is named on each field -- so a journey
+    // that passes here passes for the same reason the unit test does.
+    // `POST /__seed {"llm": {...}}` replaces any of them per test.
+    llm: {
+      // POST {KB_ENDPOINT}/qa -- DirAskGPT (v1).
+      // tybotRoute/test/conversation-askgpt_test.js:93
+      qa: {
+        answer: 'this is mock gpt reply',
+        success: true,
+        source_url: 'http://test'
+      },
+      // POST {KB_ENDPOINT_QA}/ask (and /thinking) -- DirAiPrompt, DirAiCondition.
+      // tybotRoute/test/conversation-ai_prompt_test.js:351 and
+      // tybotRoute/test/ai_directive_units_test.js:229 for prompt_token_info.
+      ask: {
+        answer: 'this is the answer',
+        chat_history_dict: {}
+      },
+      // POST {KB_ENDPOINT_QA | KB_ENDPOINT_QA_GPU}/qa -- DirAskGPTV2.
+      // tybotRoute/test/conversation-askgptv2_test.js:106 (+ :1146 for citations).
+      namespaceQa: {
+        answer: 'this is mock kb reply',
+        success: true,
+        id: '123456789',
+        ids: ['9876543210', '0123456789'],
+        source: 'http://gethelp.test.com/article',
+        sources: ['TextArticle', 'http://gethelp.test.com/article'],
+        prompt_token_size: 762,
+        content_chunks: ['this is the chunk 1', 'this is the chunk 2']
+      },
+      // POST {OPENAI_ENDPOINT}/chat/completions -- DirGptTask.
+      // tybotRoute/test/conversation-gpt_task_test.js:94
+      completion: {
+        id: 'chatcmpl-7ydspsF20mgTsl4g9yTK8LNbDDYAp',
+        object: 'chat.completion',
+        created: 1694687347,
+        model: 'gpt-3.5-turbo-0613',
+        choices: [
+          { index: 0, message: { role: 'assistant', content: 'this is the answer' }, finish_reason: 'stop' }
+        ],
+        usage: { prompt_tokens: 30, completion_tokens: 48, total_tokens: 78 }
+      },
+      // what each route was asked, oldest first
+      asked: { qa: [], ask: [], namespaceQa: [], completion: [] }
+    },
+
+    // -------------------------------------------------------------- vendors
+    //
+    // The six external systems. Each holds what the mock RECEIVED (so a test
+    // can assert the contact was really created) and, for Qapla, what it is to
+    // answer with.
+    vendors: {
+      brevo: { contacts: [], nextId: 6 },      // nextId: the unit stub answers { id: 6 }
+      customerio: { submissions: [] },
+      hubspot: { contacts: [] },
+      // trackingNumber -> { status, result, error }; seed with
+      // `{"shipments": {"AB123": {"status": "IN TRANSIT"}}}`
+      qapla: { shipments: {}, lookups: [] },
+      make: { triggers: [] },
+      whatsapp: { broadcasts: [] }
+    },
     // anything the mock could not model faithfully, so a test cannot pass for
     // the wrong reason without noticing
     warnings: [],
@@ -138,6 +205,32 @@ function json(res, status, payload) {
     'Content-Length': Buffer.byteLength(body)
   });
   res.end(body);
+}
+
+/**
+ * A response that is NOT json. Two vendors genuinely answer this way and the
+ * callers depend on it:
+ *
+ *   * Customer.io answers a submit with 204 and NO body at all, which is why
+ *     CustomerioService passes `fallbackToRequestData` (utils/http then hands
+ *     the REQUEST body to the callback). Answering `{}` here would hide that.
+ *   * Make answers plain text ("Accepted" in
+ *     tybotRoute/test/conversation-make_test.js:99) and MakeService does not
+ *     check the status or parse anything.
+ *
+ * A handler asks for one by returning `{ status, text }` (text may be null for
+ * a bodiless response).
+ */
+function raw(res, status, text, contentType) {
+  if (text === null || text === undefined) {
+    res.writeHead(status);
+    return res.end();
+  }
+  res.writeHead(status, {
+    'Content-Type': contentType || 'text/plain',
+    'Content-Length': Buffer.byteLength(text)
+  });
+  res.end(text);
 }
 
 function readBody(req) {
@@ -848,6 +941,261 @@ const ROUTES = [
       state.lastTranscriptionRequest = body;
       return state.transcription || { success: true };
     }
+  },
+
+  // ==========================================================================
+  // AI / LLM
+  // ==========================================================================
+  //
+  // These are NOT Tiledesk platform routes: they are the LLM and vendor
+  // services, whose base urls the connector reads from their own environment
+  // variables. docker-compose.integration.yml points every one of them at this
+  // process under a DISTINCT PATH PREFIX, because several of them would
+  // otherwise collide -- "/qa" is both KB_ENDPOINT's route and
+  // KB_ENDPOINT_QA's, and they answer different shapes:
+  //
+  //   KB_ENDPOINT         = http://mock-tiledesk:3001/llm/kb
+  //   KB_ENDPOINT_QA      = http://mock-tiledesk:3001/llm/qa
+  //   KB_ENDPOINT_QA_GPU  = http://mock-tiledesk:3001/llm/gpu
+  //   OPENAI_ENDPOINT     = http://mock-tiledesk:3001/llm/openai/v1
+  //   BREVO_ENDPOINT      = http://mock-tiledesk:3001/vendor/brevo/v3
+  //   CUSTOMERIO_ENDPOINT = http://mock-tiledesk:3001/vendor/customerio/v1
+  //   HUBSPOT_ENDPOINT    = http://mock-tiledesk:3001/vendor/hubspot/v3/   <- trailing slash
+  //   QAPLA_ENDPOINT      = http://mock-tiledesk:3001/vendor/qapla
+  //   MAKE_ENDPOINT       = http://mock-tiledesk:3001/vendor/make
+  //   WHATSAPP_ENDPOINT   = http://mock-tiledesk:3001/vendor/whatsapp
+  //
+  // Change a prefix there and you must change it here; nothing derives one
+  // from the other, and a mismatch shows up as a `kind: "other"` recording.
+  //
+  // NOT IMPLEMENTED, and it cannot be: the OpenAI ASSISTANTS routes that
+  // DirAssistant uses (POST /threads, /threads/:id/messages, /threads/:id/runs,
+  // GET /threads/:id/runs/:runId, GET /threads/:id/messages). Every one of them
+  // is built from `const OPENAI_API_BASE = "https://api.openai.com/v1"`, a
+  // hardcoded literal in services/OpenAIAssistantsService.js:34 with NO
+  // environment variable and no settings key behind it. No value in this
+  // compose file can redirect that service at this mock, so implementing the
+  // routes here would produce an endpoint nothing can ever reach.
+
+  // Caller: DirAskGPT -> LlmAskService.askLegacyKb (POST {KB_ENDPOINT}/qa, no
+  // headers, the key travels in the body as `gptkey`). The directive reads
+  // `resbody.answer`, `resbody.source_url` and branches on
+  // `resbody.success === true`.
+  // The three 400s reproduce the stub in
+  // tybotRoute/test/conversation-askgpt_test.js:93 -- a request missing one of
+  // the mandatory fields must NOT be answered as a success, or a broken caller
+  // would still make a journey pass.
+  {
+    method: 'POST', path: '/llm/kb/qa', kind: 'llm-qa',
+    handler: ({ body }) => {
+      state.llm.asked.qa.push({ at: new Date().toISOString(), body: body });
+      if (!body || !body.question) return { status: 400, body: { error: 'question field is mandatory' } };
+      if (!body.kbid) return { status: 400, body: { error: 'kbid field is mandatory' } };
+      if (!body.gptkey) return { status: 400, body: { error: 'gptkey field is mandatory' } };
+      return state.llm.qa;
+    }
+  },
+
+  // Callers: DirAiPrompt and DirAiCondition -> LlmAskService.ask
+  // (POST {KB_ENDPOINT_QA}/ask). Both read `resbody.answer`; DirAiPrompt also
+  // reads `resbody.reasoning_content` and `resbody.prompt_token_info
+  // .total_tokens`, which are absent from the default body and only appear
+  // when seeded -- exactly as they are absent from the unit stub unless that
+  // test needs them.
+  {
+    method: 'POST', path: '/llm/qa/ask', kind: 'llm-ask',
+    handler: ({ body }) => {
+      state.llm.asked.ask.push({ at: new Date().toISOString(), path: '/ask', body: body });
+      return state.llm.ask;
+    }
+  },
+
+  // The reasoning twin: DirAiPrompt posts to "/thinking" instead of "/ask"
+  // when the action asks for reasoning. Same service method, same response
+  // shape (`answer` plus `reasoning_content`), so the same body.
+  {
+    method: 'POST', path: '/llm/qa/thinking', kind: 'llm-ask',
+    handler: ({ body }) => {
+      state.llm.asked.ask.push({ at: new Date().toISOString(), path: '/thinking', body: body });
+      return state.llm.ask;
+    }
+  },
+
+  // Caller: DirAskGPTV2 -> LlmAskService.askNamespace
+  // (POST {KB_ENDPOINT_QA}/qa with "Authorization: JWT <token>"). It branches on
+  // `resbody.success === true` and reads `answer`, `source`, `content_chunks`,
+  // `chunks` (chunks_only), `citations` (citations) and `prompt_token_size`.
+  {
+    method: 'POST', path: '/llm/qa/qa', kind: 'llm-namespace-qa',
+    handler: ({ body }) => {
+      state.llm.asked.namespaceQa.push({ at: new Date().toISOString(), endpoint: 'cpu', body: body });
+      if (!body || !body.question) return { status: 400, body: { error: 'question field is mandatory' } };
+      if (!body.model) return { status: 400, body: { error: 'model field is mandatory' } };
+      return state.llm.namespaceQa;
+    }
+  },
+
+  // The same call, sent to KB_ENDPOINT_QA_GPU instead, which endpoints
+  // .qaEndpoint(hybrid) selects when the namespace's `hybrid === true`. Same
+  // body; `endpoint: "gpu"` on the recording is how a test tells them apart.
+  {
+    method: 'POST', path: '/llm/gpu/qa', kind: 'llm-namespace-qa',
+    handler: ({ body }) => {
+      state.llm.asked.namespaceQa.push({ at: new Date().toISOString(), endpoint: 'gpu', body: body });
+      if (!body || !body.question) return { status: 400, body: { error: 'question field is mandatory' } };
+      if (!body.model) return { status: 400, body: { error: 'model field is mandatory' } };
+      return state.llm.namespaceQa;
+    }
+  },
+
+  // Caller: DirGptTask -> OpenAIService.chatCompletions
+  // (POST {OPENAI_ENDPOINT}/chat/completions, "Authorization: Bearer <key>").
+  // It reads `resbody.choices[0].message.content` and, on the public key,
+  // `resbody.usage.total_tokens`. The 400s are the stub's, at
+  // tybotRoute/test/conversation-gpt_task_test.js:94.
+  {
+    method: 'POST', path: '/llm/openai/v1/chat/completions', kind: 'openai-completion',
+    handler: ({ body }) => {
+      state.llm.asked.completion.push({ at: new Date().toISOString(), body: body });
+      if (!body || !body.model) return { status: 400, body: { error: 'you must provide a model parameter' } };
+      if (!body.messages) return { status: 400, body: { error: "'messages' is a required property" } };
+      if (body.messages.length === 0) return { status: 400, body: { error: "'[] is too short - 'messages'" } };
+      return state.llm.completion;
+    }
+  },
+
+  // ==========================================================================
+  // VENDORS
+  // ==========================================================================
+
+  // Caller: BrevoService.createContact -> DirBrevo. ACCEPTED STATUS 200 OR 201
+  // (the service's own ACCEPTED_STATUS_CODES); 201 is what Brevo answers a
+  // create with, and what the stub in
+  // tybotRoute/test/conversation-brevo_test.js:111 sends. DirBrevo does not
+  // read a single field out of the body -- it JSON.stringifies the whole thing
+  // into assignResultTo -- so `{ id }` is the shape, not a guess at more.
+  {
+    method: 'POST', path: '/vendor/brevo/v3/contacts', kind: 'brevo',
+    handler: ({ body }) => {
+      const id = state.vendors.brevo.nextId++;
+      state.vendors.brevo.contacts.push({ at: new Date().toISOString(), id: id, contact: body });
+      return { status: 201, body: { id: id } };
+    }
+  },
+
+  // Caller: CustomerioService.submitForm -> DirCustomerio. ACCEPTED STATUS 200
+  // OR 204, and the real service answers 204 with an EMPTY body -- which is the
+  // whole reason the service passes `fallbackToRequestData`. Answering with a
+  // json body here would leave that path untested, so this route answers
+  // exactly as tybotRoute/test/conversation-customerio_test.js:113 does:
+  // `res.sendStatus(204)`, no body.
+  {
+    method: 'POST', path: '/vendor/customerio/v1/forms/:formId/submit', kind: 'customerio',
+    handler: ({ params, body }) => {
+      state.vendors.customerio.submissions.push({
+        at: new Date().toISOString(), formId: params.formId, data: body && body.data
+      });
+      return { status: 204, text: null };
+    }
+  },
+
+  // Caller: HubspotService.batchCreateContacts -> DirHubspot. Note the path:
+  // the base url carries the trailing slash and the service appends
+  // "objects/contacts/batch/create" with no separator. ACCEPTED STATUS 200 OR
+  // 201. DirHubspot assigns the WHOLE body to assignResultTo and reads no
+  // field, so the envelope is reproduced from the stub at
+  // tybotRoute/test/conversation-hubspot_test.js:116, with the results built
+  // from the `inputs` actually sent.
+  {
+    method: 'POST', path: '/vendor/hubspot/v3/objects/contacts/batch/create', kind: 'hubspot',
+    handler: ({ body }) => {
+      const startedAt = new Date().toISOString();
+      const inputs = (body && Array.isArray(body.inputs)) ? body.inputs : [];
+      const results = inputs.map((input) => {
+        const record = {
+          id: String(1000 + state.vendors.hubspot.contacts.length + 1),
+          properties: Object.assign({}, input && input.properties),
+          createdAt: startedAt,
+          updatedAt: startedAt,
+          archived: false
+        };
+        state.vendors.hubspot.contacts.push(record);
+        return record;
+      });
+      return {
+        status: 201,
+        body: {
+          status: 'COMPLETE',
+          results: results,
+          startedAt: startedAt,
+          completedAt: new Date().toISOString()
+        }
+      };
+    }
+  },
+
+  // Caller: QaplaService.getShipment -> DirQapla. The credential is a QUERY
+  // parameter (`apiKey`), not a header -- that is Qapla's api. DirQapla digs
+  // `resbody.getShipment.shipments[0].status.qaplaStatus.status`,
+  // `.getShipment.result` and `.getShipment.error` out of the body, so those
+  // are the only fields modelled; the envelope is the stub's, at
+  // tybotRoute/test/conversation-qapla_test.js:116.
+  // Seed with `{"shipments": {"<trackingNumber>": {"status": "IN TRANSIT"}}}`.
+  // NOT GROUNDED: what the real Qapla answers for a tracking number it does not
+  // know. Nothing in this repository shows that response, so rather than invent
+  // an error code the mock returns the same envelope with an empty `shipments`
+  // array (which leaves DirQapla's status at its `null` default) and records a
+  // warning, so a test cannot read meaning into it by accident.
+  {
+    method: 'GET', path: '/vendor/qapla/getShipment', kind: 'qapla',
+    handler: ({ query }) => {
+      const trackingNumber = query.get('trackingNumber');
+      state.vendors.qapla.lookups.push({
+        at: new Date().toISOString(), trackingNumber: trackingNumber, apiKey: query.get('apiKey')
+      });
+      const shipment = trackingNumber ? state.vendors.qapla.shipments[trackingNumber] : null;
+      if (!shipment) {
+        warn(`qapla: no shipment seeded for trackingNumber "${trackingNumber}"; `
+          + 'answering an empty shipments array -- the real "not found" shape is not grounded');
+        return { getShipment: { result: null, error: null, shipments: [] } };
+      }
+      return {
+        getShipment: {
+          result: shipment.result !== undefined ? shipment.result : 'OK',
+          error: shipment.error !== undefined ? shipment.error : null,
+          shipments: [
+            { status: { qaplaStatus: { status: shipment.status } } }
+          ]
+        }
+      };
+    }
+  },
+
+  // Caller: MakeService.trigger -> DirMake. MakeService checks NO status and
+  // parses nothing -- it hands the whole axios response back and DirMake reads
+  // `res.status` off it -- so the body is deliberately the plain string the
+  // stub sends (tybotRoute/test/conversation-make_test.js:99), not json. A json
+  // body here would make this the one place in the suite where Make looks like
+  // every other vendor, which is exactly the thing MakeService documents it is
+  // not.
+  {
+    method: 'POST', path: '/vendor/make/make', kind: 'make',
+    handler: ({ body }) => {
+      state.vendors.make.triggers.push({ at: new Date().toISOString(), body: body });
+      return { status: 200, text: 'Accepted' };
+    }
+  },
+
+  // Callers: WhatsappService.broadcast -> DirSendWhatsapp (which branches on
+  // `resbody.success === true`) and DirWhatsappByAttribute (which forwards the
+  // whole body). Shape and message text from the stub at
+  // tybotRoute/test/conversation-send_whatsapp_test.js:101.
+  {
+    method: 'POST', path: '/vendor/whatsapp/tiledesk/broadcast', kind: 'whatsapp',
+    handler: ({ body }) => {
+      state.vendors.whatsapp.broadcasts.push({ at: new Date().toISOString(), payload: body });
+      return { success: true, message: 'Job started. Send messages in queue.' };
+    }
   }
 ];
 
@@ -925,6 +1273,21 @@ function seed(payload) {
         : newRow(tableId, r, null));
     }
     applied.push('tables');
+  }
+
+  if (payload.llm) {
+    // Per response, REPLACED not merged: a test that seeds `{"qa": {"answer":
+    // "x"}}` means "answer with exactly this", so a leftover `success: true`
+    // from the default must not survive and silently keep the true branch.
+    for (const key of ['qa', 'ask', 'namespaceQa', 'completion']) {
+      if (payload.llm[key]) state.llm[key] = payload.llm[key];
+    }
+    applied.push('llm');
+  }
+
+  if (payload.shipments) {
+    Object.assign(state.vendors.qapla.shipments, payload.shipments);
+    applied.push('shipments');
   }
 
   if (payload.options) { Object.assign(state.options, payload.options); applied.push('options'); }
@@ -1048,7 +1411,14 @@ const server = http.createServer(async (req, res) => {
       method, path,
       pattern: route.path,
       projectId: params.projectId || null,
-      requestId: params.requestId || null,
+      // The LLM and vendor routes carry no request id in their PATH, but the
+      // connector puts one in the body -- `request_id` (DirAskGPT, DirAskGPTV2)
+      // or `transaction_id` (DirSendWhatsapp) -- so `GET /__recorded?requestId=`
+      // can filter them too, which is how the journeys tie a vendor call to the
+      // conversation that made it.
+      requestId: params.requestId
+        || (body && (body.request_id || body.transaction_id))
+        || null,
       query: Object.fromEntries(url.searchParams.entries()),
       authorization: req.headers['authorization'] || null,
       failure: mode || undefined,
@@ -1070,6 +1440,12 @@ const server = http.createServer(async (req, res) => {
     if (result && typeof result === 'object' && !Array.isArray(result)
         && typeof result.status === 'number' && 'body' in result) {
       return json(res, result.status, result.body);
+    }
+    // `{ status, text }` is the non-json answer: Customer.io's bodiless 204 and
+    // Make's plain-text 200. See raw().
+    if (result && typeof result === 'object' && !Array.isArray(result)
+        && typeof result.status === 'number' && 'text' in result) {
+      return raw(res, result.status, result.text);
     }
     return json(res, 200, result);
   }

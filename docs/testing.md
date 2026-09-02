@@ -330,9 +330,9 @@ It exits 0 when every journey passes and non-zero the moment one fails.
 | --- | --- |
 | `mongo` | `mongo:6`. Holds the bot and its intents. Seeded by the test container through the connector's own mongoose schemas, so the documents are shaped exactly as production's are. |
 | `redis` | `redis:7-alpine`. Conversation state — the attribute one HTTP request sets and the next one reads back. |
-| `mock-tiledesk` | The Tiledesk platform API, stood in for by ~150 lines of dependency-free `node:http` (`integration/mock-tiledesk/server.js`). It answers the calls the bot makes, **records every one of them**, and serves the recordings back on `GET /__recorded?requestId=…`. `POST /__reset` clears them. It adds nothing to the root `package.json`. |
+| `mock-tiledesk` | Every HTTP service the connector talks to, stood in for by one dependency-free `node:http` file (`integration/mock-tiledesk/server.js`): the Tiledesk platform API, the LLM server (`KB_ENDPOINT`, `KB_ENDPOINT_QA`, `KB_ENDPOINT_QA_GPU`, `OPENAI_ENDPOINT`) and the six vendor APIs (Brevo, Customer.io, Hubspot, Qapla, Make, Whatsapp), each under its own path prefix. It answers the calls the bot makes, **records every one of them** (`GET /__recorded?requestId=…&kind=…`), **keeps the state the platform would keep** (`GET /__state`, `POST /__seed`) and **can be armed to fail** (`POST /__fail`). It adds nothing to the root `package.json`. |
 | `tilebot` | The application, `build: .`. Wired to the other three **by service name**. |
-| `tests` | The runner (`integration/tests/run.js`). Built from the same Dockerfile purely for `axios`, `mongoose` and the faq schemas; the test code is mounted, not baked in. Seeds mongo, POSTs to `tilebot`, asserts on what `mock-tiledesk` recorded. |
+| `tests` | The runner (`integration/tests/all.js`, which spawns every suite listed in it — one process each, so one crash cannot take the others down). Built from the same Dockerfile purely for `axios`, `mongoose` and the faq schemas; the test code is mounted, not baked in. Seeds mongo, POSTs to `tilebot`, asserts on what `mock-tiledesk` recorded and on the state it kept. **A suite that is not in that list never runs.** |
 
 Every `depends_on` uses `condition: service_healthy`, and all four long-lived
 services have a healthcheck — start-up order is deterministic and there is not a
@@ -346,8 +346,10 @@ reach each other over the compose network.
 
 ### What it covers
 
-Five journeys, each there to prove one piece of real wiring — not to re-test
-directive semantics, which the unit suite owns:
+Three suites. None of them re-tests directive semantics — the unit suite owns
+that; each journey exists to prove one piece of real wiring.
+
+**`run.js` — the shipped contract (7 tests).** Five journeys:
 
 1. the container boots and `GET /` answers `Hello Tilebot!`;
 2. a bot seeded in mongo answers an explicit intent, and the stored `answer` text
@@ -360,6 +362,47 @@ directive semantics, which the unit suite owns:
 5. an unknown bot id: no reply is posted **and the container is still serving
    afterwards**. That second half is the assertion that matters — this path used to
    crash the process.
+
+**`control-api.js` — the stateful mock and its control API (11 tests).** That a
+`\_tdclose` really closes the request *in the mock's state* and not merely that a
+call was made; that `POST /__fail` can put `/close` into a 500, a 401, an
+unparseable body or a hard transport drop, and that the connector survives each
+one with the request left open; that `__reset` clears recordings, state **and**
+armed failures; that `__seed` preloads a request the platform lookup then serves.
+
+**`ai-and-vendors.js` — the LLM and the vendors (12 tests).** These intents are
+written with an `actions` list, the shape the flow designer produces for every AI
+and integration block, and are inserted through the **native driver**:
+`tybotRoute/models/faq.js` declares no `actions` path, so the mongoose model would
+strip it, while the connector reads intents with `.lean()` and sees the raw
+document. Five journeys:
+
+1. an AI-backed intent answers and the LLM's `answer` reaches the reply the visitor
+   sees — through `KB_ENDPOINT` (DirAskGPT) and through `OPENAI_ENDPOINT`
+   (DirGptTask, `choices[0].message.content`);
+2. the LLM armed to **500**: the flow takes its **false connector** rather than
+   stalling, the container stays healthy, and the next question is answered again —
+   which is what proves the failure was the injected one;
+3. a vendor call succeeds (Qapla, `getShipment.shipments[0].status.qaplaStatus
+   .status` reaching the reply) and the same vendor armed to **`drop`** — a socket
+   destroyed with no status line, the shape axios reports with no `error.response` —
+   after which the flow still moves and the worker still serves;
+4. an **exhausted token quota** (`isAvailable:false`): with no project key the
+   connector falls back to the shared `GPTKEY`, checks the quota, and **never calls
+   the LLM at all**; restoring the quota answers the very same intent;
+5. every remaining endpoint reached once by the real image — Brevo, Hubspot,
+   Customer.io (each on **its own accepted status**: 201, 201, and a bodiless 204),
+   Make (redirected to `MAKE_ENDPOINT`, answering plain text with no status check at
+   all), and both `KB_ENDPOINT_QA` routes, `/qa` and `/ask`.
+
+Every response shape the mock serves is **copied from the stub the unit suite
+already runs that same directive against**, and the file names the caller above each
+route. Where a shape could not be grounded in this repository the route says so
+rather than guessing — a plausible-looking wrong body makes a test pass for the
+wrong reason. One endpoint is deliberately **not** implemented: the OpenAI
+Assistants routes behind `DirAssistant` are built from a hardcoded
+`https://api.openai.com/v1` literal in `services/OpenAIAssistantsService.js` with no
+environment variable behind it, so no compose value can point them at the mock.
 
 `--exit-code-from tests` is what makes the job red: the runner exits 1 on any failed
 assertion and compose propagates it.
