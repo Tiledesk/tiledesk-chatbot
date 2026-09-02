@@ -534,59 +534,16 @@ describe('a conversation with a bot that lives only in MongoDB', function () {
 
   describe('a message for a bot id mongo does not know', function () {
 
-    // BUG (pre-existing, NOT fixed here).
-    //
-    //   tybotRoute/engine/IntentsMachineFactory.js:26-31  getBackupMachine()
-    //
-    //     static getBackupMachine(bot, botId, projectId) {
-    //       ...
-    //       machine = new MongodbIntentsMachine({projectId: projectId, language: bot.language});
-    //
-    // Its sibling getMachine() guards with `else if (bot) { ... } else {
-    // winston.error(...) }` and returns undefined for a null bot;
-    // getBackupMachine has no guard at all. routes/messageRoutes.js calls both,
-    // one line apart (lines 100-101), on the SAME `bot` -- so when
-    // MongodbBotsDataSource.getBotByIdCache() legitimately returns null for an
-    // id that is not in the faq_kbs collection, getMachine() logs and copes and
-    // getBackupMachine() throws
-    //
-    //     TypeError: Cannot read properties of null (reading 'language')
-    //
-    // inside the express async handler. Express 4 does not forward a rejected
-    // handler promise, so the message is dropped with no operator-visible
-    // error: the connector answers 200 (that happens before the lookup) and
-    // then goes quiet. The test below pins that ACTUAL behaviour, crash
-    // included, so the defect cannot change shape unnoticed; the skipped test
-    // after it states what SHOULD happen.
-    it('crashes the handler with a TypeError, and drops the message', async function () {
-      this.timeout(25000);
-      const requestId = newRequestId();
-      const unknownBotId = new mongoose.Types.ObjectId().toString();
+    // Journey 6. This path was broken until the e2e suite reached it: a lookup
+    // that SUCCEEDS but finds nothing resolves null, so the error catch above it
+    // did not apply. IntentsMachineFactory.getBackupMachine then dereferenced
+    // `bot.language` with no guard (its sibling getMachine guards), and past that
+    // `new TiledeskChatbot({... bot: null ...})` throws "config.bot is mandatory".
+    // Both rejected out of the async handler AFTER the 200 was sent, so the
+    // message vanished silently. routes/messageRoutes.js now returns early.
 
-      const res = await axios.post(`${BASE}/ext/${unknownBotId}`,
-        envelope("/welcome", requestId), HTTP);
-      assert.strictEqual(res.status, 200,
-        'the route acknowledges the webhook before it ever looks the bot up');
-
-      const crash = await waitFor(
-        () => rejections.find((r) => r instanceof TypeError), 8000);
-      assert.ok(crash, 'the handler rejects rather than handling the unknown bot');
-      assert.match(crash.message, /Cannot read properties of null \(reading 'language'\)/);
-      assert.match(crash.stack, /IntentsMachineFactory/,
-        'and it comes from IntentsMachineFactory.getBackupMachine, not from anywhere else');
-
-      assert.deepStrictEqual(seen.messages.filter((m) => m.requestId === requestId), [],
-        'nothing is posted for the unknown bot');
-
-      const health = await axios.get(`${BASE}/`, HTTP);
-      assert.strictEqual(health.status, 200, 'the connector itself stays up');
-    });
-
-    // The correct behaviour: getBackupMachine should guard `bot` exactly as
-    // getMachine does, so an unknown bot id is a handled miss (log, no reply,
-    // no rejection) rather than a TypeError thrown through express. Skipped
-    // because the fix is a source change and this task is test-only.
-    it.skip('should handle the unknown bot without throwing', async function () {
+    // An unknown bot id is a handled miss: log, no reply, no rejection.
+    it('should handle the unknown bot without throwing', async function () {
       this.timeout(25000);
       const requestId = newRequestId();
       const unknownBotId = new mongoose.Types.ObjectId().toString();

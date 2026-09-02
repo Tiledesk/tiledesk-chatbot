@@ -61,8 +61,8 @@
     "statements": 98.15,
     "functions": 97.9,
     "branches": 95.32,
-    "linesCovered": 19704,
-    "linesTotal": 20075,
+    "linesCovered": 19717,
+    "linesTotal": 20088,
     "functionsCovered": 701,
     "functionsTotal": 716,
     "branchesCovered": 3931,
@@ -85,7 +85,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 95.58,
-      "branches": 95.35,
+      "branches": 95.45,
       "functions": 100,
       "floorLines": 94.5
     },
@@ -141,7 +141,7 @@
     "tybotRoute/directives/conversation": {
       "files": 9,
       "lines": 98.76,
-      "branches": 96.02,
+      "branches": 96.04,
       "functions": 100,
       "floorLines": 97.7
     },
@@ -176,7 +176,7 @@
     "tybotRoute/engine": {
       "files": 10,
       "lines": 97.06,
-      "branches": 96.2,
+      "branches": 96.17,
       "functions": 100,
       "floorLines": 96
     },
@@ -218,16 +218,16 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 99.57,
-      "branches": 92.15,
+      "branches": 92.11,
       "functions": 100,
       "floorLines": 98.5
     },
     "tybotRoute/routes": {
       "files": 5,
-      "lines": 95.63,
-      "branches": 90.85,
+      "lines": 95.71,
+      "branches": 90.91,
       "functions": 100,
-      "floorLines": 94.6
+      "floorLines": 94.7
     },
     "tybotRoute/services": {
       "files": 23,

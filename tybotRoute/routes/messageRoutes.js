@@ -93,7 +93,20 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("(tybotRoute) Error getting the bot " + botId + ": ", err);
     return;
   }
-  
+
+  // A lookup that SUCCEEDS but finds nothing resolves null, so the catch above
+  // does not cover it. Falling through crashed twice over: first
+  // IntentsMachineFactory.getBackupMachine dereferenced `bot.language` with no
+  // guard (its sibling getMachine guards and returns undefined), and even past
+  // that, `new TiledeskChatbot({... bot: null ...})` throws "config.bot is
+  // mandatory". Both rejected out of this async handler after the 200 had
+  // already been sent, so the message vanished with nothing logged.
+  // An unknown bot is a handled miss: there is nothing to answer with.
+  if (!bot) {
+    winston.error("(tybotRoute) Bot not found: " + botId + " on projectId: " + projectId);
+    return;
+  }
+
   let intentsMachine;
   let backupMachine;
   if (!runtimeContext.staticBots) {
