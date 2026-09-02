@@ -657,7 +657,7 @@ describe('The message pipeline', function () {
       //      throw "pipeline is not a function".
       // Correct behaviour: the help-center reply is appended and the pipeline
       // advances to the next plug.
-      it.skip('runs an inline askhelpcenter directive and advances the pipeline', async () => {
+      it('runs an inline askhelpcenter directive and advances the pipeline', async () => {
         const plug = plugFor({});
         const out = await runPlug(plug, {
           text: "hi\n\\_tdaskhelpcenter",

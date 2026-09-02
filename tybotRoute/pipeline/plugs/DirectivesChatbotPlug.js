@@ -272,9 +272,23 @@ class DirectivesChatbotPlug {
       if (directive == null) {
         theend();
       }
-      else if (directive_name === Directives.DEFLECT_TO_HELP_CENTER) {
-        const helpDir = new DirDeflectToHelpCenter({HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT, projectId: projectId});
-        helpDir.execute(directive, pipeline, 3, () => {
+      else if (directive_name === Directives.ASK_HELP_CENTER) {
+        // The context has to carry the token, the request id and the cache:
+        // the directive's constructor builds a TiledeskClient (which rejects a
+        // null token) and go() reads the last user text out of the cache.
+        const helpDir = new DirDeflectToHelpCenter({
+          HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
+          projectId: projectId,
+          token: token,
+          API_ENDPOINT: API_ENDPOINT,
+          supportRequest: supportRequest,
+          reply: this.reply,
+          requestId: supportRequest.request_id,
+          tdcache: this.tdcache
+        });
+        // execute(directive, callback) - the extra arguments made `pipeline`
+        // the callback.
+        helpDir.execute(directive, () => {
           process(nextDirective());
         });
       }
