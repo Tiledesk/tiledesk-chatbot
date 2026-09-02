@@ -571,6 +571,27 @@ describe('Directives directives/integrations, the error and edge paths', functio
       }
     });
 
+    // Same shape as the DirBrevo missing-key defect: without a false connector
+    // the `if (!key)` block fell through and submitted the form anyway, with
+    // `authorization: Basic undefined`.
+    it('no Customer.io integration and no false connector submits nothing at all', async () => {
+      const mock = await startMock({ integrations: {} });
+      try {
+        const { dir, tdcache } = build(DirCustomerio, { vars: { who: "ada" } });
+        const stops = await run(dir, {
+          name: "customerio",
+          action: { formid: "form1", bodyParameters: Object.assign({}, BODY), assignStatusTo: "c_status", assignErrorTo: "c_error" }
+        });
+
+        assert.deepStrictEqual(mock.seen.customerio, [], 'a form must not be submitted without a key');
+        assert.strictEqual(tdcache.attrs().c_status, 422, 'the missing-key status is still recorded');
+        assert.strictEqual(tdcache.attrs().c_error, 'Missing customerio access token');
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
   });
 
   // --------------------------------------------------------------- DirHubspot
@@ -701,6 +722,25 @@ describe('Directives directives/integrations, the error and edge paths', functio
 
         assert.strictEqual(tdcache.attrs().h_error, "hubspot is down");
         assert.deepStrictEqual(dispatched, []);
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    // Same shape as the DirBrevo missing-key defect: without a false connector
+    // the `if (!key)` block fell through and created the contact anyway, with
+    // `authorization: Bearer undefined`.
+    it('no Hubspot integration and no false connector creates nothing at all', async () => {
+      const mock = await startMock({ integrations: {} });
+      try {
+        const { dir } = build(DirHubspot, { vars: { who: "ada" } });
+        const stops = await run(dir, {
+          name: "hubspot",
+          action: { bodyParameters: Object.assign({}, BODY) }
+        });
+
+        assert.deepStrictEqual(mock.seen.hubspot, [], 'a contact must not be created without a key');
         assert.deepStrictEqual(stops, [undefined]);
       } finally {
         await mock.close();

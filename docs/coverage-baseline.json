@@ -60,13 +60,13 @@
     "lines": 98.15,
     "statements": 98.15,
     "functions": 97.9,
-    "branches": 95.31,
-    "linesCovered": 19691,
-    "linesTotal": 20062,
+    "branches": 95.32,
+    "linesCovered": 19704,
+    "linesTotal": 20075,
     "functionsCovered": 701,
     "functionsTotal": 716,
-    "branchesCovered": 3928,
-    "branchesTotal": 4121
+    "branchesCovered": 3931,
+    "branchesTotal": 4124
   },
   "floor": {
     "lines": 97.1,
@@ -161,8 +161,8 @@
     },
     "tybotRoute/directives/integrations": {
       "files": 7,
-      "lines": 98.05,
-      "branches": 98.98,
+      "lines": 98.07,
+      "branches": 98.99,
       "functions": 100,
       "floorLines": 97
     },
@@ -218,7 +218,7 @@
     "tybotRoute/pipeline/plugs": {
       "files": 5,
       "lines": 99.57,
-      "branches": 92.11,
+      "branches": 92.15,
       "functions": 100,
       "floorLines": 98.5
     },

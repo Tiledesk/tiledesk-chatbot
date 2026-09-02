@@ -63,7 +63,7 @@
   "flow_directives_units_test.js": 66,
   "http_clients_units_test.js": 12,
   "if_online_agents_directive_test.js": 2,
-  "integrations_directive_units_test.js": 60,
+  "integrations_directive_units_test.js": 62,
   "intent_form_pre_filled_test.js": 4,
   "intent_form_test.js": 4,
   "json_condition-conversation_test.js": 3,

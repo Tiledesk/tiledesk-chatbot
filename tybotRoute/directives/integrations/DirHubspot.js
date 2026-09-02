@@ -80,6 +80,12 @@ class DirHubspot extends BaseDirective {
         callback(true);
         return;
       }
+      // Without a false connector this fell through and created the contact
+      // anyway with `authorization: Bearer undefined`. A missing integration is
+      // not a reason to call Hubspot: stop here and carry the flow on, the way
+      // every other no-connector exit in this directive does.
+      callback();
+      return;
     }
 
     const filler = new Filler();

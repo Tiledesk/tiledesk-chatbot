@@ -84,6 +84,13 @@ class DirCustomerio extends BaseDirective {
         callback(true);
         return;
       }
+      // Without a false connector this fell through and submitted the form
+      // anyway with `authorization: Basic undefined`. A missing integration is
+      // not a reason to call Customer.io: the status/error attributes are
+      // already assigned above, so stop here and carry the flow on, the way
+      // every other no-connector exit in this directive does.
+      callback();
+      return;
     }
 
     const filler = new Filler();
