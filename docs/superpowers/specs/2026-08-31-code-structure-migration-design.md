@@ -483,6 +483,48 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## An importable full-flow validation bot
+
+Two artifacts, because a flow nobody drives is a demo rather than a test:
+
+- **`examples/full-flow-validation-bot.json`** — importable into the Tiledesk
+  designer. 112 intents, menu-driven: `/start` opens 9 family menus, each branch
+  exercising one directive group and returning to the menu where it can.
+  `examples/README.md` covers import steps, which branches need a real
+  integration key, and which 7 branches **end the conversation**.
+- **`integration/tests/full-flow-validation.js`** — 52 tests that seed **that exact
+  JSON** (one documented substitution: an endpoint placeholder → the mock URL),
+  validate every intent against the shipped `Faq` mongoose model, then drive each
+  branch over HTTP and assert on the message posted, the mock's state, or the
+  attribute in Redis. Terminal branches assert the terminal effect via `/__state`
+  rather than expecting the conversation to continue.
+
+**All 63 dispatch names over all 56 classes appear in the flow** — 62 as
+`_tdActionType` actions and `firetiledeskevent` as a text-form directive.
+**54 of 56 classes are driven and asserted.** The two that are not:
+
+- `gpt_assistant` — `OpenAIAssistantsService` hardcodes `https://api.openai.com/v1`
+  with no env override, so nothing can point it at a mock.
+- `askhelpcenter` — the Help Center client's `allWorkspaces`/`search` response
+  shapes are grounded nowhere in this repo, so mocking them would be guessing.
+
+Both remain in the JSON for manual use against a real environment.
+
+Integration suite total: **4 suites, 82 tests**, exit 0. Nothing under
+`tybotRoute/` was touched to make any of it pass.
+
+### A product finding the flow surfaced
+
+`DirForm` locks the **action** under `action_id`, while the dispatcher skips
+actions whose `_tdActionId` differs. So a `form` block skips its own form on turn 2
+unless both ids match *and* the flow also locks the intent. The validation flow
+works around it and documents the workaround; the underlying behaviour is
+unchanged and is a product decision.
+
+Also worth knowing for anyone extending the flow: interactive branches
+(`form`, `capture_user_reply`) need a short settle delay before the follow-up turn,
+because the reply is posted **before** the lock is written.
+
 ## A full stateful Tiledesk mock
 
 The integration stack originally mocked **one** endpoint. The real
