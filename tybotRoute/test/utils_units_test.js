@@ -628,7 +628,7 @@ describe('utils, the error and edge paths', function () {
     // public API. The names below are the obvious camelCase of the constant,
     // matching lastUserDocumentURL/Name/Type next to them, but nothing in the
     // code or the tests settles it.
-    it.skip('a file message also writes the attachment and inline document urls', async function () {
+    it('a file message also writes the attachment and inline document urls', async function () {
       const chatbot = fakeChatbot();
       await ChatbotRequestAttributesUtil.updateRequestAttributes(chatbot, "T", {
         type: "file", metadata: { src: "http://x/files/download", name: "doc.pdf", type: "application/pdf" }

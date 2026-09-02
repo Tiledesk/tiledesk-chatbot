@@ -40,6 +40,11 @@ class TiledeskChatbotConst {
     static REQ_LAST_USER_IMAGE_HEIGHT = 'lastUserImageHeight';
     static REQ_LAST_USER_IMAGE_TYPE = 'lastUserImageType';
     static REQ_LAST_USER_DOCUMENT_URL = 'lastUserDocumentURL';
+    // Announced as flow attributes in CHANGELOG v0.2.60 but never declared
+    // here, so ChatbotRequestAttributesUtil wrote them under `undefined` keys
+    // and the `add` guard dropped them silently.
+    static REQ_LAST_USER_DOCUMENT_AS_ATTACHMENT_URL = 'lastUserDocumentAsAttachmentURL';
+    static REQ_LAST_USER_DOCUMENT_AS_INLINE_URL = 'lastUserDocumentAsInlineURL';
     static REQ_LAST_USER_DOCUMENT_NAME = 'lastUserDocumentName';
     static REQ_LAST_USER_DOCUMENT_TYPE = 'lastUserDocumentType';
     static REQ_EMAIL_ATTACHMENTS_LINK = 'link';
