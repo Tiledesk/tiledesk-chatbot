@@ -60,13 +60,13 @@
     "lines": 98.15,
     "statements": 98.15,
     "functions": 97.9,
-    "branches": 95.32,
-    "linesCovered": 19717,
-    "linesTotal": 20088,
+    "branches": 95.38,
+    "linesCovered": 19789,
+    "linesTotal": 20160,
     "functionsCovered": 701,
     "functionsTotal": 716,
-    "branchesCovered": 3931,
-    "branchesTotal": 4124
+    "branchesCovered": 3964,
+    "branchesTotal": 4156
   },
   "floor": {
     "lines": 97.1,
@@ -119,22 +119,22 @@
     },
     "tybotRoute/directives/agents": {
       "files": 8,
-      "lines": 99.58,
-      "branches": 97.98,
+      "lines": 99.59,
+      "branches": 98.51,
       "functions": 100,
       "floorLines": 98.5
     },
     "tybotRoute/directives/ai": {
       "files": 7,
-      "lines": 97.14,
-      "branches": 95.34,
+      "lines": 97.16,
+      "branches": 95.38,
       "functions": 100,
       "floorLines": 96.1
     },
     "tybotRoute/directives/bot": {
       "files": 5,
       "lines": 100,
-      "branches": 90.11,
+      "branches": 90.32,
       "functions": 100,
       "floorLines": 99
     },
@@ -147,8 +147,8 @@
     },
     "tybotRoute/directives/data": {
       "files": 10,
-      "lines": 97.97,
-      "branches": 98.02,
+      "lines": 97.98,
+      "branches": 98.04,
       "functions": 100,
       "floorLines": 96.9
     },
@@ -161,8 +161,8 @@
     },
     "tybotRoute/directives/integrations": {
       "files": 7,
-      "lines": 98.07,
-      "branches": 98.99,
+      "lines": 98.09,
+      "branches": 99.08,
       "functions": 100,
       "floorLines": 97
     },
@@ -238,7 +238,7 @@
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 99.34,
+      "lines": 99.35,
       "branches": 98.37,
       "functions": 98.39,
       "floorLines": 98.3
