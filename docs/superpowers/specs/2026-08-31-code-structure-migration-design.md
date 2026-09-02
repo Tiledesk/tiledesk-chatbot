@@ -483,6 +483,67 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## A full stateful Tiledesk mock
+
+The integration stack originally mocked **one** endpoint. The real
+`tiledesk/tiledesk-server` image is amd64-only and will not boot under this
+machine's QEMU backend (ruled out DNS, Mongo version and container networking
+before concluding that), so a complete mock is what makes the integration tests
+meaningful — and it runs anywhere.
+
+Enumerating the endpoints was only possible **because of the earlier service
+extraction**: every outbound URL now lives in `services/`, so the inventory came
+from a grep rather than a guess.
+
+**~36 endpoints implemented**, dependency-free `node:http`, 1,469 lines:
+26 Tiledesk platform routes (requests, leads, tags, events, departments, isopen,
+available agents, integrations, kbsettings, kb, quotas, mcp, five data-table
+routes, transcription), plus the AI routes (`/qa` v1, `/ask`, `/qa` v2 and its GPU
+variant, `/chat/completions`) and six vendor routes.
+
+**Stateful, not record-and-replay.** It keeps requests, participants, tags, leads,
+kb settings and quotas, so tests assert on *outcomes* — "the request is closed",
+"the tag is on the lead" — rather than only on what was sent. A control API
+(`/__fail`, `/__state`, `/__seed`, `/__recorded`, `/__reset`) forces any endpoint
+into 401, 500, a malformed body, or a hard socket drop. That last part matters
+most: every one of the 59 defects lived on an error path.
+
+**30 tests across 3 suites**, all green, with **7 failures genuinely injected**
+during the run (401, 500 ×3, drop ×2, malformed) — so the error paths really
+execute rather than being asserted in theory. Verified both directions: breaking
+one assertion turns the whole stack red (exit 1) and names the failing suite.
+
+### Two things the mock could not paper over
+
+- **`OpenAIAssistantsService` is unmockable as written.** It builds every url from
+  a hardcoded `https://api.openai.com/v1` with no env var or settings key, so no
+  compose value can redirect it. `DirAssistant` therefore cannot be integration
+  tested at all without a source change. Left unimplemented and recorded rather
+  than faked.
+- Response shapes were grounded in the actual caller for every endpoint, and the
+  ones that could not be determined were **left unimplemented and named** — the
+  non-`raw` shape of `/users/availables`, whether `/integration/name/:name` 404s
+  when unconfigured, and Qapla's "not found" body. A plausible-looking wrong shape
+  is worse than a missing endpoint: it makes a test pass for the wrong reason.
+
+The implementing agent also **corrected the brief by reading the code**: several
+routes are `PUT` not `POST`, `/replace` is `PUT` not `PATCH`, and `mcp/native` and
+`rows/list` are `GET`. Worth noting because the brief was mine and it was wrong.
+
+### One wiring bug this exposed
+
+`control-api.js` existed but `docker-compose.integration.yml` only invoked
+`run.js`, so its 11 tests **never executed** — dead weight that reads like
+coverage. `integration/tests/all.js` now spawns every suite in its own process
+and fails the run if any one fails. Any new suite must be added to that list or it
+silently does not run.
+
+### Known fragility
+
+The base-url prefix map lives in two places — the compose environment and the
+mock's route table — with nothing deriving one from the other. A mismatch surfaces
+as a `kind: "other"` recording rather than a hard error. Both files say so.
+
 ## Crash-safety sweep
 
 Goal, in the user's words: "be sure that application does not crash unexpectedly
