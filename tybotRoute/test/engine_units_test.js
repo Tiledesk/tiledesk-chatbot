@@ -205,30 +205,45 @@ describe('engine, the error and edge paths', function () {
       });
     });
 
-    // engine/TiledeskIntentsMachine.js:105 reports a resolved-but-unusable
-    // answer with
+    // engine/TiledeskIntentsMachine.js reports a resolved-but-unusable answer
+    // with
     //
     //   callback(TiledeskClient.getErr({message: "Response status not 200"}, options, res), null, null);
     //
-    // and `TiledeskClient` is not required anywhere in this file, so
-    // evaluating that argument throws "ReferenceError: TiledeskClient is not
-    // defined". What saves it is the `.catch()` chained after the `.then()`:
-    // the throw rejects the then-promise and the catch hands the
-    // ReferenceError to the callback, so the caller IS told the request
-    // failed - just with the wrong reason. (The identical line in
-    // utils/ChatbotParametersClient.js:72 is NOT saved, because its catch
-    // then dereferences error.response; that one is recorded as a defect in
-    // utils_units_test.js.)
+    // and `TiledeskClient` was not required anywhere in this file, so
+    // evaluating that argument threw "ReferenceError: TiledeskClient is not
+    // defined". The `.catch()` chained after the `.then()` turned that into
+    // the callback's error, so the caller was told the request failed - with
+    // the wrong reason, and with none of the request/response detail the
+    // branch exists to carry. This is the same omission already fixed in
+    // utils/ChatbotParametersClient.js and utils/ChatbotIntentUtil.js.
     //
-    // Asserted here so the day someone tightens that catch, the missing
-    // identifier surfaces as a failure rather than as a silent stall.
-    it('a 200 with no body still reaches the callback, though with the wrong reason', function (done) {
+    // Correct behaviour, asserted here: the caller gets the bundled
+    // status/request/response error, not a ReferenceError about a missing
+    // identifier.
+    it('a 200 with no body reaches the callback with the status as the reason', function (done) {
       handler = (req, res) => res.status(200).send();
       const machine = new TiledeskIntentsMachine({ API_ENDPOINT: MOCK });
       machine.myrequest({ url: MOCK + '/x', method: 'GET' }, (err, body) => {
         try {
-          assert.ok(err instanceof ReferenceError,
-            'TiledeskClient is undeclared; the message the caller gets is about that, not about the status');
+          assert.ok(!(err instanceof ReferenceError),
+            'the failure is the empty answer, not an undeclared identifier');
+          assert.strictEqual(err.http_err.message, "Response status not 200");
+          assert.strictEqual(err.http_request.url, MOCK + '/x');
+          assert.strictEqual(err.http_response.status, 200);
+          assert.strictEqual(body, null);
+          done();
+        } catch (e) { done(e); }
+      });
+    });
+
+    it('a non-200 reaches the callback with the request and the response bundled in', function (done) {
+      handler = (req, res) => res.status(204).send();
+      const machine = new TiledeskIntentsMachine({ API_ENDPOINT: MOCK });
+      machine.myrequest({ url: MOCK + '/x', method: 'GET' }, (err, body) => {
+        try {
+          assert.strictEqual(err.http_err.message, "Response status not 200");
+          assert.strictEqual(err.http_response.status, 204);
           assert.strictEqual(body, null);
           done();
         } catch (e) { done(e); }

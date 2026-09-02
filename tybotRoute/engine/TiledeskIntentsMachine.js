@@ -1,5 +1,9 @@
 
 let axios = require('axios');
+// Used by myrequest() to build the error for a non-200 answer. The reference
+// was there; the require was not -- the same omission already fixed in
+// utils/ChatbotParametersClient.js and utils/ChatbotIntentUtil.js.
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../utils/winston');
 
 class TiledeskIntentsMachine {
