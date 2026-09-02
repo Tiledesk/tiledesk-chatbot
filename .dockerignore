@@ -46,3 +46,7 @@ docker-compose*.yml
 # The integration stack: mounted into the tests container, not baked into
 # the production image.
 integration
+
+# The browser walk: it drives a deployed install from outside, and its
+# @playwright/test dependency is the size of a browser.
+e2e

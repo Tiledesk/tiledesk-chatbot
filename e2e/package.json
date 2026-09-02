@@ -1,0 +1,19 @@
+{
+  "name": "tiledesk-chatbot-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Browser walk of the full flow validation bot against a real Tiledesk install",
+  "scripts": {
+    "test": "playwright test",
+    "test:flow": "playwright test tests/flow.spec.js",
+    "test:canvas": "playwright test tests/canvas.spec.js",
+    "headed": "TILEDESK_HEADFUL=1 playwright test --headed",
+    "discover": "node discover.js",
+    "map": "node lib/flow-map.js",
+    "report": "playwright show-report .report",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0"
+  }
+}
