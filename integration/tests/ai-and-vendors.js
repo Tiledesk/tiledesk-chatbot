@@ -446,7 +446,10 @@ async function main() {
   // The project's own LLM key, so LLMKeyService.resolveOpenAIKey reports
   // publicKey:false and the token quota is NOT consulted. Journey 4 removes it
   // again, which is the only way to reach the quota branch at all.
-  await seedMock({ kbsettings: { gptkey: 'sk-integration' } });
+  //
+  // The project integration is now the ONLY project-level source: the
+  // /:projectId/kbsettings step was removed from key retrieval upstream.
+  await seedMock({ integrations: { openai: { value: { apikey: 'sk-integration' } } } });
 
   // ------------------------------------------------------------ journey 1
   section('journey 1 - an AI-backed intent answers, and the answer reaches the request');
@@ -482,7 +485,11 @@ async function main() {
     assert.strictEqual(asked[0].body.question, 'what are the opening hours?');
     assert.strictEqual(asked[0].body.kbid, 'kb-integration-1');
     assert.strictEqual(asked[0].body.gptkey, 'sk-integration',
-      'and it fetched the project key from /:projectId/kbsettings first');
+      'and it fetched the project key from the openai integration first');
+
+    // The kb-settings step is gone from key retrieval. Nothing may call it.
+    assert.strictEqual(rec.calls.filter((c) => c.kind === 'kbsettings').length, 0,
+      '/:projectId/kbsettings is no longer part of resolving an LLM key');
   });
 
   await test('a completion answers a gpt_task block, out of OPENAI_ENDPOINT', async () => {
@@ -637,11 +644,10 @@ async function main() {
   section('journey 4 - an exhausted token quota changes what the connector does');
 
   await test('with no project key and isAvailable:false, the LLM is never called', async () => {
-    // Drop both project-key sources. LLMKeyService then falls back to the
-    // container's GPTKEY and reports publicKey:true -- the ONLY path on which
-    // the quota is consulted at all.
+    // Drop the project key. LLMKeyService then falls back to the container's
+    // GPTKEY and reports publicKey:true -- the ONLY path on which the quota is
+    // consulted at all.
     await seedMock({
-      kbsettings: { gptkey: null },
       integrations: { openai: { value: null } },
       quotas: { isAvailable: false }
     });

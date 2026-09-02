@@ -1,19 +1,10 @@
 const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const { apiEndpoint } = require('../config/endpoints');
-const kbSettingsService = require('./KbSettingsService');
 
 class KBService {
 
   constructor() { }
-
-  /**
-   * @deprecated Kept as a thin delegate to KbSettingsService, the single owner
-   * of GET /{projectId}/kbsettings. Currently has no callers.
-   */
-  async getKeyFromKbSettings(id_project, token) {
-    return kbSettingsService.getKeyFromKbSettings(id_project, token, "(KbService)");
-  }
 
   /**
    * Look a namespace up by name OR by id, resolving `null` when the lookup

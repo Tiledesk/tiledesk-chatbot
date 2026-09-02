@@ -114,11 +114,6 @@ class DirGptTask extends BaseDirective {
     }
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
-      caller: "(DirGptTask)",
-      onIntegrationMiss: () => {
-        this.logger.native("[ChatGPT Task] Key not found in Integrations.");
-        winston.debug("(DirGptTask) - Key not found in Integrations. Searching in kb settings...");
-      },
       onPublicKey: () => {
         this.logger.native("[ChatGPT Task] Retrieve shared gptkey.");
         winston.debug("(DirGptTask) - Retrieve public gptkey")

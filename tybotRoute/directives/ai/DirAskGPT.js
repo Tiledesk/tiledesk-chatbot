@@ -90,10 +90,6 @@ class DirAskGPT extends BaseDirective {
     const filled_question = filler.fill(action.question, requestVariables);
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
-      caller: "(DirAskGPT)",
-      onIntegrationMiss: () => {
-        winston.debug("(DirAskGPT) - Key not found in Integrations. Searching in kb settings...");
-      },
       onPublicKey: () => {
         winston.debug("(DirAskGPT) - Retrieve public gptkey")
       }

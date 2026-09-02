@@ -1,5 +1,4 @@
 const integrationService = require('./IntegrationService');
-const kbSettingsService = require('./KbSettingsService');
 
 /**
  * Single owner of "which LLM key do we use for this project?".
@@ -10,17 +9,23 @@ const kbSettingsService = require('./KbSettingsService');
  * them into one:
  *
  *  A. `resolveOpenAIKey` - DirAddKbContent, DirAskGPT, DirGptTask
- *       integration "openai" -> project kb settings -> env GPTKEY (public)
+ *       integration "openai" -> env GPTKEY (public)
  *
  *  B. `resolveLlmKey` - DirAiPrompt, DirAiCondition
  *       integration `<llm>` -> env GPTKEY, but ONLY when llm === "openai"
- *       (there is no kb-settings step in this order)
+
  *
  *  C. DirAskGPTV2 resolves its whole model through `AIController`
  *     (`resolveLLMConfig`) and then falls back on `model.provider === 'openai'`
  *     rather than on an action attribute. That is a third shape with a single
  *     call site, so it keeps its own two-line branch and only takes
  *     `publicGptKey()` from here.
+ *
+ * A and B were two orders until the project kb-settings step was dropped from
+ * key retrieval (main, "remove getKeyFromKbSettings method and update key
+ * retrieval logic"). With that step gone A is exactly B with llm = "openai",
+ * plus the one hook only DirAddKbContent uses, so A is expressed as that
+ * rather than as a second copy of the same three lines.
  *
  * The three (resp. two) copies of each order were identical in control flow and
  * differed ONLY in logging - the flow-logger line and the winston level/prefix.
@@ -51,42 +56,29 @@ class LLMKeyService {
   }
 
   /**
-   * Resolution order A: project OpenAI integration, then the project's kb
-   * settings, then the shared env key.
+   * Resolution order A: the project's OpenAI integration, then the shared env
+   * key.
    *
    * @param {string} id_project
    * @param {string} token                      raw JWT
    * @param {object} [options]
-   * @param {string} [options.caller]           kb-settings log prefix, e.g. "(DirGptTask)"
-   * @param {function():void} [options.onIntegrationMiss]
-   *        called right before the kb-settings lookup, i.e. where the inline
-   *        copies logged "Key not found in Integrations. Searching in kb settings..."
    * @param {function():void} [options.onPublicKey]
    *        called right before falling back to `GPTKEY`
    * @param {function():void} [options.onOwnKey]
-   *        called when a project key WAS found (only DirAddKbContent logged here)
+   *        called when a project key WAS found (only DirAddKbContent logs here)
    * @returns {Promise<{key: (string|undefined|null), publicKey: boolean}>}
    */
   async resolveOpenAIKey(id_project, token, options = {}) {
-    const { caller, onIntegrationMiss, onPublicKey, onOwnKey } = options;
+    const { onPublicKey, onOwnKey } = options;
 
-    let publicKey = false;
-    let key = await integrationService.getKeyFromIntegrations(id_project, 'openai', token);
+    const resolved = await this.resolveLlmKey(id_project, 'openai', token, { onPublicKey });
 
-    if (!key) {
-      if (onIntegrationMiss) { onIntegrationMiss(); }
-      key = await kbSettingsService.getKeyFromKbSettings(id_project, token, caller);
-    }
+    // `publicKey` is set with the fallback, so its opposite is "the project's
+    // own integration answered" -- which is exactly when the inline code took
+    // the else branch and logged.
+    if (!resolved.publicKey && onOwnKey) { onOwnKey(); }
 
-    if (!key) {
-      if (onPublicKey) { onPublicKey(); }
-      key = process.env.GPTKEY;
-      publicKey = true;
-    } else {
-      if (onOwnKey) { onOwnKey(); }
-    }
-
-    return { key, publicKey };
+    return resolved;
   }
 
   /**

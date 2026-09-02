@@ -1301,3 +1301,101 @@ also fails on any collected file's failure, refuses a shrinking baseline without
 9. No directive imports `axios` for an external system that has a service.
 10. Core shapes carry JSDoc typedefs; `checkJs` runs clean enough to enumerate
     remaining errors as a follow-up list.
+
+---
+
+## Merging `main` (2.1.9 → 2.1.12)
+
+`main` moved 12 commits ahead while this branch was in flight. They land in
+files this branch had moved, renamed or dissolved, so the merge is recorded
+here in full: what came in, where it went, and every place the result is not a
+literal copy of what `main` wrote.
+
+### What came in
+
+| From `main` | Where it landed here |
+| --- | --- |
+| `IntegrationService` reads credentials from mongo, falling back to the API, and warns when the API hands back a masked secret | `services/IntegrationService.js`, rewritten on `main`'s version but keeping this branch's lazy `apiEndpoint()` instead of the module-load `API_ENDPOINT` constant |
+| New `models/integration.js`, `models/namespace.js`, `services/NamespaceService.js` | taken as they are — `models/` and `services/` are where this branch puts them anyway |
+| `DirAskGPTV2.resolveEngineApikey`: fill in an `engine.apikey` the API stripped, from mongo then from local config | `directives/ai/DirAskGPTV2.js` (git followed the rename; the merge applied cleanly) |
+| Web Request V2 `bodyType: 'raw'` with `rawType` text/javascript/json/html/xml | `directives/data/DirWebRequestV2.js` (likewise clean) |
+| The project kb-settings step removed from LLM key retrieval, in six directives and `KbService` | one place here — see below |
+| Version 2.1.12, CHANGELOG entries for 2.1.9, 2.1.10, 2.1.12 | root `package.json` and `CHANGELOG.md` |
+| `askgptv2_engine_apikey_test.js`, `integration_secrets_test.js`, and the raw-body tests appended to `conversation-web_requestv2_test.js` | `tybotRoute/test/`, unchanged apart from one require path |
+
+### The conflicts, and how each was settled
+
+- **`tybotRoute/package.json`, `tybotRoute/package-lock.json`** — deleted here,
+  version-bumped on `main`. Kept deleted: this branch has one package by
+  design, and the root `package.json` carries the 2.1.12 bump.
+- **`tiledeskChatbotPlugs/directives/Dir{AddKbContent,AiPrompt,AskGPT,GptTask}.js`**
+  — deleted here, edited on `main`. The old paths stay deleted and each change
+  was applied to the file's new home instead.
+- **`DirGptTask_OLD.js`** — dead code this branch removed, which `main` only
+  gutted further. Stays removed.
+- **`DirAiCondition`** — `main` added a `checkQuoteAvailability` method (it had
+  a call and no method: a latent `TypeError`). This branch had already fixed
+  that by routing the call to `QuotasService`, so `main`'s copy is redundant and
+  was dropped.
+- **`KbService`** — `main` deleted `getKeyFromKbSettings`; this branch had turned
+  it into a delegate. Delegate deleted.
+
+### Three places the result deviates from `main`, deliberately
+
+1. **`console.log("DirAskGPTV2 json:", JSON.stringify(json))` was not kept.**
+   It duplicates the `winston.debug` on the line directly above it, and the
+   `json` it prints carries the `engine` — which, since `resolveEngineApikey`,
+   always has an `apikey`. So that line prints the vector store credential to
+   stdout on every ask, at every log level. It reads as a debugging leftover from the commit
+   that added the apikey resolution; the `winston.debug` covers the same need
+   under level control.
+
+2. **`KbSettingsService` was deleted, not just bypassed.** `main` removed the
+   kb-settings step from key retrieval in six directives plus `KbService`. In
+   this tree those seven copies had already been collapsed into one service with
+   one caller, so honouring the change means the service has no reason to exist.
+   Deleted, along with its two unit tests.
+
+3. **`LLMKeyService.resolveOpenAIKey` now delegates to `resolveLlmKey`.** The two
+   resolution orders differed only in the kb-settings step and the `llm ===
+   "openai"` guard. With the step gone, order A is exactly order B with
+   `llm = "openai"`, plus the `onOwnKey` hook only `DirAddKbContent` uses. Both
+   methods remain — the call sites and their logging are untouched — but there
+   is one implementation.
+
+### The tests that had to change
+
+Three assertions tested behaviour `main` removed or altered:
+
+- `ai_directive_units_test.js`, "the kb settings are the second place looked
+  at" — now asserts the endpoint is **not** called (`seen.kbsettings === 0`),
+  which is the stronger statement that the step is really gone.
+- `ai_directive_units_test.js`, "the key found in the kb settings is the one
+  sent to the kb" — a project that configured a gptkey there is now served by
+  the shared key. Rewritten to assert exactly that.
+- `ai_directive_units_test.js`, "a namespace that carries its own engine…" — the
+  engine now arrives with `apikey: ""` filled in, because tilellm dereferences
+  the field unguarded. Expectation updated with the reason.
+
+One integration journey tested it too. `integration/tests/ai-and-vendors.js`
+seeded the project key into `/:projectId/kbsettings` and asserted the LLM was
+called with it; it now seeds an `openai` integration instead — the only
+project-level source left — and additionally asserts that **nothing calls
+`/:projectId/kbsettings` at all**. Two seeds of the same endpoint in
+`full-flow-validation.js` became inert and were removed.
+
+Two tests were **added** on top of `main`'s, for the two `catch` blocks its new
+database reads introduced: a `findOne` that throws must resolve `null` and let
+the API (or the local configuration) answer. Both run inside a directive that is
+answering a user, where an exception would take the flow down with it.
+
+### Where the gates landed
+
+| | before the merge | after |
+| --- | --- | --- |
+| tests | 1,436 across 92 files | **1,463 across 94 files** |
+| coverage | 98.15% | **98.16%**, every per-directory floor satisfied |
+| integration | 82 tests, 4 suites | **82 tests, all four suites green** |
+
+The floors in `docs/coverage-baseline.json` are unchanged and all pass;
+`IntegrationService` and `NamespaceService` are both at 100% statements.

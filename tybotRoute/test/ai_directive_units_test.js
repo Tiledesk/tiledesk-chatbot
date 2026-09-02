@@ -651,7 +651,13 @@ describe('Directives directives/ai, the error and edge paths', function () {
           action: { question: "q", llm: "openai", model: "gpt-4", namespace: "NS-ENGINE", top_k: 0, temperature: 0, max_tokens: 0 }
         });
 
-        assert.deepStrictEqual(mock.seen.qa[0].engine, { name: "qdrant", type: "cloud" });
+        // The namespace's own engine is sent, with one addition: an ABSENT
+        // apikey is filled in (resolveEngineApikey). tilellm dereferences the
+        // field unguarded, so a namespace that arrives without one -- which is
+        // every namespace since tiledesk-server 2.22.7 stopped returning it --
+        // must not be forwarded as it came.
+        assert.deepStrictEqual(mock.seen.qa[0].engine,
+          { name: "qdrant", type: "cloud", apikey: "" });
         assert.strictEqual(mock.seen.qa[0].embedding.name, "emb");
         assert.strictEqual(mock.seen.qa[0].top_k, undefined, 'a falsy top_k is omitted, not sent as 0');
         assert.strictEqual(mock.seen.qa[0].temperature, undefined);
@@ -861,14 +867,15 @@ describe('Directives directives/ai, the error and edge paths', function () {
       }
     });
 
-    it('no key in the integration, the kb settings or the environment takes the false connector', async () => {
+    it('no key in the integration or the environment takes the false connector', async () => {
       const mock = await startMock({ integrations: {} });
       try {
         const { dir, tdcache } = build(DirAskGPT, null);
         const stops = await run(dir, { name: "askgpt", action: Object.assign({}, ASK, { falseIntent: "KO" }) });
 
         assert.deepStrictEqual(mock.seen.integrations, ["openai"]);
-        assert.strictEqual(mock.seen.kbsettings, 1, 'the kb settings are the second place looked at');
+        assert.strictEqual(mock.seen.kbsettings, 0,
+          'the kb settings step was removed from key retrieval: nothing may call it');
         assert.strictEqual(tdcache.attrs().kb_reply, "No answers");
         assert.deepStrictEqual(dispatched, ["/KO"]);
         assert.deepStrictEqual(stops, [true]);
@@ -889,13 +896,19 @@ describe('Directives directives/ai, the error and edge paths', function () {
       }
     });
 
-    it('the key found in the kb settings is the one sent to the kb', async () => {
+    // The project's kb settings used to sit between the integration and the
+    // shared key. That step is gone, so a project that configured a gptkey
+    // there is now served by the shared key -- and the endpoint is not called
+    // at all, which is what this asserts.
+    it('the kb settings are not consulted: the shared key is used instead', async () => {
       const mock = await startMock({ integrations: {}, kbsettings: { gptkey: "sk-from-kbsettings" } });
+      process.env.GPTKEY = "sk-shared";
       try {
         const { dir, tdcache } = build(DirAskGPT, null);
         await run(dir, { name: "askgpt", action: Object.assign({}, ASK, { trueIntent: "OK" }) });
 
-        assert.strictEqual(mock.seen.qa[0].gptkey, "sk-from-kbsettings");
+        assert.strictEqual(mock.seen.kbsettings, 0);
+        assert.strictEqual(mock.seen.qa[0].gptkey, "sk-shared");
         assert.strictEqual(mock.seen.qa[0].kbid, "kb1");
         assert.strictEqual(mock.seen.qa[0].agent_id, "ROOT-1");
         assert.strictEqual(tdcache.attrs().kb_reply, "the kb answer");

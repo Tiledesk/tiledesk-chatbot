@@ -75,12 +75,8 @@ class DirAddKbContent extends BaseDirective {
     winston.verbose("[DirAddKbContent] KbEndpoint URL: " + apiEndpoint());
 
     const resolved_key = await llmKeyService.resolveOpenAIKey(this.projectId, this.token, {
-      caller: "(DirAddKbContent)",
-      onIntegrationMiss: () => {
-        this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
-        winston.verbose("[DirAddKbContent] - Key not found in Integrations. Searching in kb settings...");
-      },
       onPublicKey: () => {
+        this.logger.native("[Add to KnwoledgeBase] Using shared OpenAI key");
         winston.verbose("[DirAddKbContent] - Retrieve public gptkey")
       },
       onOwnKey: () => {

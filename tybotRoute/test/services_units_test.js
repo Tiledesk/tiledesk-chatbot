@@ -30,7 +30,6 @@ const aiController = require('../services/AIController');
 const quotasService = require('../services/QuotasService');
 const tilebotService = require('../services/TilebotService');
 const kbService = require('../services/KbService');
-const kbSettingsService = require('../services/KbSettingsService');
 const mcpService = require('../services/McpService');
 const dataTablesService = require('../services/DataTablesService');
 const makeService = require('../services/MakeService');
@@ -553,32 +552,6 @@ describe('Services tybotRoute/services', function () {
   // -------------------------------------------------------------- KbService
 
   describe('KbService', function () {
-
-    it('getKeyFromKbSettings delegates to KbSettingsService', async () => {
-      const mock = await startMock((server, seen) => {
-        server.get('/:project_id/kbsettings', (req, res) => {
-          seen.calls.push(req.headers.authorization);
-          res.status(200).send({ gptkey: "sk-kbsettings" });
-        });
-      });
-      try {
-        assert.strictEqual(await kbService.getKeyFromKbSettings(PROJECT_ID, "XXX"), "sk-kbsettings");
-        assert.deepStrictEqual(mock.seen.calls, ["JWT XXX"]);
-      } finally {
-        await mock.close();
-      }
-    });
-
-    it('kb settings with no gptkey resolve null rather than undefined', async () => {
-      const mock = await startMock((server) => {
-        server.get('/:project_id/kbsettings', (req, res) => res.status(200).send({ other: 1 }));
-      });
-      try {
-        assert.strictEqual(await kbSettingsService.getKeyFromKbSettings(PROJECT_ID, "XXX"), null);
-      } finally {
-        await mock.close();
-      }
-    });
 
     it('getNamespaceOrNull resolves null when the lookup fails and undefined when nothing matches', async () => {
       const mock = await startMock((server) => {

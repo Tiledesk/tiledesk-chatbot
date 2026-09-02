@@ -319,7 +319,6 @@ async function main() {
     ],
     agents: [{ _id: 'ffv-agent-1', firstname: 'Grace' }],
     openHours: { isopen: true },
-    kbsettings: { gptkey: 'sk-full-flow-validation' },
     integrations: {
       openai: { value: { apikey: 'an-openai-key' } },
       Brevo: { value: { apikey: 'a-brevo-key' } },
@@ -874,7 +873,6 @@ async function main() {
 
   await test('askgpt answers out of the v1 knowledge base', async () => {
     await seedMock({
-      kbsettings: { gptkey: 'sk-full-flow-validation' },
       llm: { qa: { answer: 'We are open 9 to 18', success: true, source_url: 'http://kb.ffv/hours' } }
     });
     const requestId = await conversation('/h_askgpt');
