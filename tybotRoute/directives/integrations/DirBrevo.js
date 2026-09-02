@@ -82,6 +82,12 @@ class DirBrevo extends BaseDirective {
         callback(true);
         return;
       }
+      // Without a false connector this fell through and POSTed the contact
+      // anyway with `api-key: undefined`. A missing integration is not a
+      // reason to call Brevo: stop here and carry the flow on, the way every
+      // other no-connector exit in this directive does.
+      callback();
+      return;
     }
 
     const filler = new Filler();

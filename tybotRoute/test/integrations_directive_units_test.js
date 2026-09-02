@@ -396,7 +396,7 @@ describe('Directives directives/integrations, the error and edge paths', functio
     // Correct behaviour, asserted here: a missing key stops the directive.
     // Nothing is sent, and the flow carries on the way every other
     // no-connector exit in the file does.
-    it.skip('no Brevo integration and no false connector sends nothing at all', async () => {
+    it('no Brevo integration and no false connector sends nothing at all', async () => {
       const mock = await startMock({ integrations: {} });
       try {
         const { dir } = build(DirBrevo, { vars: { who: "ada" } });
