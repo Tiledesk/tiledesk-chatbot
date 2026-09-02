@@ -311,6 +311,11 @@ class TiledeskChatbot {
           }
         }
       }
+
+      // No block was named by this message: nothing to find. Resolving here
+      // keeps the promise from being left pending forever (and leaking its
+      // closure) when there is no "/" prefix and no attributes.action.
+      resolve();
     });
   }
   

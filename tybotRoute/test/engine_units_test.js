@@ -945,7 +945,7 @@ describe('engine, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: a message that names no block
     // resolves with nothing, like the two not-found cases above.
-    it.skip('findBlock on a message that names no block resolves instead of hanging', async function () {
+    it('findBlock on a message that names no block resolves instead of hanging', async function () {
       const ds = dataSource({ intents: {} });
       const chatbot = chatbotFor({ botsDataSource: ds });
 
