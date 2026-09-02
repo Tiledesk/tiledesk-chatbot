@@ -884,7 +884,7 @@ Two findings from the boot, both pre-existing:
   guard, so an unknown bot id crashes it. Its sibling `getIntentsMachine` guards.
   The file is **byte-identical to `91008e03`** — the migration never touched it.
 
-CI remains deliberately unrun; nothing has been pushed.
+CI is deliberately deferred and nothing has been pushed.
 
 ## Follow-on: remote-request extraction (user-requested)
 
@@ -1077,9 +1077,10 @@ also fails on any collected file's failure, refuses a shrinking baseline without
 3. **Nothing ever re-runs the quarantined files**, so nobody will notice if a
    phase makes one worse, or if one starts passing. A non-gating `--quarantine`
    mode would be cheap.
-4. **CI has never actually run.** The workflow is committed but the branch was
-   deliberately not pushed. Treat the first CI run as part of the merge, not as a
-   post-merge follow-up.
+4. **CI is deliberately deferred.** A test workflow was written during Phase 0 and
+   later removed at the user's request — CI is a separate decision to be taken
+   later. Both gates (`npm test`, `npm run coverage:check`) and the integration
+   stack are single commands, so wiring CI when wanted is a small job.
 5. **CI pins Node 22 while `Dockerfile` ships `node:18-bullseye`** — the safety net
    validates a runtime production does not run. Resolve with the Phase 6 package
    collapse.
@@ -1112,7 +1113,8 @@ also fails on any collected file's failure, refuses a shrinking baseline without
 
 1. The frozen green set passes at every phase boundary.
 2. The full suite is deterministic across repeated runs.
-3. CI runs the suite on every push.
+3. ~~CI runs the suite on every push.~~ Deferred at the user's request; the
+   workflow was removed. The gates are one command each when CI is wanted.
 4. No `#executeCondition`, `#assignAttributes`, `#myrequest` or constructor-guard
    duplication remains outside `BaseDirective` and the documented overrides.
 5. No circular dependencies in the module graph.

@@ -2,7 +2,7 @@
 
 ## Quick start
 
-Requires **Node 22** (the version CI uses; `node -v` should print `v22.x`) and
+Requires **Node 22** (`node -v` should print `v22.x`) and
 Docker.
 
 ```bash
@@ -360,26 +360,6 @@ directive semantics, which the unit suite owns:
 5. an unknown bot id: no reply is posted **and the container is still serving
    afterwards**. That second half is the assertion that matters — this path used to
    crash the process.
-
-### In CI
-
-Nothing in the stack needs a host toolchain, so a job is the checkout plus the one
-command:
-
-```yaml
-  integration:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - name: Integration stack
-        run: |
-          docker compose -f docker-compose.integration.yml up --build \
-            --abort-on-container-exit --exit-code-from tests
-      - name: Tear down
-        if: always()
-        run: docker compose -f docker-compose.integration.yml down -v
-```
 
 `--exit-code-from tests` is what makes the job red: the runner exits 1 on any failed
 assertion and compose propagates it.
