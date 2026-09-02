@@ -15,7 +15,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "returns a json body - GET - assign result - assign status - no condition",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -55,7 +55,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -80,7 +80,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json2",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json2",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -105,7 +105,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -130,7 +130,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/json",
 				"headersString": {
 					"Content-Type": "application/json",
 					"Cache-Control": "no-cache",
@@ -157,7 +157,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/form-data",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/form-data",
 				"headersString": {
 					"Content-Type": "multipart/form-data",
 					"Cache-Control": "no-cache",
@@ -174,7 +174,7 @@ const bot = {
 						{
 							"name": "file",
 							"type": "URL",
-							"value": "http://localhost:10002/test/webrequest/post/form-data/simple_file.txt",
+							"value": "http://127.0.0.1:10002/test/webrequest/post/form-data/simple_file.txt",
 							"enabled": true
 						}
 					],
@@ -198,7 +198,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/json",
 				"headersString": {
 					"Content-Type": "application/json",
 					"Cache-Control": "no-cache",
