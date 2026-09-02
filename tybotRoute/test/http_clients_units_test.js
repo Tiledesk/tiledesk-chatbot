@@ -98,7 +98,7 @@ describe('The HTTP clients', function () {
     // the missing `winston` recorded in utils_units_test.js for
     // ChatbotIntentUtil.parseIntent.
     // Correct behaviour, asserted here: the caller is told.
-    it.skip('reports a 2xx with no body as an error rather than as empty parameters', function (done) {
+    it('reports a 2xx with no body as an error rather than as empty parameters', function (done) {
       client().getChatbotParameters("EMPTY", (err, body) => {
         assert.ok(err, 'a 204 is not a set of parameters');
         assert.strictEqual(body, undefined);
@@ -124,7 +124,7 @@ describe('The HTTP clients', function () {
     // waits forever, with an unhandled rejection as the only trace. The 500 case
     // above works only because axios populates `.response` for an HTTP error.
     // Correct behaviour, asserted here: the transport error reaches the callback.
-    it.skip('reports an unreachable tilebot to the caller', function (done) {
+    it('reports an unreachable tilebot to the caller', function (done) {
       const original = process.env.TILEBOT_ENDPOINT;
       process.env.TILEBOT_ENDPOINT = "http://127.0.0.1:9";
       client().getChatbotParameters(REQUEST_ID, (err) => {
