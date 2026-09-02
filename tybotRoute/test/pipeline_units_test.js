@@ -363,7 +363,7 @@ describe('The message pipeline', function () {
     // because axios populates `.response` for an HTTP error.
     // Correct behaviour: report the transport error to the callback, exactly as
     // the 500 case does, so the original message survives.
-    it.skip('keeps the original message when the webhook host is unreachable', async () => {
+    it('keeps the original message when the webhook host is unreachable', async () => {
       const plug = new WebhookChatbotPlug(supportRequest, `${DEAD}/webhook`, "XXX");
       const out = await runPlug(plug, { text: "hi", attributes: { webhook: true } }, webhookContext());
       assert.strictEqual(out.text, "hi");

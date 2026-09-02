@@ -130,7 +130,10 @@ class WebhookChatbotPlug {
       }
     })
     .catch(function (error) {
-      winston.debug("(WebhookChatbotPlug) Axios error: ", error.response.data);
+      // A transport failure (DNS, connection refused, timeout) has no
+      // `.response`: reading `.data` off it threw inside this handler, so the
+      // callback was never invoked and the pipeline stalled.
+      winston.debug("(WebhookChatbotPlug) Axios error: ", error.response ? error.response.data : error.message);
       if (callback) {
         callback(error, null, null);
       }
