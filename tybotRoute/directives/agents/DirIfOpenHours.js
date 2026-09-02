@@ -36,8 +36,13 @@ class DirIfOpenHours extends BaseDirective {
   go(action, callback) {
     winston.debug("(DirIfOpenHours) Action: ", action);
 
-    const trueIntent = action.trueIntent;
-    const falseIntent = action.falseIntent;
+    // `let`, not `const`: the two blank-name normalisations below assign to
+    // these. As consts they threw "TypeError: Assignment to constant variable"
+    // straight out of go() for an intent name that is present but blank -- the
+    // shape the designer produces when a branch is wired and then cleared. The
+    // sibling DirCondition has the identical lines with `let`.
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     const stopOnConditionMet = action.stopOnConditionMet;
@@ -61,10 +66,9 @@ class DirIfOpenHours extends BaseDirective {
       slot_id = action.slotId;
     }
     
-    // NOTE: `go` is deliberately NOT async. The `trueIntent = null` assignments
-    // above target `const` bindings and therefore throw synchronously for an
-    // empty-string intent; making this method async would turn that throw into
-    // a silently rejected promise. The service call is chained instead.
+    // NOTE: `go` is deliberately NOT async, so that nothing raised on the way
+    // to the service call turns into a silently rejected promise. The service
+    // call is chained instead.
     tiledeskApiService.isOpen(
       this.context.projectId, this.context.token, slot_id, "(DirIfOpenHours)"
     ).then(async ({ err, resbody }) => {
@@ -101,7 +105,15 @@ class DirIfOpenHours extends BaseDirective {
               callback(stopOnConditionMet);
             });
           }
-          callback();
+          else {
+            // The `callback()` used to sit outside this branch, so a configured
+            // true intent called back TWICE: once here with `undefined`, and
+            // once when the intent finished. The second call re-entered the
+            // rest of the flow. It belongs to the "no branch configured" case
+            // only -- which is how DirCondition writes it.
+            winston.debug("(DirIfOpenHours) No trueIntent to run");
+            callback();
+          }
           return;
         } else {
           this.logger.native("[If Operating Hours] is open: false")
@@ -112,7 +124,10 @@ class DirIfOpenHours extends BaseDirective {
               callback(stopOnConditionMet);
             });
           }
-          callback();
+          else {
+            winston.debug("(DirIfOpenHours) No falseIntent to run");
+            callback();
+          }
           return;
         }
       }

@@ -225,4 +225,122 @@ describe('Directives directives/agents, paths a flow cannot reach', function () 
     assert.deepStrictEqual(stops, [undefined]);
   });
 
+  // An operating-hours block whose true branch is present but blank -- the
+  // shape the designer produces when a branch is wired and then cleared -- hit
+  //
+  //     const trueIntent = action.trueIntent;
+  //     if (trueIntent && trueIntent.trim() === "") { trueIntent = null; }
+  //
+  // and threw "TypeError: Assignment to constant variable" out of go(), i.e.
+  // synchronously out of the directive dispatcher. The sibling DirCondition
+  // has the identical lines with `let` and is correct.
+  it('DirIfOpenHours treats a blank true branch as absent instead of throwing', async () => {
+    const mock = await startMock((server, seen) => {
+      server.get('/projects/:projectId/isopen', (req, res) => {
+        seen.calls.push('isopen');
+        res.status(200).send({ isopen: false });
+      });
+    });
+    try {
+      const dir = new DirIfOpenHours(contextFor({}));
+      const ran = [];
+      dir.intentDir = { execute: (d, cb) => { ran.push(d.action.intentName); setTimeout(cb, 0); } };
+
+      const stops = await run(dir, {
+        name: "ifopenhours",
+        action: { trueIntent: "   ", falseIntent: "#CLOSED", stopOnConditionMet: true }
+      });
+
+      assert.deepStrictEqual(mock.seen.calls, ['isopen']);
+      assert.deepStrictEqual(ran, ["#CLOSED"], 'the closed branch still runs');
+      assert.deepStrictEqual(stops, [true]);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirIfOpenHours with both branches blank never calls isopen and calls back once', async () => {
+    const mock = await startMock((server, seen) => {
+      server.get('/projects/:projectId/isopen', (req, res) => {
+        seen.calls.push('isopen');
+        res.status(200).send({ isopen: true });
+      });
+    });
+    try {
+      const dir = new DirIfOpenHours(contextFor({}));
+      dir.intentDir = { execute: () => assert.fail('no branch is configured') };
+      const stops = await run(dir, {
+        name: "ifopenhours",
+        action: { trueIntent: " ", falseIntent: "\t" }
+      });
+      assert.deepStrictEqual(mock.seen.calls, []);
+      assert.deepStrictEqual(stops, [undefined]);
+    } finally {
+      await mock.close();
+    }
+  });
+
+  // Both success branches ran the branch intent AND then fell through to an
+  // unconditional `callback()`, so a configured branch called back twice: once
+  // immediately with `undefined`, once when the intent finished. The second
+  // call re-entered whatever the directive dispatcher does next.
+  it('DirIfOpenHours calls back exactly once when the open branch runs', async () => {
+    const mock = await startMock((server) => {
+      server.get('/projects/:projectId/isopen', (req, res) => res.status(200).send({ isopen: true }));
+    });
+    try {
+      const dir = new DirIfOpenHours(contextFor({}));
+      const ran = [];
+      dir.intentDir = { execute: (d, cb) => { ran.push(d.action.intentName); setTimeout(cb, 0); } };
+
+      const stops = await run(dir, {
+        name: "ifopenhours",
+        action: { trueIntent: "#OPEN", falseIntent: "#CLOSED", stopOnConditionMet: true }
+      });
+
+      assert.deepStrictEqual(ran, ["#OPEN"]);
+      assert.deepStrictEqual(stops, [true], 'exactly one callback, carrying stopOnConditionMet');
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirIfOpenHours calls back exactly once when the closed branch runs', async () => {
+    const mock = await startMock((server) => {
+      server.get('/projects/:projectId/isopen', (req, res) => res.status(200).send({ isopen: false }));
+    });
+    try {
+      const dir = new DirIfOpenHours(contextFor({}));
+      const ran = [];
+      dir.intentDir = { execute: (d, cb) => { ran.push(d.action.intentName); setTimeout(cb, 0); } };
+
+      const stops = await run(dir, {
+        name: "ifopenhours",
+        action: { trueIntent: "#OPEN", falseIntent: "#CLOSED", stopOnConditionMet: true }
+      });
+
+      assert.deepStrictEqual(ran, ["#CLOSED"]);
+      assert.deepStrictEqual(stops, [true], 'exactly one callback, carrying stopOnConditionMet');
+    } finally {
+      await mock.close();
+    }
+  });
+
+  it('DirIfOpenHours falls through with no open branch configured', async () => {
+    const mock = await startMock((server) => {
+      server.get('/projects/:projectId/isopen', (req, res) => res.status(200).send({ isopen: true }));
+    });
+    try {
+      const dir = new DirIfOpenHours(contextFor({}));
+      dir.intentDir = { execute: () => assert.fail('the open branch is not configured') };
+      const stops = await run(dir, {
+        name: "ifopenhours",
+        action: { falseIntent: "#CLOSED", stopOnConditionMet: true }
+      });
+      assert.deepStrictEqual(stops, [undefined], 'no branch to run, and the flow is not stopped');
+    } finally {
+      await mock.close();
+    }
+  });
+
 });
