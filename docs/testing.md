@@ -176,7 +176,7 @@ which makes the suite look completely broken rather than misconfigured.
 ## The baseline
 
 `docs/test-baseline.json` maps each test file to the number of tests that must
-pass: **419 tests across 61 files**. It is a contract, not a snapshot. Raise it
+pass: **1,388 tests across 90 files**. It is a contract, not a snapshot. Raise it
 when you add tests; never lower it to make a run go green.
 
 Regenerate only when deliberately adding tests:
