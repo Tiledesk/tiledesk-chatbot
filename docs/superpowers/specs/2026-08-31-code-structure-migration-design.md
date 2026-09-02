@@ -483,6 +483,58 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## All known defects fixed
+
+**58 runtime defects found and fixed.** Exactly **one** skipped test remains
+repo-wide, and it is a product decision rather than a defect.
+
+Final state: **1,388 tests across 90 files**, lines **98.15%**, functions 97.90%,
+branches 95.32%. `npm test` and `npm run coverage:check` both green.
+
+### The one open question — someone has to decide it
+
+`tybotRoute/engine/TiledeskChatbot.js` composes `{ text: "Intent not found: <name>" }`
+for an explicit intent that matches nothing, then discards it.
+
+A unit test asserted the composed reply should be sent. Making that pass surfaced
+internal diagnostic text to end users AND broke `test/routes_http_test.js`, which
+pins the shipped contract that an unmatched explicit intent posts nothing. Two
+tests could not both be right.
+
+**Resolution taken:** silence ships today, so silence is preserved. The
+control-flow half of the defect — a missing `return` that fell through and ran the
+intent matcher *after* resolving — IS fixed. The unit test is skipped with the
+decision written out.
+
+**To settle it:** should `/no_such_intent` reply at all, and if so with what
+wording? `"Intent not found: x"` leaks an internal name. If yes, un-skip that test,
+update `routes_http_test.js`, and choose user-facing text.
+
+### The last defects fixed
+
+- `MockBotsDataSource` missing its `winston` require (`ReferenceError`).
+- `DirBrevo`, `DirCustomerio` and `DirHubspot` all shared one shape: when the
+  integration key is missing and the action has no false connector, the `if (!key)`
+  block **fell through and called the vendor anyway** — `api-key: undefined`,
+  `authorization: Basic undefined`, `Bearer undefined`.
+- `DirMake` took the **true** connector on a 500, because MakeService never sets
+  `err`.
+- `DirSendWhatsapp` dereferenced `payload.receiver_list[0]` unguarded.
+- `DirWhatsappByAttribute` rejected unhandled on any failed broadcast.
+- `ChatbotParametersClient` and `WebhookChatbotPlug` dereferenced
+  `error.response.data` on transport errors that have no `.response`, hanging the
+  caller and the pipeline.
+- `ChatbotIntentUtil` missing its `winston` require.
+- `TiledeskChatbotConst` never declared the two document flow-attribute names
+  (`lastUserDocumentAsAttachmentURL`, `lastUserDocumentAsInlineURL`) that
+  `CHANGELOG.md` v0.2.60 publishes as public API — the code silently never
+  delivered them.
+
+A conflict caught in the process is worth recording: a fix that satisfies its own
+unit test can contradict an older test pinning shipped behaviour. That happened
+once here and was resolved in favour of what ships, not in favour of the newer
+test.
+
 ## Coverage target reached: 98.06%
 
 **Status: 98% achieved.** Lines **98.06%** (19,592/19,979), functions 97.90%,

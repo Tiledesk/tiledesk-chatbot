@@ -15,6 +15,28 @@ npm test
 file in its own mocha process and compares the result against
 `docs/test-baseline.json`. It exits non-zero on any failure or any regression.
 
+## Running without Docker
+
+Docker is the default, but the suite only needs a Redis on 6379 (and, for
+`startapp_mongo_test.js` alone, a MongoDB on 27017). Homebrew installs both into
+a user-writable prefix, so **neither needs an admin password** — useful when
+Docker Desktop is stuck on its privileged-helper prompt:
+
+```bash
+brew install redis
+/opt/homebrew/opt/redis/bin/redis-server --port 6379 --daemonize yes
+
+brew tap mongodb/brew && brew trust mongodb/brew
+brew install mongodb-community
+mkdir -p /tmp/mongodata
+nohup mongod --dbpath /tmp/mongodata --port 27017 >/tmp/mongod.log 2>&1 &
+```
+
+`mongod --fork` does not work on macOS ("fork+exec is incompatible with macOS") —
+background it with `nohup ... &` instead.
+
+Stop them with `redis-cli shutdown` and `mongosh --eval 'db.getSiblingDB("admin").shutdownServer()'`.
+
 ## Booting the app end-to-end
 
 The suite uses static bots and never connects to MongoDB, but the real app does:
