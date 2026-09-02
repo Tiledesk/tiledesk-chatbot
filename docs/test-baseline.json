@@ -55,6 +55,7 @@
   "dir_set_attribute_test.js": 17,
   "directive_gaps_units_test.js": 11,
   "directives_test.js": 1,
+  "e2e_mongo_conversation_test.js": 10,
   "engine_units_test.js": 87,
   "expression_evaluator_test.js": 13,
   "ext_api_fix_token_test.js": 2,
