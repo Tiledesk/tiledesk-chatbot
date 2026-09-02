@@ -118,6 +118,24 @@ function run(dir, directive, settleMs) {
   });
 }
 
+/**
+ * Points one vendor's endpoint at a port nothing listens on, so the request
+ * fails at the TRANSPORT layer: axios rejects with an error that carries no
+ * `.response` at all. That is what a vendor being down, a DNS failure or a
+ * connect timeout looks like, and it is precisely the case the directives'
+ * error branches exist to report.
+ */
+const DEAD_ENDPOINT = 'http://127.0.0.1:9';
+async function withVendorDown(envName, fn) {
+  const previous = process.env[envName];
+  process.env[envName] = DEAD_ENDPOINT;
+  try { return await fn(); }
+  finally {
+    if (previous === undefined) delete process.env[envName];
+    else process.env[envName] = previous;
+  }
+}
+
 // ------------------------------------------------------------------- mock
 
 /**
@@ -396,6 +414,36 @@ describe('Directives directives/integrations, the error and edge paths', functio
     // Correct behaviour, asserted here: a missing key stops the directive.
     // Nothing is sent, and the flow carries on the way every other
     // no-connector exit in the file does.
+    // Every one of these three directives guards `err.response` before reading
+    // `.status` and `.data`, and then logs `err.response.data` UNGUARDED one
+    // line above the guards. A vendor that is down rejects with an axios error
+    // that has no `.response`, so the branch that exists to REPORT the failure
+    // threw "Cannot read properties of undefined (reading 'data')" inside an
+    // async go(): the directive never called back, the conversation stalled,
+    // and the only trace was an unhandled rejection.
+    it('a brevo host that cannot be reached is reported, not thrown on', async () => {
+      const mock = await startMock(KEYED);
+      try {
+        const { dir, tdcache } = await withVendorDown('BREVO_ENDPOINT', () => {
+          const built = build(DirBrevo, { vars: { who: "ada" } });
+          return run(built.dir, {
+            name: "brevo",
+            action: {
+              bodyParameters: Object.assign({}, BODY),
+              assignStatusTo: "b_status", assignErrorTo: "b_error", falseIntent: "KO"
+            }
+          }).then((stops) => Object.assign(built, { stops }));
+        });
+
+        assert.strictEqual(tdcache.attrs().b_status, null,
+          'there is no status: nothing answered');
+        assert.deepStrictEqual(dispatched, ["/KO"], 'the false connector is still taken');
+        assert.ok(dir);
+      } finally {
+        await mock.close();
+      }
+    });
+
     it('no Brevo integration and no false connector sends nothing at all', async () => {
       const mock = await startMock({ integrations: {} });
       try {
@@ -574,6 +622,27 @@ describe('Directives directives/integrations, the error and edge paths', functio
     // Same shape as the DirBrevo missing-key defect: without a false connector
     // the `if (!key)` block fell through and submitted the form anyway, with
     // `authorization: Basic undefined`.
+    it('a customer.io host that cannot be reached is reported, not thrown on', async () => {
+      const mock = await startMock(KEYED);
+      try {
+        const { tdcache } = await withVendorDown('CUSTOMERIO_ENDPOINT', () => {
+          const built = build(DirCustomerio, { vars: { who: "ada" } });
+          return run(built.dir, {
+            name: "customerio",
+            action: {
+              formid: "signup", bodyParameters: Object.assign({}, BODY),
+              assignStatusTo: "c_status", assignErrorTo: "c_error", falseIntent: "KO"
+            }
+          }).then(() => built);
+        });
+
+        assert.strictEqual(tdcache.attrs().c_status, null);
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+      } finally {
+        await mock.close();
+      }
+    });
+
     it('no Customer.io integration and no false connector submits nothing at all', async () => {
       const mock = await startMock({ integrations: {} });
       try {
@@ -731,6 +800,27 @@ describe('Directives directives/integrations, the error and edge paths', functio
     // Same shape as the DirBrevo missing-key defect: without a false connector
     // the `if (!key)` block fell through and created the contact anyway, with
     // `authorization: Bearer undefined`.
+    it('a hubspot host that cannot be reached is reported, not thrown on', async () => {
+      const mock = await startMock(KEYED);
+      try {
+        const { tdcache } = await withVendorDown('HUBSPOT_ENDPOINT', () => {
+          const built = build(DirHubspot, { vars: { who: "ada" } });
+          return run(built.dir, {
+            name: "hubspot",
+            action: {
+              bodyParameters: Object.assign({}, BODY),
+              assignStatusTo: "h_status", assignErrorTo: "h_error", falseIntent: "KO"
+            }
+          }).then(() => built);
+        });
+
+        assert.strictEqual(tdcache.attrs().h_status, null);
+        assert.deepStrictEqual(dispatched, ["/KO"]);
+      } finally {
+        await mock.close();
+      }
+    });
+
     it('no Hubspot integration and no false connector creates nothing at all', async () => {
       const mock = await startMock({ integrations: {} });
       try {

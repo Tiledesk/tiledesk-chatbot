@@ -102,7 +102,11 @@ class DirHubspot extends BaseDirective {
     if (err) {
       if (callback) {
         this.logger.error("[Hubspot] Error response: ", err.response);
-        winston.error("(DirHubspot)  err response: ", err.response.data)
+        // Guarded like the branches below: a hubspot that is DOWN rejects with
+        // an axios error that has no `.response` at all, so reading `.data` off
+        // it threw inside the handler that exists to report the failure -- the
+        // callback was never reached and the flow stalled.
+        winston.error("(DirHubspot)  err response: ", err.response ? err.response.data : err.message)
         let result = null;
         let status = null;
         let error;

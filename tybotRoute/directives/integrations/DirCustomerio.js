@@ -109,7 +109,11 @@ class DirCustomerio extends BaseDirective {
       if (callback) {
         this.logger.error("[Customer.io] Error response: ", err.response);
         winston.debug("(DirCustomerio) err response:", err.response)
-        winston.debug("(DirCustomerio) err data:", err.response.data)
+        // Guarded like the branches below: a customer.io that is DOWN rejects
+        // with an axios error that has no `.response` at all, so reading
+        // `.data` off it threw inside the handler that exists to report the
+        // failure -- the callback was never reached and the flow stalled.
+        winston.debug("(DirCustomerio) err data:", err.response ? err.response.data : err.message)
 
         let status = null;
         let error;

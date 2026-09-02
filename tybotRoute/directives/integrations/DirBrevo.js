@@ -118,7 +118,11 @@ class DirBrevo extends BaseDirective {
       if (callback) {
         this.logger.error("[Brevo] Error response: ", err.response);
         winston.debug("(DirBrevo) err response: ", err.response)
-        winston.debug("(DirBrevo)  err data:", err.response.data)
+        // Guarded like the branches below: a brevo that is DOWN rejects with an
+        // axios error that has no `.response` at all, so reading `.data` off it
+        // threw inside the handler that exists to report the failure -- the
+        // callback was never reached and the flow stalled.
+        winston.debug("(DirBrevo)  err data:", err.response ? err.response.data : err.message)
 
         let result = null;
         let status = null;
