@@ -1,3 +1,5 @@
+'use strict';
+
 const winston = require('./winston');
 
 // MODELS_MULTIPLIER = {
@@ -27,11 +29,16 @@ function loadMultiplier() {
     winston.debug("splitted_string: ", splitted_string)
 
     splitted_string.forEach(m => {
-        m_split = m.split(":");
+        // Both of these were assigned with no declaration. In this sloppy-mode
+        // file that silently created two globals; under strict mode it is a
+        // ReferenceError raised while the module is being required, i.e. at
+        // boot, on every deployment that sets AI_MODELS.
+        const m_split = m.split(":");
+        let multiplier;
         if (!m_split[1]) {
             multiplier = null;
         } else {
-            multiplier = Number(m_split[1]);;
+            multiplier = Number(m_split[1]);
         }
         models[m_split[0]] = multiplier;
     })

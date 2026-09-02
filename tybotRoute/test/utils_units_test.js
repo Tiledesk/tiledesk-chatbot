@@ -100,6 +100,58 @@ describe('utils, the error and edge paths', function () {
         ['free-model', 'gpt-3.5-turbo', 'gpt-4o']);
     });
 
+    // loadMultiplier()'s forEach assigned `m_split` and `multiplier` with no
+    // declaration at all. utils/aiUtils.js is not strict, so both silently
+    // became properties of the global object: the module leaked two names into
+    // every other module in the process, and the day the file (or a bundler,
+    // or an ESM wrapper) turns strict the very same lines throw
+    // "ReferenceError: m_split is not defined" AT REQUIRE TIME -- i.e. at boot,
+    // for every deployment that sets AI_MODELS. Nothing recovers from a throw
+    // in a top-level require.
+    it('parsing AI_MODELS leaks no names into the global object', function () {
+      assert.strictEqual(typeof globalThis.m_split, 'undefined',
+        'the loop variable must be declared, not written to the global object');
+      assert.strictEqual(typeof globalThis.multiplier, 'undefined',
+        'the loop variable must be declared, not written to the global object');
+    });
+
+    it('the parse survives strict mode and still reads a realistic AI_MODELS', function () {
+      const path = require.resolve('../utils/aiUtils');
+      const previousEnv = process.env.AI_MODELS;
+      const previousModule = require.cache[path];
+      try {
+        delete require.cache[path];
+        process.env.AI_MODELS = 'gpt-4:25;gpt-3.5-turbo:0.6;bare-model';
+        const reloaded = require('../utils/aiUtils').MODELS_MULTIPLIER;
+        assert.deepStrictEqual(reloaded, {
+          'gpt-4': 25,
+          'gpt-3.5-turbo': 0.6,
+          'bare-model': null
+        });
+      } finally {
+        delete require.cache[path];
+        if (previousEnv === undefined) delete process.env.AI_MODELS;
+        else process.env.AI_MODELS = previousEnv;
+        require.cache[path] = previousModule;
+      }
+    });
+
+    it('AI_MODELS unset yields an empty map rather than throwing at require time', function () {
+      const path = require.resolve('../utils/aiUtils');
+      const previousEnv = process.env.AI_MODELS;
+      const previousModule = require.cache[path];
+      try {
+        delete require.cache[path];
+        delete process.env.AI_MODELS;
+        assert.deepStrictEqual(require('../utils/aiUtils').MODELS_MULTIPLIER, {});
+      } finally {
+        delete require.cache[path];
+        if (previousEnv === undefined) delete process.env.AI_MODELS;
+        else process.env.AI_MODELS = previousEnv;
+        require.cache[path] = previousModule;
+      }
+    });
+
   });
 
   // ------------------------------------------------------- ChatbotIntentUtil
