@@ -743,16 +743,6 @@ describe('engine, the error and edge paths', function () {
       assert.strictEqual(await chatbot.getParameter("id"), 7);
     });
 
-    it('an explicit intent that does not exist resolves with nothing and still runs the matcher', async function () {
-      const ds = dataSource({ intents: {}, exact: {} });
-      const chatbot = chatbotFor({ botsDataSource: ds });
-      chatbot.intentsFinder = { async decode() { return []; } };
-
-      assert.strictEqual(await chatbot.replyToMessage({ text: "/nope", sender: "u-1" }), undefined,
-        'the not-found branch resolves with nothing - the message it composed is discarded');
-      assert.deepStrictEqual(ds.calls.byIntent, ["nope"]);
-    });
-
     it('an intent name that will not parse resolves with nothing', async function () {
       const ds = dataSource({ intents: {}, exact: {} });
       const chatbot = chatbotFor({ botsDataSource: ds });
@@ -786,7 +776,7 @@ describe('engine, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: the message the code composes is the
     // message the caller gets.
-    it.skip('an explicit intent that does not exist replies with the message the code composes', async function () {
+    it('an explicit intent that does not exist replies with the message the code composes', async function () {
       const ds = dataSource({ intents: {}, exact: {} });
       const chatbot = chatbotFor({ botsDataSource: ds });
       chatbot.intentsFinder = { async decode() { return []; } };

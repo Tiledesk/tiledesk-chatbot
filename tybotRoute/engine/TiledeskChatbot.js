@@ -172,7 +172,8 @@ class TiledeskChatbot {
           else {
             winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
             reply = { "text": "Intent not found: " + explicit_intent_name }
-            resolve()
+            resolve(reply);
+            return;
           }
         }
       }
