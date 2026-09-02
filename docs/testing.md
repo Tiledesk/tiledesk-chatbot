@@ -17,7 +17,14 @@ file in its own mocha process and compares the result against
 
 ## Booting the app end-to-end
 
-The suite uses static bots and never connects to MongoDB, but the real app does:
+Almost every test file uses static bots. Two connect to MongoDB and boot the
+app the way the real deployment does -- `test/startapp_mongo_test.js` (the boot
+itself) and `test/e2e_mongo_conversation_test.js` (conversations driven through
+a bot stored in mongo). Each owns a separate database and separate ports, and
+mongoose has one default connection per process, so the runner's
+process-per-file isolation is what keeps them apart: do not add a third mongo
+file without giving it its own database name and ports too. To run the real app
+by hand:
 
 ```bash
 docker compose -f docker-compose.test.yml up -d      # starts redis AND mongo
@@ -37,7 +44,9 @@ Two things that will trip you up:
 - Posting to `/ext/:botid` with a bot id that is not in MongoDB crashes on
   `Cannot read properties of null (reading 'language')` —
   `IntentsMachineFactory.getBackupMachine` has no null guard where its sibling
-  `getIntentsMachine` does. Pre-existing; seed a bot before exercising that route.
+  `getMachine` does. Pre-existing; seed a bot before exercising that route. The
+  crash is pinned by `test/e2e_mongo_conversation_test.js`, which also carries a
+  skipped test stating the correct behaviour.
 
 > **Port 6379 must be free.** If something else already owns it (a local
 > `redis-server`, another project's container) `docker compose up -d` fails with
@@ -154,7 +163,7 @@ which makes the suite look completely broken rather than misconfigured.
 ## The baseline
 
 `docs/test-baseline.json` maps each test file to the number of tests that must
-pass: **1,388 tests across 90 files**. It is a contract, not a snapshot. Raise it
+pass: **1,398 tests across 91 files**. It is a contract, not a snapshot. Raise it
 when you add tests; never lower it to make a run go green.
 
 Regenerate only when deliberately adding tests:
