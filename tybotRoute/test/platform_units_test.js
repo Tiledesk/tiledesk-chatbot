@@ -351,7 +351,7 @@ describe('the platform layer, the error and edge paths', function () {
     // Correct behaviour, asserted here: an unresolvable lookup returns
     // undefined, exactly as a lookup on a known bot with an unknown intent
     // already does.
-    it.skip('a lookup against a bot that is not in the static data misses instead of throwing', async function () {
+    it('a lookup against a bot that is not in the static data misses instead of throwing', async function () {
       const ds = new MockBotsDataSource(staticBots());
       assert.strictEqual(await ds.getByIntentDisplayName("NO-SUCH-BOT", "welcome"), undefined);
     });

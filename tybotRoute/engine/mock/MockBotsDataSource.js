@@ -1,3 +1,8 @@
+// Referenced by the getByIntentDisplayName catch below; the require was never
+// there, so the handler that exists to survive an unresolvable lookup threw
+// 'winston is not defined' instead of missing.
+const winston = require('../../utils/winston');
+
 class MockBotsDataSource {
 
   constructor(bots) {
