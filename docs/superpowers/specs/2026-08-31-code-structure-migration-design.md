@@ -483,6 +483,79 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## Crash-safety sweep
+
+Goal, in the user's words: "be sure that application does not crash unexpectedly
+... no error arise during real time execution." Approach: hunt the **defect class**
+rather than add more coverage, since coverage was already 98.15%.
+
+**Static sweep.** The cached tsc against `jsconfig.json` gave 121 errors. Triaged:
+the 7 `TS2349 "not callable"` were **all false positives** (every one an
+`axios(...)` call TypeScript cannot resolve through the CommonJS require shape),
+and the 79 `TS2339` are untyped-object noise. The crash-guaranteeing classes
+(`TS2304` undeclared name, `TS2588` const reassignment, `TS2551`, `TS2300`) went
+**12 → 1**.
+
+Four real defects came out of it:
+
+- `engine/TiledeskIntentsMachine.js:112` called `TiledeskClient.getErr(...)` in a
+  file that never requires `TiledeskClient` — `ReferenceError` on any non-200 from
+  the tiledesk-ai intents service. The **third** instance of this exact family.
+- `utils/aiUtils.js` assigned `m_split` and `multiplier` with no declaration,
+  leaking implicit globals — and a `ReferenceError` **at module load** under strict
+  mode whenever `AI_MODELS` is set. Runs on every boot.
+- `directives/agents/DirIfOpenHours.js` reassigned two `const`s → `TypeError` on a
+  whitespace-only intent name. Fixing it surfaced a **second** defect in the same
+  method: both success branches ran the branch intent *and* fell through to an
+  unconditional `callback()`, so a configured branch called back twice.
+- `pipeline/MessagePipeline.js` `this.coounter` typo.
+
+### The biggest find was not in the plan
+
+**All four async express handlers had no error boundary.** `POST /ext/:botid` with
+a body of `{}` — a probe, a misconfigured caller — dereferenced
+`req.body.payload._id`, threw out of the async handler, left the socket
+**unanswered** and **killed the worker**. Four distinct reachable crashes,
+reproduced outside mocha.
+
+Fixed in two layers: explicit 400s where the bad shape is known, plus
+`routes/asyncErrorBoundary.js` wrapping every handler at registration. Verified
+against a live server: `{}`, `{"payload":{}}` and a malformed `/exec` all return
+400, the worker stays up, zero `uncaughtException`.
+
+### Pattern sweep — hits triaged, not blanket-patched
+
+| Pattern | Hits | Real | Note |
+|---|---|---|---|
+| `error.response.*` unguarded | 29 | 3 | Brevo/Customerio/Hubspot each guarded two lines *below* an unguarded log — a vendor being down stalled the flow |
+| `callback()` without `return` | 11 | 1 | the DirIfOpenHours double-call |
+| identifier used, never required | 8 | 2 files | both fixed, 0 remain |
+| unguarded index on external data | 24 | 2 | `DirGptTask` `resbody.choices[0]`, `validateRequestId(undefined)` |
+| rejecting `await`, no catch | 22 audited | 3 | `DirRemoveCurrentBot` ×2, `DirAssignFromFunction` — fatal under plain node |
+
+Suite **1,398 → 1,436 tests**; coverage 98.16% lines, 95.37% branches.
+
+### Left open, each needing a product decision
+
+1. `POST /block/...` in sync mode never answers when no block publishes — a hang,
+   not a crash. The right timeout is a product call.
+2. `DirIfOnlineAgents`/`V2` do not normalise a whitespace-only intent name, so a
+   blank branch dispatches intent `" "`. `DirCondition` and `DirIfOpenHours` do
+   normalise.
+3. `trueIntentAttributes`/`falseIntentAttributes` are read into locals and never
+   passed to `intentDirectiveFor` in `DirIfOpenHours` and `DirCondition`, while
+   `DirIfOnlineAgents` does pass them.
+4. `utils/winston.js:35` assigns `logger.stream = {...}`, clobbering winston's own
+   `stream()` query method. Nothing reads it today.
+
+### One structural risk worth naming
+
+Every directive that calls `callback()` from inside a `.then()` re-enters the rest
+of the flow *there*, so a throw downstream becomes an unhandled rejection
+attributed to the wrong directive. `DirIfOpenHours`'s chain has no `.catch` at all.
+The route-level boundary does **not** cover this — closing it needs a guard in the
+directive dispatcher, which is a design change, not a fix.
+
 ## End-to-end integration tests against the production data path
 
 **The gap the existing suite could not see.** 46 test files already booted the
