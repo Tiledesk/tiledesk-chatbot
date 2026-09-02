@@ -48,29 +48,31 @@
     "2026-09-01, stage 3a (the MongoDB boot path and the message pipeline): overall lines 96.82 -> 97.54, startApp/index 74.38 -> 100.00, pipeline 96.88 -> 100.00, pipeline/plugs 89.21 -> 98.83, routes 92.91 -> 95.63, engine 96.37 -> 97.02. No floor forced. Two new files. test/startapp_mongo_test.js is the ONE file that boots the connector WITHOUT settings.bots: it connects to the mongo of docker-compose.test.yml on its own database (tilebot_startapp_test, dropped in after()), seeds a faq_kb and its faqs through the real models, and drives POST /ext/:botid and /exec/:botid through the Mongo data source and the IntentsMachineFactory. It must stay the only one -- mongoose has a single default connection per process, and the per-file process isolation of scripts/run-tests.js is what keeps the other 85 files on their static-bot contract. test/pipeline_units_test.js runs each plug inside a real MessagePipeline and asserts on the resolved message and on what the mock server received. Overall BRANCH coverage rose 93.95 -> 94.31 even though the engine area's branch figure fell 97.37 -> 96.17: newly-executed code makes previously-invisible branches countable, the same denominator effect recorded above for the quarantine release.",
     "",
     "2026-09-01, stage 3b (the last gap to 98%): overall lines 97.54 -> 98.06, branches 94.31 -> 95.19, functions 97.76 -> 97.90. No floor forced -- every floor ratcheted UP. Four new unit files, all additive: base_directive_units_test.js (BaseDirective 92.75 -> 100: the four branch x connected combinations of _executeCondition and the completion callback), http_clients_units_test.js (HttpUtils/utils.http's https agent, TdCache.connect(callback), the BASE_URL/API_URL request attributes), when_expression_corners_test.js (TiledeskWhenExpression 93.9 -> 99.4: string escapes, exponent literals, the parser's two syntax errors, optional-chained indexing, unary +/-, isEmpty on scalars) and directive_gaps_units_test.js (DirForm past the first question 86.9 -> 100, plus the success-with-no-trueIntent branch of Customerio/Hubspot and a web request over https).",
-    "Areas still under 98% after stage 3b, with the reason. Each remaining line was read; what is left is predominantly UNREACHABLE, not untested: routes/parametersRoutes.js 29-31/62-64 test `allParametersStatic() === null`, which RequestParameters can never return (it always resolves an object), and 45-47 tests an empty `:requestid`, which express cannot route; DirMake 114-131 and DirWebRequestV2 130-141 are the `if (err)` halves of two services documented in the source itself as never producing an err; DirAddTags 80-82/90-92/126-128/136-138 need addNewTag()/updateRequestWithTags() to return falsy, which they cannot because httpUtils.request already reports an empty 2xx body as an error; DirCondition 65-69 tests `scriptCondition.trim === \"\"` -- a comparison against the FUNCTION, never true; DirIfOpenHours 46-49 and DirIteration's Object.entries/Object.keys/Symbol.iterator fallbacks are unreachable for the same class of reason (a const reassignment that would throw, and branches masked by an earlier equivalent test). PromptManager 45-49 is the fallback for a prompt file that is always present on disk."
+    "Areas still under 98% after stage 3b, with the reason. Each remaining line was read; what is left is predominantly UNREACHABLE, not untested: routes/parametersRoutes.js 29-31/62-64 test `allParametersStatic() === null`, which RequestParameters can never return (it always resolves an object), and 45-47 tests an empty `:requestid`, which express cannot route; DirMake 114-131 and DirWebRequestV2 130-141 are the `if (err)` halves of two services documented in the source itself as never producing an err; DirAddTags 80-82/90-92/126-128/136-138 need addNewTag()/updateRequestWithTags() to return falsy, which they cannot because httpUtils.request already reports an empty 2xx body as an error; DirCondition 65-69 tests `scriptCondition.trim === \"\"` -- a comparison against the FUNCTION, never true; DirIfOpenHours 46-49 and DirIteration's Object.entries/Object.keys/Symbol.iterator fallbacks are unreachable for the same class of reason (a const reassignment that would throw, and branches masked by an earlier equivalent test). PromptManager 45-49 is the fallback for a prompt file that is always present on disk.",
+    "",
+    "2026-09-02, the last seven catalogued runtime defects: no floor forced -- every floor ratcheted UP (overall lines 98.06 -> 98.15, branches 95.19 -> 95.31, directives/integrations lines 97.79 -> 98.05 with its floor 96.7 -> 97, engine/mock 98.13 -> 99.09 with floor 97.1 -> 98). The fixes: the two ChatbotParametersClient failure tests released against the ff512d35 source fix, winston required in MockBotsDataSource, DirBrevo's missing-key guard given the return it never had, DirMake routed on the status the webhook answered instead of always on the true connector, DirSendWhatsapp's absent payload guarded, and DirWhatsappByAttribute's vestigial reject() removed. Two per-area BRANCH figures sampled ~0.1 low and are recorded as measured, not forced: cache 95.45 -> 95.35 (a single file, TdCache.js, untouched by this work -- 41/43 against the 42/44 recorded before) and engine 96.21 -> 96.20. Both are the per-file-process merge drift already documented above; the line figures for both areas ROSE over the same run."
   ],
-  "recordedAt": "2026-09-01",
+  "recordedAt": "2026-09-02",
   "recordedCommit": "dfc6a990ac19c9ba6fa9ab9ea96f78d9df0ab8f0",
   "headroomPoints": 1,
   "measured": {
     "files": 144,
-    "lines": 98.06,
-    "statements": 98.06,
+    "lines": 98.15,
+    "statements": 98.15,
     "functions": 97.9,
-    "branches": 95.19,
-    "linesCovered": 19592,
-    "linesTotal": 19979,
+    "branches": 95.31,
+    "linesCovered": 19691,
+    "linesTotal": 20062,
     "functionsCovered": 701,
     "functionsTotal": 716,
-    "branchesCovered": 3905,
-    "branchesTotal": 4102
+    "branchesCovered": 3928,
+    "branchesTotal": 4121
   },
   "floor": {
-    "lines": 97,
-    "statements": 97,
+    "lines": 97.1,
+    "statements": 97.1,
     "functions": 96.9,
-    "branches": 94.1
+    "branches": 94.3
   },
   "areas": {
     "tybotRoute": {
@@ -83,7 +85,7 @@
     "tybotRoute/cache": {
       "files": 1,
       "lines": 95.58,
-      "branches": 95.45,
+      "branches": 95.35,
       "functions": 100,
       "floorLines": 94.5
     },
@@ -118,7 +120,7 @@
     "tybotRoute/directives/agents": {
       "files": 8,
       "lines": 99.58,
-      "branches": 97.97,
+      "branches": 97.98,
       "functions": 100,
       "floorLines": 98.5
     },
@@ -159,10 +161,10 @@
     },
     "tybotRoute/directives/integrations": {
       "files": 7,
-      "lines": 97.79,
-      "branches": 98.94,
+      "lines": 98.05,
+      "branches": 98.98,
       "functions": 100,
-      "floorLines": 96.7
+      "floorLines": 97
     },
     "tybotRoute/directives/tiledesk": {
       "files": 3,
@@ -173,17 +175,17 @@
     },
     "tybotRoute/engine": {
       "files": 10,
-      "lines": 97.02,
-      "branches": 96.21,
+      "lines": 97.06,
+      "branches": 96.2,
       "functions": 100,
       "floorLines": 96
     },
     "tybotRoute/engine/mock": {
       "files": 3,
-      "lines": 98.13,
-      "branches": 96,
+      "lines": 99.09,
+      "branches": 97.96,
       "functions": 100,
-      "floorLines": 97.1
+      "floorLines": 98
     },
     "tybotRoute/expressions": {
       "files": 5,
@@ -215,10 +217,10 @@
     },
     "tybotRoute/pipeline/plugs": {
       "files": 5,
-      "lines": 98.83,
-      "branches": 91.35,
+      "lines": 99.57,
+      "branches": 92.11,
       "functions": 100,
-      "floorLines": 97.8
+      "floorLines": 98.5
     },
     "tybotRoute/routes": {
       "files": 5,
@@ -236,10 +238,10 @@
     },
     "tybotRoute/utils": {
       "files": 13,
-      "lines": 98.92,
-      "branches": 97.78,
+      "lines": 99.34,
+      "branches": 98.37,
       "functions": 98.39,
-      "floorLines": 97.9
+      "floorLines": 98.3
     },
     "tybotRoute/variables": {
       "files": 3,

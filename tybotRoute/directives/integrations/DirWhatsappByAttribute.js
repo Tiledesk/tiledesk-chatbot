@@ -60,7 +60,7 @@ class DirWhatsappByAttribute extends BaseDirective {
     // resolve/reject pair was vestigial in any case: execute() ignores the
     // returned promise entirely, and nothing else calls go().
     if (err) {
-      winston.error("(DirWhatsappByAttribute) broadcast failed: ", err.message ? err.message : err);
+      winston.error("(DirWhatsappByAttribute) broadcast failed: ", err);
       if (callback) {
         callback(err);
       }
