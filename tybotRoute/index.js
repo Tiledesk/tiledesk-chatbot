@@ -13,15 +13,22 @@ const { registerParametersRoutes } = require('./routes/parametersRoutes.js');
 const { registerMiscRoutes } = require('./routes/miscRoutes.js');
 const { registerBlockRoutes } = require('./routes/blockRoutes.js');
 const { startApp } = require('./startApp.js');
+const { guardRouter } = require('./routes/asyncErrorBoundary.js');
 
 router.use(bodyParser.json({limit: '50mb'}));
 router.use(bodyParser.urlencoded({ extended: true , limit: '50mb'}));
 
 // Registration order is significant for express: it reproduces exactly the
 // order the routes were declared in before the Phase 6a split.
-registerMessageRoutes(router);
-registerParametersRoutes(router);
-registerMiscRoutes(router);
-registerBlockRoutes(router);
+//
+// Every handler goes on through guardRouter: express 4 does not await an async
+// handler, so a rejection left the client waiting on an unanswered socket AND
+// killed the worker (Node defaults to --unhandled-rejections=throw). See
+// routes/asyncErrorBoundary.js.
+const guarded = guardRouter(router);
+registerMessageRoutes(guarded);
+registerParametersRoutes(guarded);
+registerMiscRoutes(guarded);
+registerBlockRoutes(guarded);
 
 module.exports = { router: router, startApp: startApp};

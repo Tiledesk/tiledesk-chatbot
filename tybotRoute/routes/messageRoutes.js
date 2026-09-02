@@ -27,6 +27,23 @@ router.post('/ext/:botid', async (req, res) => {
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
 
+
+  // The envelope is whatever was POSTed. `req.body.payload` and
+  // `payload.request` were dereferenced immediately below with no check at
+  // all, so a body of `{}` -- anything from a probe to a misconfigured caller
+  // -- threw "Cannot read properties of undefined (reading '_id')" out of this
+  // async handler: the caller was never answered and the worker died. A
+  // malformed envelope is a bad request, answered the way the two checks above
+  // answer theirs.
+  if (!req.body || !req.body.payload || typeof req.body.payload !== 'object') {
+    winston.warn("(tybotRoute) Message with no payload on " + req.originalUrl);
+    return res.status(400).send({"success": false, error: "Required parameter payload not found in the request body"})
+  }
+  if (!req.body.payload.request || typeof req.body.payload.request !== 'object') {
+    winston.warn("(tybotRoute) Message payload with no request on " + req.originalUrl);
+    return res.status(400).send({"success": false, error: "Required parameter payload.request not found in the request body"})
+  }
+
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
   }
@@ -248,6 +265,23 @@ router.post('/exec/:botid', async (req, res) => {
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
 
+
+  // The envelope is whatever was POSTed. `req.body.payload` and
+  // `payload.request` were dereferenced immediately below with no check at
+  // all, so a body of `{}` -- anything from a probe to a misconfigured caller
+  // -- threw "Cannot read properties of undefined (reading '_id')" out of this
+  // async handler: the caller was never answered and the worker died. A
+  // malformed envelope is a bad request, answered the way the two checks above
+  // answer theirs.
+  if (!req.body || !req.body.payload || typeof req.body.payload !== 'object') {
+    winston.warn("(tybotRoute) Message with no payload on " + req.originalUrl);
+    return res.status(400).send({"success": false, error: "Required parameter payload not found in the request body"})
+  }
+  if (!req.body.payload.request || typeof req.body.payload.request !== 'object') {
+    winston.warn("(tybotRoute) Message payload with no request on " + req.originalUrl);
+    return res.status(400).send({"success": false, error: "Required parameter payload.request not found in the request body"})
+  }
+
   if (req && req.body && req.body.payload && req.body.payload.request && req.body.payload.request.snapshot) {
     delete req.body.payload.request.snapshot;
   }
@@ -417,6 +451,14 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
   
   let answer = req.body;
   winston.verbose("(tybotRoute) answer on sendSupportMessageExt: ", answer);
+  // new TiledeskClient() THROWS "options.token can NOT be null." on a request
+  // with no Authorization header. The 200 above has already gone out, so the
+  // throw could not reach the caller -- it only rejected out of this async
+  // handler and killed the worker.
+  if (!token) {
+    winston.error("(tybotRoute) No Authorization header on the ext message for request " + requestId + ": nothing to run it as");
+    return;
+  }
   const tdclient = new TiledeskClient({
     projectId: projectId,
     token: token,
