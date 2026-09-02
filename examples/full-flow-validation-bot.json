@@ -78,7 +78,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 80,
+          "y": 4511
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -87,7 +93,13 @@
       "question": "defaultFallback",
       "answer": "I did not understand. Type /start to go back to the validation menu.\n* ↩ Main menu tdIntent:start",
       "intent_display_name": "defaultFallback",
-      "intent_id": "FFV_FALLBACK"
+      "intent_id": "FFV_FALLBACK",
+      "attributes": {
+        "position": {
+          "x": 80,
+          "y": 5151
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -150,7 +162,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 620,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -204,7 +222,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -431,7 +455,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 320
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -490,7 +520,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 1054
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -533,7 +569,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 1314
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -576,7 +618,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 1054
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -635,7 +683,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 1604
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -700,7 +754,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 1982
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -775,7 +835,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 620,
+          "y": 2602
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -823,7 +889,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 2602
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -866,7 +938,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 2602
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -903,7 +981,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 2936
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -946,7 +1030,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 2936
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -995,7 +1085,13 @@
           "trueIntent": "#FFV_B_COND_TRUE",
           "falseIntent": "#FFV_B_COND_FALSE"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 3240
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1038,7 +1134,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 3240
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1081,7 +1183,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 3500
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1114,7 +1222,13 @@
           "trueIntent": "#FFV_B_COND2_TRUE",
           "falseIntent": "#FFV_B_COND2_FALSE"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 3790
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1157,7 +1271,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 3790
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1200,7 +1320,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 4050
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1269,7 +1395,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 4340
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1294,7 +1426,13 @@
           "assignOutputTo": "ffv_colour",
           "delay": 1
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 4748
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1305,6 +1443,10 @@
       "intent_display_name": "b_iteration_body",
       "intent_id": "FFV_B_ITER_BODY",
       "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 4748
+        },
         "nextBlockAction": {
           "_tdActionType": "intent",
           "intentName": "#FFV_B_ITER"
@@ -1369,7 +1511,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 5022
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1416,7 +1564,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 5022
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1465,7 +1619,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 5356
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1540,7 +1700,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 620,
+          "y": 5960
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1645,7 +1811,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 5960
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1728,7 +1900,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 6442
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1776,7 +1954,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 6894
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1842,7 +2026,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 7228
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1938,7 +2128,13 @@
           "trueIntent": "#FFV_C_TABLE_OK",
           "falseIntent": "#FFV_C_TABLE_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 7636
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -1992,7 +2188,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 7636
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2035,7 +2237,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 7926
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2121,7 +2329,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 8216
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2148,7 +2362,13 @@
           "trueIntent": "#FFV_C_WEBREQ2_OK",
           "falseIntent": "#FFV_C_WEBREQ2_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 8668
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2191,7 +2411,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 8668
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2234,7 +2460,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1940,
+          "y": 8928
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2284,7 +2516,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 1280,
+          "y": 9218
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2339,7 +2577,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 2900,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2378,7 +2622,13 @@
           "assignResultTo": "ffv_favourite_colour",
           "goToIntent": "d_capture_done"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2421,7 +2671,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2501,7 +2757,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 304
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2548,7 +2810,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 756
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2611,7 +2879,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 2900,
+          "y": 1360
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2630,7 +2904,13 @@
           "trueIntent": "#FFV_E_AGENTS_ON",
           "falseIntent": "#FFV_E_AGENTS_OFF"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 1360
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2673,7 +2953,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 1360
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2716,7 +3002,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 1620
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2736,7 +3028,13 @@
           "trueIntent": "#FFV_E_AGENTS2_ON",
           "falseIntent": "#FFV_E_AGENTS2_OFF"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 1910
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2779,7 +3077,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 1910
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2822,7 +3126,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 2170
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2841,7 +3151,13 @@
           "trueIntent": "#FFV_E_HOURS_OPEN",
           "falseIntent": "#FFV_E_HOURS_CLOSED"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 2460
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2884,7 +3200,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 2460
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2927,7 +3249,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 4220,
+          "y": 2720
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2976,7 +3304,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 3010
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -2994,7 +3328,13 @@
           "maxresults": 3,
           "urlTarget": "blank"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 3344
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3053,7 +3393,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 2900,
+          "y": 3844
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3112,7 +3458,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 3844
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3168,7 +3520,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 4222
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3177,7 +3535,13 @@
       "question": "fire a custom event",
       "answer": "firetiledeskevent: a custom event was fired\n\\_tdfiretiledeskevent --name full_flow_validation_event\n* ↩ Main menu tdIntent:start",
       "intent_display_name": "f_event",
-      "intent_id": "FFV_F_EVENT"
+      "intent_id": "FFV_F_EVENT",
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 4556
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3228,7 +3592,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 3560,
+          "y": 4786
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3299,7 +3669,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5180,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3326,7 +3702,13 @@
           "trueIntent": "#FFV_G_BREVO_OK",
           "falseIntent": "#FFV_G_BREVO_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3369,7 +3751,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 0
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3412,7 +3800,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 260
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3438,7 +3832,13 @@
           "trueIntent": "#FFV_G_HUBSPOT_OK",
           "falseIntent": "#FFV_G_HUBSPOT_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 550
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3481,7 +3881,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 550
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3524,7 +3930,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 810
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3550,7 +3962,13 @@
           "trueIntent": "#FFV_G_CUSTOMERIO_OK",
           "falseIntent": "#FFV_G_CUSTOMERIO_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 1100
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3593,7 +4011,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 1100
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3636,7 +4060,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 1360
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3662,7 +4092,13 @@
           "trueIntent": "#FFV_G_MAKE_OK",
           "falseIntent": "#FFV_G_MAKE_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 1650
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3705,7 +4141,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 1650
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3748,7 +4190,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 1910
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3771,7 +4219,13 @@
           "trueIntent": "#FFV_G_QAPLA_OK",
           "falseIntent": "#FFV_G_QAPLA_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 2200
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3814,7 +4268,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 2200
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3857,7 +4317,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 2460
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3893,7 +4359,13 @@
           "trueIntent": "#FFV_G_WA_OK",
           "falseIntent": "#FFV_G_WA_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 2750
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3936,7 +4408,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 2750
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -3979,7 +4457,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 3010
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4032,7 +4516,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 3300
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4103,7 +4593,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5180,
+          "y": 3948
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4125,7 +4621,13 @@
           "trueIntent": "#FFV_H_ASKGPT_OK",
           "falseIntent": "#FFV_H_ASKGPT_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 3948
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4179,7 +4681,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 3948
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4222,7 +4730,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 4238
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4246,7 +4760,13 @@
           "trueIntent": "#FFV_H_ASKGPT2_OK",
           "falseIntent": "#FFV_H_ASKGPT2_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 4528
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4300,7 +4820,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 4528
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4343,7 +4869,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 4818
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4368,7 +4900,13 @@
           "trueIntent": "#FFV_H_PROMPT_OK",
           "falseIntent": "#FFV_H_PROMPT_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 5108
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4411,7 +4949,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 5108
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4454,7 +4998,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 5368
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4490,7 +5040,13 @@
           "fallbackIntent": "#FFV_H_AICOND_FALLBACK",
           "errorIntent": "#FFV_H_AICOND_ERROR"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 5658
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4533,7 +5089,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 5658
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4576,7 +5138,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 5918
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4619,7 +5187,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 6178
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4662,7 +5236,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 6438
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4687,7 +5267,13 @@
           "trueIntent": "#FFV_H_GPTTASK_OK",
           "falseIntent": "#FFV_H_GPTTASK_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 6728
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4730,7 +5316,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 6728
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4773,7 +5365,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 6988
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4827,7 +5425,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 7278
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4850,7 +5454,13 @@
           "trueIntent": "#FFV_H_ASSISTANT_OK",
           "falseIntent": "#FFV_H_ASSISTANT_KO"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 7642
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4893,7 +5503,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 7642
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -4936,7 +5552,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 6500,
+          "y": 7902
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5007,7 +5629,13 @@
             ]
           }
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5180,
+          "y": 8462
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5044,7 +5672,13 @@
           "_tdActionTitle": "to a human",
           "_tdActionId": "ffv-agent-1"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 8462
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5081,7 +5715,13 @@
           "_tdActionTitle": "back to the queue",
           "_tdActionId": "ffv-unassigned-1"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 8766
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5118,7 +5758,13 @@
           "_tdActionTitle": "detach this bot",
           "_tdActionId": "ffv-removebot-1"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 9070
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5156,7 +5802,13 @@
           "_tdActionId": "ffv-replace-1",
           "botName": "Full Flow Validation Target"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 9374
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5196,7 +5848,13 @@
           "nameAsSlug": true,
           "blockName": "start"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 9678
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5237,7 +5895,13 @@
           "useSlug": false,
           "blockName": "start"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 9982
+        }
+      }
     },
     {
       "webhook_enabled": false,
@@ -5274,7 +5938,13 @@
           "_tdActionTitle": "close the request",
           "_tdActionId": "ffv-close-1"
         }
-      ]
+      ],
+      "attributes": {
+        "position": {
+          "x": 5840,
+          "y": 10286
+        }
+      }
     }
   ]
 }

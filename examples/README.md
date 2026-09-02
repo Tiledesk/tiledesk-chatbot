@@ -15,8 +15,9 @@ real account (see *What the automated suite does not drive*).
 
 The file is the shape the Tiledesk designer imports: `{ name, description,
 language, webhook_enabled, type, intents: [...] }`, where each intent carries
-`intent_display_name`, `intent_id`, `question`, `answer` and either a text
-`answer` or an `actions` list.
+`intent_display_name`, `intent_id`, `question`, `answer`, either a text `answer`
+or an `actions` list, and an `attributes.position` — where the block sits on the
+design studio's canvas.
 
 1. In the Tiledesk dashboard open **Chatbots → Import chatbot** and upload
    `full-flow-validation-bot.json`.
@@ -25,6 +26,36 @@ language, webhook_enabled, type, intents: [...] }`, where each intent carries
 3. The entry block lists nine families; each button sends the block command of
    a family menu, and each of those lists its blocks. Every branch that can
    return offers **↩ Main menu** (`/start`).
+
+### How it is laid out on the canvas
+
+`attributes.position` is not decoration. An import whose blocks carry no
+position drops all 112 of them on one coordinate, and the canvas is unreadable.
+
+The nine families are tiled **three across, three down** — A B C down the first
+column, D E F down the second, G H I down the third — with `start` on the far
+left, level with the middle of the first column. Inside a family it reads left
+to right, which is the direction the studio draws connectors in (out of a
+block's right edge, into the next block's left edge):
+
+```
+family menu   →   the blocks of that family   →   their outcome blocks
+                                                  (true/false, ok/ko, targets)
+```
+
+The canvas is about 7000 × 10500, so **zoom to fit** shows the whole thing and
+each family reads as its own group.
+
+Positions are generated, not hand-placed:
+
+```bash
+node examples/layout-blocks.js                    # rewrites the bot in place
+node examples/layout-blocks.js path/to/other.json
+```
+
+It walks the flow's own connectors, so it lays out any Tiledesk export, and it
+gives every subtree a vertical region of its own — no two blocks can overlap.
+Re-run it after adding blocks. It changes nothing but `attributes.position`.
 
 Every block is also addressable directly: send `/b_condition`, `/g_brevo`,
 `/i_close`, … Block ids are stable (`FFV_…`), so `#FFV_C_WEBRESP` and friends
