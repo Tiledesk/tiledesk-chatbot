@@ -120,7 +120,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: tiledesk-chatbot:integration
-    command: ["node", "integration/tests/run.js"]
+    command: ["node", "integration/tests/all.js"]
     environment:
       MONGODB_URI: "mongodb://mongo:27017/tilebot_integration"
       TILEBOT_URL: "http://tilebot:3000"
