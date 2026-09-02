@@ -1,4 +1,7 @@
 let axios = require('axios');
+// Used by myrequest() to build the error for a non-200 answer. The reference
+// was there; the require was not.
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('./winston');
 const { tilebotEndpoint } = require('../config/endpoints');
 
@@ -84,7 +87,10 @@ class ChatbotParametersClient {
             }
           })
           .catch((error) => {
-            winston.error("(TiledeskChatbotUtil) Axios error: ", error.response.data);
+            // A transport failure (connection refused, DNS, reset, timeout) has
+            // no `.response`: reading `.data` off it threw inside this handler
+            // and the callback below never ran, leaving the caller waiting.
+            winston.error("(TiledeskChatbotUtil) Axios error: ", error.response ? error.response.data : error.message);
             if (callback) {
               callback(error, null, null);
             }

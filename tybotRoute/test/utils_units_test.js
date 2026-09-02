@@ -962,7 +962,7 @@ describe('utils, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: report the failure to the callback, the
     // way the .catch() below it does.
-    it.skip('a non-200 from tilebot reaches the callback as an error', function (done) {
+    it('a non-200 from tilebot reaches the callback as an error', function (done) {
       handler = (req, res) => res.status(204).send();
       new ChatbotParametersClient().getChatbotParameters("support-group-P1-abcd", (err, body) => {
         try {
@@ -987,7 +987,7 @@ describe('utils, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: log it and hand the error to the
     // callback.
-    it.skip('a tilebot that is not listening reaches the callback as an error', function (done) {
+    it('a tilebot that is not listening reaches the callback as an error', function (done) {
       new ChatbotParametersClient().myrequest(
         { url: 'http://127.0.0.1:10099/nothing', method: 'get' },
         (err) => {
