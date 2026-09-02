@@ -483,6 +483,52 @@ CI type gate, per the TypeScript-runway decision.
 **Verification:** green set unchanged; `npm start` boots. Type errors surfaced by
 `checkJs` are recorded as follow-up work, not fixed in this migration.
 
+## End-to-end integration tests against the production data path
+
+**The gap the existing suite could not see.** 46 test files already booted the
+full Express app — but **all 46 passed static bots** (`bots: bots_data`).
+Production loads bots from MongoDB through `MongodbBotsDataSource` and matches
+intents through `MongodbIntentsMachine`. `startapp_mongo_test.js` booted against a
+real MongoDB but only asserted the health check.
+
+So those four engine files reported **100% coverage**, entirely from unit tests
+with stubbed models, while **no test had ever pushed a real message through a real
+Mongo-stored bot.** Another instance of the theme: coverage says the lines ran, not
+that the production path works.
+
+`test/e2e_mongo_conversation_test.js` closes it — booting with a real
+`MONGODB_URI` and **no** `bots` setting (asserted: `runtimeContext.staticBots ===
+undefined`), its own database, its own ports, seeded through the repo's own
+mongoose models. Six journeys:
+
+1. An explicit `/welcome` answered from a Mongo faq document, with a wrapped
+   `Faq_kb.findById` proving exactly one bot read.
+2. **Natural-language matching** through `MongodbIntentsMachine`'s `$text` index —
+   "opening hours please" matches, a nonsense phrase gets no reply at all, which
+   proves real scoring rather than "first faq wins". Exercised by nothing before.
+3. Multi-turn state across Redis: turn 1 writes `visitor_name`, turn 2 renders it;
+   a different request does not see it.
+4. Directives parsed out of stored answer text, `_raw_message` byte-identical to
+   what Mongo holds.
+5. The bot cache: after message 1 the document is **deleted from Mongo via the raw
+   driver**, message 2 still answers, and the `findById` count is zero.
+6. A bot id Mongo does not know.
+
+### Journey 6 found a live production crash
+
+`getBotByIdCache` **resolves null** for a missing bot, so the error `catch` above it
+never applied. Falling through crashed twice over: `IntentsMachineFactory
+.getBackupMachine` dereferenced `bot.language` with no guard (its sibling
+`getMachine` guards and returns undefined), and past that `new TiledeskChatbot`
+throws `"config.bot is mandatory"`. Both rejected out of the async handler **after
+the 200 had already been sent**, so the message vanished with nothing logged.
+
+`routes/messageRoutes.js` now returns early with an error log. Fixed, not
+characterised — the test that pinned the crash was replaced by one asserting the
+handled miss.
+
+Suite: **1,398 tests across 91 files**, coverage unchanged at 98.15% lines.
+
 ## All known defects fixed
 
 **58 runtime defects found and fixed.** Exactly **one** skipped test remains
