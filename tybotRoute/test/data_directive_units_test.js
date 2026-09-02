@@ -229,6 +229,41 @@ describe('Directives directives/data, the error and edge paths', function () {
 
   describe('DirAssignFromFunction', function () {
 
+    // TiledeskClient.getProjectAvailableAgents() calls its callback AND rejects
+    // its own promise on an error -- the `reject(err)` sits outside the
+    // `if (callback)` guard. Nothing here held that promise, so a failing
+    // available-agents lookup raised an unhandled rejection, which is fatal
+    // under Node's default --unhandled-rejections=throw. Same family as the
+    // wrappers already added to DirClose and DirIfOnlineAgents.
+    it('a rejecting available-agents lookup raises no unhandled rejection', async () => {
+      const seen = [];
+      const onRejection = (reason) => seen.push(reason);
+      process.on('unhandledRejection', onRejection);
+      try {
+        const { dir, tdcache } = build(DirAssignFromFunction);
+        dir.tdClient = {
+          // Exactly what the real client does: both, for the same error.
+          getProjectAvailableAgents: (cb) => {
+            cb(new Error("agents service down"), null);
+            return Promise.reject(new Error("agents service down"));
+          }
+        };
+        const stops = await run(dir, {
+          name: "functionValue",
+          action: { functionName: "availableAgents", assignTo: "agents" }
+        }, 50);
+
+        assert.deepStrictEqual(stops, [undefined], 'the flow is released');
+        assert.deepStrictEqual(tdcache.attrs(), {});
+        // The rejection is reported one turn after the microtask queue drains.
+        await new Promise((r) => setTimeout(r, 150));
+        assert.deepStrictEqual(seen.map((e) => e && e.message), [],
+          'the rejection the client raises alongside the callback must be handled');
+      } finally {
+        process.removeListener('unhandledRejection', onRejection);
+      }
+    });
+
     it('a directive with no action writes nothing', async () => {
       const { dir, tdcache } = build(DirAssignFromFunction);
       const stops = await run(dir, { name: "functionValue" }, 50);

@@ -249,6 +249,66 @@ describe('Directives directives/bot, paths a flow cannot reach', function () {
     }
   });
 
+  // Both TiledeskClient.getRequestById() and .updateRequestProperties() call
+  // their callback AND reject their own promise on an error -- the
+  // `reject(err)` sits outside the `if (callback)` guard. go() held neither
+  // promise, so an API that answers 500 raised an unhandled rejection, fatal
+  // under Node's default --unhandled-rejections=throw: the directive released
+  // the flow correctly and the WORKER died anyway. Same family as the wrappers
+  // already added to DirClose and DirIfOnlineAgents.
+  it('DirRemoveCurrentBot raises no unhandled rejection when the request cannot be read', async () => {
+    const seen = [];
+    const onRejection = (reason) => seen.push(reason);
+    process.on('unhandledRejection', onRejection);
+    const mock = await startMock((server, calls) => {
+      server.get('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('get-request');
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = new DirRemoveCurrentBot(contextFor({}));
+      const called = await run(dir, { name: "removecurrentbot", action: {} });
+      assert.strictEqual(called, 1);
+      await new Promise((r) => setTimeout(r, 150));
+      assert.deepStrictEqual(seen.map((e) => e && e.message), []);
+    } finally {
+      process.removeListener('unhandledRejection', onRejection);
+      await mock.close();
+    }
+  });
+
+  it('DirRemoveCurrentBot raises no unhandled rejection when the handover status cannot be set', async () => {
+    const seen = [];
+    const onRejection = (reason) => seen.push(reason);
+    process.on('unhandledRejection', onRejection);
+    const mock = await startMock((server, calls) => {
+      server.get('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('get-request');
+        res.status(200).send({ request_id: req.params.requestId, participantsBots: ["BOT-9"] });
+      });
+      server.delete('/:projectId/requests/:requestId/participants/:participantId', (req, res) => {
+        calls.push('delete-participant');
+        res.status(200).send({ success: true });
+      });
+      server.patch('/:projectId/requests/:requestId', (req, res) => {
+        calls.push('patch-request');
+        res.status(500).send({ success: false });
+      });
+    });
+    try {
+      const dir = new DirRemoveCurrentBot(contextFor({}));
+      const called = await run(dir, { name: "removecurrentbot", action: {} });
+      assert.deepStrictEqual(mock.calls, ['get-request', 'delete-participant', 'patch-request']);
+      assert.strictEqual(called, 1);
+      await new Promise((r) => setTimeout(r, 150));
+      assert.deepStrictEqual(seen.map((e) => e && e.message), []);
+    } finally {
+      process.removeListener('unhandledRejection', onRejection);
+      await mock.close();
+    }
+  });
+
   it('DirRemoveCurrentBot releases the flow when the participant cannot be deleted', async () => {
     const mock = await startMock((server, calls) => {
       server.get('/:projectId/requests/:requestId', (req, res) => {

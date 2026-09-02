@@ -67,7 +67,13 @@ class DirAssignFromFunction extends BaseDirective {
         });
         break;
       case "availableAgents":
-        this.tdClient.getProjectAvailableAgents((err, agents) => {
+        // Promise.resolve(...).catch: getProjectAvailableAgents BOTH calls back
+        // with the error and rejects its own promise -- the `reject(err)` sits
+        // outside the `if (callback)` guard in the client. The callback below
+        // already logs and releases the flow; the rejection needs handling too
+        // or it goes unhandled and kills the worker. Same wrapper as
+        // DirIfOnlineAgents and DirClose.
+        Promise.resolve(this.tdClient.getProjectAvailableAgents((err, agents) => {
           winston.debug("(DirAssignFromFunction) Agents on 'open' ", agents);
           if (err || !agents) {
             winston.error("(DirAssignFromFunction) Error getting available agents in DirWhenAvailableAgents", err);
@@ -80,6 +86,8 @@ class DirAssignFromFunction extends BaseDirective {
             callback(null, agents.length);
             return;
           }
+        })).catch((err) => {
+          winston.debug("(DirAssignFromFunction) getProjectAvailableAgents rejected, already handled in the callback: ", err && err.message);
         });
         break;
       default:

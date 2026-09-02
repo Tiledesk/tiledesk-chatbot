@@ -41,7 +41,14 @@ class DirRemoveCurrentBot extends BaseDirective {
     // so a conversation with no participant bot -- exactly the state a previous
     // removecurrentbot leaves behind -- never reaches the callback and the flow
     // stalls with no reply, no log and no error. Every path below calls back.
-    this.tdClient.getRequestById(this.requestId, (err, request) => {
+    // Promise.resolve(...).catch: getRequestById and updateRequestProperties
+    // BOTH call their callback and reject their own promise on an error -- the
+    // `reject(err)` sits outside the `if (callback)` guard in the client. The
+    // callbacks below already log and release the flow; the rejections need
+    // handling too, or they go unhandled and kill the worker under Node's
+    // default --unhandled-rejections=throw. Promise.resolve(...) rather than a
+    // direct .catch, so a test double that returns nothing still works.
+    Promise.resolve(this.tdClient.getRequestById(this.requestId, (err, request) => {
       if (err) {
         winston.error("(RemoveCurrentBot) Error reading the request: ", err);
         return callback();
@@ -57,13 +64,17 @@ class DirRemoveCurrentBot extends BaseDirective {
           winston.error("(RemoveCurrentBot) Error removing the bot participant: ", err);
           return callback();
         }
-        this.tdClient.updateRequestProperties(this.requestId, { status: 50 }, (err) => {
+        Promise.resolve(this.tdClient.updateRequestProperties(this.requestId, { status: 50 }, (err) => {
           if (err) {
             winston.error("(RemoveCurrentBot) Error handing the conversation over: ", err);
           }
           callback();
+        })).catch((err) => {
+          winston.debug("(RemoveCurrentBot) updateRequestProperties rejected, already handled in the callback: ", err && err.message);
         });
       });
+    })).catch((err) => {
+      winston.debug("(RemoveCurrentBot) getRequestById rejected, already handled in the callback: ", err && err.message);
     });
   }
 }
