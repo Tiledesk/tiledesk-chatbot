@@ -1083,7 +1083,7 @@ describe('Directives directives/integrations, the error and edge paths', functio
     //
     // Correct behaviour, asserted here: a non-2xx from the webhook takes the
     // false connector, like every other directive in this folder.
-    it.skip('a 500 from the make webhook takes the false connector', async () => {
+    it('a 500 from the make webhook takes the false connector', async () => {
       const mock = await startMock({ make: (req, res) => res.status(500).send({ error: "scenario failed" }) });
       try {
         const { dir, tdcache } = build(DirMake);

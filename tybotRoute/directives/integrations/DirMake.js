@@ -141,10 +141,19 @@ class DirMake extends BaseDirective {
         ['assignStatusTo', status],
         ['assignErrorTo', error]
       ]);
-      if (trueIntent) {
-        await this._executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback(true);
-          return;
+      // MakeService never reports an error: a request that failed - a 500 from
+      // the scenario, a webhook url that does not resolve - arrives HERE, in
+      // the success position, carrying the real status and an error message.
+      // Routing unconditionally on the true connector therefore sent every
+      // failure down the success path of the flow, and the false connector the
+      // author wired for exactly this was never taken. Route on what the
+      // webhook actually answered instead.
+      const succeeded = status >= 200 && status < 300;
+      const routed = succeeded ? trueIntent : falseIntent;
+      if (routed) {
+        await this._executeCondition(succeeded, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
       }
       callback();
       return;
