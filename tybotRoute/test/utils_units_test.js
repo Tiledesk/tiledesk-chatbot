@@ -176,7 +176,7 @@ describe('utils, the error and edge paths', function () {
     //
     // Correct behaviour, asserted here: an unparseable parameter block is
     // logged and the intent still resolves by name, with no parameters.
-    it.skip('a malformed parameter block leaves the intent usable', function () {
+    it('a malformed parameter block leaves the intent usable', function () {
       assert.deepStrictEqual(ChatbotIntentUtil.parseIntent("myBlock{not json}"),
         { name: "myBlock" });
     });
