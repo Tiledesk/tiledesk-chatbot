@@ -346,8 +346,8 @@ reach each other over the compose network.
 
 ### What it covers
 
-Three suites. None of them re-tests directive semantics — the unit suite owns
-that; each journey exists to prove one piece of real wiring.
+Four suites, 82 tests. None of them re-tests directive semantics — the unit
+suite owns that; each journey exists to prove one piece of real wiring.
 
 **`run.js` — the shipped contract (7 tests).** Five journeys:
 
@@ -394,6 +394,31 @@ document. Five journeys:
    Customer.io (each on **its own accepted status**: 201, 201, and a bodiless 204),
    Make (redirected to `MAKE_ENDPOINT`, answering plain text with no status check at
    all), and both `KB_ENDPOINT_QA` routes, `/qa` and `/ask`.
+
+**`full-flow-validation.js` — every directive, end to end (52 tests).** The one
+suite that is *not* about a single piece of wiring: it drives
+`examples/full-flow-validation-bot.json` — the menu-driven bot a user imports
+into the designer to click through every directive by hand — branch by branch,
+and asserts on what the platform mock observed. It seeds **that exact file**
+(one documented substitution: the `${VALIDATION_HTTP_ENDPOINT}` attribute
+placeholder in the two Web Request blocks is pointed at the mock), so the
+importable artefact and the test cannot drift apart; `verifySeed()` additionally
+runs every intent through the shipped `Faq` model's validator, because a
+document mongoose would reject is not importable whatever else it does. Nine
+journeys, one per directive family — messaging and replies, flow control and
+conditions, variables/code/data, capturing user input, agents and departments
+and hours, platform operations, CRM and vendor integrations, AI, and the
+terminal lifecycle blocks, whose outcome is asserted through `GET /__state`
+(the request closed, the participants emptied, the bot swapped) rather than by
+expecting the conversation to continue.
+
+It reaches **54 of the 56 directive classes**. The two it cannot:
+`gpt_assistant` (`DirAssistant`), for the hardcoded OpenAI url described below,
+and `askhelpcenter` (`DirDeflectToHelpCenter`), whose Help Center client's
+response shapes are described nowhere in this repository — modelling them in the
+mock would be guessing, and a test that passes against a guess proves nothing.
+Both blocks are still in the importable flow, for a human to click against a
+real account. `examples/README.md` is the flow's own documentation.
 
 Every response shape the mock serves is **copied from the stub the unit suite
 already runs that same directive against**, and the file names the caller above each

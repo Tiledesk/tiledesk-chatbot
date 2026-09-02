@@ -1,0 +1,5280 @@
+{
+  "name": "Full Flow Validation",
+  "description": "One block per Tiledesk directive, menu driven. See examples/README.md.",
+  "language": "en",
+  "webhook_enabled": false,
+  "type": "tilebot",
+  "intents": [
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "start the full flow validation",
+      "answer": "Full Flow Validation - main menu",
+      "intent_display_name": "start",
+      "intent_id": "FFV_START",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*Full Flow Validation*\n\nOne branch per d",
+          "text": "*Full Flow Validation*\n\nOne branch per directive family. Pick one:",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*Full Flow Validation*\n\nOne branch per directive family. Pick one:",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/a_messaging"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_flow"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_data"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/d_capture"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/e_agents"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/f_platform"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_vendors"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_ai"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_terminal"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "defaultFallback",
+      "answer": "I did not understand. Type /start to go back to the validation menu.\n* ↩ Main menu tdIntent:start",
+      "intent_display_name": "defaultFallback",
+      "intent_id": "FFV_FALLBACK"
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "messaging and replies",
+      "answer": "A - messaging & replies menu",
+      "intent_display_name": "a_messaging",
+      "intent_id": "FFV_A_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*A · Messaging & replies*",
+          "text": "*A · Messaging & replies*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*A · Messaging & replies*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/a_reply"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/a_voice"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/a_replyv2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/a_message"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/a_randomreply"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "plain reply",
+      "answer": "a reply, in two messages",
+      "intent_display_name": "a_reply",
+      "intent_id": "FFV_A_REPLY",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "reply line one",
+          "text": "reply line one\nreply line two",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "reply line one"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "reply line two",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the voice channel reply aliases",
+      "answer": "the six voice aliases of the reply directive",
+      "intent_display_name": "a_voice",
+      "intent_id": "FFV_A_VOICE",
+      "actions": [
+        {
+          "_tdActionType": "dtmf_menu",
+          "_tdActionTitle": "dtmf menu",
+          "text": "dtmf_menu: press 1 for sales, 2 for support",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "dtmf_menu: press 1 for sales, 2 for support"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 0
+              },
+              {
+                "type": "settings",
+                "subType": "dtmf_menu",
+                "settings": {
+                  "no_input": "#FFV_A_VOICE",
+                  "no_match": "#FFV_A_VOICE",
+                  "timeout": 15,
+                  "bargein": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "dtmf_form",
+          "_tdActionTitle": "dtmf form",
+          "text": "dtmf_form: type your 10 digit customer code",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "dtmf_form: type your 10 digit customer code"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 0
+              },
+              {
+                "type": "settings",
+                "subType": "dtmf_form",
+                "settings": {
+                  "maxDigits": "10",
+                  "terminators": "#"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "play_prompt",
+          "_tdActionTitle": "play prompt",
+          "text": "play_prompt: this call may be recorded",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "play_prompt: this call may be recorded"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "audio_record",
+          "_tdActionTitle": "audio record",
+          "text": "audio_record: leave your message after the tone",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "audio_record: leave your message after the tone"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 0
+              },
+              {
+                "type": "settings",
+                "subType": "audio_record",
+                "settings": {
+                  "maxSeconds": 30
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "speech_form",
+          "_tdActionTitle": "speech form",
+          "text": "speech_form: say your full name",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "speech_form: say your full name"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 0
+              },
+              {
+                "type": "settings",
+                "subType": "speech_form",
+                "settings": {
+                  "language": "en-US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "blind_transfer",
+          "_tdActionTitle": "blind transfer",
+          "text": "blind_transfer: transferring you now",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "blind_transfer: transferring you now"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 0
+              },
+              {
+                "type": "settings",
+                "settings": {
+                  "transferTo": "agent@example.com"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "the six voice aliases all ran",
+          "text": "the six voice aliases all ran",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "the six voice aliases all ran",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "reply v2 with action buttons",
+      "answer": "replyv2 with action buttons and a no-match connector",
+      "intent_display_name": "a_replyv2",
+      "intent_id": "FFV_A_REPLYV2",
+      "actions": [
+        {
+          "_tdActionType": "replyv2",
+          "_tdActionId": "ffv-replyv2-1",
+          "_tdActionTitle": "pick a colour",
+          "noMatchIntent": "#FFV_A_REPLYV2_NOMATCH",
+          "text": "replyv2: pick a colour",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replyv2: pick a colour",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "action",
+                          "value": "red",
+                          "action": "#FFV_A_REPLYV2_PICKED",
+                          "link": "",
+                          "target": "blank",
+                          "attributes": "",
+                          "show_echo": true
+                        },
+                        {
+                          "type": "action",
+                          "value": "blue",
+                          "action": "#FFV_A_REPLYV2_PICKED",
+                          "link": "",
+                          "target": "blank",
+                          "attributes": "",
+                          "show_echo": true
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "a replyv2 button was pressed",
+      "answer": "the replyv2 action button connector",
+      "intent_display_name": "a_replyv2_picked",
+      "intent_id": "FFV_A_REPLYV2_PICKED",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "replyv2: you pressed a button",
+          "text": "replyv2: you pressed a button",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replyv2: you pressed a button",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "nothing matched the replyv2 buttons",
+      "answer": "the replyv2 no-match connector",
+      "intent_display_name": "a_replyv2_nomatch",
+      "intent_id": "FFV_A_REPLYV2_NOMATCH",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "replyv2: that matched no button",
+          "text": "replyv2: that matched no button",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replyv2: that matched no button",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the message and hidden message directives",
+      "answer": "message and hmessage, both DirMessage",
+      "intent_display_name": "a_message",
+      "intent_id": "FFV_A_MESSAGE",
+      "actions": [
+        {
+          "_tdActionType": "message",
+          "_tdActionTitle": "a visible message",
+          "text": "message: a plain message directive",
+          "isInfo": true,
+          "attributes": {}
+        },
+        {
+          "_tdActionType": "hmessage",
+          "_tdActionTitle": "a hidden message",
+          "text": "hmessage: a hidden (info) message",
+          "isInfo": true,
+          "attributes": {
+            "subtype": "info"
+          }
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "message and hmessage both posted",
+          "text": "message and hmessage both posted",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "message and hmessage both posted",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "a random reply",
+      "answer": "randomreply picks one of the message pairs",
+      "intent_display_name": "a_randomreply",
+      "intent_id": "FFV_A_RANDOM",
+      "actions": [
+        {
+          "_tdActionType": "randomreply",
+          "_tdActionTitle": "one of two greetings",
+          "text": "randomreply",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 300
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "randomreply: variant one",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "type": "wait",
+                "time": 300
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "randomreply: variant two",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "flow control and conditions",
+      "answer": "B - flow control menu",
+      "intent_display_name": "b_flow",
+      "intent_id": "FFV_B_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*B · Flow control & conditions*",
+          "text": "*B · Flow control & conditions*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*B · Flow control & conditions*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/b_intent"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_connect_block"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_condition"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_condition_v2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_wait"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_iteration"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_lock"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/b_flow_log"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "jump to another block",
+      "answer": "the intent directive jumps to another block and stops this one",
+      "intent_display_name": "b_intent",
+      "intent_id": "FFV_B_INTENT",
+      "actions": [
+        {
+          "_tdActionType": "intent",
+          "_tdActionTitle": "go to the target block",
+          "intentName": "#FFV_B_INTENT_TARGET"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "UNREACHABLE: the intent directive stops ",
+          "text": "UNREACHABLE: the intent directive stops the flow",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "UNREACHABLE: the intent directive stops the flow",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the intent directive target",
+      "answer": "landed here through the intent directive",
+      "intent_display_name": "b_intent_target",
+      "intent_id": "FFV_B_INTENT_TARGET",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "intent: jumped into the target block",
+          "text": "intent: jumped into the target block",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "intent: jumped into the target block",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "connect to another block",
+      "answer": "connect_block dispatches another block without stopping this one",
+      "intent_display_name": "b_connect_block",
+      "intent_id": "FFV_B_CONNECT",
+      "actions": [
+        {
+          "_tdActionType": "connect_block",
+          "_tdActionTitle": "connect to the target block",
+          "intentName": "#FFV_B_CONNECT_TARGET"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "connect_block: this block carried on",
+          "text": "connect_block: this block carried on",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "connect_block: this block carried on"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the connect_block target",
+      "answer": "landed here through connect_block",
+      "intent_display_name": "b_connect_target",
+      "intent_id": "FFV_B_CONNECT_TARGET",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "connect_block: landed in the connected b",
+          "text": "connect_block: landed in the connected block",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "connect_block: landed in the connected block",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "a json condition",
+      "answer": "jsoncondition on a score attribute",
+      "intent_display_name": "b_condition",
+      "intent_id": "FFV_B_COND",
+      "actions": [
+        {
+          "_tdActionType": "setattribute",
+          "_tdActionTitle": "score = 10",
+          "destination": "ffv_score",
+          "operation": {
+            "operands": [
+              {
+                "value": "10",
+                "isVariable": false
+              }
+            ],
+            "operators": []
+          }
+        },
+        {
+          "_tdActionType": "jsoncondition",
+          "_tdActionTitle": "is the score 10?",
+          "groups": [
+            {
+              "type": "expression",
+              "conditions": [
+                {
+                  "type": "condition",
+                  "operand1": "ffv_score",
+                  "operator": "equalAsStrings",
+                  "operand2": {
+                    "type": "const",
+                    "value": "10",
+                    "name": ""
+                  }
+                }
+              ]
+            }
+          ],
+          "stopOnConditionMet": true,
+          "trueIntent": "#FFV_B_COND_TRUE",
+          "falseIntent": "#FFV_B_COND_FALSE"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the json condition was true",
+      "answer": "the true connector of jsoncondition",
+      "intent_display_name": "b_condition_true",
+      "intent_id": "FFV_B_COND_TRUE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "jsoncondition: TRUE, ffv_score is {{ffv_",
+          "text": "jsoncondition: TRUE, ffv_score is {{ffv_score}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "jsoncondition: TRUE, ffv_score is {{ffv_score}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the json condition was false",
+      "answer": "the false connector of jsoncondition",
+      "intent_display_name": "b_condition_false",
+      "intent_id": "FFV_B_COND_FALSE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "jsoncondition: FALSE",
+          "text": "jsoncondition: FALSE",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "jsoncondition: FALSE",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "a json condition v2",
+      "answer": "jsoncondition2 with a `when` infix expression",
+      "intent_display_name": "b_condition_v2",
+      "intent_id": "FFV_B_COND2",
+      "actions": [
+        {
+          "_tdActionType": "setattribute-v2",
+          "_tdActionTitle": "tier = gold",
+          "destination": "ffv_tier",
+          "operation": {
+            "operands": [
+              {
+                "value": "gold",
+                "isVariable": false
+              }
+            ],
+            "operators": []
+          }
+        },
+        {
+          "_tdActionType": "jsoncondition2",
+          "_tdActionTitle": "is the tier gold?",
+          "when": "ffv_tier == \"gold\"",
+          "stopOnConditionMet": true,
+          "trueIntent": "#FFV_B_COND2_TRUE",
+          "falseIntent": "#FFV_B_COND2_FALSE"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the when expression was true",
+      "answer": "the true connector of jsoncondition2",
+      "intent_display_name": "b_condition_v2_true",
+      "intent_id": "FFV_B_COND2_TRUE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "jsoncondition2: TRUE, ffv_tier is {{ffv_",
+          "text": "jsoncondition2: TRUE, ffv_tier is {{ffv_tier}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "jsoncondition2: TRUE, ffv_tier is {{ffv_tier}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the when expression was false",
+      "answer": "the false connector of jsoncondition2",
+      "intent_display_name": "b_condition_v2_false",
+      "intent_id": "FFV_B_COND2_FALSE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "jsoncondition2: FALSE",
+          "text": "jsoncondition2: FALSE",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "jsoncondition2: FALSE",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "wait between two messages",
+      "answer": "the wait directive pauses the flow",
+      "intent_display_name": "b_wait",
+      "intent_id": "FFV_B_WAIT",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "wait: pausing for 1200ms",
+          "text": "wait: pausing for 1200ms",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "wait: pausing for 1200ms"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "wait",
+          "_tdActionTitle": "pause 1200ms",
+          "millis": 1200
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "wait: resumed",
+          "text": "wait: resumed",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "wait: resumed",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "iterate over a list",
+      "answer": "iteration walks a list, one block execution per item",
+      "intent_display_name": "b_iteration",
+      "intent_id": "FFV_B_ITER",
+      "actions": [
+        {
+          "_tdActionType": "code",
+          "_tdActionTitle": "build the list",
+          "source": "context.setAttribute('ffv_colours', ['red', 'green', 'blue']);"
+        },
+        {
+          "_tdActionType": "iteration",
+          "_tdActionTitle": "for each colour",
+          "_tdActionId": "ffv-iteration-1",
+          "goToIntent": "#FFV_B_ITER_BODY",
+          "iterable": "ffv_colours",
+          "assignOutputTo": "ffv_colour",
+          "delay": 1
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the iteration body",
+      "answer": "one execution of the iteration body",
+      "intent_display_name": "b_iteration_body",
+      "intent_id": "FFV_B_ITER_BODY",
+      "attributes": {
+        "nextBlockAction": {
+          "_tdActionType": "intent",
+          "intentName": "#FFV_B_ITER"
+        }
+      },
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "iteration: {{ffv_colour}}",
+          "text": "iteration: {{ffv_colour}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "iteration: {{ffv_colour}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "lock the conversation on one block",
+      "answer": "lockintent pins the next user message to one block",
+      "intent_display_name": "b_lock",
+      "intent_id": "FFV_B_LOCK",
+      "actions": [
+        {
+          "_tdActionType": "lockintent",
+          "_tdActionTitle": "lock on the unlock block",
+          "intentName": "b_unlock"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "lockintent: whatever you type next lands",
+          "text": "lockintent: whatever you type next lands in the unlock block",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "lockintent: whatever you type next lands in the unlock block"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "release the lock",
+      "answer": "unlockintent releases the conversation",
+      "intent_display_name": "b_unlock",
+      "intent_id": "FFV_B_UNLOCK",
+      "actions": [
+        {
+          "_tdActionType": "unlockintent",
+          "_tdActionTitle": "release the lock"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "unlockintent: released, normal matching ",
+          "text": "unlockintent: released, normal matching resumes",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "unlockintent: released, normal matching resumes",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "write a flow log line",
+      "answer": "flow_log writes into the flow logger",
+      "intent_display_name": "b_flow_log",
+      "intent_id": "FFV_B_FLOWLOG",
+      "actions": [
+        {
+          "_tdActionType": "flow_log",
+          "_tdActionTitle": "log a line",
+          "level": "info",
+          "log": "full flow validation reached the flow_log block"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "flow_log: a line was written to the flow",
+          "text": "flow_log: a line was written to the flow log",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "flow_log: a line was written to the flow log",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "variables code and data",
+      "answer": "C - variables, code & data menu",
+      "intent_display_name": "c_data",
+      "intent_id": "FFV_C_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*C · Variables, code & data*",
+          "text": "*C · Variables, code & data*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*C · Variables, code & data*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/c_attributes"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_delete"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_code"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_functionvalue"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_datatable"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_webrequest"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_webrequestv2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/c_webresponse"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "set some attributes",
+      "answer": "setattribute, setattribute-v2 and assign all write conversation attributes",
+      "intent_display_name": "c_attributes",
+      "intent_id": "FFV_C_ATTR",
+      "actions": [
+        {
+          "_tdActionType": "setattribute",
+          "_tdActionTitle": "first + last name",
+          "destination": "ffv_fullname",
+          "operation": {
+            "operands": [
+              {
+                "value": "Ada",
+                "isVariable": false
+              },
+              {
+                "value": " Lovelace",
+                "isVariable": false
+              }
+            ],
+            "operators": [
+              "addAsString"
+            ]
+          }
+        },
+        {
+          "_tdActionType": "setattribute-v2",
+          "_tdActionTitle": "plan",
+          "destination": "ffv_plan",
+          "operation": {
+            "operands": [
+              {
+                "value": "enterprise",
+                "isVariable": false
+              }
+            ],
+            "operators": []
+          }
+        },
+        {
+          "_tdActionType": "assign",
+          "_tdActionTitle": "a computed expression",
+          "expression": "2 * 21",
+          "assignTo": "ffv_answer"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "setattribute: {{ffv_fullname}}",
+          "text": "setattribute: {{ffv_fullname}}\nsetattribute-v2: {{ffv_plan}}\nassign: {{ffv_answer}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "setattribute: {{ffv_fullname}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "setattribute-v2: {{ffv_plan}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "assign: {{ffv_answer}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "delete an attribute",
+      "answer": "delete removes a conversation attribute",
+      "intent_display_name": "c_delete",
+      "intent_id": "FFV_C_DELETE",
+      "actions": [
+        {
+          "_tdActionType": "setattribute",
+          "_tdActionTitle": "a doomed attribute",
+          "destination": "ffv_doomed",
+          "operation": {
+            "operands": [
+              {
+                "value": "here-for-now",
+                "isVariable": false
+              }
+            ],
+            "operators": []
+          }
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "delete: before, ffv_doomed is {{ffv_doom",
+          "text": "delete: before, ffv_doomed is {{ffv_doomed}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "delete: before, ffv_doomed is {{ffv_doomed}}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "delete",
+          "_tdActionTitle": "delete it",
+          "variableName": "ffv_doomed"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "delete: after, ffv_doomed is {{ffv_doome",
+          "text": "delete: after, ffv_doomed is {{ffv_doomed}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "delete: after, ffv_doomed is {{ffv_doomed}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "run some javascript",
+      "answer": "code runs sandboxed javascript over the conversation attributes",
+      "intent_display_name": "c_code",
+      "intent_id": "FFV_C_CODE",
+      "actions": [
+        {
+          "_tdActionType": "code",
+          "_tdActionTitle": "compute a total",
+          "source": "const cart = [10, 20, 12];\ncontext.setAttribute('ffv_cart_total', cart.reduce((a, b) => a + b, 0));\ncontext.setAttribute('ffv_cart_size', cart.length);"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "code: total {{ffv_cart_total}} over {{ff",
+          "text": "code: total {{ffv_cart_total}} over {{ffv_cart_size}} items",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "code: total {{ffv_cart_total}} over {{ffv_cart_size}} items",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "read a built in function value",
+      "answer": "functionvalue assigns the value of a built-in platform function",
+      "intent_display_name": "c_functionvalue",
+      "intent_id": "FFV_C_FUNC",
+      "actions": [
+        {
+          "_tdActionType": "functionvalue",
+          "_tdActionTitle": "are we open now?",
+          "functionName": "openNow",
+          "assignTo": "ffv_open_now"
+        },
+        {
+          "_tdActionType": "functionvalue",
+          "_tdActionTitle": "how many agents?",
+          "functionName": "availableAgents",
+          "assignTo": "ffv_agent_count"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "functionvalue: openNow is {{ffv_open_now",
+          "text": "functionvalue: openNow is {{ffv_open_now}}\nfunctionvalue: availableAgents is {{ffv_agent_count}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "functionvalue: openNow is {{ffv_open_now}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "functionvalue: availableAgents is {{ffv_agent_count}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "work with a data table",
+      "answer": "data_table: insert, get, update, upsert and delete",
+      "intent_display_name": "c_datatable",
+      "intent_id": "FFV_C_TABLE",
+      "actions": [
+        {
+          "_tdActionType": "data_table",
+          "_tdActionTitle": "insert a row",
+          "tableId": "ffv_table",
+          "operation": "insert",
+          "data": {
+            "fullname": "Ada Lovelace",
+            "city": "London"
+          },
+          "assignResultTo": "ffv_row_inserted",
+          "assignErrorTo": "ffv_table_error"
+        },
+        {
+          "_tdActionType": "data_table",
+          "_tdActionTitle": "read it back",
+          "tableId": "ffv_table",
+          "operation": "get",
+          "must_match": "all",
+          "conditions": [
+            {
+              "column": "fullname",
+              "value": "Ada Lovelace",
+              "operator": "equals"
+            }
+          ],
+          "assignResultTo": "ffv_row_read",
+          "assignErrorTo": "ffv_table_error"
+        },
+        {
+          "_tdActionType": "data_table",
+          "_tdActionTitle": "update the city",
+          "tableId": "ffv_table",
+          "operation": "update",
+          "must_match": "all",
+          "conditions": [
+            {
+              "column": "fullname",
+              "value": "Ada Lovelace",
+              "operator": "equals"
+            }
+          ],
+          "data": {
+            "city": "Turin"
+          },
+          "assignResultTo": "ffv_row_updated",
+          "assignErrorTo": "ffv_table_error"
+        },
+        {
+          "_tdActionType": "data_table",
+          "_tdActionTitle": "upsert a second row",
+          "tableId": "ffv_table",
+          "operation": "upsert",
+          "must_match": "all",
+          "conditions": [
+            {
+              "column": "fullname",
+              "value": "Grace Hopper",
+              "operator": "equals"
+            }
+          ],
+          "data": {
+            "fullname": "Grace Hopper",
+            "city": "New York"
+          },
+          "assignResultTo": "ffv_row_upserted",
+          "assignErrorTo": "ffv_table_error"
+        },
+        {
+          "_tdActionType": "data_table",
+          "_tdActionTitle": "delete the first row",
+          "tableId": "ffv_table",
+          "operation": "delete",
+          "must_match": "all",
+          "conditions": [
+            {
+              "column": "fullname",
+              "value": "Ada Lovelace",
+              "operator": "equals"
+            }
+          ],
+          "assignResultTo": "ffv_row_deleted",
+          "assignErrorTo": "ffv_table_error",
+          "trueIntent": "#FFV_C_TABLE_OK",
+          "falseIntent": "#FFV_C_TABLE_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the data table operations succeeded",
+      "answer": "the true connector of the data_table block",
+      "intent_display_name": "c_datatable_ok",
+      "intent_id": "FFV_C_TABLE_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "data_table: all five operations ran",
+          "text": "data_table: all five operations ran\ndata_table: the row read back was {{ffv_row_read}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "data_table: all five operations ran"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "data_table: the row read back was {{ffv_row_read}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the data table operations failed",
+      "answer": "the false connector of the data_table block",
+      "intent_display_name": "c_datatable_ko",
+      "intent_id": "FFV_C_TABLE_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "data_table: FAILED with {{ffv_table_erro",
+          "text": "data_table: FAILED with {{ffv_table_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "data_table: FAILED with {{ffv_table_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "call an http endpoint the old way",
+      "answer": "webrequest (v1) calls an endpoint and picks fields out of the answer",
+      "intent_display_name": "c_webrequest",
+      "intent_id": "FFV_C_WEBREQ",
+      "actions": [
+        {
+          "_tdActionType": "webrequest",
+          "_tdActionTitle": "GET an endpoint, keep the whole body",
+          "url": "${VALIDATION_HTTP_ENDPOINT}/ffv/webrequest",
+          "method": "GET",
+          "headersString": {
+            "Content-Type": "application/json",
+            "User-Agent": "TiledeskBotRuntime"
+          },
+          "jsonBody": "{}",
+          "assignTo": "ffv_webrequest_body"
+        },
+        {
+          "_tdActionType": "webrequest",
+          "_tdActionTitle": "GET an endpoint, pick one field",
+          "url": "${VALIDATION_HTTP_ENDPOINT}/ffv/webrequest",
+          "method": "GET",
+          "headersString": {
+            "Content-Type": "application/json",
+            "User-Agent": "TiledeskBotRuntime"
+          },
+          "jsonBody": "{}",
+          "assignTo": "",
+          "assignments": {
+            "ffv_webrequest_ok": "success"
+          }
+        },
+        {
+          "_tdActionType": "code",
+          "_tdActionTitle": "read a field off the assigned body",
+          "source": "context.setAttribute('ffv_webrequest_body_success', String(context.attributes.ffv_webrequest_body.success));"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "webrequest: assignTo body.success is {{f",
+          "text": "webrequest: assignTo body.success is {{ffv_webrequest_body_success}}\nwebrequest: assignments success field is {{ffv_webrequest_ok}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "webrequest: assignTo body.success is {{ffv_webrequest_body_success}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "webrequest: assignments success field is {{ffv_webrequest_ok}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "call an http endpoint",
+      "answer": "webrequestv2 calls an endpoint with true/false connectors",
+      "intent_display_name": "c_webrequestv2",
+      "intent_id": "FFV_C_WEBREQ2",
+      "actions": [
+        {
+          "_tdActionType": "webrequestv2",
+          "_tdActionTitle": "POST an endpoint",
+          "url": "${VALIDATION_HTTP_ENDPOINT}/ffv/webrequestv2",
+          "method": "POST",
+          "bodyType": "json",
+          "jsonBody": "{\"source\":\"full-flow-validation\"}",
+          "headersString": {
+            "Content-Type": "application/json"
+          },
+          "assignResultTo": "ffv_webreq2_result",
+          "assignStatusTo": "ffv_webreq2_status",
+          "assignErrorTo": "ffv_webreq2_error",
+          "trueIntent": "#FFV_C_WEBREQ2_OK",
+          "falseIntent": "#FFV_C_WEBREQ2_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the web request succeeded",
+      "answer": "the true connector of webrequestv2",
+      "intent_display_name": "c_webrequestv2_ok",
+      "intent_id": "FFV_C_WEBREQ2_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "webrequestv2: OK with status {{ffv_webre",
+          "text": "webrequestv2: OK with status {{ffv_webreq2_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "webrequestv2: OK with status {{ffv_webreq2_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the web request failed",
+      "answer": "the false connector of webrequestv2",
+      "intent_display_name": "c_webrequestv2_ko",
+      "intent_id": "FFV_C_WEBREQ2_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "webrequestv2: FAILED with status {{ffv_w",
+          "text": "webrequestv2: FAILED with status {{ffv_webreq2_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "webrequestv2: FAILED with status {{ffv_webreq2_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "answer an incoming webhook",
+      "answer": "web_response answers a POST /block/... caller",
+      "intent_display_name": "c_webresponse",
+      "intent_id": "FFV_C_WEBRESP",
+      "actions": [
+        {
+          "_tdActionType": "web_response",
+          "_tdActionTitle": "answer the webhook caller",
+          "status": 201,
+          "bodyType": "json",
+          "payload": "{\"validated\":true,\"block\":\"c_webresponse\"}"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "web_response: a 201 was published to the",
+          "text": "web_response: a 201 was published to the webhook caller",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "web_response: a 201 was published to the webhook caller",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "capturing user input",
+      "answer": "D - capturing user input menu",
+      "intent_display_name": "d_capture",
+      "intent_id": "FFV_D_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*D · Capturing user input*",
+          "text": "*D · Capturing user input*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*D · Capturing user input*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/d_capture_reply"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/d_form"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/d_clear_transcript"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "capture the next thing the user types",
+      "answer": "capture_user_reply stores the next user message in an attribute",
+      "intent_display_name": "d_capture_reply",
+      "intent_id": "FFV_D_CAPTURE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "capture_user_reply: what is your favouri",
+          "text": "capture_user_reply: what is your favourite colour?",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "capture_user_reply: what is your favourite colour?"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "capture_user_reply",
+          "_tdActionTitle": "capture the colour",
+          "_tdActionId": "ffv-capture-1",
+          "assignResultTo": "ffv_favourite_colour",
+          "goToIntent": "d_capture_done"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the capture is finished",
+      "answer": "the block capture_user_reply hands over to",
+      "intent_display_name": "d_capture_done",
+      "intent_id": "FFV_D_CAPTURE_DONE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "capture_user_reply: you said {{ffv_favou",
+          "text": "capture_user_reply: you said {{ffv_favourite_colour}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "capture_user_reply: you said {{ffv_favourite_colour}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "fill in a form",
+      "answer": "form asks one field at a time and validates each answer",
+      "intent_display_name": "d_form",
+      "intent_id": "FFV_D_FORM",
+      "actions": [
+        {
+          "_tdActionType": "lockintent",
+          "_tdActionTitle": "stay in this block until the form ends",
+          "intentName": "d_form"
+        },
+        {
+          "_tdActionType": "form",
+          "_tdActionTitle": "name and email",
+          "_tdActionId": "ffv-form-1",
+          "action_id": "ffv-form-1",
+          "form": {
+            "id": "ffv-form-1",
+            "name": "Full flow validation form",
+            "cancelCommands": [
+              "cancel"
+            ],
+            "cancelReply": "Form cancelled.",
+            "fields": [
+              {
+                "name": "ffv_form_name",
+                "type": "text",
+                "label": "form: what is your name?"
+              },
+              {
+                "name": "ffv_form_email",
+                "type": "email",
+                "regex": "/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/",
+                "label": "form: thanks ${ffv_form_name}, and your email?",
+                "errorLabel": "form: that email is not valid, try again"
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "unlockintent",
+          "_tdActionTitle": "release the block"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "form: got {{ffv_form_name}} <{{ffv_form_",
+          "text": "form: got {{ffv_form_name}} <{{ffv_form_email}}>",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "form: got {{ffv_form_name}} <{{ffv_form_email}}>",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "clear the conversation transcript",
+      "answer": "clear_transcript empties the transcript the AI blocks read",
+      "intent_display_name": "d_clear_transcript",
+      "intent_id": "FFV_D_CLEAR",
+      "actions": [
+        {
+          "_tdActionType": "clear_transcript",
+          "_tdActionTitle": "clear it"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "clear_transcript: the transcript is empt",
+          "text": "clear_transcript: the transcript is empty again",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "clear_transcript: the transcript is empty again",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "agents departments and opening hours",
+      "answer": "E - agents, departments and hours menu",
+      "intent_display_name": "e_agents",
+      "intent_id": "FFV_E_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*E · Agents, departments & hours*",
+          "text": "*E · Agents, departments & hours*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*E · Agents, departments & hours*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/e_online_agents"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/e_online_agents_v2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/e_open_hours"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/e_department"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/e_helpcenter"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "are any agents online",
+      "answer": "ifonlineagents branches on whether an agent is available",
+      "intent_display_name": "e_online_agents",
+      "intent_id": "FFV_E_AGENTS",
+      "actions": [
+        {
+          "_tdActionType": "ifonlineagents",
+          "_tdActionTitle": "any agents online?",
+          "_tdActionId": "ffv-online-agents-1",
+          "stopOnConditionMet": true,
+          "trueIntent": "#FFV_E_AGENTS_ON",
+          "falseIntent": "#FFV_E_AGENTS_OFF"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "agents are online",
+      "answer": "the online connector of ifonlineagents",
+      "intent_display_name": "e_online_agents_on",
+      "intent_id": "FFV_E_AGENTS_ON",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifonlineagents: agents ARE online",
+          "text": "ifonlineagents: agents ARE online",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifonlineagents: agents ARE online",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "no agents are online",
+      "answer": "the offline connector of ifonlineagents",
+      "intent_display_name": "e_online_agents_off",
+      "intent_id": "FFV_E_AGENTS_OFF",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifonlineagents: NO agents online",
+          "text": "ifonlineagents: NO agents online",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifonlineagents: NO agents online",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "are any agents online v2",
+      "answer": "ifonlineagentsv2 can ignore the operating hours and scope to a department",
+      "intent_display_name": "e_online_agents_v2",
+      "intent_id": "FFV_E_AGENTS2",
+      "actions": [
+        {
+          "_tdActionType": "ifonlineagentsv2",
+          "_tdActionTitle": "any agents online, hours ignored?",
+          "_tdActionId": "ffv-online-agents-2",
+          "ignoreOperatingHours": true,
+          "stopOnConditionMet": true,
+          "trueIntent": "#FFV_E_AGENTS2_ON",
+          "falseIntent": "#FFV_E_AGENTS2_OFF"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "agents are online v2",
+      "answer": "the online connector of ifonlineagentsv2",
+      "intent_display_name": "e_online_agents_v2_on",
+      "intent_id": "FFV_E_AGENTS2_ON",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifonlineagentsv2: agents ARE online",
+          "text": "ifonlineagentsv2: agents ARE online",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifonlineagentsv2: agents ARE online",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "no agents are online v2",
+      "answer": "the offline connector of ifonlineagentsv2",
+      "intent_display_name": "e_online_agents_v2_off",
+      "intent_id": "FFV_E_AGENTS2_OFF",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifonlineagentsv2: NO agents online",
+          "text": "ifonlineagentsv2: NO agents online",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifonlineagentsv2: NO agents online",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "are we open right now",
+      "answer": "ifopenhours branches on the project operating hours",
+      "intent_display_name": "e_open_hours",
+      "intent_id": "FFV_E_HOURS",
+      "actions": [
+        {
+          "_tdActionType": "ifopenhours",
+          "_tdActionTitle": "are we open?",
+          "_tdActionId": "ffv-open-hours-1",
+          "stopOnConditionMet": true,
+          "trueIntent": "#FFV_E_HOURS_OPEN",
+          "falseIntent": "#FFV_E_HOURS_CLOSED"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "we are open",
+      "answer": "the open connector of ifopenhours",
+      "intent_display_name": "e_open_hours_open",
+      "intent_id": "FFV_E_HOURS_OPEN",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifopenhours: we are OPEN",
+          "text": "ifopenhours: we are OPEN",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifopenhours: we are OPEN",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "we are closed",
+      "answer": "the closed connector of ifopenhours",
+      "intent_display_name": "e_open_hours_closed",
+      "intent_id": "FFV_E_HOURS_CLOSED",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ifopenhours: we are CLOSED",
+          "text": "ifopenhours: we are CLOSED",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ifopenhours: we are CLOSED",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "move me to another department",
+      "answer": "department moves the conversation to another department",
+      "intent_display_name": "e_department",
+      "intent_id": "FFV_E_DEPT",
+      "actions": [
+        {
+          "_tdActionType": "department",
+          "_tdActionTitle": "to Sales",
+          "depName": "Sales",
+          "triggerBot": false
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "department: moved to Sales",
+          "text": "department: moved to Sales",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "department: moved to Sales",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "search the help center",
+      "answer": "askhelpcenter answers out of the Help Center knowledge base",
+      "intent_display_name": "e_helpcenter",
+      "intent_id": "FFV_E_HC",
+      "actions": [
+        {
+          "_tdActionType": "askhelpcenter",
+          "_tdActionTitle": "search the help center",
+          "hcReply": "askhelpcenter: I found these articles",
+          "maxresults": 3,
+          "urlTarget": "blank"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "tiledesk platform operations",
+      "answer": "F - Tiledesk platform menu",
+      "intent_display_name": "f_platform",
+      "intent_id": "FFV_F_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*F · Tiledesk platform*",
+          "text": "*F · Tiledesk platform*",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*F · Tiledesk platform*",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/f_add_tags"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/f_leadupdate"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/f_event"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/f_email"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "tag this conversation",
+      "answer": "add_tags tags the request and the contact",
+      "intent_display_name": "f_add_tags",
+      "intent_id": "FFV_F_TAGS",
+      "actions": [
+        {
+          "_tdActionType": "add_tags",
+          "_tdActionTitle": "tag the request",
+          "_tdActionId": "ffv-tags-request",
+          "target": "request",
+          "tags": "full-flow-validation,verified",
+          "pushToList": false
+        },
+        {
+          "_tdActionType": "add_tags",
+          "_tdActionTitle": "tag the contact",
+          "_tdActionId": "ffv-tags-lead",
+          "target": "lead",
+          "tags": "validated-contact",
+          "pushToList": false
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "add_tags: the request and the contact ar",
+          "text": "add_tags: the request and the contact are tagged",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "add_tags: the request and the contact are tagged",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "update the contact",
+      "answer": "leadupdate writes the contact record",
+      "intent_display_name": "f_leadupdate",
+      "intent_id": "FFV_F_LEAD",
+      "actions": [
+        {
+          "_tdActionType": "leadupdate",
+          "_tdActionTitle": "write the contact",
+          "_tdActionId": "ffv-lead-1",
+          "update": {
+            "fullname": "Ada Lovelace",
+            "email": "ada@example.com",
+            "company": "Analytical Engines"
+          },
+          "attributes": {
+            "ffv_source": "full-flow-validation"
+          }
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "leadupdate: the contact was updated",
+          "text": "leadupdate: the contact was updated",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "leadupdate: the contact was updated",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "fire a custom event",
+      "answer": "firetiledeskevent: a custom event was fired\n\\_tdfiretiledeskevent --name full_flow_validation_event\n* ↩ Main menu tdIntent:start",
+      "intent_display_name": "f_event",
+      "intent_id": "FFV_F_EVENT"
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "send an email",
+      "answer": "email sends a message through the Tiledesk email service",
+      "intent_display_name": "f_email",
+      "intent_id": "FFV_F_EMAIL",
+      "actions": [
+        {
+          "_tdActionType": "email",
+          "_tdActionTitle": "notify the team",
+          "to": "team@example.com",
+          "replyto": "noreply@example.com",
+          "subject": "Full flow validation",
+          "text": "The full flow validation bot reached the email block."
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "email: the message was handed to the pla",
+          "text": "email: the message was handed to the platform",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "email: the message was handed to the platform",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "crm and vendor integrations",
+      "answer": "G - CRM & vendor integrations menu",
+      "intent_display_name": "g_vendors",
+      "intent_id": "FFV_G_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*G · CRM & vendor integrations*\n\nEach of",
+          "text": "*G · CRM & vendor integrations*\n\nEach of these needs its integration configured on the project.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*G · CRM & vendor integrations*\n\nEach of these needs its integration configured on the project.",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/g_brevo"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_hubspot"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_customerio"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_make"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_qapla"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_whatsapp"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/g_whatsapp_attribute"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "create a brevo contact",
+      "answer": "brevo creates or updates a Brevo contact",
+      "intent_display_name": "g_brevo",
+      "intent_id": "FFV_G_BREVO",
+      "actions": [
+        {
+          "_tdActionType": "brevo",
+          "_tdActionTitle": "create the contact",
+          "_tdActionId": "ffv-brevo-1",
+          "bodyParameters": {
+            "email": "ada@example.com",
+            "FIRSTNAME": "Ada",
+            "LASTNAME": "Lovelace",
+            "updateEnabled": true
+          },
+          "assignResultTo": "ffv_brevo_result",
+          "assignStatusTo": "ffv_brevo_status",
+          "assignErrorTo": "ffv_brevo_error",
+          "trueIntent": "#FFV_G_BREVO_OK",
+          "falseIntent": "#FFV_G_BREVO_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the brevo call succeeded",
+      "answer": "the true connector of the brevo block",
+      "intent_display_name": "brevo_ok",
+      "intent_id": "FFV_G_BREVO_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "brevo: OK, status {{ffv_brevo_status}}",
+          "text": "brevo: OK, status {{ffv_brevo_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "brevo: OK, status {{ffv_brevo_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the brevo call failed",
+      "answer": "the false connector of the brevo block",
+      "intent_display_name": "brevo_ko",
+      "intent_id": "FFV_G_BREVO_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "brevo: FAILED, {{ffv_brevo_error}}",
+          "text": "brevo: FAILED, {{ffv_brevo_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "brevo: FAILED, {{ffv_brevo_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "create a hubspot contact",
+      "answer": "hubspot creates a HubSpot contact",
+      "intent_display_name": "g_hubspot",
+      "intent_id": "FFV_G_HUBSPOT",
+      "actions": [
+        {
+          "_tdActionType": "hubspot",
+          "_tdActionTitle": "create the contact",
+          "_tdActionId": "ffv-hubspot-1",
+          "bodyParameters": {
+            "email": "ada@example.com",
+            "firstname": "Ada",
+            "lastname": "Lovelace"
+          },
+          "assignResultTo": "ffv_hubspot_result",
+          "assignStatusTo": "ffv_hubspot_status",
+          "assignErrorTo": "ffv_hubspot_error",
+          "trueIntent": "#FFV_G_HUBSPOT_OK",
+          "falseIntent": "#FFV_G_HUBSPOT_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the hubspot call succeeded",
+      "answer": "the true connector of the hubspot block",
+      "intent_display_name": "hubspot_ok",
+      "intent_id": "FFV_G_HUBSPOT_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "hubspot: OK, status {{ffv_hubspot_status",
+          "text": "hubspot: OK, status {{ffv_hubspot_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "hubspot: OK, status {{ffv_hubspot_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the hubspot call failed",
+      "answer": "the false connector of the hubspot block",
+      "intent_display_name": "hubspot_ko",
+      "intent_id": "FFV_G_HUBSPOT_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "hubspot: FAILED, {{ffv_hubspot_error}}",
+          "text": "hubspot: FAILED, {{ffv_hubspot_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "hubspot: FAILED, {{ffv_hubspot_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "submit a customerio form",
+      "answer": "customerio submits a Customer.io form",
+      "intent_display_name": "g_customerio",
+      "intent_id": "FFV_G_CUSTOMERIO",
+      "actions": [
+        {
+          "_tdActionType": "customerio",
+          "_tdActionTitle": "submit the form",
+          "_tdActionId": "ffv-customerio-1",
+          "formid": "ffv-form",
+          "bodyParameters": {
+            "email": "ada@example.com",
+            "first_name": "Ada"
+          },
+          "assignResultTo": "ffv_customerio_result",
+          "assignStatusTo": "ffv_customerio_status",
+          "assignErrorTo": "ffv_customerio_error",
+          "trueIntent": "#FFV_G_CUSTOMERIO_OK",
+          "falseIntent": "#FFV_G_CUSTOMERIO_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the customerio call succeeded",
+      "answer": "the true connector of the customerio block",
+      "intent_display_name": "customerio_ok",
+      "intent_id": "FFV_G_CUSTOMERIO_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "customerio: OK, status {{ffv_customerio_",
+          "text": "customerio: OK, status {{ffv_customerio_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "customerio: OK, status {{ffv_customerio_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the customerio call failed",
+      "answer": "the false connector of the customerio block",
+      "intent_display_name": "customerio_ko",
+      "intent_id": "FFV_G_CUSTOMERIO_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "customerio: FAILED, {{ffv_customerio_err",
+          "text": "customerio: FAILED, {{ffv_customerio_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "customerio: FAILED, {{ffv_customerio_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "trigger a make scenario",
+      "answer": "make triggers a Make.com webhook",
+      "intent_display_name": "g_make",
+      "intent_id": "FFV_G_MAKE",
+      "actions": [
+        {
+          "_tdActionType": "make",
+          "_tdActionTitle": "trigger the scenario",
+          "_tdActionId": "ffv-make-1",
+          "url": "https://hook.eu1.make.com/replace-me-with-your-own-webhook",
+          "bodyParameters": {
+            "name": "Ada Lovelace",
+            "source": "full-flow-validation"
+          },
+          "assignResultTo": "ffv_make_result",
+          "assignStatusTo": "ffv_make_status",
+          "assignErrorTo": "ffv_make_error",
+          "trueIntent": "#FFV_G_MAKE_OK",
+          "falseIntent": "#FFV_G_MAKE_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the make call succeeded",
+      "answer": "the true connector of the make block",
+      "intent_display_name": "make_ok",
+      "intent_id": "FFV_G_MAKE_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "make: OK, status {{ffv_make_status}}",
+          "text": "make: OK, status {{ffv_make_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "make: OK, status {{ffv_make_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the make call failed",
+      "answer": "the false connector of the make block",
+      "intent_display_name": "make_ko",
+      "intent_id": "FFV_G_MAKE_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "make: FAILED, {{ffv_make_error}}",
+          "text": "make: FAILED, {{ffv_make_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "make: FAILED, {{ffv_make_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "track a shipment",
+      "answer": "qapla looks a shipment up by tracking number",
+      "intent_display_name": "g_qapla",
+      "intent_id": "FFV_G_QAPLA",
+      "actions": [
+        {
+          "_tdActionType": "qapla",
+          "_tdActionTitle": "track the parcel",
+          "_tdActionId": "ffv-qapla-1",
+          "trackingNumber": "FFV12345",
+          "apiKey": "replace-me-with-your-qapla-api-key",
+          "assignResultTo": "ffv_qapla_result",
+          "assignStatusTo": "ffv_qapla_status",
+          "assignErrorTo": "ffv_qapla_error",
+          "trueIntent": "#FFV_G_QAPLA_OK",
+          "falseIntent": "#FFV_G_QAPLA_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the shipment was found",
+      "answer": "the true connector of the qapla block",
+      "intent_display_name": "g_qapla_ok",
+      "intent_id": "FFV_G_QAPLA_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "qapla: the shipment is {{ffv_qapla_statu",
+          "text": "qapla: the shipment is {{ffv_qapla_status}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "qapla: the shipment is {{ffv_qapla_status}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the shipment was not found",
+      "answer": "the false connector of the qapla block",
+      "intent_display_name": "g_qapla_ko",
+      "intent_id": "FFV_G_QAPLA_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "qapla: FAILED, {{ffv_qapla_error}}",
+          "text": "qapla: FAILED, {{ffv_qapla_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "qapla: FAILED, {{ffv_qapla_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "send a whatsapp template",
+      "answer": "send_whatsapp broadcasts a WhatsApp template message",
+      "intent_display_name": "g_whatsapp",
+      "intent_id": "FFV_G_WA",
+      "actions": [
+        {
+          "_tdActionType": "send_whatsapp",
+          "_tdActionTitle": "send the template",
+          "_tdActionId": "ffv-whatsapp-1",
+          "templateName": "hello_world",
+          "payload": {
+            "template": {
+              "name": "hello_world",
+              "language": "en"
+            },
+            "receiver_list": [
+              {
+                "phone_number": "+390000000000",
+                "body_params": [
+                  {
+                    "type": "text",
+                    "text": "Ada"
+                  }
+                ]
+              }
+            ]
+          },
+          "trueIntent": "#FFV_G_WA_OK",
+          "falseIntent": "#FFV_G_WA_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the whatsapp broadcast was accepted",
+      "answer": "the true connector of the send_whatsapp block",
+      "intent_display_name": "g_whatsapp_ok",
+      "intent_id": "FFV_G_WA_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "send_whatsapp: accepted",
+          "text": "send_whatsapp: accepted",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "send_whatsapp: accepted",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the whatsapp broadcast was refused",
+      "answer": "the false connector of the send_whatsapp block",
+      "intent_display_name": "g_whatsapp_ko",
+      "intent_id": "FFV_G_WA_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "send_whatsapp: refused",
+          "text": "send_whatsapp: refused",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "send_whatsapp: refused",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "send a whatsapp payload held in an attribute",
+      "answer": "whatsapp_attribute broadcasts a payload built earlier in the flow",
+      "intent_display_name": "g_whatsapp_attribute",
+      "intent_id": "FFV_G_WA_ATTR",
+      "actions": [
+        {
+          "_tdActionType": "code",
+          "_tdActionTitle": "build the payload",
+          "source": "context.setAttribute('ffv_wa_payload', {\n  template: { name: 'hello_world', language: 'en' },\n  receiver_list: [{ phone_number: '+390000000000', body_params: [{ type: 'text', text: 'Ada' }] }]\n});"
+        },
+        {
+          "_tdActionType": "whatsapp_attribute",
+          "_tdActionTitle": "broadcast it",
+          "attributeName": "ffv_wa_payload"
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "whatsapp_attribute: the payload in ffv_w",
+          "text": "whatsapp_attribute: the payload in ffv_wa_payload was broadcast",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "whatsapp_attribute: the payload in ffv_wa_payload was broadcast",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai blocks",
+      "answer": "H - AI menu",
+      "intent_display_name": "h_ai",
+      "intent_id": "FFV_H_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*H · AI*\n\nEach of these needs an LLM key",
+          "text": "*H · AI*\n\nEach of these needs an LLM key on the project.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*H · AI*\n\nEach of these needs an LLM key on the project.",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/h_askgpt"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_askgptv2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_ai_prompt"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_ai_condition"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_gpt_task"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_add_kb_content"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/h_gpt_assistant"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "ask the v1 knowledge base",
+      "answer": "askgpt asks a v1 knowledge base",
+      "intent_display_name": "h_askgpt",
+      "intent_id": "FFV_H_ASKGPT",
+      "actions": [
+        {
+          "_tdActionType": "askgpt",
+          "_tdActionTitle": "ask the kb",
+          "_tdActionId": "ffv-askgpt-1",
+          "question": "What are the opening hours?",
+          "kbid": "replace-me-with-your-kb-id",
+          "assignReplyTo": "ffv_kb_reply",
+          "assignSourceTo": "ffv_kb_source",
+          "trueIntent": "#FFV_H_ASKGPT_OK",
+          "falseIntent": "#FFV_H_ASKGPT_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the knowledge base answered",
+      "answer": "the true connector of the askgpt block",
+      "intent_display_name": "h_askgpt_ok",
+      "intent_id": "FFV_H_ASKGPT_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "askgpt: {{ffv_kb_reply}}",
+          "text": "askgpt: {{ffv_kb_reply}}\naskgpt source: {{ffv_kb_source}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgpt: {{ffv_kb_reply}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgpt source: {{ffv_kb_source}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the knowledge base did not answer",
+      "answer": "the false connector of the askgpt block",
+      "intent_display_name": "h_askgpt_ko",
+      "intent_id": "FFV_H_ASKGPT_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "askgpt: no answer ({{ffv_kb_reply}})",
+          "text": "askgpt: no answer ({{ffv_kb_reply}})",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgpt: no answer ({{ffv_kb_reply}})",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "ask a knowledge base namespace",
+      "answer": "askgptv2 asks a knowledge base namespace",
+      "intent_display_name": "h_askgptv2",
+      "intent_id": "FFV_H_ASKGPT2",
+      "actions": [
+        {
+          "_tdActionType": "askgptv2",
+          "_tdActionTitle": "ask the namespace",
+          "_tdActionId": "ffv-askgptv2-1",
+          "question": "What are the opening hours?",
+          "model": "gpt-4o",
+          "history": false,
+          "assignReplyTo": "ffv_ns_reply",
+          "assignSourceTo": "ffv_ns_source",
+          "assignChunksTo": "ffv_ns_chunks",
+          "trueIntent": "#FFV_H_ASKGPT2_OK",
+          "falseIntent": "#FFV_H_ASKGPT2_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the namespace answered",
+      "answer": "the true connector of the askgptv2 block",
+      "intent_display_name": "h_askgptv2_ok",
+      "intent_id": "FFV_H_ASKGPT2_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "askgptv2: {{ffv_ns_reply}}",
+          "text": "askgptv2: {{ffv_ns_reply}}\naskgptv2 source: {{ffv_ns_source}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgptv2: {{ffv_ns_reply}}"
+                }
+              },
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgptv2 source: {{ffv_ns_source}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the namespace did not answer",
+      "answer": "the false connector of the askgptv2 block",
+      "intent_display_name": "h_askgptv2_ko",
+      "intent_id": "FFV_H_ASKGPT2_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "askgptv2: no answer",
+          "text": "askgptv2: no answer",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "askgptv2: no answer",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "run an ai prompt",
+      "answer": "ai_prompt runs a free-form prompt against the configured LLM",
+      "intent_display_name": "h_ai_prompt",
+      "intent_id": "FFV_H_PROMPT",
+      "actions": [
+        {
+          "_tdActionType": "ai_prompt",
+          "_tdActionTitle": "summarise politely",
+          "_tdActionId": "ffv-ai-prompt-1",
+          "question": "Rewrite the following politely: {{last_user_text}}",
+          "llm": "openai",
+          "model": "gpt-4o",
+          "temperature": 0.7,
+          "max_tokens": 512,
+          "history": false,
+          "assignReplyTo": "ffv_prompt_reply",
+          "trueIntent": "#FFV_H_PROMPT_OK",
+          "falseIntent": "#FFV_H_PROMPT_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai prompt answered",
+      "answer": "the true connector of the ai_prompt block",
+      "intent_display_name": "h_ai_prompt_ok",
+      "intent_id": "FFV_H_PROMPT_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_prompt: {{ffv_prompt_reply}}",
+          "text": "ai_prompt: {{ffv_prompt_reply}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_prompt: {{ffv_prompt_reply}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai prompt failed",
+      "answer": "the false connector of the ai_prompt block",
+      "intent_display_name": "h_ai_prompt_ko",
+      "intent_id": "FFV_H_PROMPT_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_prompt: FAILED, {{flowError}}",
+          "text": "ai_prompt: FAILED, {{flowError}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_prompt: FAILED, {{flowError}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "route with an ai condition",
+      "answer": "ai_condition routes the conversation by asking the LLM which label applies",
+      "intent_display_name": "h_ai_condition",
+      "intent_id": "FFV_H_AICOND",
+      "actions": [
+        {
+          "_tdActionType": "ai_condition",
+          "_tdActionTitle": "billing or technical?",
+          "_tdActionId": "ffv-ai-condition-1",
+          "llm": "openai",
+          "model": "gpt-4o",
+          "temperature": 0.2,
+          "max_tokens": 128,
+          "instructions": "User question: {{last_user_text}}",
+          "assignReplyTo": "ffv_aicond_label",
+          "intents": [
+            {
+              "label": "billing",
+              "prompt": "the user is asking about an invoice, a payment or a refund",
+              "conditionIntentId": "#FFV_H_AICOND_BILLING"
+            },
+            {
+              "label": "technical",
+              "prompt": "the user is reporting a bug or a technical problem",
+              "conditionIntentId": "#FFV_H_AICOND_TECH"
+            }
+          ],
+          "fallbackIntent": "#FFV_H_AICOND_FALLBACK",
+          "errorIntent": "#FFV_H_AICOND_ERROR"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai condition picked billing",
+      "answer": "the billing connector of the ai_condition block",
+      "intent_display_name": "h_ai_condition_billing",
+      "intent_id": "FFV_H_AICOND_BILLING",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_condition: routed to BILLING",
+          "text": "ai_condition: routed to BILLING",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_condition: routed to BILLING",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai condition picked technical",
+      "answer": "the technical connector of the ai_condition block",
+      "intent_display_name": "h_ai_condition_tech",
+      "intent_id": "FFV_H_AICOND_TECH",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_condition: routed to TECHNICAL",
+          "text": "ai_condition: routed to TECHNICAL",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_condition: routed to TECHNICAL",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai condition matched nothing",
+      "answer": "the fallback connector of the ai_condition block",
+      "intent_display_name": "h_ai_condition_fallback",
+      "intent_id": "FFV_H_AICOND_FALLBACK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_condition: no label matched",
+          "text": "ai_condition: no label matched",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_condition: no label matched",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the ai condition errored",
+      "answer": "the error connector of the ai_condition block",
+      "intent_display_name": "h_ai_condition_error",
+      "intent_id": "FFV_H_AICOND_ERROR",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "ai_condition: ERROR, {{flowError}}",
+          "text": "ai_condition: ERROR, {{flowError}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "ai_condition: ERROR, {{flowError}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "run a gpt task",
+      "answer": "gpt_task runs a chat completion",
+      "intent_display_name": "h_gpt_task",
+      "intent_id": "FFV_H_GPTTASK",
+      "actions": [
+        {
+          "_tdActionType": "gpt_task",
+          "_tdActionTitle": "summarise the conversation",
+          "_tdActionId": "ffv-gpt-task-1",
+          "question": "Summarise this conversation in one sentence.",
+          "context": "You are a concise assistant.",
+          "model": "gpt-4o",
+          "formatType": "text",
+          "max_tokens": 256,
+          "temperature": 0,
+          "assignReplyTo": "ffv_gpt_reply",
+          "trueIntent": "#FFV_H_GPTTASK_OK",
+          "falseIntent": "#FFV_H_GPTTASK_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the gpt task answered",
+      "answer": "the true connector of the gpt_task block",
+      "intent_display_name": "h_gpt_task_ok",
+      "intent_id": "FFV_H_GPTTASK_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "gpt_task: {{ffv_gpt_reply}}",
+          "text": "gpt_task: {{ffv_gpt_reply}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "gpt_task: {{ffv_gpt_reply}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the gpt task failed",
+      "answer": "the false connector of the gpt_task block",
+      "intent_display_name": "h_gpt_task_ko",
+      "intent_id": "FFV_H_GPTTASK_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "gpt_task: FAILED",
+          "text": "gpt_task: FAILED",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "gpt_task: FAILED",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "add content to the knowledge base",
+      "answer": "add_kb_content writes a new document into a knowledge base namespace",
+      "intent_display_name": "h_add_kb_content",
+      "intent_id": "FFV_H_ADDKB",
+      "actions": [
+        {
+          "_tdActionType": "add_kb_content",
+          "_tdActionTitle": "file this conversation",
+          "_tdActionId": "ffv-addkb-1",
+          "type": "text",
+          "name": "Full flow validation note",
+          "content": "The full flow validation bot reached the add_kb_content block.",
+          "tags": [
+            "full-flow-validation"
+          ]
+        },
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "add_kb_content: the note was filed",
+          "text": "add_kb_content: the note was filed",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "add_kb_content: the note was filed",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "ask an openai assistant",
+      "answer": "gpt_assistant asks an OpenAI Assistant (real OpenAI only)",
+      "intent_display_name": "h_gpt_assistant",
+      "intent_id": "FFV_H_ASSISTANT",
+      "actions": [
+        {
+          "_tdActionType": "gpt_assistant",
+          "_tdActionTitle": "ask the assistant",
+          "_tdActionId": "ffv-assistant-1",
+          "assistantId": "asst_replace_me",
+          "prompt": "How many products are in the catalog?",
+          "threadIdAttribute": "ffv_assistant_thread",
+          "assignResultTo": "ffv_assistant_reply",
+          "assignErrorTo": "ffv_assistant_error",
+          "trueIntent": "#FFV_H_ASSISTANT_OK",
+          "falseIntent": "#FFV_H_ASSISTANT_KO"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the assistant answered",
+      "answer": "the true connector of the gpt_assistant block",
+      "intent_display_name": "h_gpt_assistant_ok",
+      "intent_id": "FFV_H_ASSISTANT_OK",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "gpt_assistant: {{ffv_assistant_reply}}",
+          "text": "gpt_assistant: {{ffv_assistant_reply}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "gpt_assistant: {{ffv_assistant_reply}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "the assistant failed",
+      "answer": "the false connector of the gpt_assistant block",
+      "intent_display_name": "h_gpt_assistant_ko",
+      "intent_id": "FFV_H_ASSISTANT_KO",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "gpt_assistant: FAILED, {{ffv_assistant_e",
+          "text": "gpt_assistant: FAILED, {{ffv_assistant_error}}",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "gpt_assistant: FAILED, {{ffv_assistant_error}}",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "lifecycle and terminal blocks",
+      "answer": "I - lifecycle menu. EVERY branch below ends the bot conversation.",
+      "intent_display_name": "i_terminal",
+      "intent_id": "FFV_I_MENU",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "*I · Lifecycle — these END the conversat",
+          "text": "*I · Lifecycle — these END the conversation*\n\nAfter any of these the bot no longer answers this conversation. Start a new one to carry on validating.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "*I · Lifecycle — these END the conversation*\n\nAfter any of these the bot no longer answers this conversation. Start a new one to carry on validating.",
+                  "attributes": {
+                    "attachment": {
+                      "type": "template",
+                      "buttons": [
+                        {
+                          "type": "text",
+                          "value": "/i_agent"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_unassigned"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_removecurrentbot"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_replacebot"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_replacebotv2"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_replacebotv3"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/i_close"
+                        },
+                        {
+                          "type": "text",
+                          "value": "/start"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "talk to a human",
+      "answer": "agent hands the conversation to a human — ENDS the bot conversation",
+      "intent_display_name": "i_agent",
+      "intent_id": "FFV_I_AGENT",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "agent: handing you over to a human now. ",
+          "text": "agent: handing you over to a human now. The bot stops here.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "agent: handing you over to a human now. The bot stops here."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "agent",
+          "_tdActionTitle": "to a human",
+          "_tdActionId": "ffv-agent-1"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "put me back in the queue",
+      "answer": "move_to_unassigned drops every participant — ENDS the bot conversation",
+      "intent_display_name": "i_unassigned",
+      "intent_id": "FFV_I_UNASSIGNED",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "move_to_unassigned: putting this convers",
+          "text": "move_to_unassigned: putting this conversation back in the queue. The bot stops here.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "move_to_unassigned: putting this conversation back in the queue. The bot stops here."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "move_to_unassigned",
+          "_tdActionTitle": "back to the queue",
+          "_tdActionId": "ffv-unassigned-1"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "remove this bot from the conversation",
+      "answer": "removecurrentbot detaches this bot — ENDS the bot conversation",
+      "intent_display_name": "i_removecurrentbot",
+      "intent_id": "FFV_I_REMOVEBOT",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "removecurrentbot: this bot is leaving th",
+          "text": "removecurrentbot: this bot is leaving the conversation.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "removecurrentbot: this bot is leaving the conversation."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "removecurrentbot",
+          "_tdActionTitle": "detach this bot",
+          "_tdActionId": "ffv-removebot-1"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "replace this bot v1",
+      "answer": "replacebot swaps in another bot by name — ENDS this bot conversation",
+      "intent_display_name": "i_replacebot",
+      "intent_id": "FFV_I_REPLACE1",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "replacebot: handing over to another bot ",
+          "text": "replacebot: handing over to another bot by name.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replacebot: handing over to another bot by name."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "replacebot",
+          "_tdActionTitle": "by name",
+          "_tdActionId": "ffv-replace-1",
+          "botName": "Full Flow Validation Target"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "replace this bot v2",
+      "answer": "replacebotv2 swaps in another bot by name or slug — ENDS this bot conversation",
+      "intent_display_name": "i_replacebotv2",
+      "intent_id": "FFV_I_REPLACE2",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "replacebotv2: handing over to another bo",
+          "text": "replacebotv2: handing over to another bot by slug.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replacebotv2: handing over to another bot by slug."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "replacebotv2",
+          "_tdActionTitle": "by slug",
+          "_tdActionId": "ffv-replace-2",
+          "botName": "full-flow-validation-target",
+          "nameAsSlug": true,
+          "blockName": "start"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "replace this bot v3",
+      "answer": "replacebotv3 swaps in another bot by id — ENDS this bot conversation",
+      "intent_display_name": "i_replacebotv3",
+      "intent_id": "FFV_I_REPLACE3",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "replacebotv3: handing over to another bo",
+          "text": "replacebotv3: handing over to another bot by id.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "replacebotv3: handing over to another bot by id."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "replacebotv3",
+          "_tdActionTitle": "by id",
+          "_tdActionId": "ffv-replace-3",
+          "botId": "replace-me-with-a-bot-id",
+          "botSlug": "full-flow-validation-target",
+          "useSlug": false,
+          "blockName": "start"
+        }
+      ]
+    },
+    {
+      "webhook_enabled": false,
+      "enabled": true,
+      "language": "en",
+      "question": "close this conversation",
+      "answer": "close closes the conversation — ENDS the conversation",
+      "intent_display_name": "i_close",
+      "intent_id": "FFV_I_CLOSE",
+      "actions": [
+        {
+          "_tdActionType": "reply",
+          "_tdActionTitle": "close: goodbye, this conversation is now",
+          "text": "close: goodbye, this conversation is now closed.",
+          "attributes": {
+            "disableInputMessage": false,
+            "commands": [
+              {
+                "type": "wait",
+                "time": 500
+              },
+              {
+                "type": "message",
+                "message": {
+                  "type": "text",
+                  "text": "close: goodbye, this conversation is now closed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "_tdActionType": "close",
+          "_tdActionTitle": "close the request",
+          "_tdActionId": "ffv-close-1"
+        }
+      ]
+    }
+  ]
+}

@@ -100,6 +100,12 @@ function freshState() {
     events: [],
     // bot identifier (id | slug | name) -> { root_id }, for PUT /requests/:id/replace
     bots: {},
+    // the project's chatbots, served by GET /:projectId/faq_kb. DirReplaceBot
+    // (v1) resolves its target THROUGH THIS LIST -- TiledeskClient.findBotByName
+    // reads `bots[i].name` and `._id` -- and then swaps the participant rather
+    // than calling /replace, which is what makes v1 observably different from
+    // v2 and v3. Seed with `{"chatbots":[{"_id":"...","name":"..."}]}`.
+    chatbots: [],
     // the body POST /:projectId/llm/transcription answers with, when seeded
     transcription: null,
 
@@ -688,6 +694,19 @@ const ROUTES = [
     }
   },
 
+  // ------------------------------------------------------------ chatbots
+
+  // Caller: DirReplaceBot -> TiledeskClient.replaceBotByName -> findBotByName ->
+  // getAllBots, which iterates the response as an ARRAY and reads `.name` and
+  // `._id`. An object here (what the catch-all used to answer) makes
+  // `bots.length` undefined, the loop never runs and every v1 replace fails with
+  // "Bot not found" -- so the route has to exist for that path to be reachable
+  // at all. Nothing else in this repository reads the bot list.
+  {
+    method: 'GET', path: '/:projectId/faq_kb', kind: 'chatbot-list',
+    handler: () => state.chatbots
+  },
+
   // ---------------------------------------------------------- departments
 
   // Caller: DirDepartment.moveToDepartment -> TiledeskClient.getAllDepartments.
@@ -1242,6 +1261,7 @@ function seed(payload) {
   if (payload.agents) { state.agents = payload.agents.slice(); applied.push('agents'); }
   if (payload.namespaces) { state.namespaces = payload.namespaces.slice(); applied.push('namespaces'); }
   if (payload.bots) { Object.assign(state.bots, payload.bots); applied.push('bots'); }
+  if (payload.chatbots) { state.chatbots = payload.chatbots.slice(); applied.push('chatbots'); }
 
   if (payload.integrations) {
     // { "<name>": { value: {...} } } or [{ name, value }]
