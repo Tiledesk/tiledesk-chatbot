@@ -1,0 +1,48 @@
+# Without this file `COPY . .` pastes the host's node_modules over the tree
+# `npm ci --omit=dev` installed: devDependencies (mocha, c8) end up in the
+# production image and, on a macOS host, so do native modules built for the
+# wrong platform.
+node_modules
+**/node_modules
+
+# Repository/tooling metadata, never needed at runtime
+.git
+.gitignore
+.github
+.idea
+.replit
+.upm
+.superpowers
+replit.nix
+jsconfig.json
+deploy.sh
+log.sh
+
+# Test and coverage artefacts (coverage/ alone was 179 MB)
+coverage
+.nyc_output
+.c8rc.json
+test-results.json
+tybotRoute/test
+tybotRoute/scripts
+docs
+
+# Logs and uploads produced by a previous run
+logs
+tybotRoute/logs
+tybotRoute/uploads/*
+*.log
+
+# Local configuration: the container is configured through the environment
+.env
+.env.*
+.env_example
+
+# Docker's own files, and the integration stack (mounted, not baked)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# The integration stack: mounted into the tests container, not baked into
+# the production image.
+integration
