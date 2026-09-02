@@ -305,3 +305,112 @@ The target is 98%, per area, honestly — reached by writing tests, one area at 
 time, raising that area's floor as it lands. It is deliberately *not* the floor
 today: a single global 98% would fail on day one and, once it did pass, would say
 much less than it appears to.
+
+## The black-box integration stack
+
+`npm test` boots the app **in process**: it `require`s `tybotRoute` directly, so it
+shares the process, the `node_modules` and the host's node version with the code it
+is testing. That tells you nothing about the artefact that actually ships. The
+integration stack runs the connector as a **container built from this repository's
+`Dockerfile`** — the image the Docker Hub workflows push — and drives it over the
+network.
+
+One command, and it is the whole thing:
+
+```bash
+docker compose -f docker-compose.integration.yml up --build \
+  --abort-on-container-exit --exit-code-from tests
+```
+
+It exits 0 when every journey passes and non-zero the moment one fails.
+
+### The four services
+
+| service | what it is |
+| --- | --- |
+| `mongo` | `mongo:6`. Holds the bot and its intents. Seeded by the test container through the connector's own mongoose schemas, so the documents are shaped exactly as production's are. |
+| `redis` | `redis:7-alpine`. Conversation state — the attribute one HTTP request sets and the next one reads back. |
+| `mock-tiledesk` | The Tiledesk platform API, stood in for by ~150 lines of dependency-free `node:http` (`integration/mock-tiledesk/server.js`). It answers the calls the bot makes, **records every one of them**, and serves the recordings back on `GET /__recorded?requestId=…`. `POST /__reset` clears them. It adds nothing to the root `package.json`. |
+| `tilebot` | The application, `build: .`. Wired to the other three **by service name**. |
+| `tests` | The runner (`integration/tests/run.js`). Built from the same Dockerfile purely for `axios`, `mongoose` and the faq schemas; the test code is mounted, not baked in. Seeds mongo, POSTs to `tilebot`, asserts on what `mock-tiledesk` recorded. |
+
+Every `depends_on` uses `condition: service_healthy`, and all four long-lived
+services have a healthcheck — start-up order is deterministic and there is not a
+single `sleep` in the compose file.
+
+Host ports are the **13xxx** range, chosen so nothing collides with the in-process
+suite (10001/10002, plus 10011/10012 for the mongo e2e file) or with
+`docker-compose.test.yml` (6379/27017): `13000` tilebot, `13001` mock-tiledesk,
+`13017` mongo, `13379` redis. Publishing them is only for debugging; the containers
+reach each other over the compose network.
+
+### What it covers
+
+Five journeys, each there to prove one piece of real wiring — not to re-test
+directive semantics, which the unit suite owns:
+
+1. the container boots and `GET /` answers `Hello Tilebot!`;
+2. a bot seeded in mongo answers an explicit intent, and the stored `answer` text
+   reaches the mock carrying the mongo document's `intent_id`;
+3. natural-language matching — a phrase that is neither a `/command` nor an exact
+   stored question, so only the mongo `$text` matcher can produce the reply;
+4. a two-turn conversation in which an attribute set by a directive in turn 1 is
+   rendered in turn 2 — across two separate HTTP requests, so only redis can be
+   carrying it;
+5. an unknown bot id: no reply is posted **and the container is still serving
+   afterwards**. That second half is the assertion that matters — this path used to
+   crash the process.
+
+### In CI
+
+Nothing in the stack needs a host toolchain, so a job is the checkout plus the one
+command:
+
+```yaml
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Integration stack
+        run: |
+          docker compose -f docker-compose.integration.yml up --build \
+            --abort-on-container-exit --exit-code-from tests
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.integration.yml down -v
+```
+
+`--exit-code-from tests` is what makes the job red: the runner exits 1 on any failed
+assertion and compose propagates it.
+
+### Debugging a failure
+
+The runner prints each journey and, for a failure, the full assertion diff and stack.
+Past that:
+
+```bash
+# what the app itself logged during the run (it is not torn down on failure
+# until you say so)
+docker compose -f docker-compose.integration.yml logs tilebot
+
+# every call the bot made to the platform, as the mock saw it
+docker compose -f docker-compose.integration.yml logs mock-tiledesk
+curl -s localhost:13001/__recorded | jq .
+
+# bring up only the dependencies and poke at the app by hand
+docker compose -f docker-compose.integration.yml up -d mongo redis mock-tiledesk tilebot
+curl -s localhost:13000/
+mongosh mongodb://localhost:13017/tilebot_integration --eval 'db.faqs.find()'
+redis-cli -p 13379 keys 'tilebot:*'
+
+# always clean up: the volumes outlive `down` without -v
+docker compose -f docker-compose.integration.yml down -v
+```
+
+If the app answers `200` on the webhook but nothing is ever recorded, check
+`TILEBOT_ENDPOINT` first: a plain-text reply is posted **back to the connector
+itself** at `${TILEBOT_ENDPOINT}/ext/:projectId/requests/:requestId/messages`, which
+is where the directive pipeline runs. Point it anywhere but `http://tilebot:3000`
+and the reply is silently lost. The other classic is redis: the root `index.js`
+reads `CACHE_REDIS_HOST` / `CACHE_REDIS_PORT`, **not** `REDIS_HOST` / `REDIS_PORT`.

@@ -1,0 +1,139 @@
+# Black-box integration stack for the Tiledesk chatbot connector.
+#
+#   docker compose -f docker-compose.integration.yml up --build \
+#       --abort-on-container-exit --exit-code-from tests
+#
+# The connector runs as a container BUILT FROM THIS REPOSITORY'S Dockerfile --
+# the same artefact the Docker Hub workflows push -- and is driven over the
+# network. `npm test` runs the app in-process on the host and cannot tell you
+# whether the image boots, whether it finds mongo and redis by service name or
+# whether its endpoints resolve; this can.
+#
+# Host ports live in the 13xxx range so nothing collides with the in-process
+# suite (10001/10002, and 10011/10012 for the mongo e2e file) or with
+# docker-compose.test.yml (6379/27017). Publishing them is only for debugging;
+# the containers talk to each other by service name on the compose network.
+#
+#   13000 -> tilebot        13001 -> mock-tiledesk
+#   13017 -> mongo          13379 -> redis
+
+name: tilebot-integration
+
+services:
+
+  # --------------------------------------------------------------- mongo
+  # The bots and their intents. Seeded by the `tests` container through the
+  # connector's own mongoose schemas.
+  mongo:
+    image: mongo:6
+    ports:
+      - "13017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  # --------------------------------------------------------------- redis
+  # Conversation state: the attributes a directive sets in one HTTP request
+  # and the next request reads back.
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "13379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------- mock-tiledesk
+  # Stands in for the Tiledesk platform API. Records every call the connector
+  # makes to it and serves the recordings back on GET /__recorded, which is
+  # what the tests assert against. Dependency-free node:http, so it adds
+  # nothing to the repository's package.json and needs no install step.
+  mock-tiledesk:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      PORT: "3001"
+    volumes:
+      - ./integration/mock-tiledesk:/app:ro
+    ports:
+      - "13001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3001/__health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  # ------------------------------------------------------------- tilebot
+  # The application under test, built from ./Dockerfile.
+  tilebot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tiledesk-chatbot:integration
+    environment:
+      PORT: "3000"
+      MONGODB_URI: "mongodb://mongo:27017/tilebot_integration"
+      # The Tiledesk platform: the mock. This is where replies are POSTed.
+      API_ENDPOINT: "http://mock-tiledesk:3001"
+      # The connector's own address. A plain-text reply is posted BACK to
+      # `${TILEBOT_ENDPOINT}/ext/:projectId/requests/:requestId/messages`,
+      # which is a route of this very service -- that is where the directive
+      # pipeline runs. Point it anywhere else and nothing is ever answered.
+      TILEBOT_ENDPOINT: "http://tilebot:3000"
+      ANALYTICS_INGEST_URL: "http://mock-tiledesk:3001"
+      # index.js reads CACHE_REDIS_HOST / CACHE_REDIS_PORT, NOT REDIS_HOST /
+      # REDIS_PORT. Setting the latter leaves the connector with no cache and
+      # the /ext route dereferences it on the first message.
+      CACHE_REDIS_HOST: "redis"
+      CACHE_REDIS_PORT: "6379"
+      LOG_LEVEL: "info"
+    ports:
+      - "13000:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-tiledesk:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  # --------------------------------------------------------------- tests
+  # The runner. Built from the same Dockerfile (cached, so it costs nothing)
+  # purely so it has axios, mongoose and the connector's own faq schemas
+  # available; the test code itself is mounted, never baked into the image.
+  # It seeds mongo, drives tilebot over HTTP and asserts on what
+  # mock-tiledesk recorded. Exits non-zero if anything fails.
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tiledesk-chatbot:integration
+    command: ["node", "integration/tests/run.js"]
+    environment:
+      MONGODB_URI: "mongodb://mongo:27017/tilebot_integration"
+      TILEBOT_URL: "http://tilebot:3000"
+      MOCK_URL: "http://mock-tiledesk:3001"
+    volumes:
+      - ./integration:/usr/src/app/integration:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-tiledesk:
+        condition: service_healthy
+      tilebot:
+        condition: service_healthy
+    restart: "no"
