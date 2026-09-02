@@ -1114,6 +1114,47 @@ describe('Directives directives/ai, the error and edge paths', function () {
       }
     });
 
+    // OPENAI_ENDPOINT is configurable, so the 2xx body here is whatever the
+    // configured completions host answered with -- an OpenAI-compatible proxy,
+    // a gateway, a local model server. `resbody.choices[0].message.content`
+    // was read with no guard at all, so a 2xx whose body has no `choices`
+    // threw "Cannot read properties of undefined (reading '0')" inside an
+    // async go() nobody holds the promise of: an unhandled rejection (fatal
+    // under Node's default --unhandled-rejections=throw) and a directive that
+    // never called back.
+    it('a 2xx completion with no choices keeps the default answer instead of throwing', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION },
+        completions: (req, res) => res.status(200).send({ id: "cmpl-1", object: "chat.completion" })
+      });
+      try {
+        const { dir, tdcache } = build(DirGptTask, null);
+        const stops = await run(dir, { name: "gptTask", action: Object.assign({}, TASK, { trueIntent: "OK" }) });
+
+        assert.strictEqual(tdcache.attrs().gpt_reply, "No answer.",
+          'the declared default stands in when the answer carries no completion');
+        assert.deepStrictEqual(dispatched, ["/OK"]);
+        assert.deepStrictEqual(stops, [true]);
+      } finally {
+        await mock.close();
+      }
+    });
+
+    it('a 2xx completion with an empty choices array keeps the default answer', async () => {
+      const mock = await startMock({
+        integrations: { openai: OPENAI_INTEGRATION },
+        completions: (req, res) => res.status(200).send({ choices: [], usage: { total_tokens: 0 } })
+      });
+      try {
+        const { dir, tdcache } = build(DirGptTask, null);
+        const stops = await run(dir, { name: "gptTask", action: TASK });
+        assert.strictEqual(tdcache.attrs().gpt_reply, "No answer.");
+        assert.deepStrictEqual(stops, [undefined]);
+      } finally {
+        await mock.close();
+      }
+    });
+
     it('a failing completion with no false connector lets the flow carry on', async () => {
       const mock = await startMock({
         integrations: { openai: OPENAI_INTEGRATION },

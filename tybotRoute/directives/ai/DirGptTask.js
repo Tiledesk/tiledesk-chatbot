@@ -202,7 +202,22 @@ class DirGptTask extends BaseDirective {
       return;
     } else {
       winston.debug("(DirGptTask) resbody: ", resbody);
-      answer = resbody.choices[0].message.content;
+      // OPENAI_ENDPOINT is configurable, so this 2xx body is whatever the
+      // configured completions host answered with. Read unguarded, a body with
+      // no `choices` threw "Cannot read properties of undefined (reading '0')"
+      // inside this async go() -- an unhandled rejection (fatal under Node's
+      // default --unhandled-rejections=throw) and a directive that never
+      // called back. `answer` keeps the "No answer." default declared above,
+      // which is what every other no-completion exit in this file already
+      // writes.
+      const completion = resbody?.choices?.[0]?.message?.content;
+      if (completion === undefined || completion === null) {
+        this.logger.error("[ChatGPT Task] the completion answered with no choices");
+        winston.error("(DirGptTask) the completion answered with no choices: ", resbody);
+      }
+      else {
+        answer = completion;
+      }
 
       if (action.formatType === 'json_object' || action.formatType === undefined || action.formatType === null) {
         answer = await this.convertToJson(answer);
