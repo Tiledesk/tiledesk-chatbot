@@ -77,6 +77,7 @@ class DirCallSubagent {
     }
     await subagentStack.push(this.requestId, stackData);
 
+    console.log("Context token before replaceBot: ", this.context.token);
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
       if (this.context.chatbot?.bot.root_id) {
