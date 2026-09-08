@@ -5,6 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+
+# this branch
+- added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+
+# 2.1.0
+- added: support to analytics
+
 # 2.0.36
 - changed: minimist-string package (ssh problem) in favour of minimist and string-argv packages
 

@@ -21,6 +21,7 @@ class Directives {
   static IF_ONLINE_AGENTS = "ifonlineagents";
   static FUNCTION_VALUE = "functionvalue";
   static JSON_CONDITION = "jsoncondition";
+  static JSON_CONDITION_2 = "jsoncondition2"; // NEW: azione JSON Condition V2 del Design Studio
   static SET_ATTRIBUTE = "setattribute";
   static SET_ATTRIBUTE_V2 = "setattribute-v2";
   static REPLY = 'reply';
@@ -63,7 +64,7 @@ class Directives {
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
-
+  static DATA_TABLES = "data_table";
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
   //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE

@@ -7,6 +7,7 @@ const { ExtApi } = require('./ExtApi.js');
 const { ExtUtil } = require('./ExtUtil.js');
 const { TdCache } = require('./TdCache.js');
 const { TiledeskChatbot } = require('./engine/TiledeskChatbot.js');
+const { AnalyticsClient } = require('./AnalyticsClient.js');
 const { MongodbBotsDataSource } = require('./engine/MongodbBotsDataSource.js');
 const { MockBotsDataSource } = require('./engine/mock/MockBotsDataSource.js');
 const { TiledeskChatbotConst } = require('./engine/TiledeskChatbotConst.js');
@@ -158,6 +159,7 @@ router.post('/ext/:botid', async (req, res) => {
   }
   
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    let directivesSuccess = true;
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
@@ -181,7 +183,22 @@ router.post('/ext/:botid', async (req, res) => {
       });
     }
     catch (error) {
+      directivesSuccess = false;
       winston.error("(tybotRoute) Error while processing actions:", error);
+    }
+
+    // Only track published (production) runs: the root/draft copy has no root_id,
+    // so draft/test executions are intentionally excluded from analytics.
+    if (chatbot._intentStartTime && bot.root_id) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id,
+        intent_id:   chatbot._lastIntentId || '',
+        intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     directivesSuccess,
+        request_id:  requestId || null
+      });
     }
   }
   else { // text answer (parse text directives to get actions)
@@ -201,12 +218,30 @@ router.post('/ext/:botid', async (req, res) => {
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
+
+    // Only track published (production) runs: the root/draft copy has no root_id,
+    // so draft/test executions are intentionally excluded from analytics.
+    if (chatbot._intentStartTime && bot.root_id) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id,
+        intent_id:   chatbot._lastIntentId || '',
+        intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     true,
+        request_id:  requestId || null
+      });
+    }
   }
-  
+
 });
 
 router.post('/exec/:botid', async (req, res) => {
-  
+  // NOTE (analytics): This route executes a named block directly via findBlock() and has no
+  // intent context. agent.intent_matched / agent.intent_completed are intentionally NOT emitted
+  // here. Only agent.block_executed (and related events) may be emitted by DirectivesChatbotPlug
+  // for individual directives inside the block.
+
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /exec/:botid called: " + botId);
   if(!botId || botId === "null" || botId === "undefined"){
@@ -562,6 +597,11 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     const execution_id = uuidv4().replace(/-/g, '');
     request_id = "automation-request-" + project_id + "-" + execution_id;
   }
+  // webhook.triggered is emitted by tiledesk-server (routes/webhook.js) — the
+  // single source for production webhook automations (it carries webhook_id and
+  // excludes dev/draft runs). Not emitted here to avoid double-counting; the
+  // block execution itself is already recorded via agent.block_executed.
+
   const command = "/#" + block_id;
   let message = {
     payload: {

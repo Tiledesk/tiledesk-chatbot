@@ -1,5 +1,36 @@
 # Tiledesk native chatbot
 
+# 2.1.12
+- Improved api key management from integration
+
+# 2.1.10
+- Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
+
+# 2.1.9 
+- Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
+
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
+# 2.1.5
+- Added action DirDataTables
+
+# 2.1.4
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+
+# 2.1.3
+- Fixed bug on analytics integration
+
+# 2.1.2
+- Fixed bug on AiPrompt action with vllm models
+
+# 2.1.1
+- Improved support for multiple vLLM servers
+
+# 2.1.0
+- Added support to analytics
+
 # 2.0.47
 - Updated addUnansweredQuestion method in KbService to accept a data object instead of separate parameters.
 - Introduced addAnsweredQuestion method in KbService for handling answered questions.
