@@ -1,6 +1,6 @@
-FROM node:18-bullseye
+FROM node:18-bookworm
 
-RUN sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
+# RUN sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
 
 
 RUN apt-get update
