@@ -339,6 +339,7 @@ class DirAiPrompt {
       };
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
+      json.tools = [];
       winston.debug("DirAiPrompt json.servers: ", json.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
