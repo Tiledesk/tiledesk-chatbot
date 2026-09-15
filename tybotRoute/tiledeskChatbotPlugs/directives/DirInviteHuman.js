@@ -69,10 +69,10 @@ class DirInviteHuman {
     try {
       result = await this.invite({ department_id: action.departmentId || undefined, members: members });
     } catch (err) {
-      const message = (err && err.message) ? err.message : String(err);
-      this.logger.error("[Invite Human] Error: " + message);
-      winston.error("(DirInviteHuman) invite error: " + JSON.stringify(DirInviteHuman.errorSummary(err)));
-      await this.setParameter("flowError", "(Invite human) An error occurred: " + message);
+      const summary = DirInviteHuman.errorSummary(err);
+      this.logger.error("[Invite Human] Error: " + summary.message);
+      winston.error("(DirInviteHuman) invite error: " + JSON.stringify(summary));
+      await this.setParameter("flowError", "(Invite human) An error occurred: " + summary.message);
       this.jump(falseIntent, action.falseIntentAttributes, callback);
       return;
     }

@@ -133,7 +133,7 @@ describe('Conversation for Invite human test', async () => {
         res.send({ request_id: REQUEST_ID, department_id: 'dep-sre', invited: [], reason: 'no_available_agents' });
       },
       message: (text, finish) => {
-        assert.strictEqual(text, 'no human available');
+        assert.strictEqual(text, 'no human available|');
         finish();
       }
     }).then(() => {
@@ -148,7 +148,22 @@ describe('Conversation for Invite human test', async () => {
         res.status(500).send({ success: false, error: 'boom' });
       },
       message: (text, finish) => {
-        assert.strictEqual(text, 'no human available');
+        assert.strictEqual(text, 'no human available|(Invite human) An error occurred: boom');
+        finish();
+      }
+    }).then(() => {
+      tilebotService.sendMessageToBot(userMessage(REQUEST_ID, '/invite', ONCALL_PAYLOAD), BOT_ID, () => {});
+    });
+  });
+
+  it('goes to the "no human available" block with the server reason on a 422', (done) => {
+    const REQUEST_ID = supportRequestId();
+    mockApi(done, {
+      invite: (req, res) => {
+        res.status(422).send({ success: false, error: 'Invite human requires a conversation started by a webhook' });
+      },
+      message: (text, finish) => {
+        assert.strictEqual(text, 'no human available|(Invite human) An error occurred: Invite human requires a conversation started by a webhook');
         finish();
       }
     }).then(() => {
@@ -163,7 +178,7 @@ describe('Conversation for Invite human test', async () => {
         throw new Error('invite endpoint must not be called for automation runs');
       },
       message: (text, finish) => {
-        assert.strictEqual(text, 'no human available');
+        assert.strictEqual(text, 'no human available|(Invite human) requires a conversation');
         finish();
       }
     }).then(() => {

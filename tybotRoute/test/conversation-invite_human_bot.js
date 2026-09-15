@@ -45,7 +45,7 @@ const intents = [
   {
     "webhook_enabled": false, "enabled": true, "language": "en",
     "intent_display_name": "noone", "intent_id": "noone-id",
-    "actions": [replyV2("noone-action", "no human available")]
+    "actions": [replyV2("noone-action", "no human available|{{flowError}}")]
   },
   {
     "webhook_enabled": false, "enabled": true, "language": "en",
