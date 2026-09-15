@@ -377,12 +377,17 @@ describe('Conversation for Reply test', async () => {
 
   it('/reply success (type tts)', (done) => {
     let listener;
+    let preloadCalled = false;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
     endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
       res.send({ success: true });
       const message = req.body;
       
+      // The widget synthesizes the audio itself through the speech proxy:
+      // the chatbot must not pre-generate it on the server.
+      assert(preloadCalled === false, "the chatbot must not call /llm/preload/speech");
+
       const command0 = message.attributes.commands[0];
       assert(command0.type === "wait");
       assert(command0.time === 500);
@@ -408,6 +413,7 @@ describe('Conversation for Reply test', async () => {
     });
 
     endpointServer.post('/:projectId/llm/preload/speech', function (req, res) {
+      preloadCalled = true;
       res.status(202).send({ 
         "status": "started",
       });

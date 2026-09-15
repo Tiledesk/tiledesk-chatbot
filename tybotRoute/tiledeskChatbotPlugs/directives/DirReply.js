@@ -110,12 +110,8 @@ class DirReply {
                 voice: requestAttributes['TTS_VOICE_NAME'],
                 language: requestAttributes['TTS_VOICE_LANGUAGE']
               }
-              try {
-                const speechPreload = await aiService.preloadSpeech(voiceSettings, uid, this.projectId, this.token)
-                console.log("DirReply speechPreload: ", speechPreload);
-              } catch (error) {
-                winston.error("DirReply Error preloading speech: ", error);
-              }
+              // No server-side preload: the widget synthesizes the audio through
+              // the speech proxy, and metadata.src is only its last fallback.
               // const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
               command.message.metadata = {
                 type: 'audio/mp3',
