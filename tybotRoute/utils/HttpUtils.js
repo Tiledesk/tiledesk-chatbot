@@ -16,6 +16,9 @@ class HttpUtils {
     if (options.json !== null) {
       axios_options.data = options.json
     }
+    if (typeof options.timeout === 'number' && options.timeout > 0) {
+      axios_options.timeout = options.timeout
+    }
     if (options.url.startsWith("https:")) {
       const httpsAgent = new https.Agent({
         rejectUnauthorized: false,

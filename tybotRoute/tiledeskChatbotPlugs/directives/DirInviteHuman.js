@@ -11,6 +11,8 @@ const AUTOMATION_PREFIX = 'automation-request-';
 
 class DirInviteHuman {
 
+  static INVITE_TIMEOUT_MS = 30000;
+
   constructor(context) {
     if (!context) {
       throw new Error('context object is mandatory.');
@@ -122,7 +124,8 @@ class DirInviteHuman {
           'Authorization': DirInviteHuman.fixToken(this.token)
         },
         json: body,
-        method: 'POST'
+        method: 'POST',
+        timeout: DirInviteHuman.INVITE_TIMEOUT_MS
       };
       httpUtils.request(HTTPREQUEST, (err, resbody) => {
         if (err) {

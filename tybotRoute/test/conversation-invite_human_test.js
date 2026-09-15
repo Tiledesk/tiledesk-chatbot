@@ -13,6 +13,7 @@ const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const bots_data = require('./conversation-invite_human_bot.js').bots_data;
 const tilebotService = require('../services/TilebotService');
+const { DirInviteHuman } = require('../tiledeskChatbotPlugs/directives/DirInviteHuman');
 
 const PROJECT_ID = "projectID";
 const BOT_ID = "botID";
@@ -170,6 +171,38 @@ describe('Conversation for Invite human test', async () => {
       tilebotService.sendMessageToBot(userMessage(REQUEST_ID, '/invite', ONCALL_PAYLOAD), BOT_ID, () => {});
     });
   });
+
+  it('goes to the "no human available" block with a timeout flowError when the server is slow', (done) => {
+    const REQUEST_ID = supportRequestId();
+    DirInviteHuman.INVITE_TIMEOUT_MS = 500;
+    mockApi(done, {
+      invite: (req, res) => {
+        // Answers well after the 500ms invite timeout; guard against writing
+        // to a connection the client (axios) has already given up on.
+        setTimeout(() => {
+          try {
+            res.send({ request_id: REQUEST_ID, department_id: 'dep-sre', invited: [] });
+          } catch (err) {
+            // client already timed out: ignore
+          }
+        }, 2000);
+      },
+      message: (text, finish) => {
+        DirInviteHuman.INVITE_TIMEOUT_MS = 30000;
+        let assertionError = null;
+        try {
+          assert.strictEqual(text, 'no human available|(Invite human) An error occurred: timeout of 500ms exceeded');
+        } catch (err) {
+          assertionError = err;
+        }
+        // Close the mock listener only after the delayed invite response has
+        // fired, so listener.close() does not hang on the still-open connection.
+        setTimeout(() => finish(assertionError), 1700);
+      }
+    }).then(() => {
+      tilebotService.sendMessageToBot(userMessage(REQUEST_ID, '/invite', ONCALL_PAYLOAD), BOT_ID, () => {});
+    });
+  }).timeout(10000);
 
   it('does not call the server for automation runs', (done) => {
     const REQUEST_ID = automationRequestId();
