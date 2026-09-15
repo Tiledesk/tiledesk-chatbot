@@ -59,12 +59,17 @@ class DirInviteHuman {
       return;
     }
 
-    let members = [];
+    let members;
     try {
       const variables = this.tdcache ? await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId) : {};
       members = DirInviteHuman.resolveMembers(action.members, variables, new Filler());
     } catch (err) {
-      winston.error("(DirInviteHuman) error resolving members: " + JSON.stringify(DirInviteHuman.errorSummary(err)));
+      const summary = DirInviteHuman.errorSummary(err);
+      this.logger.error("[Invite Human] Error resolving members: " + summary.message);
+      winston.error("(DirInviteHuman) error resolving members: " + JSON.stringify(summary));
+      await this.setParameter("flowError", "(Invite human) An error occurred: " + summary.message);
+      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      return;
     }
 
     let result;
