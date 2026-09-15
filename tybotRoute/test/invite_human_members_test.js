@@ -111,4 +111,24 @@ describe('DirInviteHuman directive', function () {
       }
     });
   });
+
+  it('runs the callback exactly once even if go() rejects unexpectedly', (done) => {
+    const { dir } = buildDirective();
+    dir.go = async () => { throw new Error('boom'); };
+    let calls = 0;
+    let lastArg = 'unset';
+    dir.execute({ action: { trueIntent: '#yes', falseIntent: '#no' } }, (stop) => {
+      calls++;
+      lastArg = stop;
+    });
+    setTimeout(() => {
+      try {
+        assert.strictEqual(calls, 1);
+        assert.strictEqual(lastArg, undefined);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    }, 0);
+  });
 });

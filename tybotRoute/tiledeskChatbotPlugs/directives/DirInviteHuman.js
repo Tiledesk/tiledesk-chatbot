@@ -30,14 +30,25 @@ class DirInviteHuman {
 
   execute(directive, callback) {
     winston.verbose("Execute InviteHuman directive");
+    let called = false;
+    const safeCallback = (stop) => {
+      if (called) {
+        return;
+      }
+      called = true;
+      callback(stop);
+    };
     if (!directive || !directive.action) {
       this.logger.error("[Invite Human] Incorrect action for ", directive?.name, directive);
       winston.warn("(DirInviteHuman) Incorrect directive: ", directive);
-      callback();
+      safeCallback();
       return;
     }
     this.go(directive.action, (stop) => {
-      callback(stop);
+      safeCallback(stop);
+    }).catch((err) => {
+      winston.error("(DirInviteHuman) unexpected error: " + JSON.stringify(DirInviteHuman.errorSummary(err)));
+      safeCallback();
     });
   }
 
