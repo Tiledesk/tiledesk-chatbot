@@ -62,7 +62,7 @@ class DirInviteHuman {
       const variables = this.tdcache ? await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId) : {};
       members = DirInviteHuman.resolveMembers(action.members, variables, new Filler());
     } catch (err) {
-      winston.error("(DirInviteHuman) error resolving members: ", err);
+      winston.error("(DirInviteHuman) error resolving members: " + JSON.stringify(DirInviteHuman.errorSummary(err)));
     }
 
     let result;
@@ -71,7 +71,7 @@ class DirInviteHuman {
     } catch (err) {
       const message = (err && err.message) ? err.message : String(err);
       this.logger.error("[Invite Human] Error: " + message);
-      winston.error("(DirInviteHuman) invite error: ", err);
+      winston.error("(DirInviteHuman) invite error: " + JSON.stringify(DirInviteHuman.errorSummary(err)));
       await this.setParameter("flowError", "(Invite human) An error occurred: " + message);
       this.jump(falseIntent, action.falseIntentAttributes, callback);
       return;
@@ -109,7 +109,7 @@ class DirInviteHuman {
         await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, name, value);
       }
     } catch (err) {
-      winston.error("(DirInviteHuman) error setting parameter " + name, err);
+      winston.error("(DirInviteHuman) error setting parameter " + name + ": " + JSON.stringify(DirInviteHuman.errorSummary(err)));
     }
   }
 
@@ -208,6 +208,27 @@ class DirInviteHuman {
       return token;
     }
     return token.startsWith('JWT ') ? token : 'JWT ' + token;
+  }
+
+  /**
+   * Reduces an axios-like error to a plain, log-safe summary.
+   * Never reads err.config, err.request or headers (they may carry the bot JWT).
+   */
+  static errorSummary(err) {
+    const responseData = (err && err.response) ? err.response.data : undefined;
+    let message;
+    if (responseData && typeof responseData.error === 'string' && responseData.error.length > 0) {
+      message = responseData.error;
+    } else if (err && err.message) {
+      message = err.message;
+    } else {
+      message = String(err);
+    }
+    return {
+      message: message,
+      status: (err && err.response) ? err.response.status : undefined,
+      data: responseData
+    };
   }
 }
 

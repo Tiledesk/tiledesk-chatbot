@@ -51,3 +51,29 @@ describe('DirInviteHuman.fixToken', function () {
     assert.strictEqual(DirInviteHuman.fixToken('JWT abc'), 'JWT abc');
   });
 });
+
+describe('DirInviteHuman.errorSummary', function () {
+  it('extracts the server error text and never touches config/request headers', () => {
+    const err = {
+      message: 'Request failed with status code 422',
+      config: { headers: { Authorization: 'JWT SECRET' } },
+      request: { _header: 'Authorization: JWT SECRET' },
+      response: {
+        status: 422,
+        data: { success: false, error: 'Invite human requires a conversation started by a webhook' }
+      }
+    };
+    const summary = DirInviteHuman.errorSummary(err);
+    assert.deepStrictEqual(summary, {
+      message: 'Invite human requires a conversation started by a webhook',
+      status: 422,
+      data: { success: false, error: 'Invite human requires a conversation started by a webhook' }
+    });
+    assert.strictEqual(JSON.stringify(summary).includes('SECRET'), false);
+  });
+
+  it('falls back to err.message when there is no response', () => {
+    const summary = DirInviteHuman.errorSummary(new Error('socket hang up'));
+    assert.deepStrictEqual(summary, { message: 'socket hang up', status: undefined, data: undefined });
+  });
+});
