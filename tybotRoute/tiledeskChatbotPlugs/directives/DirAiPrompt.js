@@ -8,6 +8,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const aiController = require("../../services/AIController");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
@@ -123,6 +124,7 @@ class DirAiPrompt {
     let publicKey = false;
     let ollama_integration;
     let vllm_server_config;
+    let openrouter_model;
 
     if (action.llm === 'ollama') {
       ollama_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token).catch( async (err) => {
@@ -189,6 +191,26 @@ class DirAiPrompt {
         this.logger.error("[AI Prompt] llm key not found in vllm integration");
         winston.error("Error: DirAiPrompt llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm vllm");
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
+    } else if (action.llm === 'openrouter') {
+      // The model object carries provider_routing, which decides the upstream
+      // provider; sending the bare model name would silently drop it and let
+      // OpenRouter route on its own (unlike /llm/preview in tiledesk-server).
+      try {
+        openrouter_model = await aiController.resolveLLMConfig(this.projectId, action.llm, filled_model, this.token);
+        key = openrouter_model.api_key;
+      } catch (err) {
+        this.logger.error("[AI Prompt] llm key not found in openrouter integration");
+        winston.error("Error: DirAiPrompt openrouter integration not resolved: " + (err?.error || err?.message));
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: missing key for llm " + action.llm);
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
@@ -287,6 +309,10 @@ class DirAiPrompt {
         provider: 'vllm'
       }
       console.log("set json.model to: ", json.model);
+    }
+
+    if (action.llm === 'openrouter') {
+      json.model = openrouter_model;
     }
 
     if (action.attach) {
