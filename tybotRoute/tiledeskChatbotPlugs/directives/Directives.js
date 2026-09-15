@@ -61,6 +61,7 @@ class Directives {
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
   static ADD_TAGS = 'add_tags'
+  static INVITE_HUMAN = "invite_human";
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
