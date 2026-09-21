@@ -417,6 +417,190 @@ describe('Conversation for AskGPTV2 test', async () => {
     });
   });
 
+  it('/gpt_success_agentplatform (named server) - resolves google model with project and location, no url', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "kb replied: this is mock kb reply");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["kb_reply"] === "this is mock kb reply");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+      assert.deepStrictEqual(req.body.model, {
+        provider: "google",
+        name: "google/gemini-2.5-flash-lite",
+        api_key: "AQ.Ab8R-test-key",
+        project: "poc-tiledesk-496310",
+        location: "europe-west8"
+      });
+      assert.ok(!('url' in req.body.model));
+
+      res.status(200).send({
+        answer: "this is mock kb reply",
+        success: true,
+        id: "123456789",
+        ids: ["9876543210", "0123456789"],
+        source: "http://gethelp.test.com/article",
+        sources: [ "TextArticle", "http://gethelp.test.com/article"],
+        prompt_token_size: 762,
+        content_chunks: ["this is the chunk 1", "this is the chunk 2"]
+      });
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      assert(req.params.name === 'agentplatform');
+      res.status(200).send({
+        _id: "694ab906a51c8c2ad0933d20",
+        id_project: "62c3f10152dc740035000000",
+        name: "agentplatform",
+        value: {
+          servers: [
+            {
+              name: "prod-vertex",
+              apikey: "AQ.Ab8R-test-key",
+              project: "poc-tiledesk-496310",
+              location: "europe-west8"
+            }
+          ]
+        }
+      });
+    })
+
+    endpointServer.get('/:project_id/kb/namespace/all', function (req, res) {
+      res.status(200).send([
+        {
+          default: true,
+          id_project: "62c3f10152dc7400352b0000",
+          id: "projectID",
+          name: "Default",
+          preview_settings: {
+            model: "gpt-3.5-turbo",
+            max_tokens: 128,
+            temperature: 0.7,
+            top_k: 4
+          },
+          engine: {
+            name: "pinecone",
+            type: "serverless",
+            apikey: "",
+            vector_size: 1536,
+            index_name: "example-index"
+          }
+        }
+      ]);
+    })
+
+    endpointServer.post('/:project_id/kb/answered', function (req, res) {
+      res.send({ success: true });
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/kb_success_agentplatform{"last_user_message":"come ti chiami"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    });
+  });
+
+  it('/gpt_fail_agentplatform_missing_llm_server - does not call the worker', (done) => {
+    let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    let askedQa = false;
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(askedQa === false);
+          assert(attributes["flowError"] === "AskKnowledgeBase Error: llmServer attribute is undefined");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+
+    });
+
+    endpointServer.post('/api/qa', function (req, res) {
+      askedQa = true;
+      res.status(200).send({ success: true, answer: "should not be called" });
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      res.status(200).send({
+        name: "agentplatform",
+        value: {
+          servers: [
+            {
+              name: "prod-vertex",
+              apikey: "AQ.Ab8R-test-key",
+              project: "poc-tiledesk-496310",
+              location: "europe-west8"
+            }
+          ]
+        }
+      });
+    })
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      let request = {
+        "payload": {
+          "senderFullname": "guest#367e",
+          "type": "text",
+          "sender": "A-SENDER",
+          "recipient": REQUEST_ID,
+          "text": '/kb_fail_agentplatform_missing_llm_server{"last_user_message":"come ti chiami"}',
+          "id_project": PROJECT_ID,
+          "metadata": "",
+          "request": {
+            "request_id": REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+    });
+  });
+
   it('/gpt_success_custom_context (key from integrations) - invokes the askgpt mockup with temperature, max_token, top_k, context and test the returning attributes', (done) => {
     let listener;
     let endpointServer = express();

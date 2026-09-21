@@ -141,6 +141,7 @@ class DirAskGPTV2 {
       skip_unanswered = false,
       use_hyde = false,
       use_cache = false,
+      llmServer = null,
       vllmServer = null,
     } = action;
 
@@ -181,7 +182,12 @@ class DirAskGPTV2 {
     let engine;
 
     try {
-      model = await aiController.resolveLLMConfig(this.projectId, llm, filled_model, this.token, vllmServer);
+      // agentplatform uses llmServer; vllm keeps vllmServer and accepts llmServer as fallback
+      const filled_llm_server = filler.fill(
+        llm === 'vllm' ? (llmServer || vllmServer) : llmServer,
+        requestVariables
+      );
+      model = await aiController.resolveLLMConfig(this.projectId, llm, filled_model, this.token, filled_llm_server);
     } catch (err) {
       const errorMsg = err?.error || `${llm} integration not found`;
       this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration: `, errorMsg);

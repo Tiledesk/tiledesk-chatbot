@@ -500,7 +500,376 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AiPrompt ollama success - invokes the aiprompt mockup and test the returning attributes', (done) => {
+    it('AIPROMPT-SUCCESS-AGENTPLATFORM', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: this is the answer");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(attributes);
+            assert(attributes["ai_reply"] === "this is the answer");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'agentplatform');
+
+        res.status(200).send({
+          _id: "694ab906a51c8c2ad0933d20",
+          id_project: "62c3f10152dc740035000000",
+          name: "agentplatform",
+          value: {
+            servers: [
+              {
+                name: "prod-vertex",
+                apikey: "AQ.Ab8R-test-key",
+                project: "poc-tiledesk-496310",
+                location: "europe-west8"
+              }
+            ]
+          }
+        });
+
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert(req.body.llm === "google");
+        assert(req.body.llm_key === "AQ.Ab8R-test-key");
+        assert.deepStrictEqual(req.body.model, {
+          provider: "google",
+          name: "google/gemini-2.5-flash-lite",
+          api_key: "AQ.Ab8R-test-key",
+          project: "poc-tiledesk-496310",
+          location: "europe-west8"
+        });
+        assert.ok(!('url' in req.body.model));
+  
+        res.status(200).send({
+          answer: "this is the answer"
+        });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_agentplatform_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
+    it('AIPROMPT-FAIL-AGENTPLATFORM-MISSING-LLM-SERVER', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      let askedLlm = false;
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        const command2 = message.attributes.commands[1];
+        assert(command2.message.text === "Error: AiPrompt Error: llmServer attribute is undefined");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(askedLlm === false);
+            assert(attributes["flowError"] === "AiPrompt Error: llmServer attribute is undefined");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({
+          name: "agentplatform",
+          value: {
+            servers: [
+              {
+                name: "prod-vertex",
+                apikey: "AQ.Ab8R-test-key",
+                project: "poc-tiledesk-496310",
+                location: "europe-west8"
+              }
+            ]
+          }
+        });
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+        askedLlm = true;
+        res.status(200).send({ answer: "should not be called" });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_agentplatform_missing_llm_server',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+      });
+
+    })
+
+    it('AIPROMPT-FAIL-AGENTPLATFORM-UNKNOWN-SERVER', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      let askedLlm = false;
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const command2 = req.body.attributes.commands[1];
+        assert(command2.message.text === "Error: AiPrompt Error: agentplatform server 'missing-server' not found");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(askedLlm === false);
+            assert(attributes["flowError"] === "AiPrompt Error: agentplatform server 'missing-server' not found");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({
+          name: "agentplatform",
+          value: {
+            servers: [
+              {
+                name: "prod-vertex",
+                apikey: "AQ.Ab8R-test-key",
+                project: "poc-tiledesk-496310",
+                location: "europe-west8"
+              }
+            ]
+          }
+        });
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+        askedLlm = true;
+        res.status(200).send({ answer: "should not be called" });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_agentplatform_unknown_server',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+      });
+
+    })
+
+    it('AIPROMPT-FAIL-AGENTPLATFORM-MISSING-PROJECT', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      let askedLlm = false;
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const command2 = req.body.attributes.commands[1];
+        assert(command2.message.text === "Error: AiPrompt Error: Project for agentplatform is empty or invalid");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(askedLlm === false);
+            assert(attributes["flowError"] === "AiPrompt Error: Project for agentplatform is empty or invalid");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({
+          name: "agentplatform",
+          value: {
+            servers: [
+              {
+                name: "prod-vertex",
+                apikey: "AQ.Ab8R-test-key",
+                location: "europe-west8"
+              }
+            ]
+          }
+        });
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+        askedLlm = true;
+        res.status(200).send({ answer: "should not be called" });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_agentplatform_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+      });
+
+    })
+
+    it('AIPROMPT-FAIL-AGENTPLATFORM-MISSING-LOCATION', (done) => {
+      
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+      let askedLlm = false;
+      
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const command2 = req.body.attributes.commands[1];
+        assert(command2.message.text === "Error: AiPrompt Error: Location for agentplatform is empty or invalid");
+
+        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+          if (err) {
+            assert.ok(false);
+          }
+          else {
+            assert(askedLlm === false);
+            assert(attributes["flowError"] === "AiPrompt Error: Location for agentplatform is empty or invalid");
+            listener.close(() => {
+              done();
+            });
+          }
+        });
+
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({
+          name: "agentplatform",
+          value: {
+            servers: [
+              {
+                name: "prod-vertex",
+                apikey: "AQ.Ab8R-test-key",
+                project: "poc-tiledesk-496310"
+              }
+            ]
+          }
+        });
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+        askedLlm = true;
+        res.status(200).send({ answer: "should not be called" });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_agentplatform_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+      });
+
+    })
+
+    it('AIPROMPT-SUCCESS-OLLAMA', (done) => {
       
       let listener;
       let endpointServer = express();
