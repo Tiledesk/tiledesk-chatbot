@@ -8,6 +8,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const aiController = require("../../services/AIController");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
@@ -403,6 +404,7 @@ class DirAiPrompt {
       };
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
+      json.tools = [];
       winston.debug("DirAiPrompt json.servers: ", json.servers);
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
