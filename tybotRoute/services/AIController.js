@@ -1,4 +1,5 @@
 const integrationService = require("./IntegrationService");
+const { buildOpenRouterModel } = require("../utils/openrouterUtils");
 
 class AIController {
 
@@ -47,6 +48,15 @@ class AIController {
                 project: server.project,
                 location: server.location
             };
+        }
+
+        if (provider === 'openrouter') {
+            const integration = await integrationService.getIntegration(id_project, provider, token);
+            if (!integration?.value?.apikey) {
+                throw { code: 422, error: "The key provided for openrouter is not valid or undefined" };
+            }
+
+            return buildOpenRouterModel(integration.value, model);
         }
 
         if (provider === 'ollama' || provider === 'vllm') {
