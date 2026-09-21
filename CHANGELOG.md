@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# 2.1.14
+# 2.1.15
 - Added support for OpenRouter provider
 - Added support for Gemini Agent Platform
 
