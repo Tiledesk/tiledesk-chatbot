@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# 2.1.14
+- Added support for OpenRouter provider
+- Added support for Gemini Agent Platform
+
 # 2.1.13
 - Added mcp lock and mcp server
 
