@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.13
+- Added mcp lock and mcp server
+
 # 2.1.12
 - Improved api key management from integration
 
