@@ -72,6 +72,27 @@ const parentBot = normalizeBot({
 				}]
 			}
 		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "defaultFallback",
+		"intent_id": "10000000-0000-0000-0000-0000000000df",
+		"question": "",
+		"form": {},
+		"actions": [{
+			"_tdActionType": "reply",
+			"text": "FALLBACK",
+			"attributes": {
+				"commands": [{
+					"type": "message",
+					"message": {
+						"type": "text",
+						"text": "FALLBACK"
+					}
+				}]
+			}
+		}]
 	}]
 });
 

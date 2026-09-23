@@ -146,6 +146,7 @@ class TiledeskChatbot {
           winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
           reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
           resolve();
+          return;
         }
         else {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
@@ -166,12 +167,14 @@ class TiledeskChatbot {
             catch(error) {
               winston.error("(TiledeskChatbot) Error adding parameter: ", error);
               reject(error);
+              return;
             }
           }
           else {
             winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
             reply = { "text": "Intent not found: " + explicit_intent_name }
-            resolve()
+            resolve();
+            return;
           }
         }
       }

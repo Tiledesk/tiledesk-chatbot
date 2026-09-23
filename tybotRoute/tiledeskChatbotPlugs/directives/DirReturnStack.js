@@ -48,8 +48,12 @@ class DirReturnStack {
             return;
         }
         try {
+            if (data.triggerText) {
+                await subagentStack.markTriggerMessageConsumed(this.requestId, data.triggerText);
+            }
             await requestService.replaceBot(this.context.projectId, this.requestId, { id: data.parentId }, this.context.token);
         } catch (error) {
+            await subagentStack.clearConsumedTriggerMessage(this.requestId);
             winston.error("(DirReturnStack) error: ", error);
             this.logger.error("(ReturnStack) Invoke subagent error: ", error);
             callback(true);

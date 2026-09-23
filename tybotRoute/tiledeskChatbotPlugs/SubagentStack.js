@@ -11,8 +11,14 @@ class SubagentStack {
         this.tdCache = options.tdCache;
     }
 
+    static CONSUMED_MESSAGE_TTL_SECONDS = 300;
+
     stackKey(requestId) {
         return `subagent:stack:${requestId}`;
+    }
+
+    consumedMessageKey(requestId) {
+        return `subagent:consumed_text:${requestId}`;
     }
 
     // Save parent state in the stack before calling the subagent
@@ -53,6 +59,27 @@ class SubagentStack {
     async clear(requestId) {
         const key = this.stackKey(requestId);
         await this.tdCache.del(key);
+    }
+
+    // Remember the user text that opened the subagent, so a re-delivery
+    // after the parent is restored is not interpreted as a new turn.
+    async markTriggerMessageConsumed(requestId, text) {
+        if (!text) {
+            return;
+        }
+        await this.tdCache.set(
+            this.consumedMessageKey(requestId),
+            text,
+            { EX: SubagentStack.CONSUMED_MESSAGE_TTL_SECONDS }
+        );
+    }
+
+    async getConsumedTriggerMessage(requestId) {
+        return await this.tdCache.get(this.consumedMessageKey(requestId));
+    }
+
+    async clearConsumedTriggerMessage(requestId) {
+        await this.tdCache.del(this.consumedMessageKey(requestId));
     }
     
 }

@@ -37,6 +37,7 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
+const { SubagentStack } = require('./tiledeskChatbotPlugs/SubagentStack.js');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -91,6 +92,24 @@ router.post('/ext/:botid', async (req, res) => {
     botId,
     {EX: 604800} // 7 days
   );
+
+  if (isBotBubble(message)) {
+    winston.verbose("(tybotRoute) Skipping bot-authored message: " + message.text);
+    return;
+  }
+
+  const subagentStack = new SubagentStack({ tdCache: tdcache });
+  const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
+  if (
+    consumedTriggerText &&
+    message.text === consumedTriggerText &&
+    message.sender !== "_tdinternal" &&
+    !(message.attributes && message.attributes.action)
+  ) {
+    winston.verbose("(tybotRoute) Skipping subagent trigger message re-delivery: " + message.text);
+    await subagentStack.clearConsumedTriggerMessage(requestId);
+    return;
+  }
 
   let botsDS;
   if (!staticBots) {
@@ -808,6 +827,21 @@ function myrequest(options, callback) {
       }
     }
   );
+}
+
+// A bubble written by a bot is not a user turn. Slash commands and button
+// actions stay, because those are how a bot invokes a block on another bot.
+function isBotBubble(message) {
+  if (!message || typeof message.sender !== "string" || !message.sender.startsWith("bot_")) {
+    return false;
+  }
+  if (message.attributes && message.attributes.action) {
+    return false;
+  }
+  if (typeof message.text === "string" && message.text.startsWith("/")) {
+    return false;
+  }
+  return true;
 }
 
 module.exports = { router: router, startApp: startApp};
