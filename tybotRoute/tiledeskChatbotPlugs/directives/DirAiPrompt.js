@@ -833,8 +833,8 @@ class DirAiPrompt {
         : {};
     for (const key of Object.keys(base)) {
       const v = base[key];
-      if (v !== undefined && v !== null && typeof v !== 'string') {
-        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      if (v !== undefined && v !== null) {
+        base[key] = DirAiPrompt.sanitizeHeaderValue(v);
       }
     }
     if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
@@ -850,12 +850,34 @@ class DirAiPrompt {
           base[key] = '';
           continue;
         }
-        base[key] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        base[key] = DirAiPrompt.sanitizeHeaderValue(v);
       } catch (err) {
         winston.warn("DirAiPrompt mergeHeadersWithVariables skip key:", key, err);
       }
     }
     return base;
+  }
+
+  // Header values reject backslash and control chars. Email bodies often
+  // arrive with real newlines or literal "\n" sequences in x-last-user-text.
+  static sanitizeHeaderValue(value) {
+    if (value == null) return '';
+    let str;
+    try {
+      str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    } catch (err) {
+      return '';
+    }
+    return str
+      .replace(/\\r\\n/g, ' ')
+      .replace(/\\n/g, ' ')
+      .replace(/\\r/g, ' ')
+      .replace(/\\t/g, ' ')
+      .replace(/[\u0000-\u001F\u007F]/g, ' ')
+      .replace(/\\/g, '')
+      .replace(/[^\t\x20-\x7E\x80-\xFF]/g, '')
+      .replace(/ {2,}/g, ' ')
+      .trim();
   }
 
   async resolveNativeServerUrls(servers) {
