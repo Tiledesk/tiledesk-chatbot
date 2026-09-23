@@ -12,14 +12,15 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
+const namespaceService = require("../../services/NamespaceService");
 const default_engine = require('../../config/kb/engine');
 const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
+const llmService = require("../../services/LLMService");
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -140,6 +141,7 @@ class DirAskGPTV2 {
       skip_unanswered = false,
       use_hyde = false,
       use_cache = false,
+      llmServer = null,
       vllmServer = null,
     } = action;
 
@@ -180,7 +182,12 @@ class DirAskGPTV2 {
     let engine;
 
     try {
-      model = await aiController.resolveLLMConfig(this.projectId, llm, filled_model, this.token, vllmServer);
+      // agentplatform uses llmServer; vllm keeps vllmServer and accepts llmServer as fallback
+      const filled_llm_server = filler.fill(
+        llm === 'vllm' ? (llmServer || vllmServer) : llmServer,
+        requestVariables
+      );
+      model = await aiController.resolveLLMConfig(this.projectId, llm, filled_model, this.token, filled_llm_server);
     } catch (err) {
       const errorMsg = err?.error || `${llm} integration not found`;
       this.logger.error(`[Ask Knowledge Base] Error getting ${llm} integration: `, errorMsg);
@@ -277,7 +284,7 @@ class DirAskGPTV2 {
     }
     
     if (ns.engine) {
-      engine = ns.engine;
+      engine = await this.resolveEngineApikey(ns);
     } else {
       engine = await this.setDefaultEngine(ns.hybrid);
     }
@@ -350,6 +357,10 @@ class DirAskGPTV2 {
         json.reranking_multiplier = calculatedRerankingMultiplier;
       }
     }
+    
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
+    }
 
     if (!action.advancedPrompt) {
       const contextTemplate = getRagContextTemplate(model.name);
@@ -380,6 +391,7 @@ class DirAskGPTV2 {
     }
     
     winston.debug("DirAskGPTV2 json:", json);
+    console.log("DirAskGPTV2 json:", JSON.stringify(json));
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
     if (ns.hybrid === true) {
@@ -420,6 +432,7 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
+          console.log("DirAskGPTV2 resbody: ", JSON.stringify(resbody));
           if (chunks_only) {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
             if (trueIntent) {
@@ -458,7 +471,7 @@ class DirAskGPTV2 {
               request_id: this.requestId,
               tokens: tokens
             }
-            kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("Error adding answered question: ", err);
             })
   
@@ -479,8 +492,7 @@ class DirAskGPTV2 {
               question: json.question,
               request_id: this.requestId
             }
-
-            kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
@@ -670,6 +682,49 @@ class DirAskGPTV2 {
       return default_engine_hybrid
     }
     return default_engine;
+  }
+
+  /**
+   * Returns the namespace engine with an apikey field that tilellm can read.
+   *
+   * An EMPTY apikey is the normal Tiledesk setup: the vector store credential
+   * lives in the LLM microservice environment (PINECONE_API_KEY) and the client
+   * falls back to it, which is why every namespace is stored with apikey "".
+   * What breaks tilellm is the field being ABSENT: it parses as None and the
+   * pinecone path dereferences it unguarded, so /api/qa answers 400 with
+   * "'NoneType' object has no attribute 'get_secret_value'". That is what
+   * tiledesk-server 2.22.7 introduced, by deleting engine.apikey from
+   * GET /kb/namespace/all.
+   *
+   * So: a value the API provides is kept as it is, empty included. Only a
+   * missing one is resolved — from the namespace document in MongoDB, which
+   * this connector is already connected to and which holds the credential for
+   * the deployments that set one per namespace, then from the local
+   * configuration, and finally as the empty string the microservice expects.
+   *
+   * The engine is copied rather than patched in place: `ns` comes from the API
+   * response and is reused by the caller.
+   */
+  async resolveEngineApikey(ns) {
+    if (typeof ns.engine.apikey === 'string') {
+      return ns.engine;
+    }
+
+    let engine = Object.assign({}, ns.engine);
+
+    let storedEngine = await namespaceService.getEngine(ns.id, this.context.projectId);
+    if (storedEngine && typeof storedEngine.apikey === 'string') {
+      engine.apikey = storedEngine.apikey;
+      winston.verbose("DirAskGPTV2 - Vector store apikey read from the database for namespace " + ns.id);
+      return engine;
+    }
+
+    let fallbackEngine = await this.setDefaultEngine(ns.hybrid);
+    engine.apikey = fallbackEngine.apikey || "";
+    winston.verbose("DirAskGPTV2 - Vector store apikey taken from the local configuration for namespace " +
+      ns.id + (engine.apikey ? "" : " (empty: the LLM microservice uses its own key)"));
+
+    return engine;
   }
 
 }

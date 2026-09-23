@@ -116,121 +116,27 @@ class DirGptTask {
             key = integration.value.apikey;
           }
 
-          // key not present in integrations - for retro compatibility search in kbsettings
+          // key not present in integrations - fall back to shared GPTKEY
           if (!key) {
 
-            winston.debug("(DirGptTask) Key not found in Integrations. Searching in kb settings...");
+            winston.debug("(DirGptTask) Key not found in Integrations. Retrieve public gptkey");
+            key = process.env.GPTKEY;
 
-            const KB_HTTPREQUEST = {
-              url: this.API_ENDPOINT + "/" + this.context.projectId + "/kbsettings",
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'JWT ' + this.context.token
-              },
-              method: "GET"
-            }
-            winston.debug("(DirGptTask) KB_HTTPREQUEST", KB_HTTPREQUEST);
-
-            httpUtils.request(
-              KB_HTTPREQUEST, async (err, resbody) => {
-                if (err) {
-                  if (callback) {
-                    console.error("(httprequest) DirGptTask Get KnowledgeBase err:", err.message);
-                    console.error("(httprequest) DirGptTask Get KnowledgeBase full err", err);
-
-                    await this.#assignAttributes(action, answer);
-                    if (falseIntent) {
-                      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                      callback(true);
-                      return;
-                    }
-                    callback();
-                    return;
-                  }
-                } else if (callback) {
-                  winston.debug("(DirGptTask) Get KnowledgeBase settings resbody:", resbody);
-
-                  if (!resbody.gptkey) {
-                    await this.#assignAttributes(action, answer);
-                    if (falseIntent) {
-                      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                      callback(true);
-                      return;
-                    }
-                    callback();
-                    return;
-
-                  } else {
-
-                    winston.debug("(DirGptTask) Key found in KbSettings");
-
-                    key = resbody.gptkey;
-
-                    let json = {
-                      "model": action.model,
-                      "messages": [
-                        {
-                          "role": "user",
-                          "content": filled_question
-                        }
-                      ],
-                      "max_tokens": action.max_tokens,
-                      "temperature": action.temperature
-                    }
-
-                    let message = { role: "", content: "" };
-                    if (action.context) {
-                      message.role = "system";
-                      message.content = action.context;
-                      json.messages.unshift(message);
-                    }
-                    winston.debug("(DirGptTask) json: ", json);
-
-                    const HTTPREQUEST = {
-                      url: openai_url,
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + key
-                      },
-                      json: json,
-                      method: 'POST'
-                    }
-                    winston.debug("(DirGptTask) HTTPREQUEST: ", HTTPREQUEST);
-                    httpUtils.request(
-                      HTTPREQUEST, async (err, resbody) => {
-                        if (err) {
-                          console.error("(httprequest) DirGptTask openai err:", err);
-                          console.error("(httprequest) DirGptTask openai err:", err.response.data);
-                          await this.#assignAttributes(action, answer);
-                          if (falseIntent) {
-                            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                            callback(true);
-                            return;
-                          }
-                          callback();
-                          return;
-                        } else {
-                          winston.debug("(DirGptTask) resbody: ", JSON.stringify(resbody));
-                          answer = resbody.choices[0].message.content;
-                          let answer_json = await this.convertToJson(answer);
-                          await this.#assignAttributes(action, answer_json);
-                          if (trueIntent) {
-                            await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-                            callback(true);
-                            return;
-                          }
-                          callback();
-                          return;
-                        }
-                      }
-                    )
-                  }
-                }
+            if (!key) {
+              await this.#assignAttributes(action, answer);
+              if (falseIntent) {
+                await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+                callback(true);
+                return;
               }
-            )
-          } else {
+              callback();
+              return;
+            }
+          }
 
-            winston.debug("(DirGptTask) Key found in Integrations");
+          if (key) {
+
+            winston.debug("(DirGptTask) Key found");
 
             let json = {
               "model": action.model,

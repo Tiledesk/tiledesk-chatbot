@@ -1,5 +1,23 @@
 # Tiledesk native chatbot
 
+# 2.1.13
+- Added mcp lock and mcp server
+
+# 2.1.12
+- Improved api key management from integration
+
+# 2.1.10
+- Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
+
+# 2.1.9 
+- Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
+
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
+# 2.1.5
+- Added action DirDataTables
 
 # 2.1.4
 - added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
@@ -7,11 +25,17 @@
 # 2.1.3
 - Fixed bug on analytics integration
 
+# 2.1.3-rc1
+- Updated TiledeskWhenExpression and directive json_condition v2
+
 # 2.1.2
 - Fixed bug on AiPrompt action with vllm models
 
 # 2.1.1
 - Improved support for multiple vLLM servers
+
+# 2.1.1-rc19
+- Added TiledeskWhenExpression and directive json_condition v2
 
 # 2.1.0
 - Added support to analytics
@@ -121,6 +145,8 @@
 
 # 1.3.0
 - added: AI_ENDPOINT env var
+
+# 1.3.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # 1.2.2
@@ -135,6 +161,19 @@
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
+
+# 1.1.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# 1.1.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# 1.1.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -143,6 +182,12 @@
 
 # 1.1.2
 - bug-fixed: minor improvement
+
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
+# 1.0.27-rc2
+- added: specchToText function to transcript audio file
 
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini
