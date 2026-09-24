@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.0
+- Normalized custom headers in AiPrompt action 
+
 # 2.1.15
 - Added support for OpenRouter provider
 - Added support for Gemini Agent Platform
