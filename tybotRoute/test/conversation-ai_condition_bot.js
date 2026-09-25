@@ -111,6 +111,39 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "ai_condition_vllm_success",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_condition",
+				"assignReplyTo": "ai_reply",
+				"intents": [
+					{
+						"label": "medical",
+						"prompt": "user asking for medical information",
+						"conditionIntentId": "#SUCCESS"
+					},
+					{
+						"label": "buy",
+						"prompt": "user asking to buy a product",
+						"conditionIntentId": "#FAILURE"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
+				"llm": "vllm",
+				"model": "gpt-oss-30b",
+				"vllmServer": "Cerebras",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"fallbackIntent": "#FAILURE",
+				"errorIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "ai_condition_success",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
