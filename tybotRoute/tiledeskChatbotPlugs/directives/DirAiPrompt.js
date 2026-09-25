@@ -405,7 +405,7 @@ class DirAiPrompt {
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
       json.tools = [];
-      winston.info("DirAiPrompt json.servers: ", JSON.stringify(json.servers));
+      winston.info("DirAiPrompt json.servers: "+ JSON.stringify(json.servers));
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -437,7 +437,7 @@ class DirAiPrompt {
       json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
-    winston.info("DirAiPrompt json: ", JSON.stringify(json));
+    winston.info("DirAiPrompt json: "+ JSON.stringify(json));
 
     const HTTPREQUEST = {
       url: AI_endpoint + apiEndpoint,
