@@ -809,3 +809,41 @@ describe('JSON operation to expression', function() {
         });
     });        
 });
+describe('endsWith is case-sensitive, like the operators beside it', function() {
+
+    // It used to lower both sides, so "ends with" quietly ignored case while
+    // startsWith and contains did not -- and nothing on the screen said so.
+    // A condition that wants case ignored now asks for it: the Design Studio
+    // wraps both operands in lowerCase().
+    function endsWithResult(value, suffix) {
+        const groups = [{
+            type: 'expression',
+            conditions: [{
+                type: 'condition',
+                operand1: 'nome',
+                operator: 'endsWith',
+                operand2: { type: 'const', value: suffix }
+            }]
+        }];
+        const expression = TiledeskExpression.JSONGroupsToExpression(groups, { nome: value });
+        return new TiledeskExpression().evaluateJavascriptExpression(expression, { nome: value });
+    }
+
+    it('matches when the ending is written exactly the same way', function() {
+        assert.strictEqual(endsWithResult('MaRIO', 'RIO'), true);
+    });
+
+    it('does not match a different case', function() {
+        assert.strictEqual(endsWithResult('MaRio', 'RIO'), false);
+        assert.strictEqual(endsWithResult('MaRio', 'rio'), false);
+    });
+
+    it('survives a missing variable instead of throwing', function() {
+        const groups = [{
+            type: 'expression',
+            conditions: [{ type: 'condition', operand1: 'assente', operator: 'endsWith', operand2: { type: 'const', value: 'x' } }]
+        }];
+        const expression = TiledeskExpression.JSONGroupsToExpression(groups, {});
+        assert.strictEqual(new TiledeskExpression().evaluateJavascriptExpression(expression, {}), false);
+    });
+});

@@ -23,6 +23,7 @@ const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
 const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirJSONConditionV2 } = require('./directives/DirJSONConditionV2');
+const { DirJSONConditionMulti } = require('./directives/DirJSONConditionMulti');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirSetAttributeV2 } = require('./directives/DirSetAttributeV2');
@@ -267,6 +268,7 @@ class DirectivesChatbotPlug {
       [Directives.FUNCTION_VALUE]: DirAssignFromFunction,
       [Directives.JSON_CONDITION]: DirJSONCondition,
       [Directives.JSON_CONDITION_2]: DirJSONConditionV2, // NEW: JSON Condition V2 (tipo dedicato dal DS); V1 dispatch invariato
+      [Directives.JSON_CONDITION_MULTI]: DirJSONConditionMulti, // NEW: condizione a piu' casi; V1 e V2 dispatch invariati
       [Directives.ASSIGN]: DirAssign,
       [Directives.SET_ATTRIBUTE]: DirSetAttribute,
       [Directives.SET_ATTRIBUTE_V2]: DirSetAttributeV2,
