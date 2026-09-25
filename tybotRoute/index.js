@@ -62,7 +62,16 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  winston.verbose("(tybotRoute) message.id_project: " + message.id_project)
+  winston.info("(tybotRoute) inbound " + JSON.stringify({
+    botId: botId,
+    requestId: requestId,
+    text: message.text,
+    sender: message.sender,
+    senderFullname: message.senderFullname,
+    subtype: message.attributes && message.attributes.subtype,
+    action: message.attributes && message.attributes.action,
+    participants: message.request && message.request.participants
+  }));
 
   // adding info for internal context workflow
   message.request.bot_id = botId;
@@ -94,19 +103,26 @@ router.post('/ext/:botid', async (req, res) => {
   );
 
   if (isBotBubble(message)) {
-    winston.verbose("(tybotRoute) Skipping bot-authored message: " + message.text);
+    winston.info("(tybotRoute) skip bot bubble " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text, sender: message.sender }));
     return;
   }
 
   const subagentStack = new SubagentStack({ tdCache: tdcache });
   const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
+  winston.info("(tybotRoute) subagent gate " + JSON.stringify({
+    botId: botId,
+    requestId: requestId,
+    text: message.text,
+    consumedTriggerText: consumedTriggerText,
+    sender: message.sender
+  }));
   if (
     consumedTriggerText &&
     message.text === consumedTriggerText &&
     message.sender !== "_tdinternal" &&
     !(message.attributes && message.attributes.action)
   ) {
-    winston.verbose("(tybotRoute) Skipping subagent trigger message re-delivery: " + message.text);
+    winston.info("(tybotRoute) skip re-delivered trigger " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text }));
     await subagentStack.clearConsumedTriggerMessage(requestId);
     return;
   }

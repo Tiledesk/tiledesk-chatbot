@@ -76,6 +76,14 @@ class DirCallSubAgent {
       TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY
     );
 
+    winston.info("(DirCallSubAgent) push " + JSON.stringify({
+      requestId: this.requestId,
+      parentId: this.context.chatbot?.botId,
+      targetBotId: botId,
+      blockName: blockName,
+      triggerText: triggerText,
+      nextBlock: intentAction && intentAction.intentName
+    }));
     const stackData = {
       parentId: this.context.chatbot?.botId,
       parentToken: this.context.token,

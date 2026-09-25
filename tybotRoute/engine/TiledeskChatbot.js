@@ -86,7 +86,14 @@ class TiledeskChatbot {
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
-      winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
+      winston.info("(TiledeskChatbot) resolve " + JSON.stringify({
+        botId: this.botId,
+        requestId: this.requestId,
+        text: message.text,
+        sender: message.sender,
+        action: message.attributes && message.attributes.action,
+        lockedIntent: locked_intent || null
+      }));
       if (locked_intent) {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
@@ -171,7 +178,12 @@ class TiledeskChatbot {
             }
           }
           else {
-            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            winston.info("(TiledeskChatbot) explicit intent not found, stop " + JSON.stringify({
+              botId: this.botId,
+              requestId: this.requestId,
+              intent: explicit_intent_name,
+              text: message.text
+            }));
             reply = { "text": "Intent not found: " + explicit_intent_name }
             resolve();
             return;
@@ -235,6 +247,15 @@ class TiledeskChatbot {
           return;
         }
         else {
+          winston.info("(TiledeskChatbot) defaultFallback " + JSON.stringify({
+            botId: this.botId,
+            requestId: this.requestId,
+            text: message.text,
+            sender: message.sender,
+            senderFullname: message.senderFullname,
+            subtype: message.attributes && message.attributes.subtype,
+            action: message.attributes && message.attributes.action
+          }));
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
           if (!fallbackIntent) {
             resolve(null);

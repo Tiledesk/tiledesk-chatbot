@@ -48,6 +48,12 @@ class DirReturnStack {
             return;
         }
         try {
+            winston.info("(DirReturnStack) pop " + JSON.stringify({
+                requestId: this.requestId,
+                parentId: data.parentId,
+                triggerText: data.triggerText,
+                nextBlock: data.nextBlock && data.nextBlock.intentName
+            }));
             if (data.triggerText) {
                 await subagentStack.markTriggerMessageConsumed(this.requestId, data.triggerText);
             }
