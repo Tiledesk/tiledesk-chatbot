@@ -22,6 +22,7 @@ class Directives {
   static FUNCTION_VALUE = "functionvalue";
   static JSON_CONDITION = "jsoncondition";
   static JSON_CONDITION_2 = "jsoncondition2"; // NEW: azione JSON Condition V2 del Design Studio
+  static JSON_CONDITION_MULTI = "jsonconditionmulti"; // NEW: condizione a piu' casi in sequenza, un'uscita per caso
   static SET_ATTRIBUTE = "setattribute";
   static SET_ATTRIBUTE_V2 = "setattribute-v2";
   static REPLY = 'reply';

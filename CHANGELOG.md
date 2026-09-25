@@ -1,5 +1,10 @@
 # Tiledesk native chatbot
 
+# this branch 25/09/2026
+- **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
+- **added**: a case left without a condition is skipped instead of counting as true, and a case that cannot be evaluated does not shadow the sound ones below it — the flow carries on to the next case and the error is recorded
+- **changed**: **ends with** now compares case exactly, like *starts with* and *contains* beside it. On its own it used to ignore case, so a flow could take a branch nobody intended and nothing on the screen said why. A condition that wants case ignored asks for it explicitly
+
 # 3.0.0
 - V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
 - V3 agents: Iteration runs the "when the list is done" block after the last item or when the list is empty
