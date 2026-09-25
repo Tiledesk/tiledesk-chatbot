@@ -96,7 +96,14 @@ class TiledeskChatbot {
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
-      winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
+      winston.info("(TiledeskChatbot) resolve " + JSON.stringify({
+        botId: this.botId,
+        requestId: this.requestId,
+        text: message.text,
+        sender: message.sender,
+        action: message.attributes && message.attributes.action,
+        lockedIntent: locked_intent || null
+      }));
       if (locked_intent) {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
@@ -156,6 +163,7 @@ class TiledeskChatbot {
           winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
           reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
           resolve();
+          return;
         }
         else {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
@@ -176,12 +184,19 @@ class TiledeskChatbot {
             catch(error) {
               winston.error("(TiledeskChatbot) Error adding parameter: ", error);
               reject(error);
+              return;
             }
           }
           else {
-            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            winston.info("(TiledeskChatbot) explicit intent not found, stop " + JSON.stringify({
+              botId: this.botId,
+              requestId: this.requestId,
+              intent: explicit_intent_name,
+              text: message.text
+            }));
             reply = { "text": "Intent not found: " + explicit_intent_name }
-            resolve()
+            resolve();
+            return;
           }
         }
       }
@@ -190,7 +205,7 @@ class TiledeskChatbot {
       let faqs;
       try {
         faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
-        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
+        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + JSON.stringify(faqs, null, 2));
       }
       catch (error) {
         winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
@@ -215,7 +230,7 @@ class TiledeskChatbot {
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
-          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:", intents);
+          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:" + JSON.stringify(intents, null, 2));
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occurred on IntentsFinder.decode() (/model/parse error):" + error.message);
@@ -226,7 +241,7 @@ class TiledeskChatbot {
             winston.debug("(TiledeskChatbot) Got intents from backup finder: ", intents);
           }
         }
-        winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
+        winston.debug("(TiledeskChatbot) NLP intents found: " + JSON.stringify(intents, null, 2));
         if (intents && intents.length > 0) {
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
@@ -242,6 +257,15 @@ class TiledeskChatbot {
           return;
         }
         else {
+          winston.info("(TiledeskChatbot) defaultFallback " + JSON.stringify({
+            botId: this.botId,
+            requestId: this.requestId,
+            text: message.text,
+            sender: message.sender,
+            senderFullname: message.senderFullname,
+            subtype: message.attributes && message.attributes.subtype,
+            action: message.attributes && message.attributes.action
+          }));
           let fallbackIntent = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, "defaultFallback", this.tdcache);
           if (!fallbackIntent) {
             resolve(null);
@@ -616,7 +640,7 @@ class TiledeskChatbot {
     let _current_step = await _tdcache.get(parameter_key);
     let current_step = Number(_current_step);
     if (current_step > max_steps) {
-      winston.verbose("(TiledeskChatbot) max_steps limit just violated");
+      winston.verbose("(TiledeskChatbot) max_steps_limit just violated");
       winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
       return {
         error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded.",
