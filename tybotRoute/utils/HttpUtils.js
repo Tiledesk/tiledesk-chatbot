@@ -39,12 +39,12 @@ function getSharedHttpsAgent() {
 }
 
 if (HTTP_CLIENT_KEEP_ALIVE) {
-  winston.info(
+  winston.verbose(
     '[HttpUtils] HTTP client keep-alive: ENABLED — shared agents reuse TCP connections (TYBOT_HTTP_KEEP_ALIVE=1). ' +
     'Verbose logs include round-trip time (ms) and [keep-alive client: on].'
   );
 } else {
-  winston.info(
+  winston.verbose(
     '[HttpUtils] HTTP client keep-alive: disabled (default). Set TYBOT_HTTP_KEEP_ALIVE=1|true|yes|on to enable. ' +
     'Verbose logs include round-trip time (ms) and [keep-alive client: off].'
   );
@@ -87,7 +87,7 @@ class HttpUtils {
       .then((res) => {
         const ms = httpRoundTripMs();
         if (res && (res.status >= 200 && res.status <= 299) && res.data) {
-          winston.info(
+          winston.verbose(
             `[HttpUtils] ${options.method || 'GET'} ${options.url} completed in ${ms.toFixed(2)}ms ` +
             `(HTTP ${res.status}) [keep-alive client: ${keepAliveTag}]`
           );
@@ -97,7 +97,7 @@ class HttpUtils {
         }
         else {
           const status = res && res.status != null ? res.status : 'n/a';
-          winston.info(
+          winston.verbose(
             `[HttpUtils] ${options.method || 'GET'} ${options.url} completed in ${ms.toFixed(2)}ms ` +
             `(unexpected response, status ${status}) [keep-alive client: ${keepAliveTag}]`
           );

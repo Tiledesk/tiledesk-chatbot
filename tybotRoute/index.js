@@ -404,9 +404,7 @@ router.post('/exec/:botid', async (req, res) => {
           cache: tdcache
         }
       );
-      let t1 = process.hrtime.bigint();
       await directivesPlug.processDirectives();
-      console.log("processDirectives time (await): ", Number(process.hrtime.bigint() - t1) / 1e6, "ms")
       winston.verbose("(tybotRoute) Actions - Directives executed.");
 
     }
@@ -723,8 +721,6 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
         let json = JSON.parse(message);
         let status = json.status ? json.status : 200;
-        console.log("listener response json: ", json);
-        console.log("listener response status: ", status);
         winston.debug("Web response status: " + status);
 
         return res.status(status).send(json.payload);
