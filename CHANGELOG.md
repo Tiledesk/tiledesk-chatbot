@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.1-rc2
+- Added support for `voice_streaming` request attribute
+
 # 2.2.1-rc1
 - **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
 - **added**: a case left without a condition is skipped instead of counting as true, and a case that cannot be evaluated does not shadow the sound ones below it — the flow carries on to the next case and the error is recorded
