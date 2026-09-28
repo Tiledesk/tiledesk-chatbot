@@ -888,7 +888,7 @@ class TiledeskChatbotUtil {
             }
 
             // --- VOICE STREAMING ---
-            add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes.voice_streaming? true : false);
+            add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voiceStreaming? true : false);
 
             
             
