@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
 # 2.2.1-rc2
+- Replaced  `voice_streaming` with `voiceStreaming` request attribute
+
+# 2.2.1-rc2
 - Added support for `voice_streaming` request attribute
 
 # 2.2.1-rc1
