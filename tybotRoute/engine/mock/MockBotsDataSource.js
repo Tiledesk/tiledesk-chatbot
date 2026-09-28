@@ -15,17 +15,18 @@ class MockBotsDataSource {
     return new Promise((resolve, reject)=>{
       try{
         const bot = {
+          _id: botId,
           webhook_enabled: this.data.bots[botId].webhook_enabled,
           webhook_url: this.data.bots[botId].webhook_url,
           language: this.data.bots[botId].language,
-          name: this.data.bots[botId].name
+          name: this.data.bots[botId].name,
+          attributes: this.data.bots[botId].attributes
         }
         resolve(bot)
       }catch(err){
         reject(err);
       }
-      
-    }) 
+    })
   }
   
   async getBotByIdCache(botId, tdcache) {
