@@ -83,6 +83,10 @@ class DirReplyV2 {
         const buttons = TiledeskChatbotUtil.allReplyButtons(message);
         if (buttons && buttons.length > 0) {
           const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
+          if (locked === null) { // could not lock: stop, do not ask
+            callback(true);
+            return;
+          }
           if (locked) { // fist execution returns (just) locked
             must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
             if (action.noInputIntent) {
@@ -282,7 +286,11 @@ class DirReplyV2 {
     const own = lockedAction && lockedAction === action["_tdActionId"];
 
     if (!own) {
-      const intent_name = this.reply.attributes.intent_info.intent_name
+      const intent_name = this.reply?.attributes?.intent_info?.intent_name;
+      if (!intent_name) {
+        winston.error("(DirReplyV2) Cannot lock: missing attributes.intent_info.intent_name");
+        return null; // caller stops the block without locking
+      }
       const actionId = action["_tdActionId"];
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);

@@ -147,4 +147,15 @@ describe('Lock ownership', () => {
     ], 1500);
     send(requestId, 'A-SENDER', '/rvt');
   });
+
+  it('a plain text answer to a Reply V2 reached by an internal jump does not consume the waiting question', (done) => {
+    const requestId = newRequestId();
+    run(done, requestId, [
+      { expect: "question A?", then: () => send(requestId, '_tdinternal', '/rv') },
+      { expect: "choose", then: () => send(requestId, 'A-SENDER', 'Go') },
+      // "Go" has no attributes.action: the Reply V2 (own lock) matches the button by text
+      { expect: "rv done" }
+    ], 1500);
+    send(requestId, 'A-SENDER', '/a');
+  });
 });
