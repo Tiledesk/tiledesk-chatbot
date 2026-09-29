@@ -16,6 +16,7 @@ function replyV2WithButton(actionId, text) {
   return {
     "_tdActionType": "replyv2",
     "_tdActionId": actionId,
+    "noMatchIntent": "#rv_nomatch-id",
     "attributes": {
       "disableInputMessage": false,
       "commands": [
@@ -62,6 +63,7 @@ const intents = [
   block("b", "b-id", [reply("b1", "question B?"), capture("b2", "#b_done-id", "ans_b")]),
   block("b_done", "b_done-id", [reply("b3", "B: {{ans_b}}")]),
   block("rv", "rv-id", [replyV2WithButton("r1", "choose")]),
+  block("rv_nomatch", "rv_nomatch-id", [reply("r3", "rv nomatch")]),
   block("rv_done", "rv_done-id", [reply("r2", "rv done")])
 ];
 

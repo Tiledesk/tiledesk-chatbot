@@ -126,6 +126,7 @@ describe('Lock ownership', () => {
     const requestId = newRequestId();
     run(done, requestId, [
       { expect: "question A?", then: () => send(requestId, '_tdinternal', '/rv') },
+      // first pass on the Reply V2 (own lock absent): it asks, it must not take the reply path
       { expect: "choose", then: () => {
         const m = message(requestId, 'A-SENDER', 'Go');
         m.payload.attributes = { action: '#rv_done-id' };

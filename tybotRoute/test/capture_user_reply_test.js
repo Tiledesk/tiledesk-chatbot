@@ -3,7 +3,8 @@ const { DirCaptureUserReply } = require('../tiledeskChatbotPlugs/directives/DirC
 
 describe('DirCaptureUserReply without lock key', () => {
   it('stops the block and does not lock', (done) => {
-    const fail = () => { throw new Error("must not lock"); };
+    const lockCalls = [];
+    const fail = async (...a) => { lockCalls.push(a); };
     const chatbot = {
       currentLockedAction: async () => null,
       lockIntent: fail,
@@ -18,6 +19,7 @@ describe('DirCaptureUserReply without lock key', () => {
       setTimeout(() => {
         try {
           assert.deepStrictEqual(calls, [true]);
+          assert.deepStrictEqual(lockCalls, []);
           done();
         } catch (e) { done(e); }
       }, 50);
