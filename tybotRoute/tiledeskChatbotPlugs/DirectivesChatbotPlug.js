@@ -238,8 +238,8 @@ class DirectivesChatbotPlug {
 
     const directive_name = directive.name.toLowerCase();
 
-    // Controllo lock action
-    if (directive.action) {
+    // Controllo lock action (internal jumps to another block are not subject to it: the lock stays for the user's reply)
+    if (directive.action && this.message?.sender !== "_tdinternal") {
       const action_id = directive.action["_tdActionId"];
       const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
       if (locked_action_id && locked_action_id !== action_id) {
