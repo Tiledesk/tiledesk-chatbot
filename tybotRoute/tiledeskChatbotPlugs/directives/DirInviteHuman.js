@@ -12,6 +12,7 @@ const AUTOMATION_PREFIX = 'automation-request-';
 class DirInviteHuman {
 
   static INVITE_TIMEOUT_MS = 30000;
+  static AUTOMATION_PREFIX = AUTOMATION_PREFIX;
 
   constructor(context) {
     if (!context) {

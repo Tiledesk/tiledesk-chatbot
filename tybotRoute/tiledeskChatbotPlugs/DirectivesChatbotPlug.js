@@ -50,6 +50,7 @@ const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
 const { DirInviteHuman } = require('./directives/DirInviteHuman');
+const { DirRemoveHuman } = require('./directives/DirRemoveHuman');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
@@ -313,6 +314,7 @@ class DirectivesChatbotPlug {
       [Directives.ITERATION]: DirIteration,
       [Directives.DATA_TABLES]: DirDataTables,
       [Directives.INVITE_HUMAN]: DirInviteHuman,
+      [Directives.REMOVE_HUMAN]: DirRemoveHuman,
     };
 
     const HandlerClass = handlers[directive_name];
