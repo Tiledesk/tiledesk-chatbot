@@ -272,9 +272,11 @@ class DirReplyV2 {
 
 
   async lockUnlock(action, callback) {
-    let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    // a lock only counts as "waiting for the reply" when this very action set it
+    const own = lockedAction && lockedAction === action["_tdActionId"];
 
-    if (!lockedAction) {
+    if (!own) {
       const intent_name = this.reply.attributes.intent_info.intent_name
       const actionId = action["_tdActionId"];
       await this.chatbot.lockIntent(this.requestId, intent_name);
