@@ -46,6 +46,23 @@ describe('DirRemoveHuman directive', function () {
     });
   });
 
+  it('jumps to trueIntent when nobody was removed', (done) => {
+    const { dir, params, jumps } = buildDirective();
+    dir.remove = async (body) => {
+      return { request_id: 'support-group-p-abc', removed: [] };
+    };
+    dir.execute({ action: { trueIntent: '#removed-id', falseIntent: '#rmerror-id' } }, (stop) => {
+      try {
+        assert.strictEqual(stop, true);
+        assert.strictEqual(params.removed_humans_count, 0);
+        assert.deepStrictEqual(params.removed_humans, []);
+        assert.strictEqual(jumps.length, 1);
+        assert.strictEqual(jumps[0].action.intentName.startsWith('#removed-id'), true);
+        done();
+      } catch (err) { done(err); }
+    });
+  });
+
   it('sends errors to falseIntent without logging secrets', (done) => {
     const { dir, params, jumps, logs } = buildDirective();
     dir.remove = () => Promise.reject({
