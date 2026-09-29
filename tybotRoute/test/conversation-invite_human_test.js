@@ -115,6 +115,7 @@ describe('Conversation for Invite human test', async () => {
         assert.strictEqual(req.headers.authorization, 'JWT ' + CHATBOT_TOKEN);
         assert.strictEqual(req.body.department_id, 'dep-sre');
         assert.deepStrictEqual(req.body.members, ['a@acme.it', 'b@acme.it', 'ops@acme.it']);
+        assert.strictEqual(req.body.fallback_intent, '#noone-id');
         res.send({ request_id: REQUEST_ID, department_id: 'dep-sre', invited: [{ id_user: 'agent-1', fullname: 'Agent One', already_participant: false }] });
       },
       message: (text, finish) => {
@@ -230,6 +231,25 @@ describe('Conversation for Invite human test', async () => {
           tilebotService.sendMessageToBot(userMessage(REQUEST_ID, 'Approve', { sender: 'agent-1', senderFullname: 'Agent One' }), BOT_ID, () => {});
         } else {
           assert.strictEqual(text, 'approved by agent-1');
+          finish();
+        }
+      }
+    }).then(() => {
+      tilebotService.sendMessageToBot(userMessage(REQUEST_ID, '/invite', ONCALL_PAYLOAD), BOT_ID, () => {});
+    });
+  });
+
+  it('jumps to the "no human available" block when the server sends the fallback action', (done) => {
+    const REQUEST_ID = supportRequestId();
+    mockApi(done, {
+      invite: (req, res) => {
+        res.send({ request_id: REQUEST_ID, department_id: 'dep-sre', invited: [{ id_user: 'agent-1', fullname: 'Agent One', already_participant: false }] });
+      },
+      message: (text, finish) => {
+        if (text === 'invited 1: restart?') {
+          tilebotService.sendMessageToBot(userMessage(REQUEST_ID, 'The invited human left and no replacement is available', { sender: 'system', senderFullname: 'System', attributes: { subtype: 'info', hitl_fallback: true, action: '#noone-id{"flowError":"(Invite human) The invited human left and no replacement is available"}' } }), BOT_ID, () => {});
+        } else {
+          assert.strictEqual(text, 'no human available|(Invite human) The invited human left and no replacement is available');
           finish();
         }
       }

@@ -85,7 +85,11 @@ class DirInviteHuman {
 
     let result;
     try {
-      result = await this.invite({ department_id: action.departmentId || undefined, members: members });
+      const inviteBody = { department_id: action.departmentId || undefined, members: members };
+      if (falseIntent && typeof falseIntent === 'string' && falseIntent.length > 0) {
+        inviteBody.fallback_intent = falseIntent;
+      }
+      result = await this.invite(inviteBody);
     } catch (err) {
       const summary = DirInviteHuman.errorSummary(err);
       this.logger.error("[Invite Human] Error: " + summary.message);
