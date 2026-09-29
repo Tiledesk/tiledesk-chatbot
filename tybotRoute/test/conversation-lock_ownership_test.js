@@ -136,4 +136,15 @@ describe('Lock ownership', () => {
     ], 1500);
     send(requestId, 'A-SENDER', '/a');
   });
+
+  it('the no-input timer of a Reply V2 does not fire once another action owns the lock', (done) => {
+    const requestId = newRequestId();
+    run(done, requestId, [
+      { expect: "pick?", then: () => send(requestId, '_tdinternal', '/b') },
+      // wait past the 800ms no-input timeout, then answer B
+      { expect: "question B?", then: () => setTimeout(() => send(requestId, 'A-SENDER', 'yes'), 1500) },
+      { expect: "B: yes" }
+    ], 1500);
+    send(requestId, 'A-SENDER', '/rvt');
+  });
 });

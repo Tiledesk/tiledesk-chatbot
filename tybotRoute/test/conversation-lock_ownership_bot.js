@@ -41,6 +41,13 @@ function replyV2WithButton(actionId, text) {
   };
 }
 
+function replyV2WithNoInput(actionId, text, noInputIntent, timeout) {
+  const r = replyV2WithButton(actionId, text);
+  r.noInputIntent = noInputIntent;
+  r.noInputTimeout = timeout;
+  return r;
+}
+
 function capture(actionId, goTo, assignTo) {
   return {
     "_tdActionType": "capture_user_reply",
@@ -63,6 +70,8 @@ const intents = [
   block("b", "b-id", [reply("b1", "question B?"), capture("b2", "#b_done-id", "ans_b")]),
   block("b_done", "b_done-id", [reply("b3", "B: {{ans_b}}")]),
   block("rv", "rv-id", [replyV2WithButton("r1", "choose")]),
+  block("rvt", "rvt-id", [replyV2WithNoInput("t1", "pick?", "#rvt_noinput-id", 800)]),
+  block("rvt_noinput", "rvt_noinput-id", [reply("t2", "rvt noinput")]),
   block("rv_nomatch", "rv_nomatch-id", [reply("r3", "rv nomatch")]),
   block("rv_done", "rv_done-id", [reply("r2", "rv done")])
 ];

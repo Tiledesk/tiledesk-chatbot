@@ -94,6 +94,11 @@ class DirReplyV2 {
                 setTimeout(async () => {
                   winston.debug("(DirReplyV2) noinput timeout triggered!");
                   const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
+                  const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+                  if (lockedAction !== action["_tdActionId"]) {
+                    winston.debug("(DirReplyV2) lock owned by another action, skipping noinput");
+                    return;
+                  }
                   if (userInput && userInput === timeout_id) {
                     await this.chatbot.unlockIntent(this.requestId);
                     await this.chatbot.unlockAction(this.requestId);
