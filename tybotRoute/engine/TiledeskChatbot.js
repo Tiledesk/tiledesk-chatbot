@@ -191,11 +191,13 @@ class TiledeskChatbot {
               catch(error) {
                 winston.error("(TiledeskChatbot) Error executing start fallback: ", error);
                 reject(error);
+                return;
               }
             }
             else {
               winston.verbose("(TiledeskChatbot) Start box not found either");
-              resolve()
+              resolve();
+              return;
             }
           }
           else {
