@@ -1,4 +1,5 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
+const { TiledeskWhenExpression } = require('../TiledeskWhenExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 const { TiledeskChatbotConst } = require('../engine/TiledeskChatbotConst');
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
@@ -156,6 +157,53 @@ class TiledeskChatbotUtil {
 
     }
 
+    /**
+     * Decides whether a message guarded by a filter should be shown.
+     *
+     * The design studio saves two forms of the same filter: the `conditions` tree, and `when`,
+     * the same thing written as a formula. The formula is the one to read. It is evaluated by
+     * TiledeskWhenExpression, which parses it into a tree and walks it -- no eval, no Function,
+     * no vm2, whitelisted functions only -- while the tree is turned back into JavaScript and
+     * run in a sandbox, which a security review asked us to move away from.
+     *
+     * It also happens to be the only form that works: the old evaluator knows 18 operators, the
+     * studio offers 38, and the missing ones do not merely fail -- looking one up returns
+     * undefined and reading `.applyPattern` off it throws, so the whole filter is abandoned and
+     * the message it guarded disappears with nothing said on screen.
+     *
+     * The fall back to the old path is not politeness: filters saved before `when` was written
+     * have no formula, and reading only `when` would switch every one of them off at once.
+     *
+     * A filter that cannot be evaluated SHOWS its message. `=== false` is what hides it, so both
+     * a thrown error and a non-boolean answer leave the content in place -- the same leniency
+     * the sandbox had, where a failure returned null. The opposite reading would turn every
+     * malformed filter into a message that vanishes, which is the fault being fixed here.
+     */
+    static evaluateMessageFilter(jsonCondition, variables) {
+        const when = jsonCondition ? jsonCondition.when : null;
+        if (typeof when === 'string' && when.trim().length > 0) {
+            try {
+                return new TiledeskWhenExpression().evaluate(when, variables);
+            }
+            catch (err) {
+                winston.error("(TiledeskChatbotUtil) message filter not evaluated: " + err.message + " - while evaluating the following 'when': '" + when + "'");
+                return null;
+            }
+        }
+        // Guarded because building the expression is where the old path breaks: an operator the
+        // old evaluator does not know reads `.applyPattern` off undefined and throws, and an
+        // unguarded throw here would abandon every remaining message in this reply, not just
+        // this one. Filters saved with one of those operators exist in the wild.
+        try {
+            const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
+            return new TiledeskExpression().evaluateStaticExpression(expression, variables);
+        }
+        catch (err) {
+            winston.error("(TiledeskChatbotUtil) message filter not evaluated: " + err.message);
+            return null;
+        }
+    }
+
     static filterOnVariables(message, variables) {
         if (!variables) {
           return;
@@ -168,8 +216,7 @@ class TiledeskChatbotUtil {
                     // if (commands[i].message["lang"] && !(commands[i].message["lang"] === lang)) { // if there is a filter and the filter is false, remove
                     const jsonCondition = commands[i].message["_tdJSONCondition"];
                     if (jsonCondition) {
-                        const expression = TiledeskExpression.JSONGroupToExpression(jsonCondition);
-                        const conditionResult = new TiledeskExpression().evaluateStaticExpression(expression, variables);
+                        const conditionResult = TiledeskChatbotUtil.evaluateMessageFilter(jsonCondition, variables);
                         if (conditionResult === false) {
                             commands.splice(i, 1);
                             if (commands[i-1]) {

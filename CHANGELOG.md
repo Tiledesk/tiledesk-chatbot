@@ -1,5 +1,11 @@
 # Tiledesk native chatbot
 
+# this branch 30/09/2026
+- Reply filters are evaluated without generating code, so every comparison the editor offers now works: dates, lists, lengths, negations. Older filters keep the previous path
+- A filter that cannot be evaluated shows its message instead of dropping it, and no longer takes the rest of the reply with it
+- List length is counted in items, not characters: a list reaching a flow is held as text, so `["a","b"]` used to count as nine
+- *exists* is false on a variable set to null, which holds no value. *is null* and *is undefined* still tell the two apart
+
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
 
