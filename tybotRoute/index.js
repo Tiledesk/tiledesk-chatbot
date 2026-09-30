@@ -38,6 +38,7 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
 const { SubagentStack } = require('./tiledeskChatbotPlugs/SubagentStack.js');
+const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
 
 let API_ENDPOINT = null;
 let API_URL = null;
@@ -718,8 +719,10 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     winston.verbose("Async webhook");
     tilebotService.sendMessageToBot(message, bot_id, (err, resbody) => {
       if (err) {
-        winston.error("Async webhook err:\n", err);
-        return res.status(500).send({ success: false, error: err });
+        // never log or return the raw error: it carries request headers/body (bot token)
+        const extUrl = `${process.env.TILEBOT_ENDPOINT || `${process.env.API_ENDPOINT}/modules/tilebot`}/ext/${bot_id}`;
+        winston.error("Async webhook err:", HttpUtils.errorSummary(err, extUrl));
+        return res.status(500).send({ success: false, error: (err && err.message) || 'Error sending the message to the chatbot' });
       }
       return res.status(200).send({ success: true });
     })

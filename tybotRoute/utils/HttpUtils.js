@@ -64,6 +64,9 @@ class HttpUtils {
     if (options.json !== null) {
       axios_options.data = options.json
     }
+    if (typeof options.timeout === 'number' && options.timeout > 0) {
+      axios_options.timeout = options.timeout
+    }
     if (options.url.startsWith('https:')) {
       if (HTTP_CLIENT_KEEP_ALIVE) {
         axios_options.httpsAgent = getSharedHttpsAgent();
@@ -114,21 +117,22 @@ class HttpUtils {
           `[HttpUtils] ${options.method || 'GET'} ${options.url} failed after ${ms.toFixed(2)}ms ` +
           `(${statusPart}) [keep-alive client: ${keepAliveTag}]`
         );
-        if (error.response?.data) {
-          if (typeof error.response.data === 'string') {
-            winston.error("Axios error response data: " + error.response.data);
-          } else {
-            winston.error("Axios error response data: ", error.response.data);
-          }
-        } else if (error.response) {
-          winston.error("Axios error response: ", error.response);
-        } else {
-          winston.error("Axios error: ", error);
-        }
+        // Never log the error/response/config objects: they carry request headers (Authorization: JWT ...).
+        winston.error("HTTP request error: ", HttpUtils.errorSummary(error, options.url));
         if (callback) {
           callback(error, null);
         }
       });
+  }
+
+  static errorSummary(error, url) {
+    return {
+      message: error?.message,
+      code: error?.code,
+      status: error?.response?.status,
+      url: typeof url === 'string' ? url.split('?')[0] : undefined,
+      data: error?.response?.data
+    };
   }
 
   // static myrequest(options, callback, log) {

@@ -85,6 +85,10 @@ class DirReplyV2 {
         const buttons = TiledeskChatbotUtil.allReplyButtons(message);
         if (buttons && buttons.length > 0) {
           const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
+          if (locked === null) { // could not lock: stop, do not ask
+            callback(true);
+            return;
+          }
           if (locked) { // fist execution returns (just) locked
             must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
             if (action.noInputIntent) {
@@ -96,6 +100,11 @@ class DirReplyV2 {
                 setTimeout(async () => {
                   winston.debug("(DirReplyV2) noinput timeout triggered!");
                   const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
+                  const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+                  if (lockedAction !== action["_tdActionId"]) {
+                    winston.debug("(DirReplyV2) lock owned by another action, skipping noinput");
+                    return;
+                  }
                   if (userInput && userInput === timeout_id) {
                     await this.chatbot.unlockIntent(this.requestId);
                     await this.chatbot.unlockAction(this.requestId);
@@ -311,10 +320,16 @@ class DirReplyV2 {
 
 
   async lockUnlock(action, callback) {
-    let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    // a lock only counts as "waiting for the reply" when this very action set it
+    const own = lockedAction && lockedAction === action["_tdActionId"];
 
-    if (!lockedAction) {
-      const intent_name = this.reply.attributes.intent_info.intent_name
+    if (!own) {
+      const intent_name = this.reply?.attributes?.intent_info?.intent_name;
+      if (!intent_name) {
+        winston.error("(DirReplyV2) Cannot lock: missing attributes.intent_info.intent_name");
+        return null; // caller stops the block without locking
+      }
       const actionId = action["_tdActionId"];
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
