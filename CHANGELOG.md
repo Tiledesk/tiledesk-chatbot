@@ -1,10 +1,21 @@
 # Tiledesk native chatbot
 
-# this branch 30/09/2026
+# 2.2.1-rc4
 - Reply filters are evaluated without generating code, so every comparison the editor offers now works: dates, lists, lengths, negations. Older filters keep the previous path
 - A filter that cannot be evaluated shows its message instead of dropping it, and no longer takes the rest of the reply with it
 - List length is counted in items, not characters: a list reaching a flow is held as text, so `["a","b"]` used to count as nine
 - *exists* is false on a variable set to null, which holds no value. *is null* and *is undefined* still tell the two apart
+
+# 2.2.1-rc3
+- Replaced  `voice_streaming` with `voiceStreaming` request attribute
+
+# 2.2.1-rc2
+- Added support for `voice_streaming` request attribute
+
+# 2.2.1-rc1
+- **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
+- **added**: a case left without a condition is skipped instead of counting as true, and a case that cannot be evaluated does not shadow the sound ones below it — the flow carries on to the next case and the error is recorded
+- **changed**: **ends with** now compares case exactly, like *starts with* and *contains* beside it. On its own it used to ignore case, so a flow could take a branch nobody intended and nothing on the screen said why. A condition that wants case ignored asks for it explicitly
 
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
@@ -38,11 +49,17 @@
 # 2.1.3
 - Fixed bug on analytics integration
 
+# 2.1.3-rc1
+- Updated TiledeskWhenExpression and directive json_condition v2
+
 # 2.1.2
 - Fixed bug on AiPrompt action with vllm models
 
 # 2.1.1
 - Improved support for multiple vLLM servers
+
+# 2.1.1-rc19
+- Added TiledeskWhenExpression and directive json_condition v2
 
 # 2.1.0
 - Added support to analytics
@@ -152,6 +169,8 @@
 
 # 1.3.0
 - added: AI_ENDPOINT env var
+
+# 1.3.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # 1.2.2
@@ -166,6 +185,19 @@
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
+
+# 1.1.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# 1.1.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# 1.1.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -174,6 +206,12 @@
 
 # 1.1.2
 - bug-fixed: minor improvement
+
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
+# 1.0.27-rc2
+- added: specchToText function to transcript audio file
 
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini

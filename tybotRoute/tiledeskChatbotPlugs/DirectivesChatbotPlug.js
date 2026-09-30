@@ -23,6 +23,7 @@ const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
 const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirJSONConditionV2 } = require('./directives/DirJSONConditionV2');
+const { DirJSONConditionMulti } = require('./directives/DirJSONConditionMulti');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirSetAttributeV2 } = require('./directives/DirSetAttributeV2');
@@ -59,13 +60,17 @@ const { DirAiTask, DirAiPrompt } = require('./directives/DirAiPrompt');
 const { DirWebResponse } = require('./directives/DirWebResponse');
 const { DirConnectBlock } = require('./directives/DirConnectBlock');
 const { DirAiCondition } = require('./directives/DirAiCondition');
-
-const winston = require('../utils/winston');
-const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
+const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
+const { DirCallSubagent } = require('./directives/DirCallSubagent');
+const { DirReturnStack } = require('./directives/DirReturnStack');
 const { DirDataTables } = require('./directives/DirDataTables');
+const { DirInvokeSubAgent } = require('./directives/DirInvokeSubAgent');
+const { DirReturn } = require('./directives/DirReturn');
+
+const winston = require('../utils/winston');
 
 class DirectivesChatbotPlug {
 
@@ -121,15 +126,14 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    this.theend = theend;
+    this.theend = typeof theend === 'function' ? theend : () => {};
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       winston.verbose("(DirectivesChatbotPlug) No directives to process.");
       this.theend();
       return;
     }
-    
-    const supportRequest = this.supportRequest;    
+    const supportRequest = this.supportRequest;
     const token = this.token;
     const API_ENDPOINT = this.API_ENDPOINT;
     const TILEBOT_ENDPOINT = this.TILEBOT_ENDPOINT;
@@ -151,11 +155,11 @@ class DirectivesChatbotPlug {
         APIKEY: "___"
       });
     }
-    catch(err) {
+    catch (err) {
       winston.error("(DirectivesChatbotPlug) An error occurred while creating TiledeskClient in DirectivesChatbotPlug: ", err);
     }
 
-    this.context =  {
+    this.context = {
       projectId: projectId,
       chatbot: this.chatbot,
       message: this.message,
@@ -168,12 +172,12 @@ class DirectivesChatbotPlug {
       departmentId: depId,
       tdcache: tdcache,
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
-    }
+    };
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
-    
+
     this.curr_directive_index = -1;
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
-    
+
     const next_dir = await this.nextDirective(directives);
     winston.debug("(DirectivesChatbotPlug) next_dir: ", next_dir);
     await this.process(next_dir);
@@ -267,6 +271,7 @@ class DirectivesChatbotPlug {
       [Directives.FUNCTION_VALUE]: DirAssignFromFunction,
       [Directives.JSON_CONDITION]: DirJSONCondition,
       [Directives.JSON_CONDITION_2]: DirJSONConditionV2, // NEW: JSON Condition V2 (tipo dedicato dal DS); V1 dispatch invariato
+      [Directives.JSON_CONDITION_MULTI]: DirJSONConditionMulti, // NEW: condizione a piu' casi; V1 e V2 dispatch invariati
       [Directives.ASSIGN]: DirAssign,
       [Directives.SET_ATTRIBUTE]: DirSetAttribute,
       [Directives.SET_ATTRIBUTE_V2]: DirSetAttributeV2,
@@ -276,6 +281,8 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT]: DirReplaceBot,
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
+      [Directives.CALL_SUBAGENT]: DirCallSubagent,
+      [Directives.RETURN_STACK]: DirReturnStack,
       [Directives.WAIT]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
       [Directives.UNLOCK_INTENT]: DirUnlockIntent,
@@ -310,6 +317,8 @@ class DirectivesChatbotPlug {
       [Directives.WEB_RESPONSE]: DirWebResponse,
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
+      [Directives.INVOKE_SUB_AGENT]: DirInvokeSubAgent,
+      [Directives.RETURN]: DirReturn,
       [Directives.DATA_TABLES]: DirDataTables,
     };
 
@@ -321,7 +330,7 @@ class DirectivesChatbotPlug {
 
     const handler = new HandlerClass(context);
 
-    // Esegue l'handler e chiama next se non stop
+    winston.verbose("(DirectivesChatbotPlug) Execut directive: " + directive_name);
 
     const blockStart = Date.now();
     handler.execute(directive, async (stop) => {

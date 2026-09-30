@@ -37,15 +37,16 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
+const { SubagentStack } = require('./tiledeskChatbotPlugs/SubagentStack.js');
 
 let API_ENDPOINT = null;
+let API_URL = null;
 let TILEBOT_ENDPOINT = null;
 let staticBots;
 
 router.post('/ext/:botid', async (req, res) => {
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /ext/:botid called: " + botId)
-
   if(!botId || botId === "null" || botId === "undefined"){
     return res.status(400).send({"success": false, error: "Required parameters botid not found. Value is 'null' or 'undefined'"})
   }
@@ -54,14 +55,22 @@ router.post('/ext/:botid', async (req, res) => {
     delete req.body.payload.request.snapshot;
   }
   winston.verbose("(tybotRoute) Request Body: ", req.body);
-
   const message = req.body.payload;
   const messageId = message._id;
   //const faq_kb = req.body.hook; now it is "bot"
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  winston.verbose("(tybotRoute) message.id_project: " + message.id_project)
+  winston.info("(tybotRoute) inbound " + JSON.stringify({
+    botId: botId,
+    requestId: requestId,
+    text: message.text,
+    sender: message.sender,
+    senderFullname: message.senderFullname,
+    subtype: message.attributes && message.attributes.subtype,
+    action: message.attributes && message.attributes.action,
+    participants: message.request && message.request.participants
+  }));
 
   // adding info for internal context workflow
   message.request.bot_id = botId;
@@ -69,12 +78,13 @@ router.post('/ext/:botid', async (req, res) => {
     message.request.id_project = projectId;
   }
 
+
   //skip internal note messages
   if(message && message.attributes && message.attributes.subtype === 'private') {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
-
+  
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
@@ -91,6 +101,31 @@ router.post('/ext/:botid', async (req, res) => {
     botId,
     {EX: 604800} // 7 days
   );
+
+  if (isBotBubble(message)) {
+    winston.info("(tybotRoute) skip bot bubble " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text, sender: message.sender }));
+    return;
+  }
+
+  const subagentStack = new SubagentStack({ tdCache: tdcache });
+  const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
+  winston.info("(tybotRoute) subagent gate " + JSON.stringify({
+    botId: botId,
+    requestId: requestId,
+    text: message.text,
+    consumedTriggerText: consumedTriggerText,
+    sender: message.sender
+  }));
+  if (
+    consumedTriggerText &&
+    message.text === consumedTriggerText &&
+    message.sender !== "_tdinternal" &&
+    !(message.attributes && message.attributes.action)
+  ) {
+    winston.info("(tybotRoute) skip re-delivered trigger " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text }));
+    await subagentStack.clearConsumedTriggerMessage(requestId);
+    return;
+  }
 
   let botsDS;
   if (!staticBots) {
@@ -134,7 +169,7 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
-  
+
   try {
     await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
     if (requestId.startsWith("support-group-")) {
@@ -144,7 +179,7 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
   }
-
+  
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
@@ -172,15 +207,16 @@ router.post('/ext/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+      
+      await directivesPlug.processDirectives();
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
     catch (error) {
       directivesSuccess = false;
@@ -226,7 +262,7 @@ router.post('/ext/:botid', async (req, res) => {
       AnalyticsClient.track('agent.intent_completed', projectId, {
         agent_id:    bot.root_id,
         intent_id:   chatbot._lastIntentId || '',
-        intent_name: reply.attributes?.intent_info?.intent_name || 'unknown',
+        intent_name: reply.intent_display_name || 'unknown',
         duration_ms: intentDuration,
         success:     true,
         request_id:  requestId || null
@@ -237,11 +273,6 @@ router.post('/ext/:botid', async (req, res) => {
 });
 
 router.post('/exec/:botid', async (req, res) => {
-  // NOTE (analytics): This route executes a named block directly via findBlock() and has no
-  // intent context. agent.intent_matched / agent.intent_completed are intentionally NOT emitted
-  // here. Only agent.block_executed (and related events) may be emitted by DirectivesChatbotPlug
-  // for individual directives inside the block.
-
   const botId = req.params.botid;
   winston.verbose("(tybotRoute) POST /exec/:botid called: " + botId);
   if(!botId || botId === "null" || botId === "undefined"){
@@ -272,6 +303,12 @@ router.post('/exec/:botid', async (req, res) => {
     return res.status(200).send({"success":true});
   }
 
+  //skip hidden info messages (must not trigger intent matching or defaultFallback)
+  if (TiledeskChatbotUtil.isHiddenMessage(message)) {
+    winston.verbose("(tybotRoute) Skipping hidden info message: " + message.text);
+    return res.status(200).send({"success":true});
+  }
+
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
@@ -283,12 +320,7 @@ router.post('/exec/:botid', async (req, res) => {
   }
 
   const request_botId_key = "tilebot:botId_requests:" + requestId;
-  await tdcache.set(
-    request_botId_key,
-    botId,
-    {EX: 604800} // 7 days
-  );
-
+  
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
@@ -298,11 +330,14 @@ router.post('/exec/:botid', async (req, res) => {
     botsDS = new MockBotsDataSource(staticBots);
   }
 
-  // get the bot metadata
-  let bot = await botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
-    Promise.reject(err);
-    return;
-  });
+  // Run Redis request↔bot mapping and bot metadata load in parallel (independent keys / work).
+  let bot = await Promise.all([
+    tdcache.set(request_botId_key, botId, {EX: 604800}), // 7 days
+    botsDS.getBotByIdCache(botId, tdcache).catch((err)=> {
+      Promise.reject(err);
+      return;
+    }),
+  ]).then(([, b]) => b);
 
   let intentsMachine;
   let backupMachine;
@@ -324,6 +359,17 @@ router.post('/exec/:botid', async (req, res) => {
   });
   winston.verbose("(tybotRoute) Message text: " + message.text);
 
+
+  try {
+    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+    if (requestId.startsWith("support-group-")) {
+      await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    }
+  } catch (e) {
+    winston.error("Error on /exec updating request attributes or transcript: ", e)
+    return;
+  }
+  
   let reply = null;
   try {
     reply = await chatbot.findBlock(message);
@@ -337,7 +383,24 @@ router.post('/exec/:botid', async (req, res) => {
     return;
   }
 
+  if (!reply.attributes) {
+    reply.attributes = {};
+  }
+  if (!reply.attributes.intent_info) {
+    let question_payload = Object.assign({}, message);
+    delete question_payload.request;
+    reply.attributes.intent_info = {
+      intent_name: reply.intent_display_name,
+      intent_id: reply.intent_id,
+      is_fallback: false,
+      question_payload: question_payload,
+      botId: botId,
+      bot: bot
+    };
+  }
+
   if (reply.actions && reply.actions.length > 0) { // structured actions (coming from chatbot designer)
+    let directivesSuccess = true;
     try {
       winston.debug("(tybotRoute) Reply actions: ", reply.actions)
       let directives = TiledeskChatbotUtil.actionsToDirectives(reply.actions);
@@ -350,18 +413,32 @@ router.post('/exec/:botid', async (req, res) => {
           chatbot: chatbot,
           supportRequest: message.request,
           API_ENDPOINT: API_ENDPOINT,
+          API_URL: API_URL,
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache
         }
       );
-      directivesPlug.processDirectives( () => {
-        winston.verbose("(tybotRoute) Actions - Directives executed.");
-      });
+      await directivesPlug.processDirectives();
+      winston.verbose("(tybotRoute) Actions - Directives executed.");
+
     }
     catch (error) {
+      directivesSuccess = false;
       winston.error("(tybotRoute) Error while processing actions:", error);
+    }
+
+    if (chatbot._intentStartTime) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id || botId,
+        intent_id:   reply?.intent_id || reply._id?.toString() || '',
+        intent_name: reply?.intent_display_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     directivesSuccess,
+        request_id:  requestId || null
+      });
     }
   }
   else { // text answer (parse text directives to get actions)
@@ -374,13 +451,25 @@ router.post('/exec/:botid', async (req, res) => {
     reply.attributes.splits = true;
     reply.attributes.markbot = true;
     reply.attributes.fillParams = true;
-    
+
     const apiext = new ExtApi({
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT
     });
     apiext.sendSupportMessageExt(reply, projectId, requestId, token, () => {
       winston.verbose("(tybotRoute) sendSupportMessageExt reply sent: ", reply)
     });
+
+    if (chatbot._intentStartTime) {
+      const intentDuration = Date.now() - chatbot._intentStartTime;
+      AnalyticsClient.track('agent.intent_completed', projectId, {
+        agent_id:    bot.root_id,
+        intent_id:   chatbot._lastIntentId || '',
+        intent_name: reply.intent_display_name || 'unknown',
+        duration_ms: intentDuration,
+        success:     true,
+        request_id:  requestId || null
+      });
+    }
   }
 
 })
@@ -442,21 +531,27 @@ router.post('/ext/:projectId/requests/:requestId/messages', async (req, res) => 
     }
     
     bot_answer.attributes["_raw_message"] = original_answer_text;
-    tdclient.sendSupportMessage(requestId, bot_answer, (err, response) => {
+    tdclient.sendSupportMessage(requestId, bot_answer, async (err, response) => {
       winston.verbose("(tybotRoute) Bot answer sent")
       if (err) {
         winston.error("(tybotRoute) Error sending message", err);
       }
-      directivesPlug.processDirectives(() => {
+      try {
+        await directivesPlug.processDirectives();
         winston.verbose("(tybotRoute) Directives executed")
-      });
+      } catch (e) {
+        winston.error("(tybotRoute) processDirectives error:", e);
+      }
     });
   }
   else {
     winston.verbose("(tybotRoute) No bot_answer")
-    directivesPlug.processDirectives(() => {
+    try {
+      await directivesPlug.processDirectives();
       winston.verbose("(tybotRoute) Directives executed")
-    });
+    } catch (e) {
+      winston.error("(tybotRoute) processDirectives error:", e);
+    }
   }
   
 });
@@ -681,6 +776,14 @@ async function startApp(settings, completionCallback) {
     winston.info("(Tilebot) settings.API_ENDPOINT:" + API_ENDPOINT);
   }
 
+  if (!settings.API_URL) {
+    throw new Error("settings.API_URL is mandatory id no settings.bots.");
+  }
+  else {
+    API_URL = settings.API_URL;
+    winston.info("(Tilebot) settings.API_URL:" + API_URL);
+  }
+
   if (!settings.TILEBOT_ENDPOINT) {
     TILEBOT_ENDPOINT = `${API_ENDPOINT}/modules/tilebot`
   }
@@ -808,6 +911,21 @@ function myrequest(options, callback) {
       }
     }
   );
+}
+
+// A bubble written by a bot is not a user turn. Slash commands and button
+// actions stay, because those are how a bot invokes a block on another bot.
+function isBotBubble(message) {
+  if (!message || typeof message.sender !== "string" || !message.sender.startsWith("bot_")) {
+    return false;
+  }
+  if (message.attributes && message.attributes.action) {
+    return false;
+  }
+  if (typeof message.text === "string" && message.text.startsWith("/")) {
+    return false;
+  }
+  return true;
 }
 
 module.exports = { router: router, startApp: startApp};
