@@ -854,6 +854,10 @@ class TiledeskChatbotUtil {
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
                 winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); 
             }
+            // --- START TYPE (set by the request creator, e.g. "webhook") ---
+            if (message && message.request && message.request.attributes && message.request.attributes.start_type) {
+                add("start_type", message.request.attributes.start_type);
+            }
             if (message.attributes) {
                 winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes);
 

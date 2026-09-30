@@ -178,6 +178,26 @@ class TiledeskChatbot {
               reject(error);
             }
           }
+          else if (message.text === '/start' && intent.name !== 'start') {
+            // A /start naming a missing start box falls back to the default start block
+            winston.warn("(TiledeskChatbot) Start box not found: " + explicit_intent_name + ", falling back to start");
+            const startFaq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, 'start', this.tdcache);
+            if (startFaq) {
+              try {
+                reply = await this.execIntent(startFaq, message, lead, { match_type: 'explicit' });
+                resolve(reply);
+                return;
+              }
+              catch(error) {
+                winston.error("(TiledeskChatbot) Error executing start fallback: ", error);
+                reject(error);
+              }
+            }
+            else {
+              winston.verbose("(TiledeskChatbot) Start box not found either");
+              resolve()
+            }
+          }
           else {
             winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
             reply = { "text": "Intent not found: " + explicit_intent_name }
