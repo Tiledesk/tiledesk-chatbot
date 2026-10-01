@@ -887,9 +887,8 @@ class TiledeskChatbotUtil {
                 }
 
                 // --- VOICE STREAMING ---
-                console.log("(TiledeskChatbotUtil) message.attributes?.voiceStreaming: ", message);
-                if (message.attributes?.voiceStreaming) {
-                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voiceStreaming);
+                if (message.attributes?.voice_mode) {
+                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voice_mode);
                 }
             }
 
