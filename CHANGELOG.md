@@ -1,5 +1,14 @@
 # Tiledesk native chatbot
 
+# 2.2.1-rc4
+- Reply filters are evaluated without generating code, so every comparison the editor offers now works: dates, lists, lengths, negations. Older filters keep the previous path
+- A filter that cannot be evaluated shows its message instead of dropping it, and no longer takes the rest of the reply with it
+- List length is counted in items, not characters: a list reaching a flow is held as text, so `["a","b"]` used to count as nine
+- *exists* is false on a variable set to null, which holds no value. *is null* and *is undefined* still tell the two apart
+
+# 2.2.1-rc3
+- Replaced  `voice_streaming` with `voiceStreaming` request attribute
+
 # 2.2.1-rc2
 - Added support for `voice_streaming` request attribute
 

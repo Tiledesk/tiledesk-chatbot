@@ -58,14 +58,16 @@ class DirCaptureUserReply {
   async go(action, callback) {
     winston.debug("(DirCaptureUserReply) Action: ", action);
     const goToIntent = action.goToIntent;
-    let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
-    if (!lockedAction) {
+    const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    // a lock only counts as "waiting for the reply" when this very action set it
+    const own = lockedAction && lockedAction === action["_tdActionId"];
+    if (!own) {
       const intent_name = this.#resolveIntentLockKey();
       const actionId = action["_tdActionId"];
       if (!intent_name) {
         this.logger.error("[Capture User Reply] Cannot lock intent: missing intent info");
         winston.error("(DirCaptureUserReply) Cannot lock intent: missing intent info");
-        callback();
+        callback(true);
         return;
       }
       await this.chatbot.lockIntent(this.requestId, intent_name);
@@ -95,9 +97,9 @@ class DirCaptureUserReply {
   
       if (callback) {
         if (goToIntent) {
-          this.#executeGoTo(goToIntent, () => {
+          this.#executeGoTo(goToIntent, (stop) => {
             this.logger.native("[Capture User Reply] Executed");
-            callback(); // continue the flow
+            callback(stop); // a jump ends this block
           });
         }
         else {
@@ -118,8 +120,8 @@ class DirCaptureUserReply {
     if (intent) {
       goToIntentDirective = DirIntent.intentDirectiveFor(intent);
     }
-    this.intentDir.execute(goToIntentDirective, () => {
-        callback();
+    this.intentDir.execute(goToIntentDirective, (stop) => {
+        callback(stop);
     });
   }
 

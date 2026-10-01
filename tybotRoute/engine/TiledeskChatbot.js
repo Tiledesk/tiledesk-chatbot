@@ -104,7 +104,7 @@ class TiledeskChatbot {
         action: message.attributes && message.attributes.action,
         lockedIntent: locked_intent || null
       }));
-      if (locked_intent) {
+      if (locked_intent && message.sender !== "_tdinternal") {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
         //   token: this.token,
@@ -184,6 +184,28 @@ class TiledeskChatbot {
             catch(error) {
               winston.error("(TiledeskChatbot) Error adding parameter: ", error);
               reject(error);
+              return;
+            }
+          }
+          else if (message.text === '/start' && intent.name !== 'start') {
+            // A /start naming a missing start box falls back to the default start block
+            winston.warn("(TiledeskChatbot) Start box not found: " + explicit_intent_name + ", falling back to start");
+            const startFaq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, 'start', this.tdcache);
+            if (startFaq) {
+              try {
+                reply = await this.execIntent(startFaq, message, lead, { match_type: 'explicit' });
+                resolve(reply);
+                return;
+              }
+              catch(error) {
+                winston.error("(TiledeskChatbot) Error executing start fallback: ", error);
+                reject(error);
+                return;
+              }
+            }
+            else {
+              winston.verbose("(TiledeskChatbot) Start box not found either");
+              resolve();
               return;
             }
           }
