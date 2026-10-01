@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.1-rc8
+- Voice streaming now reads `voice_mode` from message attributes (flow variable remains `voiceStreaming`)
+
 # 2.2.1-rc4
 - Reply filters are evaluated without generating code, so every comparison the editor offers now works: dates, lists, lengths, negations. Older filters keep the previous path
 - A filter that cannot be evaluated shows its message instead of dropping it, and no longer takes the rest of the reply with it
