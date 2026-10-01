@@ -936,11 +936,14 @@ class TiledeskChatbotUtil {
                 if (message.attributes.ani) {
                     add("ani", message.attributes.ani);
                 }
+
+                // --- VOICE STREAMING ---
+                console.log("(TiledeskChatbotUtil) message.attributes?.voiceStreaming: ", message);
+                if (message.attributes?.voiceStreaming) {
+                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voiceStreaming);
+                }
             }
 
-            // --- VOICE STREAMING ---
-            console.log("(TiledeskChatbotUtil) message.attributes?.voiceStreaming: ", message);
-            add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voiceStreaming? true : false);
 
             
             
