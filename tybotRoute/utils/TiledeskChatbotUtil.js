@@ -939,6 +939,7 @@ class TiledeskChatbotUtil {
             }
 
             // --- VOICE STREAMING ---
+            console.log("(TiledeskChatbotUtil) message.attributes?.voiceStreaming: ", message);
             add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voiceStreaming? true : false);
 
             
