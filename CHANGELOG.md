@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.1
+- Added support for custom headers on vLLM servers
+
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
 

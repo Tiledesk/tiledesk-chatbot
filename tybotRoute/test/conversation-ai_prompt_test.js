@@ -500,6 +500,88 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt vllm custom headers - sends the enabled headers and a placeholder key for a server without apikey', (done) => {
+
+      let listener;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: this is the answer");
+        listener.close(() => {
+          done();
+        });
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        assert(req.params.name === 'vllm');
+        res.status(200).send({
+          name: "vllm",
+          id_project: PROJECT_ID,
+          value: {
+            servers: [
+              {
+                name: "cerebras",
+                url: "https://api.cerebras.ai/v1",
+                models: ["gpt-oss-120b"],
+                apikey: "csk-cerebras"
+              },
+              {
+                name: "ArubaModels",
+                url: "https://aruba.models.com/ai",
+                models: ["aruba1"],
+                customHeaders: [
+                  { key: "x-api-key", value: "12345678", enabled: true },
+                  { key: "x-disabled", value: "nope", enabled: false }
+                ]
+              }
+            ]
+          }
+        });
+      });
+
+      endpointServer.post('/api/ask', function (req, res) {
+        assert.strictEqual(req.body.llm, "vllm");
+        assert.strictEqual(req.body.llm_key, "sk-...");
+        assert.deepStrictEqual(req.body.model, {
+          provider: "vllm",
+          name: "aruba1",
+          url: "https://aruba.models.com/ai",
+          api_key: "sk-...",
+          custom_headers: { "x-api-key": "12345678" }
+        });
+        res.status(200).send({ answer: "this is the answer" });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_vllm_custom_headers_success',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": "XXX"
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
     it('AIPROMPT-SUCCESS-AGENTPLATFORM', (done) => {
       
       let listener;

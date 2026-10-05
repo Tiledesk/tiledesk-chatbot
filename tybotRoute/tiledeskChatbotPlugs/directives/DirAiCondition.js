@@ -123,7 +123,7 @@ class DirAiCondition {
     let key;
     let publicKey = false;
     let ollama_integration;
-    let vllm_server_config;
+    let vllm_model;
     let openrouter_model;
     let agentplatform_model;
 
@@ -142,12 +142,16 @@ class DirAiCondition {
       });
 
     } else if(action.llm === 'vllm'){
-      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
-      
-      if (!vllm_integration?.value) {
-        this.logger.error("[AI Condition] Error getting vllm integration.");
-        winston.error("DirAiCondition Error getting vllm integration");
-        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+      try {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        vllm_model = await aiController.resolveLLMConfig(
+          this.projectId, action.llm, filled_model, this.token, filled_vllm_server);
+        key = vllm_model.api_key;
+      } catch (err) {
+        const errorMsg = err?.error || err?.message || "vllm integration not found";
+        this.logger.error("[AI Condition] vllm integration not resolved: ", errorMsg);
+        winston.error("Error: DirAiCondition vllm integration not resolved: " + errorMsg);
+        await this.chatbot.addParameter("flowError", "AiCondition Error: " + errorMsg);
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
@@ -155,37 +159,6 @@ class DirAiCondition {
         }
         callback();
         return;
-      }
-
-      const vllm_value = vllm_integration.value;
-      if (Array.isArray(vllm_value.servers)) {
-        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
-        if (!filled_vllm_server) {
-          this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
-          await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
-        if (!vllm_server_config) {
-          this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
-          await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        key = vllm_server_config.apikey;
-      } else {
-        key = vllm_value.apikey;
       }
 
       if (!key) {
@@ -334,15 +307,8 @@ class DirAiCondition {
 
     }
 
-    if (action.llm === 'vllm' && vllm_server_config) {
-      console.log("llm: vllm")
-      json.model = {
-        name: filled_model,
-        url: vllm_server_config.url,
-        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
-        provider: 'vllm'
-      }
-      console.log("set json.model to: ", json.model);
+    if (action.llm === 'vllm') {
+      json.model = vllm_model;
     }
 
     if (action.llm === 'openrouter') {
