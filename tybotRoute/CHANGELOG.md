@@ -6,6 +6,10 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# this branch 05/10/2026
+- fixed: Iteration — an empty, missing or unreadable list, a missing "Go to block" or an error on an element no longer stop the conversation: the flow goes on from the block's exit, as when the list is done
+- fixed: Iteration — a loop left unfinished is not resumed by a later run on a different list: it starts over
+
 # this branch
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
 

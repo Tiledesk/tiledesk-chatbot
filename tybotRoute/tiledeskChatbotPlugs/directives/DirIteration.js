@@ -60,6 +60,15 @@ class DirIteration {
       }
     }
     
+    // A state left behind by a loop that never finished (a branch that did not
+    // lead back here) must not be resumed by a later, unrelated run of this
+    // block: if the list is not the one the saved state was iterating, start over.
+    if (iterationState && await this.#isStale(iterationState, action)) {
+      this.logger.warn("[Iteration] Saved iteration state belongs to another list. Starting over.");
+      await this.#clearIterationState(foundActionId);
+      iterationState = null;
+    }
+
     if (!iterationState) {
       // First call: initialize iteration state
       if (!actionId) {
@@ -92,10 +101,12 @@ class DirIteration {
     // Get iterable value
     const iterableValue = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, iterable);
 
+    // Nothing to iterate is a list that is already done: the flow goes on
+    // from the block's exit instead of stopping the conversation in silence.
     if (!iterableValue) {
       winston.verbose("[Iteration] Iterable object is undefined");
-      this.logger.warn("[Iteration] Iterable object is undefined");
-      callback(true);
+      this.logger.warn("[Iteration] Iterable object is undefined. Nothing to iterate, going on.");
+      callback(false);
       return;
     }
 
@@ -104,15 +115,15 @@ class DirIteration {
     
     if (!iterableArray) {
       winston.verbose("[Iteration] Could not convert iterable to array");
-      this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}`);
-      callback(true);
+      this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}. Going on.`);
+      callback(false);
       return;
     }
 
     if (iterableArray.length === 0) {
       winston.verbose("[Iteration] Iterable array is empty. Exit...")
-      this.logger.warn("[Iteration] Iterable array is empty. Exit...")
-      callback(true);
+      this.logger.warn("[Iteration] Iterable array is empty. Going on.")
+      callback(false);
       return;
     }
 
@@ -186,9 +197,10 @@ class DirIteration {
     } catch (error) {
       this.logger.error("[Iteration] Error processing current item: ", error);
       winston.error("[Iteration] Error processing current item: ", error);
-      // Clear state on error to prevent stuck iterations
+      // Clear state on error to prevent stuck iterations, and leave the loop
+      // through the block's exit rather than stopping the conversation.
       await this.#clearIterationState(actionId);
-      callback(true);
+      callback(false);
     }
   }
 
@@ -209,7 +221,27 @@ class DirIteration {
     // Clear state and complete
     await this.#clearIterationState(actionId);
     this.logger.native("[Iteration] Iteration completed (no intent mode)");
-    callback(true);
+    callback(false);
+  }
+
+  /**
+   * True when the saved state was iterating a different list from the one the
+   * action's iterable holds now. While a loop runs, its branch leads back here
+   * with the same list; a different list means the block was reached again by
+   * a new run (a new message, a new email) after a loop that never finished.
+   */
+  async #isStale(iterationState, action) {
+    if (!action || !action.iterable) {
+      return false;
+    }
+    try {
+      const currentValue = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, action.iterable);
+      const currentArray = currentValue ? this.#normalizeToArray(currentValue, action.iterable) : [];
+      return JSON.stringify(currentArray || []) !== JSON.stringify(iterationState.iterableArray || []);
+    } catch (error) {
+      winston.error("[Iteration] Error checking iteration state: ", error);
+      return false;
+    }
   }
 
   async #getIterationState(actionId) {
