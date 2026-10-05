@@ -32,10 +32,11 @@ class MongodbIntentsMachine {
       }
       query.$text = search_obj;
       mongoproject = { score: { $meta: "textScore" } };
-      sort = { score: { $meta: "textScore" } } 
+      sort = { score: { $meta: "textScore" } }
+      winston.debug("(MongodbIntentsMachine) query: " + JSON.stringify(query, null, 2));
       // DA QUI RECUPERO LA RISPOSTA DATO (ID: SE EXT_AI) (QUERY FULLTEXT SE NATIVE-BASIC-AI)
       Faq.find(query, mongoproject).sort(sort).lean().exec( (err, faqs) => {
-        winston.debug("(MongodbIntentsMachine) Found: ", faqs);
+        winston.debug("(MongodbIntentsMachine) Found: " + JSON.stringify(faqs, null, 2));
         if (err) {
           winston.error("(MongodbIntentsMachine) Error:", err);
         }

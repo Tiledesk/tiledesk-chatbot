@@ -35,6 +35,7 @@ describe('Conversation for Reply test', async () => {
             bots: bots_data,
             TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
+            API_URL: process.env.API_URL,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -323,7 +324,7 @@ describe('Conversation for Reply test', async () => {
  * @param {string} token. User token
  */
 function sendMessageToBot(message, botId, callback) {
-  const url = `http://localhost:${SERVER_PORT}/ext/${botId}`;
+  const url = `http://127.0.0.1:${SERVER_PORT}/ext/${botId}`;
   // console.log("sendMessageToBot URL", url);
   const HTTPREQUEST = {
     url: url,
