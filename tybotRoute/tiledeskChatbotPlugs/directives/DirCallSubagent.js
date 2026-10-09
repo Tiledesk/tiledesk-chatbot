@@ -114,7 +114,6 @@ class DirCallSubagent {
     }
 
     if (blockName) {
-      winston.debug("(DirCallSubagent) Sending hidden /start message to bot in dept");
       const message = {
         type: "text",
         text: "/" + blockName,
@@ -122,16 +121,42 @@ class DirCallSubagent {
           subtype: "info"
         }
       }
+      winston.info("(DirCallSubagent) sendSupportMessage request " + JSON.stringify({
+        requestId: this.requestId,
+        apiEndpoint: this.API_ENDPOINT,
+        targetBotId: botId,
+        text: message.text,
+        subtype: message.attributes.subtype
+      }));
+      const started = Date.now();
       this.tdClient.sendSupportMessage(
         this.requestId,
-        message, (err) => {
+        message, (err, result) => {
           if (err) {
-            winston.debug("(DirCallSubagent) Error sending hidden message: " + err.message);
+            winston.error("(DirCallSubagent) sendSupportMessage failed " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              message: err.message,
+              status: err.response && err.response.status
+            }));
+          }
+          else {
+            winston.info("(DirCallSubagent) sendSupportMessage response " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              messageId: result && (result._id || result.id)
+            }));
           }
           callback(true);
         });
     }
     else {
+      winston.info("(DirCallSubagent) no blockName, skip hidden message " + JSON.stringify({
+        requestId: this.requestId,
+        targetBotId: botId
+      }));
       callback();
     }
   }
