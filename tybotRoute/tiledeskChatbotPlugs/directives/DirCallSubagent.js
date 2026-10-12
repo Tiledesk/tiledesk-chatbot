@@ -11,6 +11,7 @@ const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
+const jwt = require('jsonwebtoken');
 
 class DirCallSubAgent {
 
@@ -76,16 +77,21 @@ class DirCallSubAgent {
       TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY
     );
 
+    const parentId = this.context.chatbot?.botId;
+    const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
+
     winston.info("(DirCallSubAgent) push " + JSON.stringify({
       requestId: this.requestId,
-      parentId: this.context.chatbot?.botId,
+      parentId: parentId,
+      parentParticipantId: parentParticipantId,
       targetBotId: botId,
       blockName: blockName,
       triggerText: triggerText,
       nextBlock: intentAction && intentAction.intentName
     }));
     const stackData = {
-      parentId: this.context.chatbot?.botId,
+      parentId: parentId,
+      parentParticipantId: parentParticipantId,
       parentToken: this.context.token,
       nextBlock: intentAction,
       triggerText: triggerText
@@ -135,6 +141,20 @@ class DirCallSubAgent {
     }
   }
 
+}
+
+// The bot JWT is signed for the bot that is a participant of the request. After a publish
+// that is the development bot, while chatbot.botId is the published copy running the flow.
+function participantBotIdFromToken(token) {
+  if (!token || typeof token !== 'string') {
+    return null;
+  }
+  const raw = token.startsWith('JWT ') ? token.slice(4) : token;
+  const payload = jwt.decode(raw);
+  if (!payload || payload.sub !== 'bot' || !payload._id) {
+    return null;
+  }
+  return String(payload._id);
 }
 
 module.exports = { DirCallSubAgent };

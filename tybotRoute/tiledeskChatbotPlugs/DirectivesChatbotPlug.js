@@ -65,7 +65,7 @@ const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
-const { DirCallSubAgent } = require('./directives/DirCallSubAgent');
+const { DirCallSubAgent } = require('./directives/DirCallSubagent');
 const { DirReturnStack } = require('./directives/DirReturnStack');
 
 class DirectivesChatbotPlug {

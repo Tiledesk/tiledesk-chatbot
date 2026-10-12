@@ -47,17 +47,19 @@ class DirReturnStack {
             callback(true);
             return;
         }
+        const parentParticipantId = data.parentParticipantId || data.parentId;
         try {
             winston.info("(DirReturnStack) pop " + JSON.stringify({
                 requestId: this.requestId,
                 parentId: data.parentId,
+                parentParticipantId: parentParticipantId,
                 triggerText: data.triggerText,
                 nextBlock: data.nextBlock && data.nextBlock.intentName
             }));
             if (data.triggerText) {
                 await subagentStack.markTriggerMessageConsumed(this.requestId, data.triggerText);
             }
-            await requestService.replaceBot(this.context.projectId, this.requestId, { id: data.parentId }, this.context.token);
+            await requestService.replaceBot(this.context.projectId, this.requestId, { id: parentParticipantId }, this.context.token);
         } catch (error) {
             await subagentStack.clearConsumedTriggerMessage(this.requestId);
             winston.error("(DirReturnStack) error: ", error);
