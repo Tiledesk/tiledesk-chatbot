@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# features-2610/connectors-v3 12/10/2026
+# 2.2.1-rc16
 - added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
 
 # 2.2.1-rc15
