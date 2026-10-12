@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# features-2610/connectors-v3 12/10/2026
+- V3 agents: reply buttons are filled from the bot connectors list before the reply is sent (`#id` plus the record params), so the agent JSON may carry buttons without `action`; a button with no record becomes a text button
+- V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs every exit is resolved from the list, so the action destination fields may be empty on the server; bots without the label or without the list run as before
+
 # 2.2.1
 - Added support for custom headers on vLLM servers
 

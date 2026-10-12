@@ -23,7 +23,14 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
       { _tdActionId: 'cb', _tdActionType: 'connect_block', intentName: '' },
       { _tdActionId: 'multi', _tdActionType: 'jsonconditionmulti', cases: [{ _tdCaseId: 'c1', intent: '' }, { _tdCaseId: 'c2', intent: '#' + A }], elseIntent: '' },
       { _tdActionId: 'ai', _tdActionType: 'ai_condition', intents: [{ label: 'yes', conditionIntentId: '' }], fallbackIntent: '', errorIntent: '' },
-      { _tdActionId: 'r1', _tdActionType: 'reply', attributes: { attachment: { buttons: [{ type: 'action', value: 'Go', action: '#' + B }] } } },
+      { _tdActionId: 'r1', _tdActionType: 'reply', attributes: { commands: [{ type: 'wait' }, { type: 'message', message: { attributes: { attachment: { buttons: [
+        { uid: 'b1', type: 'action', value: 'Go' },                                  // ripulito: si riempie dalla lista
+        { uid: 'b2', type: 'action', value: 'Params' },                              // idem, con la coda {...} dal record
+        { uid: 'b3', type: 'action', value: 'Old', action: '#' + C },                // senza record: torna di testo
+        { uid: 'b4', type: 'text', value: 'Solo testo' },                            // resta com'e'
+        { uid: 'b5', type: 'url', value: 'Sito', link: 'https://x', action: '#' + C }, // url: mai toccato
+        { uid: 'b6', type: 'action', value: 'Keep', action: '#' + A + '{"q":2}' },   // lista senza coda: la sua resta
+      ] } } } }] } },
       { _tdActionId: 'r2', _tdActionType: 'replyv2', noInputIntent: '', noMatchIntent: '' },
       { _tdActionId: 'cap', _tdActionType: 'capture_user_reply', goToIntent: '' },
       { _tdActionId: 'it', _tdActionType: 'iteration', goToIntent: '', fallbackIntent: '' },
@@ -53,7 +60,7 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     assert.strictEqual(ConnectorsV3.usesCollection({ _id: 'bot', attributes: { dsVersion: 'V3 ' } }), false);
   });
 
-  it('un bot V3 con la lista: ogni uscita del catalogo viene riscritta dalla lista, bottoni esclusi', () => {
+  it('un bot V3 con la lista: ogni uscita del catalogo viene riscritta dalla lista, bottoni compresi', () => {
     const bot = botV3([
       record(START + '/n/' + A, 'block'),
       record(START + '/tf/true/' + B),
@@ -65,6 +72,9 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
       record(START + '/ai/yes/true/' + C, 'branch'),
       record(START + '/ai/fallback/' + A),
       record(START + '/r1/noInput/' + B),
+      record(START + '/r1/b1/' + B, 'button'),
+      { ...record(START + '/r1/b2/' + C, 'button'), props: { params: '{"k":1}' } },
+      record(START + '/r1/b6/' + A, 'button'),
       record(START + '/r2/noMatch/' + C),
       record(START + '/cap/' + A),
       record(START + '/it/goto/' + B),
@@ -81,8 +91,11 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     assert.strictEqual(intent.actions[2].elseIntent, '#' + B);
     assert.strictEqual(intent.actions[3].intents[0].conditionIntentId, '#' + C);
     assert.deepStrictEqual([intent.actions[3].fallbackIntent, intent.actions[3].errorIntent], ['#' + A, '']);
-    // la reply v1: i bottoni restano, `settings.noInputIntent` nasce dalla lista
-    assert.strictEqual(intent.actions[4].attributes.attachment.buttons[0].action, '#' + B);
+    // la reply v1: i bottoni si riempiono dalla lista (coda compresa), `settings.noInputIntent` nasce dalla lista
+    const buttons = intent.actions[4].attributes.commands[1].message.attributes.attachment.buttons;
+    assert.deepStrictEqual(buttons.map(b => [b.type, b.action]), [
+      ['action', '#' + B], ['action', '#' + C + '{"k":1}'], ['text', ''], ['text', undefined], ['url', '#' + C], ['action', '#' + A + '{"q":2}'],
+    ]);
     assert.strictEqual(intent.actions[4].settings.noInputIntent, '#' + B);
     assert.strictEqual(intent.actions[4].settings.noMatchIntent, undefined);
     assert.deepStrictEqual([intent.actions[5].noInputIntent, intent.actions[5].noMatchIntent], ['', '#' + C]);
@@ -97,7 +110,7 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     assert.strictEqual(intent.actions[9].attributes.commands[0].settings, undefined);
     // senza _tdActionId: intatta
     assert.strictEqual(intent.actions[10].intentName, '');
-    assert.strictEqual(rewritten, 16);
+    assert.strictEqual(rewritten, 19);   // 16 di prima + b1, b2 riempiti e b3 tornato di testo
     // un secondo passaggio non cambia piu' nulla
     assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 0);
   });

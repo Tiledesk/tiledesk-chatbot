@@ -11,8 +11,11 @@ const winston = require('./winston');
  * ha sempre letto. Per un agente che non e' V3, o che e' V3 ma non ha ancora la lista, non fa
  * nulla: resta la logica V2 di sempre, campi alla mano.
  *
- * I bottoni delle reply NON passano da qui: e' il widget a mandare al bot `button.action`
- * com'e', e quel testo il Design Studio lo scrive sempre, anche nei V3.
+ * Anche i bottoni delle reply passano da qui (dal 12/10/2026 sera): nel JSON di un V3 il bottone
+ * non porta piu' `action`; prima che la reply parta verso il widget, `button.action` viene
+ * riempito dalla lista con `#id` piu' l'eventuale coda `{...}` di parametri (`props.params` del
+ * record). Il widget riceve quello che riceveva. `DirReplyV2`, che alla seconda esecuzione
+ * rilegge `button.action`, rilegge la reply gia' riempita.
  *
  * Il catalogo delle uscite e' la copia di `connectors/connector-catalog.ts` del Design Studio:
  * stessi tipi, stessi campi, stessi suffissi degli id. Se cambia di la', cambia anche qui.
@@ -28,18 +31,20 @@ const field = (suffix, name) => ({ kind: 'field', suffix, field: name });
 const nested = (suffix, path) => ({ kind: 'nested', suffix, path });
 const lastCommand = (suffix, name) => ({ kind: 'lastCommandSetting', suffix, field: name });
 const array = (suffix, arrayName, idField, name) => ({ kind: 'array', suffix, array: arrayName, idField, field: name });
+/** I bottoni della action, a qualunque profondita' (come `findButtons` del Design Studio): ancora `uid`, campo `action`. */
+const BUTTONS = { kind: 'buttons' };
 
 const TRUE_FALSE = [field('/true', 'trueIntent'), field('/false', 'falseIntent')];
-const REPLY_V1 = [nested('/noInput', ['settings', 'noInputIntent']), nested('/noMatch', ['settings', 'noMatchIntent'])];
-const VOICE_SETTINGS = REPLY_V1;
+const VOICE_SETTINGS = [nested('/noInput', ['settings', 'noInputIntent']), nested('/noMatch', ['settings', 'noMatchIntent'])];
+const REPLY_V1 = [BUTTONS, ...VOICE_SETTINGS];
 
-/** Le uscite di ogni tipo di action, come nel catalogo del Design Studio (bottoni esclusi). */
+/** Le uscite di ogni tipo di action, come nel catalogo del Design Studio. */
 const OUTPUT_CATALOG = {
   intent:              [field('', 'intentName')],
   connect_block:       [field('', 'intentName')],
   reply:               REPLY_V1,
   randomreply:         REPLY_V1,
-  replyv2:             [field('/noInput', 'noInputIntent'), field('/noMatch', 'noMatchIntent')],
+  replyv2:             [BUTTONS, field('/noInput', 'noInputIntent'), field('/noMatch', 'noMatchIntent')],
   ifonlineagents:      TRUE_FALSE,
   ifonlineagentsv2:    TRUE_FALSE,
   ifopenhours:         TRUE_FALSE,
@@ -63,14 +68,14 @@ const OUTPUT_CATALOG = {
   qapla:               TRUE_FALSE,
   capture_user_reply:  [field('', 'goToIntent')],
   iteration:           [field('/goto', 'goToIntent'), field('/fallback', 'fallbackIntent')],
-  dtmf_menu:           [...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
-  dtmf_form:           [...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
+  dtmf_menu:           [BUTTONS, ...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
+  dtmf_form:           [BUTTONS, ...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
   speech_form:         [lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
-  blind_transfer:      [...VOICE_SETTINGS, lastCommand('/true', 'trueIntent'), lastCommand('/false', 'falseIntent')],
+  blind_transfer:      [BUTTONS, ...VOICE_SETTINGS, lastCommand('/true', 'trueIntent'), lastCommand('/false', 'falseIntent')],
   send_whatsapp:       TRUE_FALSE,
 };
 
-/** L'indice `fromId -> intentId di arrivo` di una lista, calcolato una volta per oggetto lista. */
+/** L'indice `fromId -> { toId, params }` di una lista, calcolato una volta per oggetto lista. */
 const indexes = new WeakMap();
 
 class ConnectorsV3 {
@@ -104,7 +109,8 @@ class ConnectorsV3 {
       if (!record || typeof record.id !== 'string' || !record.to || !record.to.intentId) { continue; }
       const cut = record.id.lastIndexOf('/');
       if (cut <= 0) { continue; }
-      index.set(record.id.substring(0, cut), record.to.intentId);   // una destinazione per uscita
+      const params = record.props && typeof record.props.params === 'string' && record.props.params !== '' ? record.props.params : null;
+      index.set(record.id.substring(0, cut), { toId: record.to.intentId, params });   // una destinazione per uscita
     }
     indexes.set(collection, index);
     return index;
@@ -133,7 +139,7 @@ class ConnectorsV3 {
       const specs = OUTPUT_CATALOG[action._tdActionType] || [];
       for (const spec of specs) {
         for (const slot of resolve(spec, intentId, action)) {
-          rewritten += write(slot.holder, slot.field, index.get(slot.fromId));
+          rewritten += slot.button ? writeButton(slot.button, index.get(slot.fromId)) : write(slot.holder, slot.field, index.get(slot.fromId));
         }
       }
     }
@@ -168,6 +174,15 @@ function resolve(spec, intentId, action) {
       if (!last.settings || typeof last.settings !== 'object') { last.settings = {}; }
       return [{ holder: last.settings, field: spec.field, fromId: base + spec.suffix }];
     }
+    case 'buttons': {
+      const out = [];
+      for (const button of findButtons(action)) {
+        if (!button || typeof button !== 'object' || button.type === 'url') { continue; }
+        if (typeof button.uid !== 'string' || button.uid === '') { continue; }
+        out.push({ holder: button, field: 'action', fromId: base + '/' + button.uid, button });
+      }
+      return out;
+    }
     case 'array': {
       const list = action[spec.array];
       if (!Array.isArray(list)) { return []; }
@@ -183,8 +198,46 @@ function resolve(spec, intentId, action) {
   }
 }
 
+/** Ogni `buttons[]` dentro l'oggetto, a qualunque profondita', nell'ordine di visita. */
+function findButtons(obj) {
+  let buttons = [];
+  if (Array.isArray(obj)) {
+    for (const element of obj) { buttons = buttons.concat(findButtons(element)); }
+  } else if (obj && typeof obj === 'object') {
+    if (Array.isArray(obj.buttons)) { buttons = buttons.concat(obj.buttons); }
+    for (const key in obj) { if (key !== 'buttons') { buttons = buttons.concat(findButtons(obj[key])); } }
+  }
+  return buttons;
+}
+
+/**
+ * Riempie `button.action` dalla lista (`#id` piu' la coda `{...}` del record) e rende il bottone
+ * di tipo `action`; senza record, un bottone `action` torna di testo. Una coda gia' presente nel
+ * bottone sopravvive se il record non ne ha una (lista scritta prima che la coda viaggiasse li').
+ */
+function writeButton(button, entry) {
+  const current = typeof button.action === 'string' ? button.action : '';
+  const brace = current.indexOf('{');
+  const currentId = brace > -1 ? current.substring(0, brace) : current;
+  const currentTail = brace > -1 ? current.substring(brace) : '';
+  if (!entry) {
+    if (button.type !== 'action' && current === '') { return 0; }
+    if (current !== '' && !currentId.startsWith('#')) { return 0; }   // un testo libero: non si tocca
+    button.action = '';
+    button.type = 'text';
+    return 1;
+  }
+  const tail = entry.params !== null ? entry.params : (currentId === '#' + entry.toId ? currentTail : '');
+  const value = '#' + entry.toId + tail;
+  if (current === value && button.type === 'action') { return 0; }
+  button.action = value;
+  button.type = 'action';
+  return 1;
+}
+
 /** Scrive `#id` o svuota; restituisce 1 se ha cambiato qualcosa. */
-function write(holder, field, toId) {
+function write(holder, field, entry) {
+  const toId = entry ? entry.toId : null;
   const current = typeof holder[field] === 'string' ? holder[field] : '';
   if (!toId) {
     if (current === '') { return 0; }
