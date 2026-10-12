@@ -4,6 +4,7 @@ const START_ID = "11111111-1111-1111-1111-111111111111";
 const SECOND_ID = "22222222-2222-2222-2222-222222222222";
 const JUMP_ID = "33333333-3333-3333-3333-333333333333";
 const THIRD_ID = "44444444-4444-4444-4444-444444444444";
+const MENU_ID = "55555555-5555-5555-5555-555555555555";
 
 function intents() {
 	return [{
@@ -56,6 +57,24 @@ function intents() {
 		"webhook_enabled": false,
 		"enabled": true,
 		"language": "en",
+		"intent_display_name": "menu",
+		"intent_id": MENU_ID,
+		"actions": [{
+			"_tdActionType": "replyv2",
+			"_tdActionId": "reply_menu",
+			"text": "Pick one",
+			"attributes": {
+				"disableInputMessage": false,
+				"commands": [{ "type": "wait", "time": 100 }, { "type": "message", "message": { "type": "text", "text": "Pick one", "attributes": { "attachment": { "type": "template", "buttons": [
+					{ "uid": "btn_go", "type": "action", "value": "Go third", "show_echo": true },
+					{ "uid": "btn_txt", "type": "text", "value": "Just text" }
+				] } } } }]
+			}
+		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
 		"intent_display_name": "third_block",
 		"intent_id": THIRD_ID,
 		"actions": [{
@@ -77,6 +96,12 @@ const connectors = {
 		"from": { "intentId": START_ID, "actionId": "next_start", "slot": "next" },
 		"to": { "intentId": SECOND_ID },
 		"kind": "block"
+	}, {
+		"id": MENU_ID + "/reply_menu/btn_go/" + THIRD_ID,
+		"from": { "intentId": MENU_ID, "actionId": "reply_menu", "slot": "button:btn_go" },
+		"to": { "intentId": THIRD_ID },
+		"kind": "button",
+		"props": { "params": "{\"from\":\"menu\"}" }
 	}, {
 		"id": JUMP_ID + "/cb_jump/" + THIRD_ID,
 		"from": { "intentId": JUMP_ID, "actionId": "cb_jump", "slot": "default" },
@@ -110,4 +135,4 @@ const bots_data = { "bots": {} };
 bots_data.bots["v3botID"] = v3bot;
 bots_data.bots["v2botID"] = v2bot;
 
-module.exports = { bots_data: bots_data };
+module.exports = { bots_data: bots_data, ids: { START_ID, SECOND_ID, JUMP_ID, THIRD_ID, MENU_ID } };

@@ -7,6 +7,7 @@ available on:
 
 
 # this branch
+- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
 - added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server; reply buttons are unchanged. Bots without the version label or without the list run exactly as before
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
 
