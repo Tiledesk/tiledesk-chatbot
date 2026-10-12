@@ -1,0 +1,113 @@
+// Due bot con GLI STESSI blocchi e GLI STESSI campi di destinazione vuoti, e la stessa lista di
+// connettori negli attributi: quello V3 (dsVersion) segue la lista, quello V2 la ignora.
+const START_ID = "11111111-1111-1111-1111-111111111111";
+const SECOND_ID = "22222222-2222-2222-2222-222222222222";
+const JUMP_ID = "33333333-3333-3333-3333-333333333333";
+const THIRD_ID = "44444444-4444-4444-4444-444444444444";
+
+function intents() {
+	return [{
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "start",
+		"intent_id": START_ID,
+		"actions": [{
+			"_tdActionType": "reply",
+			"_tdActionId": "reply_start",
+			"text": "Start",
+			"attributes": {
+				"commands": [{ "type": "wait", "time": 100 }, { "type": "message", "message": { "type": "text", "text": "Start" } }]
+			}
+		}],
+		"attributes": {
+			"nextBlockAction": {
+				"_tdActionType": "intent",
+				"_tdActionId": "next_start",
+				"intentName": ""
+			}
+		}
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "second_block",
+		"intent_id": SECOND_ID,
+		"actions": [{
+			"_tdActionType": "reply",
+			"_tdActionId": "reply_second",
+			"text": "Block connected!",
+			"attributes": {
+				"commands": [{ "type": "wait", "time": 100 }, { "type": "message", "message": { "type": "text", "text": "Block connected!" } }]
+			}
+		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "jump",
+		"intent_id": JUMP_ID,
+		"actions": [{
+			"_tdActionType": "connect_block",
+			"_tdActionId": "cb_jump",
+			"intentName": ""
+		}]
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "third_block",
+		"intent_id": THIRD_ID,
+		"actions": [{
+			"_tdActionType": "reply",
+			"_tdActionId": "reply_third",
+			"text": "Third reached!",
+			"attributes": {
+				"commands": [{ "type": "wait", "time": 100 }, { "type": "message", "message": { "type": "text", "text": "Third reached!" } }]
+			}
+		}]
+	}];
+}
+
+const connectors = {
+	"version": 1,
+	"updatedAt": "2026-10-12T00:00:00.000Z",
+	"items": [{
+		"id": START_ID + "/next_start/" + SECOND_ID,
+		"from": { "intentId": START_ID, "actionId": "next_start", "slot": "next" },
+		"to": { "intentId": SECOND_ID },
+		"kind": "block"
+	}, {
+		"id": JUMP_ID + "/cb_jump/" + THIRD_ID,
+		"from": { "intentId": JUMP_ID, "actionId": "cb_jump", "slot": "default" },
+		"to": { "intentId": THIRD_ID },
+		"kind": "action"
+	}]
+};
+
+function normalizeBot(bot) {
+	const list = bot.intents;
+	delete bot.intents;
+	const by_name = {}, by_id = {};
+	for (const intent of list) { by_name[intent.intent_display_name] = intent; by_id[intent.intent_id] = intent; }
+	bot.intents = by_name;
+	bot.intents_by_intent_id = by_id;
+	return bot;
+}
+
+const v3bot = normalizeBot({
+	"webhook_enabled": false, "language": "en", "name": "connectors v3", "type": "tilebot",
+	"attributes": { "dsVersion": "v3", "connectors": JSON.parse(JSON.stringify(connectors)) },
+	"intents": intents()
+});
+const v2bot = normalizeBot({
+	"webhook_enabled": false, "language": "en", "name": "connectors v2 control", "type": "tilebot",
+	"attributes": { "connectors": JSON.parse(JSON.stringify(connectors)) },
+	"intents": intents()
+});
+
+const bots_data = { "bots": {} };
+bots_data.bots["v3botID"] = v3bot;
+bots_data.bots["v2botID"] = v2bot;
+
+module.exports = { bots_data: bots_data };
