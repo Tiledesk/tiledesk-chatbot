@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# 2.2.1-rc17
+- added: `GET /version` returns the name and version of the running engine (the same version `publish.sh` tags), so the deployed build can be checked from outside
+
 # 2.2.1-rc16
 - added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
 
