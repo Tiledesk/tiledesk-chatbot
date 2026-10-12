@@ -6,7 +6,7 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# this branch
+# 2.2.1-rc15
 - added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server; reply buttons are unchanged. Bots without the version label or without the list run exactly as before
 
 # 2.2.1-rc12
