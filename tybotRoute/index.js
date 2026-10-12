@@ -623,12 +623,6 @@ router.get('/', (req, res) => {
   res.send('Hello Tilebot!');
 });
 
-/** La versione del motore in esecuzione: la stessa che `publish.sh` legge da package.json e usa per il tag. */
-router.get('/version', (req, res) => {
-  const pkg = require('./package.json');
-  res.json({ name: pkg.name, version: pkg.version });
-});
-
 router.get('/test/webrequest/get/plain/:username', async (req, res) => {
   res.send(`Application var ${req.params['username']}`);
 });
