@@ -15,6 +15,7 @@ class MockBotsDataSource {
     return new Promise((resolve, reject)=>{
       try{
         const bot = {
+          _id: botId,
           webhook_enabled: this.data.bots[botId].webhook_enabled,
           webhook_url: this.data.bots[botId].webhook_url,
           language: this.data.bots[botId].language,
@@ -25,8 +26,7 @@ class MockBotsDataSource {
       }catch(err){
         reject(err);
       }
-      
-    }) 
+    })
   }
   
   async getBotByIdCache(botId, tdcache) {
