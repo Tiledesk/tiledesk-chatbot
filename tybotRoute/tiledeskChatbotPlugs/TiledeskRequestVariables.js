@@ -16,7 +16,8 @@ class TiledeskRequestVariables {
 
     async set(name, value, callback) {
         const parameter_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":parameters";
-        await this.tdcache.hset(parameter_key, name, value);
+        const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
+        await this.tdcache.hset(parameter_key, name, value, { EX: ttl });
         if (callback) {
             callback();
         }

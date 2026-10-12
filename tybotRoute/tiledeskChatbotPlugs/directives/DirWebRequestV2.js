@@ -3,6 +3,7 @@ let https = require("https");
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
+const { AnalyticsClient } = require('../../AnalyticsClient');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -37,6 +38,13 @@ class DirWebRequestV2 {
     this.logger.native("Executing WebRequest action ", directive.action)
     this.go(action, (stop) => {
       this.logger.native("[Web Request] Executed");
+      AnalyticsClient.track('webhook.triggered', this.context.projectId, {
+        webhook_id: action.webhookId || action._id || 'unknown',
+        agent_id:   this.context.chatbot?.botId || '',
+        block_id:   directive.blockId || directive.action?.blockId || 'unknown',
+        async:      action.async === true,
+        request_id: this.requestId || null
+      });
       callback(stop);
     }).catch((err) => {
       // do not nothing
@@ -111,6 +119,7 @@ class DirWebRequestV2 {
       HTTPREQUEST, async (err, res) => {
 
         let resbody = res.data;
+        console.log("\n\nDirWebRequestV2 resbody: ", resbody);
         let status = res.status;
         let error = res.error;
         await this.#assignAttributes(action, resbody, status, error)
@@ -118,7 +127,7 @@ class DirWebRequestV2 {
         this.logger.native("[Web Request] resbody: ", resbody);
         
         if (err) {
-          this.logger.error("WebRequest error: ", err);
+          this.logger.error("[Web Request] error: ", err);
           winston.log("webRequest error: ", err);
           if (callback) {
             if (falseIntent) {
@@ -131,6 +140,7 @@ class DirWebRequestV2 {
           }
         }
         else if (res.status >= 200 && res.status <= 299) {
+
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
             callback(true);
@@ -221,6 +231,28 @@ class DirWebRequestV2 {
         } catch (err) {
           winston.error("DirWebRequestV2 Error parsing webRequest formData: " + JSON.stringify(formData) + "\nError: " + JSON.stringify(err)); 
           reject("Error parsing formData");
+        }
+      }
+      else if (action.bodyType == "raw") {
+        const rawType = action.rawType || "json";
+        if (!action.jsonBody) {
+          resolve(null);
+          return;
+        }
+        let rawBody = filler.fill(action.jsonBody, requestAttributes);
+        if (rawType === "json") {
+          try {
+            let json = JSON.parse(rawBody);
+            resolve(json);
+          }
+          catch (err) {
+            winston.error("DirWebRequestV2 Error parsing webRequest raw jsonBody: " + JSON.stringify(rawBody) + "\nError: " + JSON.stringify(err));
+            reject("Error parsing jsonBody");
+          }
+        }
+        else {
+          // text | xml | html | javascript: raw string sent as-is, Content-Type comes from headers
+          resolve(rawBody);
         }
       }
       else {

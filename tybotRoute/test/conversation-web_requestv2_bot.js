@@ -15,7 +15,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "returns a json body - GET - assign result - assign status - no condition",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -55,7 +55,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -80,7 +80,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json2",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json2",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -105,7 +105,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "GET",
-				"url": "http://localhost:10002/test/webrequest/get/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/get/json",
 				"headersString": {
 					"Content-Type": "*/*",
 					"Cache-Control": "no-cache",
@@ -130,7 +130,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/json",
 				"headersString": {
 					"Content-Type": "application/json",
 					"Cache-Control": "no-cache",
@@ -157,7 +157,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/form-data",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/form-data",
 				"headersString": {
 					"Content-Type": "multipart/form-data",
 					"Cache-Control": "no-cache",
@@ -174,7 +174,7 @@ const bot = {
 						{
 							"name": "file",
 							"type": "URL",
-							"value": "http://localhost:10002/test/webrequest/post/form-data/simple_file.txt",
+							"value": "http://127.0.0.1:10002/test/webrequest/post/form-data/simple_file.txt",
 							"enabled": true
 						}
 					],
@@ -198,7 +198,7 @@ const bot = {
 			"question": "",
 			"actions": [{
 				"_tdActionTitle": "POST",
-				"url": "http://localhost:10002/test/webrequest/post/json",
+				"url": "http://127.0.0.1:10002/test/webrequest/post/json",
 				"headersString": {
 					"Content-Type": "application/json",
 					"Cache-Control": "no-cache",
@@ -206,6 +206,195 @@ const bot = {
 				},
 				"jsonBody": "{\"name\":myname,\"email\":\"myemail\"}", // missing "" in myname
 				"bodyType": "json",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "result",
+				"assignStatusTo": "status",
+				"falseIntent": "#FAILURE",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw_json",
+			"intent_id": "POST-RAW-JSON",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "set rawname",
+				"_tdActionType": "setattribute",
+				"operation": {
+					"operands": [{
+						"value": "myname",
+						"isVariable": false
+					}],
+					"operators": []
+				},
+				"destination": "rawname"
+			}, {
+				"_tdActionTitle": "POST raw json",
+				"url": "http://localhost:10002/test/webrequest/post/raw/json",
+				"headersString": {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "{\"name\":\"{{rawname}}\",\"email\":\"myemail\"}",
+				"bodyType": "raw",
+				"rawType": "json",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "result",
+				"assignStatusTo": "status",
+				"trueIntent": "#SUCCESS_POST",
+				"falseIntent": "#FAILURE_REQUEST",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw_xml",
+			"intent_id": "POST-RAW-XML",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "set xmlto",
+				"_tdActionType": "setattribute",
+				"operation": {
+					"operands": [{
+						"value": "Tove",
+						"isVariable": false
+					}],
+					"operators": []
+				},
+				"destination": "xmlto"
+			}, {
+				"_tdActionTitle": "POST raw xml",
+				"url": "http://localhost:10002/test/webrequest/post/raw/xml",
+				"headersString": {
+					"Content-Type": "application/xml",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "<note><to>{{xmlto}}</to><body>Hello</body></note>",
+				"bodyType": "raw",
+				"rawType": "xml",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "reply",
+				"assignStatusTo": "status",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE_REQUEST",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw_text",
+			"intent_id": "POST-RAW-TEXT",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "POST raw text",
+				"url": "http://localhost:10002/test/webrequest/post/raw/text",
+				"headersString": {
+					"Content-Type": "text/plain",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "Hello, raw text body",
+				"bodyType": "raw",
+				"rawType": "text",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "reply",
+				"assignStatusTo": "status",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE_REQUEST",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw_html",
+			"intent_id": "POST-RAW-HTML",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "POST raw html",
+				"url": "http://localhost:10002/test/webrequest/post/raw/html",
+				"headersString": {
+					"Content-Type": "text/html",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "<html><body><h1>Hello</h1></body></html>",
+				"bodyType": "raw",
+				"rawType": "html",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "reply",
+				"assignStatusTo": "status",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE_REQUEST",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw_javascript",
+			"intent_id": "POST-RAW-JAVASCRIPT",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "POST raw javascript",
+				"url": "http://localhost:10002/test/webrequest/post/raw/javascript",
+				"headersString": {
+					"Content-Type": "application/javascript",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "console.log(\"hello\");",
+				"bodyType": "raw",
+				"rawType": "javascript",
+				"method": "POST",
+				"assignErrorTo": "error",
+				"assignResultTo": "reply",
+				"assignStatusTo": "status",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE_REQUEST",
+				"_tdActionType": "webrequestv2"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "webrequestv2_post_raw-incorrect-body",
+			"intent_id": "POST-RAW-BAD",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionTitle": "POST raw malformed json",
+				"url": "http://localhost:10002/test/webrequest/post/raw/json",
+				"headersString": {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-cache",
+					"User-Agent": "TiledeskBotRuntime"
+				},
+				"jsonBody": "{\"name\":myname,\"email\":\"myemail\"}", // missing "" in myname
+				"bodyType": "raw",
+				"rawType": "json",
 				"method": "POST",
 				"assignErrorTo": "error",
 				"assignResultTo": "result",
