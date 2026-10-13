@@ -37,7 +37,6 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
-const { SubagentStack } = require('./tiledeskChatbotPlugs/SubagentStack.js');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -104,26 +103,6 @@ router.post('/ext/:botid', async (req, res) => {
 
   if (isBotBubble(message)) {
     winston.info("(tybotRoute) skip bot bubble " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text, sender: message.sender }));
-    return;
-  }
-
-  const subagentStack = new SubagentStack({ tdCache: tdcache });
-  const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
-  winston.info("(tybotRoute) subagent gate " + JSON.stringify({
-    botId: botId,
-    requestId: requestId,
-    text: message.text,
-    consumedTriggerText: consumedTriggerText,
-    sender: message.sender
-  }));
-  if (
-    consumedTriggerText &&
-    message.text === consumedTriggerText &&
-    message.sender !== "_tdinternal" &&
-    !(message.attributes && message.attributes.action)
-  ) {
-    winston.info("(tybotRoute) skip re-delivered trigger " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text }));
-    await subagentStack.clearConsumedTriggerMessage(requestId);
     return;
   }
 

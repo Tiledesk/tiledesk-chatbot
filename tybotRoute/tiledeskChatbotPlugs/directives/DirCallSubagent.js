@@ -1,6 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { Filler } = require('../Filler');
 
 const axios = require("axios").default;
@@ -71,11 +70,6 @@ class DirCallSubAgent {
 
     const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
     const intentAction = this.context.reply.actions.find(action => action._tdActionType === "intent");
-    const triggerText = await TiledeskChatbot.getParameterStatic(
-      this.context.tdcache,
-      this.requestId,
-      TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY
-    );
 
     const parentId = this.context.chatbot?.botId;
     const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
@@ -86,15 +80,13 @@ class DirCallSubAgent {
       parentParticipantId: parentParticipantId,
       targetBotId: botId,
       blockName: blockName,
-      triggerText: triggerText,
       nextBlock: intentAction && intentAction.intentName
     }));
     const stackData = {
       parentId: parentId,
       parentParticipantId: parentParticipantId,
       parentToken: this.context.token,
-      nextBlock: intentAction,
-      triggerText: triggerText
+      nextBlock: intentAction
     }
     await subagentStack.push(this.requestId, stackData);
 
