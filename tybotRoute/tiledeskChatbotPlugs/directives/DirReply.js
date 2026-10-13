@@ -162,6 +162,10 @@ class DirReply {
     winston.debug("DirReply reply with clean message: ", cleanMessage);
     this.logger.native("[Reply] Reply with 2: " + cleanMessage.text);
 
+    if (this.context.turnId && this.tdcache) {
+      await this.#tagStreamedReply(cleanMessage);
+    }
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
       this.requestId,
@@ -183,6 +187,39 @@ class DirReply {
         }
     });
 
+  }
+
+  /**
+   * Voice turns: when this reply speaks the text an AI action has just streamed (see DirAiPrompt), mark it with
+   * attributes.stream_id so the channel closes the stream instead of speaking the text a second time.
+   */
+  async #tagStreamedReply(message) {
+    try {
+      const key = TiledeskChatbot.pendingStreamCacheKey(this.requestId);
+      const pending = await this.tdcache.getJSON(key);
+      if (!pending || !pending.stream_id || typeof pending.text !== "string") {
+        return;
+      }
+      const streamed = pending.text.trim();
+      const texts = [message.text];
+      if (message.attributes && Array.isArray(message.attributes.commands)) {
+        message.attributes.commands.forEach((c) => {
+          if (c && c.type === "message" && c.message) {
+            texts.push(c.message.text);
+          }
+        });
+      }
+      if (texts.some((t) => typeof t === "string" && t.trim() === streamed)) {
+        message.attributes = message.attributes || {};
+        message.attributes.stream_id = pending.stream_id;
+        await this.tdcache.del(key);
+        winston.verbose("(DirReply) reply closes stream " + pending.stream_id);
+      } else {
+        winston.verbose("(DirReply) reply does not match the pending stream " + pending.stream_id + ", sent untagged");
+      }
+    } catch (err) {
+      winston.error("(DirReply) Error matching the streamed reply: " + err.message);
+    }
   }
 
 }

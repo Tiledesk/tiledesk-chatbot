@@ -88,6 +88,8 @@ class DirectivesChatbotPlug {
     this.reply = config.reply;
     this.chatbot = config.chatbot;
     this.message = config.message;
+    // Set only on streaming channels (voice): id of the caller message that started this turn
+    this.turnId = config.turnId;
   }
 
   exec(pipeline) {
@@ -169,7 +171,8 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
+      turnId: this.turnId
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
@@ -199,6 +202,11 @@ class DirectivesChatbotPlug {
       }
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
+    }
+    // Latest message wins: a newer caller message started another turn, stop this one silently
+    if (this.turnId && await TiledeskChatbot.isTurnSuperseded(this.context.tdcache, this.context.requestId, this.turnId)) {
+      winston.verbose("(DirectivesChatbotPlug) turn " + this.turnId + " superseded on " + this.context.requestId + ", flow stopped");
+      return null;
     }
     this.curr_directive_index += 1;
     if (this.curr_directive_index < directives.length) {

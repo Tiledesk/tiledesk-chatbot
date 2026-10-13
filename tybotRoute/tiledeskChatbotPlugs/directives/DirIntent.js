@@ -69,6 +69,10 @@ class DirIntent {
       },
       "token": this.token
     }
+    if (this.context.turnId) {
+      // keep the voice turn across the jump, so the next block can still be superseded
+      intent_command_request.payload.voice_turn_id = this.context.turnId;
+    }
     winston.debug("DirIntent move to intent message: ", intent_command_request);
 
     // tilebotService.executeBlock(intent_command_request, botId, () => {

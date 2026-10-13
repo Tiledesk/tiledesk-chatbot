@@ -681,6 +681,37 @@ class TiledeskChatbot {
     const request_key = "tilebot:requests:" + requestId;
     return request_key;
   }
+
+  // Streaming channels (voice): "latest message wins". Each caller message starts a turn; a turn whose id is no
+  // longer the stored one has been superseded and must stop (directives, LLM streaming).
+  static turnCacheKey(requestId) {
+    return TiledeskChatbot.requestCacheKey(requestId) + ":turn";
+  }
+
+  static async setCurrentTurn(_tdcache, requestId, turnId) {
+    await _tdcache.set(TiledeskChatbot.turnCacheKey(requestId), turnId, { EX: 3600 });
+  }
+
+  static async isTurnSuperseded(_tdcache, requestId, turnId) {
+    if (!_tdcache || !turnId) {
+      return false;
+    }
+    const current = await _tdcache.get(TiledeskChatbot.turnCacheKey(requestId));
+    return current !== null && current !== undefined && current !== turnId;
+  }
+
+  // Text streamed by an AI action and not yet closed by a reply message (see DirAiPrompt, DirReply)
+  static pendingStreamCacheKey(requestId) {
+    return TiledeskChatbot.requestCacheKey(requestId) + ":stream:pending";
+  }
+
+  static isStreamingChannel(channelName) {
+    if (process.env.STREAM_ENABLED !== "true" || !channelName) {
+      return false;
+    }
+    const channels = (process.env.STREAM_CHANNELS || "voice_twilio").split(",").map(c => c.trim());
+    return channels.includes(channelName);
+  }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
     winston.verbose("(TiledeskChatbot) static_bot_answer.attributes.webhook:" + static_bot_answer.attributes.webhook);
