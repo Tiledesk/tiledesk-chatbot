@@ -2,7 +2,7 @@ const httpUtils = require('../utils/HttpUtils');
 const winston = require('../utils/winston');
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
-class KBService {
+class LLMService {
 
   constructor() { }
 
@@ -37,36 +37,6 @@ class KBService {
               namespace = namespaces.find(n => n.id === id);
             }
             resolve(namespace || null);
-          }
-        }
-      )
-    })
-  }
-
-  async getKeyFromKbSettings(id_project, token) {
-
-    return new Promise((resolve) => {
-      const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + token
-        },
-        method: "GET"
-      }
-      winston.debug("Kb HttpRequest", http_request);
-
-      httpUtils.request(
-        http_request, async (err, resbody) => {
-          if (err) {
-            winston.error("Error getting kb settings:", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody || !resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
           }
         }
       )
@@ -120,5 +90,5 @@ class KBService {
   }
 }
 
-const kbService = new KBService();
-module.exports = kbService;
+const llmService = new LLMService();
+module.exports = llmService;

@@ -12,7 +12,7 @@ const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
 const jwt = require('jsonwebtoken');
 
-class DirCallSubAgent {
+class DirCallSubagent {
 
   constructor(context) {
     if (!context) {
@@ -34,7 +34,7 @@ class DirCallSubAgent {
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.warn("DirCallSubAgent Incorrect directive: ", directive);
+      winston.warn("DirCallSubagent Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -45,7 +45,7 @@ class DirCallSubAgent {
   }
 
   async go(action, callback) {
-    winston.debug("(DirCallSubAgent) Action: ", action);
+    winston.debug("(DirCallSubagent) Action: ", action);
     let botId = action.botId;
     let botSlug = action.botSlug;
     let useSlug = action.useSlug;
@@ -74,7 +74,7 @@ class DirCallSubAgent {
     const parentId = this.context.chatbot?.botId;
     const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
 
-    winston.info("(DirCallSubAgent) push " + JSON.stringify({
+    winston.info("(DirCallSubagent) push " + JSON.stringify({
       requestId: this.requestId,
       parentId: parentId,
       parentParticipantId: parentParticipantId,
@@ -90,6 +90,7 @@ class DirCallSubAgent {
     }
     await subagentStack.push(this.requestId, stackData);
 
+    console.log("Context token before replaceBot: ", this.context.token);
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
       if (this.context.chatbot?.bot.root_id) {
@@ -102,7 +103,7 @@ class DirCallSubAgent {
       }
     } catch (error) {
       await subagentStack.pop(this.requestId);
-      winston.error("(DirCallSubAgent) error: ", error);
+      winston.error("(DirCallSubagent) error: ", error);
       this.logger.error("(ReplaceBot) Invoke subagent error: ", error);
       if (callback) {
         callback(true);
@@ -111,7 +112,6 @@ class DirCallSubAgent {
     }
 
     if (blockName) {
-      winston.debug("(DirCallSubAgent) Sending hidden /start message to bot in dept");
       const message = {
         type: "text",
         text: "/" + blockName,
@@ -119,16 +119,42 @@ class DirCallSubAgent {
           subtype: "info"
         }
       }
+      winston.info("(DirCallSubagent) sendSupportMessage request " + JSON.stringify({
+        requestId: this.requestId,
+        apiEndpoint: this.API_ENDPOINT,
+        targetBotId: botId,
+        text: message.text,
+        subtype: message.attributes.subtype
+      }));
+      const started = Date.now();
       this.tdClient.sendSupportMessage(
         this.requestId,
-        message, (err) => {
+        message, (err, result) => {
           if (err) {
-            winston.debug("(DirCallSubAgent) Error sending hidden message: " + err.message);
+            winston.error("(DirCallSubagent) sendSupportMessage failed " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              message: err.message,
+              status: err.response && err.response.status
+            }));
+          }
+          else {
+            winston.info("(DirCallSubagent) sendSupportMessage response " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              messageId: result && (result._id || result.id)
+            }));
           }
           callback(true);
         });
     }
     else {
+      winston.info("(DirCallSubagent) no blockName, skip hidden message " + JSON.stringify({
+        requestId: this.requestId,
+        targetBotId: botId
+      }));
       callback();
     }
   }
@@ -149,4 +175,4 @@ function participantBotIdFromToken(token) {
   return String(payload._id);
 }
 
-module.exports = { DirCallSubAgent };
+module.exports = { DirCallSubagent };
