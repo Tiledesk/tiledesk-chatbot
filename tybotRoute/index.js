@@ -157,6 +157,8 @@ router.post('/ext/:botid', async (req, res) => {
     try {
       await TiledeskChatbot.setCurrentTurn(tdcache, requestId, turnId);
       winston.verbose("(tybotRoute) voice turn " + turnId + " on " + requestId);
+      // timing for local/measure (the chatbot log has no timestamps)
+      winston.info("[VoiceTiming] " + requestId + " " + turnId + " ext " + Date.now());
     } catch (e) {
       winston.error("(tybotRoute) Error setting the voice turn: ", e);
       turnId = undefined;
