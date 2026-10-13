@@ -573,15 +573,25 @@ class DirAiPrompt {
       turnId: this.context.turnId,
       onStop: () => controller.abort()
     });
+    const timing = (event) => winston.info("[VoiceTiming] " + this.requestId + " " + this.context.turnId + " " + event + " " + Date.now());
+    let firstChunk = true;
     const chunker = new SentenceChunker({
       maxWaitMs: process.env.STREAM_CHUNK_MAX_WAIT_MS,
-      onChunk: (text) => sender.send(text)
+      onChunk: (text) => {
+        if (firstChunk) {
+          firstChunk = false;
+          timing("first_chunk");
+        }
+        sender.send(text);
+      }
     });
     this.logger.native("[AI Prompt] streaming answer " + sender.streamId);
 
     let text = "";
     let completed = null;
     let streamError = null;
+    let firstDelta = true;
+    timing("llm_request");
     try {
       const response = await axios.post(url, { ...json, stream: true }, {
         headers: headers,
@@ -591,6 +601,10 @@ class DirAiPrompt {
       });
       await DirAiPrompt.readSSE(response.data, (event, data) => {
         if (event === "chunk" && typeof data.content === "string" && data.content) {
+          if (firstDelta) {
+            firstDelta = false;
+            timing("llm_first_delta");
+          }
           text += data.content;
           chunker.push(data.content);
         }
@@ -605,6 +619,7 @@ class DirAiPrompt {
     }
     sender.end(chunker.flush());
     await sender.drain();
+    timing("llm_done");
 
     if (sender.stopped === "superseded") {
       this.logger.native("[AI Prompt] turn superseded, answer interrupted");
