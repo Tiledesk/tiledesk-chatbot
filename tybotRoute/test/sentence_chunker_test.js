@@ -59,3 +59,40 @@ describe('SentenceChunker', function () {
   });
 
 });
+
+describe('SentenceChunker first chunk', function () {
+
+  it('firstMaxWaitMs cuts the first chunk sooner, then maxWaitMs applies', async () => {
+    const chunks = [];
+    const chunker = new SentenceChunker({ maxWaitMs: 200, firstMaxWaitMs: 10, onChunk: (t) => chunks.push(t) });
+    chunker.push("Il costo della fibra ");
+    await new Promise((r) => setTimeout(r, 40));
+    assert.deepStrictEqual(chunks, ["Il costo della fibra "]);
+    chunker.push("parte da venti euro al ");
+    await new Promise((r) => setTimeout(r, 60));
+    assert.strictEqual(chunks.length, 1, "second chunk must wait maxWaitMs");
+    await new Promise((r) => setTimeout(r, 200));
+    assert.deepStrictEqual(chunks, ["Il costo della fibra ", "parte da venti euro al "]);
+    chunker.flush();
+  });
+
+  it('a 0 ms wait without a word boundary waits for the next delta (no busy loop)', async () => {
+    const chunks = [];
+    const chunker = new SentenceChunker({ maxWaitMs: 0, onChunk: (t) => chunks.push(t) });
+    chunker.push("Buongiorno");
+    await new Promise((r) => setTimeout(r, 30));
+    assert.deepStrictEqual(chunks, []);
+    assert.strictEqual(chunker.timer, null);
+    chunker.push(", come ");
+    await new Promise((r) => setTimeout(r, 10));
+    assert.deepStrictEqual(chunks, ["Buongiorno, come "]);
+    chunker.flush();
+  });
+
+  it('defaults to maxWaitMs when firstMaxWaitMs is not set', () => {
+    assert.strictEqual(new SentenceChunker({ maxWaitMs: 150 }).firstMaxWaitMs, 150);
+    assert.strictEqual(new SentenceChunker({ maxWaitMs: 150, firstMaxWaitMs: "" }).firstMaxWaitMs, 150);
+    assert.strictEqual(new SentenceChunker({ maxWaitMs: 150, firstMaxWaitMs: "0" }).firstMaxWaitMs, 0);
+  });
+
+});

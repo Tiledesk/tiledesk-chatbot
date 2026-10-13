@@ -577,6 +577,7 @@ class DirAiPrompt {
     let firstChunk = true;
     const chunker = new SentenceChunker({
       maxWaitMs: process.env.STREAM_CHUNK_MAX_WAIT_MS,
+      firstMaxWaitMs: process.env.STREAM_CHUNK_FIRST_MAX_WAIT_MS,
       onChunk: (text) => {
         if (firstChunk) {
           firstChunk = false;
