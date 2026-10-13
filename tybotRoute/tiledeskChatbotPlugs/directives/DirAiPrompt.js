@@ -14,6 +14,9 @@ const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { SentenceChunker } = require("../../utils/SentenceChunker");
+const { StreamSender } = require("../../utils/StreamSender");
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
@@ -418,6 +421,13 @@ class DirAiPrompt {
       method: 'POST'
     }
     winston.debug("DirAiPrompt HttpRequest: ", { ...HTTPREQUEST, json: loggableJson });
+
+    // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
+    if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
+      await this.#goStreaming(action, json, AI_endpoint + apiEndpoint, headers, publicKey,
+        trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback);
+      return;
+    }
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -537,6 +547,182 @@ class DirAiPrompt {
     }
 
     return objectTranscript;
+  }
+
+  /**
+   * Streaming variant of the /ask call for voice turns. tiledesk-llm answers with SSE (chunk events, then a
+   * "completed" metadata event); deltas are grouped by SentenceChunker and posted to tiledesk-server /stream by
+   * StreamSender while the LLM is still generating. The flow then continues exactly as the non-streaming path
+   * (assign reply attribute, true/false intent); the text streamed is saved as "pending" so that the reply that
+   * speaks it (DirReply) carries attributes.stream_id and the channel does not speak it twice.
+   * If a newer caller message supersedes the turn, the LLM request is aborted, the part already streamed is posted
+   * as a message with attributes.interrupted and the flow stops.
+   */
+  async #goStreaming(action, json, url, headers, publicKey, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    const controller = new AbortController();
+    const sender = new StreamSender({
+      API_ENDPOINT: this.API_ENDPOINT,
+      projectId: this.projectId,
+      requestId: this.requestId,
+      token: this.token,
+      tdcache: this.tdcache,
+      turnId: this.context.turnId,
+      onStop: () => controller.abort()
+    });
+    const chunker = new SentenceChunker({
+      maxWaitMs: process.env.STREAM_CHUNK_MAX_WAIT_MS,
+      onChunk: (text) => sender.send(text)
+    });
+    this.logger.native("[AI Prompt] streaming answer " + sender.streamId);
+
+    let text = "";
+    let completed = null;
+    let streamError = null;
+    try {
+      const response = await axios.post(url, { ...json, stream: true }, {
+        headers: headers,
+        responseType: 'stream',
+        signal: controller.signal,
+        timeout: 60000
+      });
+      await DirAiPrompt.readSSE(response.data, (event, data) => {
+        if (event === "chunk" && typeof data.content === "string" && data.content) {
+          text += data.content;
+          chunker.push(data.content);
+        }
+        else if (event === "metadata" && data.status === "completed") {
+          completed = data;
+        }
+      });
+    } catch (err) {
+      if (!sender.stopped) {
+        streamError = err;
+      }
+    }
+    sender.end(chunker.flush());
+    await sender.drain();
+
+    if (sender.stopped === "superseded") {
+      this.logger.native("[AI Prompt] turn superseded, answer interrupted");
+      winston.verbose("DirAiPrompt stream " + sender.streamId + " superseded after " + sender.seq + " chunks");
+      if (sender.streamed) {
+        await this.#sendInterrupted(sender);
+      }
+      callback(true);
+      return;
+    }
+    if (sender.stopped === "closed") {
+      winston.verbose("DirAiPrompt stream " + sender.streamId + ": request closed, flow stopped");
+      callback(true);
+      return;
+    }
+
+    if (streamError) {
+      let error;
+      const status = streamError.response && streamError.response.status;
+      error = status ? "LLM stream error: HTTP " + status : (streamError.message || "General error executing action");
+      winston.error("DirAiPrompt error executing action: " + error);
+      this.logger.error("[AI Prompt] error executing action: ", error);
+      await this.#assignAttributes(action, "No answer");
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    const answer = (completed && typeof completed.full_response === "string") ? completed.full_response : text;
+    this.logger.native("[AI Prompt] answer: ", answer);
+
+    if (publicKey === true) {
+      const usage = completed && completed.model_used && completed.model_used.prompt_token_info;
+      quotasService.updateQuote(this.projectId, this.token, { tokens: (usage && usage.total_tokens) || 0, model: json.model });
+    }
+
+    if (sender.streamed && !sender.disabled) {
+      await this.tdcache.setJSON(TiledeskChatbot.pendingStreamCacheKey(this.requestId),
+        { stream_id: sender.streamId, text: answer }, { EX: 120 });
+    }
+
+    await this.#assignAttributes(action, answer);
+    if (trueIntent) {
+      await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      callback(true);
+      return;
+    }
+    callback();
+  }
+
+  /** Posts what the caller heard of an interrupted answer, so the conversation keeps it. */
+  async #sendInterrupted(sender) {
+    const message = {
+      text: sender.sentText,
+      senderFullname: this.chatbot.bot.name,
+      attributes: { stream_id: sender.streamId, interrupted: true }
+    };
+    try {
+      await TiledeskChatbotUtil.updateConversationTranscript(this.chatbot, message);
+      const tdClient = new TiledeskClient({ projectId: this.projectId, token: this.token, APIURL: this.API_ENDPOINT, APIKEY: "___" });
+      await new Promise((resolve) => {
+        tdClient.sendSupportMessage(this.requestId, message, (err) => {
+          if (err) {
+            winston.error("DirAiPrompt Error sending the interrupted answer: " + (err.message || err));
+          }
+          resolve();
+        });
+      });
+    } catch (err) {
+      winston.error("DirAiPrompt Error sending the interrupted answer: " + err.message);
+    }
+  }
+
+  /** Reads a text/event-stream body, calling onEvent(eventName, parsedData) for every event. */
+  static readSSE(stream, onEvent) {
+    return new Promise((resolve, reject) => {
+      let buffer = "";
+      const dispatch = (block) => {
+        let event = "message";
+        const data = [];
+        block.split(/\r?\n/).forEach((line) => {
+          if (line.startsWith("event:")) {
+            event = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            data.push(line.slice(5).replace(/^ /, ""));
+          }
+        });
+        if (data.length === 0) {
+          return;
+        }
+        let parsed;
+        try {
+          parsed = JSON.parse(data.join("\n"));
+        } catch (err) {
+          return;
+        }
+        onEvent(event, parsed);
+      };
+      stream.setEncoding("utf8");
+      stream.on("data", (chunk) => {
+        buffer += chunk;
+        let sep;
+        while ((sep = buffer.search(/\r?\n\r?\n/)) !== -1) {
+          const block = buffer.slice(0, sep);
+          buffer = buffer.slice(sep).replace(/^\r?\n\r?\n/, "");
+          dispatch(block);
+        }
+      });
+      stream.on("end", () => {
+        if (buffer.trim()) {
+          dispatch(buffer);
+        }
+        resolve();
+      });
+      stream.on("error", reject);
+      stream.on("close", resolve);
+    });
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {

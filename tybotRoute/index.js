@@ -158,7 +158,21 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
   }
-  
+
+  // Streaming channels (voice): this caller message starts a new turn; a turn still running stops at its next step
+  let turnId;
+  if (message._id && TiledeskChatbot.isStreamingChannel(message.request.channel && message.request.channel.name) &&
+      message.sender !== "_tdinternal" && !(message.attributes && message.attributes.subtype === "info")) {
+    turnId = message._id;
+    try {
+      await TiledeskChatbot.setCurrentTurn(tdcache, requestId, turnId);
+      winston.verbose("(tybotRoute) voice turn " + turnId + " on " + requestId);
+    } catch (e) {
+      winston.error("(tybotRoute) Error setting the voice turn: ", e);
+      turnId = undefined;
+    }
+  }
+
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
@@ -190,10 +204,11 @@ router.post('/ext/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-          cache: tdcache
+          cache: tdcache,
+          turnId: turnId
         }
       );
-      
+
       await directivesPlug.processDirectives();
       winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
@@ -396,7 +411,9 @@ router.post('/exec/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-          cache: tdcache
+          cache: tdcache,
+          // voice turn carried by DirIntent across block jumps
+          turnId: message.voice_turn_id
         }
       );
       await directivesPlug.processDirectives();
