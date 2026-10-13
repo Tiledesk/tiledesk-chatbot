@@ -4,6 +4,8 @@
  * A chunk is emitted at the last sentence/clause boundary in the buffer (". ! ? ; :" or a newline, followed by
  * whitespace), or, when no boundary arrives within maxWaitMs from the first buffered character, at the last space
  * (never inside a word). Emitted chunks concatenated are exactly the input text.
+ * firstMaxWaitMs (default: maxWaitMs) applies to the first chunk only: a low value starts the speech sooner without
+ * splitting the rest of the answer into many small chunks.
  *
  * Example:
  *   const chunker = new SentenceChunker({ maxWaitMs: 150, onChunk: (text) => send(text) });
@@ -16,6 +18,9 @@ class SentenceChunker {
   constructor(options) {
     options = options || {};
     this.maxWaitMs = Number(options.maxWaitMs) >= 0 ? Number(options.maxWaitMs) : 150;
+    const first = options.firstMaxWaitMs;
+    this.firstMaxWaitMs = (first !== undefined && first !== null && first !== "" && Number(first) >= 0) ? Number(first) : this.maxWaitMs;
+    this.emitted = 0;
     this.onChunk = options.onChunk || (() => {});
     this.buffer = "";
     this.timer = null;
@@ -56,6 +61,7 @@ class SentenceChunker {
     this.buffer = this.buffer.slice(cut);
     this.#clearTimer();
     if (chunk) {
+      this.emitted++;
       this.onChunk(chunk);
     }
   }
@@ -64,14 +70,16 @@ class SentenceChunker {
     if (this.timer || !this.buffer) {
       return;
     }
+    const wait = this.emitted === 0 ? this.firstMaxWaitMs : this.maxWaitMs;
     this.timer = setTimeout(() => {
       this.timer = null;
       const space = this.buffer.lastIndexOf(" ");
       if (space > 0) {
         this.#emit(space + 1);
+        this.#armTimer();
       }
-      this.#armTimer();
-    }, this.maxWaitMs);
+      // no word boundary yet: the next push arms the timer again (no busy loop with a 0 ms wait)
+    }, wait);
   }
 
   #clearTimer() {
