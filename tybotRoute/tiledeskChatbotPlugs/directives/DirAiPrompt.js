@@ -407,7 +407,8 @@ class DirAiPrompt {
       };
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
-      winston.debug("DirAiPrompt json.servers: ", json.servers);
+      // server definitions can carry credentials (headers, tokens): log the names only
+      winston.debug("DirAiPrompt json.servers: " + (json.servers ? Object.keys(json.servers).join(",") : json.servers));
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -442,6 +443,9 @@ class DirAiPrompt {
 
     // never log the provider key
     const loggableJson = { ...json, llm_key: json.llm_key ? "***" : json.llm_key };
+    if (loggableJson.servers) {
+      loggableJson.servers = Object.keys(loggableJson.servers);
+    }
     if (loggableJson.model && typeof loggableJson.model === 'object') {
       loggableJson.model = { ...loggableJson.model };
       ['api_key', 'token'].forEach((k) => { if (loggableJson.model[k]) loggableJson.model[k] = "***"; });
