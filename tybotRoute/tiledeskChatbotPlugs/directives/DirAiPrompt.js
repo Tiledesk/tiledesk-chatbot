@@ -437,8 +437,14 @@ class DirAiPrompt {
       json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
-    winston.debug("DirAiPrompt json: ", json);
-    console.log("DirAiPrompt json: ", json);
+    // never log the provider key
+    const loggableJson = { ...json, llm_key: json.llm_key ? "***" : json.llm_key };
+    if (loggableJson.model && typeof loggableJson.model === 'object') {
+      loggableJson.model = { ...loggableJson.model };
+      ['api_key', 'token'].forEach((k) => { if (loggableJson.model[k]) loggableJson.model[k] = "***"; });
+    }
+    winston.debug("DirAiPrompt json: ", loggableJson);
+    console.log("DirAiPrompt json: ", loggableJson);
 
     const HTTPREQUEST = {
       url: AI_endpoint + apiEndpoint,
@@ -446,7 +452,7 @@ class DirAiPrompt {
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
+    winston.debug("DirAiPrompt HttpRequest: ", { ...HTTPREQUEST, json: loggableJson });
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
