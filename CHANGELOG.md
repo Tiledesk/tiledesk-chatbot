@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# 2.2.1
+# 2.3.0
 - Added support for Subagent with CallSubagent and ReturnStack actions
 
 # 2.2.0
