@@ -67,7 +67,7 @@ function mockServer(options, ready) {
     if (options.onStream) {
       options.onStream(req.body, calls);
     }
-    res.status(options.streamStatus || 202).send({ success: (options.streamStatus || 202) === 202 });
+    res.status(options.streamStatus || 202).send(options.streamBody || { success: (options.streamStatus || 202) === 202 });
   });
   server.post('/:projectId/requests/:requestId/messages', (req, res) => {
     calls.messages.push({ body: req.body, t: Date.now() });
@@ -79,7 +79,11 @@ function mockServer(options, ready) {
   const listener = server.listen(10002, '0.0.0.0', () => ready(listener, calls));
 }
 
-function sendToBot(requestId, channelName, text) {
+function sendToBot(requestId, channelName, text, attributes) {
+  if (attributes === undefined) {
+    // the connector marks relay calls; Gather calls on the same channel carry no marker
+    attributes = channelName === "voice_twilio" ? { voice_relay: true } : {};
+  }
   const request = {
     "payload": {
       "_id": uuidv4(),
@@ -90,6 +94,7 @@ function sendToBot(requestId, channelName, text) {
       "text": text,
       "id_project": PROJECT_ID,
       "metadata": "",
+      "attributes": attributes,
       "request": {
         "request_id": requestId,
         "channel": { "name": channelName }
@@ -208,6 +213,74 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
     }, (l) => {
       listener = l;
       sendToBot(requestId, "voice_twilio", "/kb");
+    });
+  }).timeout(10000);
+
+  it('does not stream a Gather call on the voice channel (no voice_relay marker)', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.ok(!calls.ask[0].body.stream, "stream requested for a Gather call");
+          assert.strictEqual(calls.stream.length, 0);
+          assert.strictEqual(spokenText(body), ANSWER);
+          assert.strictEqual(body.attributes.stream_id, undefined);
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kb", {});
+    });
+  }).timeout(10000);
+
+  it('a server without the stream route (404) does not stop the conversation', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      streamStatus: 404,
+      streamBody: "Cannot POST /projectID/requests/x/stream",
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.strictEqual(calls.stream.length, 1, "streaming must stop after the first 404");
+          assert.strictEqual(spokenText(body), ANSWER);
+          assert.strictEqual(body.attributes.stream_id, undefined);
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kb");
+    });
+  }).timeout(10000);
+
+  it('the route 404 for a closed request stops the flow', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    let replied = false;
+    mockServer({
+      streamStatus: 404,
+      streamBody: { success: false, msg: "Request not found or closed." },
+      onMessage: () => { replied = true; }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kb");
+      setTimeout(() => {
+        let error;
+        try {
+          assert.strictEqual(replied, false, "a closed request must not get the reply");
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }, 1500);
     });
   }).timeout(10000);
 
