@@ -223,6 +223,28 @@ class DirWebRequestV2 {
           reject("Error parsing formData");
         }
       }
+      else if (action.bodyType == "raw") {
+        const rawType = action.rawType || "json";
+        if (!action.jsonBody) {
+          resolve(null);
+          return;
+        }
+        let rawBody = filler.fill(action.jsonBody, requestAttributes);
+        if (rawType === "json") {
+          try {
+            let json = JSON.parse(rawBody);
+            resolve(json);
+          }
+          catch (err) {
+            winston.error("DirWebRequestV2 Error parsing webRequest raw jsonBody: " + JSON.stringify(rawBody) + "\nError: " + JSON.stringify(err));
+            reject("Error parsing jsonBody");
+          }
+        }
+        else {
+          // text | xml | html | javascript: raw string sent as-is, Content-Type comes from headers
+          resolve(rawBody);
+        }
+      }
       else {
         resolve(null);
       }

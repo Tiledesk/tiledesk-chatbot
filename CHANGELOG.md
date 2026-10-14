@@ -1,5 +1,30 @@
 # Tiledesk native chatbot
 
+# 2.2.0
+- Normalized custom headers in AiPrompt action 
+
+# 2.1.15
+- Added support for OpenRouter provider
+- Added support for Gemini Agent Platform
+
+# 2.1.13
+- Added mcp lock and mcp server
+
+# 2.1.12
+- Improved api key management from integration
+
+# 2.1.10
+- Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
+
+# 2.1.9 
+- Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
+
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
+# 2.1.5
+- Added action DirDataTables
 
 # 2.1.4
 - added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility

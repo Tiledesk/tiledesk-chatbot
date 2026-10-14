@@ -179,7 +179,8 @@ describe('Conversation for AskGPT test', async () => {
     });
   });
 
-  it('/gpt success (key from kbsettings) - invokes the askgpt mockup and test the returning attributes', (done) => {
+  it('/gpt success (key from shared GPTKEY) - invokes the askgpt mockup and test the returning attributes', (done) => {
+    process.env.GPTKEY = "sk-123456";
     let listener;
     let endpointServer = express();
     endpointServer.use(bodyParser.json());
@@ -241,12 +242,8 @@ describe('Conversation for AskGPT test', async () => {
       res.status(http_code).send(reply);
     })
 
-    endpointServer.get('/:project_id/kbsettings', function (req, res) {
-
-      let reply = { gptkey: "sk-123456" };
-      let http_code = 200;
-
-      res.status(http_code).send(reply);
+    endpointServer.get('/:project_id/quotes/:type', function (req, res) {
+      res.status(200).send({ isAvailable: true });
     });
 
     listener = endpointServer.listen(10002, '0.0.0.0', () => {

@@ -1,6 +1,7 @@
 # Load .env variables
 if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
+  # export $(grep -v '^#' .env | xargs)
+  export NPM_PUBLISH_TOKEN=$(grep '^NPM_PUBLISH_TOKEN=' .env | cut -d '=' -f2-)
 fi
 
 # Check if the token is set

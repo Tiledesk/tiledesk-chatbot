@@ -43,36 +43,6 @@ class KBService {
     })
   }
 
-  async getKeyFromKbSettings(id_project, token) {
-
-    return new Promise((resolve) => {
-      const http_request = {
-        url: API_ENDPOINT + "/" + id_project + "/kbsettings",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + token
-        },
-        method: "GET"
-      }
-      winston.debug("Kb HttpRequest", http_request);
-
-      httpUtils.request(
-        http_request, async (err, resbody) => {
-          if (err) {
-            winston.error("Error getting kb settings:", err?.response?.data);
-            resolve(null);
-          } else {
-            if (!resbody || !resbody.gptkey) {
-              resolve(null);
-            } else {
-              resolve(resbody.gptkey);
-            }
-          }
-        }
-      )
-    })
-  }
-
   async addUnansweredQuestion(id_project, data, token) {
     
     return new Promise((resolve, reject) => {
