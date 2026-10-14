@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.1
+- Added support for Subagent with CallSubagent and ReturnStack actions
+
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
 
