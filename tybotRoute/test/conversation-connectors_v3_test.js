@@ -108,6 +108,29 @@ describe('Conversation for V3 connectors (destinations from the bot connectors l
     });
   });
 
+  it('V3 with an empty list: /start follows the block dot still in the JSON, nothing is erased', (done) => {
+    converse("v3filledID", "/start", 1200, (texts) => {
+      assert.deepStrictEqual(texts, ["Start", "Block connected!"]);
+      done();
+    });
+  });
+
+  it('V3 with an empty list: /jump follows the intentName still in the JSON', (done) => {
+    converse("v3filledID", "/jump", 1200, (texts) => {
+      assert.deepStrictEqual(texts, ["Third reached!"]);
+      done();
+    });
+  });
+
+  it('V3 with an empty list: /menu sends the button action still in the JSON', (done) => {
+    converse("v3filledID", "/menu", 1500, (texts, buttons) => {
+      assert.deepStrictEqual(texts, ["Pick one"]);
+      assert.strictEqual(buttons[0][0].action, '#' + ids.THIRD_ID);
+      assert.strictEqual(buttons[0][1].action, undefined);
+      done();
+    });
+  });
+
   it('V2 control: /menu sends the buttons as they are in the JSON, without action', (done) => {
     converse("v2botID", "/menu", 1500, (texts, buttons) => {
       assert.deepStrictEqual(texts, ["Pick one"]);

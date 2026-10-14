@@ -153,8 +153,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] vllm integration not resolved: ", errorMsg);
         winston.error("Error: DirAiCondition vllm integration not resolved: " + errorMsg);
         await this.chatbot.addParameter("flowError", "AiCondition Error: " + errorMsg);
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -166,8 +166,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] llm key not found in vllm integration");
         winston.error("Error: DirAiCondition llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }

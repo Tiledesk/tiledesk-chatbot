@@ -11,11 +11,22 @@ const winston = require('./winston');
  * ha sempre letto. Per un agente che non e' V3, o che e' V3 ma non ha ancora la lista, non fa
  * nulla: resta la logica V2 di sempre, campi alla mano.
  *
+ * Regola (14/10/2026): la lista AGGIUNGE e SOSTITUISCE, non toglie. Un'uscita che ha un record
+ * nella lista prende quella destinazione; un'uscita senza record resta com'e' nel JSON del blocco
+ * (vuota se il Design Studio V3 l'ha ripulita, piena se il blocco viene da un flusso vecchio o da
+ * un import). Cosi' una lista vuota o incompleta non spegne mai un collegamento che il JSON porta
+ * ancora, e un record non puo' che aggiungere strada. Per lo stesso motivo nessun contenitore
+ * (`settings`, `nextBlockAction`) nasce se la lista non ha un record da metterci.
+ *
  * Anche i bottoni delle reply passano da qui (dal 12/10/2026 sera): nel JSON di un V3 il bottone
  * non porta piu' `action`; prima che la reply parta verso il widget, `button.action` viene
  * riempito dalla lista con `#id` piu' l'eventuale coda `{...}` di parametri (`props.params` del
  * record). Il widget riceve quello che riceveva. `DirReplyV2`, che alla seconda esecuzione
- * rilegge `button.action`, rilegge la reply gia' riempita.
+ * rilegge `button.action`, rilegge la reply gia' riempita. Un bottone senza record resta com'e'.
+ *
+ * Il pallino del blocco: se il JSON non porta piu' il descrittore `attributes.nextBlockAction`
+ * ma la lista ha il record del blocco (`kind: 'block'`), il descrittore nasce dal record, cosi'
+ * `addConnectAction` trova quello che ha sempre trovato.
  *
  * Il catalogo delle uscite e' la copia di `connectors/connector-catalog.ts` del Design Studio:
  * stessi tipi, stessi campi, stessi suffissi degli id. Se cambia di la', cambia anche qui.
@@ -26,6 +37,7 @@ const winston = require('./winston');
 
 const COLLECTION_VERSION = 1;
 const DS_VERSION_V3 = 'v3';
+const KIND_BLOCK = 'block';
 
 const field = (suffix, name) => ({ kind: 'field', suffix, field: name });
 const nested = (suffix, path) => ({ kind: 'nested', suffix, path });
@@ -75,7 +87,11 @@ const OUTPUT_CATALOG = {
   send_whatsapp:       TRUE_FALSE,
 };
 
-/** L'indice `fromId -> { toId, params }` di una lista, calcolato una volta per oggetto lista. */
+/**
+ * Gli indici di una lista, calcolati una volta per oggetto lista:
+ * `outputs`: `fromId -> { toId, params }` (una destinazione per uscita);
+ * `blocks`:  `intentId -> { toId, actionId }` per i record del pallino (`kind: 'block'`).
+ */
 const indexes = new WeakMap();
 
 class ConnectorsV3 {
@@ -104,13 +120,20 @@ class ConnectorsV3 {
     if (!collection) { return null; }
     let index = indexes.get(collection);
     if (index) { return index; }
-    index = new Map();
+    index = { outputs: new Map(), blocks: new Map() };
     for (const record of collection.items) {
       if (!record || typeof record.id !== 'string' || !record.to || !record.to.intentId) { continue; }
       const cut = record.id.lastIndexOf('/');
       if (cut <= 0) { continue; }
       const params = record.props && typeof record.props.params === 'string' && record.props.params !== '' ? record.props.params : null;
-      index.set(record.id.substring(0, cut), { toId: record.to.intentId, params });   // una destinazione per uscita
+      index.outputs.set(record.id.substring(0, cut), { toId: record.to.intentId, params });
+      if (record.kind === KIND_BLOCK) {
+        const parts = record.id.split('/');
+        const from = record.from && typeof record.from === 'object' ? record.from : {};
+        const intentId = from.intentId || parts[0];
+        const actionId = from.actionId || (parts.length === 3 ? parts[1] : null);
+        if (intentId && actionId && !index.blocks.has(intentId)) { index.blocks.set(intentId, { toId: record.to.intentId, actionId }); }
+      }
     }
     indexes.set(collection, index);
     return index;
@@ -119,9 +142,9 @@ class ConnectorsV3 {
   /**
    * Riscrive dalla lista i campi di destinazione del blocco che sta per essere eseguito: il
    * pallino (`attributes.nextBlockAction.intentName`) e ogni uscita delle action che il catalogo
-   * conosce. Un'uscita che la lista non ha viene svuotata; un valore senza `#` (un nome di blocco
-   * dei flussi vecchi) resta com'e'. Per un bot non V3, o senza lista, non tocca nulla.
-   * Restituisce quante uscite ha riscritto, o null se non ha lavorato.
+   * conosce. Un'uscita che la lista non ha resta com'e' (vuota o piena); un valore senza `#` (un
+   * nome di blocco dei flussi vecchi) resta com'e' anche con il record. Per un bot non V3, o
+   * senza lista, non tocca nulla. Restituisce quante uscite ha riscritto, o null se non ha lavorato.
    */
   static projectIntent(bot, intent) {
     if (!intent || !ConnectorsV3.isV3Bot(bot)) { return null; }
@@ -130,16 +153,14 @@ class ConnectorsV3 {
     const intentId = intent.intent_id;
     if (!intentId) { return null; }
     let rewritten = 0;
-    const next = intent.attributes && intent.attributes.nextBlockAction;
-    if (next && typeof next === 'object' && next._tdActionId) {
-      rewritten += write(next, 'intentName', index.get(intentId + '/' + next._tdActionId));
-    }
+    rewritten += projectBlockDot(index, intentId, intent);
     for (const action of intent.actions || []) {
       if (!action || typeof action !== 'object' || !action._tdActionId) { continue; }
       const specs = OUTPUT_CATALOG[action._tdActionType] || [];
       for (const spec of specs) {
-        for (const slot of resolve(spec, intentId, action)) {
-          rewritten += slot.button ? writeButton(slot.button, index.get(slot.fromId)) : write(slot.holder, slot.field, index.get(slot.fromId));
+        for (const slot of resolve(spec, intentId, action, index.outputs)) {
+          const entry = index.outputs.get(slot.fromId);
+          rewritten += slot.button ? writeButton(slot.button, entry) : write(slot.holder, slot.field, entry);
         }
       }
     }
@@ -148,31 +169,59 @@ class ConnectorsV3 {
   }
 }
 
-/** Le uscite di una action secondo una voce del catalogo: dove sta il campo e l'id dell'ancora. */
-function resolve(spec, intentId, action) {
+/**
+ * Il pallino del blocco. Con il descrittore (`_tdActionId`) l'uscita si riscrive dal record della
+ * sua ancora; senza descrittore, se la lista ha il record del blocco, il descrittore nasce da li'
+ * (`addConnectAction` lo accoda alle action come sempre). Un descrittore vecchio senza `_tdActionId`
+ * ma con un nome di blocco resta com'e'.
+ */
+function projectBlockDot(index, intentId, intent) {
+  const next = intent.attributes && intent.attributes.nextBlockAction;
+  if (next && typeof next === 'object' && next._tdActionId) {
+    return write(next, 'intentName', index.outputs.get(intentId + '/' + next._tdActionId));
+  }
+  const block = index.blocks.get(intentId);
+  if (!block) { return 0; }
+  if (next && typeof next === 'object' && typeof next.intentName === 'string' && next.intentName !== '') { return 0; }
+  if (!intent.attributes || typeof intent.attributes !== 'object') { intent.attributes = {}; }
+  intent.attributes.nextBlockAction = { _tdActionType: 'intent', _tdActionId: block.actionId, intentName: '#' + block.toId };
+  return 1;
+}
+
+/**
+ * Le uscite di una action secondo una voce del catalogo: dove sta il campo e l'id dell'ancora.
+ * Un contenitore che manca (`settings` della action o dell'ultimo comando) nasce solo se la lista
+ * ha un record per quell'uscita; altrimenti l'uscita non c'e' e il JSON resta com'e'.
+ */
+function resolve(spec, intentId, action, outputs) {
   const base = intentId + '/' + action._tdActionId;
   switch (spec.kind) {
     case 'field':
       return [{ holder: action, field: spec.field, fromId: base + spec.suffix }];
     case 'nested': {
+      const fromId = base + spec.suffix;
       let holder = action;
       for (let i = 0; i < spec.path.length - 1; i++) {
         if (holder[spec.path[i]] === undefined || holder[spec.path[i]] === null) {
-          // il campo annidato non c'e': se la lista ha una destinazione per questa uscita, la strada si crea
+          if (!outputs.has(fromId)) { return []; }
           holder[spec.path[i]] = {};
         }
         holder = holder[spec.path[i]];
         if (typeof holder !== 'object') { return []; }
       }
-      return [{ holder, field: spec.path[spec.path.length - 1], fromId: base + spec.suffix }];
+      return [{ holder, field: spec.path[spec.path.length - 1], fromId }];
     }
     case 'lastCommandSetting': {
+      const fromId = base + spec.suffix;
       const commands = action.attributes && action.attributes.commands;
       if (!Array.isArray(commands) || commands.length === 0) { return []; }
       const last = commands[commands.length - 1];
       if (!last || typeof last !== 'object') { return []; }
-      if (!last.settings || typeof last.settings !== 'object') { last.settings = {}; }
-      return [{ holder: last.settings, field: spec.field, fromId: base + spec.suffix }];
+      if (!last.settings || typeof last.settings !== 'object') {
+        if (!outputs.has(fromId)) { return []; }
+        last.settings = {};
+      }
+      return [{ holder: last.settings, field: spec.field, fromId }];
     }
     case 'buttons': {
       const out = [];
@@ -212,21 +261,15 @@ function findButtons(obj) {
 
 /**
  * Riempie `button.action` dalla lista (`#id` piu' la coda `{...}` del record) e rende il bottone
- * di tipo `action`; senza record, un bottone `action` torna di testo. Una coda gia' presente nel
- * bottone sopravvive se il record non ne ha una (lista scritta prima che la coda viaggiasse li').
+ * di tipo `action`; senza record il bottone resta com'e'. Una coda gia' presente nel bottone
+ * sopravvive se il record non ne ha una (lista scritta prima che la coda viaggiasse li').
  */
 function writeButton(button, entry) {
+  if (!entry) { return 0; }
   const current = typeof button.action === 'string' ? button.action : '';
   const brace = current.indexOf('{');
   const currentId = brace > -1 ? current.substring(0, brace) : current;
   const currentTail = brace > -1 ? current.substring(brace) : '';
-  if (!entry) {
-    if (button.type !== 'action' && current === '') { return 0; }
-    if (current !== '' && !currentId.startsWith('#')) { return 0; }   // un testo libero: non si tocca
-    button.action = '';
-    button.type = 'text';
-    return 1;
-  }
   const tail = entry.params !== null ? entry.params : (currentId === '#' + entry.toId ? currentTail : '');
   const value = '#' + entry.toId + tail;
   if (current === value && button.type === 'action') { return 0; }
@@ -235,17 +278,12 @@ function writeButton(button, entry) {
   return 1;
 }
 
-/** Scrive `#id` o svuota; restituisce 1 se ha cambiato qualcosa. */
+/** Scrive `#id` dal record; senza record, o su un nome di blocco dei flussi vecchi, non tocca nulla. Restituisce 1 se ha cambiato qualcosa. */
 function write(holder, field, entry) {
-  const toId = entry ? entry.toId : null;
+  if (!entry || !entry.toId) { return 0; }
   const current = typeof holder[field] === 'string' ? holder[field] : '';
-  if (!toId) {
-    if (current === '') { return 0; }
-    if (!current.startsWith('#')) { return 0; }   // un nome di blocco dei flussi vecchi: non si tocca
-    holder[field] = '';
-    return 1;
-  }
-  const value = '#' + toId;
+  if (current !== '' && !current.startsWith('#')) { return 0; }   // un nome di blocco dei flussi vecchi: non si tocca
+  const value = '#' + entry.toId;
   if (current === value) { return 0; }
   holder[field] = value;
   return 1;

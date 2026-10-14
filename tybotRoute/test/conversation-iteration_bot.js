@@ -79,4 +79,27 @@ const bots_data = {
 }
 bots_data.bots["botID"] = bot;
 
+// Lo stesso bot, V3, con il blocco "when the list is done" (`fallbackIntent`, 14/10/2026): dopo
+// l'ultimo elemento, o con una lista vuota, il motore esegue quel blocco. Il gemello senza
+// etichetta V3 (la console V2 mostra lo stesso campo) lo ignora come sempre.
+const DONE_ID = "00f93b97-89ee-466d-a09c-e47a18943059";
+const fallbackBot = JSON.parse(JSON.stringify(bot));
+fallbackBot.attributes = { "dsVersion": "v3" };
+fallbackBot.intents["iteration"].actions[0].fallbackIntent = "#" + DONE_ID;
+fallbackBot.intents_by_intent_id[fallbackBot.intents["iteration"].intent_id] = fallbackBot.intents["iteration"];
+const doneBlock = {
+	"webhook_enabled": false, "enabled": true, "language": "en",
+	"intent_display_name": "done_reply", "intent_id": DONE_ID, "form": {}, "question": "",
+	"actions": [{
+		"_tdActionType": "reply", "text": "Done",
+		"attributes": { "commands": [{ "type": "wait", "time": 100 }, { "type": "message", "message": { "type": "text", "text": "Done" } }] }
+	}]
+};
+fallbackBot.intents["done_reply"] = doneBlock;
+fallbackBot.intents_by_intent_id[DONE_ID] = doneBlock;
+bots_data.bots["fallbackBotID"] = fallbackBot;
+const fallbackV2Bot = JSON.parse(JSON.stringify(fallbackBot));
+delete fallbackV2Bot.attributes;
+bots_data.bots["fallbackV2BotID"] = fallbackV2Bot;
+
 module.exports = { bots_data: bots_data };
