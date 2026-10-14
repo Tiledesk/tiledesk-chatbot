@@ -8,8 +8,9 @@ const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
  * one at a time and in order, without blocking the caller (send() only queues).
  *
  * Before every chunk it checks the voice turn: when a newer caller message superseded it, nothing more is sent and
- * onStop("superseded") fires. 404 (request missing/closed) stops with onStop("closed"). Any other error (503: stream
- * not available) disables streaming for this answer: the complete message is still sent by the flow as usual.
+ * onStop("superseded") fires. The route's 404 (request missing/closed) stops with onStop("closed"). Any other error
+ * (503: stream not available; 404 of a server without the route) disables streaming for this answer: the complete
+ * message is still sent by the flow as usual.
  */
 class StreamSender {
 
@@ -80,7 +81,10 @@ class StreamSender {
       }
     } catch (err) {
       const status = err.response && err.response.status;
-      if (status === 404) {
+      const body = err.response && err.response.data;
+      // tiledesk-server's stream route answers 404 with this message when the request is missing or closed; any other
+      // 404 means the route does not exist (server without streaming): not a reason to stop the conversation
+      if (status === 404 && body && body.msg === "Request not found or closed.") {
         this.#stop("closed");
       } else {
         // never log err.config: it carries the Authorization header
