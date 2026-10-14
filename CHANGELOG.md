@@ -1,14 +1,9 @@
 # Tiledesk native chatbot
 
-# features-2610/connectors-v3 14/10/2026
-- V3 agents: the connectors list adds and replaces destinations but never removes them; an exit or a button with no record keeps what the block JSON carries, an empty list changes nothing, a missing block descriptor is rebuilt from the block record
-- V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list; agents without the V3 label are unchanged
-- Fixed: block jumps use the endpoint given at start-up (environment as fallback)
-- Fixed: AI Condition vLLM error path crashed on undeclared variables; it now goes to the error block
-
-# features-2610/connectors-v3 12/10/2026
-- V3 agents: reply buttons are filled from the bot connectors list before the reply is sent (`#id` plus the record params), so the agent JSON may carry buttons without `action`
-- V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs every exit is resolved from the list, so the action destination fields may be empty on the server; bots without the label or without the list run as before
+# 2.2.2-rc1
+- V3 agents (`attributes.dsVersion = 'v3'`): block exits and reply buttons are resolved from the connectors list in the bot attributes before a block runs; the list adds and replaces destinations but never removes what the block JSON carries. Bots without the label or the list run as before
+- V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list
+- Fixed: block jumps use the endpoint given at start-up (environment as fallback); the AI Condition vLLM error path no longer crashes and goes to the error block
 
 # 2.2.1
 - Added support for custom headers on vLLM servers
