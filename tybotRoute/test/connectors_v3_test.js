@@ -26,7 +26,7 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
       { _tdActionId: 'r1', _tdActionType: 'reply', attributes: { commands: [{ type: 'wait' }, { type: 'message', message: { attributes: { attachment: { buttons: [
         { uid: 'b1', type: 'action', value: 'Go' },                                  // ripulito: si riempie dalla lista
         { uid: 'b2', type: 'action', value: 'Params' },                              // idem, con la coda {...} dal record
-        { uid: 'b3', type: 'action', value: 'Old', action: '#' + C },                // senza record: torna di testo
+        { uid: 'b3', type: 'action', value: 'Old', action: '#' + C },                // senza record: resta com'e'
         { uid: 'b4', type: 'text', value: 'Solo testo' },                            // resta com'e'
         { uid: 'b5', type: 'url', value: 'Sito', link: 'https://x', action: '#' + C }, // url: mai toccato
         { uid: 'b6', type: 'action', value: 'Keep', action: '#' + A + '{"q":2}' },   // lista senza coda: la sua resta
@@ -64,10 +64,10 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     const bot = botV3([
       record(START + '/n/' + A, 'block'),
       record(START + '/tf/true/' + B),
-      // tf/false: non in lista -> si svuota
+      // tf/false: non in lista -> resta com'e' (#C)
       record(START + '/cb/' + C),
       record(START + '/multi/case/c1/' + A, 'case'),
-      // multi/case/c2: non in lista -> si svuota
+      // multi/case/c2: non in lista -> resta com'e' (#A)
       record(START + '/multi/else/' + B),
       record(START + '/ai/yes/true/' + C, 'branch'),
       record(START + '/ai/fallback/' + A),
@@ -85,16 +85,16 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     const intent = blocco();
     const rewritten = ConnectorsV3.projectIntent(bot, intent);
     assert.strictEqual(intent.attributes.nextBlockAction.intentName, '#' + A);
-    assert.deepStrictEqual([intent.actions[0].trueIntent, intent.actions[0].falseIntent], ['#' + B, '']);
+    assert.deepStrictEqual([intent.actions[0].trueIntent, intent.actions[0].falseIntent], ['#' + B, '#' + C]);
     assert.strictEqual(intent.actions[1].intentName, '#' + C);
-    assert.deepStrictEqual(intent.actions[2].cases.map(c => c.intent), ['#' + A, '']);
+    assert.deepStrictEqual(intent.actions[2].cases.map(c => c.intent), ['#' + A, '#' + A]);
     assert.strictEqual(intent.actions[2].elseIntent, '#' + B);
     assert.strictEqual(intent.actions[3].intents[0].conditionIntentId, '#' + C);
     assert.deepStrictEqual([intent.actions[3].fallbackIntent, intent.actions[3].errorIntent], ['#' + A, '']);
     // la reply v1: i bottoni si riempiono dalla lista (coda compresa), `settings.noInputIntent` nasce dalla lista
     const buttons = intent.actions[4].attributes.commands[1].message.attributes.attachment.buttons;
     assert.deepStrictEqual(buttons.map(b => [b.type, b.action]), [
-      ['action', '#' + B], ['action', '#' + C + '{"k":1}'], ['text', ''], ['text', undefined], ['url', '#' + C], ['action', '#' + A + '{"q":2}'],
+      ['action', '#' + B], ['action', '#' + C + '{"k":1}'], ['action', '#' + C], ['text', undefined], ['url', '#' + C], ['action', '#' + A + '{"q":2}'],
     ]);
     assert.strictEqual(intent.actions[4].settings.noInputIntent, '#' + B);
     assert.strictEqual(intent.actions[4].settings.noMatchIntent, undefined);
@@ -110,7 +110,7 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     assert.strictEqual(intent.actions[9].attributes.commands[0].settings, undefined);
     // senza _tdActionId: intatta
     assert.strictEqual(intent.actions[10].intentName, '');
-    assert.strictEqual(rewritten, 19);   // 16 di prima + b1, b2 riempiti e b3 tornato di testo
+    assert.strictEqual(rewritten, 16);   // 14 campi dalla lista + b1, b2 riempiti; b3 e le uscite senza record restano com'erano
     // un secondo passaggio non cambia piu' nulla
     assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 0);
   });
@@ -121,5 +121,53 @@ describe('ConnectorsV3 - le destinazioni dei blocchi V3 dalla lista del bot', fu
     assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 1);
     assert.strictEqual(intent.actions[0].intentName, '#' + B);
     assert.strictEqual(ConnectorsV3.projectIntent(bot, { actions: [] }), null);
+  });
+
+  it("la lista aggiunge e sostituisce, non toglie: lista vuota o senza il record, il campo resta com'e'", () => {
+    const intent = blocco();
+    const before = JSON.stringify(intent);
+    const empty = botV3([]);
+    assert.strictEqual(ConnectorsV3.usesCollection(empty), true);
+    assert.strictEqual(ConnectorsV3.projectIntent(empty, intent), 0);
+    assert.strictEqual(JSON.stringify(intent), before);
+    // una lista che conosce una sola uscita tocca solo quella
+    const one = botV3([record(START + '/cb/' + A)]);
+    assert.strictEqual(ConnectorsV3.projectIntent(one, intent), 1);
+    assert.strictEqual(intent.actions[1].intentName, '#' + A);
+    assert.deepStrictEqual([intent.actions[0].trueIntent, intent.actions[0].falseIntent], ['', '#' + C]);
+    assert.deepStrictEqual(intent.actions[4].attributes.commands[1].message.attributes.attachment.buttons.map(b => [b.type, b.action]), [
+      ['action', undefined], ['action', undefined], ['action', '#' + C], ['text', undefined], ['url', '#' + C], ['action', '#' + A + '{"q":2}'],
+    ]);
+    assert.strictEqual(intent.attributes.nextBlockAction.intentName, '');
+  });
+
+  it("senza record non nascono `settings` di comodo, ne' nella action ne' nei comandi", () => {
+    const bot = botV3([record(START + '/r1/b1/' + B, 'button'), record(START + '/voice/noMatch/' + A)]);
+    const intent = blocco();
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 3);
+    assert.strictEqual(intent.actions[4].settings, undefined);               // reply v1: nessun record noInput/noMatch
+    assert.strictEqual(intent.actions[9].settings.noMatchIntent, '#' + A);    // dtmf: record noMatch -> settings nasce
+    assert.strictEqual(intent.actions[9].settings.noInputIntent, undefined);
+    assert.deepStrictEqual(intent.actions[9].attributes.commands[1].settings, { noMatchIntent: '#' + A });
+    assert.strictEqual(intent.actions[9].attributes.commands[0].settings, undefined);
+  });
+
+  it('il pallino: se il descrittore manca ma la lista ha il record del blocco, nasce dal record', () => {
+    const bot = botV3([record(START + '/n/' + A, 'block')]);
+    const intent = { intent_id: START, actions: [], attributes: {} };
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 1);
+    assert.deepStrictEqual(intent.attributes.nextBlockAction, { _tdActionType: 'intent', _tdActionId: 'n', intentName: '#' + A });
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, intent), 0);
+    const bare = { intent_id: START, actions: [] };
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, bare), 1);
+    assert.strictEqual(bare.attributes.nextBlockAction.intentName, '#' + A);
+    // un descrittore vecchio, senza _tdActionId ma con un nome, non si tocca
+    const legacy = { intent_id: START, actions: [], attributes: { nextBlockAction: { _tdActionType: 'intent', intentName: 'Nome di blocco' } } };
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, legacy), 0);
+    assert.strictEqual(legacy.attributes.nextBlockAction.intentName, 'Nome di blocco');
+    // senza il record del blocco non nasce nulla
+    const none = { intent_id: B, actions: [], attributes: {} };
+    assert.strictEqual(ConnectorsV3.projectIntent(bot, none), 0);
+    assert.strictEqual(none.attributes.nextBlockAction, undefined);
   });
 });

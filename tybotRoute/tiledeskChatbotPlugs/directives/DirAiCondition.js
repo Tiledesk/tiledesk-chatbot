@@ -148,8 +148,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] Error getting vllm integration.");
         winston.error("DirAiCondition Error getting vllm integration");
         await this.chatbot.addParameter("flowError", "Vllm integration not found");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
@@ -163,8 +163,8 @@ class DirAiCondition {
         if (!filled_vllm_server) {
           this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
           await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -175,8 +175,8 @@ class DirAiCondition {
         if (!vllm_server_config) {
           this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          if (errorIntent) {
+            await this.#executeIntent(errorIntent);
             callback(true);
             return;
           }
@@ -192,8 +192,8 @@ class DirAiCondition {
         this.logger.error("[AI Condition] llm key not found in vllm integration");
         winston.error("Error: DirAiCondition llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        if (errorIntent) {
+          await this.#executeIntent(errorIntent);
           callback(true);
           return;
         }
