@@ -20,6 +20,7 @@ app.use((err, req, res, next) => {
 });
 
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const {
   bots_data,
@@ -188,7 +189,7 @@ describe('Conversation for CallSubAgent test', async () => {
     });
   });
 
-  it('does not run defaultFallback on the trigger text or a subagent bubble after return', (done) => {
+  it('does not run defaultFallback on a subagent bubble after return', (done) => {
     const requestId = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
     const invokeIntentId = "10000000-0000-0000-0000-000000000001";
     let listener;
@@ -224,19 +225,6 @@ describe('Conversation for CallSubAgent test', async () => {
       }
       replayed = true;
 
-      const triggerReplay = {
-        payload: {
-          _id: uuidv4(),
-          senderFullname: "guest#367e",
-          type: "text",
-          sender: "A-SENDER",
-          recipient: requestId,
-          text: "run task",
-          id_project: PROJECT_ID,
-          request: { request_id: requestId, id_project: PROJECT_ID }
-        },
-        token: CHATBOT_TOKEN
-      };
       const botBubble = {
         payload: {
           _id: uuidv4(),
@@ -251,14 +239,12 @@ describe('Conversation for CallSubAgent test', async () => {
         token: CHATBOT_TOKEN
       };
 
-      tilebotService.sendMessageToBot(triggerReplay, PARENT_BOT_ID, () => {
-        tilebotService.sendMessageToBot(botBubble, PARENT_BOT_ID, () => {
-          setTimeout(() => {
-            const texts = messageReceived.map(getUserVisibleText).filter(Boolean);
-            assert.ok(!texts.includes("FALLBACK"), "defaultFallback must not run after subagent return");
-            listener.close(() => done());
-          }, 500);
-        });
+      tilebotService.sendMessageToBot(botBubble, PARENT_BOT_ID, () => {
+        setTimeout(() => {
+          const texts = messageReceived.map(getUserVisibleText).filter(Boolean);
+          assert.ok(!texts.includes("FALLBACK"), "defaultFallback must not run after subagent return");
+          listener.close(() => done());
+        }, 500);
       });
     });
 
@@ -276,6 +262,65 @@ describe('Conversation for CallSubAgent test', async () => {
           request: { request_id: requestId, id_project: PROJECT_ID }
         },
         token: CHATBOT_TOKEN
+      };
+      tilebotService.sendMessageToBot(request, PARENT_BOT_ID, () => {});
+    });
+  });
+
+  it('returns the participant bot of the token, not the published copy running the flow', (done) => {
+    const requestId = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
+    const DEV_PARENT_BOT_ID = "devParentBotID";
+    const devParentToken = jwt.sign({ _id: DEV_PARENT_BOT_ID }, "test-secret", { subject: "bot" });
+    let listener;
+    let endpointServer = express();
+    let messageReceived = [];
+    let replacedIds = [];
+    let activeBotId = PARENT_BOT_ID;
+
+    endpointServer.use(bodyParser.json());
+    endpointServer.put('/:projectId/requests/:requestId/replace', function (req, res) {
+      if (req.body.id) {
+        activeBotId = req.body.id;
+        replacedIds.push(req.body.id);
+      }
+      res.send({ success: true, replaced_bot_root_id: req.body.id });
+    });
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      const message = req.body;
+      messageReceived.push(message);
+
+      if (isInternalTrigger(message)) {
+        tilebotService.sendMessageToBot(
+          buildTilebotRequest(message.text, requestId),
+          activeBotId,
+          () => {}
+        );
+        return;
+      }
+
+      const userMessages = messageReceived.map(getUserVisibleText).filter(Boolean);
+      if (!userMessages.includes("Subagent returned to the parent")) {
+        return;
+      }
+
+      assert.deepStrictEqual(replacedIds, [SUBAGENT_BOT_ID, DEV_PARENT_BOT_ID]);
+      listener.close(() => done());
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      const request = {
+        payload: {
+          _id: uuidv4(),
+          senderFullname: "guest#367e",
+          type: "text",
+          sender: "A-SENDER",
+          recipient: requestId,
+          text: '/invoke_subagent',
+          id_project: PROJECT_ID,
+          request: { request_id: requestId, id_project: PROJECT_ID }
+        },
+        token: devParentToken
       };
       tilebotService.sendMessageToBot(request, PARENT_BOT_ID, () => {});
     });

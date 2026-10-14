@@ -1,6 +1,5 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
-const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { Filler } = require('../Filler');
 
 const axios = require("axios").default;
@@ -11,6 +10,7 @@ const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
+const jwt = require('jsonwebtoken');
 
 class DirCallSubagent {
 
@@ -70,25 +70,23 @@ class DirCallSubagent {
 
     const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
     const intentAction = this.context.reply.actions.find(action => action._tdActionType === "intent");
-    const triggerText = await TiledeskChatbot.getParameterStatic(
-      this.context.tdcache,
-      this.requestId,
-      TiledeskChatbotConst.REQ_LAST_USER_TEXT_v2_KEY
-    );
 
-    winston.info("(DirCallSubAgent) push " + JSON.stringify({
+    const parentId = this.context.chatbot?.botId;
+    const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
+
+    winston.info("(DirCallSubagent) push " + JSON.stringify({
       requestId: this.requestId,
-      parentId: this.context.chatbot?.botId,
+      parentId: parentId,
+      parentParticipantId: parentParticipantId,
       targetBotId: botId,
       blockName: blockName,
-      triggerText: triggerText,
       nextBlock: intentAction && intentAction.intentName
     }));
     const stackData = {
-      parentId: this.context.chatbot?.botId,
+      parentId: parentId,
+      parentParticipantId: parentParticipantId,
       parentToken: this.context.token,
-      nextBlock: intentAction,
-      triggerText: triggerText
+      nextBlock: intentAction
     }
     await subagentStack.push(this.requestId, stackData);
 
@@ -161,6 +159,20 @@ class DirCallSubagent {
     }
   }
 
+}
+
+// The bot JWT is signed for the bot that is a participant of the request. After a publish
+// that is the development bot, while chatbot.botId is the published copy running the flow.
+function participantBotIdFromToken(token) {
+  if (!token || typeof token !== 'string') {
+    return null;
+  }
+  const raw = token.startsWith('JWT ') ? token.slice(4) : token;
+  const payload = jwt.decode(raw);
+  if (!payload || payload.sub !== 'bot' || !payload._id) {
+    return null;
+  }
+  return String(payload._id);
 }
 
 module.exports = { DirCallSubagent };

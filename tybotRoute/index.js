@@ -37,8 +37,6 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
-const { SubagentStack } = require('./tiledeskChatbotPlugs/SubagentStack.js');
-const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
 
 let API_ENDPOINT = null;
 let API_URL = null;
@@ -108,26 +106,6 @@ router.post('/ext/:botid', async (req, res) => {
     return;
   }
 
-  const subagentStack = new SubagentStack({ tdCache: tdcache });
-  const consumedTriggerText = await subagentStack.getConsumedTriggerMessage(requestId);
-  winston.info("(tybotRoute) subagent gate " + JSON.stringify({
-    botId: botId,
-    requestId: requestId,
-    text: message.text,
-    consumedTriggerText: consumedTriggerText,
-    sender: message.sender
-  }));
-  if (
-    consumedTriggerText &&
-    message.text === consumedTriggerText &&
-    message.sender !== "_tdinternal" &&
-    !(message.attributes && message.attributes.action)
-  ) {
-    winston.info("(tybotRoute) skip re-delivered trigger " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text }));
-    await subagentStack.clearConsumedTriggerMessage(requestId);
-    return;
-  }
-
   let botsDS;
   if (!staticBots) {
     botsDS = new MongodbBotsDataSource({projectId: projectId, botId: botId});
@@ -180,7 +158,25 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
   }
-  
+
+  // Streaming channels (voice): this caller message starts a new turn; a turn still running stops at its next step.
+  // Only for calls the connector marks as relay (attributes.voice_relay): Gather calls on the same channel are untouched.
+  let turnId;
+  if (message._id && TiledeskChatbot.isStreamingChannel(message.request.channel && message.request.channel.name) &&
+      message.attributes && message.attributes.voice_relay === true &&
+      message.sender !== "_tdinternal" && message.attributes.subtype !== "info") {
+    turnId = message._id;
+    try {
+      await TiledeskChatbot.setCurrentTurn(tdcache, requestId, turnId);
+      winston.verbose("(tybotRoute) voice turn " + turnId + " on " + requestId);
+      // timing for local/measure (the chatbot log has no timestamps)
+      winston.info("[VoiceTiming] " + requestId + " " + turnId + " ext " + Date.now());
+    } catch (e) {
+      winston.error("(tybotRoute) Error setting the voice turn: ", e);
+      turnId = undefined;
+    }
+  }
+
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
@@ -212,10 +208,11 @@ router.post('/ext/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-          cache: tdcache
+          cache: tdcache,
+          turnId: turnId
         }
       );
-      
+
       await directivesPlug.processDirectives();
       winston.verbose("(tybotRoute) Actions - Directives executed.");
     }
@@ -418,7 +415,9 @@ router.post('/exec/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-          cache: tdcache
+          cache: tdcache,
+          // voice turn carried by DirIntent across block jumps
+          turnId: message.voice_turn_id
         }
       );
       await directivesPlug.processDirectives();
