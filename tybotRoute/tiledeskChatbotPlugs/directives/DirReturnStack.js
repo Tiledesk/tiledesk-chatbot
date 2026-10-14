@@ -49,7 +49,7 @@ class DirReturnStack {
         }
         const parentParticipantId = data.parentParticipantId || data.parentId;
         try {
-            winston.info("(DirReturnStack) pop " + JSON.stringify({
+            winston.debug("(DirReturnStack) pop " + JSON.stringify({
                 requestId: this.requestId,
                 parentId: data.parentId,
                 parentParticipantId: parentParticipantId,

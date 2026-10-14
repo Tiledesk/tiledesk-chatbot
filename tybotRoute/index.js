@@ -61,16 +61,6 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  winston.info("(tybotRoute) inbound " + JSON.stringify({
-    botId: botId,
-    requestId: requestId,
-    text: message.text,
-    sender: message.sender,
-    senderFullname: message.senderFullname,
-    subtype: message.attributes && message.attributes.subtype,
-    action: message.attributes && message.attributes.action,
-    participants: message.request && message.request.participants
-  }));
 
   // adding info for internal context workflow
   message.request.bot_id = botId;

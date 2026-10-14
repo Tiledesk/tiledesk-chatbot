@@ -74,7 +74,7 @@ class DirCallSubAgent {
     const parentId = this.context.chatbot?.botId;
     const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
 
-    winston.info("(DirCallSubAgent) push " + JSON.stringify({
+    winston.debug("(DirCallSubAgent) push " + JSON.stringify({
       requestId: this.requestId,
       parentId: parentId,
       parentParticipantId: parentParticipantId,
