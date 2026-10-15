@@ -756,6 +756,20 @@ class TiledeskChatbot {
     const channels = (process.env.STREAM_CHANNELS || "voice_twilio").split(",").map(c => c.trim());
     return channels.includes(channelName);
   }
+
+  /**
+   * The caller's message belongs to a call the voice connector speaks with ConversationRelay: streaming channel AND
+   * the request attribute voice_stream (set by the connector on /start, the request's first message), or the previous
+   * per-message marker voice_relay (accepted for this release). Gather calls carry neither: unchanged behaviour.
+   */
+  static isVoiceStreamMessage(message) {
+    if (!message || !message.request || !TiledeskChatbot.isStreamingChannel(message.request.channel && message.request.channel.name)) {
+      return false;
+    }
+    const requestAttributes = message.request.attributes || {};
+    const attributes = message.attributes || {};
+    return requestAttributes.voice_stream === true || attributes.voice_relay === true;
+  }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
     winston.verbose("(TiledeskChatbot) static_bot_answer.attributes.webhook:" + static_bot_answer.attributes.webhook);

@@ -160,11 +160,11 @@ router.post('/ext/:botid', async (req, res) => {
   }
 
   // Streaming channels (voice): this caller message starts a new turn; a turn still running stops at its next step.
-  // Only for calls the connector marks as relay (attributes.voice_relay): Gather calls on the same channel are untouched.
+  // Only for calls the connector streams (request attribute voice_stream, or the previous marker voice_relay):
+  // Gather calls on the same channel are untouched.
   let turnId;
-  if (message._id && TiledeskChatbot.isStreamingChannel(message.request.channel && message.request.channel.name) &&
-      message.attributes && message.attributes.voice_relay === true &&
-      message.sender !== "_tdinternal" && message.attributes.subtype !== "info") {
+  if (message._id && TiledeskChatbot.isVoiceStreamMessage(message) &&
+      message.sender !== "_tdinternal" && !(message.attributes && message.attributes.subtype === "info")) {
     turnId = message._id;
     try {
       await TiledeskChatbot.setCurrentTurn(tdcache, requestId, turnId);
