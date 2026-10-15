@@ -8,11 +8,10 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
-const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
-const jwt = require('jsonwebtoken');
+const { pushCallerSnapshot } = require('../pushCallerSnapshot');
 
-class DirCallSubAgent {
+class DirCallSubagent {
 
   constructor(context) {
     if (!context) {
@@ -34,7 +33,7 @@ class DirCallSubAgent {
     }
     else {
       this.logger.error("Incorrect action for ", directive.name, directive)
-      winston.warn("DirCallSubAgent Incorrect directive: ", directive);
+      winston.warn("DirCallSubagent Incorrect directive: ", directive);
       callback();
       return;
     }
@@ -45,7 +44,7 @@ class DirCallSubAgent {
   }
 
   async go(action, callback) {
-    winston.debug("(DirCallSubAgent) Action: ", action);
+    winston.debug("(DirCallSubagent) Action: ", action);
     let botId = action.botId;
     let botSlug = action.botSlug;
     let useSlug = action.useSlug;
@@ -68,28 +67,12 @@ class DirCallSubAgent {
       data.id = botId;
     }
 
-    const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
-    const intentAction = this.context.reply.actions.find(action => action._tdActionType === "intent");
-
-    const parentId = this.context.chatbot?.botId;
-    const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
-
-    winston.debug("(DirCallSubAgent) push " + JSON.stringify({
-      requestId: this.requestId,
-      parentId: parentId,
-      parentParticipantId: parentParticipantId,
+    const { subagentStack } = await pushCallerSnapshot(this.context, "DirCallSubAgent", {
       targetBotId: botId,
-      blockName: blockName,
-      nextBlock: intentAction && intentAction.intentName
-    }));
-    const stackData = {
-      parentId: parentId,
-      parentParticipantId: parentParticipantId,
-      parentToken: this.context.token,
-      nextBlock: intentAction
-    }
-    await subagentStack.push(this.requestId, stackData);
+      blockName: blockName
+    });
 
+    console.log("Context token before replaceBot: ", this.context.token);
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
       if (this.context.chatbot?.bot.root_id) {
@@ -102,7 +85,7 @@ class DirCallSubAgent {
       }
     } catch (error) {
       await subagentStack.pop(this.requestId);
-      winston.error("(DirCallSubAgent) error: ", error);
+      winston.error("(DirCallSubagent) error: ", error);
       this.logger.error("(ReplaceBot) Invoke subagent error: ", error);
       if (callback) {
         callback(true);
@@ -111,7 +94,6 @@ class DirCallSubAgent {
     }
 
     if (blockName) {
-      winston.debug("(DirCallSubAgent) Sending hidden /start message to bot in dept");
       const message = {
         type: "text",
         text: "/" + blockName,
@@ -119,34 +101,46 @@ class DirCallSubAgent {
           subtype: "info"
         }
       }
+      winston.info("(DirCallSubagent) sendSupportMessage request " + JSON.stringify({
+        requestId: this.requestId,
+        apiEndpoint: this.API_ENDPOINT,
+        targetBotId: botId,
+        text: message.text,
+        subtype: message.attributes.subtype
+      }));
+      const started = Date.now();
       this.tdClient.sendSupportMessage(
         this.requestId,
-        message, (err) => {
+        message, (err, result) => {
           if (err) {
-            winston.debug("(DirCallSubAgent) Error sending hidden message: " + err.message);
+            winston.error("(DirCallSubagent) sendSupportMessage failed " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              message: err.message,
+              status: err.response && err.response.status
+            }));
+          }
+          else {
+            winston.info("(DirCallSubagent) sendSupportMessage response " + JSON.stringify({
+              requestId: this.requestId,
+              text: message.text,
+              duration_ms: Date.now() - started,
+              messageId: result && (result._id || result.id)
+            }));
           }
           callback(true);
         });
     }
     else {
+      winston.info("(DirCallSubagent) no blockName, skip hidden message " + JSON.stringify({
+        requestId: this.requestId,
+        targetBotId: botId
+      }));
       callback();
     }
   }
 
-}
-
-// The bot JWT is signed for the bot that is a participant of the request. After a publish
-// that is the development bot, while chatbot.botId is the published copy running the flow.
-function participantBotIdFromToken(token) {
-  if (!token || typeof token !== 'string') {
-    return null;
-  }
-  const raw = token.startsWith('JWT ') ? token.slice(4) : token;
-  const payload = jwt.decode(raw);
-  if (!payload || payload.sub !== 'bot' || !payload._id) {
-    return null;
-  }
-  return String(payload._id);
 }
 
 module.exports = { DirCallSubAgent };

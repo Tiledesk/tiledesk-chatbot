@@ -7,20 +7,29 @@ available on:
 
 
 # features-2610/v3-fields 15/10/2026
-- changed: the bot model knows `ds_version` and `connectors`, the two fields the server stores for V3 agents since 2.30.0; the Mongo data source loads the connectors list explicitly (not selected by default on the server) and the mock data source hands both fields over. Agents without the label are untouched
+- changed: V3 agents — `ds_version` and `connectors` are fields of the bot (server 2.30.0): the model knows them, the data sources load the connectors list and hand both over; agents without the label are untouched
 
 # features-2610/connectors-v3 14/10/2026
 - changed: V3 agents — the connectors list adds and replaces destinations but never removes them: an exit or a button with no record keeps what the block JSON carries, an empty list changes nothing, no empty settings or block descriptor is created without a record, and a missing block descriptor is rebuilt from the block record
-- added: V3 agents — Iteration runs the "when the list is done" block after the last item, or at once with an empty list; agents without the V3 label keep ignoring that field as before
+- added: V3 agents — Iteration runs the "when the list is done" block after the last item, or at once with an empty list; agents without the V3 label keep ignoring that field and go on from the block's exit as before
 - fixed: block jumps use the endpoint given at start-up, with the environment as fallback (the same value as before in every current deployment)
-- fixed: AI Condition — the vLLM error paths (integration, server or key missing) referenced undeclared variables and crashed the action; they now go to the error block like every other error
+- fixed: AI Condition — the vLLM error path (integration or key not resolved) referenced undeclared variables and crashed the action; it now goes to the error block like every other error
 
-# features-2610/connectors-v3 12/10/2026
-- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; bots without the V3 label or without the list are untouched
-- added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server. Bots without the version label or without the list run exactly as before
+# 2.2.1-rc16
+- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
 
-# main 23/07/2026
+# 2.2.1-rc15
+- added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server; reply buttons are unchanged. Bots without the version label or without the list run exactly as before
+
+# 2.2.1-rc12
+- fixed: Iteration — an empty, missing or unreadable list, a missing "Go to block" or an error on an element no longer stop the conversation: the flow goes on from the block's exit, as when the list is done
+- fixed: Iteration — a loop left unfinished is not resumed by a later run on a different list: it starts over
+
+# 2.2.0-rc22
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+
+# 2.2.0-rc9
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
 
 # 2.1.0
 - added: support to analytics
@@ -39,6 +48,9 @@ available on:
 
 # 2.0.26
 
+# 2.0.26-rc1
+- added: check and skip private message from internal-notes
+
 # 2.0.9
 
 # 2.0.9-rc1
@@ -54,6 +66,8 @@ available on:
 
 # v0.5.0
 - added: AI_ENDPOINT env var
+
+# v0.5.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # v0.4.2
@@ -68,6 +82,19 @@ available on:
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
+# v0.3.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# v0.3.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # v0.3.4
 -bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -76,6 +103,18 @@ available on:
 
 # v0.3.2
 - bug-fixed: minor improvement
+
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
 
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini

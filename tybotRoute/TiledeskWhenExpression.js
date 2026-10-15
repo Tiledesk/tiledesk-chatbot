@@ -388,6 +388,11 @@ const DEFAULT_FUNCTIONS = {
   },
   isNull: (a) => a === null,
   isUndefined: (a) => a === undefined,
+  // exists: has a value at all. Deliberately stricter than !isUndefined, which the design
+  // studio used to send for this: a variable explicitly set to null holds no value, and saying
+  // it exists made "exists" and "is null" both true on it. `isNull` and `isUndefined` are still
+  // there for whoever needs to tell the two apart.
+  exists: (a) => a !== null && a !== undefined,
 
   // --- Date / time (ISO-8601; any invalid/missing date -> false) ---------
   dateEqual: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() === y.getTime(); },
@@ -408,9 +413,21 @@ const DEFAULT_FUNCTIONS = {
     return arr.some((el) => String(el) === String(b));
   },
   // length: array element count, or string character length, otherwise 0.
+  //
+  // A list reaching a flow -- from a web request, a data table, a knowledge base -- is held in a
+  // variable as JSON text, so the array branch above was almost never the one taken and
+  // `["a","b"]` counted as nine characters rather than two items. `arrayContains` reads that
+  // same value as a list; leaving `length` reading it as text meant one operator saw a list and
+  // its neighbour in the very same "Array" group saw a string.
+  //
+  // Text that merely looks like a list is now measured in items, which is the reading every
+  // caller asks for: `length()` is emitted only by the length operators of that group.
   length: (a) => {
     if (Array.isArray(a)) return a.length;
-    if (typeof a === 'string') return a.length;
+    if (typeof a === 'string') {
+      try { const parsed = JSON.parse(a); if (Array.isArray(parsed)) return parsed.length; } catch (e) { /* not a JSON array */ }
+      return a.length;
+    }
     return 0;
   },
 
