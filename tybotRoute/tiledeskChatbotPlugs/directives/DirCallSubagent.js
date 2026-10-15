@@ -143,4 +143,4 @@ class DirCallSubagent {
 
 }
 
-module.exports = { DirCallSubAgent };
+module.exports = { DirCallSubagent };

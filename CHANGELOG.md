@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# features-2610/v3-fields 15/10/2026
+# 2.3.0-rc1
 - V3 agents: `ds_version` and `connectors` are read as fields of the bot (as the server stores them since 2.30.0), no longer from `attributes`; the bot is loaded with its connectors list. Agents without the label are unchanged
 
 # 2.3.0
