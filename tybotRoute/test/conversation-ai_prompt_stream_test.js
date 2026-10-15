@@ -79,10 +79,13 @@ function mockServer(options, ready) {
   const listener = server.listen(10002, '0.0.0.0', () => ready(listener, calls));
 }
 
-function sendToBot(requestId, channelName, text, attributes) {
+function sendToBot(requestId, channelName, text, attributes, requestAttributes) {
   if (attributes === undefined) {
-    // the connector marks relay calls; Gather calls on the same channel carry no marker
-    attributes = channelName === "voice_twilio" ? { voice_relay: true } : {};
+    attributes = {};
+  }
+  if (requestAttributes === undefined) {
+    // the connector marks relay calls on /start (request attribute); Gather calls on the same channel carry no marker
+    requestAttributes = channelName === "voice_twilio" ? { voice_stream: true } : {};
   }
   const request = {
     "payload": {
@@ -97,7 +100,8 @@ function sendToBot(requestId, channelName, text, attributes) {
       "attributes": attributes,
       "request": {
         "request_id": requestId,
-        "channel": { "name": channelName }
+        "channel": { "name": channelName },
+        "attributes": requestAttributes
       }
     },
     "token": "XXX"
@@ -216,7 +220,28 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
     });
   }).timeout(10000);
 
-  it('does not stream a Gather call on the voice channel (no voice_relay marker)', (done) => {
+  it('streams a relay call marked only with the previous per-message marker (voice_relay)', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.ok(calls.ask[0].body.stream, "stream not requested for a voice_relay call");
+          assert.ok(calls.stream.length > 0, "no chunk streamed");
+          assert.ok(body.attributes.stream_id, "final message not tied to the stream");
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kb", { voice_relay: true }, {});
+    });
+  }).timeout(10000);
+
+  it('does not stream a Gather call on the voice channel (no voice_stream / voice_relay marker)', (done) => {
     const requestId = newRequestId();
     let listener;
     mockServer({
@@ -234,7 +259,7 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
       }
     }, (l) => {
       listener = l;
-      sendToBot(requestId, "voice_twilio", "/kb", {});
+      sendToBot(requestId, "voice_twilio", "/kb", {}, {});
     });
   }).timeout(10000);
 
