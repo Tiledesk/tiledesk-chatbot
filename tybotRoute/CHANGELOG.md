@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# features-2610/v3-fields 15/10/2026
+- changed: the bot model knows `ds_version` and `connectors`, the two fields the server stores for V3 agents since 2.30.0; the Mongo data source loads the connectors list explicitly (not selected by default on the server) and the mock data source hands both fields over. Agents without the label are untouched
+
 # this branch
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
 

@@ -12,7 +12,8 @@ class MongodbBotsDataSource {
   }
   
   async getBotById(botId) {
-    const bot = await Faq_kb.findById(botId).select('+secret').exec();
+    // `connectors` (V3 agents) is not selected by default on the server's schema: ask for it.
+    const bot = await Faq_kb.findById(botId).select('+secret +connectors').exec();
     if (bot) {
       return bot;
     }

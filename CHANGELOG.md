@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# features-2610/v3-fields 15/10/2026
+- V3 agents: the version label and the connectors list are read from two fields of the bot, `ds_version` and `connectors`, as the server stores them since 2.30.0; the engine model knows them and the bot is loaded with the connectors list, which the server does not return by default. Agents without the label are untouched
+
 # 2.3.0
 - Added support for Subagent with CallSubagent and ReturnStack actions
 
