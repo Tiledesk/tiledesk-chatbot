@@ -19,7 +19,8 @@ class MockBotsDataSource {
           webhook_enabled: source.webhook_enabled,
           webhook_url: source.webhook_url,
           language: source.language,
-          name: source.name
+          name: source.name,
+          attributes: source.attributes
         }
         // V3 agents: the version label and the connectors list are fields of the bot.
         if (source.ds_version !== undefined) { bot.ds_version = source.ds_version; }
