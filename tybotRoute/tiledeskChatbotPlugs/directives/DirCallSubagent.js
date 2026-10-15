@@ -8,9 +8,8 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
-const { SubagentStack } = require('../SubagentStack');
 const requestService = require('../../services/RequestService');
-const jwt = require('jsonwebtoken');
+const { pushCallerSnapshot } = require('../pushCallerSnapshot');
 
 class DirCallSubAgent {
 
@@ -68,27 +67,10 @@ class DirCallSubAgent {
       data.id = botId;
     }
 
-    const subagentStack = new SubagentStack({ tdCache: this.context.tdcache });
-    const intentAction = this.context.reply.actions.find(action => action._tdActionType === "intent");
-
-    const parentId = this.context.chatbot?.botId;
-    const parentParticipantId = participantBotIdFromToken(this.context.token) || parentId;
-
-    winston.debug("(DirCallSubAgent) push " + JSON.stringify({
-      requestId: this.requestId,
-      parentId: parentId,
-      parentParticipantId: parentParticipantId,
+    const { subagentStack } = await pushCallerSnapshot(this.context, "DirCallSubAgent", {
       targetBotId: botId,
-      blockName: blockName,
-      nextBlock: intentAction && intentAction.intentName
-    }));
-    const stackData = {
-      parentId: parentId,
-      parentParticipantId: parentParticipantId,
-      parentToken: this.context.token,
-      nextBlock: intentAction
-    }
-    await subagentStack.push(this.requestId, stackData);
+      blockName: blockName
+    });
 
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
@@ -133,20 +115,6 @@ class DirCallSubAgent {
     }
   }
 
-}
-
-// The bot JWT is signed for the bot that is a participant of the request. After a publish
-// that is the development bot, while chatbot.botId is the published copy running the flow.
-function participantBotIdFromToken(token) {
-  if (!token || typeof token !== 'string') {
-    return null;
-  }
-  const raw = token.startsWith('JWT ') ? token.slice(4) : token;
-  const payload = jwt.decode(raw);
-  if (!payload || payload.sub !== 'bot' || !payload._id) {
-    return null;
-  }
-  return String(payload._id);
 }
 
 module.exports = { DirCallSubAgent };
