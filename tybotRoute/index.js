@@ -165,6 +165,10 @@ router.post('/ext/:botid', async (req, res) => {
       winston.error("(tybotRoute) Error setting the voice turn: ", e);
       turnId = undefined;
     }
+  } else if (message.sender === "_tdinternal" && message.voice_turn_id) {
+    // block jump (DirIntent) inside a voice turn that arrives here instead of /exec: the jumped block belongs to the
+    // caller message's turn (supersession, and the reply that closes a streamed answer), it does not start a new one
+    turnId = message.voice_turn_id;
   }
 
   let reply = null;
