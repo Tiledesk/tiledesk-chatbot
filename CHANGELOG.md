@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.2-rc2
+- Voice streaming: the answer is streamed only when the request carries the `voice_stream` attribute (set by the voice connector on `/start` for ConversationRelay calls, including the new conference mode with background ambience); the previous per-message marker `voice_relay` is still accepted. Gather calls are unchanged
+
 # 2.2.2-rc1
 - V3 agents (`attributes.dsVersion = 'v3'`): block exits and reply buttons are resolved from the connectors list in the bot attributes before a block runs; the list adds and replaces destinations but never removes what the block JSON carries. Bots without the label or the list run as before
 - V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list
