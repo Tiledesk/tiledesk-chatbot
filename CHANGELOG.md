@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.2.2-rc3
+- Voice streaming: the Ask Knowledge Base action streams its answer on voice turns, like AI Prompt (sentences spoken while the model generates them; citations not requested on voice; a knowledge-base miss is never read out as a marker and runs the false branch without speaking the fallback on top of what was already said). The streaming loop is shared by both actions (`utils/LlmStream.js`). Built on 2.2.2-rc2 (the 2.3.x line is not included)
+
 # 2.2.2-rc2
 - Voice streaming: the answer is streamed only when the request carries the `voice_stream` attribute (set by the voice connector on `/start` for ConversationRelay calls, including the new conference mode with background ambience); the previous per-message marker `voice_relay` is still accepted. Gather calls are unchanged
 
