@@ -793,6 +793,7 @@ async function startApp(settings, completionCallback) {
     TILEBOT_ENDPOINT = settings.TILEBOT_ENDPOINT
   }
   winston.info("(Tilebot) settings.TILEBOT_ENDPOINT:" + TILEBOT_ENDPOINT);
+  tilebotService.setEndpoint(settings.TILEBOT_ENDPOINT, TILEBOT_ENDPOINT);   // i salti fra blocchi usano lo stesso endpoint
 
   if (settings.REDIS_HOST && settings.REDIS_PORT) {
     tdcache = new TdCache({

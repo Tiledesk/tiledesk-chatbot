@@ -131,4 +131,52 @@ describe('Conversation for Iteration test', async () => {
     });
   });
 
+  /** Manda la lista al bot `botId` e raccoglie i testi delle risposte fino a 1500 ms di silenzio. */
+  function iterateWithFallback(botId, iterable, onDone) {
+    const requestId = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
+    const texts = [];
+    let listener;
+    let timer = null;
+    const endpointServer = express();
+    endpointServer.use(bodyParser.json());
+    endpointServer.post('/:projectId/requests/:requestId/messages', function (req, res) {
+      res.send({ success: true });
+      texts.push(req.body.attributes.commands[1].message.text);
+      clearTimeout(timer);
+      timer = setTimeout(() => listener.close(() => onDone(texts)), 1500);
+    });
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      const request = {
+        "payload": {
+          "senderFullname": "guest#367e", "type": "text", "sender": "A-SENDER",
+          "recipient": requestId, "text": `/iteration{'iterable_varname':${JSON.stringify(iterable)}}`,
+          "id_project": PROJECT_ID, "metadata": "", "request": { "request_id": requestId }
+        },
+        "token": "XXX"
+      };
+      tilebotService.sendMessageToBot(request, botId, () => {});
+    });
+  }
+
+  it('V3: after the last item the "when the list is done" block (fallbackIntent) runs', (done) => {
+    iterateWithFallback("fallbackBotID", [{ id: 0, name: "John" }, { id: 1, name: "Mark" }], (texts) => {
+      assert.deepStrictEqual(texts, ["[object Object]", "[object Object]", "Done"]);
+      done();
+    });
+  });
+
+  it('V3: with an empty list the "when the list is done" block runs at once', (done) => {
+    iterateWithFallback("fallbackBotID", [], (texts) => {
+      assert.deepStrictEqual(texts, ["Done"]);
+      done();
+    });
+  });
+
+  it('V2 control: the same bot without the V3 label ignores fallbackIntent as it always did', (done) => {
+    iterateWithFallback("fallbackV2BotID", [{ id: 0, name: "John" }, { id: 1, name: "Mark" }], (texts) => {
+      assert.deepStrictEqual(texts, ["[object Object]", "[object Object]"]);
+      done();
+    });
+  });
+
 });

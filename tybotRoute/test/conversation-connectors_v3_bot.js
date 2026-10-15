@@ -131,8 +131,24 @@ const v2bot = normalizeBot({
 	"intents": intents()
 });
 
+// Un V3 con la lista VUOTA e le destinazioni ancora nei campi (flusso importato, lista mai
+// riscritta): la lista non toglie nulla, il motore segue i campi.
+function filledIntents() {
+	const list = intents();
+	list[0].attributes.nextBlockAction.intentName = "#" + SECOND_ID;
+	list[2].actions[0].intentName = "#" + THIRD_ID;
+	list[3].actions[0].attributes.commands[1].message.attributes.attachment.buttons[0].action = "#" + THIRD_ID;
+	return list;
+}
+const v3filledbot = normalizeBot({
+	"webhook_enabled": false, "language": "en", "name": "connectors v3 empty list", "type": "tilebot",
+	"attributes": { "dsVersion": "v3", "connectors": { "version": 1, "updatedAt": "2026-10-14T00:00:00.000Z", "items": [] } },
+	"intents": filledIntents()
+});
+
 const bots_data = { "bots": {} };
 bots_data.bots["v3botID"] = v3bot;
 bots_data.bots["v2botID"] = v2bot;
+bots_data.bots["v3filledID"] = v3filledbot;
 
 module.exports = { bots_data: bots_data, ids: { START_ID, SECOND_ID, JUMP_ID, THIRD_ID, MENU_ID } };

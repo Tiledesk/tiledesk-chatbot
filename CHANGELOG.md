@@ -1,5 +1,10 @@
 # Tiledesk native chatbot
 
+# 2.2.2-rc1
+- V3 agents (`attributes.dsVersion = 'v3'`): block exits and reply buttons are resolved from the connectors list in the bot attributes before a block runs; the list adds and replaces destinations but never removes what the block JSON carries. Bots without the label or the list run as before
+- V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list
+- Fixed: block jumps use the endpoint given at start-up (environment as fallback); the AI Condition vLLM error path no longer crashes and goes to the error block
+
 # 2.2.1
 - Added support for custom headers on vLLM servers
 
