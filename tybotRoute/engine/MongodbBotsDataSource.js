@@ -12,7 +12,8 @@ class MongodbBotsDataSource {
   }
   
   async getBotById(botId) {
-    const bot = await Faq_kb.findById(botId).select('+secret').exec();
+    // `connectors` (V3 agents) is not selected by default on the server's schema: ask for it.
+    const bot = await Faq_kb.findById(botId).select('+secret +connectors').exec();
     if (bot) {
       return bot;
     }
@@ -37,6 +38,7 @@ class MongodbBotsDataSource {
           bot = await this.getBotById(botId);
           winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
           await tdcache.set(botCacheKey, JSON.stringify(bot));
+
           // DEBUG CODE REMOVE
           // let bot_ = await tdcache.get(botCacheKey);
         }
