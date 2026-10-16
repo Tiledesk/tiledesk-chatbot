@@ -40,6 +40,8 @@ build/Release
 
 # Dependency directories
 node_modules/
+# also a symlink or file named node_modules (a trailing slash matches directories only)
+node_modules
 ./tybotRoute/node_modules/
 jspm_packages/
 
