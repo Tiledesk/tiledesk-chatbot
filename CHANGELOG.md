@@ -1,5 +1,12 @@
 # Tiledesk native chatbot
 
+# 2.3.0-rc2
+- Voice streaming (ConversationRelay): on calls marked `voice_stream`, the AI Prompt and Ask Knowledge Base actions stream the LLM answer sentence by sentence to tiledesk-server (`POST /:project_id/requests/:request_id/stream`) while it is generated; the reply that speaks the answer closes the stream instead of re-speaking it. Shared `utils/LlmStream.js`
+- Ask Knowledge Base on voice: `<NOANS>` is never spoken, a miss takes the false branch without speaking the fallback twice, citations are not requested
+- Voice turn supersession: a newer caller message stops the current turn (Redis turn marker, checked before every block and every chunk); the partial answer is saved with `attributes.interrupted`
+- `/ext` keeps `voice_turn_id` on internal block-jump messages
+- Gather calls and other channels unchanged
+
 # 2.3.0-rc1
 - V3 agents: `ds_version` and `connectors` are read as fields of the bot (as the server stores them since 2.30.0), no longer from `attributes`; the bot is loaded with its connectors list. Agents without the label are unchanged
 
