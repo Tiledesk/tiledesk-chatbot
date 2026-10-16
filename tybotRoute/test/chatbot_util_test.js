@@ -602,3 +602,39 @@ If more than one condition is true, answer with the first label corresponding to
     });
 
 });
+describe('transcript of voice replies', function() {
+    function fakeChatbot() {
+        const params = {};
+        return {
+            bot: { name: "Aruba voice" },
+            getParameter: async (k) => params[k],
+            addParameter: async (k, v) => { params[k] = v; },
+            params
+        };
+    }
+    const speechForm = (text) => ({
+        senderFullname: "Aruba voice", sender: "bot_1", text: "",
+        attributes: { commands: [
+            { type: "wait", time: 0 },
+            { type: "message", message: { type: "text", text: text } },
+            { type: "settings", subType: "speech_form", settings: { bargein: true } }
+        ] }
+    });
+
+    it('records the spoken text of a speech_form reply (text "", commands) so the AI Prompt history keeps it', async () => {
+        const chatbot = fakeChatbot();
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, { senderFullname: "caller", sender: "voice_twilio-1", text: "Differenza tra FTTH e FTTC?" });
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, speechForm("FTTH porta la fibra fino a casa. Vuoi sapere di più?"));
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, { senderFullname: "caller", sender: "voice_twilio-1", text: "Sì, grazie." });
+        const history = TiledeskChatbotUtil.transcriptJSON(chatbot.params.transcript);
+        assert.deepStrictEqual(history.map((m) => m.role), ["user", "assistant", "user"]);
+        assert.strictEqual(history[1].content.trim(), "FTTH porta la fibra fino a casa. Vuoi sapere di più?");
+    });
+
+    it('message.text wins when present; a reply with nothing to say is not recorded', async () => {
+        const chatbot = fakeChatbot();
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, { senderFullname: "Aruba voice", sender: "bot_1", text: "Ciao!", attributes: { commands: [{ type: "message", message: { text: "altro" } }] } });
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, speechForm("   "));
+        assert.strictEqual(chatbot.params.transcript, "<bot:Aruba voice> Ciao!");
+    });
+});
