@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.3.0-rc3
+- Voice: the AI Prompt history now includes the bot's spoken answers (speech_form replies carry their text in the commands, with an empty `text`, and were left out of the transcript): a caller's "sì" to the bot's "Vuoi sapere di più?" keeps its context
+
 # 2.3.0-rc2
 - Voice streaming (ConversationRelay): on calls marked `voice_stream`, the AI Prompt and Ask Knowledge Base actions stream the LLM answer sentence by sentence to tiledesk-server (`POST /:project_id/requests/:request_id/stream`) while it is generated; the reply that speaks the answer closes the stream instead of re-speaking it. Shared `utils/LlmStream.js`
 - Ask Knowledge Base on voice: `<NOANS>` is never spoken, a miss takes the false branch without speaking the fallback twice, citations are not requested
