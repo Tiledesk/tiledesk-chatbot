@@ -14,18 +14,23 @@ class MockBotsDataSource {
   async getBotById(botId) {
     return new Promise((resolve, reject)=>{
       try{
+        const source = this.data.bots[botId];
         const bot = {
-          webhook_enabled: this.data.bots[botId].webhook_enabled,
-          webhook_url: this.data.bots[botId].webhook_url,
-          language: this.data.bots[botId].language,
-          name: this.data.bots[botId].name
+          _id: botId,
+          webhook_enabled: source.webhook_enabled,
+          webhook_url: source.webhook_url,
+          language: source.language,
+          name: source.name,
+          attributes: source.attributes
         }
+        // V3 agents: the version label and the connectors list are fields of the bot.
+        if (source.ds_version !== undefined) { bot.ds_version = source.ds_version; }
+        if (source.connectors !== undefined) { bot.connectors = source.connectors; }
         resolve(bot)
       }catch(err){
         reject(err);
       }
-      
-    }) 
+    })
   }
   
   async getBotByIdCache(botId, tdcache) {

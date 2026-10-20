@@ -2,6 +2,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const { ConnectorsV3 } = require('../../utils/ConnectorsV3');
 
 class DirIteration {
   constructor(context) {
@@ -60,6 +61,15 @@ class DirIteration {
       }
     }
     
+    // A state left behind by a loop that never finished (a branch that did not
+    // lead back here) must not be resumed by a later, unrelated run of this
+    // block: if the list is not the one the saved state was iterating, start over.
+    if (iterationState && await this.#isStale(iterationState, action)) {
+      this.logger.warn("[Iteration] Saved iteration state belongs to another list. Starting over.");
+      await this.#clearIterationState(foundActionId);
+      iterationState = null;
+    }
+
     if (!iterationState) {
       // First call: initialize iteration state
       if (!actionId) {
@@ -85,6 +95,7 @@ class DirIteration {
     
     const iterable = action.iterable;
     const goToIntent = action.goToIntent;
+    const fallbackIntent = action.fallbackIntent;   // "when the list is done": il blocco da eseguire dopo l'ultimo elemento (o con una lista vuota)
     const output = action.assignOutputTo;
     const delay = 1000;
     //const delay = (action.delay || 30) * 1000; // s to ms
@@ -92,10 +103,12 @@ class DirIteration {
     // Get iterable value
     const iterableValue = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, iterable);
 
+    // Nothing to iterate is a list that is already done: the flow goes on
+    // from the block's exit instead of stopping the conversation in silence.
     if (!iterableValue) {
       winston.verbose("[Iteration] Iterable object is undefined");
-      this.logger.warn("[Iteration] Iterable object is undefined");
-      callback(true);
+      this.logger.warn("[Iteration] Iterable object is undefined. Nothing to iterate, going on.");
+      callback(false);
       return;
     }
 
@@ -104,15 +117,15 @@ class DirIteration {
     
     if (!iterableArray) {
       winston.verbose("[Iteration] Could not convert iterable to array");
-      this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}`);
-      callback(true);
+      this.logger.error(`[Iteration] Could not convert iterable '${iterable}' to array | type: ${typeof iterableValue}. Going on.`);
+      callback(false);
       return;
     }
 
     if (iterableArray.length === 0) {
       winston.verbose("[Iteration] Iterable array is empty. Exit...")
-      this.logger.warn("[Iteration] Iterable array is empty. Exit...")
-      callback(true);
+      this.logger.warn("[Iteration] Iterable array is empty. Going on.")
+      this.#whenDone(fallbackIntent, false, callback);
       return;
     }
 
@@ -121,6 +134,7 @@ class DirIteration {
       currentIndex: 0,
       iterableArray: iterableArray,
       goToIntent: goToIntent,
+      fallbackIntent: fallbackIntent,
       output: output,
       delay: delay,
       totalItems: iterableArray.length
@@ -143,7 +157,7 @@ class DirIteration {
     if (iterationState.currentIndex >= iterationState.totalItems) {
       this.logger.native("[Iteration] Iteration completed");
       await this.#clearIterationState(actionId);
-      callback(false);
+      this.#whenDone(iterationState.fallbackIntent, false, callback);
       return;
     }
 
@@ -152,6 +166,24 @@ class DirIteration {
     
     // Process current item (use values from saved state)
     await this.#processCurrentItem(iterationState, actionId, iterationState.goToIntent, iterationState.output, callback);
+  }
+
+  /**
+   * La lista e' finita (ultimo elemento gia' passato, o lista vuota). Per un agente V3 con un
+   * blocco "when the list is done" (`fallbackIntent`, dal 14/10/2026) lo esegue e ferma il flusso,
+   * come fa `goToIntent` per ogni elemento. Per gli agenti precedenti il campo resta ignorato come
+   * e' sempre stato (nessun cambiamento di comportamento): il flusso fa quello che ha sempre fatto
+   * (`stopWithoutFallback`).
+   */
+  #whenDone(fallbackIntent, stopWithoutFallback, callback) {
+    if (!fallbackIntent || !ConnectorsV3.isV3Bot(this.chatbot && this.chatbot.bot)) {
+      callback(stopWithoutFallback);
+      return;
+    }
+    this.logger.native("[Iteration] List done: executing fallbackIntent");
+    this.#executeIntent(fallbackIntent, () => {
+      callback(true);
+    });
   }
 
   async #processCurrentItem(iterationState, actionId, goToIntent, output, callback) {
@@ -186,9 +218,10 @@ class DirIteration {
     } catch (error) {
       this.logger.error("[Iteration] Error processing current item: ", error);
       winston.error("[Iteration] Error processing current item: ", error);
-      // Clear state on error to prevent stuck iterations
+      // Clear state on error to prevent stuck iterations, and leave the loop
+      // through the block's exit rather than stopping the conversation.
       await this.#clearIterationState(actionId);
-      callback(true);
+      callback(false);
     }
   }
 
@@ -209,7 +242,27 @@ class DirIteration {
     // Clear state and complete
     await this.#clearIterationState(actionId);
     this.logger.native("[Iteration] Iteration completed (no intent mode)");
-    callback(true);
+    callback(false);
+  }
+
+  /**
+   * True when the saved state was iterating a different list from the one the
+   * action's iterable holds now. While a loop runs, its branch leads back here
+   * with the same list; a different list means the block was reached again by
+   * a new run (a new message, a new email) after a loop that never finished.
+   */
+  async #isStale(iterationState, action) {
+    if (!action || !action.iterable) {
+      return false;
+    }
+    try {
+      const currentValue = await TiledeskChatbot.getParameterStatic(this.tdcache, this.requestId, action.iterable);
+      const currentArray = currentValue ? this.#normalizeToArray(currentValue, action.iterable) : [];
+      return JSON.stringify(currentArray || []) !== JSON.stringify(iterationState.iterableArray || []);
+    } catch (error) {
+      winston.error("[Iteration] Error checking iteration state: ", error);
+      return false;
+    }
   }
 
   async #getIterationState(actionId) {

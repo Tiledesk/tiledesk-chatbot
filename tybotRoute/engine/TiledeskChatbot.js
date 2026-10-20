@@ -5,6 +5,7 @@ const { WebhookChatbotPlug } = require('../tiledeskChatbotPlugs/WebhookChatbotPl
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { IntentForm } = require('./IntentForm.js');
 const { TiledeskChatbotUtil } = require('../utils/TiledeskChatbotUtil.js');
+const { ConnectorsV3 } = require('../utils/ConnectorsV3');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 const winston = require('../utils/winston');
@@ -179,6 +180,28 @@ class TiledeskChatbot {
               return;
             }
           }
+          else if (message.text === '/start' && intent.name !== 'start') {
+            // A /start naming a missing start box falls back to the default start block
+            winston.warn("(TiledeskChatbot) Start box not found: " + explicit_intent_name + ", falling back to start");
+            const startFaq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, 'start', this.tdcache);
+            if (startFaq) {
+              try {
+                reply = await this.execIntent(startFaq, message, lead, { match_type: 'explicit' });
+                resolve(reply);
+                return;
+              }
+              catch(error) {
+                winston.error("(TiledeskChatbot) Error executing start fallback: ", error);
+                reject(error);
+                return;
+              }
+            }
+            else {
+              winston.verbose("(TiledeskChatbot) Start box not found either");
+              resolve();
+              return;
+            }
+          }
           else {
             winston.info("(TiledeskChatbot) explicit intent not found, stop " + JSON.stringify({
               botId: this.botId,
@@ -197,7 +220,7 @@ class TiledeskChatbot {
       let faqs;
       try {
         faqs = await this.botsDataSource.getByExactMatch(this.botId, message.text);
-        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + faqs);
+        winston.verbose("(TiledeskChatbot) Got faq by exact match: " + JSON.stringify(faqs, null, 2));
       }
       catch (error) {
         winston.error("(TiledeskChatbot) An error occurred during exact match: ", error);
@@ -222,7 +245,7 @@ class TiledeskChatbot {
         let intents;
         try {
           intents = await this.intentsFinder.decode(this.botId, message.text);
-          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:", intents);
+          winston.verbose("(TiledeskChatbot) Tiledesk AI intents found:" + JSON.stringify(intents, null, 2));
         }
         catch(error) {
           winston.error("(TiledeskChatbot) An error occurred on IntentsFinder.decode() (/model/parse error):" + error.message);
@@ -233,7 +256,7 @@ class TiledeskChatbot {
             winston.debug("(TiledeskChatbot) Got intents from backup finder: ", intents);
           }
         }
-        winston.debug("(TiledeskChatbot) NLP intents found: ", intents);
+        winston.debug("(TiledeskChatbot) NLP intents found: " + JSON.stringify(intents, null, 2));
         if (intents && intents.length > 0) {
           let faq = await this.botsDataSource.getByIntentDisplayNameCache(this.botId, intents[0].intent_display_name, this.tdcache);
           let reply;
@@ -313,6 +336,8 @@ class TiledeskChatbot {
 
           if (faq) {
             if (faq.actions) {
+              // Agente V3: le destinazioni del blocco si leggono dalla lista dei connettori del bot (ConnectorsV3).
+              ConnectorsV3.projectIntent(this.bot, faq);
               // Qui viene aggiornata faq perchè l'oggetto in js viene passato per riferimento. Viene modificato l'oggetto originale anche senza un return.
               TiledeskChatbotUtil.addConnectAction(faq);
             }
@@ -434,6 +459,8 @@ class TiledeskChatbot {
     let static_bot_answer;
     if (answerObj.actions) {
       const actions_length = answerObj.actions.length;
+      // Agente V3: le destinazioni del blocco si leggono dalla lista dei connettori del bot (ConnectorsV3).
+      ConnectorsV3.projectIntent(this.bot, answerObj);
       TiledeskChatbotUtil.addConnectAction(answerObj);
     }
 
@@ -623,7 +650,7 @@ class TiledeskChatbot {
     let _current_step = await _tdcache.get(parameter_key);
     let current_step = Number(_current_step);
     if (current_step > max_steps) {
-      winston.verbose("(TiledeskChatbot) max_steps limit just violated");
+      winston.verbose("(TiledeskChatbot) max_steps_limit just violated");
       winston.verbose("(TiledeskChatbot) Current Step > Max Steps: " + current_step);
       return {
         error: "Anomaly detection. MAX ACTIONS (" + max_steps + ") exeeded.",
@@ -680,6 +707,51 @@ class TiledeskChatbot {
   static requestCacheKey(requestId) {
     const request_key = "tilebot:requests:" + requestId;
     return request_key;
+  }
+
+  // Streaming channels (voice): "latest message wins". Each caller message starts a turn; a turn whose id is no
+  // longer the stored one has been superseded and must stop (directives, LLM streaming).
+  static turnCacheKey(requestId) {
+    return TiledeskChatbot.requestCacheKey(requestId) + ":turn";
+  }
+
+  static async setCurrentTurn(_tdcache, requestId, turnId) {
+    await _tdcache.set(TiledeskChatbot.turnCacheKey(requestId), turnId, { EX: 3600 });
+  }
+
+  static async isTurnSuperseded(_tdcache, requestId, turnId) {
+    if (!_tdcache || !turnId) {
+      return false;
+    }
+    const current = await _tdcache.get(TiledeskChatbot.turnCacheKey(requestId));
+    return current !== null && current !== undefined && current !== turnId;
+  }
+
+  // Text streamed by an AI action and not yet closed by a reply message (see DirAiPrompt, DirReply)
+  static pendingStreamCacheKey(requestId) {
+    return TiledeskChatbot.requestCacheKey(requestId) + ":stream:pending";
+  }
+
+  static isStreamingChannel(channelName) {
+    if (process.env.STREAM_ENABLED !== "true" || !channelName) {
+      return false;
+    }
+    const channels = (process.env.STREAM_CHANNELS || "voice_twilio").split(",").map(c => c.trim());
+    return channels.includes(channelName);
+  }
+
+  /**
+   * The caller's message belongs to a call the voice connector speaks with ConversationRelay: streaming channel AND
+   * the request attribute voice_stream (set by the connector on /start, the request's first message), or the previous
+   * per-message marker voice_relay (accepted for this release). Gather calls carry neither: unchanged behaviour.
+   */
+  static isVoiceStreamMessage(message) {
+    if (!message || !message.request || !TiledeskChatbot.isStreamingChannel(message.request.channel && message.request.channel.name)) {
+      return false;
+    }
+    const requestAttributes = message.request.attributes || {};
+    const attributes = message.attributes || {};
+    return requestAttributes.voice_stream === true || attributes.voice_relay === true;
   }
   
   async execWebhook(static_bot_answer, userMessage, bot, context) {
