@@ -203,7 +203,7 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["extracted_text"], "hello from pdf");
   });
 
-  it('/extract_redis - the poll is still running and the text arrives on redis', async () => {
+  it('/extract_redis - a redis notification is followed by a GET for the result', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_redis', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
@@ -217,19 +217,31 @@ describe('Conversation for Docparse Extract test', async () => {
         });
       });
 
+      let polls = 0;
       endpointServer.get('/v1/jobs/:jobId', function (req, res) {
         assert.strictEqual(req.params.jobId, 'job-redis');
-        publishCompleted('job-redis', {
-          content_type: "application/json",
-          body: { text: "from redis", filename: "scan.pdf" }
-        }).then(() => {
-          res.status(200).send({
-            job_id: "job-redis",
-            kind: "extract",
-            status: "running",
-            error: null,
-            result: null
+        polls += 1;
+        if (polls === 1) {
+          publishCompleted('job-redis', { job_id: 'job-redis', status: 'succeeded' }).then(() => {
+            res.status(200).send({
+              job_id: "job-redis",
+              kind: "extract",
+              status: "running",
+              error: null,
+              result: null
+            });
           });
+          return;
+        }
+        res.status(200).send({
+          job_id: "job-redis",
+          kind: "extract",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "application/json",
+            body: { text: "from redis", filename: "scan.pdf" }
+          }
         });
       });
     });
@@ -351,7 +363,7 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["extracted_text"], "vision text");
   });
 
-  it('/extract_fail_job - redis publishes a processing error', async () => {
+  it('/extract_fail_job - the GET after the redis notification returns the error', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_fail_job', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
@@ -363,18 +375,29 @@ describe('Conversation for Docparse Extract test', async () => {
         });
       });
 
+      let polls = 0;
       endpointServer.get('/v1/jobs/:jobId', function (req, res) {
-        publishCompleted('job-error', {
-          code: "processing_failed",
-          detail: "unreadable document",
-          hint: "check the file"
-        }).then(() => {
-          res.status(200).send({
-            job_id: "job-error",
-            status: "running",
-            error: null,
-            result: null
+        polls += 1;
+        if (polls === 1) {
+          publishCompleted('job-error', { job_id: 'job-error', status: 'failed' }).then(() => {
+            res.status(200).send({
+              job_id: "job-error",
+              status: "running",
+              error: null,
+              result: null
+            });
           });
+          return;
+        }
+        res.status(200).send({
+          job_id: "job-error",
+          status: "failed",
+          error: {
+            code: "processing_failed",
+            detail: "unreadable document",
+            hint: "check the file"
+          },
+          result: null
         });
       });
     });

@@ -217,24 +217,27 @@ class DirDocparseExtract {
         });
       };
 
-      const onMessage = (message) => {
-        let payload = message;
-        if (typeof message === "string") {
-          try {
-            payload = JSON.parse(message);
-          } catch (err) {
-            finish({ ok: false, error: "Invalid docparse job event" });
-            return;
-          }
-        }
-        const outcome = this.#interpret(payload, false);
-        if (outcome.pending) {
+      const onMessage = async (message) => {
+        const received = typeof message === "string" ? message : JSON.stringify(message);
+        winston.info("(DirDocparseExtract) Redis message received on " + topic + ": " + received);
+        if (settled) {
           return;
         }
-        finish(outcome);
+        try {
+          const outcome = await this.#readJob(base, jobId);
+          if (!outcome || outcome.pending || settled) {
+            return;
+          }
+          finish(outcome);
+        } catch (err) {
+          winston.error("DirDocparseExtract job fetch after redis event failed: ", this.#httpErrorLog(err));
+          finish({ ok: false, error: this.#httpErrorMessage(err) });
+        }
       };
 
+      winston.info("(DirDocparseExtract) Subscribing to " + topic);
       this.tdcache.subscribe(topic, onMessage).then(async () => {
+        winston.info("(DirDocparseExtract) Subscribed to " + topic);
         if (settled) {
           return;
         }
@@ -243,18 +246,11 @@ class DirDocparseExtract {
         }, this.jobTimeoutMs);
 
         try {
-          const job = await this.#request({
-            url: this.#endpoint(base, "/v1/jobs/" + encodeURIComponent(jobId)),
-            headers: { 'Content-Type': 'application/json' },
-            method: "GET"
-          });
-          if (settled) {
+          const outcome = await this.#readJob(base, jobId);
+          if (!outcome || outcome.pending || settled) {
             return;
           }
-          const outcome = this.#interpret(job, true);
-          if (!outcome.pending) {
-            finish(outcome);
-          }
+          finish(outcome);
         } catch (err) {
           winston.warn("DirDocparseExtract preventive job poll failed: ", this.#httpErrorMessage(err));
         }
@@ -264,6 +260,15 @@ class DirDocparseExtract {
         resolve({ ok: false, error: "Unable to subscribe to docparse job result" });
       });
     });
+  }
+
+  async #readJob(base, jobId) {
+    const job = await this.#request({
+      url: this.#endpoint(base, "/v1/jobs/" + encodeURIComponent(jobId)),
+      headers: { 'Content-Type': 'application/json' },
+      method: "GET"
+    });
+    return this.#interpret(job, true);
   }
 
   #interpret(payload, fromPoll) {
