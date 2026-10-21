@@ -63,6 +63,23 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "extract_filename_from_url",
+			"intent_id": "extract-filename-from-url",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "docparse_extract",
+				"_tdActionTitle": "extract filename from url",
+				"url": "https://example.com/documents/my%20invoice.pdf?token=signed#download",
+				"assignReplyTo": "extracted_text",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "extract_fallback",
 			"intent_id": "extract-fallback",
 			"form": {},

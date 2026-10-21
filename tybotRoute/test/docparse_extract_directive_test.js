@@ -272,6 +272,35 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["doc_url"], "https://example.com/invoice.pdf");
   });
 
+  it('/extract_filename_from_url - filename is derived from the url', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_filename_from_url', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        assert.strictEqual(req.body.filename, 'my invoice.pdf');
+        assert.strictEqual(req.body.url, 'https://example.com/documents/my%20invoice.pdf?token=signed#download');
+        res.status(202).send({
+          job_id: "job-derived-filename",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-derived-filename",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "derived filename text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: derived filename text");
+  });
+
   it('/extract_fallback - provider and model are sent as vision fallback', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_fallback', (endpointServer) => {
