@@ -12,7 +12,6 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
-const kbService = require("../../services/KbService");
 const quotasService = require("../../services/QuotasService");
 const aiController = require("../../services/AIController");
 const namespaceService = require("../../services/NamespaceService");
@@ -21,6 +20,8 @@ const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
+const llmService = require("../../services/LLMService");
+const { LlmStream } = require("../../utils/LlmStream");
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -357,6 +358,10 @@ class DirAskGPTV2 {
         json.reranking_multiplier = calculatedRerankingMultiplier;
       }
     }
+    
+    if (ns.embeddings?.embedding_qa) {
+      json.embedding = ns.embeddings.embedding_qa;
+    }
 
     if (!action.advancedPrompt) {
       const contextTemplate = getRagContextTemplate(model.name);
@@ -387,7 +392,6 @@ class DirAskGPTV2 {
     }
     
     winston.debug("DirAskGPTV2 json:", json);
-    console.log("DirAskGPTV2 json:", JSON.stringify(json));
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
     if (ns.hybrid === true) {
@@ -405,6 +409,13 @@ class DirAskGPTV2 {
       method: "POST"
     }
     winston.debug("DirAskGPTV2 HttpRequest: ", HTTPREQUEST);
+
+    // Voice turn: speak the answer while tiledesk-llm generates it (chunks_only returns no answer: nothing to stream)
+    if (this.context.turnId && !chunks_only) {
+      await this.#goStreaming(action, json, HTTPREQUEST.url, HTTPREQUEST.headers, publicKey, answer, skip_unanswered,
+        trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback);
+      return;
+    }
 
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
@@ -467,7 +478,7 @@ class DirAskGPTV2 {
               request_id: this.requestId,
               tokens: tokens
             }
-            kbService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addAnsweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("Error adding answered question: ", err);
             })
   
@@ -488,8 +499,7 @@ class DirAskGPTV2 {
               question: json.question,
               request_id: this.requestId
             }
-
-            kbService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
+            llmService.addUnansweredQuestion(this.projectId, data, this.token).catch((err) => {
               winston.error("DirAskGPTV2 - Error adding unanswered question: ", {
                 status: err.response?.status,
                 statusText: err.response?.statusText,
@@ -508,6 +518,99 @@ class DirAskGPTV2 {
         }
       }
     )
+  }
+
+  /**
+   * Streaming variant of the /qa call for voice turns (see utils/LlmStream): sentences are spoken while the model
+   * generates them; the "completed" event carries the usual /qa result (model_used), and the flow continues as in the
+   * non-streaming path (attributes, quota, answered/unanswered question, true/false intent). Differences on voice:
+   * - citations are not requested (a voice does not read them; the markers would be spoken);
+   * - a knowledge-base miss is marked by the model with "<NOANS>" at the very end, after the text was spoken: the
+   *   marker is never spoken, the spoken text becomes the answer attribute (so a reply of that attribute closes the
+   *   stream instead of speaking the fallback on top of it), the question is logged as unanswered and the false branch
+   *   runs. If nothing was spoken, the configured fallback is used as in the non-streaming path.
+   * A newer caller message aborts the request: the part already spoken is posted as interrupted and the flow stops.
+   */
+  async #goStreaming(action, json, url, headers, publicKey, noAnswer, skip_unanswered, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    const stream = new LlmStream(this, { label: "DirAskGPTV2", holdMarker: "<NOANS>" });
+    this.logger.native("[Ask Knowledge Base] streaming answer " + stream.streamId);
+    const result = await stream.run(url, { ...json, citations: false }, headers);
+
+    if (result.stopped === "superseded") {
+      this.logger.native("[Ask Knowledge Base] turn superseded, answer interrupted");
+      winston.verbose("DirAskGPTV2 stream " + stream.streamId + " superseded after " + result.chunks + " chunks");
+      await stream.sendInterrupted();
+      callback(true);
+      return;
+    }
+    if (result.stopped === "closed") {
+      winston.verbose("DirAskGPTV2 stream " + stream.streamId + ": request closed, flow stopped");
+      callback(true);
+      return;
+    }
+
+    const resbody = (result.completed && result.completed.model_used) || null;
+    if (result.error || (!resbody && !result.text)) {
+      const status = result.error && result.error.response && result.error.response.status;
+      winston.error("DirAskGPTV2 stream error: " + (status ? "HTTP " + status : (result.error ? result.error.message : "empty answer")));
+      this.logger.error(`[Ask Knowledge Base] Error getting answer`);
+      await this.#assignAttributes(action, noAnswer);
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    const success = result.marker ? false : (resbody && typeof resbody.success === "boolean" ? resbody.success : !!result.text);
+    if (success) {
+      const answer = (resbody && typeof resbody.answer === "string" && resbody.answer) || result.text;
+      this.logger.native("[Ask Knowledge Base] answer: ", answer);
+      await this.#assignAttributes(action, answer, resbody && resbody.source, resbody && resbody.content_chunks);
+      let tokens = (resbody && resbody.prompt_token_size) || 0;
+      if (publicKey === true) {
+        const multiplier = MODELS_MULTIPLIER[json.model.name] ?? 1;
+        quotasService.updateQuote(this.projectId, this.token, { tokens: tokens, model: json.model }).catch((err) => {
+          winston.error("Error updating quota: ", err);
+        });
+        tokens = tokens * multiplier;
+      }
+      llmService.addAnsweredQuestion(this.projectId, { namespace: json.namespace, question: json.question, answer: answer,
+        request_id: this.requestId, tokens: tokens }, this.token).catch((err) => {
+        winston.error("Error adding answered question: ", err);
+      });
+      await stream.savePending(answer);
+      if (trueIntent) {
+        await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    // knowledge-base miss: what was spoken (if anything) is the answer, otherwise the configured fallback
+    this.logger.native("[Ask Knowledge Base] no answer in the knowledge base");
+    if (result.streamed && result.text) {
+      await this.#assignAttributes(action, result.text);
+      await stream.savePending(result.text);
+    } else {
+      await this.#assignAttributes(action, noAnswer);
+    }
+    if (!skip_unanswered) {
+      llmService.addUnansweredQuestion(this.projectId, { namespace: json.namespace, question: json.question,
+        request_id: this.requestId }, this.token).catch((err) => {
+        winston.error("DirAskGPTV2 - Error adding unanswered question: ", err && err.message);
+      });
+    }
+    if (falseIntent) {
+      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      callback(true);
+      return;
+    }
+    callback();
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {

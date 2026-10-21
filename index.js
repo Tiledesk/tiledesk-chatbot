@@ -4,7 +4,6 @@ var app = express();
 var cors = require('cors');
 app.use(cors());
 
-// const tybot = require("@tiledesk/tiledesk-tybot-connector");
 const tybot = require("./tybotRoute");
 const tybotRoute = tybot.router;
 app.use("/", tybotRoute); // /tybot
@@ -26,6 +25,7 @@ tybot.startApp(
     TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
     // bots: bots_data,
     API_ENDPOINT: process.env.API_ENDPOINT,
+    API_URL: process.env.API_URL,
     REDIS_HOST: process.env.CACHE_REDIS_HOST,
     REDIS_PORT: process.env.CACHE_REDIS_PORT,
     REDIS_PASSWORD: process.env.CACHE_REDIS_PASSWORD,
