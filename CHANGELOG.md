@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.6.0
+- Added voice_mode system-defined flow variable
+
 # 2.4.0
 - Updated ReplaceBot to manage return
 
