@@ -222,6 +222,7 @@ class DirDocparseExtract {
       };
 
       const onMessage = (message) => {
+        console.log("(DirDocparseExtract) Redis message received on " + topic + ": ", message);
         let payload = message;
         if (typeof message === "string") {
           try {
@@ -238,7 +239,9 @@ class DirDocparseExtract {
         finish(outcome);
       };
 
+      console.log("(DirDocparseExtract) Subscribing to " + topic);
       this.tdcache.subscribe(topic, onMessage).then(async () => {
+        console.log("(DirDocparseExtract) Subscribed to " + topic);
         if (settled) {
           return;
         }
