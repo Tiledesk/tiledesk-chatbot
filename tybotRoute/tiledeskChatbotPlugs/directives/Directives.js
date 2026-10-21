@@ -22,6 +22,7 @@ class Directives {
   static FUNCTION_VALUE = "functionvalue";
   static JSON_CONDITION = "jsoncondition";
   static JSON_CONDITION_2 = "jsoncondition2"; // NEW: azione JSON Condition V2 del Design Studio
+  static JSON_CONDITION_MULTI = "jsonconditionmulti"; // NEW: condizione a piu' casi in sequenza, un'uscita per caso
   static SET_ATTRIBUTE = "setattribute";
   static SET_ATTRIBUTE_V2 = "setattribute-v2";
   static REPLY = 'reply';
@@ -63,9 +64,14 @@ class Directives {
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
   static ADD_TAGS = 'add_tags'
+  static WEBHOOK = 'webhook';
+  static INVITE_HUMAN = "invite_human";
+  static REMOVE_HUMAN = "remove_human";
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
+  static INVOKE_SUB_AGENT = "invoke_subagent";
+  static RETURN = "return";
   static DATA_TABLES = "data_table";
   // DOCPARSE
   static DOCPARSE_EXTRACT = "docparse_extract";

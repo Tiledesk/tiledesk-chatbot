@@ -2,11 +2,13 @@ const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
+const { InternalSubAgentService } = require('../../services/InternalSubAgentService');
 const { DirIntent } = require("./DirIntent");
 // const { defaultOptions } = require('liquidjs');
 const { DirMessageToBot } = require('./DirMessageToBot');
 const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const aiService = require('../../services/AIService');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -83,6 +85,10 @@ class DirReplyV2 {
         const buttons = TiledeskChatbotUtil.allReplyButtons(message);
         if (buttons && buttons.length > 0) {
           const locked = await this.lockUnlock(action); // first execution returns locked, then unlocked
+          if (locked === null) { // could not lock: stop, do not ask
+            callback(true);
+            return;
+          }
           if (locked) { // fist execution returns (just) locked
             must_stop = true; // you must stop after next callbacks (in this flow) if there are buttons
             if (action.noInputIntent) {
@@ -94,6 +100,11 @@ class DirReplyV2 {
                 setTimeout(async () => {
                   winston.debug("(DirReplyV2) noinput timeout triggered!");
                   const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
+                  const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+                  if (lockedAction !== action["_tdActionId"]) {
+                    winston.debug("(DirReplyV2) lock owned by another action, skipping noinput");
+                    return;
+                  }
                   if (userInput && userInput === timeout_id) {
                     await this.chatbot.unlockIntent(this.requestId);
                     await this.chatbot.unlockAction(this.requestId);
@@ -194,6 +205,33 @@ class DirReplyV2 {
               command.message.text = filler.fill(command.message.text, requestAttributes);
               TiledeskChatbotUtil.fillCommandAttachments(command, requestAttributes);
             }
+
+            if (command.type === 'message' && command.message && command.message.metadata) {
+              command.message.metadata.src = filler.fill(command.message.metadata.src, requestAttributes);
+              command.message.metadata.downloadURL = filler.fill(command.message.metadata.downloadURL, requestAttributes);
+              winston.debug("(DirReplyV2) command filled (metadata.src): " + command.message.metadata.src);
+              winston.debug("(DirReplyV2) command filled (metadata.downloadURL): " + command.message.metadata.downloadURL);
+            }
+
+            if (command.type === 'message' && command.message && command.message.type === 'tts') {
+              command.message.text = filler.fill(command.message.text, requestAttributes);
+              const voiceSettings = {
+                text: command.message.text,
+                provider: requestAttributes['VOICE_PROVIDER'],
+                model: requestAttributes['TTS_MODEL'],
+                voice: requestAttributes['TTS_VOICE_NAME'],
+                language: requestAttributes['TTS_VOICE_LANGUAGE']
+              }
+              const voiceSpeech = await aiService.textToSpeech(voiceSettings, this.projectId, this.token)
+              command.message.metadata = {
+                type: voiceSpeech.contentType,
+                uid: Date.now().toString(36),
+                filename: `audio-${Date.now().toString(36)}.${voiceSpeech.contentType.split('/')[1]}`,
+                src: this.API_ENDPOINT + "/files?path=" + encodeURIComponent(voiceSpeech.filename)
+              }
+              winston.debug("(DirReplyV2) command filled (tts): " + command.message.text);
+              winston.debug("(DirReplyV2) command filled (tts metadata): " + JSON.stringify(command.message.metadata));
+            }
           }
         }
       }
@@ -246,9 +284,19 @@ class DirReplyV2 {
     // }
     cleanMessage.senderFullname = this.context.chatbot.bot.name;
     winston.debug("(DirReplyV2) Reply: ", cleanMessage);
+
+    const outboundRequestId = InternalSubAgentService.resolveOutboundRequestId(
+      this.requestId,
+      requestAttributes,
+      this.context
+    );
+    if (outboundRequestId !== this.requestId) {
+      winston.debug(`(DirReplyV2) Sub-agent reply routed to parent request ${outboundRequestId}`);
+    }
+
     await TiledeskChatbotUtil.updateConversationTranscript(this.context.chatbot, cleanMessage);
     this.tdClient.sendSupportMessage(
-      this.requestId,
+      outboundRequestId,
       cleanMessage,
       (err) => {
         if (err) {
@@ -272,10 +320,16 @@ class DirReplyV2 {
 
 
   async lockUnlock(action, callback) {
-    let lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+    // a lock only counts as "waiting for the reply" when this very action set it
+    const own = lockedAction && lockedAction === action["_tdActionId"];
 
-    if (!lockedAction) {
-      const intent_name = this.reply.attributes.intent_info.intent_name
+    if (!own) {
+      const intent_name = this.reply?.attributes?.intent_info?.intent_name;
+      if (!intent_name) {
+        winston.error("(DirReplyV2) Cannot lock: missing attributes.intent_info.intent_name");
+        return null; // caller stops the block without locking
+      }
       const actionId = action["_tdActionId"];
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
