@@ -61,7 +61,6 @@ router.post('/ext/:botid', async (req, res) => {
   const token = req.body.token;
   const requestId = message.request.request_id;
   const projectId = message.id_project;
-  winston.verbose("(tybotRoute) message.id_project: " + message.id_project)
 
   // adding info for internal context workflow
   message.request.bot_id = botId;
@@ -74,7 +73,7 @@ router.post('/ext/:botid', async (req, res) => {
     winston.verbose("(tybotRoute) Skipping internal note message: " + message.text);
     return res.status(200).send({"success":true});
   }
-
+  
   // validate reuqestId
   let isValid = TiledeskChatbotUtil.validateRequestId(requestId, projectId);
   if (isValid) {
@@ -91,6 +90,11 @@ router.post('/ext/:botid', async (req, res) => {
     botId,
     {EX: 604800} // 7 days
   );
+
+  if (isBotBubble(message)) {
+    winston.info("(tybotRoute) skip bot bubble " + JSON.stringify({ botId: botId, requestId: requestId, text: message.text, sender: message.sender }));
+    return;
+  }
 
   let botsDS;
   if (!staticBots) {
@@ -134,7 +138,7 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
   winston.verbose("(tybotRoute) Message text: " + message.text)
-  
+
   try {
     await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
     if (requestId.startsWith("support-group-")) {
@@ -144,7 +148,7 @@ router.post('/ext/:botid', async (req, res) => {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
   }
-
+  
   let reply = null;
   try {
     reply = await chatbot.replyToMessage(message);
@@ -808,6 +812,21 @@ function myrequest(options, callback) {
       }
     }
   );
+}
+
+// A bubble written by a bot is not a user turn. Slash commands and button
+// actions stay, because those are how a bot invokes a block on another bot.
+function isBotBubble(message) {
+  if (!message || typeof message.sender !== "string" || !message.sender.startsWith("bot_")) {
+    return false;
+  }
+  if (message.attributes && message.attributes.action) {
+    return false;
+  }
+  if (typeof message.text === "string" && message.text.startsWith("/")) {
+    return false;
+  }
+  return true;
 }
 
 module.exports = { router: router, startApp: startApp};

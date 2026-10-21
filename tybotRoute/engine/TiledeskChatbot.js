@@ -96,7 +96,6 @@ class TiledeskChatbot {
       // Checking locked intent (for non-internal intents)
       // internal intents always "skip" the locked intent
       const locked_intent = await this.currentLockedIntent(this.requestId);
-      winston.verbose("(TiledeskChatbot) Got locked intent: -" + locked_intent + "-");
       if (locked_intent) {
         // const tdclient = new TiledeskClient({
         //   projectId: this.projectId,
@@ -156,6 +155,7 @@ class TiledeskChatbot {
           winston.verbose("(TiledeskChatbot) Invalid intent:", explicit_intent_name)
           reply = { "text": "Invalid intent: *" + explicit_intent_name + "*" }
           resolve();
+          return;
         }
         else {
           winston.verbose("(TiledeskChatbot) Processing intent:", explicit_intent_name)
@@ -176,12 +176,19 @@ class TiledeskChatbot {
             catch(error) {
               winston.error("(TiledeskChatbot) Error adding parameter: ", error);
               reject(error);
+              return;
             }
           }
           else {
-            winston.verbose("(TiledeskChatbot) Intent not found: " + explicit_intent_name);
+            winston.info("(TiledeskChatbot) explicit intent not found, stop " + JSON.stringify({
+              botId: this.botId,
+              requestId: this.requestId,
+              intent: explicit_intent_name,
+              text: message.text
+            }));
             reply = { "text": "Intent not found: " + explicit_intent_name }
-            resolve()
+            resolve();
+            return;
           }
         }
       }

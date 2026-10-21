@@ -46,6 +46,7 @@ const { DirHubspot } = require('./directives/DirHubspot');
 const { DirCustomerio } = require('./directives/DirCustomerio');
 const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
+const { DirDocparseExtract } = require('./directives/DirDocparseExtract');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
@@ -65,6 +66,8 @@ const { DirFlowLog } = require('./directives/DirFlowLog');
 const { DirAddKbContent } = require('./directives/DirAddKbContent');
 const { DirIteration } = require('./directives/DirIteration');
 const { AnalyticsClient } = require('../AnalyticsClient');
+const { DirCallSubAgent } = require('./directives/DirCallSubagent');
+const { DirReturnStack } = require('./directives/DirReturnStack');
 const { DirDataTables } = require('./directives/DirDataTables');
 
 class DirectivesChatbotPlug {
@@ -276,6 +279,8 @@ class DirectivesChatbotPlug {
       [Directives.REPLACE_BOT]: DirReplaceBot,
       [Directives.REPLACE_BOT_V2]: DirReplaceBotV2,
       [Directives.REPLACE_BOT_V3]: DirReplaceBotV3,
+      [Directives.CALL_SUBAGENT]: DirCallSubAgent,
+      [Directives.RETURN_STACK]: DirReturnStack,
       [Directives.WAIT]: DirWait,
       [Directives.LOCK_INTENT]: DirLockIntent,
       [Directives.UNLOCK_INTENT]: DirUnlockIntent,
@@ -290,6 +295,7 @@ class DirectivesChatbotPlug {
       [Directives.ASK_HELP_CENTER]: DirDeflectToHelpCenter,
       [Directives.ASK_GPT]: DirAskGPT,
       [Directives.ASK_GPT_V2]: DirAskGPTV2,
+      [Directives.DOCPARSE_EXTRACT]: DirDocparseExtract,
       [Directives.ADD_KB_CONTENT]: DirAddKbContent,
       [Directives.GPT_TASK]: DirGptTask,
       [Directives.AI_PROMPT]: DirAiPrompt,
