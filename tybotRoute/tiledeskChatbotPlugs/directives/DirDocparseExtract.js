@@ -72,8 +72,8 @@ class DirDocparseExtract {
 
       const requestVariables = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
       const filler = new Filler();
-      const filename = filler.fill(action.filename, requestVariables);
       const url = filler.fill(action.url, requestVariables);
+      const filename = filler.fill(action.filename, requestVariables) || this.#filenameFromUrl(url);
       const mode = filler.fill(action.mode, requestVariables) || "text";
 
       if (!filename || !url) {
@@ -334,6 +334,19 @@ class DirDocparseExtract {
       return null;
     }
     return dpi;
+  }
+
+  #filenameFromUrl(value) {
+    if (!value) {
+      return null;
+    }
+    try {
+      const pathname = new URL(value).pathname;
+      const filename = pathname.split("/").filter(Boolean).pop();
+      return filename ? decodeURIComponent(filename) : null;
+    } catch (err) {
+      return null;
+    }
   }
 
   #endpoint(base, path) {
