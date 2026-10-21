@@ -75,6 +75,9 @@ jobs:
           mv helm/values.yaml.new helm/values.yaml
           git --no-pager diff -- helm/values.yaml
 
+     - name: Wait 1 minute before commit
+       run: sleep 60
+
      - name: Commit and push on stage
        env:
         IMAGE_TAG: ${{ steps.image_tag.outputs.value }}
