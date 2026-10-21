@@ -68,6 +68,7 @@ const OUTPUT_CATALOG = {
   invoke_subagent:     TRUE_FALSE,
   askgpt:              TRUE_FALSE,
   askgptv2:            TRUE_FALSE,
+  docparse_extract:    TRUE_FALSE,
   gpt_task:            TRUE_FALSE,
   gpt_assistant:       TRUE_FALSE,
   ai_prompt:           TRUE_FALSE,
