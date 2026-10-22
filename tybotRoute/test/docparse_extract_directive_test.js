@@ -176,6 +176,7 @@ describe('Conversation for Docparse Extract test', async () => {
         assert.strictEqual(req.body.url, 'https://example.com/8.pdf');
         assert.strictEqual(req.body.mode, 'text');
         assert.strictEqual(req.body.enable_vision_fallback, undefined);
+        assert.strictEqual(req.body.ocr_quality_threshold, undefined);
         res.status(202).send({
           job_id: "job-ready",
           kind: "extract",
@@ -345,7 +346,6 @@ describe('Conversation for Docparse Extract test', async () => {
             name: 'gpt-4o',
             api_key: 'sk-test'
           },
-          temperature: 0,
           max_tokens: 8196
         });
         assert.strictEqual(req.body.provider, undefined);
@@ -373,6 +373,62 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(replyText(message), "extracted: vision text");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["extracted_text"], "vision text");
+  });
+
+  it('/extract_confidence - an integer 1-100 becomes ocr_quality_threshold 0.01-1', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_confidence', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.92);
+        res.status(202).send({
+          job_id: "job-confidence",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-confidence",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "confident text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: confident text");
+  });
+
+  it('/extract_confidence_invalid - an out-of-range confidence becomes 0.86', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_confidence_invalid', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.86);
+        res.status(202).send({
+          job_id: "job-confidence-invalid",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-confidence-invalid",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "fallback threshold text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: fallback threshold text");
   });
 
   it('/extract_fail_job - the GET after the redis notification returns the error', async () => {
