@@ -605,7 +605,8 @@ class DirAiPrompt {
    * as a message with attributes.interrupted and the flow stops.
    */
   async #goStreaming(action, json, url, headers, publicKey, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
-    const stream = new LlmStream(this, { label: "DirAiPrompt" });
+    // hedged request against provider latency spikes (OpenRouter only, VOICE_HEDGE_AFTER_MS): see utils/LlmStream
+    const stream = new LlmStream(this, { label: "DirAiPrompt", hedgeAfterMs: LlmStream.hedgeAfterMs() });
     this.logger.native("[AI Prompt] streaming answer " + stream.streamId);
     const result = await stream.run(url, json, headers);
 

@@ -26,7 +26,7 @@ let SERVER_PORT = 10001
 
 const OPENAI_INTEGRATION = { _id: "656728224b45965b69233333", id_project: PROJECT_ID, name: "openai", value: { apikey: "sk-test-key" } };
 const OPENROUTER_INTEGRATION = { _id: "656728224b45965b69234444", id_project: PROJECT_ID, name: "openrouter",
-  value: { apikey: "sk-or-test-key", models: [{ id: "deepseek/deepseek-v4.1-flash-1017", providers: ["together"], allow_fallbacks: false },
+  value: { apikey: "sk-or-test-key", models: [{ id: "deepseek/deepseek-v4.1-flash-1017", providers: ["together", "deepinfra/fp8"], allow_fallbacks: false },
     { id: "openai/gpt-oss-120b", providers: ["groq"], allow_fallbacks: false }] } };
 const DELTAS = ["Ciao! ", "Sono l'assistente ", "virtuale di Aruba. ", "Posso aiutarti ", "con la fibra?"];
 const ANSWER = DELTAS.join("");
@@ -38,6 +38,8 @@ function sse(event, data) {
 /**
  * Mock of tiledesk-server + tiledesk-llm. Records every call with its arrival time.
  * options.deltaDelay: ms between SSE chunks; options.streamStatus: status returned by /stream.
+ * options.askPlan(i): per /api/ask call i, { firstDelay: ms before the first chunk, deltas: [...], status: HTTP error };
+ * calls.ask[i].aborted is set when the client closes the connection before the end of the answer.
  */
 function mockServer(options, ready) {
   const calls = { ask: [], stream: [], messages: [] };
@@ -51,20 +53,35 @@ function mockServer(options, ready) {
     res.status(200).send(integration);
   });
   server.post('/api/ask', async (req, res) => {
-    calls.ask.push({ body: req.body, t: Date.now() });
+    const entry = { body: req.body, t: Date.now(), aborted: false };
+    const index = calls.ask.push(entry) - 1;
+    const plan = options.askPlan ? options.askPlan(index) || {} : {};
+    const deltas = plan.deltas || DELTAS;
+    const answer = deltas.join("");
+    res.on("close", () => {
+      if (!res.writableEnded) {
+        entry.aborted = true;
+      }
+    });
+    if (plan.status) {
+      return res.status(plan.status).send({ error: "provider error" });
+    }
     if (!req.body.stream) {
-      return res.status(200).send({ answer: ANSWER });
+      return res.status(200).send({ answer: answer });
     }
     res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" });
     res.write(sse("metadata", { message_id: "m1", status: "started" }));
-    for (const d of DELTAS) {
+    if (plan.firstDelay) {
+      await new Promise((r) => setTimeout(r, plan.firstDelay));
+    }
+    for (const d of deltas) {
       await new Promise((r) => setTimeout(r, options.deltaDelay || 20));
       if (res.writableEnded || res.destroyed) {
         return;
       }
       res.write(sse("chunk", { content: d, message_id: "m1" }));
     }
-    res.write(sse("metadata", { message_id: "m1", status: "completed", full_response: ANSWER, model_used: { answer: ANSWER, prompt_token_info: { total_tokens: 10 } } }));
+    res.write(sse("metadata", { message_id: "m1", status: "completed", full_response: answer, model_used: { answer: answer, prompt_token_info: { total_tokens: 10 } } }));
     res.end();
   });
   server.post('/:projectId/requests/:requestId/stream', (req, res) => {
@@ -192,7 +209,7 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
           assert.strictEqual(calls.ask[0].body.stream, true);
           assert.deepStrictEqual(calls.ask[0].body.thinking, { type: "disabled" });
           assert.strictEqual(calls.ask[0].body.model.name, "deepseek/deepseek-v4.1-flash-1017");
-          assert.deepStrictEqual(calls.ask[0].body.model.provider_routing.order, ["together"]);
+          assert.deepStrictEqual(calls.ask[0].body.model.provider_routing.order, ["together", "deepinfra/fp8"]);
           assert.strictEqual(spokenText(body), ANSWER);
         } catch (err) {
           error = err;
@@ -493,4 +510,141 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
     });
   }).timeout(15000);
 
+
+  // Hedged request (VOICE_HEDGE_AFTER_MS): a second /ask with the provider order rotated when the first is late
+  const HEDGE_DELTAS = ["Risposta ", "del secondo ", "provider."];
+  const withHedge = (ms, fn) => (done) => {
+    const saved = process.env.VOICE_HEDGE_AFTER_MS;
+    process.env.VOICE_HEDGE_AFTER_MS = String(ms);
+    fn((err) => {
+      if (saved === undefined) {
+        delete process.env.VOICE_HEDGE_AFTER_MS;
+      } else {
+        process.env.VOICE_HEDGE_AFTER_MS = saved;
+      }
+      done(err);
+    });
+  };
+  const hedgeCase = (askPlan, text, check) => (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      askPlan,
+      onMessage: (body, calls) => {
+        setTimeout(() => { // let the aborted request close
+          let error;
+          try {
+            check(body, calls);
+          } catch (err) {
+            error = err;
+          }
+          listener.close(() => done(error));
+        }, 200);
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", text);
+    });
+  };
+
+  it('hedge: a fast first request is not hedged (one /ask)', withHedge(300, hedgeCase(() => ({}), "/kbor", (body, calls) => {
+    assert.strictEqual(calls.ask.length, 1);
+    assert.strictEqual(spokenText(body), ANSWER);
+  }))).timeout(10000);
+
+  it('hedge: a late first request is hedged with the provider order rotated; the hedge answer is spoken, the first aborted',
+    withHedge(300, hedgeCase((i) => (i === 0 ? { firstDelay: 2000 } : { deltas: HEDGE_DELTAS }), "/kbor", (body, calls) => {
+      assert.strictEqual(calls.ask.length, 2);
+      assert.deepStrictEqual(calls.ask[0].body.model.provider_routing.order, ["together", "deepinfra/fp8"]);
+      assert.deepStrictEqual(calls.ask[1].body.model.provider_routing.order, ["deepinfra/fp8", "together"]);
+      assert.deepStrictEqual(calls.ask[1].body.thinking, { type: "disabled" }, "the hedge is the same request");
+      assert.ok(calls.ask[1].t - calls.ask[0].t >= 280, "hedge sent too early: " + (calls.ask[1].t - calls.ask[0].t) + " ms");
+      assert.strictEqual(calls.ask[0].aborted, true, "the late request must be aborted");
+      assert.strictEqual(spokenText(body), HEDGE_DELTAS.join(""));
+      assert.strictEqual(calls.stream.map((c) => c.body.delta).join(""), HEDGE_DELTAS.join(""), "only the winner is streamed");
+    }))).timeout(10000);
+
+  it('hedge: when both are late, the first to send a word wins and the other is aborted',
+    withHedge(300, hedgeCase((i) => (i === 0 ? { firstDelay: 700 } : { firstDelay: 3000, deltas: HEDGE_DELTAS }), "/kbor", (body, calls) => {
+      assert.strictEqual(calls.ask.length, 2);
+      assert.strictEqual(spokenText(body), ANSWER);
+      assert.strictEqual(calls.ask[1].aborted, true);
+      assert.strictEqual(calls.stream.map((c) => c.body.delta).join(""), ANSWER);
+    }))).timeout(10000);
+
+  it('hedge: a first request that fails before any word is hedged at once',
+    withHedge(2000, hedgeCase((i) => (i === 0 ? { status: 500 } : { deltas: HEDGE_DELTAS }), "/kbor", (body, calls) => {
+      assert.strictEqual(calls.ask.length, 2);
+      assert.ok(calls.ask[1].t - calls.ask[0].t < 1500, "the hedge must not wait for the timer after an error");
+      assert.strictEqual(spokenText(body), HEDGE_DELTAS.join(""));
+    }))).timeout(10000);
+
+  it('hedge: off when VOICE_HEDGE_AFTER_MS is 0 (one /ask even if late)',
+    withHedge(0, hedgeCase((i) => (i === 0 ? { firstDelay: 1000 } : { deltas: HEDGE_DELTAS }), "/kbor", (body, calls) => {
+      assert.strictEqual(calls.ask.length, 1);
+      assert.strictEqual(spokenText(body), ANSWER);
+    }))).timeout(10000);
+
+  it('hedge: never for a model that is not on OpenRouter',
+    withHedge(300, hedgeCase((i) => (i === 0 ? { firstDelay: 1000 } : { deltas: HEDGE_DELTAS }), "/kb", (body, calls) => {
+      assert.strictEqual(calls.ask.length, 1);
+      assert.strictEqual(spokenText(body), ANSWER);
+    }))).timeout(10000);
+
+  it('hedge: a newer caller message during the race aborts both requests; only the new turn replies', withHedge(300, (done) => {
+    const requestId = newRequestId();
+    let listener;
+    let replied = false;
+    mockServer({
+      askPlan: (i) => (i < 2 ? { firstDelay: 3000 } : { deltas: HEDGE_DELTAS }),
+      onMessage: (body, calls) => {
+        if (replied || (body.attributes && body.attributes.interrupted)) {
+          return;
+        }
+        replied = true;
+        setTimeout(() => {
+          let error;
+          try {
+            // the superseded turn is noticed when its first word arrives (3 s): both racing requests are aborted then
+            assert.ok(calls.ask.length >= 3, "expected 2 racing requests + the new turn, got " + calls.ask.length);
+            assert.strictEqual(calls.ask[0].aborted, true);
+            assert.strictEqual(calls.ask[1].aborted, true);
+            const replies = calls.messages.filter((m) => !(m.body.attributes && m.body.attributes.interrupted));
+            assert.strictEqual(replies.length, 1, "the superseded turn must not reply");
+            assert.strictEqual(spokenText(replies[0].body), HEDGE_DELTAS.join(""));
+            const spoken = calls.stream.map((c) => c.body.delta).join("");
+            assert.ok(!spoken.includes(DELTAS[0]), "nothing of the superseded turn may be streamed: " + spoken);
+          } catch (err) {
+            error = err;
+          }
+          listener.close(() => done(error));
+        }, 3500);
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kbor");
+      setTimeout(() => sendToBot(requestId, "voice_twilio", "/kbor"), 700); // after the hedge started (300 ms)
+    });
+  })).timeout(15000);
+
+  it('hedgeBody rotates the OpenRouter provider order and leaves other requests alone', () => {
+    const { LlmStream } = require('../utils/LlmStream');
+    const body = { llm: "openrouter", question: "q", model: { name: "m", provider_routing: { order: ["a", "b", "c"], allow_fallbacks: false } } };
+    assert.deepStrictEqual(LlmStream.hedgeBody(body).model.provider_routing, { order: ["b", "c", "a"], allow_fallbacks: false });
+    assert.deepStrictEqual(body.model.provider_routing.order, ["a", "b", "c"], "the original body is not changed");
+    const one = { llm: "openrouter", model: { name: "m", provider_routing: { order: ["a"] } } };
+    assert.strictEqual(LlmStream.hedgeBody(one), one);
+    assert.strictEqual(LlmStream.hedgeBody({ llm: "openai", model: { name: "gpt-4o" } }), null);
+    const saved = process.env.VOICE_HEDGE_AFTER_MS;
+    try {
+      delete process.env.VOICE_HEDGE_AFTER_MS;
+      assert.strictEqual(LlmStream.hedgeAfterMs(), 0);
+      process.env.VOICE_HEDGE_AFTER_MS = "1000";
+      assert.strictEqual(LlmStream.hedgeAfterMs(), 1000);
+      process.env.VOICE_HEDGE_AFTER_MS = "abc";
+      assert.strictEqual(LlmStream.hedgeAfterMs(), 0);
+    } finally {
+      if (saved === undefined) delete process.env.VOICE_HEDGE_AFTER_MS; else process.env.VOICE_HEDGE_AFTER_MS = saved;
+    }
+  });
 });
