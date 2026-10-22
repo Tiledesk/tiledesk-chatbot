@@ -27,6 +27,7 @@ class DirDocparseExtract {
   }
 
   execute(directive, callback) {
+    console.log("DirDocparseExtract directive: ", directive);
     winston.debug("DirDocparseExtract directive: ", directive);
     let action;
     if (directive.action) {
@@ -48,6 +49,7 @@ class DirDocparseExtract {
   }
 
   async go(action, callback) {
+    console.log("DirDocparseExtract action: ", action);
     winston.debug("DirDocparseExtract action:", action);
     let finished = false;
     const done = (stop) => {
@@ -115,6 +117,7 @@ class DirDocparseExtract {
         body.vision_llm = visionLlm;
       }
 
+      console.log("DirDocparseExtract body: ", body);
       let created;
       try {
         created = await this.#request({
@@ -129,6 +132,7 @@ class DirDocparseExtract {
         return;
       }
 
+      console.log("DirDocparseExtract created: ", created);
       const jobId = created && created.job_id;
       if (!jobId) {
         await this.#fail(action, "docparse did not return a job_id", trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
