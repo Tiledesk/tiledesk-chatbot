@@ -288,6 +288,7 @@ describe('Conversation for Docparse Extract test', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_filename_from_url', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
+        console.log("req.body", req.body);
         assert.strictEqual(req.body.filename, 'my invoice.pdf');
         assert.strictEqual(req.body.url, 'https://example.com/documents/my%20invoice.pdf?token=signed#download');
         res.status(202).send({
@@ -335,9 +336,20 @@ describe('Conversation for Docparse Extract test', async () => {
         assert.strictEqual(req.body.language, 'ita+eng');
         assert.strictEqual(req.body.dpi, 300);
         assert.strictEqual(req.body.enable_vision_fallback, true);
-        assert.strictEqual(req.body.provider, 'openai');
-        assert.strictEqual(req.body.model, 'gpt-4o');
-        assert.strictEqual(req.body.api_key, 'sk-test');
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.98);
+        assert.deepStrictEqual(req.body.vision_llm, {
+          llm: 'openai',
+          llm_key: '',
+          model: {
+            provider: 'openai',
+            name: 'gpt-4o',
+            api_key: 'sk-test'
+          },
+          temperature: 0,
+          max_tokens: 8196
+        });
+        assert.strictEqual(req.body.provider, undefined);
+        assert.strictEqual(req.body.api_key, undefined);
         res.status(202).send({
           job_id: "job-fallback",
           kind: "extract",
