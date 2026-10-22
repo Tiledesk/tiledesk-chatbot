@@ -6,8 +6,29 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# this branch
+# features-2610/v3-fields 15/10/2026
+- changed: V3 agents — `ds_version` and `connectors` are fields of the bot (server 2.30.0): the model knows them, the data sources load the connectors list and hand both over; agents without the label are untouched
+
+# features-2610/connectors-v3 14/10/2026
+- changed: V3 agents — the connectors list adds and replaces destinations, never removes them: an exit without a record keeps what the block carries, an empty list changes nothing, a missing block descriptor is rebuilt from the block record
+- added: V3 agents — Iteration runs the "when the list is done" block after the last item or at once with an empty list; agents without the label go on from the block's exit as before
+- fixed: block jumps use the endpoint given at start-up (environment as fallback); AI Condition's vLLM error path no longer crashes and goes to the error block
+
+# 2.2.1-rc16
+- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
+
+# 2.2.1-rc15
+- added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server; reply buttons are unchanged. Bots without the version label or without the list run exactly as before
+
+# 2.2.1-rc12
+- fixed: Iteration — an empty, missing or unreadable list, a missing "Go to block" or an error on an element no longer stop the conversation: the flow goes on from the block's exit, as when the list is done
+- fixed: Iteration — a loop left unfinished is not resumed by a later run on a different list: it starts over
+
+# 2.2.0-rc22
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+
+# 2.2.0-rc9
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
 
 # 2.1.0
 - added: support to analytics
@@ -26,6 +47,9 @@ available on:
 
 # 2.0.26
 
+# 2.0.26-rc1
+- added: check and skip private message from internal-notes
+
 # 2.0.9
 
 # 2.0.9-rc1
@@ -41,6 +65,8 @@ available on:
 
 # v0.5.0
 - added: AI_ENDPOINT env var
+
+# v0.5.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # v0.4.2
@@ -55,6 +81,19 @@ available on:
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
+# v0.3.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# v0.3.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # v0.3.4
 -bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -63,6 +102,18 @@ available on:
 
 # v0.3.2
 - bug-fixed: minor improvement
+
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
 
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
