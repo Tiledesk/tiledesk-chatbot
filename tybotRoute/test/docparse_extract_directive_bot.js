@@ -92,9 +92,47 @@ const bot = {
 				"provider": "openai",
 				"model": "gpt-4o",
 				"max_tokens": 8196,
-				"ocr_quality_threshold": 0.98,
+				"confidence": 98,
 				"language": "ita+eng",
 				"dpi": 300,
+				"assignReplyTo": "extracted_text",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "extract_confidence",
+			"intent_id": "extract-confidence",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "docparse_extract",
+				"_tdActionTitle": "extract with confidence",
+				"filename": "8.pdf",
+				"url": "https://example.com/8.pdf",
+				"confidence": 92,
+				"assignReplyTo": "extracted_text",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "extract_confidence_invalid",
+			"intent_id": "extract-confidence-invalid",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "docparse_extract",
+				"_tdActionTitle": "extract with invalid confidence",
+				"filename": "8.pdf",
+				"url": "https://example.com/8.pdf",
+				"confidence": 150,
 				"assignReplyTo": "extracted_text",
 				"trueIntent": "#SUCCESS",
 				"falseIntent": "#FAILURE"
