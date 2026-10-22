@@ -427,6 +427,14 @@ class DirAiPrompt {
 
     // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
     if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
+      // Reasoning not enabled in the block: hybrid models (DeepSeek V4.x, Claude Haiku 5.5) think by default when
+      // nothing is sent, and the first spoken word comes later. For the OpenRouter models listed in
+      // VOICE_REASONING_OFF_MODELS (comma-separated id prefixes, e.g. "deepseek/,anthropic/claude-haiku") switch it
+      // off explicitly (tiledesk-llm maps it to OpenRouter's reasoning: { enabled: false }). Only listed models:
+      // models with mandatory reasoning (gpt-oss, Gemini 2.5 Pro, o4-mini...) reject it with HTTP 400.
+      if (json.llm === 'openrouter' && !json.thinking && DirAiPrompt.voiceReasoningOff(json.model && json.model.name)) {
+        json.thinking = { type: "disabled" };
+      }
       await this.#goStreaming(action, json, AI_endpoint + apiEndpoint, headers, publicKey,
         trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback);
       return;
@@ -612,6 +620,15 @@ class DirAiPrompt {
       return;
     }
     callback();
+  }
+
+  /** True when the OpenRouter model id starts with one of the prefixes in VOICE_REASONING_OFF_MODELS (read per call). */
+  static voiceReasoningOff(modelName) {
+    if (!modelName) {
+      return false;
+    }
+    return (process.env.VOICE_REASONING_OFF_MODELS || "").split(",").map((p) => p.trim()).filter(Boolean)
+      .some((prefix) => String(modelName).startsWith(prefix));
   }
 
   /** Reads a text/event-stream body (kept for callers of the previous API: see utils/LlmStream). */

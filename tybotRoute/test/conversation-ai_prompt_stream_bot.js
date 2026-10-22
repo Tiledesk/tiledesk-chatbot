@@ -28,6 +28,50 @@ const bot = {
 			}]
 		},
 		{
+			// same as "kb" through OpenRouter (hybrid reasoning model, reasoning not enabled in the block)
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "it",
+			"intent_display_name": "kbor",
+			"intent_id": "7d2e9b14-1c3a-4f6e-8a90-5b7c3d2e1f04",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionId": "ai-prompt-kbor",
+				"assignReplyTo": "prompt_reply",
+				"question": "{{lastUserText}}",
+				"llm": "openrouter",
+				"model": "deepseek/deepseek-v4.1-flash-1017",
+				"max_tokens": 256,
+				"temperature": 0.3,
+				"trueIntent": "#KBO",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
+			// OpenRouter model not in VOICE_REASONING_OFF_MODELS (e.g. mandatory reasoning)
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "it",
+			"intent_display_name": "kborx",
+			"intent_id": "9a4c1e27-5b3d-4c8f-b1a2-6d8e0f9c3b15",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionId": "ai-prompt-kborx",
+				"assignReplyTo": "prompt_reply",
+				"question": "{{lastUserText}}",
+				"llm": "openrouter",
+				"model": "openai/gpt-oss-120b",
+				"max_tokens": 256,
+				"temperature": 0.3,
+				"trueIntent": "#KBO",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "it",

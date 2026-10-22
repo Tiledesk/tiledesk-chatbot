@@ -2,6 +2,7 @@
 process.env.STREAM_ENABLED = "true";
 process.env.STREAM_CHANNELS = "voice_twilio";
 process.env.STREAM_CHUNK_MAX_WAIT_MS = "150";
+process.env.VOICE_REASONING_OFF_MODELS = "deepseek/, anthropic/claude-haiku";
 
 var assert = require('assert');
 const tybot = require("..");
@@ -24,6 +25,9 @@ const tilebotService = require('../services/TilebotService');
 let SERVER_PORT = 10001
 
 const OPENAI_INTEGRATION = { _id: "656728224b45965b69233333", id_project: PROJECT_ID, name: "openai", value: { apikey: "sk-test-key" } };
+const OPENROUTER_INTEGRATION = { _id: "656728224b45965b69234444", id_project: PROJECT_ID, name: "openrouter",
+  value: { apikey: "sk-or-test-key", models: [{ id: "deepseek/deepseek-v4.1-flash-1017", providers: ["together"], allow_fallbacks: false },
+    { id: "openai/gpt-oss-120b", providers: ["groq"], allow_fallbacks: false }] } };
 const DELTAS = ["Ciao! ", "Sono l'assistente ", "virtuale di Aruba. ", "Posso aiutarti ", "con la fibra?"];
 const ANSWER = DELTAS.join("");
 
@@ -40,10 +44,11 @@ function mockServer(options, ready) {
   const server = express();
   server.use(bodyParser.json());
   server.get('/:project_id/integration/name/:name', (req, res) => {
-    if (req.params.name !== OPENAI_INTEGRATION.name) {
+    const integration = [OPENAI_INTEGRATION, OPENROUTER_INTEGRATION].find((i) => i.name === req.params.name);
+    if (!integration) {
       return res.status(404).send({ success: false });
     }
-    res.status(200).send(OPENAI_INTEGRATION);
+    res.status(200).send(integration);
   });
   server.post('/api/ask', async (req, res) => {
     calls.ask.push({ body: req.body, t: Date.now() });
@@ -151,6 +156,7 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
         try {
           assert.strictEqual(calls.ask.length, 1);
           assert.strictEqual(calls.ask[0].body.stream, true);
+          assert.strictEqual(calls.ask[0].body.thinking, undefined, "no reasoning field outside OpenRouter");
           const chunks = calls.stream.map((c) => c.body);
           assert.ok(chunks.length >= 2, "expected several chunks, got " + chunks.length);
           chunks.forEach((c, i) => {
@@ -173,6 +179,91 @@ describe('Conversation for AI Prompt streaming (voice)', async () => {
       sendToBot(requestId, "voice_twilio", "/kb");
     });
     let listener;
+  }).timeout(10000);
+
+  it('switches reasoning off on a voice turn for an OpenRouter model listed in VOICE_REASONING_OFF_MODELS', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.strictEqual(calls.ask.length, 1);
+          assert.strictEqual(calls.ask[0].body.stream, true);
+          assert.deepStrictEqual(calls.ask[0].body.thinking, { type: "disabled" });
+          assert.strictEqual(calls.ask[0].body.model.name, "deepseek/deepseek-v4.1-flash-1017");
+          assert.deepStrictEqual(calls.ask[0].body.model.provider_routing.order, ["together"]);
+          assert.strictEqual(spokenText(body), ANSWER);
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kbor");
+    });
+  }).timeout(10000);
+
+  it('leaves reasoning alone on a voice turn for an OpenRouter model not listed (mandatory reasoning)', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.strictEqual(calls.ask.length, 1);
+          assert.strictEqual(calls.ask[0].body.stream, true);
+          assert.strictEqual(calls.ask[0].body.model.name, "openai/gpt-oss-120b");
+          assert.strictEqual(calls.ask[0].body.thinking, undefined);
+          assert.strictEqual(spokenText(body), ANSWER);
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "voice_twilio", "/kborx");
+    });
+  }).timeout(10000);
+
+  it('VOICE_REASONING_OFF_MODELS: empty = never, comma-separated id prefixes otherwise', () => {
+    const { DirAiPrompt } = require('../tiledeskChatbotPlugs/directives/DirAiPrompt');
+    const saved = process.env.VOICE_REASONING_OFF_MODELS;
+    try {
+      delete process.env.VOICE_REASONING_OFF_MODELS;
+      assert.strictEqual(DirAiPrompt.voiceReasoningOff("deepseek/deepseek-v4.1-flash-1017"), false);
+      process.env.VOICE_REASONING_OFF_MODELS = " deepseek/ , anthropic/claude-haiku ";
+      assert.strictEqual(DirAiPrompt.voiceReasoningOff("deepseek/deepseek-v4.1-flash-1017"), true);
+      assert.strictEqual(DirAiPrompt.voiceReasoningOff("anthropic/claude-haiku-5.5"), true);
+      assert.strictEqual(DirAiPrompt.voiceReasoningOff("openai/gpt-oss-120b"), false);
+      assert.strictEqual(DirAiPrompt.voiceReasoningOff(undefined), false);
+    } finally {
+      process.env.VOICE_REASONING_OFF_MODELS = saved;
+    }
+  });
+
+  it('leaves reasoning alone on an OpenRouter chat turn (no voice)', (done) => {
+    const requestId = newRequestId();
+    let listener;
+    mockServer({
+      onMessage: (body, calls) => {
+        let error;
+        try {
+          assert.strictEqual(calls.ask.length, 1);
+          assert.ok(!calls.ask[0].body.stream, "a chat turn is not streamed");
+          assert.strictEqual(calls.ask[0].body.thinking, undefined);
+          assert.strictEqual(calls.stream.length, 0);
+        } catch (err) {
+          error = err;
+        }
+        listener.close(() => done(error));
+      }
+    }, (l) => {
+      listener = l;
+      sendToBot(requestId, "chat21", "/kbor");
+    });
   }).timeout(10000);
 
   it('does not stream on other channels', (done) => {
