@@ -106,9 +106,9 @@ class DirDocparseExtract {
         body.dpi = dpi;
       }
 
-      const threshold = this.#threshold(filler.fill(action.ocr_quality_threshold, requestVariables));
-      if (threshold !== null) {
-        body.ocr_quality_threshold = threshold;
+      const confidence = this.#confidence(filler.fill(action.confidence, requestVariables));
+      if (confidence !== null) {
+        body.ocr_quality_threshold = confidence;
       }
 
       const visionLlm = await this.#resolveFallback(action, filler, requestVariables);
@@ -215,9 +215,7 @@ class DirDocparseExtract {
       visionLlm.temperature = temperature;
     }
     const maxTokens = this.#integer(filler.fill(action.max_tokens, requestVariables));
-    if (maxTokens !== null) {
-      visionLlm.max_tokens = maxTokens;
-    }
+    visionLlm.max_tokens = maxTokens !== null ? maxTokens : 8192;
 
     return visionLlm;
   }
@@ -387,12 +385,15 @@ class DirDocparseExtract {
     return number;
   }
 
-  #threshold(value) {
-    const threshold = this.#number(value);
-    if (threshold === null || threshold < 0 || threshold > 1) {
+  #confidence(value) {
+    if (value === undefined || value === null || value === "") {
       return null;
     }
-    return threshold;
+    const confidence = Number(value);
+    if (!Number.isInteger(confidence) || confidence < 1 || confidence > 100) {
+      return 0.86;
+    }
+    return confidence / 100;
   }
 
   #filenameFromUrl(value) {
