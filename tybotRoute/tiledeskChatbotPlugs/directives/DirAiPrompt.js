@@ -309,8 +309,14 @@ class DirAiPrompt {
 
     }
 
-    if (action.llm === 'vllm') {
-      json.model = vllm_model;
+    if (action.llm === 'vllm' && vllm_server_config) {
+      console.log("llm: vllm")
+      json.model = {
+        name: filled_model,
+        url: vllm_server_config.url,
+        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
+        provider: 'vllm'
+      }
     }
 
     if (action.llm === 'openrouter') {

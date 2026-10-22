@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.4.0
+- Updated ReplaceBot to manage return
+
 # 2.3.0-rc3
 - Voice: the AI Prompt history now includes the bot's spoken answers (speech_form replies carry their text in the commands, with an empty `text`, and were left out of the transcript): a caller's "sì" to the bot's "Vuoi sapere di più?" keeps its context
 

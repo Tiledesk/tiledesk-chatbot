@@ -47,6 +47,7 @@ const { DirHubspot } = require('./directives/DirHubspot');
 const { DirCustomerio } = require('./directives/DirCustomerio');
 const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
+const { DirDocparseExtract } = require('./directives/DirDocparseExtract');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
@@ -307,6 +308,7 @@ class DirectivesChatbotPlug {
       [Directives.ASK_HELP_CENTER]: DirDeflectToHelpCenter,
       [Directives.ASK_GPT]: DirAskGPT,
       [Directives.ASK_GPT_V2]: DirAskGPTV2,
+      [Directives.DOCPARSE_EXTRACT]: DirDocparseExtract,
       [Directives.ADD_KB_CONTENT]: DirAddKbContent,
       [Directives.GPT_TASK]: DirGptTask,
       [Directives.AI_PROMPT]: DirAiPrompt,

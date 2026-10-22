@@ -28,6 +28,7 @@ let SERVER_PORT = 10001
 describe('Conversation for AiPrompt test', async () => {
 
   let app_listener;
+  const app_sockets = new Set();
   let util = new TiledeskChatbotUtil();
 
   before(() => {
@@ -51,6 +52,10 @@ describe('Conversation for AiPrompt test', async () => {
               winston.info('Tilebot connector listening on port ', port);
               resolve();
             });
+            app_listener.on('connection', (socket) => {
+              app_sockets.add(socket);
+              socket.on('close', () => app_sockets.delete(socket));
+            });
           });
       }
       catch (error) {
@@ -61,9 +66,17 @@ describe('Conversation for AiPrompt test', async () => {
   });
 
   after(function (done) {
-    app_listener.close(() => {
+    if (!app_listener) {
       done();
-    });
+      return;
+    }
+
+    // Open sockets from the bot calls would otherwise hold close() past
+    // Mocha's default timeout; closeAllConnections() needs Node >= 18.2.
+    app_listener.close(() => done());
+    for (const socket of app_sockets) {
+      socket.destroy();
+    }
   });
 
   describe('Missing parameters tests', async () => {
@@ -353,7 +366,6 @@ describe('Conversation for AiPrompt test', async () => {
       })
 
       endpointServer.post('/api/ask', function (req, res) {
-
         assert(req.body.llm === "myllm");
         assert(req.body.model === "llmmodel");
         assert(req.body.llm_key === "example_api_key");
@@ -458,7 +470,7 @@ describe('Conversation for AiPrompt test', async () => {
       })
 
       endpointServer.post('/api/ask', function (req, res) {
-
+        console.log("req.body: ", req.body);
         assert(req.body.llm === "vllm");
         assert(req.body.llm_key === "cerebras_api_key");
         assert(req.body.model.name === "gpt-oss-30b");
@@ -1301,7 +1313,38 @@ describe('Conversation for AiPrompt test', async () => {
                   name: "Tiledesk Communicator",
                   native: true,
                   transport: "streamable_http",
-                  tools: [ "CHECK_AVAILABLE_AGENTS", "ASK_KB", "CLOSE_CONVERSATION" ],
+                  authorization: {
+                    type: "X-API-Key",
+                    key: "example_api_key"
+                  },
+                  customHeaders: [
+                    { key: "X-Tenant", value: "acme", enabled: true },
+                    { key: "X-Skip", value: "no", enabled: false }
+                  ]
+                },
+                {
+                  name: "calendar",
+                  url: "example_url2.com/mcp",
+                  transport: "streamable_http",
+                  authorization: {
+                    type: "Bearer",
+                    key: "Bearer mybearertoken"
+                  },
+                  customHeaders: [
+                    { key: "X-Tenant", value: "calendar", enabled: true }
+                  ]
+                },
+                {
+                  name: "custom",
+                  url: "example_customurl1.com/mcp",
+                  transport: "streamable_http",
+                  authorization: {
+                    type: "Basic",
+                    key: "Basic mybase64username:password"
+                  },
+                  customHeaders: [
+                    { key: "X-Tenant", value: "custom", enabled: true }
+                  ]
                 }
               ]
             }
@@ -1342,6 +1385,35 @@ describe('Conversation for AiPrompt test', async () => {
         assert(req.body.servers["Tiledesk Communicator"].headers["x-chatbot-id"] === "botID");
         assert(req.body.servers["Tiledesk Communicator"].headers["x-last-user-text"] === "/ai_prompt_native_mcp_tools");
 
+        assert(req.body.servers.email.url === "example_url1.com/mcp");
+        assert(req.body.servers.email.transport === "streamable_http");
+        assert(req.body.servers.email.enabled_tools.length === 2);
+        assert(req.body.servers.email.enabled_tools[0] === "email_send");
+        assert(req.body.servers.email.enabled_tools[1] === "email_read");
+        assert(req.body.servers.email.api_key === "example_api_key");
+        assert(req.body.servers.email.headers['X-Tenant'] === 'acme');
+        assert(req.body.servers.email.headers['X-Skip'] === undefined);
+        assert(req.body.servers.email.headers['x-chatbotToken'] === undefined);
+        assert(req.body.servers.email.headers['x-project-id'] === undefined);
+
+        assert(req.body.servers.calendar.url === "example_url2.com/mcp");
+        assert(req.body.servers.calendar.transport === "streamable_http");
+        assert(req.body.servers.calendar.enabled_tools.length === 2);
+        assert(req.body.servers.calendar.enabled_tools[0] === "calendar_read");
+        assert(req.body.servers.calendar.enabled_tools[1] === "calendar_write");
+        assert(req.body.servers.calendar.api_key === "Bearer mybearertoken");
+        assert(req.body.servers.calendar.headers['X-Tenant'] === 'calendar');
+        assert(req.body.servers.calendar.headers['x-chatbotToken'] === undefined);
+
+        assert(req.body.servers.custom.url === "example_customurl1.com/mcp");
+        assert(req.body.servers.custom.transport === "streamable_http");
+        assert(req.body.servers.custom.enabled_tools.length === 2);
+        assert(req.body.servers.custom.enabled_tools[0] === "tool1");
+        assert(req.body.servers.custom.enabled_tools[1] === "tool2");
+        assert(req.body.servers.custom.api_key === "Basic mybase64username:password");
+        assert(req.body.servers.custom.headers['X-Tenant'] === 'custom');
+        assert(req.body.servers.custom.headers['x-chatbotToken'] === undefined);
+  
         let reply = {}
         let http_code = 200;
         reply = {
