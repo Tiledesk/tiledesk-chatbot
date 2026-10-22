@@ -104,17 +104,15 @@ class DirDocparseExtract {
         body.dpi = dpi;
       }
 
-      const fallback = await this.#resolveFallback(action, filler, requestVariables);
-      if (fallback) {
+      const threshold = this.#threshold(filler.fill(action.ocr_quality_threshold, requestVariables));
+      if (threshold !== null) {
+        body.ocr_quality_threshold = threshold;
+      }
+
+      const visionLlm = await this.#resolveFallback(action, filler, requestVariables);
+      if (visionLlm) {
         body.enable_vision_fallback = true;
-        body.provider = fallback.provider;
-        body.model = fallback.model;
-        if (fallback.api_key) {
-          body.api_key = fallback.api_key;
-        }
-        if (fallback.base_url) {
-          body.base_url = fallback.base_url;
-        }
+        body.vision_llm = visionLlm;
       }
 
       let created;
@@ -187,12 +185,37 @@ class DirDocparseExtract {
       apiKey = process.env.GPTKEY;
     }
 
-    return {
-      provider: provider,
-      model: (resolved && resolved.name) || model,
-      api_key: apiKey || undefined,
-      base_url: resolved && resolved.url ? resolved.url : undefined
+    const modelConfig = {
+      provider: (resolved && resolved.provider) || provider,
+      name: (resolved && resolved.name) || model
     };
+    if (apiKey) {
+      modelConfig.api_key = apiKey;
+    }
+    for (const field of ["url", "token", "project", "location", "provider_routing", "custom_headers"]) {
+      if (resolved && resolved[field]) {
+        modelConfig[field] = resolved[field];
+      }
+    }
+
+    // llm stays populated because tiledesk-llm still branches on it.
+    // The credentials travel inside model; llm_key is only there for compatibility.
+    const visionLlm = {
+      llm: modelConfig.provider,
+      llm_key: "",
+      model: modelConfig
+    };
+
+    const temperature = this.#number(filler.fill(action.temperature, requestVariables));
+    if (temperature !== null) {
+      visionLlm.temperature = temperature;
+    }
+    const maxTokens = this.#integer(filler.fill(action.max_tokens, requestVariables));
+    if (maxTokens !== null) {
+      visionLlm.max_tokens = maxTokens;
+    }
+
+    return visionLlm;
   }
 
   #waitForJob(base, jobId) {
@@ -339,6 +362,33 @@ class DirDocparseExtract {
       return null;
     }
     return dpi;
+  }
+
+  #number(value) {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+    const number = Number(value);
+    if (!Number.isFinite(number)) {
+      return null;
+    }
+    return number;
+  }
+
+  #integer(value) {
+    const number = this.#number(value);
+    if (number === null || !Number.isInteger(number)) {
+      return null;
+    }
+    return number;
+  }
+
+  #threshold(value) {
+    const threshold = this.#number(value);
+    if (threshold === null || threshold < 0 || threshold > 1) {
+      return null;
+    }
+    return threshold;
   }
 
   #filenameFromUrl(value) {

@@ -91,6 +91,8 @@ const bot = {
 				"url": "https://example.com/8.pdf",
 				"provider": "openai",
 				"model": "gpt-4o",
+				"max_tokens": 8196,
+				"ocr_quality_threshold": 0.98,
 				"language": "ita+eng",
 				"dpi": 300,
 				"assignReplyTo": "extracted_text",

@@ -256,19 +256,27 @@ const bot = {
 						name: "email", 
 						transport: "streamable_http", 
 						url: "example_url1.com/mcp", 
-						enabled_tools: ['email_send', 'email_read'] 
+						tools: [
+							{ name: "email_send" },
+							{ name: "email_read" }
+						]
 					}, 
 					{ 
 						name: "calendar",
 						transport: "streamable_http", 
 						url: "example_url2.com/mcp", 
-						enabled_tools: ['calendar_read', 'calendar_write'] 
+						tools: ["calendar_read", "calendar_write"]
 					},
 					{ 
 						name: "custom",
 						transport: "streamable_http", 
 						url: "example_customurl1.com/mcp", 
-						enabled_tools: ['tool1', 'tool2'] 
+						tools: [
+							{ name: "tool1" },
+							{ name: "" },
+							{},
+							{ name: "tool2" }
+						]
 					}
 				],
 				"llm": "myllm",
