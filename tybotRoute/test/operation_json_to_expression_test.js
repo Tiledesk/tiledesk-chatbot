@@ -809,12 +809,8 @@ describe('JSON operation to expression', function() {
         });
     });        
 });
-describe('endsWith is case-sensitive, like the operators beside it', function() {
+describe('endsWith ignores case (legacy behaviour kept)', function() {
 
-    // It used to lower both sides, so "ends with" quietly ignored case while
-    // startsWith and contains did not -- and nothing on the screen said so.
-    // A condition that wants case ignored now asks for it: the Design Studio
-    // wraps both operands in lowerCase().
     function endsWithResult(value, suffix) {
         const groups = [{
             type: 'expression',
@@ -833,9 +829,19 @@ describe('endsWith is case-sensitive, like the operators beside it', function() 
         assert.strictEqual(endsWithResult('MaRIO', 'RIO'), true);
     });
 
-    it('does not match a different case', function() {
-        assert.strictEqual(endsWithResult('MaRio', 'RIO'), false);
-        assert.strictEqual(endsWithResult('MaRio', 'rio'), false);
+    it('matches a different case', function() {
+        assert.strictEqual(endsWithResult('Ordine.PDF', '.pdf'), true);
+        assert.strictEqual(endsWithResult('abc', 'BC'), true);
+        assert.strictEqual(endsWithResult('MaRio', 'RIO'), true);
+    });
+
+    it('does not match a different ending', function() {
+        assert.strictEqual(endsWithResult('abc', 'x'), false);
+    });
+
+    it('an undefined or null left operand never matches (no throw, not even "ned")', function() {
+        assert.strictEqual(endsWithResult(undefined, 'ned'), false);
+        assert.strictEqual(endsWithResult(null, 'ull'), false);
     });
 
     it('survives a missing variable instead of throwing', function() {
