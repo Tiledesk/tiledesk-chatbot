@@ -67,6 +67,10 @@ class Directives {
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
   static DATA_TABLES = "data_table";
+  // DOCPARSE
+  static DOCPARSE_EXTRACT = "docparse_extract";
+
+  // DEPRECATED DIRECTIVES
   // static WHEN_ONLINE_MOVE_TO_AGENT = "whenonlinemovetoagent"; // DEPRECATED?
   // static WHEN_OFFLINE_HOURS = "whenofflinehours"; // DEPRECATED // adds a message on top of the original message when offline hours opts: --replace
   //static WHEN_OFFLINE_HOURS_REPLACE_MESSAGE = "whenofflinehoursreplacemessage"; // REMOVE

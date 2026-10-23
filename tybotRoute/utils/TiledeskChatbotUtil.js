@@ -854,6 +854,8 @@ class TiledeskChatbotUtil {
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
                 winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); 
             }
+
+            // --- ATTRIBUTES ---
             if (message.attributes) {
                 winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes);
 
@@ -882,6 +884,11 @@ class TiledeskChatbotUtil {
                 }
                 if (message.attributes.ani) {
                     add("ani", message.attributes.ani);
+                }
+
+                // --- VOICE STREAMING ---
+                if (message.attributes?.voice_mode) {
+                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voice_mode);
                 }
             }
 

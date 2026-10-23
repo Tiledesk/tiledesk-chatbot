@@ -6,21 +6,52 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# features-2610/v3-fields 15/10/2026
-- changed: the bot model knows `ds_version` and `connectors`, the two fields the server stores for V3 agents since 2.30.0; the Mongo data source loads the connectors list explicitly (not selected by default on the server) and the mock data source hands both fields over. Agents without the label are untouched
+# 2.6.0
+- Added voice_mode system-defined flow variable
 
-# features-2610/connectors-v3 14/10/2026
-- changed: V3 agents — the connectors list adds and replaces destinations but never removes them: an exit or a button with no record keeps what the block JSON carries, an empty list changes nothing, no empty settings or block descriptor is created without a record, and a missing block descriptor is rebuilt from the block record
-- added: V3 agents — Iteration runs the "when the list is done" block after the last item, or at once with an empty list; agents without the V3 label keep ignoring that field as before
-- fixed: block jumps use the endpoint given at start-up, with the environment as fallback (the same value as before in every current deployment)
-- fixed: AI Condition — the vLLM error paths (integration, server or key missing) referenced undeclared variables and crashed the action; they now go to the error block like every other error
+# 2.4.0
+- Updated ReplaceBot to manage return
 
-# features-2610/connectors-v3 12/10/2026
-- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; bots without the V3 label or without the list are untouched
-- added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server. Bots without the version label or without the list run exactly as before
+# 2.3.0
+- Added support for Subagent with CallSubagent and ReturnStack actions
 
-# main 23/07/2026
-- added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+# 2.2.0
+- Normalized custom headers in AiPrompt action 
+
+# 2.1.15
+- Added support for OpenRouter provider
+- Added support for Gemini Agent Platform
+
+# 2.1.13
+- Added mcp lock and mcp server
+
+# 2.1.12
+- Improved api key management from integration
+
+# 2.1.10
+- Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
+
+# 2.1.9 
+- Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
+
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
+# 2.1.5
+- Added action DirDataTables
+
+# 2.1.4
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+
+# 2.1.3
+- Fixed bug on analytics integration
+
+# 2.1.2
+- Fixed bug on AiPrompt action with vllm models
+
+# 2.1.1
+- Improved support for multiple vLLM servers
 
 # 2.1.0
 - added: support to analytics
