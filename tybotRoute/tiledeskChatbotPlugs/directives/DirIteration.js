@@ -2,6 +2,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const { ConnectorsV3 } = require('../../utils/ConnectorsV3');
 
 class DirIteration {
   constructor(context) {
@@ -94,6 +95,7 @@ class DirIteration {
     
     const iterable = action.iterable;
     const goToIntent = action.goToIntent;
+    const fallbackIntent = action.fallbackIntent;   // "when the list is done": il blocco da eseguire dopo l'ultimo elemento (o con una lista vuota)
     const output = action.assignOutputTo;
     const delay = 1000;
     //const delay = (action.delay || 30) * 1000; // s to ms
@@ -122,8 +124,8 @@ class DirIteration {
 
     if (iterableArray.length === 0) {
       winston.verbose("[Iteration] Iterable array is empty. Exit...")
-      this.logger.warn("[Iteration] Iterable array is empty. Going on.")
-      callback(false);
+      this.logger.warn("[Iteration] Iterable array is empty. Exit...")
+      this.#whenDone(fallbackIntent, true, callback);
       return;
     }
 
@@ -132,6 +134,7 @@ class DirIteration {
       currentIndex: 0,
       iterableArray: iterableArray,
       goToIntent: goToIntent,
+      fallbackIntent: fallbackIntent,
       output: output,
       delay: delay,
       totalItems: iterableArray.length
@@ -154,7 +157,7 @@ class DirIteration {
     if (iterationState.currentIndex >= iterationState.totalItems) {
       this.logger.native("[Iteration] Iteration completed");
       await this.#clearIterationState(actionId);
-      callback(false);
+      this.#whenDone(iterationState.fallbackIntent, false, callback);
       return;
     }
 
@@ -163,6 +166,24 @@ class DirIteration {
     
     // Process current item (use values from saved state)
     await this.#processCurrentItem(iterationState, actionId, iterationState.goToIntent, iterationState.output, callback);
+  }
+
+  /**
+   * La lista e' finita (ultimo elemento gia' passato, o lista vuota). Per un agente V3 con un
+   * blocco "when the list is done" (`fallbackIntent`, dal 14/10/2026) lo esegue e ferma il flusso,
+   * come fa `goToIntent` per ogni elemento. Per gli agenti precedenti il campo resta ignorato come
+   * e' sempre stato (nessun cambiamento di comportamento): il flusso fa quello che ha sempre fatto
+   * (`stopWithoutFallback`).
+   */
+  #whenDone(fallbackIntent, stopWithoutFallback, callback) {
+    if (!fallbackIntent || !ConnectorsV3.isV3Bot(this.chatbot && this.chatbot.bot)) {
+      callback(stopWithoutFallback);
+      return;
+    }
+    this.logger.native("[Iteration] List done: executing fallbackIntent");
+    this.#executeIntent(fallbackIntent, () => {
+      callback(true);
+    });
   }
 
   async #processCurrentItem(iterationState, actionId, goToIntent, output, callback) {

@@ -8,6 +8,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
+const { pushCallerSnapshot } = require('../pushCallerSnapshot');
 
 class DirReplaceBotV3 {
 
@@ -35,9 +36,9 @@ class DirReplaceBotV3 {
       callback();
       return;
     }
-    this.go(action, () => {
+    this.go(action, (stop) => {
       this.logger.native("[Replace Bot] Executed");
-      callback();
+      callback(stop);
     })
   }
 
@@ -56,6 +57,18 @@ class DirReplaceBotV3 {
     //botId = filler.fill(botId, variables);
     botSlug = filler.fill(botSlug, variables);
     blockName = filler.fill(blockName, variables);
+
+    let pushed;
+    try {
+      pushed = await pushCallerSnapshot(this.context, "DirReplaceBotV3", {
+        targetBotId: useSlug ? botSlug : botId,
+        blockName: blockName
+      });
+    } catch (error) {
+      winston.error("(DirReplaceBotV3) error saving stack: ", error);
+      callback(true);
+      return;
+    }
 
     let data = {};
     if (useSlug && useSlug === true) {
@@ -77,9 +90,10 @@ class DirReplaceBotV3 {
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
+          await pushed.subagentStack.pop(this.requestId);
           winston.error("(DirReplaceBotV3) error: ", err);
           if (callback) {
-            callback();
+            callback(true);
             return;
           }
         }
@@ -112,8 +126,11 @@ class DirReplaceBotV3 {
               if (err) {
                 winston.debug("(DirReplaceBotV3) Error sending hidden message: " + err.message);
               }
-              callback();
+              callback(true);
             });
+        }
+        else if (pushed.nextBlock) {
+          callback(true);
         }
         else {
           callback();

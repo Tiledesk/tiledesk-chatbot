@@ -6,12 +6,52 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
-# this branch 05/10/2026
-- fixed: Iteration — an empty, missing or unreadable list, a missing "Go to block" or an error on an element no longer stop the conversation: the flow goes on from the block's exit, as when the list is done
-- fixed: Iteration — a loop left unfinished is not resumed by a later run on a different list: it starts over
+# 2.6.0
+- Added voice_mode system-defined flow variable
 
-# this branch
-- added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+# 2.4.0
+- Updated ReplaceBot to manage return
+
+# 2.3.0
+- Added support for Subagent with CallSubagent and ReturnStack actions
+
+# 2.2.0
+- Normalized custom headers in AiPrompt action 
+
+# 2.1.15
+- Added support for OpenRouter provider
+- Added support for Gemini Agent Platform
+
+# 2.1.13
+- Added mcp lock and mcp server
+
+# 2.1.12
+- Improved api key management from integration
+
+# 2.1.10
+- Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
+
+# 2.1.9 
+- Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
+
+# 2.1.6
+- Improved DirAiPrompt: better vLLM integration handling, flow-variable server URL resolution, and reasoning support
+- Improved DirAiCondition: added vLLM integration support, Filler for model processing with request variables, and clearer error handling/logging
+
+# 2.1.5
+- Added action DirDataTables
+
+# 2.1.4
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
+
+# 2.1.3
+- Fixed bug on analytics integration
+
+# 2.1.2
+- Fixed bug on AiPrompt action with vllm models
+
+# 2.1.1
+- Improved support for multiple vLLM servers
 
 # 2.1.0
 - added: support to analytics
