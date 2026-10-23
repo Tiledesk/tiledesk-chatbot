@@ -60,6 +60,8 @@ const OUTPUT_CATALOG = {
   ifonlineagents:      TRUE_FALSE,
   ifonlineagentsv2:    TRUE_FALSE,
   ifopenhours:         TRUE_FALSE,
+  invite_human:        TRUE_FALSE,
+  remove_human:        TRUE_FALSE,
   jsonconditionmulti:  [array((c) => '/case/' + c._tdCaseId, 'cases', '_tdCaseId', 'intent'), field('/else', 'elseIntent')],
   jsoncondition:       TRUE_FALSE,
   jsoncondition2:      TRUE_FALSE,
