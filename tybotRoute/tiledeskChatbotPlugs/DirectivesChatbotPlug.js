@@ -50,6 +50,8 @@ const { DirDocparseExtract } = require('./directives/DirDocparseExtract');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
+const { DirInviteHuman } = require('./directives/DirInviteHuman');
+const { DirRemoveHuman } = require('./directives/DirRemoveHuman');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
@@ -239,8 +241,8 @@ class DirectivesChatbotPlug {
 
     const directive_name = directive.name.toLowerCase();
 
-    // Controllo lock action
-    if (directive.action) {
+    // Controllo lock action (internal jumps to another block are not subject to it: the lock stays for the user's reply)
+    if (directive.action && this.message?.sender !== "_tdinternal") {
       const action_id = directive.action["_tdActionId"];
       const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
       if (locked_action_id && locked_action_id !== action_id) {
@@ -317,6 +319,8 @@ class DirectivesChatbotPlug {
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
       [Directives.DATA_TABLES]: DirDataTables,
+      [Directives.INVITE_HUMAN]: DirInviteHuman,
+      [Directives.REMOVE_HUMAN]: DirRemoveHuman,
     };
 
     const HandlerClass = handlers[directive_name];
