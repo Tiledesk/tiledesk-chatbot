@@ -5,6 +5,13 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 3.0.0
+- V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
+- V3 agents: Iteration runs the "when the list is done" block after the last item or when the list is empty
+- Iteration continues from the block exit when the list is empty, missing or unreadable, when "Go to block" is missing, or when an element errors, instead of stopping the conversation. An unfinished loop is not resumed by a later run on a different list
+- Fixed block jumps to use the endpoint given at start-up, with the environment as fallback
+- Fixed AI Condition vLLM error paths (missing integration, server or key) so they go to the error block instead of crashing
+
 
 # 2.6.0
 - Added voice_mode system-defined flow variable
