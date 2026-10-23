@@ -1,6 +1,8 @@
 # Tiledesk native chatbot
 
-# this branch 25/09/2026
+# 3.0.1-rc1
+- **added**: human-in-the-loop directives `invite_human` and `remove_human`, with the start-point fallback (a `/start` naming a missing start box falls back to the default start block, and `start_type` is exposed as a flow variable) and the lock-ownership fixes
+- **added**: ConnectorsV3 `invite_human` and `remove_human` exits (TRUE_FALSE), so V3 agents route the invited/removed branches from the connectors list
 - **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
 - **added**: a case left without a condition is skipped instead of counting as true, and a case that cannot be evaluated does not shadow the sound ones below it — the flow carries on to the next case and the error is recorded
 - **changed**: **ends with** now compares case exactly, like *starts with* and *contains* beside it. On its own it used to ignore case, so a flow could take a branch nobody intended and nothing on the screen said why. A condition that wants case ignored asks for it explicitly
