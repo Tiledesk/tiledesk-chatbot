@@ -258,4 +258,64 @@ const bots_data = {
 }
 bots_data.bots["botID"] = bot;
 
+// A Design Studio V3 bot: the docparse blocks carry NO trueIntent/falseIntent, the exits live only
+// in the bot's `connectors` list (ConnectorsV3 projects them onto the action before it runs).
+const exitIntents = [intents_dict_by_intent_id["SUCCESS"], intents_dict_by_intent_id["FAILURE"]];
+function v3Extract(name, intentId, url) {
+	return {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": name,
+		"intent_id": intentId,
+		"form": {},
+		"question": "",
+		"actions": [{
+			"_tdActionType": "docparse_extract",
+			"_tdActionId": "dp",
+			"_tdActionTitle": name,
+			"url": url,
+			"mode": "full",
+			"assignReplyTo": "extracted_text",
+			"trueIntent": "",
+			"falseIntent": ""
+		}]
+	};
+}
+const connectorRecord = (from, slot, to) => ({
+	"id": from + "/dp/" + slot + "/" + to,
+	"from": { "intentId": from, "actionId": "dp", "slot": slot },
+	"to": { "intentId": to },
+	"kind": "action"
+});
+const v3intents = [
+	v3Extract("extract_v3", "extract-v3", "https://example.com/v3.pdf"),
+	v3Extract("extract_v3_fail", "extract-v3-fail", "https://example.com/v3-broken.pdf"),
+	...JSON.parse(JSON.stringify(exitIntents))
+];
+const v3bot = {
+	"webhook_enabled": false,
+	"language": "en",
+	"name": "docparse v3",
+	"type": "tilebot",
+	"ds_version": "v3",
+	"connectors": {
+		"version": 1,
+		"updatedAt": "2026-10-26T00:00:00.000Z",
+		"items": [
+			connectorRecord("extract-v3", "true", "SUCCESS"),
+			connectorRecord("extract-v3", "false", "FAILURE"),
+			connectorRecord("extract-v3-fail", "true", "SUCCESS"),
+			connectorRecord("extract-v3-fail", "false", "FAILURE")
+		]
+	},
+	"intents": {},
+	"intents_by_intent_id": {}
+};
+for (const intent of v3intents) {
+	v3bot.intents[intent.intent_display_name] = intent;
+	v3bot.intents_by_intent_id[intent.intent_id] = intent;
+}
+bots_data.bots["v3botID"] = v3bot;
+
 module.exports = { bots_data: bots_data };

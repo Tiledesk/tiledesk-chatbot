@@ -90,7 +90,7 @@ describe('Conversation for Docparse Extract test', async () => {
     return "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
   }
 
-  function sendToBot(requestId, text) {
+  function sendToBot(requestId, text, botId) {
     tilebotService.sendMessageToBot({
       "payload": {
         "senderFullname": "guest#367e",
@@ -105,12 +105,12 @@ describe('Conversation for Docparse Extract test', async () => {
         }
       },
       "token": CHATBOT_TOKEN
-    }, BOT_ID, () => {
+    }, botId || BOT_ID, () => {
       winston.verbose("Message sent:\n", text);
     });
   }
 
-  function invoke(requestId, text, register) {
+  function invoke(requestId, text, register, botId) {
     return new Promise((resolve, reject) => {
       let listener;
       let endpointServer = express();
@@ -135,7 +135,7 @@ describe('Conversation for Docparse Extract test', async () => {
 
       listener = endpointServer.listen(10002, '0.0.0.0', () => {
         winston.verbose('endpointServer started' + listener.address());
-        sendToBot(requestId, text);
+        sendToBot(requestId, text, botId);
       });
       listener.on('error', (err) => {
         clearTimeout(timer);
@@ -170,7 +170,13 @@ describe('Conversation for Docparse Extract test', async () => {
 
   it('/extract_success - the preventive poll already returns the extracted text', async () => {
     const id = requestId();
+    let syncCalled = false;
     const message = await invoke(id, '/extract_success', (endpointServer) => {
+      endpointServer.post('/v1/extract', function (req, res) {
+        syncCalled = true;
+        res.status(500).send({ error: "should_not_be_called" });
+      });
+
       endpointServer.post('/v1/jobs/extract', function (req, res) {
         assert.strictEqual(req.body.filename, '8.pdf');
         assert.strictEqual(req.body.url, 'https://example.com/8.pdf');
@@ -200,6 +206,7 @@ describe('Conversation for Docparse Extract test', async () => {
     });
 
     assert.strictEqual(replyText(message), "extracted: hello from pdf");
+    assert.strictEqual(syncCalled, false, "async jobs are available: the sync endpoint must not be called");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["extracted_text"], "hello from pdf");
   });
@@ -289,7 +296,6 @@ describe('Conversation for Docparse Extract test', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_filename_from_url', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
-        console.log("req.body", req.body);
         assert.strictEqual(req.body.filename, 'my invoice.pdf');
         assert.strictEqual(req.body.url, 'https://example.com/documents/my%20invoice.pdf?token=signed#download');
         res.status(202).send({
@@ -507,6 +513,177 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: missing attribute 'url'");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["flowError"], "DocparseExtract Error: missing attribute 'url'");
+  });
+
+  // docsparse 1.2.0 (production) mounts /v1/jobs/* only with DOCPARSE_ENABLE_ASYNC_JOBS=true:
+  // the submit answers 404 and the directive falls back to the sync POST /v1/extract.
+  function jobsNotMounted(endpointServer) {
+    endpointServer.post('/v1/jobs/extract', function (req, res) {
+      res.status(404).send({ detail: "Not Found" });
+    });
+    endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+      res.status(500).send({ error: "should_not_be_called" });
+    });
+  }
+
+  it('/extract_success (sync fallback) - 404 on /v1/jobs/extract, POST /v1/extract returns the text', async () => {
+    const id = requestId();
+    let syncBody = null;
+    const message = await invoke(id, '/extract_success', (endpointServer) => {
+      jobsNotMounted(endpointServer);
+      endpointServer.post('/v1/extract', function (req, res) {
+        syncBody = req.body;
+        res.status(200).send({
+          filename: "8.pdf",
+          text: "sync text from pdf",
+          pages: [{ page: 1, text: "sync text from pdf" }],
+          stats: {},
+          warnings: []
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: sync text from pdf");
+    assert.deepStrictEqual(syncBody, {
+      filename: '8.pdf',
+      url: 'https://example.com/8.pdf',
+      mode: 'full'
+    });
+    const attributes = await parameters(id);
+    assert.strictEqual(attributes["extracted_text"], "sync text from pdf");
+  });
+
+  it('/extract_fallback (sync fallback) - vision_llm and its api key are not sent to /v1/extract', async () => {
+    const id = requestId();
+    let syncBody = null;
+    let asyncBody = null;
+    const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({
+          _id: "656728224b45965b69111111",
+          id_project: PROJECT_ID,
+          name: "openai",
+          value: { apikey: "sk-test", organization: "Tiledesk" }
+        });
+      });
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        asyncBody = req.body;
+        res.status(404).send({ detail: "Not Found" });
+      });
+      endpointServer.post('/v1/extract', function (req, res) {
+        syncBody = req.body;
+        res.status(200).send({ filename: "8.pdf", text: "scanned text", pages: [], stats: {}, warnings: [] });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: scanned text");
+    assert.ok(asyncBody && asyncBody.vision_llm, "the async submit still carries vision_llm");
+    assert.strictEqual(syncBody.vision_llm, undefined);
+    assert.ok(JSON.stringify(syncBody).indexOf("sk-test") === -1, "no api key in the sync body");
+    assert.strictEqual(syncBody.mode, 'full');
+    assert.strictEqual(syncBody.filename, '8.pdf');
+    assert.strictEqual(syncBody.url, 'https://example.com/8.pdf');
+    assert.strictEqual(syncBody.language, 'ita+eng');
+    assert.strictEqual(syncBody.dpi, 300);
+    assert.strictEqual(syncBody.enable_vision_fallback, true);
+  });
+
+  it('/extract_success (sync fallback) - /v1/extract 5xx takes the false exit', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_success', (endpointServer) => {
+      jobsNotMounted(endpointServer);
+      endpointServer.post('/v1/extract', function (req, res) {
+        res.status(500).send({ error: "extract_failed", detail: "converter crashed" });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: extract_failed: converter crashed");
+    const attributes = await parameters(id);
+    assert.strictEqual(attributes["flowError"], "DocparseExtract Error: extract_failed: converter crashed");
+    assert.strictEqual(attributes["extracted_text"], "");
+  });
+
+  it('/extract_success (sync fallback) - a 200 without a text field takes the false exit', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_success', (endpointServer) => {
+      jobsNotMounted(endpointServer);
+      endpointServer.post('/v1/extract', function (req, res) {
+        res.status(200).send({ filename: "8.pdf", pages: [] });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: docparse did not return the extracted text");
+  });
+
+  it('/extract_success (sync fallback) - /v1/extract timeout takes the false exit', async () => {
+    const id = requestId();
+    const previous = process.env.DOCPARSE_SYNC_TIMEOUT_MS;
+    process.env.DOCPARSE_SYNC_TIMEOUT_MS = "300";
+    let message;
+    try {
+      message = await invoke(id, '/extract_success', (endpointServer) => {
+        jobsNotMounted(endpointServer);
+        endpointServer.post('/v1/extract', function (req, res) {
+          setTimeout(() => {
+            res.status(200).send({ filename: "8.pdf", text: "too late", pages: [], stats: {}, warnings: [] });
+          }, 1500);
+        });
+      });
+    } finally {
+      if (previous === undefined) {
+        delete process.env.DOCPARSE_SYNC_TIMEOUT_MS;
+      } else {
+        process.env.DOCPARSE_SYNC_TIMEOUT_MS = previous;
+      }
+    }
+
+    assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: Docparse extract timed out after 0.3 seconds");
+    const attributes = await parameters(id);
+    assert.strictEqual(attributes["extracted_text"], "");
+  });
+
+  it('V3 bot (exits only in connectors) - sync fallback success takes the true exit', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_v3', (endpointServer) => {
+      jobsNotMounted(endpointServer);
+      endpointServer.post('/v1/extract', function (req, res) {
+        assert.strictEqual(req.body.filename, 'v3.pdf');
+        res.status(200).send({ filename: "v3.pdf", text: "v3 text", pages: [], stats: {}, warnings: [] });
+      });
+    }, "v3botID");
+
+    assert.strictEqual(replyText(message), "extracted: v3 text");
+  });
+
+  it('V3 bot (exits only in connectors) - sync fallback failure takes the false exit', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_v3_fail', (endpointServer) => {
+      jobsNotMounted(endpointServer);
+      endpointServer.post('/v1/extract', function (req, res) {
+        res.status(502).send({ error: "download_failed", detail: "url not reachable" });
+      });
+    }, "v3botID");
+
+    assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: download_failed: url not reachable");
+  });
+
+  it('V3 bot (exits only in connectors) - async path success takes the true exit', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_v3', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        res.status(202).send({ job_id: "job-v3", kind: "extract", status: "queued" });
+      });
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-v3",
+          status: "succeeded",
+          error: null,
+          result: { content_type: "application/json", body: { text: "v3 async text" } }
+        });
+      });
+    }, "v3botID");
+
+    assert.strictEqual(replyText(message), "extracted: v3 async text");
   });
 
 });

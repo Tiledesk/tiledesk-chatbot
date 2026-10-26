@@ -7,6 +7,8 @@ const { Logger } = require("../../Logger");
 const aiController = require("../../services/AIController");
 
 const JOB_TIMEOUT_MS = 10 * 60 * 1000;
+// Sync POST /v1/extract: docsparse runs gunicorn with a 300 s request timeout.
+const SYNC_TIMEOUT_MS = 300 * 1000;
 
 class DirDocparseExtract {
 
@@ -116,6 +118,7 @@ class DirDocparseExtract {
       }
 
       let created;
+      let outcome = null;
       try {
         created = await this.#request({
           url: this.#endpoint(base, "/v1/jobs/extract"),
@@ -124,19 +127,28 @@ class DirDocparseExtract {
           method: "POST"
         });
       } catch (err) {
-        winston.error("DirDocparseExtract submit error: ", this.#httpErrorLog(err));
-        await this.#fail(action, this.#httpErrorMessage(err), trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
-        return;
+        if (err && err.response && err.response.status === 404) {
+          // Async jobs are not mounted (docsparse < 1.3, or DOCPARSE_ENABLE_ASYNC_JOBS off):
+          // fall back to the synchronous endpoint.
+          winston.verbose("DirDocparseExtract /v1/jobs/extract not found, using sync /v1/extract");
+          outcome = await this.#extractSync(base, body);
+        } else {
+          winston.error("DirDocparseExtract submit error: ", this.#httpErrorLog(err));
+          await this.#fail(action, this.#httpErrorMessage(err), trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
+          return;
+        }
       }
 
-      const jobId = created && created.job_id;
-      if (!jobId) {
-        await this.#fail(action, "docparse did not return a job_id", trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
-        return;
-      }
+      if (!outcome) {
+        const jobId = created && created.job_id;
+        if (!jobId) {
+          await this.#fail(action, "docparse did not return a job_id", trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
+          return;
+        }
 
-      winston.verbose("DirDocparseExtract job queued: " + jobId);
-      const outcome = await this.#waitForJob(base, jobId);
+        winston.verbose("DirDocparseExtract job queued: " + jobId);
+        outcome = await this.#waitForJob(base, jobId);
+      }
       if (!outcome.ok) {
         await this.#fail(action, outcome.error, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
         return;
@@ -214,6 +226,43 @@ class DirDocparseExtract {
     visionLlm.max_tokens = maxTokens !== null ? maxTokens : 8192;
 
     return visionLlm;
+  }
+
+  async #extractSync(base, body) {
+    // Same request without the async-only fields: vision_llm is read only by the docsparse job
+    // worker (and carries the provider key), and the sync response is read in mode "full".
+    const syncBody = Object.assign({}, body, { mode: "full" });
+    delete syncBody.vision_llm;
+    const timeoutMs = this.#syncTimeoutMs();
+    let response;
+    try {
+      response = await this.#request({
+        url: this.#endpoint(base, "/v1/extract"),
+        headers: { 'Content-Type': 'application/json' },
+        json: syncBody,
+        method: "POST",
+        timeout: timeoutMs
+      });
+    } catch (err) {
+      if (err && (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") && !err.response) {
+        winston.error("DirDocparseExtract sync extract timed out after " + timeoutMs + " ms");
+        return { ok: false, error: "Docparse extract timed out after " + (timeoutMs / 1000) + " seconds" };
+      }
+      winston.error("DirDocparseExtract sync extract error: ", this.#httpErrorLog(err));
+      return { ok: false, error: this.#httpErrorMessage(err) };
+    }
+    if (typeof response === "string") {
+      return { ok: true, text: response };
+    }
+    if (response && typeof response === "object" && typeof response.text === "string") {
+      return { ok: true, text: response.text };
+    }
+    return { ok: false, error: "docparse did not return the extracted text" };
+  }
+
+  #syncTimeoutMs() {
+    const value = Number(process.env.DOCPARSE_SYNC_TIMEOUT_MS);
+    return Number.isFinite(value) && value > 0 ? value : SYNC_TIMEOUT_MS;
   }
 
   #waitForJob(base, jobId) {
