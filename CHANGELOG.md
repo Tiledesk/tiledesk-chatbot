@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 3.0.1
+- Release of 3.0.1-rc2, tested on stage on 2026-10-26; no code change.
+
 # 3.0.1-rc2
 - **fixed**: Docparse Extract works for V3 bots (Design Studio V3 3.0.20):
   - the file name is taken from the url after its variables are filled, so `{{variable}}` urls work
