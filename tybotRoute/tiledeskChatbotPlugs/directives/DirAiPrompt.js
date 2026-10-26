@@ -342,7 +342,6 @@ class DirAiPrompt {
         api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
-      console.log("set json.model to: ", json.model);
     }
 
     if (action.llm === 'openrouter') {
@@ -415,7 +414,6 @@ class DirAiPrompt {
         callback();
         return;
       }
-      console.log('json.servers', json.servers);
     }
 
 
@@ -438,7 +436,6 @@ class DirAiPrompt {
     }
 
     winston.debug("DirAiPrompt json: ", json);
-    console.log("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
       url: AI_endpoint + apiEndpoint,
