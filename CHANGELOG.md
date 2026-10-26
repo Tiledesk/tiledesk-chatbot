@@ -1,5 +1,14 @@
 # Tiledesk native chatbot
 
+# 3.0.1-rc2
+- **fixed**: Docparse Extract works for V3 bots (Design Studio V3 3.0.20):
+  - the file name is taken from the url after its variables are filled, so `{{variable}}` urls work
+  - `confidence` (1-100) is sent as the OCR quality threshold
+  - the vision model is sent as `vision_llm`
+  - the true/false exits are routed from the bot `connectors` list (ConnectorsV3 `docparse_extract`)
+  - after the Redis completion event the job result is re-read with `GET /v1/jobs/{id}`
+- **added**: Docparse Extract falls back to the sync `POST /v1/extract` when docsparse has no async jobs (`/v1/jobs/extract` answers 404, as on docsparse 1.2.0): same request in mode `full` without `vision_llm`, 300 s timeout (`DOCPARSE_SYNC_TIMEOUT_MS`), the `text` field goes to the reply variable; success takes the true exit, any error or timeout the false exit with `flowError`. With async jobs available nothing changes
+
 # 3.0.1-rc1
 - **added**: human-in-the-loop directives `invite_human` and `remove_human`, with the start-point fallback (a `/start` naming a missing start box falls back to the default start block, and `start_type` is exposed as a flow variable) and the lock-ownership fixes
 - **added**: ConnectorsV3 `invite_human` and `remove_human` exits (TRUE_FALSE), so V3 agents route the invited/removed branches from the connectors list
