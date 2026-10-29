@@ -70,18 +70,20 @@ class DirAiCondition {
     // ]
     let fallbackIntent = action.fallbackIntent; // non condition met block
     let errorIntent = action.errorIntent; // On error block
-    await this.checkMandatoryParameters(action).catch( async (missing_param) => {
+    try {
+      await this.checkMandatoryParameters(action);
+    } catch (missing_param) {
       const error = "AiCondition Error: '" + missing_param + "' attribute is undefined"
       this.logger.error(error);
       await this.chatbot.addParameter("flowError", error);
       if (errorIntent) {
         await this.#executeIntent(errorIntent);
         callback(true);
-        return Promise.reject();
+        return;
       }
       callback();
-      return Promise.reject();
-    })
+      return;
+    }
     
     // fill attributes
     let requestVariables = null;
@@ -367,19 +369,22 @@ class DirAiCondition {
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
-          winston.error("DirAiCondition openai err: ", err);
+          winston.error("DirAiCondition openai err: ", err.response?.data);
           await this.#assignAttributes(action, answer);
           let error;
-          if (err.response?.data?.detail[0]) {
+          if (err.response?.data?.detail && err.response?.data?.detail[0]) {
             error = err.response.data.detail[0]?.msg;
-          } else if (err.response?.data?.detail?.answer) {
+          } else if (err.response?.data?.detail && err.response?.data?.detail?.answer) {
             error = err.response.data.detail.answer;
-          } else {
+          } else if (err.response?.data) {
             error = JSON.stringify(err.response.data);
+          } else {
+            error = err.message || "General error executing action";
           }
+          winston.error("DirAiCondition error executing action: " + error);
           this.logger.error("[AI Condition] error executing action: ", error);
           if (errorIntent) {
-            await this.chatbot.addParameter("flowError", "[AI Condition] error executing action: condition label not found in intents list");
+            await this.chatbot.addParameter("flowError", "AiCondition Error: " + error);
             await this.#executeIntent(errorIntent);
             callback(true);
             return;

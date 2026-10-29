@@ -1,4 +1,4 @@
-FROM node:18-bookworm
+FROM node:24-bookworm
 
 # RUN sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
 
@@ -20,7 +20,8 @@ RUN if [ "$NPM_TOKEN" ]; \
 # where available (npm@5+)
 COPY package*.json ./
 
-RUN npm install --production
+# RUN npm install --production
+RUN npm ci --omit=dev
 
 RUN rm -f .npmrc
 

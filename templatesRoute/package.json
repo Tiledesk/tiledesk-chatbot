@@ -9,6 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "dependencies": {
     "@types/node": "^18.0.6",
     "body-parser": "^1.20.1",

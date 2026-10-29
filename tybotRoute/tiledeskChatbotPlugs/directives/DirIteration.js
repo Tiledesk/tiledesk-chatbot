@@ -123,9 +123,9 @@ class DirIteration {
     }
 
     if (iterableArray.length === 0) {
-      winston.verbose("[Iteration] Iterable array is empty. Exit...")
-      this.logger.warn("[Iteration] Iterable array is empty. Exit...")
-      this.#whenDone(fallbackIntent, true, callback);
+      winston.verbose("[Iteration] Iterable array is empty. Nothing to iterate, going on.")
+      this.logger.warn("[Iteration] Iterable array is empty. Nothing to iterate, going on.")
+      this.#whenDone(fallbackIntent, false, callback);
       return;
     }
 

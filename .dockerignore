@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+
+.git
+.env
+.env.*
+
+logs
+*.log
+tybotRoute/logs
+tybotRoute/dump.rdb
+tybotRoute/uploads
+temp

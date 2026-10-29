@@ -9,102 +9,106 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "ai_prompt_missing_question",
+			"intent_display_name": "ai_condition_missing_llm",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
 				"assignReplyTo": "ai_reply",
+				"intents": [
+					{
+						"label": "this is the answer",
+						"prompt": "the matching condition",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
+				"model": "llmmodel",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"fallbackIntent": "#FAILURE",
+				"errorIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_condition_missing_model",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943058",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_condition",
+				"assignReplyTo": "ai_reply",
+				"intents": [
+					{
+						"label": "this is the answer",
+						"prompt": "the matching condition",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
+				"llm": "myllm",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"fallbackIntent": "#FAILURE",
+				"errorIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
+			"intent_display_name": "ai_condition_myllm",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943059",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_condition",
+				"assignReplyTo": "ai_reply",
+				"intents": [
+					{
+						"label": "this is the answer",
+						"prompt": "the matching condition",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "myllm",
 				"model": "llmmodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#FAILURE",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
-			"intent_display_name": "ai_prompt_missing_llm",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"intent_display_name": "ai_condition_ollama_success",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943060",
 			"form": {},
 			"question": "",
 			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
+				"_tdActionType": "ai_condition",
 				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"model": "llmmodel",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_missing_model",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"llm": "myllm",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_missing_llm_key",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
-				"llm": "myllm",
-				"model": "llmmodel",
-				"max_tokens": 512,
-				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
-			}]
-		},
-		{
-			"webhook_enabled": false,
-			"enabled": true,
-			"language": "en",
-			"intent_display_name": "ai_prompt_ollama_success",
-			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
-			"form": {},
-			"question": "",
-			"actions": [{
-				"_tdActionType": "ai_prompt",
-				"_tdActionTitle": "ai action",
-				"assignReplyTo": "ai_reply",
-				"question": "this is the question",
+				"intents": [
+					{
+						"label": "this is the answer",
+						"prompt": "the matching condition",
+						"conditionIntentId": "#SUCCESS"
+					}
+				],
+				"instructions": "User question: {{last_user_text}}",
 				"llm": "ollama",
 				"model": "mymodel",
 				"max_tokens": 512,
 				"temperature": 0.7,
-				"trueIntent": "#SUCCESS",
-				"falseIntent": "#FAILURE",
+				"fallbackIntent": "#FAILURE",
+				"errorIntent": "#FAILURE",
 			}]
 		},
 		{

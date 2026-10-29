@@ -415,7 +415,6 @@ class DirAiPrompt {
         callback();
         return;
       }
-      console.log('json.servers', json.servers);
     }
 
 
@@ -438,7 +437,6 @@ class DirAiPrompt {
     }
 
     winston.debug("DirAiPrompt json: ", json);
-    console.log("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
       url: AI_endpoint + apiEndpoint,
@@ -748,8 +746,7 @@ class DirAiPrompt {
       cleanServer.enabled_tools = this.buildEnabledTools(server);
 
       const integrationHeaders = this.customHeadersToObject(integrationServer?.customHeaders);
-      const serverFlowVariables = server.native === true ? flowVariables : null;
-      cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, serverFlowVariables);
+      cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, flowVariables);
 
       acc[server.name] = cleanServer;
       return acc;
@@ -757,10 +754,13 @@ class DirAiPrompt {
   }
 
   buildEnabledTools(server) {
-    if (!Array.isArray(server?.tools) || server.tools.length === 0) {
+    const source = Array.isArray(server?.tools) && server.tools.length > 0
+      ? server.tools
+      : server?.enabled_tools;
+    if (!Array.isArray(source) || source.length === 0) {
       return [];
     }
-    return server.tools
+    return source
       .map(t => (typeof t === 'string' ? t : t?.name))
       .filter(name => typeof name === 'string' && name.length > 0);
   }
