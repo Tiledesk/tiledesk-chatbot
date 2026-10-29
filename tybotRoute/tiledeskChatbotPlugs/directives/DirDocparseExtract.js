@@ -27,6 +27,7 @@ class DirDocparseExtract {
   }
 
   execute(directive, callback) {
+    console.log("DirDocparseExtract directive: ", directive);
     winston.debug("DirDocparseExtract directive: ", directive);
     let action;
     if (directive.action) {
@@ -48,6 +49,7 @@ class DirDocparseExtract {
   }
 
   async go(action, callback) {
+    console.log("DirDocparseExtract action: ", action);
     winston.debug("DirDocparseExtract action:", action);
     let finished = false;
     const done = (stop) => {
@@ -72,8 +74,8 @@ class DirDocparseExtract {
 
       const requestVariables = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
       const filler = new Filler();
-      const filename = filler.fill(action.filename, requestVariables);
       const url = filler.fill(action.url, requestVariables);
+      const filename = filler.fill(action.filename, requestVariables) || this.#filenameFromUrl(url);
       const mode = filler.fill(action.mode, requestVariables) || "text";
 
       if (!filename || !url) {
@@ -104,19 +106,18 @@ class DirDocparseExtract {
         body.dpi = dpi;
       }
 
-      const fallback = await this.#resolveFallback(action, filler, requestVariables);
-      if (fallback) {
-        body.enable_vision_fallback = true;
-        body.provider = fallback.provider;
-        body.model = fallback.model;
-        if (fallback.api_key) {
-          body.api_key = fallback.api_key;
-        }
-        if (fallback.base_url) {
-          body.base_url = fallback.base_url;
-        }
+      const confidence = this.#confidence(filler.fill(action.confidence, requestVariables));
+      if (confidence !== null) {
+        body.ocr_quality_threshold = confidence;
       }
 
+      const visionLlm = await this.#resolveFallback(action, filler, requestVariables);
+      if (visionLlm) {
+        body.enable_vision_fallback = true;
+        body.vision_llm = visionLlm;
+      }
+
+      console.log("DirDocparseExtract body: ", body);
       let created;
       try {
         created = await this.#request({
@@ -131,6 +132,7 @@ class DirDocparseExtract {
         return;
       }
 
+      console.log("DirDocparseExtract created: ", created);
       const jobId = created && created.job_id;
       if (!jobId) {
         await this.#fail(action, "docparse did not return a job_id", trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
@@ -187,12 +189,35 @@ class DirDocparseExtract {
       apiKey = process.env.GPTKEY;
     }
 
-    return {
-      provider: provider,
-      model: (resolved && resolved.name) || model,
-      api_key: apiKey || undefined,
-      base_url: resolved && resolved.url ? resolved.url : undefined
+    const modelConfig = {
+      provider: (resolved && resolved.provider) || provider,
+      name: (resolved && resolved.name) || model
     };
+    if (apiKey) {
+      modelConfig.api_key = apiKey;
+    }
+    for (const field of ["url", "token", "project", "location", "provider_routing", "custom_headers"]) {
+      if (resolved && resolved[field]) {
+        modelConfig[field] = resolved[field];
+      }
+    }
+
+    // llm stays populated because tiledesk-llm still branches on it.
+    // The credentials travel inside model; llm_key is only there for compatibility.
+    const visionLlm = {
+      llm: modelConfig.provider,
+      llm_key: "",
+      model: modelConfig
+    };
+
+    const temperature = this.#number(filler.fill(action.temperature, requestVariables));
+    if (temperature !== null) {
+      visionLlm.temperature = temperature;
+    }
+    const maxTokens = this.#integer(filler.fill(action.max_tokens, requestVariables));
+    visionLlm.max_tokens = maxTokens !== null ? maxTokens : 8192;
+
+    return visionLlm;
   }
 
   #waitForJob(base, jobId) {
@@ -217,24 +242,27 @@ class DirDocparseExtract {
         });
       };
 
-      const onMessage = (message) => {
-        let payload = message;
-        if (typeof message === "string") {
-          try {
-            payload = JSON.parse(message);
-          } catch (err) {
-            finish({ ok: false, error: "Invalid docparse job event" });
-            return;
-          }
-        }
-        const outcome = this.#interpret(payload, false);
-        if (outcome.pending) {
+      const onMessage = async (message) => {
+        const received = typeof message === "string" ? message : JSON.stringify(message);
+        winston.info("(DirDocparseExtract) Redis message received on " + topic + ": " + received);
+        if (settled) {
           return;
         }
-        finish(outcome);
+        try {
+          const outcome = await this.#readJob(base, jobId);
+          if (!outcome || outcome.pending || settled) {
+            return;
+          }
+          finish(outcome);
+        } catch (err) {
+          winston.error("DirDocparseExtract job fetch after redis event failed: ", this.#httpErrorLog(err));
+          finish({ ok: false, error: this.#httpErrorMessage(err) });
+        }
       };
 
+      winston.info("(DirDocparseExtract) Subscribing to " + topic);
       this.tdcache.subscribe(topic, onMessage).then(async () => {
+        winston.info("(DirDocparseExtract) Subscribed to " + topic);
         if (settled) {
           return;
         }
@@ -243,18 +271,11 @@ class DirDocparseExtract {
         }, this.jobTimeoutMs);
 
         try {
-          const job = await this.#request({
-            url: this.#endpoint(base, "/v1/jobs/" + encodeURIComponent(jobId)),
-            headers: { 'Content-Type': 'application/json' },
-            method: "GET"
-          });
-          if (settled) {
+          const outcome = await this.#readJob(base, jobId);
+          if (!outcome || outcome.pending || settled) {
             return;
           }
-          const outcome = this.#interpret(job, true);
-          if (!outcome.pending) {
-            finish(outcome);
-          }
+          finish(outcome);
         } catch (err) {
           winston.warn("DirDocparseExtract preventive job poll failed: ", this.#httpErrorMessage(err));
         }
@@ -264,6 +285,15 @@ class DirDocparseExtract {
         resolve({ ok: false, error: "Unable to subscribe to docparse job result" });
       });
     });
+  }
+
+  async #readJob(base, jobId) {
+    const job = await this.#request({
+      url: this.#endpoint(base, "/v1/jobs/" + encodeURIComponent(jobId)),
+      headers: { 'Content-Type': 'application/json' },
+      method: "GET"
+    });
+    return this.#interpret(job, true);
   }
 
   #interpret(payload, fromPoll) {
@@ -334,6 +364,49 @@ class DirDocparseExtract {
       return null;
     }
     return dpi;
+  }
+
+  #number(value) {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+    const number = Number(value);
+    if (!Number.isFinite(number)) {
+      return null;
+    }
+    return number;
+  }
+
+  #integer(value) {
+    const number = this.#number(value);
+    if (number === null || !Number.isInteger(number)) {
+      return null;
+    }
+    return number;
+  }
+
+  #confidence(value) {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+    const confidence = Number(value);
+    if (!Number.isInteger(confidence) || confidence < 1 || confidence > 100) {
+      return 0.86;
+    }
+    return confidence / 100;
+  }
+
+  #filenameFromUrl(value) {
+    if (!value) {
+      return null;
+    }
+    try {
+      const pathname = new URL(value).pathname;
+      const filename = pathname.split("/").filter(Boolean).pop();
+      return filename ? decodeURIComponent(filename) : null;
+    } catch (err) {
+      return null;
+    }
   }
 
   #endpoint(base, path) {

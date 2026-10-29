@@ -140,7 +140,12 @@ class TiledeskExpression {
         },
         "endsWith": {
             name: "endsWith",
-            applyPattern: "#1?.toLowerCase().endsWith(#2.toLowerCase())"
+            // Case-sensitive, like startsWith and contains beside it. It used to lower
+            // both sides, so "ends with" quietly ignored case while its neighbours did
+            // not, and nothing on the screen said so. A condition that wants case
+            // ignored asks for it explicitly -- the Design Studio wraps both operands
+            // in lowerCase() -- rather than getting it from one operator by accident.
+            applyPattern: "String(#1).endsWith(String(#2))"
         },
         "isEmpty": {
             name: "isEmpty",

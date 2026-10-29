@@ -14,6 +14,8 @@ const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { LlmStream } = require("../../utils/LlmStream");
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
@@ -123,7 +125,7 @@ class DirAiPrompt {
     let key;
     let publicKey = false;
     let ollama_integration;
-    let vllm_server_config;
+    let vllm_model;
     let openrouter_model;
     let agentplatform_model;
 
@@ -142,12 +144,16 @@ class DirAiPrompt {
       });
 
     } else if (action.llm === 'vllm') {
-      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
-      
-      if (!vllm_integration?.value) {
-        this.logger.error("[AI Prompt] Error getting vllm integration.");
-        winston.error("DirAiPrompt Error getting vllm integration");
-        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+      try {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        vllm_model = await aiController.resolveLLMConfig(
+          this.projectId, action.llm, filled_model, this.token, filled_vllm_server);
+        key = vllm_model.api_key;
+      } catch (err) {
+        const errorMsg = err?.error || err?.message || "vllm integration not found";
+        this.logger.error("[AI Prompt] vllm integration not resolved: ", errorMsg);
+        winston.error("Error: DirAiPrompt vllm integration not resolved: " + errorMsg);
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + errorMsg);
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
@@ -155,37 +161,6 @@ class DirAiPrompt {
         }
         callback();
         return;
-      }
-
-      const vllm_value = vllm_integration.value;
-      if (Array.isArray(vllm_value.servers)) {
-        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
-        if (!filled_vllm_server) {
-          this.logger.error("[AI Prompt] missing vllmServer for multi-server vllm integration");
-          await this.chatbot.addParameter("flowError", "AiPrompt Error: 'vllmServer' attribute is undefined");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
-        if (!vllm_server_config) {
-          this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
-          await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        key = vllm_server_config.apikey;
-      } else {
-        key = vllm_value.apikey;
       }
 
       if (!key) {
@@ -342,7 +317,6 @@ class DirAiPrompt {
         api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
-      console.log("set json.model to: ", json.model);
     }
 
     if (action.llm === 'openrouter') {
@@ -404,7 +378,9 @@ class DirAiPrompt {
       };
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
-      winston.debug("DirAiPrompt json.servers: ", json.servers);
+      json.tools = [];
+      // server definitions can carry credentials (headers, tokens): log the names only
+      winston.info("DirAiPrompt json.servers: " + (json.servers ? Object.keys(json.servers).join(",") : json.servers));
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -444,7 +420,22 @@ class DirAiPrompt {
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", HTTPREQUEST);
+    winston.debug("DirAiPrompt HttpRequest: ", { ...HTTPREQUEST, json: loggableJson });
+
+    // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
+    if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
+      // Reasoning not enabled in the block: hybrid models (DeepSeek V4.x, Claude Haiku 5.5) think by default when
+      // nothing is sent, and the first spoken word comes later. For the OpenRouter models listed in
+      // VOICE_REASONING_OFF_MODELS (comma-separated id prefixes, e.g. "deepseek/,anthropic/claude-haiku") switch it
+      // off explicitly (tiledesk-llm maps it to OpenRouter's reasoning: { enabled: false }). Only listed models:
+      // models with mandatory reasoning (gpt-oss, Gemini 2.5 Pro, o4-mini...) reject it with HTTP 400.
+      if (json.llm === 'openrouter' && !json.thinking && DirAiPrompt.voiceReasoningOff(json.model && json.model.name)) {
+        json.thinking = { type: "disabled" };
+      }
+      await this.#goStreaming(action, json, AI_endpoint + apiEndpoint, headers, publicKey,
+        trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback);
+      return;
+    }
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -564,6 +555,83 @@ class DirAiPrompt {
     }
 
     return objectTranscript;
+  }
+
+  /**
+   * Streaming variant of the /ask call for voice turns. tiledesk-llm answers with SSE (chunk events, then a
+   * "completed" metadata event); deltas are grouped by SentenceChunker and posted to tiledesk-server /stream by
+   * StreamSender while the LLM is still generating. The flow then continues exactly as the non-streaming path
+   * (assign reply attribute, true/false intent); the text streamed is saved as "pending" so that the reply that
+   * speaks it (DirReply) carries attributes.stream_id and the channel does not speak it twice.
+   * If a newer caller message supersedes the turn, the LLM request is aborted, the part already streamed is posted
+   * as a message with attributes.interrupted and the flow stops.
+   */
+  async #goStreaming(action, json, url, headers, publicKey, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // hedged request against provider latency spikes (OpenRouter only, VOICE_HEDGE_AFTER_MS): see utils/LlmStream
+    const stream = new LlmStream(this, { label: "DirAiPrompt", hedgeAfterMs: LlmStream.hedgeAfterMs() });
+    this.logger.native("[AI Prompt] streaming answer " + stream.streamId);
+    const result = await stream.run(url, json, headers);
+
+    if (result.stopped === "superseded") {
+      this.logger.native("[AI Prompt] turn superseded, answer interrupted");
+      winston.verbose("DirAiPrompt stream " + stream.streamId + " superseded after " + result.chunks + " chunks");
+      await stream.sendInterrupted();
+      callback(true);
+      return;
+    }
+    if (result.stopped === "closed") {
+      winston.verbose("DirAiPrompt stream " + stream.streamId + ": request closed, flow stopped");
+      callback(true);
+      return;
+    }
+
+    if (result.error) {
+      const status = result.error.response && result.error.response.status;
+      const error = status ? "LLM stream error: HTTP " + status : (result.error.message || "General error executing action");
+      winston.error("DirAiPrompt error executing action: " + error);
+      this.logger.error("[AI Prompt] error executing action: ", error);
+      await this.#assignAttributes(action, "No answer");
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    const completed = result.completed;
+    const answer = (completed && typeof completed.full_response === "string") ? completed.full_response : result.text;
+    this.logger.native("[AI Prompt] answer: ", answer);
+
+    if (publicKey === true) {
+      const usage = completed && completed.model_used && completed.model_used.prompt_token_info;
+      quotasService.updateQuote(this.projectId, this.token, { tokens: (usage && usage.total_tokens) || 0, model: json.model });
+    }
+
+    await stream.savePending(answer);
+    await this.#assignAttributes(action, answer);
+    if (trueIntent) {
+      await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      callback(true);
+      return;
+    }
+    callback();
+  }
+
+  /** True when the OpenRouter model id starts with one of the prefixes in VOICE_REASONING_OFF_MODELS (read per call). */
+  static voiceReasoningOff(modelName) {
+    if (!modelName) {
+      return false;
+    }
+    return (process.env.VOICE_REASONING_OFF_MODELS || "").split(",").map((p) => p.trim()).filter(Boolean)
+      .some((prefix) => String(modelName).startsWith(prefix));
+  }
+
+  /** Reads a text/event-stream body (kept for callers of the previous API: see utils/LlmStream). */
+  static readSSE(stream, onEvent) {
+    return LlmStream.readSSE(stream, onEvent);
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {

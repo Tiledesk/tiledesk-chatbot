@@ -13,8 +13,32 @@
 # 2.4.0
 - Updated ReplaceBot to manage return
 
+# 2.3.0-rc3
+- Voice: the AI Prompt history now includes the bot's spoken answers (speech_form replies carry their text in the commands, with an empty `text`, and were left out of the transcript): a caller's "sì" to the bot's "Vuoi sapere di più?" keeps its context
+
+# 2.3.0-rc2
+- Voice streaming (ConversationRelay): on calls marked `voice_stream`, the AI Prompt and Ask Knowledge Base actions stream the LLM answer sentence by sentence to tiledesk-server (`POST /:project_id/requests/:request_id/stream`) while it is generated; the reply that speaks the answer closes the stream instead of re-speaking it. Shared `utils/LlmStream.js`
+- Ask Knowledge Base on voice: `<NOANS>` is never spoken, a miss takes the false branch without speaking the fallback twice, citations are not requested
+- Voice turn supersession: a newer caller message stops the current turn (Redis turn marker, checked before every block and every chunk); the partial answer is saved with `attributes.interrupted`
+- `/ext` keeps `voice_turn_id` on internal block-jump messages
+- Gather calls and other channels unchanged
+
+# 2.3.0-rc1
+- V3 agents: `ds_version` and `connectors` are read as fields of the bot (as the server stores them since 2.30.0), no longer from `attributes`; the bot is loaded with its connectors list. Agents without the label are unchanged
+
 # 2.3.0
 - Added support for Subagent with CallSubagent and ReturnStack actions
+
+# 2.2.2-rc2
+- Voice streaming: the answer is streamed only when the request carries the `voice_stream` attribute (set by the voice connector on `/start` for ConversationRelay calls, including the new conference mode with background ambience); the previous per-message marker `voice_relay` is still accepted. Gather calls are unchanged
+
+# 2.2.2-rc1
+- V3 agents (`attributes.dsVersion = 'v3'`): block exits and reply buttons are resolved from the connectors list in the bot attributes before a block runs; the list adds and replaces destinations but never removes what the block JSON carries. Bots without the label or the list run as before
+- V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list
+- Fixed: block jumps use the endpoint given at start-up (environment as fallback); the AI Condition vLLM error path no longer crashes and goes to the error block
+
+# 2.2.1
+- Added support for custom headers on vLLM servers
 
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
@@ -48,11 +72,17 @@
 # 2.1.3
 - Fixed bug on analytics integration
 
+# 2.1.3-rc1
+- Updated TiledeskWhenExpression and directive json_condition v2
+
 # 2.1.2
 - Fixed bug on AiPrompt action with vllm models
 
 # 2.1.1
 - Improved support for multiple vLLM servers
+
+# 2.1.1-rc19
+- Added TiledeskWhenExpression and directive json_condition v2
 
 # 2.1.0
 - Added support to analytics
@@ -162,6 +192,8 @@
 
 # 1.3.0
 - added: AI_ENDPOINT env var
+
+# 1.3.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # 1.2.2
@@ -176,6 +208,19 @@
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
+
+# 1.1.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# 1.1.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# 1.1.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -184,6 +229,12 @@
 
 # 1.1.2
 - bug-fixed: minor improvement
+
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
+# 1.0.27-rc2
+- added: specchToText function to transcript audio file
 
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini

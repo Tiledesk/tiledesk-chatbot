@@ -176,6 +176,7 @@ describe('Conversation for Docparse Extract test', async () => {
         assert.strictEqual(req.body.url, 'https://example.com/8.pdf');
         assert.strictEqual(req.body.mode, 'text');
         assert.strictEqual(req.body.enable_vision_fallback, undefined);
+        assert.strictEqual(req.body.ocr_quality_threshold, undefined);
         res.status(202).send({
           job_id: "job-ready",
           kind: "extract",
@@ -203,7 +204,7 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["extracted_text"], "hello from pdf");
   });
 
-  it('/extract_redis - the poll is still running and the text arrives on redis', async () => {
+  it('/extract_redis - a redis notification is followed by a GET for the result', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_redis', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
@@ -217,19 +218,31 @@ describe('Conversation for Docparse Extract test', async () => {
         });
       });
 
+      let polls = 0;
       endpointServer.get('/v1/jobs/:jobId', function (req, res) {
         assert.strictEqual(req.params.jobId, 'job-redis');
-        publishCompleted('job-redis', {
-          content_type: "application/json",
-          body: { text: "from redis", filename: "scan.pdf" }
-        }).then(() => {
-          res.status(200).send({
-            job_id: "job-redis",
-            kind: "extract",
-            status: "running",
-            error: null,
-            result: null
+        polls += 1;
+        if (polls === 1) {
+          publishCompleted('job-redis', { job_id: 'job-redis', status: 'succeeded' }).then(() => {
+            res.status(200).send({
+              job_id: "job-redis",
+              kind: "extract",
+              status: "running",
+              error: null,
+              result: null
+            });
           });
+          return;
+        }
+        res.status(200).send({
+          job_id: "job-redis",
+          kind: "extract",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "application/json",
+            body: { text: "from redis", filename: "scan.pdf" }
+          }
         });
       });
     });
@@ -272,6 +285,36 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["doc_url"], "https://example.com/invoice.pdf");
   });
 
+  it('/extract_filename_from_url - filename is derived from the url', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_filename_from_url', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        console.log("req.body", req.body);
+        assert.strictEqual(req.body.filename, 'my invoice.pdf');
+        assert.strictEqual(req.body.url, 'https://example.com/documents/my%20invoice.pdf?token=signed#download');
+        res.status(202).send({
+          job_id: "job-derived-filename",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-derived-filename",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "derived filename text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: derived filename text");
+  });
+
   it('/extract_fallback - provider and model are sent as vision fallback', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_fallback', (endpointServer) => {
@@ -294,9 +337,19 @@ describe('Conversation for Docparse Extract test', async () => {
         assert.strictEqual(req.body.language, 'ita+eng');
         assert.strictEqual(req.body.dpi, 300);
         assert.strictEqual(req.body.enable_vision_fallback, true);
-        assert.strictEqual(req.body.provider, 'openai');
-        assert.strictEqual(req.body.model, 'gpt-4o');
-        assert.strictEqual(req.body.api_key, 'sk-test');
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.98);
+        assert.deepStrictEqual(req.body.vision_llm, {
+          llm: 'openai',
+          llm_key: '',
+          model: {
+            provider: 'openai',
+            name: 'gpt-4o',
+            api_key: 'sk-test'
+          },
+          max_tokens: 8196
+        });
+        assert.strictEqual(req.body.provider, undefined);
+        assert.strictEqual(req.body.api_key, undefined);
         res.status(202).send({
           job_id: "job-fallback",
           kind: "extract",
@@ -322,7 +375,63 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(attributes["extracted_text"], "vision text");
   });
 
-  it('/extract_fail_job - redis publishes a processing error', async () => {
+  it('/extract_confidence - an integer 1-100 becomes ocr_quality_threshold 0.01-1', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_confidence', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.92);
+        res.status(202).send({
+          job_id: "job-confidence",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-confidence",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "confident text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: confident text");
+  });
+
+  it('/extract_confidence_invalid - an out-of-range confidence becomes 0.86', async () => {
+    const id = requestId();
+    const message = await invoke(id, '/extract_confidence_invalid', (endpointServer) => {
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        assert.strictEqual(req.body.ocr_quality_threshold, 0.86);
+        res.status(202).send({
+          job_id: "job-confidence-invalid",
+          kind: "extract",
+          status: "queued"
+        });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        res.status(200).send({
+          job_id: "job-confidence-invalid",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "text/plain",
+            body: "fallback threshold text"
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: fallback threshold text");
+  });
+
+  it('/extract_fail_job - the GET after the redis notification returns the error', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_fail_job', (endpointServer) => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
@@ -334,18 +443,29 @@ describe('Conversation for Docparse Extract test', async () => {
         });
       });
 
+      let polls = 0;
       endpointServer.get('/v1/jobs/:jobId', function (req, res) {
-        publishCompleted('job-error', {
-          code: "processing_failed",
-          detail: "unreadable document",
-          hint: "check the file"
-        }).then(() => {
-          res.status(200).send({
-            job_id: "job-error",
-            status: "running",
-            error: null,
-            result: null
+        polls += 1;
+        if (polls === 1) {
+          publishCompleted('job-error', { job_id: 'job-error', status: 'failed' }).then(() => {
+            res.status(200).send({
+              job_id: "job-error",
+              status: "running",
+              error: null,
+              result: null
+            });
           });
+          return;
+        }
+        res.status(200).send({
+          job_id: "job-error",
+          status: "failed",
+          error: {
+            code: "processing_failed",
+            detail: "unreadable document",
+            hint: "check the file"
+          },
+          result: null
         });
       });
     });
