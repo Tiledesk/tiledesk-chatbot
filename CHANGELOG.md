@@ -1,9 +1,9 @@
 # Tiledesk native chatbot
 
-# 3.0.1
-- Release of 3.0.1-rc2, tested on stage on 2026-10-26; no code change.
+# 3.0.2
+- **updated** node version to 24.x to improve vulnerability
 
-# 3.0.1-rc2
+# 3.0.1
 - **fixed**: Docparse Extract works for V3 bots (Design Studio V3 3.0.20):
   - the file name is taken from the url after its variables are filled, so `{{variable}}` urls work
   - `confidence` (1-100) is sent as the OCR quality threshold
@@ -11,8 +11,6 @@
   - the true/false exits are routed from the bot `connectors` list (ConnectorsV3 `docparse_extract`)
   - after the Redis completion event the job result is re-read with `GET /v1/jobs/{id}`
 - **added**: Docparse Extract falls back to the sync `POST /v1/extract` when docsparse has no async jobs (`/v1/jobs/extract` answers 404, as on docsparse 1.2.0): same request in mode `full` without `vision_llm`, 300 s timeout (`DOCPARSE_SYNC_TIMEOUT_MS`), the `text` field goes to the reply variable; success takes the true exit, any error or timeout the false exit with `flowError`. With async jobs available nothing changes
-
-# 3.0.1-rc1
 - **added**: human-in-the-loop directives `invite_human` and `remove_human`, with the start-point fallback (a `/start` naming a missing start box falls back to the default start block, and `start_type` is exposed as a flow variable) and the lock-ownership fixes
 - **added**: ConnectorsV3 `invite_human` and `remove_human` exits (TRUE_FALSE), so V3 agents route the invited/removed branches from the connectors list
 - **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
