@@ -342,7 +342,6 @@ class DirAiPrompt {
         api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
-      console.log("set json.model to: ", json.model);
     }
 
     if (action.llm === 'openrouter') {
@@ -746,7 +745,8 @@ class DirAiPrompt {
       cleanServer.enabled_tools = this.buildEnabledTools(server);
 
       const integrationHeaders = this.customHeadersToObject(integrationServer?.customHeaders);
-      cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, flowVariables);
+      const serverFlowVariables = server.native === true ? flowVariables : null;
+      cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, serverFlowVariables);
 
       acc[server.name] = cleanServer;
       return acc;

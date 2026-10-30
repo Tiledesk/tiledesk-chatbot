@@ -344,7 +344,6 @@ class DirAiCondition {
         api_key: vllm_server_config.apikey || vllm_server_config.token || null,
         provider: 'vllm'
       }
-      console.log("set json.model to: ", json.model);
     }
 
     if (action.llm === 'openrouter') {

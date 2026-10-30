@@ -809,3 +809,47 @@ describe('JSON operation to expression', function() {
         });
     });        
 });
+describe('endsWith ignores case (legacy behaviour kept)', function() {
+
+    function endsWithResult(value, suffix) {
+        const groups = [{
+            type: 'expression',
+            conditions: [{
+                type: 'condition',
+                operand1: 'nome',
+                operator: 'endsWith',
+                operand2: { type: 'const', value: suffix }
+            }]
+        }];
+        const expression = TiledeskExpression.JSONGroupsToExpression(groups, { nome: value });
+        return new TiledeskExpression().evaluateJavascriptExpression(expression, { nome: value });
+    }
+
+    it('matches when the ending is written exactly the same way', function() {
+        assert.strictEqual(endsWithResult('MaRIO', 'RIO'), true);
+    });
+
+    it('matches a different case', function() {
+        assert.strictEqual(endsWithResult('Ordine.PDF', '.pdf'), true);
+        assert.strictEqual(endsWithResult('abc', 'BC'), true);
+        assert.strictEqual(endsWithResult('MaRio', 'RIO'), true);
+    });
+
+    it('does not match a different ending', function() {
+        assert.strictEqual(endsWithResult('abc', 'x'), false);
+    });
+
+    it('an undefined or null left operand never matches (no throw, not even "ned")', function() {
+        assert.strictEqual(endsWithResult(undefined, 'ned'), false);
+        assert.strictEqual(endsWithResult(null, 'ull'), false);
+    });
+
+    it('survives a missing variable instead of throwing', function() {
+        const groups = [{
+            type: 'expression',
+            conditions: [{ type: 'condition', operand1: 'assente', operator: 'endsWith', operand2: { type: 'const', value: 'x' } }]
+        }];
+        const expression = TiledeskExpression.JSONGroupsToExpression(groups, {});
+        assert.strictEqual(new TiledeskExpression().evaluateJavascriptExpression(expression, {}), false);
+    });
+});
