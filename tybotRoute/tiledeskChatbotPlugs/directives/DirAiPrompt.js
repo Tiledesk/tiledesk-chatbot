@@ -420,7 +420,7 @@ class DirAiPrompt {
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", { ...HTTPREQUEST, json: loggableJson });
+    winston.debug("DirAiPrompt HttpRequest: ", JSON.stringify(HTTPREQUEST));
 
     // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
     if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
