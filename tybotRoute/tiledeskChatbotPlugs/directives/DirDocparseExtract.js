@@ -116,6 +116,7 @@ class DirDocparseExtract {
         body.enable_vision_fallback = true;
         body.vision_llm = visionLlm;
       }
+      console.log("[DocsparseExtract] body", body);
 
       let created;
       let outcome = null;
