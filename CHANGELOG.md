@@ -1,5 +1,10 @@
 # Tiledesk native chatbot
 
+# 3.0.3
+- **fixed**: Docparse Extract derives the right file name when the action has no `filename` and the url carries the file path in the query string, as Tiledesk file urls do (`/api/files?path=uploads/.../4939_001.pdf` now gives `4939_001.pdf` instead of `files`):
+  - the first query parameter whose last path segment has an extension (`.pdf`, `.docx`, ...) is used, whatever the parameter name (`path`, `name`, `file`, ...)
+  - otherwise the last segment of the url path is used, as before
+
 # 3.0.2
 - **updated** node version to 24.x to improve vulnerability
 
