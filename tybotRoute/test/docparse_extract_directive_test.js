@@ -321,6 +321,52 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(replyText(message), "extracted: derived filename text");
   });
 
+  const filenameFromUrlCases = [
+    {
+      url: "https://eu-frankfurt-prod-v3.eks.tiledesk.com/api/files?path=uploads/users/3ec5ad15cb00668893006d58bd4786e3/files/d12d4a45-9b33-499d-bd58-c9ee52a69fcf/4939_001.pdf",
+      filename: "4939_001.pdf"
+    },
+    { url: "https://tiledesk.com/files/sample.pdf", filename: "sample.pdf" },
+    { url: "https://tiledesk.com/files?name=sample.pdf", filename: "sample.pdf" },
+    { url: "https://tiledesk.com/files?path=sample.pdf", filename: "sample.pdf" },
+    { url: "https://tiledesk.com/files?file=uploads%2Fx%2Fmy%20doc.docx", filename: "my doc.docx" },
+    { url: "https://tiledesk.com/files?id=123&path=uploads/sample.pdf", filename: "sample.pdf" },
+    { url: "https://tiledesk.com/files/other-path/sample", filename: "sample" },
+    { url: "https://tiledesk.com/api/files?id=123", filename: "files" }
+  ];
+
+  filenameFromUrlCases.forEach(({ url, filename }) => {
+    it(`/extract_filename_from_url_attribute - ${url} gives filename '${filename}'`, async () => {
+      const id = requestId();
+      const jobId = "job-filename-" + uuidv4();
+      const message = await invoke(id, '/extract_filename_from_url_attribute' + JSON.stringify({ doc_url: url }), (endpointServer) => {
+        endpointServer.post('/v1/jobs/extract', function (req, res) {
+          assert.strictEqual(req.body.filename, filename);
+          assert.strictEqual(req.body.url, url);
+          res.status(202).send({
+            job_id: jobId,
+            kind: "extract",
+            status: "queued"
+          });
+        });
+
+        endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+          res.status(200).send({
+            job_id: jobId,
+            status: "succeeded",
+            error: null,
+            result: {
+              content_type: "text/plain",
+              body: "filename text"
+            }
+          });
+        });
+      });
+
+      assert.strictEqual(replyText(message), "extracted: filename text");
+    });
+  });
+
   it('/extract_fallback - provider and model are sent as vision fallback', async () => {
     const id = requestId();
     const message = await invoke(id, '/extract_fallback', (endpointServer) => {

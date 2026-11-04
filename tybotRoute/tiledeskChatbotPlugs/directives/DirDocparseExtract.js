@@ -447,12 +447,26 @@ class DirDocparseExtract {
       return null;
     }
     try {
-      const pathname = new URL(value).pathname;
-      const filename = pathname.split("/").filter(Boolean).pop();
-      return filename ? decodeURIComponent(filename) : null;
+      const parsed = new URL(value);
+      for (const paramValue of parsed.searchParams.values()) {
+        const candidate = this.#lastSegment(paramValue);
+        if (this.#hasExtension(candidate)) {
+          return candidate;
+        }
+      }
+      const segment = parsed.pathname.split("/").filter(Boolean).pop();
+      return segment ? decodeURIComponent(segment) : null;
     } catch (err) {
       return null;
     }
+  }
+
+  #lastSegment(value) {
+    return String(value || "").split("/").filter(Boolean).pop() || null;
+  }
+
+  #hasExtension(filename) {
+    return !!filename && /\.[a-z0-9]{1,10}$/i.test(filename);
   }
 
   #endpoint(base, path) {

@@ -80,6 +80,23 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "extract_filename_from_url_attribute",
+			"intent_id": "extract-filename-from-url-attribute",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "docparse_extract",
+				"_tdActionTitle": "extract filename from url attribute",
+				"url": "{{doc_url}}",
+				"assignReplyTo": "extracted_text",
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE"
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "extract_fallback",
 			"intent_id": "extract-fallback",
 			"form": {},
