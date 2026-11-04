@@ -20,3 +20,6 @@ For more information on configuration, features, and customization, check out ou
 
 ## License
 This project is released under the MIT license. For more details, see the `LICENSE.md` file.
+
+# Automation Engine Enhancements
+- Added custom event hook handlers for multichannel bot routing.
