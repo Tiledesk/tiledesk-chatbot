@@ -9,6 +9,7 @@ const assert = require("assert");
 require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
+const { vectorStoreWritesFrozen } = require("../../utils/vectorStoreWrites");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 
@@ -54,6 +55,14 @@ class DirAddKbContent {
     if (!this.tdcache) {
       winston.error("[DirAddKbContent] Error: tdcache is mandatory");
       callback();
+      return;
+    }
+
+    if (vectorStoreWritesFrozen()) {
+      winston.warn("[DirAddKbContent] Vector store writes are disabled (PINECONE_WRITE_DISABLED=true)");
+      this.logger.warn("[Add to KnwoledgeBase] Indexing is temporarily unavailable");
+      await this.chatbot.addParameter("flowError", "Knowledge base indexing is temporarily unavailable (vector_store_writes_disabled)");
+      callback(true);
       return;
     }
 
