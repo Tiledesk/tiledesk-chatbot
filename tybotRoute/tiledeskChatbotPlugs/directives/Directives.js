@@ -64,11 +64,14 @@ class Directives {
   static MOVE_TO_UNASSIGNED = "move_to_unassigned";
   static CONNECT_BLOCK = "connect_block";
   static ADD_TAGS = 'add_tags'
+  static WEBHOOK = 'webhook';
   static INVITE_HUMAN = "invite_human";
   static REMOVE_HUMAN = "remove_human";
   static WEB_RESPONSE = "web_response";
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
+  static INVOKE_SUB_AGENT = "invoke_subagent";
+  static RETURN = "return";
   static DATA_TABLES = "data_table";
   // DOCPARSE
   static DOCPARSE_EXTRACT = "docparse_extract";

@@ -1,6 +1,26 @@
 const integrationService = require("./IntegrationService");
 const { buildOpenRouterModel } = require("../utils/openrouterUtils");
 
+function buildCustomHeaders(customHeaders) {
+    if (!Array.isArray(customHeaders)) {
+        return undefined;
+    }
+
+    const headers = {};
+    for (const header of customHeaders) {
+        if (!header || header.enabled === false) {
+            continue;
+        }
+        const key = typeof header.key === 'string' ? header.key.trim() : '';
+        if (!key) {
+            continue;
+        }
+        headers[key] = header.value ?? "";
+    }
+
+    return Object.keys(headers).length > 0 ? headers : undefined;
+}
+
 class AIController {
 
     constructor() {}
@@ -78,12 +98,22 @@ class AIController {
                 if (!server.url) {
                     throw { code: 422, error: "Server url for vllm is empty or invalid" };
                 }
-                return {
+                const config = {
                     provider,
                     name: model,
                     url: server.url,
                     api_key: server.apikey || ""
                 };
+
+                const customHeaders = buildCustomHeaders(server.customHeaders);
+                if (customHeaders) {
+                    config.custom_headers = customHeaders;
+                    // tiledesk-llm rejects an empty api_key, even when the server authenticates through headers
+                    if (config.api_key === "") {
+                        config.api_key = "sk-...";
+                    }
+                }
+                return config;
             }
 
             if (!value.url) {

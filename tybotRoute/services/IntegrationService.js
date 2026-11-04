@@ -103,7 +103,10 @@ class IntegrationService {
     }
 
     const masked = SECRET_KEYS.some((key) => this.looksMasked(value[key])) ||
-      (Array.isArray(value.servers) && value.servers.some((server) => server && this.looksMasked(server.apikey)));
+      (Array.isArray(value.servers) && value.servers.some((server) => server && (
+        this.looksMasked(server.apikey) ||
+        (Array.isArray(server.customHeaders) && server.customHeaders.some((header) => header && this.looksMasked(header.value)))
+      )));
 
     if (masked) {
       winston.error("IntegrationService: the API returned a masked credential for integration " +
