@@ -337,7 +337,6 @@ class DirAiCondition {
     }
 
     if (action.llm === 'vllm' && vllm_server_config) {
-      console.log("llm: vllm")
       json.model = {
         name: filled_model,
         url: vllm_server_config.url,
