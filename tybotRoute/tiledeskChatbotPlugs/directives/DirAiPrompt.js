@@ -91,6 +91,8 @@ class DirAiPrompt {
         this.tdcache, this.requestId
       )
 
+    console.log("requestVariables", requestVariables);
+
     const filler = new Filler();
     const filled_question = filler.fill(action.question, requestVariables);
     const filled_context = filler.fill(action.context, requestVariables);

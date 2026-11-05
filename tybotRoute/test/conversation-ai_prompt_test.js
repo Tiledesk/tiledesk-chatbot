@@ -1351,6 +1351,97 @@ describe('Conversation for AiPrompt test', async () => {
 
   })
 
+  describe('Ask Success with attachments', async () => {
+
+    it('PROMPT-AI-ATTACHMENTS-SUCCESS - invokes the aiprompt mockup and test the returning attributes', (done) => {
+      let listener;
+    let endpointServer = express();
+    endpointServer.use(bodyParser.json());
+
+    endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+      res.send({ success: true });
+      const message = req.body;
+      assert(message.attributes.commands !== null);
+      assert(message.attributes.commands.length === 2);
+      const command2 = message.attributes.commands[1];
+      assert(command2.type === "message");
+      assert(command2.message.text === "Answer: this is the answer");
+
+      util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
+        if (err) {
+          assert.ok(false);
+        }
+        else {
+          assert(attributes);
+          assert(attributes["ai_reply"] === "this is the answer");
+          listener.close(() => {
+            done();
+          });
+        }
+      });
+    });
+
+    endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+      assert(req.params.name === 'myllm');
+      let http_code = 200;
+      let reply = {
+        _id: "656728224b45965b69111111",
+        id_project: "62c3f10152dc740035000000",
+        name: "myllm",
+        value: {
+          apikey: "example_api_key",
+        }
+      }
+      res.status(http_code).send(reply);
+    });
+
+    endpointServer.post('/api/ask', function (req, res) {
+      assert(req.body.llm === "myllm");
+      assert(req.body.model === "llmmodel");
+      assert(req.body.llm_key === "example_api_key");
+
+      let reply = {}
+      let http_code = 200;
+      reply = {
+        answer: "this is the answer",
+        chat_history_dict: {
+          additionalProp1: { question: "string", answer: "string" },
+          additionalProp2: { question: "string", answer: "string" },
+          additionalProp3: { question: "string", answer: "string" }
+        }
+      }
+      res.status(http_code).send(reply);
+    });
+
+    listener = endpointServer.listen(10002, '0.0.0.0', () => {
+      winston.verbose('endpointServer started' + listener.address());
+      let request = {
+        "payload": {
+          senderFullname: 'guest#fd6b ',
+          type: 'image',
+          sender: 'A-SENDER',
+          recipient: REQUEST_ID,
+          text: '/ai_prompt_attachments_success{"last_user_message":"descrivi cosa vedi in questa immagine"}',
+          id_project: PROJECT_ID,
+          metadata: {
+            name: 'sample_image.png',
+            src: 'https://repo.com/sample_image.png',
+            type: 'image/png',
+            downloadURL: 'https://repo.com/sample_image.png'
+          },
+          request: {
+            request_id: REQUEST_ID
+          }
+        },
+        "token": "XXX"
+      }
+      tilebotService.sendMessageToBot(request, BOT_ID, () => {
+        winston.verbose("Message sent:\n", request);
+      });
+    })
+    })
+  })
+
   describe('Ask Fail', async () => {
 
     it('AiPrompt fail - invokes the aiprompt mockup and test the returning attributes', (done) => {
