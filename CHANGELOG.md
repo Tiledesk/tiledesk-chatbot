@@ -1,6 +1,8 @@
 # Tiledesk native chatbot
 
 # 3.0.4
+- **added** possibility to block indexing functions
+# 3.0.4
 - **removed** verbose logs
 
 # 3.0.3
