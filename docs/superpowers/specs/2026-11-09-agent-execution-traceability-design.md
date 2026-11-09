@@ -654,7 +654,7 @@ agents list, and the audit lives in the existing Activities page. No new sidebar
 |---|---|
 | `bots/bots-list/bots-list.component.html`, card actions (`cl-card-action-group`, next to the `leaderboard` analytics button) | new icon button **Executions** (`manage_history`), shown when `PERMISSION_TO_VIEW_EXECUTIONS`. It carries a small badge with the agent's executions needing attention in the last 24 h (`failed` + `stopped`, red; `running`, blue dot). Also an **Executions** item in the card's `more_vert` menu. For all agent kinds, including webhook/automation flows and copilot (unlike analytics, which hides for webhook/copilot). |
 | `bots-list` page header, next to the create buttons | link **All executions** (project-wide list). |
-| `bots-list.component.ts` | `PERMISSION_TO_VIEW_EXECUTIONS` / `…_CONTROL_…` set the same way as the other flags (owner/admin true, agent false, custom role from `matchedPermissions`). One batched call `GET /executions/summary?agent_ids=…&since=24h` for the badges of the visible page. |
+| `bots-list.component.ts` | `PERMISSION_TO_VIEW_EXECUTIONS` / `…_CONTROL_…` set the same way as the other flags (owner/admin true; supervisor true for view, false for control; agent false; custom role from `matchedPermissions`). One batched call `GET /executions/summary?agent_ids=…&since=24h` for the badges of the visible page. |
 | new lazy module `src/app/bots/executions/` | routes `project/:projectid/bots/executions` (all agents), `project/:projectid/bots/:botid/executions` (one agent), `project/:projectid/bots/:botid/executions/:executionid` (detail). Guard: `AuthGuard`, like the other bot pages; the permission is checked in the component through `RoleService` (as the other bot pages do), and the API refuses anyway. Must be registered before `bots/:faqkbid/:type` (`app.routing.ts`), which would otherwise match `bots/:botid/executions`. |
 | `activities-new` (Activities page) | new filter group **Executions** in `ACTIVITY_FILTER_OPTION_DEFINITIONS` (`groupKey` gets `'Executions'`), icons in `ACTIVITY_ICON_BY_VERB`, sentences in `utils/activity-message.util.ts`, and a component `activities-execution-link` (like `activities-bot-link`) that opens the execution detail. Rows come from `GET /activities` as today (§7.3.1). |
 | `users-new-role` (custom role editor), Flows section | checkboxes for the new permissions (§10.1). |
@@ -973,13 +973,13 @@ sequenceDiagram
 
 ### 10.1 Roles **[decided]**
 
-| | Permission (custom roles) | Owner | Admin | Agent |
-|---|---|---|---|---|
-| See executions, trace and flow state (names, no values) | `executions_read` | ✓ | ✓ | — |
-| Soft/hard stop, resume, start new | `executions_control` | ✓ | ✓ | — |
-| Destroy | `executions_destroy` | ✓ | — | — |
-| Request in-depth data access (with reason), incl. variable values | `executions_data_access` | ✓ | ✓ | — |
-| Read the execution audit (Activities rows, Audit tab), set retention | `executions_audit_read` | ✓ | — | — |
+| | Permission (custom roles) | Owner | Admin | Supervisor | Agent |
+|---|---|---|---|---|---|
+| See executions, trace and flow state (names, no values) | `executions_read` | ✓ | ✓ | ✓ | — |
+| Soft/hard stop, resume, start new | `executions_control` | ✓ | ✓ | — | — |
+| Destroy | `executions_destroy` | ✓ | — | — | — |
+| Request in-depth data access (with reason), incl. variable values | `executions_data_access` | ✓ | ✓ | — | — |
+| Read the execution audit (Activities rows, Audit tab), set retention | `executions_audit_read` | ✓ | — | — | — |
 
 Standard roles follow the table (the server's role hierarchy, `middleware/has-role.js`). Custom
 roles (`models/role.js`, edited in the dashboard's `users-new-role`) get each line only through
@@ -1000,7 +1000,13 @@ role it calls `hasPermission(undefined)`, which lets the request through. `flow_
 `executions_*` require `flows_read` (the entry is on the agents list); `executions_audit_read`
 also requires `activities_read`; `executions_control`, `executions_destroy`,
 `executions_data_access` require `executions_read` **[my call]**.
-The supervisor role is still open.
+
+**Supervisor: read-only trace** **[decided]**. A supervisor sees the executions list, the
+timeline and the flow state (names, types, sizes, who changed what), with no values, no
+controls, no data access and no audit. In the UI the controls are shown disabled with a tooltip
+("Only owners and admins can stop or resume executions"); the Activities execution rows stay
+hidden, as for admins. The service checks `hasRole('supervisor')` for read routes and
+`hasRole('admin')` for control and data-access routes.
 
 ### 10.2 Sealing
 
