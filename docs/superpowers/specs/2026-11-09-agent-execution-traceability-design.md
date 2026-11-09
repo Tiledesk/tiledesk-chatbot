@@ -27,7 +27,7 @@ Everything else follows from those two.
 11. User interface
 12. Performance and reliability
 13. Retention
-14. Phases and repos
+14. Phases and repos (14.1 local first, from the production baseline)
 15. Left to the builder
 
 ---
@@ -1236,8 +1236,85 @@ Activities          [Date range] [Teammate ▾] [Activity type ▾: … Chatbot 
 | 4 In-depth access | grants, decrypt path, data view (incl. variable values), Audit tab, retention settings | executions, dashboard |
 | Follow-ups | failure alerts (email/webhook), approval step, aggregate charts in analytics, retiring FlowLogs | — |
 
-Each repo works on `feature/execution-traceability` from its default branch; tybot is merged
-separately into `main` and `main_pre`.
+Each repo works on `feature/execution-traceability`, cut from the commit of its default branch
+that runs in production (§14.1). The feature branch is what gets merged into each target branch
+(`main`/`master` for prod, a pre branch only if stage is used); pre branches are never merged
+into master.
+
+### 14.1 Local first, from the production baseline **[decided]**
+
+Everything is built and proven **locally** first, starting from the versions that run in
+production today, so that moving to production later is a release of the same branches, not a
+port.
+
+**Baseline** (checked 2026-11-09 against `tiledesk-argo` branch `prod`, `helm/values.yaml`, and
+each repo's tags):
+
+| Repo | In production | Base commit | Notes |
+|---|---|---|---|
+| tiledesk-chatbot (tybot) | `tiledesk/tiledesk-chatbot:3.0.5` | tag `3.0.5` = `origin/main` `af406feb` | Prod runs tybot as its own pod: the server's `TILEBOT_ENDPOINT` points at the chatbot service (configmap). So tybot changes ship in the chatbot image; the copy of `@tiledesk/tiledesk-tybot-connector` (3.0.2) embedded in the server is not on the flow path and is not touched. The design branch is already cut here. |
+| tiledesk-server | `tiledeskrepo/tiledesk-server-enterprise:3.3.1` (built with `Dockerfile-en`); workers `tiledesk-server-worker:3.3.1` | tag `3.3.1` = `origin/master` `68700f80` | The Activities consumer runs in the server process; the refire route too. |
+| tiledesk-dashboard | Published to S3 by the team; argo's image tag (2.7.136) is stale and not what users get | the release tag that is live on prod. Latest tag 2.8.39 (`9ad65f5de`); `origin/master` is 6 commits past it (2.8.40 version commit, untagged) | **To confirm before cutting the branch:** which build is live on the prod S3. Cut from that tag. |
+| tiledesk-executions | not deployed (new) | new repo, `main` | Version 0.1.0. |
+| tiledesk-argo | — | — | No change during the local phase. The `executions` values block is written only at the release step (prod `my-tiledesk-prod` syncs automatically on push). |
+| scheduler (phase 3 link only) | prod tag of the scheduler | that tag | Only if phase 3 needs a change there. |
+
+If a default branch moves past the prod tag before work starts, the feature branch is still cut
+from the prod tag, and is merged into the then-current default at release time, where any
+conflict is solved on the feature branch **[my call]**.
+
+**Local environment.** `tiledesk-dev-env`, the one local stack (source-built, no Docker Hub
+credentials):
+
+- `CHATBOT_PATH`, `SERVER_PATH`, `DASHBOARD_PATH` point at the feature-branch worktrees; every
+  other component uses `<NAME>_REF` set to its production version, so the stack around the change
+  matches prod.
+- `TILEBOT_ENDPOINT` is set as in prod (server → separate chatbot container), so the flow path is
+  the production one.
+- `tiledesk-executions` is added to `components.sh` as a new component (its three deployments as
+  three containers from one image), in a new profile `exec`. Mongo, Redis and RabbitMQ come from
+  `infra`. Keys for sealing are generated locally by a `bin/` script; no real key ever leaves
+  the machine.
+- `bin/seed` gets one scheduled agent and one webhook agent with a few blocks that set variables,
+  call an HTTP action and fail on demand, so every scenario below can run on a fresh database.
+- Nothing is pushed during the local phase. Commits stay on local feature branches until you
+  ask.
+
+**Built so that production is only a release:**
+
+- **Off by default, everywhere.** tybot: `EXECUTIONS_ENABLED=false` makes the recorder a no-op
+  (no publish, no Redis `exec:*` keys, no extra HGETALL). Server: the Activities consumer and the
+  refire route start only with `EXECUTIONS_ENABLED=true`. Dashboard: the Executions entry and the
+  Activities group show only when the project's settings say the service is on. So each branch
+  can be merged and released on its own, in any order, without changing production behaviour.
+- **Additive only.** New collections, new Redis keys, new Activity verbs, new permission strings.
+  No existing document, key or route changes shape; no migration.
+- **Turn-on order in prod:** executions service → server → chatbot → dashboard, then enable per
+  project (one internal project first), then for all.
+- **Rollback** = set the flag back to false (the recorder stops at the next execution); images
+  can stay. Data already recorded stays readable or is destroyed by retention.
+- **Versions** (minor bumps, features): chatbot 3.1.0, server 3.4.0, dashboard next minor,
+  executions 0.1.0. Each goes to stage as `-rcN` first if stage is used, prod gets the bare
+  version.
+- **Prod steps are done together**, one at a time: argo `prod` values (executions image, keys as
+  a secret, env flags), then each image tag, each checked before the next.
+
+**Local acceptance, before anything moves** (all on the local stack, against seeded agents):
+
+1. Scheduled run that succeeds: execution listed, every block with before/after flow state,
+   status `completed`.
+2. Run that fails in an HTTP action: status `failed`, error and the block shown, flow state up to
+   the failure.
+3. Soft stop: the running block finishes, the next one does not start.
+4. Hard stop during a long HTTP action: aborted at once, status `stopped`.
+5. Resume from the stop point, and Start new: the failed execution is unchanged, the new one
+   links back.
+6. Destroy: data gone, audit entry kept, Activities row for the owner.
+7. Data access with a reason: values visible for 15 minutes, audit + Activities rows, refused for
+   a role without the permission (admin for audit, supervisor for values, custom role without
+   `executions_data_access`).
+8. With `EXECUTIONS_ENABLED=false` on all components: the same flows behave exactly as on 3.0.5 /
+   3.3.1 (the existing tybot and server test suites pass unchanged).
 
 ## 15. Left to the builder
 
