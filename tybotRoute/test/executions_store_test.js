@@ -183,6 +183,69 @@ describe('ExecutionStore', function () {
     assert.strictEqual(ok.created, true);
   });
 
+  it('setStatusHint / pushFrame / popFrame never recreate an expired exec hash, and keep a live one\'s TTL (T4)', async function () {
+    const gone = `gone-${run}`;
+    execs.add(gone);
+    await store.setStatusHint(gone, 'completed');
+    await store.pushFrame(gone, { agent_id: 'S1' });
+    assert.strictEqual(await store.popFrame(gone), null);
+    assert.strictEqual(await client.exists(`exec:${gone}`), 0);
+    const a = await make(rid('ttl'), 'A');
+    await store.pushFrame(a.executionId, { agent_id: 'S1' });
+    await store.setStatusHint(a.executionId, 'failed');
+    assert.deepStrictEqual(await store.popFrame(a.executionId), { agent_id: 'S1' });
+    assert.strictEqual(await client.hGet(`exec:${a.executionId}`, 'status'), 'failed');
+    assert.ok(await client.ttl(`exec:${a.executionId}`) > 604000);
+  });
+
+  /** A client that records the calls it gets and how many were still pending when each was issued. */
+  function recording() {
+    const calls = [];
+    let pending = 0;
+    const c = new Proxy(client, {
+      get(target, prop) {
+        const v = target[prop];
+        if (typeof v !== 'function') return v;
+        return (...args) => {
+          calls.push({ call: String(prop), args, pendingBefore: pending });
+          const r = v.apply(target, args);
+          if (r && typeof r.then === 'function') {
+            pending++;
+            r.then(() => { pending--; }, () => { pending--; });
+          }
+          return r;
+        };
+      }
+    });
+    return { c, calls };
+  }
+
+  it('resolve: no EXISTS on the hint; status and state are read in one round trip (T3b)', async function () {
+    const r = rid('rt');
+    const a = await make(r, 'A');
+    const v = { step_seq: 2, raw: { x: '1' }, blocks_since_kf: 1, delta_bytes_since_kf: 3 };
+    await store.setState(a.executionId, v);
+    const { c, calls } = recording();
+    const s = new ExecutionStore(c);
+    const x = await s.resolve({ requestId: r, agentId: 'A', hintedExecutionId: a.executionId, meta, withState: true });
+    assert.strictEqual(x.executionId, a.executionId);
+    assert.deepStrictEqual(x.state, v);
+    assert.deepStrictEqual(calls.map((k) => k.call), ['hGet', 'get']);
+    assert.strictEqual(calls[1].pendingBefore, 1, 'the state GET is issued with the HGET');
+    // through the request key: GET, then HGET + state GET together
+    calls.length = 0;
+    const y = await s.resolve({ requestId: r, agentId: 'A', meta, withState: true });
+    assert.deepStrictEqual(y.state, v);
+    assert.deepStrictEqual(calls.map((k) => k.call), ['get', 'hGet', 'get']);
+    assert.strictEqual(calls[2].pendingBefore, 1);
+    // a gone hint (null HGET) falls through to the request key
+    calls.length = 0;
+    const z = await s.resolve({ requestId: r, agentId: 'A', hintedExecutionId: 'missing-id', meta });
+    assert.strictEqual(z.executionId, a.executionId);
+    assert.ok(!calls.some((k) => k.call === 'exists'));
+    assert.strictEqual(z.state, undefined, 'without withState no state is read');
+  });
+
   it('resolve returns null when the client throws', async function () {
     const calls = [];
     const orig = winston.warn; winston.warn = (m) => calls.push(m);

@@ -77,10 +77,12 @@ class DirCallSubAgent {
 
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
-      await ExecutionRecorder.onSubagentCall(this.context.chatbot?.execution, {
-        subagentRootId: resbody?.replaced_bot_root_id,
-        returnBlock: nextBlock?.intentName
-      });
+      if (this.context.chatbot?.execution) {
+        await ExecutionRecorder.onSubagentCall(this.context.chatbot.execution, {
+          subagentRootId: resbody?.replaced_bot_root_id,
+          returnBlock: nextBlock?.intentName
+        });
+      }
       if (this.context.chatbot?.bot.root_id) {
         AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
           from_agent_id:  this.context.chatbot?.bot.root_id,

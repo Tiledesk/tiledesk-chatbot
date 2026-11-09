@@ -1,5 +1,8 @@
 'use strict';
 
+// first: sets the endpoint defaults before the engine modules load
+const { listen, close, suiteEndpoints } = require('./helpers/executionsTestServer');
+
 const assert = require('assert');
 const crypto = require('crypto');
 const express = require('express');
@@ -36,13 +39,6 @@ function newRequestId() {
   return 'support-group-' + PROJECT_ID + '-' + uuidv4().replace(/-/g, '');
 }
 
-function listen(server, port) {
-  return new Promise((resolve) => { const l = server.listen(port, '0.0.0.0', () => resolve(l)); });
-}
-
-function close(listener) {
-  return new Promise((resolve) => (listener ? listener.close(() => resolve()) : resolve()));
-}
 
 function startTybot(endpoints = { TILEBOT_ENDPOINT: `http://localhost:${APP_PORT}`, API_ENDPOINT: `http://localhost:${API_PORT}` }) {
   return new Promise((resolve) => {
@@ -167,7 +163,7 @@ describe('Executions: jumps across blocks and pods', function () {
       if (savedEnv[k] === undefined) delete process.env[k];
       else process.env[k] = savedEnv[k];
     }
-    await startTybot({ TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT, API_ENDPOINT: process.env.API_ENDPOINT });
+    await startTybot(suiteEndpoints());
     setEmitterForTests(null);
     ExecutionRecorder._resetForTests();
     const del = [];

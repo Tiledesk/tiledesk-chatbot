@@ -82,9 +82,10 @@ function defer(job) {
 /**
  * Allocates the next seq (awaited: the only Redis call of an event) and returns it.
  * build(seq) — diffing, hashing, sealing — and the publish run deferred, in seq order.
+ * seqP: a nextSeq the caller already issued together with its other Redis call (one round trip).
  */
-async function emit(ctx, type, build) {
-  const seq = await ctx._store.nextSeq(ctx.execution_id);
+async function emit(ctx, type, build, seqP) {
+  const seq = await (seqP || ctx._store.nextSeq(ctx.execution_id));
   if (seq === null || seq === undefined) return null;
   const at = new Date().toISOString();
   defer(() => {
@@ -101,7 +102,8 @@ function sealInto(ctx, data, field, plain) {
   if (typeof plain === 'object' && Object.keys(plain).length === 0) return;
   try {
     const sealed = Sealer.seal(plain, ctx._cfg);
-    if (sealed) data[field] = sealed;
+    // no key, or over dataMaxBytes: no sealed block; the clear part of the event stays
+    if (sealed && sealed !== Sealer.TOO_LARGE) data[field] = sealed;
     else data.data_missing = true;
   } catch (err) {
     warn('seal ' + field, err);
@@ -165,12 +167,13 @@ const ExecutionRecorder = {
       const agentId = rootId || botId;
       const agentName = (bot && bot.name) || null;
       const test = !rootId;
-      const trigger = detectTrigger(message, requestId, botId);
+      const trigger = detectTrigger(message, requestId, botId, agentId);
       const resolved = await st.resolve({
         requestId,
         agentId,
         hintedExecutionId: message && message.attributes && message.attributes.execution_id,
-        meta: { id_project: projectId, agent_version: botId, agent_name: agentName, test, trigger }
+        meta: { id_project: projectId, agent_version: botId, agent_name: agentName, test, trigger },
+        withState: cfg.stateEnabled
       });
       if (!resolved) return null;
 
@@ -199,7 +202,9 @@ const ExecutionRecorder = {
         _chainEnded: false
       };
 
-      const saved = cfg.stateEnabled ? await st.getState(ctx.execution_id) : null;
+      // resolve read the state with the status (a created execution has none)
+      let saved = null;
+      if (cfg.stateEnabled) saved = resolved.state !== undefined ? resolved.state : await st.getState(ctx.execution_id);
       if (saved) {
         ctx._hasState = true;
         ctx.prev = saved.raw || null;
@@ -252,11 +257,13 @@ const ExecutionRecorder = {
       const scopes = ctx.scopes;
       ctx.scopes = { message_in: new Set(), jump_params: new Set() };
       // state off, or the read failed: the step and its actions still flow, without state fields
-      const before = cfg.stateEnabled ? await readState(ctx) : null;
+      const beforeP = cfg.stateEnabled ? readState(ctx) : null;
+      const seqP = ctx._store.nextSeq(ctx.execution_id); // goes out with the HGETALL: one round trip
+      const before = await beforeP;
       if (before === null) {
         return await openStep(ctx, blockId, blockName, {}, true, () => ({
           block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
-        }));
+        }), seqP);
       }
       // decided on the block count plus the delta bytes folded in so far (deferred jobs add theirs)
       const keyframe = StateDiff.shouldKeyframe({
@@ -288,7 +295,7 @@ const ExecutionRecorder = {
           sealInto(ctx, data, 'sealed_state', outside.sealedValues);
         }
         return data;
-      });
+      }, seqP);
     } catch (err) {
       warn('blockEntry', err);
       return null;
@@ -507,7 +514,7 @@ const ExecutionRecorder = {
  * Starts ctx.step with the state before the block and emits step.started.
  * stateless: no state fields for this step and its actions, and no state write at its exit.
  */
-async function openStep(ctx, blockId, blockName, before, stateless, build) {
+async function openStep(ctx, blockId, blockName, before, stateless, build, seqP) {
   ctx.step = {
     seq: null, block_id: blockId, block_name: blockName, started_at: Date.now(),
     actions: [], outcome: null, exit_taken: null, before, stateless, exitPending: null
@@ -515,7 +522,7 @@ async function openStep(ctx, blockId, blockName, before, stateless, build) {
   ctx.current = before;
   ctx._chainEnded = false;
   const step = ctx.step;
-  step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, build()));
+  step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, build()), seqP);
   return step.seq;
 }
 
@@ -529,7 +536,9 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     // snapshot now: the deferred diff must not see writes made after this point
     const writes = new Map(rec.tap ? rec.tap.writes : []);
     const before = ctx.current;
-    const after = step.stateless ? null : await readState(ctx);
+    const afterP = step.stateless ? null : readState(ctx);
+    const seqP = ctx._store.nextSeq(ctx.execution_id); // goes out with the HGETALL: one round trip
+    const after = await afterP;
     if (after) ctx.current = after;
     const kf = ctx.kf;
 
@@ -559,7 +568,7 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
       data.state_delta = delta.changes;
       sealInto(ctx, data, 'sealed_state', delta.sealedValues);
       return data;
-    });
+    }, seqP);
   } catch (err) {
     warn('afterAction', err);
     return null;
@@ -587,23 +596,24 @@ async function recordBlockExit(ctx, step) {
       exit_taken: step.exit_taken,
       duration_ms: Date.now() - step.started_at
     };
-    const seq = await emit(ctx, 'step.completed', () => {
-      if (!step.stateless) {
-        data.state_vars = Object.keys(current).length;
-        data.changed_keys = countChanged(step.before, current);
-      }
-      return data;
-    });
+    const seqP = ctx._store.nextSeq(ctx.execution_id);
     ctx.kf.blocks_since += 1;
     ctx._blocks += 1;
-    if (step.stateless) return seq;
-    ctx.prev = current;
-    await ctx._store.setState(ctx.execution_id, {
+    // the state write goes out with the INCR (one round trip); delta bytes of deferred jobs not yet run are counted at the next exit
+    const saved = step.stateless ? null : ctx._store.setState(ctx.execution_id, {
       step_seq: step.seq,
       raw: current,
       blocks_since_kf: ctx.kf.blocks_since,
       delta_bytes_since_kf: ctx.kf.delta_bytes
     });
+    if (!step.stateless) ctx.prev = current;
+    const [seq] = await Promise.all([emit(ctx, 'step.completed', () => {
+      if (!step.stateless) {
+        data.state_vars = Object.keys(current).length;
+        data.changed_keys = countChanged(step.before, current);
+      }
+      return data;
+    }, seqP), saved]);
     return seq;
   } catch (err) {
     warn('blockExit', err);

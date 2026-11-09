@@ -101,9 +101,11 @@ class DirReplaceBotV3 {
 
         winston.debug("(DirReplaceBotV3)  replace resbody: ", resbody);
 
-        await ExecutionRecorder.onHandedToBot(this.context.chatbot?.execution, {
-          toAgentId: resbody?.replaced_bot_root_id || (useSlug ? botSlug : botId)
-        });
+        if (this.context.chatbot?.execution) {
+          await ExecutionRecorder.onHandedToBot(this.context.chatbot.execution, {
+            toAgentId: resbody?.replaced_bot_root_id || (useSlug ? botSlug : botId)
+          });
+        }
 
         // Emit analytics event for bot switch. Only track published (production)
         // runs (root/draft copy has no root_id).

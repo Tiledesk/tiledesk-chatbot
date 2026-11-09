@@ -1,5 +1,8 @@
 'use strict';
 
+// first: sets the endpoint defaults before the engine modules load
+const { listen, close, suiteEndpoints } = require('./helpers/executionsTestServer');
+
 const assert = require('assert');
 const crypto = require('crypto');
 const axios = require('axios');
@@ -42,13 +45,6 @@ function newRequestId(projectId = PROJECT_ID) {
   return 'support-group-' + projectId + '-' + uuidv4().replace(/-/g, '');
 }
 
-function listen(server, port) {
-  return new Promise((resolve) => { const l = server.listen(port, '0.0.0.0', () => resolve(l)); });
-}
-
-function close(listener) {
-  return new Promise((resolve) => (listener ? listener.close(() => resolve()) : resolve()));
-}
 
 function startTybot(endpoints = { TILEBOT_ENDPOINT: `http://localhost:${APP_PORT}`, API_ENDPOINT: `http://localhost:${API_PORT}` }) {
   return new Promise((resolve) => {
@@ -173,7 +169,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       else process.env[k] = savedEnv[k];
     }
     // put the engine's module state (endpoints) back to what the other test files expect
-    await startTybot({ TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT, API_ENDPOINT: process.env.API_ENDPOINT });
+    await startTybot(suiteEndpoints());
     setEmitterForTests(null);
     ExecutionRecorder._resetForTests();
     const execIds = new Set(log.filter((e) => e.event).map((e) => e.event.execution_id));
@@ -464,21 +460,31 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'scheduled', chatbot_id: 'c1' } }, attributes: { action: '#sp1' } }, 'support-group-p-1', 'b'), { type: 'scheduled', source_id: 'c1', start_point_id: 'sp1' });
     assert.deepStrictEqual(detectTrigger({ request: { channel: { name: 'whatsapp' } } }, 'support-group-p-1', 'b'), { type: 'channel', source_id: 'whatsapp', start_point_id: null });
     assert.deepStrictEqual(detectTrigger({ request: { channel: { name: 'chat21' } } }, 'support-group-p-1', 'b'), { type: 'widget', source_id: null, start_point_id: null });
+    // T5: a scheduled run with neither id falls back to the agent (root) id; other types do not
+    assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'scheduled' } } }, 'support-group-p-1', 'b', 'root1'), { type: 'scheduled', source_id: 'root1', start_point_id: null });
+    assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'scheduled', chatbot_id: 'c1' } } }, 'support-group-p-1', 'b', 'root1').source_id, 'c1');
+    assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'webhook' } } }, 'support-group-p-1', 'b', 'root1').source_id, null);
   });
 
   /** Points the recorder at a store whose client logs every call into `log`. */
   /** A client that logs every call into `log` (with its resolved value); fail(prop) can make a method throw. */
   function proxiedClient(fail = () => false) {
+    const pending = { n: 0 };
     return new Proxy(client, {
       get(target, prop) {
         const v = target[prop];
         if (typeof v !== 'function') return v;
         return (...args) => {
-          const entry = { call: String(prop), args };
+          // pendingBefore: calls of this client still awaiting their reply when this one was issued
+          // (node-redis sends commands issued in the same tick in one write: one round trip)
+          const entry = { call: String(prop), args, pendingBefore: pending.n };
           log.push(entry);
           if (fail(String(prop))) return Promise.reject(new Error('injected ' + String(prop) + ' failure'));
           const r = v.apply(target, args);
-          if (r && typeof r.then === 'function') r.then((value) => { entry.result = value; }, () => {});
+          if (r && typeof r.then === 'function') {
+            pending.n++;
+            r.then((value) => { entry.result = value; pending.n--; }, () => { pending.n--; });
+          }
           return r;
         };
       }
@@ -639,8 +645,91 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     const to = seqCall(ofType(rid, 'step.completed')[0].seq);
     assert.ok(from >= 0 && to > from);
     assert.strictEqual(ofType(rid, 'action.completed').length, 3);
-    // 3 actions x (HGETALL + INCR), then the INCR of step.completed
-    assert.deepStrictEqual(log.slice(from + 1, to + 1).filter((e) => e.call).map((e) => e.call),
-      ['hGetAll', 'incr', 'hGetAll', 'incr', 'hGetAll', 'incr', 'incr']);
+    // 3 actions x (HGETALL + INCR), then the INCR of step.completed with the state write
+    const calls = log.slice(from + 1).filter((e) => e.call);
+    assert.deepStrictEqual(calls.slice(0, 8).map((e) => e.call),
+      ['hGetAll', 'incr', 'hGetAll', 'incr', 'hGetAll', 'incr', 'incr', 'set']);
+    // pipelined: each action's INCR goes out with its HGETALL (1 round trip per action), and the
+    // state write with the step.completed INCR (1 round trip at block exit)
+    for (const i of [1, 3, 5]) assert.ok(calls[i].pendingBefore >= 1, 'INCR ' + i + ' issued with its HGETALL');
+    assert.strictEqual(calls[6].args[0], `exec:${execId}:seq`);
+    assert.strictEqual(calls[7].args[0], `exec:${execId}:state`);
+    assert.ok(calls[7].pendingBefore >= 1, 'state write issued with the step.completed INCR');
+    const roundTrips = (slice) => slice.filter((e) => e.pendingBefore === 0).length;
+    for (const i of [0, 2, 4]) assert.strictEqual(roundTrips(calls.slice(i, i + 2)), 1, 'one round trip for action at ' + i);
+    assert.strictEqual(roundTrips(calls.slice(6, 8)), 1, 'one round trip at block exit');
+  });
+
+  it('a message resolves without EXISTS, its status and state read together (T3b)', async function () {
+    useProxiedStore();
+    const rid = newRequestId();
+    send('/count', rid);
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+    await settle(rid, 200);
+    const execId = ofType(rid, 'execution.started')[0].execution_id;
+    const from = log.length;
+    send('/count', rid, { attributes: { execution_id: execId } });
+    await waitFor(() => ofType(rid, 'execution.idle').length > 1, 'second execution.idle');
+    const calls = log.slice(from).filter((e) => e.call);
+    assert.ok(!calls.some((e) => e.call === 'exists'), 'no EXISTS');
+    const status = calls.findIndex((e) => e.call === 'hGet' && e.args[0] === `exec:${execId}` && e.args[1] === 'status');
+    assert.ok(status >= 0);
+    assert.strictEqual(calls[status + 1].call, 'get');
+    assert.strictEqual(calls[status + 1].args[0], `exec:${execId}:state`);
+    assert.ok(calls[status + 1].pendingBefore >= 1, 'the state GET goes out with the status HGET');
+    assert.strictEqual(calls.filter((e) => e.call === 'get' && e.args[0] === `exec:${execId}:state`).length, 1, 'state read once');
+  });
+
+  it('a sealed block over EXECUTIONS_DATA_MAX_BYTES is left out: data_missing, the clear part stays (T2)', async function () {
+    const saved = process.env.EXECUTIONS_DATA_MAX_BYTES;
+    process.env.EXECUTIONS_DATA_MAX_BYTES = '200';
+    try {
+      const rid = newRequestId();
+      requestIds.push(rid);
+      const message = { request: { request_id: rid, attributes: { payload: { blob: 'x'.repeat(500) } } } };
+      const ctx = await ExecutionRecorder.onMessageIn({ message, bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store: new ExecutionStore(client) });
+      await ExecutionRecorder._drainForTests();
+      const started = ofType(rid, 'execution.started')[0];
+      assert.ok(!('sealed_trigger_payload' in started.data));
+      assert.strictEqual(started.data.data_missing, true);
+      assert.deepStrictEqual(started.data.trigger, { type: 'widget', source_id: null, start_point_id: null });
+      assert.strictEqual(started.data.agent_name, 'b');
+      assert.ok(ctx);
+    } finally {
+      if (saved === undefined) delete process.env.EXECUTIONS_DATA_MAX_BYTES; else process.env.EXECUTIONS_DATA_MAX_BYTES = saved;
+    }
+  });
+
+  it('a scheduled run without webhook_id / chatbot_id records the agent root id as source_id (T5)', async function () {
+    const rid = newRequestId();
+    requestIds.push(rid);
+    const message = { request: { request_id: rid, attributes: { start_type: 'scheduled' } }, attributes: { action: '#sp9' } };
+    await ExecutionRecorder.onMessageIn({ message, bot: { name: 'b', root_id: 'rootAgent' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store: new ExecutionStore(client) });
+    await ExecutionRecorder._drainForTests();
+    const started = ofType(rid, 'execution.started')[0];
+    requestIds.push(rid);
+    assert.deepStrictEqual(started.data.trigger, { type: 'scheduled', source_id: 'rootAgent', start_point_id: 'sp9' });
+    await client.del(`exec:req:${rid}:rootAgent`);
+  });
+
+  it('flag off: the flow makes no awaited recorder call (T6)', async function () {
+    const names = ['onMessageIn', 'withScope', 'blockEntry', 'afterAction', 'failed', 'blockExit', 'endOfChain', 'onSubagentCall', 'onSubagentReturn', 'onHandedToBot'];
+    const orig = {};
+    const called = [];
+    for (const n of names) {
+      orig[n] = ExecutionRecorder[n];
+      ExecutionRecorder[n] = function (...args) { called.push(n); return orig[n].apply(ExecutionRecorder, args); };
+    }
+    process.env.EXECUTIONS_ENABLED = 'false';
+    try {
+      const rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => replies.some((r) => r.requestId === rid && r.message), 'the done reply');
+      await new Promise((r) => setTimeout(r, 300));
+      assert.deepStrictEqual(called, []);
+    } finally {
+      for (const n of names) ExecutionRecorder[n] = orig[n];
+      process.env.EXECUTIONS_ENABLED = 'true';
+    }
   });
 });

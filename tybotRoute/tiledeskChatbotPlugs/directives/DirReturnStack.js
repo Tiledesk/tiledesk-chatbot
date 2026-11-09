@@ -57,7 +57,7 @@ class DirReturnStack {
                 nextBlock: data.nextBlock && data.nextBlock.intentName
             }));
             await requestService.replaceBot(this.context.projectId, this.requestId, { id: parentParticipantId, reason: "subagent_return" }, this.context.token);
-            await ExecutionRecorder.onSubagentReturn(this.context.chatbot?.execution);
+            if (this.context.chatbot?.execution) await ExecutionRecorder.onSubagentReturn(this.context.chatbot.execution);
         } catch (error) {
             winston.error("(DirReturnStack) error: ", error);
             this.logger.error("(ReturnStack) Invoke subagent error: ", error);

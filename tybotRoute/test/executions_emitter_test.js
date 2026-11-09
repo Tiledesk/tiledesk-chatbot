@@ -54,6 +54,80 @@ describe('executions: TraceEmitter', function () {
     assert.strictEqual(e.stats().buffered, 0);
   });
 
+  it('publishes with a window: up to 100 in flight at once, in emit order (T1)', async function () {
+    const calls = [];
+    const t = { publish: (rk, buf) => new Promise((resolve) => calls.push({ n: JSON.parse(buf.toString()).n, resolve })), close: async () => {} };
+    const e = make({ transport: t, bufferMax: 1000, pod: 'p' });
+    for (let n = 0; n < 250; n++) e.emit({ id_project: 'P', type: 't', n });
+    assert.strictEqual(calls.length, 100);
+    assert.deepStrictEqual(calls.map((c) => c.n), [...Array(100).keys()]);
+    assert.strictEqual(e.stats().buffered, 150);
+    const done = e.flush();
+    // confirms come back; each frees a slot for the next entry, order kept
+    while (calls.some((c) => !c.done)) {
+      for (const c of calls) if (!c.done) { c.done = true; c.resolve(); }
+      await new Promise((r) => setImmediate(r));
+    }
+    await done;
+    assert.deepStrictEqual(calls.map((c) => c.n), [...Array(250).keys()]);
+    assert.strictEqual(e.stats().published, 250);
+    assert.strictEqual(e.stats().buffered, 0);
+  });
+
+  it('on failures the unconfirmed entries go back to the head, in order (T1)', async function () {
+    const sent = [];
+    const failOnce = new Set([3, 5]);
+    const t = {
+      publish: async (rk, buf) => {
+        const n = JSON.parse(buf.toString()).n;
+        await new Promise((r) => setImmediate(r));
+        if (failOnce.delete(n)) throw new Error('nack ' + n);
+        sent.push(n);
+      },
+      close: async () => {},
+    };
+    const e = make({ transport: t, bufferMax: 100, pod: 'p' });
+    for (let n = 0; n < 10; n++) e.emit({ id_project: 'P', type: 't', n });
+    await e.flush();
+    assert.deepStrictEqual(sent, [0, 1, 2, 4, 6, 7, 8, 9]);
+    assert.strictEqual(e.stats().buffered, 2);
+    e.emit({ id_project: 'P', type: 't', n: 10 });
+    await e.flush();
+    assert.deepStrictEqual(sent.slice(8), [3, 5, 10]);
+    assert.strictEqual(e.stats().published, 11);
+    assert.strictEqual(e.stats().dropped, 0);
+  });
+
+  it('a byte cap drops the oldest entries and counts them as dropped (T2)', async function () {
+    const t = { publish: async () => { throw new Error('down'); }, close: async () => {} };
+    const one = Buffer.byteLength(JSON.stringify({ id_project: 'P', type: 't', n: 0, pad: 'x'.repeat(80) }));
+    const e = make({ transport: t, bufferMax: 1000, bufferMaxBytes: one * 3 + 10, pod: 'p' });
+    for (let n = 0; n < 8; n++) e.emit({ id_project: 'P', type: 't', n, pad: 'x'.repeat(80) });
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+    assert.strictEqual(e.stats().buffered, 3);
+    assert.strictEqual(e.stats().dropped, 5);
+    assert.ok(e.stats().bufferedBytes <= one * 3 + 10);
+  });
+
+  it('EXECUTIONS_BUFFER_MAX_BYTES defaults to 64 MB and reaches the emitter (T2)', function () {
+    const { getConfig } = require('../executions/config');
+    const saved = process.env.EXECUTIONS_BUFFER_MAX_BYTES;
+    try {
+      delete process.env.EXECUTIONS_BUFFER_MAX_BYTES;
+      assert.strictEqual(getConfig().bufferMaxBytes, 67108864);
+      assert.strictEqual(new TraceEmitter({ transport: okTransport() }).bufferMaxBytes, 67108864);
+      process.env.EXECUTIONS_BUFFER_MAX_BYTES = '1024';
+      assert.strictEqual(getConfig().bufferMaxBytes, 1024);
+      setEmitterForTests(null);
+      const saveUrl = process.env.EXECUTIONS_AMQP_URL;
+      delete process.env.EXECUTIONS_AMQP_URL;
+      try { assert.strictEqual(getEmitter().bufferMaxBytes, 1024); } finally { if (saveUrl !== undefined) process.env.EXECUTIONS_AMQP_URL = saveUrl; }
+    } finally {
+      if (saved === undefined) delete process.env.EXECUTIONS_BUFFER_MAX_BYTES; else process.env.EXECUTIONS_BUFFER_MAX_BYTES = saved;
+    }
+  });
+
   it('buildEnvelope carries event_version 1 and all envelope fields', function () {
     const ctx = { execution_id: 'x1', id_project: 'P', agent_id: 'a', agent_version: 'v', request_id: 'r' };
     const env = buildEnvelope({ ctx, seq: 3, type: 'action.start', data: { k: 1 } });

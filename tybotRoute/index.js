@@ -40,6 +40,7 @@ const tilebotService = require('./services/TilebotService.js');
 const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
 const ExecutionRecorder = require('./executions/ExecutionRecorder');
 const { ExecutionStore } = require('./executions/ExecutionStore');
+const { isEnabled: executionsEnabled } = require('./executions/config');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -113,7 +114,8 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
-  const ctx = await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token });
+  // flag off: no call at all (not even an awaited null), the flow runs as in 3.0.5
+  const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
   
   let intentsMachine;
   let backupMachine;
@@ -145,12 +147,20 @@ router.post('/ext/:botid', async (req, res) => {
   winston.verbose("(tybotRoute) Message text: " + message.text)
 
   try {
-    await ExecutionRecorder.withScope(ctx, 'message_in', async () => {
+    if (ctx) {
+      await ExecutionRecorder.withScope(ctx, 'message_in', async () => {
+        await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+        if (requestId.startsWith("support-group-")) {
+          await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+        }
+      });
+    }
+    else { // tracing off: unchanged
       await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
       if (requestId.startsWith("support-group-")) {
         await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
       }
-    });
+    }
   } catch (e) {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
@@ -256,8 +266,10 @@ router.post('/ext/:botid', async (req, res) => {
         request_id:  requestId || null
       });
     }
-    await ExecutionRecorder.blockExit(ctx);
-    await ExecutionRecorder.endOfChain(ctx);
+    if (ctx) {
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
   }
 
 });

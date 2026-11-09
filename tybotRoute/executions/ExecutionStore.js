@@ -14,6 +14,9 @@ const CAS_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
 
 const CAD_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end";
 
+// HSET only on a live hash: an expired exec:{id} is never recreated (it would have no TTL).
+const HSET_IF_EXISTS = "if redis.call('EXISTS', KEYS[1]) == 1 then return redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) else return 0 end";
+
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
 
@@ -31,23 +34,26 @@ class ExecutionStore {
     winston.warn(`[ExecutionStore] ${op} failed: ${err && err.message}`);
   }
 
-  async resolve({ requestId, agentId, hintedExecutionId, meta }) {
+  /**
+   * withState: the reused execution's exec:{id}:state is read together with its status (one round
+   * trip) and returned as `state`; a created execution has none (null). Without it `state` is undefined.
+   */
+  async resolve({ requestId, agentId, hintedExecutionId, meta, withState }) {
     try {
       const c = this.client;
-      if (hintedExecutionId && await c.exists(execKey(hintedExecutionId))) {
-        const hintedStatus = await c.hGet(execKey(hintedExecutionId), 'status');
-        if (!TERMINAL.includes(hintedStatus)) {
-          return { executionId: hintedExecutionId, created: false, previousExecutionId: null, parentExecutionId: null };
-        }
+      // status and state of a candidate in one round trip; status is always written, so null means gone
+      const probe = (id) => Promise.all([c.hGet(execKey(id), 'status'), withState ? this.getState(id) : undefined]);
+      const reused = (id, state) => ({ executionId: id, created: false, previousExecutionId: null, parentExecutionId: null, state });
+      if (hintedExecutionId) {
+        const [hintedStatus, state] = await probe(hintedExecutionId);
+        if (hintedStatus != null && !TERMINAL.includes(hintedStatus)) return reused(hintedExecutionId, state);
       }
       const key = reqKey(requestId, agentId);
       const current = await c.get(key);
       let previousExecutionId = null;
       if (current) {
-        const status = await c.hGet(execKey(current), 'status');
-        if (!TERMINAL.includes(status)) {
-          return { executionId: current, created: false, previousExecutionId: null, parentExecutionId: null };
-        }
+        const [status, state] = await probe(current);
+        if (!TERMINAL.includes(status)) return reused(current, state);
         previousExecutionId = current;
       }
 
@@ -61,7 +67,7 @@ class ExecutionStore {
       if (!won) {
         const winner = await c.get(key);
         if (!winner) return null;
-        return { executionId: winner, created: false, previousExecutionId: null, parentExecutionId: null };
+        return reused(winner, withState ? await this.getState(winner) : undefined);
       }
 
       const m = meta || {};
@@ -100,7 +106,7 @@ class ExecutionStore {
         this._warn('resolve handoff', err);
         parentExecutionId = null;
       }
-      return { executionId: id, created: true, previousExecutionId, parentExecutionId };
+      return { executionId: id, created: true, previousExecutionId, parentExecutionId, state: withState ? null : undefined };
     } catch (err) {
       this._warn('resolve', err);
       return null;
@@ -153,6 +159,10 @@ class ExecutionStore {
     }
   }
 
+  _hSetIfExists(id, field, value) {
+    return this.client.eval(HSET_IF_EXISTS, { keys: [execKey(id)], arguments: [field, value] });
+  }
+
   async _stack(id) {
     const raw = await this.client.hGet(execKey(id), 'agent_stack');
     return raw ? JSON.parse(raw) : [];
@@ -162,7 +172,7 @@ class ExecutionStore {
     try {
       const stack = await this._stack(id);
       stack.push(frame);
-      await this.client.hSet(execKey(id), 'agent_stack', JSON.stringify(stack));
+      await this._hSetIfExists(id, 'agent_stack', JSON.stringify(stack));
     } catch (err) {
       this._warn('pushFrame', err);
     }
@@ -173,7 +183,7 @@ class ExecutionStore {
       const stack = await this._stack(id);
       if (stack.length === 0) return null;
       const frame = stack.pop();
-      await this.client.hSet(execKey(id), 'agent_stack', JSON.stringify(stack));
+      await this._hSetIfExists(id, 'agent_stack', JSON.stringify(stack));
       return frame;
     } catch (err) {
       this._warn('popFrame', err);
@@ -191,7 +201,7 @@ class ExecutionStore {
 
   async setStatusHint(id, status) {
     try {
-      await this.client.hSet(execKey(id), 'status', status);
+      await this._hSetIfExists(id, 'status', status);
     } catch (err) {
       this._warn('setStatusHint', err);
     }

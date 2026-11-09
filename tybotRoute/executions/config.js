@@ -36,6 +36,7 @@ function getConfig() {
     sealPublicKeyPem: pem(env.EXECUTIONS_SEAL_PUBLIC_KEY),
     sealKid: env.EXECUTIONS_SEAL_KID || null,
     bufferMax: int(env.EXECUTIONS_BUFFER_MAX, 10000),
+    bufferMaxBytes: int(env.EXECUTIONS_BUFFER_MAX_BYTES, 67108864),
     dataMaxBytes: int(env.EXECUTIONS_DATA_MAX_BYTES, 262144),
     stateValueMaxBytes: int(env.EXECUTIONS_STATE_VALUE_MAX_BYTES, 262144),
     keyframeEvery: int(env.EXECUTIONS_STATE_KEYFRAME_EVERY, 20),

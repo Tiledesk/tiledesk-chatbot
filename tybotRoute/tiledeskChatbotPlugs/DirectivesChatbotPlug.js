@@ -203,7 +203,7 @@ class DirectivesChatbotPlug {
           request_id:    this.context.requestId || null
         });
       }
-      await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error });
+      if (this.execution) await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
@@ -364,7 +364,7 @@ class DirectivesChatbotPlug {
           request_id:     this.context.requestId || null
         });
       }
-      await ExecutionRecorder.afterAction(this.execution, { index: actionIndex, directive, startedAt: blockStart });
+      if (this.execution) await ExecutionRecorder.afterAction(this.execution, { index: actionIndex, directive, startedAt: blockStart });
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();

@@ -33,6 +33,30 @@ describe('executions: config, secrets, Sealer', function () {
     assert.deepStrictEqual(openSealed(sealed, keys.privateKeyPem), { a: 1 });
   });
 
+  it('seal imports the public key once per pem, not per call (T3c)', function () {
+    const crypto = require('crypto');
+    const orig = crypto.createPublicKey;
+    let n = 0;
+    crypto.createPublicKey = function (...args) { n++; return orig.apply(crypto, args); };
+    try {
+      const pemCfg = { sealPublicKeyPem: getTestKeys().publicKeyPem + '\n', sealKid: 'kc' }; // a pem this file has not used yet
+      const a = Sealer.seal({ a: 1 }, pemCfg);
+      const b = Sealer.seal({ b: 2 }, pemCfg);
+      assert.strictEqual(n, 1);
+      assert.deepStrictEqual(openSealed(a, keys.privateKeyPem), { a: 1 });
+      assert.deepStrictEqual(openSealed(b, keys.privateKeyPem), { b: 2 });
+    } finally {
+      crypto.createPublicKey = orig;
+    }
+  });
+
+  it('seal returns Sealer.TOO_LARGE over cfg.dataMaxBytes (T2)', function () {
+    const big = { s: 'x'.repeat(300) };
+    assert.strictEqual(Sealer.seal(big, Object.assign({ dataMaxBytes: 100 }, cfg)), Sealer.TOO_LARGE);
+    assert.ok(Sealer.seal(big, Object.assign({ dataMaxBytes: 1000 }, cfg)).ct);
+    assert.ok(Sealer.seal(big, cfg).ct, 'no cap configured: sealed');
+  });
+
   it('isSecretName', function () {
     for (const n of ['Authorization', 'api_key', 'accessToken', 'password', 'client_secret']) {
       assert.strictEqual(isSecretName(n), true, n);
