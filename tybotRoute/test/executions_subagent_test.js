@@ -377,7 +377,7 @@ describe('Executions: subagents, replace bot, event fixture', function () {
 
   // last: mocha runs a suite's own tests before its sub-suites, so this sits in a sub-suite of its own
   describe('event fixture', function () {
-    it('writes every envelope seen in this file to test/fixtures/executions-events.sample.json', function () {
+    it('test/fixtures/executions-events.sample.json holds one envelope per type seen in this file (written with EXECUTIONS_WRITE_FIXTURE=1)', function () {
       const byType = new Map();
       for (const envelope of log) if (!byType.has(envelope.type)) byType.set(envelope.type, envelope);
       const sample = [...byType.keys()].sort().map((type) => byType.get(type));
@@ -388,9 +388,17 @@ describe('Executions: subagents, replace bot, event fixture', function () {
         assert.deepStrictEqual(Object.keys(e).sort(),
           ['agent_id', 'agent_version', 'at', 'data', 'event_version', 'execution_id', 'id_project', 'pod', 'request_id', 'seq', 'type']);
       }
-      fs.mkdirSync(path.dirname(FIXTURE_PATH), { recursive: true });
-      fs.writeFileSync(FIXTURE_PATH, JSON.stringify(sample, null, 2) + '\n');
-      assert.deepStrictEqual(JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8')).map((e) => e.type), [...byType.keys()].sort());
+      // written only on request (volatile ids and timestamps); otherwise the committed file is checked
+      if (process.env.EXECUTIONS_WRITE_FIXTURE === '1') {
+        fs.mkdirSync(path.dirname(FIXTURE_PATH), { recursive: true });
+        fs.writeFileSync(FIXTURE_PATH, JSON.stringify(sample, null, 2) + '\n');
+      }
+      const committed = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8'));
+      assert.deepStrictEqual(committed.map((e) => e.type), sample.map((e) => e.type),
+        'the fixture has one envelope per type produced here (regenerate with EXECUTIONS_WRITE_FIXTURE=1)');
+      for (const [i, e] of committed.entries()) {
+        assert.deepStrictEqual(Object.keys(e).sort(), Object.keys(sample[i]).sort(), e.type + ': same envelope keys');
+      }
     });
   });
 });
