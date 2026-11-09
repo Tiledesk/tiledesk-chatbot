@@ -1,7 +1,7 @@
 # Agent execution traceability and control — design
 
 **Date:** 2026-11-09
-**Status:** draft v2 (deep design), awaiting approval
+**Status:** draft v3 (deep design, dashboard integration + flow state tracking), awaiting approval
 **Branch:** `feature/execution-traceability` (tiledesk-chatbot, from `origin/main` af406feb 3.0.5)
 **Repos touched:** tiledesk-chatbot (tybot), **new** `tiledesk-executions`, tiledesk-server,
 tiledesk-dashboard, tiledesk-scheduler-service (small), tiledesk-argo
@@ -69,7 +69,12 @@ This work gives the project a **monitor of agent executions** for three needs **
 5. Execution **data** (attribute values, request/response bodies, prompts, trigger payload) is
    **sealed**. It is readable only through an explicit, audited **in-depth access request** **[decided]**.
 6. Every control action and every data access is in an append-only audit log: who, when, which
-   execution, why **[decided]**.
+   execution, why **[decided]**. It is read in the dashboard's existing **Activities** page **[decided]**.
+7. The **whole flow state** (all flow variables) is tracked before and after every block, and every
+   change is tied to the action that made it **[decided]**. Names and "what changed" are in the
+   trace; values are data (goal 5).
+8. The UI lives **inside the existing dashboard pages**: executions are reached from the agents
+   list **[decided]**.
 
 **Non-goals (v1)**
 
@@ -142,7 +147,7 @@ flowchart TB
     VK[vault keyring<br/>api pods only]
   end
 
-  DASH[dashboard<br/>Executions module]
+  DASH[dashboard<br/>agents list + executions pages<br/>+ Activities]
 
   SCH --> WCS
   WH --> WCS
@@ -174,7 +179,7 @@ flowchart TB
 | ingest worker | tiledesk-executions | new | consume events, build executions and steps, detect gaps |
 | api | tiledesk-executions | new | query, control, data access, audit; only place that holds the private keys |
 | reaper + retention | tiledesk-executions | new | find executions whose owner died, apply retention |
-| Executions module | tiledesk-dashboard | new | list, detail, controls, data access, audit |
+| Executions pages + Activities verbs | tiledesk-dashboard | new pages under `bots/`, changes to `bots-list`, `activities-new`, `users-new-role` | list, detail (timeline, flow state, audit tab), controls, data access; audit rows in Activities |
 | run log ↔ execution link | tiledesk-scheduler-service | changed (small) | jump from a scheduled run to its execution |
 | deployment, keys, queues | tiledesk-argo | changed | run all of it |
 
@@ -300,6 +305,8 @@ stay one-liners.
 | `ControlListener` | subscribes to `exec:control`; hard stop → AbortRegistry; resume → takes the lease and drives. |
 | `AbortRegistry` | per-pod `Map<execution_id, AbortController>` for the blocks this pod drives. |
 | `OutcomeMapper` | per action type: exit taken → `success` / `failure_condition`; thrown error → `error`. |
+| `StateRecorder` | flow state before/after every block and every action (§7.1.10): reads the `:parameters` hash, computes the delta, attributes each change to the action that wrote it, hands values to `Sealer`. Shares the hash read with `Checkpointer`. |
+| `WriteTap` | records which keys the running action writes. Called from the three places that write flow variables (§7.1.10). |
 
 #### 7.1.2 Hook points in existing code
 
@@ -307,9 +314,13 @@ stay one-liners.
 |---|---|
 | `index.js` `POST /ext/:botid` (message in, incl. block jumps) | resolve or create the execution (`ExecutionStore.resolve(request_id, bot_id)`); if a jump carries `execution_id`, use it; **check the stop flag before running anything**; take the lease; build `ExecutionContext`. If stopped: emit `execution.message_while_stopped`, answer 200, run nothing. |
 | `index.js` `POST /block/:project_id/:bot_id/:block_id` (automation) | create the execution with trigger `automation`; same as above. |
-| `TiledeskChatbot.execIntent` | emit `step.started` (block id/name, agent, version). |
-| `DirectivesChatbotPlug.nextDirective`, next to the existing `checkStep` | before each action: check the stop flag (soft → stop here, checkpoint `next_action = this one`); after each action: OutcomeMapper, seal data, emit `action.completed`, write checkpoint. Existing `checkStep` errors → `execution.failed` (`max_steps_exceeded` / `max_time_exceeded`). |
-| `DirectivesChatbotPlug.process` (`theend`) | emit `step.completed`. If no jump is in flight → `execution.idle` (conversation) or `execution.ended` (automation). Release the lease. |
+| `TiledeskChatbot.execIntent` | `StateRecorder.blockEntry()`: read the whole state (state **before** the block), diff it against the state recorded at the end of the previous block (changes made outside the flow); emit `step.started` (block id/name, agent, version, state before). |
+| `DirectivesChatbotPlug.nextDirective`, next to the existing `checkStep` | before each action: check the stop flag (soft → stop here, checkpoint `next_action = this one`), `WriteTap.begin(action_id)`; after each action: OutcomeMapper, `StateRecorder.afterAction()` (delta of this action), seal data, emit `action.completed`, write checkpoint (same hash read). Existing `checkStep` errors → `execution.failed` (`max_steps_exceeded` / `max_time_exceeded`). |
+| `DirectivesChatbotPlug.process` (`theend`), and the post-action callback when `stop` is true | `StateRecorder.blockExit()` (state **after** the block = state after its last action); emit `step.completed`. If no jump is in flight → `execution.idle` (conversation) or `execution.ended` (automation). Release the lease. |
+| `TiledeskChatbot.addParameterStatic` / `deleteParameterStatic`, `TiledeskRequestVariables.set` / `delete` (used by the Code action) | one line each: `WriteTap.note(requestId, key, op)`. These are the only writers of `:parameters` in tybot today. |
+| `index.js` `POST /ext/:botid`, around `TiledeskChatbotUtil.updateRequestAttributes` and `updateConversationTranscript` (message in) | `WriteTap.scope(source: "message_in")` around both calls, so the variables refreshed by an incoming message (`lastUserText`, `lastUserMessage`, `transcript`…) are labelled as such instead of "changed outside the flow". |
+| `TiledeskChatbot` intent invocation with parameters (`/intentName{…}`, ~l.170: `this.addParameter` before `execIntent`, not awaited) | await those writes and tap them with `source: "jump_params"` **[my call]**. |
+| `DirIntent`, `DirConnectBlock`, `DirReturnStack` (jumps), state side | before posting the jump: `afterAction` + checkpoint write + `blockExit` are **awaited**, so the next block (same or other pod) reads a checkpoint that already holds the state after this block **[my call]**. Today `DirIntent` calls back only after `sendMessageToBot` returns, so without this the next block can start before the previous one has recorded its exit. |
 | `DirIntent`, `DirConnectBlock`, `DirReturnStack` (jumps) | add `execution_id` to the posted message attributes; set `exec:{id}:transit = now`; release the lease. |
 | `DirReplaceBot*` | emit `execution.handed_to_bot` with the new bot id; the next `/ext` for the new bot creates the child with `parent_execution_id`. |
 | `DirCallSubagent` | before the swap: `SET exec:req:{request_id}:{subagent_root_id} = <current execution_id>` (an alias, so the subagent's first `/ext`, which arrives through `sendSupportMessage` without `execution_id`, resolves to the **same** execution) and push a frame on `agent_stack`; the replace call carries `reason: "subagent_call"`. |
@@ -415,6 +426,102 @@ A thrown error is always `error`.
 | sealing fails | trace event sent without data, `data_missing: true` |
 | pod dies mid-block | lease expires; the reaper marks `failed` (`lost_owner`); resumable from the last checkpoint |
 
+#### 7.1.10 Flow state tracking (variables before / after every block)
+
+**What the code does today.** All flow variables of a conversation live in one Redis hash,
+`TiledeskChatbot.requestCacheKey(request_id) + ":parameters"`, one field per variable, value as
+a JSON string (up to 20 MB per value, TTL `FLOW_ATTRIBUTES_TTL`). Three places write it:
+`TiledeskChatbot.addParameterStatic` / `deleteParameterStatic` (every directive and the
+incoming-message refresh in `TiledeskChatbotUtil.updateRequestAttributes` and
+`updateConversationTranscript`, both through `chatbot.addParameter`), and `TiledeskRequestVariables.set` / `delete` (the Code action, which
+writes raw strings). Nothing records who changed what. `TiledeskChatbotUtil.userFlowAttributes`
+already splits user variables from reserved/system ones (`_*`, `support-group-*`, the
+`RESERVED` list).
+
+**What gets recorded.** For every block (intent) and every action in it:
+
+| Point | Recorded |
+|---|---|
+| block entry (`execIntent`) | **state before**: the whole hash |
+| after each action | **delta** of that action: every key set or deleted, `before` → `after` |
+| block exit (`theend` / stop / jump) | **state after**: the state after the block's last action |
+| between two blocks | **outside changes**: diff between the previous block's state after and this block's state before. Labelled `message_in` when `WriteTap` saw the incoming-message refresh, `external` otherwise (another pod, a server-side attribute write, an API) |
+
+So the whole flow state is known before and after every block, and each change is tied to the
+action (or the message, or "outside") that made it.
+
+**How (my calls).**
+
+- One `HGETALL` per action. The checkpoint already needs it (§7.1.5), so `StateRecorder` and
+  `Checkpointer` share the read: no extra Redis call per action, one extra at block entry. The
+  previous snapshot is kept in memory on the pod for the block it drives; on a block jump to
+  another pod, the new pod takes it from the checkpoint (`request_state.parameters`).
+- The diff is computed on the **raw Redis strings**, so it is exact whatever writer was used
+  (JSON-encoded or raw Code action values).
+- `WriteTap` keeps the tap per running action, keyed by `execution_id + step_seq + action_index`
+  (not by request, since two blocks of one request can overlap on a pod during a jump), found
+  through `AsyncLocalStorage` set by the directive loop. Writes outside any action context go to
+  the `message_in` / `jump_params` scopes. A key in the delta that no tap saw is marked
+  `by: "external"` (a concurrent write), not attributed to the action.
+- **Clear manifest.** Every keyframe also carries an **unsealed manifest** of the whole state:
+  `[{key, type, size, hash, reserved}]`, no values. It is recorded even when `capture_data =
+  false`. With the manifest plus the clear deltas, the api rebuilds the full variable list
+  before/after any block (names, types, sizes, "changed / unchanged") **without decrypting**;
+  only values need a grant. This is what Phase 1 shows.
+- **Storage: keyframes + deltas.** A full sealed snapshot (keyframe) at execution start, on
+  resume, and then every 20 blocks or when the deltas since the last keyframe exceed 1 MB. In
+  between only deltas. Any "state before/after block N" is rebuilt by the api as keyframe +
+  deltas. This avoids storing the whole `transcript` (which grows every turn) on every block.
+- **What is in clear and what is sealed.** In clear, in the trace: key name, `op`
+  (`set`/`del`/`add`), value type, size, a keyed hash of the value (`HMAC-SHA256` with a
+  per-project key held by tybot, so "same value as before" is visible without the value),
+  `reserved: true|false`, `by` (action id / `message_in` / `external`). **Sealed**: the values
+  (`before` and `after`). Seeing values requires an in-depth data access grant (§9.7), like any
+  other data.
+- Secrets: keys whose names match the secret rules of §10.2 are recorded as `[secret]` (name
+  and op only, no hash).
+- Values over `EXECUTIONS_STATE_VALUE_MAX_BYTES` (default 256 KB) are not stored: the delta
+  keeps type, size and hash with `omitted: "too_large"`.
+- `capture_data = false` (§13) → only the clear part (names, ops, sizes, hashes) is recorded.
+
+Delta record (inside `action.completed`, `step.started` for outside changes):
+
+```json
+{ "state_delta": [
+    { "key": "order_total", "op": "set", "type": "number", "size": 6,
+      "hash_before": "b1c…", "hash_after": "9fe…", "reserved": false, "by": "act_41f" },
+    { "key": "lastUserText", "op": "set", "type": "string", "size": 18,
+      "hash_after": "07a…", "reserved": true, "by": "message_in" } ],
+  "sealed_state": { "kid": "…", "ct": "…" },          // before/after values of the keys above
+  "state_keyframe": false,
+  "state_manifest": null }                               // set on keyframes: [{key,type,size,hash,reserved}]
+```
+
+Config: `EXECUTIONS_STATE_ENABLED` (default `true` when `EXECUTIONS_ENABLED`),
+`EXECUTIONS_STATE_VALUE_MAX_BYTES`, `EXECUTIONS_STATE_KEYFRAME_EVERY` (20),
+`EXECUTIONS_STATE_KEYFRAME_MAX_DELTA_BYTES` (1 MB), `EXECUTIONS_STATE_HASH_KEY`.
+
+```mermaid
+sequenceDiagram
+  participant M as /ext (message in)
+  participant B as Block "Check order"
+  participant A1 as Web request
+  participant A2 as Set attribute
+  participant R as Redis :parameters
+  participant SR as StateRecorder
+  M->>R: lastUserText, transcript (WriteTap: message_in)
+  B->>SR: blockEntry
+  SR->>R: HGETALL → state before
+  SR->>SR: diff vs previous block's state after → outside changes (message_in)
+  A1->>R: HSET order_status, order_total (WriteTap: act_41f)
+  A1->>SR: afterAction
+  SR->>R: HGETALL (shared with checkpoint)
+  SR->>SR: delta act_41f, seal values
+  A2->>R: HSET shipping_eta (WriteTap: act_42a)
+  A2->>SR: afterAction → delta act_42a
+  B->>SR: blockExit → state after = state after act_42a
+```
+
 ### 7.2 tiledesk-executions (new service)
 
 TypeScript, same conventions as tiledesk-scheduler-service (Express, zod, pino, Prometheus,
@@ -465,7 +572,9 @@ to `exec:*` keys and the `exec:control` channel) **[my call]**.
 |---|---|---|
 | `executions` | §8.3 | `{id_project, started_at:-1}`, `{id_project, status, started_at:-1}`, `{id_project, agent_id, started_at:-1}`, `{request_id}`, `{retention.trace_until}` TTL |
 | `steps` | `execution_id, seq, block…, actions[]` | `{execution_id, seq}` unique |
-| `sealed_data` | `execution_id, seq, kid, wrapped_key, iv, ct, size` | `{execution_id, seq}`, `{data_until}` TTL |
+| `sealed_data` | `execution_id, seq, kind (action|trigger|state_delta|state_keyframe), kid, wrapped_key, iv, ct, size` | `{execution_id, seq}`, `{execution_id, kind, seq}`, `{data_until}` TTL |
+| `state_manifests` | `execution_id, seq, step_seq, at: before, vars[{key, type, size, hash, reserved}]` (keyframes only, no values) | `{execution_id, seq}`, `{retention.trace_until}` TTL |
+| `state_changes` | clear part of §7.1.10: `execution_id, seq, step_seq, action_id?, by, key, op, type, size, hash_before, hash_after, reserved` | `{execution_id, step_seq}`, `{execution_id, key, seq}` (a variable's history), `{retention.trace_until}` TTL |
 | `checkpoints` | `execution_id, seq, sealed…` | `{execution_id}` unique |
 | `grants` | `grant_id, execution_id, user_id, scope, expires_at, status` | `{expires_at}` TTL |
 | `audit_log` | §8.3 | `{id_project, at:-1}`, `{execution_id, at:-1}`, `{at}` TTL 1 y |
@@ -490,18 +599,72 @@ status). The `ingest` user cannot read `grants` or `audit_log`. Only `api` has `
 | `execution_id` attribute | written by tybot through the existing attributes update. No schema change. Shown in the conversation detail with a link (dashboard). |
 | refire route `POST /:projectid/executions/refire` | user JWT, owner/admin. Body `{ chatbot_id, trigger: {type, start_point_id}, payload, retry_of }`. Scheduled → the same code path as `/webhook/scheduled-start` (live snapshot, rate limit) but authenticated by the user; webhook / connector trigger → `webhookConversationService.start` with the stored payload and that start point; automation → `webhookService.run` with the stored payload (mints the bot token, rate limit, `webhook.triggered`). `retry_of` goes into the new conversation's attributes so the new execution links back. |
 | close for destroy | the service calls the existing `PUT /:projectid/requests/:id/close` **with the user's JWT**: the close is done by that person and shows up as such in the conversation. |
+| **audit → Activities** | the same `executions-publisher` module also **consumes** `audit.recorded` (queue `server.executions.audit`, bound to `audit.#` on `tiledesk.executions`) and saves one `Activity` per entry through `pubmodules/activities` (§7.3.1). |
+| permissions | new permission strings for custom roles (§10.1), checked with the existing `roleChecker.hasRoleOrTypes(role, types, permission)`: standard roles go by the hierarchy in `middleware/has-role.js`, custom roles by their `permissions`. The service needs the caller's role **and**, for a custom role, its permissions: `project_users/me` gives the role, and the server attaches `rolePermissions` to the project user in `projectUserService.getWithPermissions`. Whether `/me` serialises it for custom roles, or the service must read the role via the roles API, is for the builder to confirm (§15). |
+
+#### 7.3.1 Execution audit in the existing Activities
+
+**What exists.** `pubmodules/activities` stores `Activity` documents (`actor`, `verb`, `target`,
+`actionObj`, `related`, `involvedUserIds`, `id_project`) from server events, and
+`GET /:projectid/activities` (+ `/csv`) serves the dashboard Activities page, filtered by
+`activities` (verbs), `agent_id`, dates. The route is mounted with `hasRole('admin')`. Two limits
+matter here: activities are saved only when `ACTIVITY_HISTORY_ENABLED=true`, and the collection
+has one TTL index on `createdAt`, 30 days by default (`ACTIVITY_EXPIRATION_TIME`).
+
+**Design (my calls).**
+
+- The service's `audit_log` stays the **record of authority**: always on, append-only, 1 year
+  (§10.4). It cannot depend on a flag that can be off, nor on a 30-day TTL.
+- Every audit entry is **mirrored** into Activities, so governance is read in the one place users
+  already use. The service publishes `audit.recorded`; the server saves:
+
+  | Field | Value |
+  |---|---|
+  | `actor` | `{type: "user", id: user_id, name}` (from the audit entry) |
+  | `verb` | `EXECUTION_STOP_SOFT`, `EXECUTION_STOP_HARD`, `EXECUTION_RESUME`, `EXECUTION_START_NEW`, `EXECUTION_DESTROY`, `EXECUTION_DATA_ACCESS`, `EXECUTION_DATA_ACCESS_DENIED`, `EXECUTION_RETENTION_UPDATE` |
+  | `target` | `{type: "execution", id: execution_id, object: {agent_id, agent_name, request_id, status_after, trigger_type}}` |
+  | `related` | `{role: "agent", type: "faq_kb", id: agent_id, name: agent_name}` |
+  | `actionObj` | `{mode?, reason?, scope?, step_seq?, grant_id?, result, audit_id}` (never data) |
+
+  `audit_id` makes the save idempotent (unique sparse index on `actionObj.audit_id`).
+- `data viewed` is folded into `EXECUTION_DATA_ACCESS` (`actionObj.result: "viewed"`) to keep the
+  Activities list readable; the service audit keeps both entries.
+- **Owner-only stays owner-only.** The Activities route is admin-level, but the role table says
+  only owners read the audit. `GET /activities` and `/csv` drop `EXECUTION_*` verbs for callers
+  who are not owners (and, for custom roles, who lack `executions_audit_read`). Admins keep
+  seeing all other activities as today.
+- Activities older than the 30-day activity TTL disappear from the Activities page, as all
+  activities do. The full year is in the execution detail (Audit tab, read from the service) and
+  in the service audit export.
+- When `ACTIVITY_HISTORY_ENABLED` is off, the mirror is skipped and the execution detail's Audit
+  tab is still complete. The deploy enables it where executions are enabled.
+- Verbs and icons are added to the dashboard's `ACTIVITY_FILTER_OPTION_DEFINITIONS` (new group
+  `Executions`) and `ACTIVITY_ICON_BY_VERB`, and the sentences to `activity-message.util.ts`
+  (§11.7). The **server** builds sentences too: `activityMessageUtil.buildDefaultActivityMessage`
+  (used by `enrichActivityWithMessage` for the list and by `buildCsv`, with the it/en switch) gets
+  the `EXECUTION_*` cases in both languages, so the CSV and the list carry the same text.
+  `docs/activities-client.md` gets the new verbs.
 
 ### 7.4 tiledesk-dashboard (Angular 15)
 
-- Lazy module `src/app/executions/` with routes
-  `project/:projectid/executions`, `project/:projectid/executions/:executionid`,
-  `project/:projectid/executions-audit`; guard: project role owner/admin.
+The monitor is **part of the existing pages**, not a new area: executions are reached from the
+agents list, and the audit lives in the existing Activities page. No new sidebar item.
+
+| Where (existing code) | Change |
+|---|---|
+| `bots/bots-list/bots-list.component.html`, card actions (`cl-card-action-group`, next to the `leaderboard` analytics button) | new icon button **Executions** (`manage_history`), shown when `PERMISSION_TO_VIEW_EXECUTIONS`. It carries a small badge with the agent's executions needing attention in the last 24 h (`failed` + `stopped`, red; `running`, blue dot). Also an **Executions** item in the card's `more_vert` menu. For all agent kinds, including webhook/automation flows and copilot (unlike analytics, which hides for webhook/copilot). |
+| `bots-list` page header, next to the create buttons | link **All executions** (project-wide list). |
+| `bots-list.component.ts` | `PERMISSION_TO_VIEW_EXECUTIONS` / `…_CONTROL_…` set the same way as the other flags (owner/admin true, agent false, custom role from `matchedPermissions`). One batched call `GET /executions/summary?agent_ids=…&since=24h` for the badges of the visible page. |
+| new lazy module `src/app/bots/executions/` | routes `project/:projectid/bots/executions` (all agents), `project/:projectid/bots/:botid/executions` (one agent), `project/:projectid/bots/:botid/executions/:executionid` (detail). Guard: `AuthGuard`, like the other bot pages; the permission is checked in the component through `RoleService` (as the other bot pages do), and the API refuses anyway. Must be registered before `bots/:faqkbid/:type` (`app.routing.ts`), which would otherwise match `bots/:botid/executions`. |
+| `activities-new` (Activities page) | new filter group **Executions** in `ACTIVITY_FILTER_OPTION_DEFINITIONS` (`groupKey` gets `'Executions'`), icons in `ACTIVITY_ICON_BY_VERB`, sentences in `utils/activity-message.util.ts`, and a component `activities-execution-link` (like `activities-bot-link`) that opens the execution detail. Rows come from `GET /activities` as today (§7.3.1). |
+| `users-new-role` (custom role editor), Flows section | checkboxes for the new permissions (§10.1). |
+| `utils/permissions.constants.ts` | the new permission keys. |
+| conversation detail | "Execution ↗" when `attributes.execution_id` exists. |
+| `bots/flow-webhooks-logs` | "View executions" link to the agent's list. |
+
 - `ExecutionsService` → `EXECUTIONS_BASE_URL` from the dashboard runtime config (like analytics).
-- Entry points: sidebar item **Executions** in the agents area; "Executions" tab on a chatbot
-  (filtered by agent); "View executions" from `bots/flow-webhooks-logs` and from the conversation
-  detail when `attributes.execution_id` exists.
 - Polling: list every 10 s while it shows any `running`/`stopping`; detail every 2 s while
-  `running`/`stopping`, otherwise no polling.
+  `running`/`stopping`, otherwise no polling. Badges on the agents list: once on page load.
 - All strings through the existing translate pipe (en first, like the other new pages).
 
 ### 7.5 tiledesk-scheduler-service (small)
@@ -536,9 +699,10 @@ Envelope (all events):
 | Type | Producer | `data` |
 |---|---|---|
 | `execution.started` | tybot | `trigger {type, source_id, start_point_id, source_run_id?}`, `agent_name`, `test`, `parent_execution_id?`, `previous_execution_id?`, `retry_of?`, `sealed_trigger_payload?` |
-| `step.started` | tybot | `step_seq`, `block_id`, `block_name` |
-| `action.completed` | tybot | `step_seq`, `action_index`, `action_id`, `type`, `title`, `outcome`, `exit_taken`, `duration_ms`, `error_code?`, `hard_degraded?`, `sealed?` |
-| `step.completed` | tybot | `step_seq`, `outcome`, `exit_taken`, `duration_ms` |
+| `step.started` | tybot | `step_seq`, `block_id`, `block_name`, `state_vars` (count), `outside_changes` (`state_delta` of §7.1.10 with `by: message_in|external`), `sealed_state?`, `state_keyframe` (true → `sealed_state` is the whole state before this block) |
+| `action.completed` | tybot | `step_seq`, `action_index`, `action_id`, `type`, `title`, `outcome`, `exit_taken`, `duration_ms`, `error_code?`, `hard_degraded?`, `sealed?`, `state_delta`, `sealed_state?` |
+| `step.completed` | tybot | `step_seq`, `outcome`, `exit_taken`, `duration_ms`, `state_vars`, `changed_keys` (count) |
+| `audit.recorded` | api | routing key `audit.<id_project>.<action>`: the audit entry (§8.3) **plus the display context** the mirror needs: `actor_name`, `agent_name`, `request_id`, `status_after`, `trigger_type`. The api already has them (actor from the server's `/me`, the rest from the execution), so the server consumer does no lookups **[my call]** |
 | `execution.idle` | tybot | `last_seq` |
 | `execution.checkpoint` | tybot | `sealed` checkpoint, `cp_seq` |
 | `execution.stopping` | api | `mode`, `actor` |
@@ -587,23 +751,30 @@ retention: { trace_until, data_until }
 ended_at, duration_ms, outcome, exit_taken, actions[{ index, action_id, type, title, outcome,
 exit_taken, duration_ms, error_code, has_data, hard_degraded }]`
 
-**audit_log**: `at, actor{user_id, email, role}, id_project, execution_id, action
-(stop_soft|stop_hard|resume|start_new|destroy|data_access_requested|data_viewed|data_access_denied),
-reason, details, ip, user_agent`
+**audit_log**: `audit_id, at, actor{user_id, email, role}, id_project, execution_id, agent_id,
+action (stop_soft|stop_hard|resume|start_new|destroy|data_access_requested|data_viewed|data_access_denied|retention_update),
+reason, details, ip, user_agent, mirrored_at?`
+
+**State view** (built by the api, not stored): for a step, `vars[{ key, reserved, before:
+{type, size, hash, value?}, after: {…}, changed, by }]`. `value` only with a grant.
 
 ### 8.4 Public REST API (`/executions/api/v1`)
 
 | Method & path | Role | Notes |
 |---|---|---|
-| `GET /projects/:pid/executions` | owner, admin | filters `agent_id, trigger, status, has_failures, test, from, to, q (execution/request id)`; cursor pagination on `started_at` |
-| `GET /projects/:pid/executions/:id` | owner, admin | execution + steps (no data) + allowed controls for this caller |
-| `POST /projects/:pid/executions/:id/stop` | owner, admin | `{mode: soft|hard}` → 202 |
-| `POST /projects/:pid/executions/:id/resume` | owner, admin | `{confirm?: true}` → 202, or 409 `confirm_required {action}` / 409 `not_resumable {reason}` |
-| `POST /projects/:pid/executions/:id/start-new` | owner, admin | → 202 `{new_execution_hint}` (the new id arrives with its `execution.started`) |
-| `POST /projects/:pid/executions/:id/destroy` | **owner** | `{confirm: "<short id>"}` |
-| `POST /projects/:pid/executions/:id/data-access` | owner, admin | `{reason (≥ 10 chars), scope: execution|step, step_seq?}` → `{grant_id, expires_at}` |
+| `GET /projects/:pid/executions` | `executions_read` | filters `agent_id, trigger, status, has_failures, test, from, to, q (execution/request id)`; cursor pagination on `started_at` |
+| `GET /projects/:pid/executions/summary` | `executions_read` | `agent_ids, since` → per agent `{running, waiting, failed, stopped, last_started_at}` for the agents-list badges |
+| `GET /projects/:pid/executions/:id` | `executions_read` | execution + steps (no data) + allowed controls for this caller |
+| `GET /projects/:pid/executions/:id/state?step_seq=&at=before|after` | `executions_read` | the state view (§8.3): names, types, sizes, hashes, who changed what. Values only with `grant=` (then it is a data access, audited) |
+| `GET /projects/:pid/executions/:id/state/history?key=` | `executions_read` | one variable across the execution (every change, by whom) |
+| `GET /projects/:pid/executions/:id/audit` | `executions_audit_read` | full audit of one execution (beyond the 30-day Activities window) |
+| `POST /projects/:pid/executions/:id/stop` | `executions_control` | `{mode: soft|hard}` → 202 |
+| `POST /projects/:pid/executions/:id/resume` | `executions_control` | `{confirm?: true}` → 202, or 409 `confirm_required {action}` / 409 `not_resumable {reason}` |
+| `POST /projects/:pid/executions/:id/start-new` | `executions_control` | → 202 `{new_execution_hint}` (the new id arrives with its `execution.started`) |
+| `POST /projects/:pid/executions/:id/destroy` | `executions_destroy` (owner) | `{confirm: "<short id>"}` |
+| `POST /projects/:pid/executions/:id/data-access` | `executions_data_access` | `{reason (≥ 10 chars), scope: execution|step, step_seq?}` → `{grant_id, expires_at}` |
 | `GET /projects/:pid/executions/:id/data?grant=` | grant holder | plaintext, `Cache-Control: no-store` |
-| `GET /projects/:pid/audit` | **owner** | filters `execution_id, actor, action, from, to` |
+| `GET /projects/:pid/audit` | `executions_audit_read` (owner) | filters `execution_id, actor, action, from, to`; CSV export. The dashboard reads the audit through Activities (§7.3.1); this route is for the per-execution tab and exports |
 | `GET /projects/:pid/settings/retention` / `PUT` | owner | retention policy (§13) |
 
 Errors: `401` bad token, `403` role, `404`, `409` state conflict (with `allowed` list), `410` data expired.
@@ -802,20 +973,41 @@ sequenceDiagram
 
 ### 10.1 Roles **[decided]**
 
-| | Owner | Admin | Agent |
-|---|---|---|---|
-| See executions and trace | ✓ | ✓ | — |
-| Soft/hard stop, resume, start new | ✓ | ✓ | — |
-| Destroy | ✓ | — | — |
-| Request in-depth data access (with reason) | ✓ | ✓ | — |
-| Read the audit log, set retention | ✓ | — | — |
+| | Permission (custom roles) | Owner | Admin | Agent |
+|---|---|---|---|---|
+| See executions, trace and flow state (names, no values) | `executions_read` | ✓ | ✓ | — |
+| Soft/hard stop, resume, start new | `executions_control` | ✓ | ✓ | — |
+| Destroy | `executions_destroy` | ✓ | — | — |
+| Request in-depth data access (with reason), incl. variable values | `executions_data_access` | ✓ | ✓ | — |
+| Read the execution audit (Activities rows, Audit tab), set retention | `executions_audit_read` | ✓ | — | — |
+
+Standard roles follow the table (the server's role hierarchy, `middleware/has-role.js`). Custom
+roles (`models/role.js`, edited in the dashboard's `users-new-role`) get each line only through
+its permission string **[my call]**.
+
+**Enforcement is explicit, everywhere.** Today the server does not check custom-role
+permissions on any route: `hasRoleOrTypes` is never called with a `permission`, and for a custom
+role it calls `hasPermission(undefined)`, which lets the request through. `flow_test`,
+`activities_read` and the like are checked only in the dashboard. So:
+
+- the executions service checks the permission strings itself on every route;
+- the new server routes (refire, the `EXECUTION_*` filter on `/activities` and `/csv`) pass the
+  permission explicitly, and a custom role without it is refused;
+- the existing gap (custom roles pass every admin-level server route) is **not** fixed here; it
+  is reported as a separate issue.
+
+**Dependencies** (enforced in the role editor, which ticks and locks the prerequisite):
+`executions_*` require `flows_read` (the entry is on the agents list); `executions_audit_read`
+also requires `activities_read`; `executions_control`, `executions_destroy`,
+`executions_data_access` require `executions_read` **[my call]**.
+The supervisor role is still open.
 
 ### 10.2 Sealing
 
 - tybot holds the service **public** key (`kid` versioned). Each data block gets a fresh
   AES-256-GCM data key, wrapped with RSA-OAEP-256 (or X25519 sealed box): the builder picks one,
   `alg` is in the record. The plaintext never travels through RabbitMQ and is never stored in clear.
-- Sealed: trigger payload, attribute changes made by an action, request/response bodies, LLM
+- Sealed: trigger payload, flow variable values (before/after, keyframes, §7.1.10), request/response bodies, LLM
   prompt and answer, messages sent and received, checkpoints.
 - **Never stored, not even sealed:** header/param values whose names match `authorization`,
   `*token*`, `*key*`, `*secret*`, `password`, integration secret keys (`IntegrationService`
@@ -831,77 +1023,111 @@ expired (`data_until`). Losing a private key makes that data unreadable, but the
 
 ### 10.4 Audit
 
-Append-only (DB permissions, §7.2.4), 1-year retention, visible to owners. Every control action
+Append-only (DB permissions, §7.2.4), 1-year retention, visible to owners, and mirrored into the
+dashboard's existing Activities (§7.3.1): that is where people read it. Every control action
 and every data access writes one entry **before** acting: a failed action is still audited, with
 `details.result`. Prepared for an approval step: a grant can be created `pending` and activated by
 a second owner (not built in v1).
 
 ## 11. User interface
 
-The mockup shows these screens. Layout follows the dashboard's existing list/detail pages
-(`bots/flow-webhooks-logs`).
+Everything sits inside the existing dashboard pages (§7.4). The mockup shows them in a dashboard
+shell: agents list → executions, execution detail with flow state, and the Activities page.
 
 ### 11.1 Information architecture
 
 ```
-Sidebar ▸ Executions ─┬─ list (project)            /project/:pid/executions
-                      ├─ detail                    /project/:pid/executions/:id
-                      └─ audit log (owner)         /project/:pid/executions-audit
-Chatbot ▸ tab Executions → list filtered by agent
+Agents list (bots-list) ─┬─ card ▸ [⟲ Executions] (badge) ──▶ agent executions   /project/:pid/bots/:botid/executions
+                         ├─ card ▸ ⋮ ▸ Executions        ──▶ same
+                         └─ header ▸ All executions      ──▶ all agents        /project/:pid/bots/executions
+Agent executions ▸ row ──▶ execution detail                                    /project/:pid/bots/:botid/executions/:id
+Execution detail ▸ tabs: Timeline · Flow state · Audit (owner)
+Activities (activities-new) ▸ filter group "Executions" ▸ row ▸ execution ↗
 Conversation detail ▸ "Execution ↗" (attributes.execution_id)
 Webhook logs page ▸ "View executions"
 Scheduler console run ▸ "View execution"
 ```
 
-### 11.2 Execution list
+### 11.2 Entry from the agents list
 
 ```
-Executions                                                     [Audit log]  (owner only)
-[Search id…] [Agent ▾] [Trigger: unattended ▾] [Status ▾] [With failure conditions ☐] [Last 7 days ▾]
- Running 2 · Waiting 5 · Failed 3 · Stopped 1                  ← counters, click = filter
+┌ Nightly checks ─────────────────────┐   Card actions, left to right:
+│ Automation · updated 07 Nov          │   [📊 Messages] [⟲ Executions ②] [share] [⋮]
+│                                      │                          └ badge: failed+stopped in 24 h (red)
+│ [📊] [⟲ ②] [⤴] [⋮]                  │                            or a blue dot while one is running
+└──────────────────────────────────────┘
+⋮ menu: Test it out · Duplicate · Executions · Delete
+Page header: … [All executions]
+```
+
+- The Executions button shows for every agent type (chatbot, voice, webhook, automation,
+  copilot), because unattended flows are the main case.
+- Tooltip on the badge: "2 executions need attention in the last 24 hours".
+
+### 11.3 Execution list (one agent, or all)
+
+```
+Agents › Nightly checks › Executions                  [Agent: Nightly checks ▾]  (switch / All agents)
+[Search id…] [Trigger: unattended ▾] [Status ▾] [With failure conditions ☐] [Last 7 days ▾]
+ Running 0 · Waiting 0 · Failed 2 · Stopped 1                  ← counters, click = filter
 ──────────────────────────────────────────────────────────────────────────────────────────────
-Status       Agent           Trigger     Started          Blocks  Failure cond.  Duration
-● failed     Nightly checks  scheduled   09 Nov 03:00     4       1              2.1 s     ›
-● running    Order sync      webhook     09 Nov 10:41     7       0              live      ›
-● waiting    HITL alerts     webhook     09 Nov 10:40     3       0              —         ›
-● stopped    Nightly checks  scheduled   08 Nov 03:00     2       0              0.4 s     ›
-● completed  Support bot     widget      09 Nov 10:12     12      0              3 min     ›
+Status       Trigger     Started          Blocks  Failure cond.  Vars changed  Duration
+● failed     scheduled   09 Nov 03:00     4       1              7             2.1 s     ›
+● stopped    scheduled   08 Nov 03:00     2       0              2             0.4 s     ›
+● destroyed  scheduled   07 Nov 03:00     1       0              1             12 min    ›
                                                                    [Load more]
 ```
 
+- In the all-agents view an "Agent" column is added.
 - Default filter: unattended triggers, last 7 days, test runs hidden.
 - Status chips: running (blue, pulsing), waiting (gray), stopping (amber), stopped (amber),
   failed (red), completed (green), destroyed (dark gray, struck).
 - A row with `trace_complete: false` shows a small warning icon.
-- Empty state: "No executions yet. Executions appear here when an agent runs." with a link to the
-  docs. With filters: "No executions match these filters" + Clear filters.
+- Empty states: "No executions yet for this agent. They appear here when it runs." / with
+  filters: "No executions match these filters" + Clear filters.
 
-### 11.3 Execution detail
+### 11.4 Execution detail
 
 ```
-← Executions
+Agents › Nightly checks › Executions › 0193a2…
 Nightly checks · scheduled · v 07 Nov 2026 18:20            ● failed  web_request_error
 Execution 0193a2…  ·  started 09 Nov 03:00:00  ·  2.1 s  ·  conversation ↗  ·  retried as 0193b7… ↗
 [Resume] [Start new] [Destroy]                         [View data]  (actions by status + role)
-⚠ Some events of this execution were not received (seq 9–11).   ← only if trace incomplete
+[ Timeline ] [ Flow state ] [ Audit ]
 ──────────────────────────────────────────────────────────────────────────────────────────────
-Timeline                                                         [All] [Failures only]
-03:00:00.010  ✓ start                  success                          10 ms
-03:00:00.120  ✓ Fetch config           success                          98 ms   ▸
-03:00:00.300  ✕ Call status API        error   Web request · HTTP 500   1.8 s   ▾
-        └ Web request v2  "GET status"  error  exit: false  error_code http_500   [View data]
-──────────────────────────────────────────────────────────────────────────────────────────────
-Audit for this execution (owner)
-09 Nov 08:12  nico@…  viewed data · reason "500 investigation"
+Timeline                                                         [All] [Not successful]
+03:00:00.010  ✓ start                  success                   3 vars changed   10 ms
+03:00:00.120  ✓ Fetch config           success                   2 vars changed   98 ms   ▸
+03:00:00.300  ✕ Call status API        error   Web request · HTTP 500   1 var     1.8 s   ▾
+        ├ Web request v2  "GET status"  error  exit: false  error_code http_500   [View data]
+        └ Flow state  before → after this block                      [Show system variables ☐]
+            Variable        Before           After            Changed by
+            last_status     ••• (3 B)        ••• (3 B)        Web request "GET status"
+            status_body     —                ••• (412 B)      Web request "GET status"
+            config_loaded   ••• (4 B)        = unchanged
+          (values hidden: [View values] opens the data access dialog with this block as scope)
 ```
 
-- Right panel (on a step click, or ▾ inline): the actions, their outcome, exit, duration and
-  error code. "View data" opens the access dialog with that step as scope.
-- Live: while `running`, new steps slide in and the current block shows a spinner with its
-  elapsed time.
+- Each block row says how many variables it changed. Expanding it shows its actions and the
+  **Flow state** panel: every variable as it was before the block and after it, the changed ones
+  first and highlighted, with who changed each (the action, "incoming message", or "outside the
+  flow").
+- Before a data access grant, values are masked and only type and size show; "= unchanged" and
+  "changed" come from the hashes, so they are visible without values.
+- Outside changes appear as a thin row between blocks: "2 variables changed by the incoming
+  message (lastUserText, transcript)" or "1 variable changed outside the flow".
+- "Show system variables" (off by default) adds the reserved ones, using the same split as
+  `TiledeskChatbotUtil.userFlowAttributes`.
+- **Flow state tab**: pick a block (slider or dropdown over the timeline) and see the whole state
+  at that point, before or after the block. Clicking a variable opens its history: every change
+  in this execution, by whom, at which block.
+- **Audit tab** (owner / `executions_audit_read`): this execution's audit, read from the service
+  (complete for the year, not limited to the Activities window). Link "Open in Activities".
+- Live: while `running`, new blocks slide in, the current block shows a spinner with elapsed
+  time.
 - Lineage strip when relevant: `parent ↗ · previous ↗ · retry of ↗ · retried as ↗`.
 
-### 11.4 Dialogs
+### 11.5 Dialogs
 
 ```
 Stop execution                                    ┌ Resume execution ───────────────────────┐
@@ -919,40 +1145,61 @@ The failed execution stays as it is.              The trace and audit are kept.
                                                                  [Cancel] [Destroy]
 View execution data
 Opening the data is recorded in the audit log with your name and reason.
-Scope: (•) This step  ( ) Whole execution
+Scope: (•) This block  ( ) Whole execution
+       includes: action inputs/outputs and flow variable values before/after
 Reason *  [__________________________________]   (min 10 characters)
                        [Cancel] [Request access]
 ```
 
-### 11.5 Data view
+### 11.6 Data view
 
 Inline in the detail, inside a bordered "sealed data" area with a countdown: "Access expires in
-14:32 · recorded in audit". It shows per action: input, output, attribute changes (JSON viewer,
-`[secret]` values greyed out). Closing it or the grant expiring clears the data from memory, and
-nothing is cached or stored locally.
+14:32 · recorded in the audit log". It shows, per action: input, output (JSON viewer, `[secret]`
+values greyed out), and fills in the masked values of the Flow state panel and tab for the
+granted scope. Closing it or the grant expiring masks the values again and clears them from
+memory; nothing is cached or stored locally.
 
-### 11.6 Audit log page (owner)
+### 11.7 Audit in the Activities page
+
+The existing Activities page (`activities-new`) gets a filter group **Executions**. Rows read
+like the other activities (icon, sentence, time, actor avatar):
 
 ```
-Audit log                         [Actor ▾] [Action ▾] [Execution id…] [Last 30 days ▾]
-When            Who         Action                 Execution   Reason / details
-09 Nov 08:13    nico@…      data viewed            0193a2 ↗    "500 investigation" · 1 step
-09 Nov 08:12    nico@…      resume                 0193a2 ↗    confirmed rerun of Call status API
-09 Nov 08:10    anna@…      data access denied     0193a2 ↗    role agent
+Activities          [Date range] [Teammate ▾] [Activity type ▾: … Chatbot · Knowledge base · Executions ▸]
+⟲  Nico Cardone viewed the data of execution 0193a2 of Nightly checks · "500 from status API" · 1 block   09 Nov 08:13
+⟲  Nico Cardone resumed execution 0193a2 of Nightly checks (confirmed rerun of "Call status API")       09 Nov 08:12
+■  Anna Rossi hard-stopped execution 01939f · "Generate summary" interrupted                             08 Nov 03:00
+✕  Marco Bianchi was denied access to the data of execution 0193b1 (role agent)                           07 Nov 17:02
+💬 Support bot closed the conversation …                                         (existing activity rows)
 ```
 
-### 11.7 States and permissions in the UI
+- The execution id links to the execution detail; the agent name links to the agent.
+- Rows are shown to owners (and custom roles with `executions_audit_read`) only; admins see the
+  other activities as today (§7.3.1).
+- The CSV export of Activities includes them, with the same sentences.
+- The Activities page shows the last 30 days, like all activities; older audit is in each
+  execution's Audit tab and the service export.
+
+### 11.8 States and permissions in the UI
 
 - Controls not allowed for the status are hidden. Controls allowed for the status but not for
   the role are shown disabled with a tooltip ("Only the project owner can destroy executions").
+- The Executions button on agent cards is hidden without `executions_read`.
 - After a control: optimistic chip (`stopping…`, `resuming…`) until the event arrives; on 409 the
   chip reverts and the reason is shown.
-- Data expired (`410`): "The data of this execution is no longer kept (retention 30 days)".
+- Data expired (`410`): "The data of this execution is no longer kept (retention 30 days)". The
+  Flow state panel still shows names, types, sizes and who changed what.
 
 ## 12. Performance and reliability
 
-- Hot path per action: one `GET` (stop flag), one `SET` (checkpoint), one `INCR` (seq), about
-  1–3 ms. Publishing and sealing are async and never awaited by the flow.
+- Hot path per action: one `GET` (stop flag), one `HGETALL` of `:parameters` (shared by the
+  checkpoint and the state delta), one `SET` (checkpoint), one `INCR` (seq), about 1–3 ms for
+  normal-sized state. One more `HGETALL` at block entry. Diffing, hashing, publishing and
+  sealing are async and never awaited by the flow.
+- Large state: a conversation with a big `transcript` or large API bodies in variables makes the
+  `HGETALL` heavier. The checkpoint pays this already; the state recorder adds no second read.
+  Values above 256 KB are hashed, not stored (§7.1.10). The pre-production gate measures p95
+  state size on prod (sample of `:parameters` sizes) together with the event rate.
 - Broker down: bounded buffer per pod, then drop + metric; the gap is visible (§9.8).
 - Ingest idempotent and order-tolerant (§7.2.1).
 - Metrics: tybot `executions_events_published_total`, `…_dropped_total`, `…_seal_errors_total`;
@@ -969,15 +1216,18 @@ When            Who         Action                 Execution   Reason / details
 | Durable checkpoints | until terminal + 7 days, or destroy | fixed |
 | Test runs | 7 days | fixed |
 | Audit log | 1 year | not shortenable |
+| Flow state: names, ops, sizes, hashes (`state_changes`) | as the trace | — |
+| Flow state: values (sealed deltas, keyframes) | as sealed data | at 0, not captured |
+| Activities mirror | the server's activity TTL (`ACTIVITY_EXPIRATION_TIME`, 30 days) | server setting |
 
 ## 14. Phases and repos
 
 | Phase | Delivers | Repos |
 |---|---|---|
-| 1 Trace | ExecutionContext, events, sealing on, ingest, read API, list + detail UI, server publisher (end events), conversation link | chatbot, executions, server, dashboard, argo |
-| 2 Stop & destroy | stop flag, lease, transit, hard stop + abortable directives, reaper, audit, stop/destroy dialogs | chatbot, executions, server (close), dashboard |
+| 1 Trace | ExecutionContext, events, sealing on, **flow state tracking** (StateRecorder, WriteTap, `state_changes`, sealed deltas/keyframes), ingest, read API incl. state view (names, no values), agents-list entry + badges, list + detail UI with the Flow state panel, server publisher (end events), conversation link | chatbot, executions, server, dashboard, argo |
+| 2 Stop & destroy | stop flag, lease, transit, hard stop + abortable directives, reaper, audit + **Activities mirror** (server consumer, verbs, owner-only filter, dashboard Activities group), permissions for custom roles, stop/destroy dialogs | chatbot, executions, server (close, activities), dashboard |
 | 3 Resume & start new | checkpoints, durable checkpoint + internal unseal, restore, confirm on side effects, refire route | chatbot, executions, server, dashboard, scheduler (link) |
-| 4 In-depth access | grants, decrypt path, data view, audit page, retention settings | executions, dashboard |
+| 4 In-depth access | grants, decrypt path, data view (incl. variable values), Audit tab, retention settings | executions, dashboard |
 | Follow-ups | failure alerts (email/webhook), approval step, aggregate charts in analytics, retiring FlowLogs | — |
 
 Each repo works on `feature/execution-traceability` from its default branch; tybot is merged
@@ -993,3 +1243,7 @@ separately into `main` and `main_pre`.
 - Dashboard component split and styling within the dashboard's existing patterns.
 - Exact listener wiring for `bot_left` / `bot_replaced` in tiledesk-server (which events carry the
   bot participant change in API and job-worker mode).
+- Whether `GET /project_users/me` serialises `rolePermissions` for custom roles, or the service
+  reads the role's permissions through the roles API (§7.3).
+- Flow state tab controls (slider vs dropdown) and how many variables to show before "show all".
+- The HMAC key handling for value hashes (per project, rotated with the seal key).
