@@ -166,6 +166,10 @@ router.post('/ext/:botid', async (req, res) => {
   }
   if (!reply) {
     winston.verbose("(tybotRoute) No reply. Stop flow.")
+    if (ctx && ctx.step) { // execIntent opened a step: close it
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
     return;
   }
   

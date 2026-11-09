@@ -85,6 +85,14 @@ const bot = {
 		"webhook_enabled": false,
 		"enabled": true,
 		"language": "en",
+		"intent_display_name": "empty",
+		"intent_id": "empty",
+		"question": "",
+		"actions": []
+	}, {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
 		"intent_display_name": "count",
 		"intent_id": "count",
 		"question": "",

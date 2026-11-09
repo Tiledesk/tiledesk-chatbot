@@ -16,6 +16,8 @@ const { detectTrigger } = require('../executions/trigger');
 const { ExecutionStore } = require('../executions/ExecutionStore');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
 const { TiledeskRequestVariables } = require('../tiledeskChatbotPlugs/TiledeskRequestVariables');
+const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
+const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
 const bots_data = require('./executions_lifecycle_bot.js').bots_data;
 
 const PROJECT_ID = 'projectID';
@@ -27,7 +29,7 @@ const APP_PORT = 10011;   // this file's TILEBOT_ENDPOINT: block jumps come back
 const API_PORT = 10012;   // this file's API_ENDPOINT: the bot replies land here
 const FAIL_PORT = 10003;  // web request target, always 500
 
-const ENV_KEYS = ['EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
+const ENV_KEYS = ['EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
   'EXECUTIONS_AMQP_URL', 'AMQP_MANAGER_URL', 'CHATBOT_MAX_STEPS'];
 
 const app = express();
@@ -136,6 +138,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     delete process.env.EXECUTIONS_AMQP_URL;
     delete process.env.AMQP_MANAGER_URL;
     delete process.env.CHATBOT_MAX_STEPS;
+    delete process.env.EXECUTIONS_STATE_ENABLED; // default: on when EXECUTIONS_ENABLED
     setEmitterForTests(fakeEmitter);
 
     client = redis.createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
@@ -468,15 +471,86 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     assert.deepStrictEqual(detectTrigger({ request: { channel: { name: 'chat21' } } }, 'support-group-p-1', 'b'), { type: 'widget', source_id: null, start_point_id: null });
   });
 
-  it('no extra awaited Redis call per action beyond HGETALL+INCR', async function () {
+  /** Points the recorder at a store whose client logs every call into `log`. */
+  function useProxiedStore() {
     const calls = new Proxy(client, {
       get(target, prop) {
         const v = target[prop];
         if (typeof v !== 'function') return v;
-        return (...args) => { log.push({ call: String(prop) }); return v.apply(target, args); };
+        return (...args) => { log.push({ call: String(prop), args }); return v.apply(target, args); };
       }
     });
     ExecutionRecorder.init({ store: new ExecutionStore(calls) });
+  }
+
+  it('a block that yields no reply still closes its step', async function () {
+    const rid = newRequestId();
+    send('/empty', rid);
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+    await settle(rid, 300);
+    const started = ofType(rid, 'step.started');
+    assert.strictEqual(started.length, 1);
+    assert.strictEqual(started[0].data.block_id, 'empty');
+    for (const s of started) {
+      assert.strictEqual(ofType(rid, 'step.completed').filter((c) => c.data.step_seq === s.seq).length, 1, 'step ' + s.seq + ' closed once');
+    }
+    assert.strictEqual(ofType(rid, 'step.completed')[0].data.outcome, 'success');
+  });
+
+  it('flag off: intent parameters are written as in 3.0.5 (not awaited)', async function () {
+    const make = (execution) => {
+      const chatbot = new TiledeskChatbot({ botsDataSource: new MockBotsDataSource(bots_data), botId: BOT_ID, bot: { name: 'b' }, requestId: 'r-params' });
+      chatbot.execution = execution;
+      chatbot.added = [];
+      chatbot.addParameter = (k, v) => { chatbot.added.push([k, v]); return new Promise(() => {}); }; // never settles
+      chatbot.execIntent = async () => 'replied';
+      return chatbot;
+    };
+    const message = { text: '/start{"a":1,"b":2}', sender: 'A-SENDER', request: { request_id: 'r-params' } };
+    const timeout = (p) => Promise.race([p, new Promise((r) => setTimeout(() => r('pending'), 200))]);
+
+    const off = make(null);
+    assert.strictEqual(await timeout(off.replyToMessage(message)), 'replied');
+    assert.deepStrictEqual(off.added, [['a', 1], ['b', 2]]);
+
+    const on = make({ request_id: 'r-params', scopes: { message_in: new Set(), jump_params: new Set() } });
+    assert.strictEqual(await timeout(on.replyToMessage(message)), 'pending', 'with a ctx the writes are awaited');
+    assert.deepStrictEqual(on.added, [['a', 1]]);
+  });
+
+  it('EXECUTIONS_STATE_ENABLED=false: no state reads or writes, events still flow', async function () {
+    process.env.EXECUTIONS_STATE_ENABLED = 'false';
+    try {
+      useProxiedStore();
+      const from = log.length;
+      const rid = newRequestId();
+      send('/count', rid);
+      await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+      const evs = events(rid);
+      assert.deepStrictEqual(evs.map((e) => e.type), ['execution.started', 'step.started', 'action.completed', 'action.completed', 'action.completed', 'step.completed', 'execution.idle']);
+      const step = evs[1].data;
+      assert.deepStrictEqual(step.outside_changes, []);
+      assert.strictEqual(step.state_keyframe, false);
+      assert.strictEqual(step.state_manifest, null);
+      assert.ok(!('state_vars' in step) && !('sealed_state' in step));
+      for (const a of ofType(rid, 'action.completed')) {
+        assert.deepStrictEqual(a.data.state_delta, []);
+        assert.ok(!('sealed_state' in a.data));
+        assert.strictEqual(a.data.outcome, 'success');
+      }
+      const done = ofType(rid, 'step.completed')[0].data;
+      assert.ok(!('state_vars' in done) && !('changed_keys' in done));
+      const calls = log.slice(from).filter((e) => e.call);
+      assert.ok(!calls.some((c) => c.call === 'hGetAll'), 'no HGETALL');
+      assert.ok(!calls.some((c) => String(c.args[0]).endsWith(':state')), 'no exec:{id}:state read or write');
+      assert.strictEqual(await client.exists(`exec:${evs[0].execution_id}:state`), 0);
+    } finally {
+      delete process.env.EXECUTIONS_STATE_ENABLED;
+    }
+  });
+
+  it('no extra awaited Redis call per action beyond HGETALL+INCR', async function () {
+    useProxiedStore();
     const rid = newRequestId();
     send('/count', rid);
     await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');

@@ -166,7 +166,13 @@ class TiledeskChatbot {
           if (faq) {
             winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
-              if (intent.parameters) {
+              if (intent.parameters && !this.execution) { // tracing off: unchanged, writes not awaited
+                for (const [key, value] of Object.entries(intent.parameters)) {
+                  winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
+                  this.addParameter(key, value);                  
+                }
+              }
+              else if (intent.parameters) {
                 await ExecutionRecorder.withScope(this.execution, 'jump_params', async () => {
                   for (const [key, value] of Object.entries(intent.parameters)) {
                     winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);

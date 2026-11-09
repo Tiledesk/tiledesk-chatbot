@@ -156,7 +156,7 @@ const ExecutionRecorder = {
         _chainEnded: false
       };
 
-      const saved = await st.getState(ctx.execution_id);
+      const saved = cfg.stateEnabled ? await st.getState(ctx.execution_id) : null;
       if (saved) {
         ctx._hasState = true;
         ctx.prev = saved.raw || null;
@@ -202,6 +202,9 @@ const ExecutionRecorder = {
     if (!ctx) return null;
     try {
       const cfg = ctx._cfg;
+      if (!cfg.stateEnabled) return await openStep(ctx, blockId, blockName, {}, {
+        block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
+      });
       const before = await readState(ctx);
       if (before === null) return null;
       const scopes = ctx.scopes;
@@ -232,16 +235,7 @@ const ExecutionRecorder = {
         ctx.kf.delta_bytes += outside.deltaBytes;
         sealInto(ctx, data, 'sealed_state', outside.sealedValues);
       }
-
-      ctx.step = {
-        seq: null, block_id: blockId, block_name: blockName, started_at: Date.now(),
-        actions: [], outcome: null, exit_taken: null, before, exitPending: null
-      };
-      ctx.current = before;
-      ctx._chainEnded = false;
-      const step = ctx.step;
-      step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, data));
-      return step.seq;
+      return await openStep(ctx, blockId, blockName, before, data);
     } catch (err) {
       warn('blockEntry', err);
       return null;
@@ -374,14 +368,29 @@ const ExecutionRecorder = {
   }
 };
 
+/** Starts ctx.step with the state before the block and emits step.started. */
+async function openStep(ctx, blockId, blockName, before, data) {
+  ctx.step = {
+    seq: null, block_id: blockId, block_name: blockName, started_at: Date.now(),
+    actions: [], outcome: null, exit_taken: null, before, exitPending: null
+  };
+  ctx.current = before;
+  ctx._chainEnded = false;
+  const step = ctx.step;
+  step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, data));
+  return step.seq;
+}
+
+const NO_DELTA = { changes: [], sealedValues: {}, deltaBytes: 0 };
+
 async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpedTo, error }) {
   try {
     const cfg = ctx._cfg;
     const action = (directive && directive.action) || {};
     const actionId = action._tdActionId;
     const writes = rec.tap ? rec.tap.writes : new Map();
-    const after = await readState(ctx);
-    const delta = StateDiff.diffStates(ctx.current, after || ctx.current, {
+    const after = cfg.stateEnabled ? await readState(ctx) : null;
+    const delta = !cfg.stateEnabled ? NO_DELTA : StateDiff.diffStates(ctx.current, after || ctx.current, {
       projectKey: ctx._projectKey,
       valueMaxBytes: cfg.stateValueMaxBytes,
       attribute: (key) => writes.has(key) ? (actionId || `action_${index}`) : 'external'
@@ -433,14 +442,17 @@ async function recordBlockExit(ctx, step) {
       step_seq: step.seq,
       outcome,
       exit_taken: step.exit_taken,
-      duration_ms: Date.now() - step.started_at,
-      state_vars: Object.keys(current).length,
-      changed_keys: countChanged(step.before, current)
+      duration_ms: Date.now() - step.started_at
     };
+    if (ctx._cfg.stateEnabled) {
+      data.state_vars = Object.keys(current).length;
+      data.changed_keys = countChanged(step.before, current);
+    }
     const seq = await emit(ctx, 'step.completed', () => data);
     ctx.kf.blocks_since += 1;
     ctx._blocks += 1;
     ctx.prev = current;
+    if (!ctx._cfg.stateEnabled) return seq;
     await ctx._store.setState(ctx.execution_id, {
       step_seq: step.seq,
       raw: current,
