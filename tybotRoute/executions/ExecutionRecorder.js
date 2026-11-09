@@ -389,6 +389,38 @@ const ExecutionRecorder = {
     }
   },
 
+  /**
+   * Called by TilebotService.sendMessageToBot before a block jump is posted.
+   * Outside a traced action: undefined, synchronously, and the message is untouched.
+   * In one: onJump runs synchronously (it marks the jump before the action's own callback can
+   * reach theend), execution_id goes into the message attributes, and the returned promise
+   * resolves once the block exit is recorded, so the next block (on any pod) reads its state.
+   */
+  beforeJump(message) {
+    let store;
+    try {
+      store = WriteTap.current();
+      if (!store || store.kind !== 'action' || typeof store.onJump !== 'function' || !store.executionId) return undefined;
+    } catch (err) {
+      warn('beforeJump', err);
+      return undefined;
+    }
+    let recorded;
+    try {
+      recorded = store.onJump(message && message.payload ? message.payload.text : undefined);
+    } catch (err) {
+      recorded = Promise.reject(err);
+    }
+    try {
+      if (message && message.payload) {
+        message.payload.attributes = Object.assign({}, message.payload.attributes || {}, { execution_id: store.executionId });
+      }
+    } catch (err) {
+      warn('beforeJump', err);
+    }
+    return Promise.resolve(recorded);
+  },
+
   /** The theend of a directives run, wrapped so the block exit and the chain end are recorded once. */
   wrapTheEnd(ctx, theend) {
     if (!ctx) return theend;

@@ -285,10 +285,11 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       assert.strictEqual(status.data.step_seq, startStep.seq);
     });
 
-    it('three step.completed; the last event of the chain is execution.idle; seqs strictly increase', function () {
+    it('three step.completed; exactly one execution.idle, at the end of the chain; seqs strictly increase', function () {
       const evs = events(rid);
       assert.strictEqual(ofType(rid, 'step.completed').length, 3);
       assert.strictEqual(ofType(rid, 'execution.started').length, 1);
+      assert.strictEqual(ofType(rid, 'execution.idle').length, 1, 'no idle mid-chain at the jumps');
       assert.strictEqual(evs[evs.length - 1].type, 'execution.idle');
       assert.strictEqual(evs[evs.length - 1].data.last_seq, evs[evs.length - 1].seq);
       for (let i = 1; i < evs.length; i++) {
@@ -311,33 +312,22 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
   });
 
   it('web request false exit maps to failure_condition', async function () {
-    // Task 8 calls onJump from TilebotService.sendMessageToBot; until then the test stands in for it.
-    const original = tilebotService.sendMessageToBot;
-    tilebotService.sendMessageToBot = async function (message, botId, callback) {
-      const store = WriteTap.current();
-      if (store && store.onJump) await store.onJump(message.payload.text);
-      return original.call(tilebotService, message, botId, callback);
-    };
-    try {
-      const rid = newRequestId();
-      send('/start', rid);
-      await waitFor(() => ofType(rid, 'execution.idle').length > 0 && ofType(rid, 'step.completed').length === 3, 'the chain to end');
-      await settle(rid);
-      const web = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_fail_request');
-      assert.strictEqual(web.data.type, 'webrequestv2');
-      assert.strictEqual(web.data.outcome, 'failure_condition');
-      assert.strictEqual(web.data.exit_taken, 'false');
-      assert.deepStrictEqual(web.data.state_delta.map((c) => [c.key, c.by]), [['status_code', 'act_fail_request']]);
-      const checkStep = ofType(rid, 'step.started').find((s) => s.data.block_id === 'check');
-      const checkDone = ofType(rid, 'step.completed').find((s) => s.data.step_seq === checkStep.seq);
-      assert.strictEqual(checkDone.data.outcome, 'failure_condition');
-      assert.strictEqual(checkDone.data.exit_taken, 'false');
-      const jump = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_goto_check');
-      assert.strictEqual(jump.data.exit_taken, 'jump');
-      assert.strictEqual(ofType(rid, 'action.completed').filter((a) => a.data.action_id === 'act_fail_request').length, 1, 'afterAction is idempotent');
-    } finally {
-      tilebotService.sendMessageToBot = original;
-    }
+    const rid = newRequestId();
+    send('/start', rid);
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0 && ofType(rid, 'step.completed').length === 3, 'the chain to end');
+    await settle(rid);
+    const web = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_fail_request');
+    assert.strictEqual(web.data.type, 'webrequestv2');
+    assert.strictEqual(web.data.outcome, 'failure_condition');
+    assert.strictEqual(web.data.exit_taken, 'false');
+    assert.deepStrictEqual(web.data.state_delta.map((c) => [c.key, c.by]), [['status_code', 'act_fail_request']]);
+    const checkStep = ofType(rid, 'step.started').find((s) => s.data.block_id === 'check');
+    const checkDone = ofType(rid, 'step.completed').find((s) => s.data.step_seq === checkStep.seq);
+    assert.strictEqual(checkDone.data.outcome, 'failure_condition');
+    assert.strictEqual(checkDone.data.exit_taken, 'false');
+    const jump = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_goto_check');
+    assert.strictEqual(jump.data.exit_taken, 'jump');
+    assert.strictEqual(ofType(rid, 'action.completed').filter((a) => a.data.action_id === 'act_fail_request').length, 1, 'afterAction is idempotent');
   });
 
   it('/start{"a":1} records a as jump_params in outside_changes', async function () {

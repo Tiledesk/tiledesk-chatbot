@@ -1,5 +1,6 @@
 const httpUtils = require("../utils/HttpUtils");
 const winston = require('../utils/winston');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 // L'endpoint dei salti fra blocchi (`/ext`, `/exec`). Vale, nell'ordine: il `TILEBOT_ENDPOINT`
 // passato a `startApp`, la variabile d'ambiente, l'endpoint che `startApp` ha ricavato da
 // `API_ENDPOINT`, infine l'ambiente `API_ENDPOINT`. Prima (14/10/2026) il modulo leggeva solo
@@ -41,7 +42,7 @@ class TilebotService {
             json: message,
             method: 'POST'
         };
-        httpUtils.request(
+        const post = () => httpUtils.request(
             HTTPREQUEST,
             function (err, resbody) {
                 if (err) {
@@ -56,6 +57,18 @@ class TilebotService {
                 }
             }, false
         );
+        // Execution tracing: inside a traced action the block exit is recorded before the jump
+        // is posted. Synchronous here, so onJump runs before the caller's own callback. Off (no
+        // traced action): undefined, and the post goes out right away as before.
+        const recorded = ExecutionRecorder.beforeJump(message);
+        if (!recorded) {
+            post();
+            return;
+        }
+        recorded
+            .catch((err) => winston.warn("(TilebotService) beforeJump failed: " + (err && err.message)))
+            .then(post)
+            .catch((err) => winston.error("(TilebotService) sendMessageToBot error: ", err));
     }
 
     /**
