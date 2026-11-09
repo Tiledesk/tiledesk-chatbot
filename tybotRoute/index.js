@@ -38,6 +38,8 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
 const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
+const ExecutionRecorder = require('./executions/ExecutionRecorder');
+const { ExecutionStore } = require('./executions/ExecutionStore');
 
 let API_ENDPOINT = null;
 let TILEBOT_ENDPOINT = null;
@@ -111,6 +113,7 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+  const ctx = await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token });
   
   let intentsMachine;
   let backupMachine;
@@ -138,13 +141,16 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_STEPS: MAX_STEPS,
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
+  chatbot.execution = ctx;
   winston.verbose("(tybotRoute) Message text: " + message.text)
 
   try {
-    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
-    if (requestId.startsWith("support-group-")) {
-      await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
-    }
+    await ExecutionRecorder.withScope(ctx, 'message_in', async () => {
+      await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+      if (requestId.startsWith("support-group-")) {
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+      }
+    });
   } catch (e) {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
     return;
@@ -180,7 +186,8 @@ router.post('/ext/:botid', async (req, res) => {
           TILEBOT_ENDPOINT:TILEBOT_ENDPOINT,
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
-          cache: tdcache
+          cache: tdcache,
+          execution: ctx
         }
       );
       directivesPlug.processDirectives( () => {
@@ -237,6 +244,8 @@ router.post('/ext/:botid', async (req, res) => {
         request_id:  requestId || null
       });
     }
+    await ExecutionRecorder.blockExit(ctx);
+    await ExecutionRecorder.endOfChain(ctx);
   }
 
 });
@@ -761,6 +770,7 @@ async function connectRedis() {
       process.exit(1);
     }
     winston.info("(Tilebot) Redis connected");
+    ExecutionRecorder.init({ store: new ExecutionStore(tdcache.client), apiEndpoint: API_ENDPOINT });
   }
   return;
 }

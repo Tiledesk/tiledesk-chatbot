@@ -1,0 +1,491 @@
+'use strict';
+
+const assert = require('assert');
+const crypto = require('crypto');
+const axios = require('axios');
+const express = require('express');
+const bodyParser = require('body-parser');
+const redis = require('redis');
+const { v4: uuidv4 } = require('uuid');
+const tybot = require('../');
+const winston = require('../utils/winston');
+const tilebotService = require('../services/TilebotService');
+const WriteTap = require('../executions/WriteTap');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
+const { detectTrigger } = require('../executions/trigger');
+const { ExecutionStore } = require('../executions/ExecutionStore');
+const { setEmitterForTests } = require('../executions/TraceEmitter');
+const { TiledeskRequestVariables } = require('../tiledeskChatbotPlugs/TiledeskRequestVariables');
+const bots_data = require('./executions_lifecycle_bot.js').bots_data;
+
+const PROJECT_ID = 'projectID';
+const NO_CAPTURE_PROJECT_ID = 'projectNoCapture';
+const BOT_ID = 'botID';
+const CHATBOT_TOKEN = 'XXX';
+// Own ports, not the suite's 10001/10002: a failing test elsewhere can leave those bound.
+const APP_PORT = 10011;   // this file's TILEBOT_ENDPOINT: block jumps come back here
+const API_PORT = 10012;   // this file's API_ENDPOINT: the bot replies land here
+const FAIL_PORT = 10003;  // web request target, always 500
+
+const ENV_KEYS = ['EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
+  'EXECUTIONS_AMQP_URL', 'AMQP_MANAGER_URL', 'CHATBOT_MAX_STEPS'];
+
+const app = express();
+app.use('/', tybot.router);
+app.use((err, req, res, next) => { winston.error('General error', err); });
+
+function newRequestId(projectId = PROJECT_ID) {
+  return 'support-group-' + projectId + '-' + uuidv4().replace(/-/g, '');
+}
+
+function listen(server, port) {
+  return new Promise((resolve) => { const l = server.listen(port, '0.0.0.0', () => resolve(l)); });
+}
+
+function close(listener) {
+  return new Promise((resolve) => (listener ? listener.close(() => resolve()) : resolve()));
+}
+
+function startTybot(endpoints = { TILEBOT_ENDPOINT: `http://localhost:${APP_PORT}`, API_ENDPOINT: `http://localhost:${API_PORT}` }) {
+  return new Promise((resolve) => {
+    tybot.startApp({
+      bots: bots_data,
+      TILEBOT_ENDPOINT: endpoints.TILEBOT_ENDPOINT,
+      API_ENDPOINT: endpoints.API_ENDPOINT,
+      REDIS_HOST: process.env.REDIS_HOST,
+      REDIS_PORT: process.env.REDIS_PORT,
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD
+    }, () => resolve());
+  });
+}
+
+async function waitFor(pred, what, timeoutMs = 10000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeoutMs) {
+    if (pred()) return;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  throw new Error('timed out waiting for ' + what);
+}
+
+describe('Executions lifecycle (recorder + engine hooks)', function () {
+  this.timeout(30000);
+
+  let savedEnv;
+  let appListener, apiListener, failListener;
+  let client;
+  const log = [];          // events and proxied redis calls, in order
+  const replies = [];      // bot messages received by the fake API
+  const requestIds = [];
+  const fakeEmitter = {
+    emit(envelope) { log.push({ event: envelope }); },
+    async flush() {},
+    stats() { return { published: 0, dropped: 0, buffered: 0 }; },
+    stop() {}
+  };
+
+  const events = (requestId) => log.filter((e) => e.event && e.event.request_id === requestId).map((e) => e.event);
+  const ofType = (requestId, type) => events(requestId).filter((e) => e.type === type);
+
+  function send(text, requestId, extra = {}) {
+    requestIds.push(requestId);
+    const projectId = requestId.split('-')[2];
+    const request = {
+      payload: Object.assign({
+        _id: uuidv4(),
+        senderFullname: 'guest#367e',
+        type: 'text',
+        sender: 'A-SENDER',
+        recipient: requestId,
+        text: text,
+        id_project: projectId,
+        request: { request_id: requestId }
+      }, extra),
+      token: CHATBOT_TOKEN
+    };
+    tilebotService.sendMessageToBot(request, BOT_ID, () => {});
+  }
+
+  /** Waits until the request's events stop changing for quietMs. */
+  async function settle(requestId, quietMs = 500) {
+    let n = -1;
+    let since = Date.now();
+    await waitFor(() => {
+      const m = events(requestId).length;
+      if (m !== n) { n = m; since = Date.now(); return false; }
+      return Date.now() - since >= quietMs;
+    }, 'events of ' + requestId + ' to settle');
+  }
+
+  async function scanExec() {
+    const keys = [];
+    for await (const k of client.scanIterator({ MATCH: 'exec:*', COUNT: 1000 })) {
+      if (Array.isArray(k)) keys.push(...k); else keys.push(k);
+    }
+    return keys.sort();
+  }
+
+  before(async function () {
+    savedEnv = {};
+    for (const k of ENV_KEYS) savedEnv[k] = process.env[k];
+    const { publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+    process.env.EXECUTIONS_ENABLED = 'true';
+    process.env.EXECUTIONS_STATE_HASH_KEY = 'lifecycle-test-hash-key';
+    process.env.EXECUTIONS_SEAL_PUBLIC_KEY = publicKey.export({ type: 'spki', format: 'pem' });
+    process.env.EXECUTIONS_SEAL_KID = 'kid-lifecycle';
+    delete process.env.EXECUTIONS_AMQP_URL;
+    delete process.env.AMQP_MANAGER_URL;
+    delete process.env.CHATBOT_MAX_STEPS;
+    setEmitterForTests(fakeEmitter);
+
+    client = redis.createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
+    await client.connect();
+
+    const api = express();
+    api.use(bodyParser.json());
+    api.post('/:projectId/requests/:requestId/messages', (req, res) => {
+      res.send({ success: true });
+      replies.push({ requestId: req.params.requestId, message: req.body });
+    });
+    api.patch('/:projectId/requests/:requestId/attributes', (req, res) => {
+      res.send({ success: true });
+      replies.push({ requestId: req.params.requestId, attributesPatch: req.body });
+    });
+    apiListener = await listen(api, API_PORT);
+
+    const fail = express();
+    fail.get('/fail', (req, res) => res.status(500).send({ error: 'boom' }));
+    failListener = await listen(fail, FAIL_PORT);
+
+    await startTybot();
+    appListener = await listen(app, APP_PORT);
+  });
+
+  after(async function () {
+    for (const k of ENV_KEYS) {
+      if (savedEnv[k] === undefined) delete process.env[k];
+      else process.env[k] = savedEnv[k];
+    }
+    // put the engine's module state (endpoints) back to what the other test files expect
+    await startTybot({ TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT, API_ENDPOINT: process.env.API_ENDPOINT });
+    setEmitterForTests(null);
+    ExecutionRecorder._resetForTests();
+    const execIds = new Set(log.filter((e) => e.event).map((e) => e.event.execution_id));
+    const del = [`exec:policy:${NO_CAPTURE_PROJECT_ID}`];
+    for (const id of execIds) del.push(`exec:${id}`, `exec:${id}:seq`, `exec:${id}:state`);
+    for (const rid of new Set(requestIds)) {
+      del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`);
+      for await (const k of client.scanIterator({ MATCH: `tilebot:requests:${rid}*`, COUNT: 1000 })) {
+        if (Array.isArray(k)) del.push(...k); else del.push(k);
+      }
+    }
+    if (del.length) await client.del(del);
+    await client.quit();
+    await close(appListener);
+    await close(apiListener);
+    await close(failListener);
+  });
+
+  it('flag off: no events, no exec:* keys', async function () {
+    process.env.EXECUTIONS_ENABLED = 'false';
+    try {
+      const keysBefore = await scanExec();
+      const logBefore = log.length;
+      const rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => replies.some((r) => r.requestId === rid && r.message), 'the done reply');
+      const reply = replies.find((r) => r.requestId === rid && r.message).message;
+      assert.strictEqual(reply.attributes.commands[0].message.text, 'done');
+      await new Promise((r) => setTimeout(r, 300));
+      assert.strictEqual(log.length, logBefore, 'no events emitted');
+      assert.deepStrictEqual(await scanExec(), keysBefore, 'no exec:* keys written');
+      assert.ok(!replies.some((r) => r.requestId === rid && r.attributesPatch), 'no execution_id patch');
+    } finally {
+      process.env.EXECUTIONS_ENABLED = 'true';
+    }
+  });
+
+  describe('a conversation start -> check -> after', function () {
+    let rid;
+    before(async function () {
+      rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => replies.some((r) => r.requestId === rid && r.message), 'the done reply');
+      await waitFor(() => ofType(rid, 'step.completed').length === 3, 'three step.completed');
+      await settle(rid);
+    });
+
+    it('start emits execution.started then step.started (keyframe, manifest has the message_in keys)', function () {
+      const evs = events(rid);
+      assert.strictEqual(evs[0].type, 'execution.started');
+      const started = evs[0];
+      assert.deepStrictEqual(started.data.trigger, { type: 'widget', source_id: null, start_point_id: null });
+      assert.strictEqual(started.data.agent_name, 'Executions lifecycle bot');
+      assert.strictEqual(started.data.test, true);
+      assert.strictEqual(started.agent_id, BOT_ID);
+      assert.strictEqual(started.agent_version, BOT_ID);
+      assert.strictEqual(started.id_project, PROJECT_ID);
+
+      const step = evs[1];
+      assert.strictEqual(step.type, 'step.started');
+      assert.strictEqual(step.data.step_seq, step.seq);
+      assert.strictEqual(step.data.block_id, 'start');
+      assert.strictEqual(step.data.block_name, 'start');
+      assert.strictEqual(step.data.state_keyframe, true);
+      const manifestKeys = step.data.state_manifest.map((m) => m.key);
+      assert.ok(manifestKeys.includes('lastUserText'));
+      assert.ok(manifestKeys.includes('last_user_text'));
+      const m = step.data.state_manifest.find((x) => x.key === 'lastUserText');
+      assert.strictEqual(m.type, 'string');
+      assert.strictEqual(m.reserved, true);
+      assert.match(m.hash, /^[0-9a-f]{64}$/);
+      assert.ok(!('value' in m));
+      const lut = step.data.outside_changes.find((c) => c.key === 'lastUserText');
+      assert.strictEqual(lut.by, 'message_in');
+      assert.strictEqual(lut.op, 'add');
+      assert.strictEqual(step.data.state_vars, manifestKeys.length);
+      // the chatbot token is a secret: name and op only
+      const tok = step.data.state_manifest.find((x) => x.key === 'chatbotToken');
+      assert.deepStrictEqual({ type: tok.type, hash: tok.hash }, { type: 'secret', hash: null });
+      assert.strictEqual(step.data.sealed_state.alg, 'RSA-OAEP-256+A256GCM');
+      assert.strictEqual(step.data.sealed_state.kid, 'kid-lifecycle');
+    });
+
+    it('writes execution_id into the request attributes', async function () {
+      const execId = events(rid)[0].execution_id;
+      await waitFor(() => replies.some((r) => r.requestId === rid && r.attributesPatch), 'the attributes patch');
+      const patch = replies.find((r) => r.requestId === rid && r.attributesPatch).attributesPatch;
+      assert.deepStrictEqual(patch, { execution_id: execId });
+    });
+
+    it('set attribute deltas are attributed to their action ids', function () {
+      const acts = ofType(rid, 'action.completed');
+      const total = acts.find((a) => a.data.action_id === 'act_total');
+      const status = acts.find((a) => a.data.action_id === 'act_status');
+      assert.strictEqual(total.data.action_index, 0);
+      assert.strictEqual(total.data.type, 'setattribute');
+      assert.strictEqual(total.data.title, 'set order_total');
+      assert.strictEqual(total.data.outcome, 'success');
+      assert.ok(total.data.duration_ms >= 0);
+      assert.deepStrictEqual(total.data.state_delta.map((c) => [c.key, c.op, c.by, c.reserved]), [['order_total', 'add', 'act_total', false]]);
+      assert.match(total.data.state_delta[0].hash_after, /^[0-9a-f]{64}$/);
+      assert.ok(total.data.sealed_state && total.data.sealed_state.ct);
+      assert.strictEqual(status.data.action_index, 1);
+      assert.deepStrictEqual(status.data.state_delta.map((c) => [c.key, c.op, c.by, c.type]), [['status', 'add', 'act_status', 'string']]);
+      const startStep = ofType(rid, 'step.started').find((s) => s.data.block_id === 'start');
+      assert.strictEqual(total.data.step_seq, startStep.seq);
+      assert.strictEqual(status.data.step_seq, startStep.seq);
+    });
+
+    it('three step.completed; the last event of the chain is execution.idle; seqs strictly increase', function () {
+      const evs = events(rid);
+      assert.strictEqual(ofType(rid, 'step.completed').length, 3);
+      assert.strictEqual(ofType(rid, 'execution.started').length, 1);
+      assert.strictEqual(evs[evs.length - 1].type, 'execution.idle');
+      assert.strictEqual(evs[evs.length - 1].data.last_seq, evs[evs.length - 1].seq);
+      for (let i = 1; i < evs.length; i++) {
+        assert.ok(evs[i].seq > evs[i - 1].seq, `seq ${evs[i].seq} after ${evs[i - 1].seq}`);
+      }
+      assert.strictEqual(new Set(evs.map((e) => e.execution_id)).size, 1, 'one execution');
+      const startDone = ofType(rid, 'step.completed').find((s) => s.data.step_seq === ofType(rid, 'step.started')[0].seq);
+      assert.strictEqual(startDone.data.outcome, 'success');
+      assert.strictEqual(startDone.data.changed_keys, 2);
+      assert.ok(startDone.data.state_vars >= 2);
+    });
+
+    it('writes exec:{id}:state at block exit', async function () {
+      const execId = events(rid)[0].execution_id;
+      const saved = JSON.parse(await client.get(`exec:${execId}:state`));
+      assert.ok(saved.raw && saved.raw.status === '"new"');
+      assert.ok(Number.isInteger(saved.step_seq));
+      assert.ok(Number.isInteger(saved.blocks_since_kf));
+    });
+  });
+
+  it('web request false exit maps to failure_condition', async function () {
+    // Task 8 calls onJump from TilebotService.sendMessageToBot; until then the test stands in for it.
+    const original = tilebotService.sendMessageToBot;
+    tilebotService.sendMessageToBot = async function (message, botId, callback) {
+      const store = WriteTap.current();
+      if (store && store.onJump) await store.onJump(message.payload.text);
+      return original.call(tilebotService, message, botId, callback);
+    };
+    try {
+      const rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => ofType(rid, 'execution.idle').length > 0 && ofType(rid, 'step.completed').length === 3, 'the chain to end');
+      await settle(rid);
+      const web = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_fail_request');
+      assert.strictEqual(web.data.type, 'webrequestv2');
+      assert.strictEqual(web.data.outcome, 'failure_condition');
+      assert.strictEqual(web.data.exit_taken, 'false');
+      assert.deepStrictEqual(web.data.state_delta.map((c) => [c.key, c.by]), [['status_code', 'act_fail_request']]);
+      const checkStep = ofType(rid, 'step.started').find((s) => s.data.block_id === 'check');
+      const checkDone = ofType(rid, 'step.completed').find((s) => s.data.step_seq === checkStep.seq);
+      assert.strictEqual(checkDone.data.outcome, 'failure_condition');
+      assert.strictEqual(checkDone.data.exit_taken, 'false');
+      const jump = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_goto_check');
+      assert.strictEqual(jump.data.exit_taken, 'jump');
+      assert.strictEqual(ofType(rid, 'action.completed').filter((a) => a.data.action_id === 'act_fail_request').length, 1, 'afterAction is idempotent');
+    } finally {
+      tilebotService.sendMessageToBot = original;
+    }
+  });
+
+  it('/start{"a":1} records a as jump_params in outside_changes', async function () {
+    const rid = newRequestId();
+    send('/start{"a":1}', rid);
+    await waitFor(() => ofType(rid, 'step.started').length > 0, 'step.started');
+    const step = ofType(rid, 'step.started')[0];
+    const a = step.data.outside_changes.find((c) => c.key === 'a');
+    assert.strictEqual(a.by, 'jump_params');
+    assert.strictEqual(a.type, 'number');
+    assert.strictEqual(step.data.outside_changes.find((c) => c.key === 'lastUserText').by, 'message_in');
+    await settle(rid);
+  });
+
+  it('capture_data "false" seals no state values (manifest and hashes stay)', async function () {
+    await client.hSet(`exec:policy:${NO_CAPTURE_PROJECT_ID}`, 'capture_data', 'false');
+    const rid = newRequestId(NO_CAPTURE_PROJECT_ID);
+    send('/count', rid, { request: { request_id: rid, attributes: { payload: { x: 1 } } } });
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+    const evs = events(rid);
+    assert.ok(!('sealed_trigger_payload' in evs[0].data));
+    const step = ofType(rid, 'step.started')[0];
+    assert.ok(step.data.state_manifest.length > 0);
+    assert.ok(!('sealed_state' in step.data));
+    for (const a of ofType(rid, 'action.completed')) {
+      assert.ok(!('sealed_state' in a.data));
+      assert.match(a.data.state_delta[0].hash_after, /^[0-9a-f]{64}$/);
+    }
+  });
+
+  it('seals the trigger payload, without secrets, when capture is on', async function () {
+    const rid = newRequestId();
+    send('/count', rid, { request: { request_id: rid, attributes: { payload: { x: 1, api_key: 'k' } } } });
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+    const started = ofType(rid, 'execution.started')[0];
+    assert.strictEqual(started.data.sealed_trigger_payload.alg, 'RSA-OAEP-256+A256GCM');
+  });
+
+  it('an automation run ends with execution.ended completed', async function () {
+    // axios.request, not axios.post: analytics_test.js stubs axios.post for the whole run
+    const res = await axios.request({ method: 'post', url: `http://localhost:${APP_PORT}/block/${PROJECT_ID}/${BOT_ID}/count`, data: { async: true, token: CHATBOT_TOKEN } });
+    assert.strictEqual(res.status, 200);
+    await waitFor(() => log.some((e) => e.event && e.event.type === 'execution.ended' && e.event.request_id.startsWith('automation-request-' + PROJECT_ID)), 'execution.ended');
+    const ended = log.find((e) => e.event && e.event.type === 'execution.ended').event;
+    requestIds.push(ended.request_id);
+    const evs = events(ended.request_id);
+    assert.strictEqual(evs[0].data.trigger.type, 'automation');
+    assert.deepStrictEqual(ended.data, { end_reason: 'completed' });
+    assert.ok(!evs.some((e) => e.type === 'execution.idle'));
+    assert.strictEqual(await client.hGet(`exec:${ended.execution_id}`, 'status'), 'completed');
+    assert.ok(!replies.some((r) => r.requestId === ended.request_id && r.attributesPatch), 'no attributes patch for automations');
+  });
+
+  describe('with CHATBOT_MAX_STEPS=2', function () {
+    before(async function () {
+      process.env.CHATBOT_MAX_STEPS = '2';
+      await startTybot();
+    });
+    after(async function () {
+      process.env.CHATBOT_MAX_STEPS = '1000'; // index.js keeps MAX_STEPS in module state: put the default back
+      await startTybot();
+      delete process.env.CHATBOT_MAX_STEPS;
+    });
+
+    it('max steps exceeded emits execution.failed max_steps_exceeded', async function () {
+      const rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => ofType(rid, 'execution.failed').length > 0, 'execution.failed');
+      await settle(rid);
+      const failed = ofType(rid, 'execution.failed')[0];
+      assert.strictEqual(failed.data.error_code, 'max_steps_exceeded');
+      assert.strictEqual(failed.data.message, 'Anomaly detection. MAX ACTIONS (2) exeeded.');
+      const step = ofType(rid, 'step.started')[0];
+      assert.strictEqual(failed.data.step_seq, step.seq);
+      assert.strictEqual(ofType(rid, 'action.completed').length, 2);
+      assert.strictEqual(ofType(rid, 'step.completed')[0].data.outcome, 'error');
+      assert.strictEqual(ofType(rid, 'execution.idle').length, 0);
+      assert.strictEqual(await client.hGet(`exec:${failed.execution_id}`, 'status'), 'failed');
+    });
+  });
+
+  it('TiledeskRequestVariables.set(name, v, cb) stays inside the action chain', async function () {
+    const vars = new TiledeskRequestVariables('r-cb', { hset: async () => {} }, {});
+    const seen = await new Promise((resolve) => {
+      WriteTap.runAction({ executionId: 'e', stepSeq: 1, actionIndex: 0, actionId: 'a-cb', requestId: 'r-cb' }, () => {
+        vars.set('k', 'v', () => resolve(WriteTap.current()));
+      });
+    });
+    assert.strictEqual(seen.actionId, 'a-cb');
+    assert.strictEqual(seen.writes.get('k'), 'set');
+  });
+
+  it('a throwing or rejecting execute call is recorded as error and still throws', async function () {
+    const store = new ExecutionStore(client);
+    const open = async () => {
+      const rid = newRequestId();
+      requestIds.push(rid);
+      const ctx = await ExecutionRecorder.onMessageIn({ message: { request: { request_id: rid } }, bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store });
+      await ExecutionRecorder.blockEntry(ctx, { blockId: 'blk', blockName: 'blk' });
+      return { rid, ctx };
+    };
+    const directive = { name: 'code', action: { _tdActionId: 'act_boom' } };
+
+    const sync = await open();
+    assert.throws(() => ExecutionRecorder.runAction(sync.ctx, { index: 0, directive }, () => { throw new Error('boom'); }), /boom/);
+    await waitFor(() => ofType(sync.rid, 'execution.idle').length === 1, 'idle after the throw');
+
+    const async_ = await open();
+    await assert.rejects(ExecutionRecorder.runAction(async_.ctx, { index: 0, directive }, async () => { throw new Error('later'); }), /later/);
+    await waitFor(() => ofType(async_.rid, 'execution.idle').length === 1, 'idle after the rejection');
+
+    for (const { rid } of [sync, async_]) {
+      const act = ofType(rid, 'action.completed')[0];
+      assert.deepStrictEqual([act.data.outcome, act.data.error_code, act.data.exit_taken], ['error', 'action_error', null]);
+      assert.strictEqual(ofType(rid, 'step.completed')[0].data.outcome, 'error');
+    }
+  });
+
+  it('every hook is a no-op on a null ctx', async function () {
+    assert.strictEqual(await ExecutionRecorder.blockEntry(null, { blockId: 'x' }), null);
+    assert.strictEqual(await ExecutionRecorder.afterAction(null, { index: 0 }), null);
+    assert.strictEqual(await ExecutionRecorder.blockExit(null), null);
+    assert.strictEqual(await ExecutionRecorder.endOfChain(null), null);
+    assert.strictEqual(await ExecutionRecorder.failed(null, { error_code: 'x' }), null);
+    assert.strictEqual(ExecutionRecorder.runAction(null, { index: 0 }, () => 7), 7);
+    assert.strictEqual(await ExecutionRecorder.withScope(null, 'message_in', async () => 8), 8);
+    const theend = () => 9;
+    assert.strictEqual(ExecutionRecorder.wrapTheEnd(null, theend), theend);
+  });
+
+  it('detectTrigger', function () {
+    assert.deepStrictEqual(detectTrigger({ request: {} }, 'automation-request-p-1', 'b'), { type: 'automation', source_id: null, start_point_id: null });
+    assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'webhook', webhook_id: 'w1' } } }, 'support-group-p-1', 'b'), { type: 'webhook', source_id: 'w1', start_point_id: null });
+    assert.deepStrictEqual(detectTrigger({ request: { attributes: { start_type: 'scheduled', chatbot_id: 'c1' } }, attributes: { action: '#sp1' } }, 'support-group-p-1', 'b'), { type: 'scheduled', source_id: 'c1', start_point_id: 'sp1' });
+    assert.deepStrictEqual(detectTrigger({ request: { channel: { name: 'whatsapp' } } }, 'support-group-p-1', 'b'), { type: 'channel', source_id: 'whatsapp', start_point_id: null });
+    assert.deepStrictEqual(detectTrigger({ request: { channel: { name: 'chat21' } } }, 'support-group-p-1', 'b'), { type: 'widget', source_id: null, start_point_id: null });
+  });
+
+  it('no extra awaited Redis call per action beyond HGETALL+INCR', async function () {
+    const calls = new Proxy(client, {
+      get(target, prop) {
+        const v = target[prop];
+        if (typeof v !== 'function') return v;
+        return (...args) => { log.push({ call: String(prop) }); return v.apply(target, args); };
+      }
+    });
+    ExecutionRecorder.init({ store: new ExecutionStore(calls) });
+    const rid = newRequestId();
+    send('/count', rid);
+    await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+    const from = log.findIndex((e) => e.event && e.event.request_id === rid && e.event.type === 'step.started');
+    const to = log.findIndex((e) => e.event && e.event.request_id === rid && e.event.type === 'step.completed');
+    const window = log.slice(from + 1, to);
+    assert.strictEqual(window.filter((e) => e.event && e.event.type === 'action.completed').length, 3);
+    // 3 actions x (HGETALL + INCR), then the INCR of step.completed
+    assert.deepStrictEqual(window.filter((e) => e.call).map((e) => e.call),
+      ['hGetAll', 'incr', 'hGetAll', 'incr', 'hGetAll', 'incr', 'incr']);
+  });
+});

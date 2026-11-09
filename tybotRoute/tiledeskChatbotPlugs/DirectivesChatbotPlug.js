@@ -72,6 +72,7 @@ const { AnalyticsClient } = require('../AnalyticsClient');
 const { DirCallSubAgent } = require('./directives/DirCallSubagent');
 const { DirReturnStack } = require('./directives/DirReturnStack');
 const { DirDataTables } = require('./directives/DirDataTables');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 
 class DirectivesChatbotPlug {
 
@@ -92,6 +93,7 @@ class DirectivesChatbotPlug {
     this.reply = config.reply;
     this.chatbot = config.chatbot;
     this.message = config.message;
+    this.execution = config.execution || null;
   }
 
   exec(pipeline) {
@@ -127,7 +129,7 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    this.theend = theend;
+    this.theend = ExecutionRecorder.wrapTheEnd(this.execution, theend);
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       winston.verbose("(DirectivesChatbotPlug) No directives to process.");
@@ -201,6 +203,7 @@ class DirectivesChatbotPlug {
           request_id:    this.context.requestId || null
         });
       }
+      await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
@@ -336,7 +339,8 @@ class DirectivesChatbotPlug {
     // Esegue l'handler e chiama next se non stop
 
     const blockStart = Date.now();
-    handler.execute(directive, async (stop) => {
+    const actionIndex = this.curr_directive_index;
+    ExecutionRecorder.runAction(this.execution, { index: actionIndex, directive }, () => handler.execute(directive, async (stop) => {
       // [analytics-debug] Trace the block_executed decision per directive so we can
       // see whether the event is emitted and why (missing root_id, draft, etc.).
       winston.debug("(DirectivesChatbotPlug) [analytics] block_executed decision:" +
@@ -360,6 +364,7 @@ class DirectivesChatbotPlug {
           request_id:     this.context.requestId || null
         });
       }
+      await ExecutionRecorder.afterAction(this.execution, { index: actionIndex, directive, startedAt: blockStart });
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();
@@ -367,7 +372,7 @@ class DirectivesChatbotPlug {
       const next_dir = await this.nextDirective(this.directives);
       let process_next_dir = await this.process(next_dir);
       return process_next_dir;
-    });
+    }));
   }
 
   // DEPRECATED

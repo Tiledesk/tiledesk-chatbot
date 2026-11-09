@@ -10,6 +10,7 @@ const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockInt
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 const winston = require('../utils/winston');
 const WriteTap = require('../executions/WriteTap');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const { AnalyticsClient } = require('../AnalyticsClient');
 
 class TiledeskChatbot {
@@ -166,10 +167,12 @@ class TiledeskChatbot {
             winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
               if (intent.parameters) {
-                for (const [key, value] of Object.entries(intent.parameters)) {
-                  winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
-                  this.addParameter(key, value);                  
-                }
+                await ExecutionRecorder.withScope(this.execution, 'jump_params', async () => {
+                  for (const [key, value] of Object.entries(intent.parameters)) {
+                    winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
+                    await this.addParameter(key, value);
+                  }
+                });
               }
               reply = await this.execIntent(faq, message, lead, { match_type: 'explicit' });
               resolve(reply);
@@ -356,6 +359,7 @@ class TiledeskChatbot {
   }
   
   async execIntent(faq, message, lead, matchContext = {}) {//, bot) {
+    await ExecutionRecorder.blockEntry(this.execution, { blockId: faq.intent_id, blockName: faq.intent_display_name });
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
 
