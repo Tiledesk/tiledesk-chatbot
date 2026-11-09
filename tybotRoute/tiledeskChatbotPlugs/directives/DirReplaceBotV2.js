@@ -8,6 +8,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
+const ExecutionRecorder = require('../../executions/ExecutionRecorder');
 
 class DirReplaceBotV2 {
 
@@ -86,6 +87,10 @@ class DirReplaceBotV2 {
         }
 
         winston.debug("(DirReplaceBotV2) replace resbody: ", resbody)
+
+        await ExecutionRecorder.onHandedToBot(this.context.chatbot?.execution, {
+          toAgentId: resbody?.replaced_bot_root_id || botName
+        });
 
         // Emit analytics event for bot switch. Only track published (production)
         // runs (root/draft copy has no root_id).

@@ -1,0 +1,320 @@
+[
+  {
+    "event_version": 1,
+    "type": "action.completed",
+    "execution_id": "01a1c18f-530d-719e-a9b6-f4605252c11a",
+    "seq": 3,
+    "at": "2026-11-09T18:25:58.049Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-fd90d12b0cb34bb6944c44095aac05e7",
+    "pod": "Mac",
+    "data": {
+      "step_seq": 2,
+      "action_index": 0,
+      "action_id": null,
+      "type": "callsubagent",
+      "title": "Invoke subagent",
+      "outcome": "success",
+      "exit_taken": null,
+      "duration_ms": 5,
+      "state_delta": []
+    }
+  },
+  {
+    "event_version": 1,
+    "type": "execution.handed_to_bot",
+    "execution_id": "01a1c18f-5553-77d4-be5d-3268c53b7999",
+    "seq": 3,
+    "at": "2026-11-09T18:25:58.632Z",
+    "id_project": "projectID",
+    "agent_id": "replacerV3BotID",
+    "agent_version": "replacerV3BotID",
+    "request_id": "support-group-projectID-868bb00b8b7744f099e0589b7be59724",
+    "pod": "Mac",
+    "data": {
+      "to_bot_id": "targetBotID"
+    }
+  },
+  {
+    "event_version": 1,
+    "type": "execution.idle",
+    "execution_id": "01a1c18f-530d-719e-a9b6-f4605252c11a",
+    "seq": 5,
+    "at": "2026-11-09T18:25:58.051Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-fd90d12b0cb34bb6944c44095aac05e7",
+    "pod": "Mac",
+    "data": {
+      "last_seq": 5
+    }
+  },
+  {
+    "event_version": 1,
+    "type": "execution.started",
+    "execution_id": "01a1c18f-530d-719e-a9b6-f4605252c11a",
+    "seq": 1,
+    "at": "2026-11-09T18:25:58.032Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-fd90d12b0cb34bb6944c44095aac05e7",
+    "pod": "Mac",
+    "data": {
+      "trigger": {
+        "type": "widget",
+        "source_id": null,
+        "start_point_id": null
+      },
+      "agent_name": "Parent bot",
+      "test": true
+    }
+  },
+  {
+    "event_version": 1,
+    "type": "step.completed",
+    "execution_id": "01a1c18f-530d-719e-a9b6-f4605252c11a",
+    "seq": 4,
+    "at": "2026-11-09T18:25:58.050Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-fd90d12b0cb34bb6944c44095aac05e7",
+    "pod": "Mac",
+    "data": {
+      "step_seq": 2,
+      "outcome": "success",
+      "exit_taken": null,
+      "duration_ms": 10,
+      "state_vars": 12,
+      "changed_keys": 0
+    }
+  },
+  {
+    "event_version": 1,
+    "type": "step.started",
+    "execution_id": "01a1c18f-530d-719e-a9b6-f4605252c11a",
+    "seq": 2,
+    "at": "2026-11-09T18:25:58.039Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-fd90d12b0cb34bb6944c44095aac05e7",
+    "pod": "Mac",
+    "data": {
+      "step_seq": 2,
+      "block_id": "10000000-0000-0000-0000-000000000001",
+      "block_name": "invoke_subagent",
+      "state_vars": 12,
+      "outside_changes": [
+        {
+          "key": "chatbot_jwt_token",
+          "op": "add",
+          "reserved": true,
+          "by": "message_in",
+          "secret": true,
+          "type": "secret",
+          "size": 0
+        },
+        {
+          "key": "project_id",
+          "op": "add",
+          "type": "string",
+          "size": 11,
+          "hash_after": "117f913783032005b05b6ebbe766b3293369a4b812831fe3a0f106bc70ea0430",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "last_user_text",
+          "op": "add",
+          "type": "string",
+          "size": 18,
+          "hash_after": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "transcript",
+          "op": "add",
+          "type": "string",
+          "size": 36,
+          "hash_after": "9006a37c1a1831532fe913498571c4a6646c07e15f05c96a6194803832fe505e",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "conversation_id",
+          "op": "add",
+          "type": "string",
+          "size": 58,
+          "hash_after": "d95e123b6b4f74bc09d0c053e610427decca4f2cbbb2b022d515559d748fb70d",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "lastUserMessageType",
+          "op": "add",
+          "type": "string",
+          "size": 6,
+          "hash_after": "fab5525dc10d34fc0776b82d86a8f78172718e6ba97cea86b541762e10674546",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "chatbot_name",
+          "op": "add",
+          "type": "string",
+          "size": 12,
+          "hash_after": "7aa65354891d403ad2a747d98e2c4c8f199e179587a27b9141852413e25d8df3",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "strongAuthenticated",
+          "op": "add",
+          "type": "boolean",
+          "size": 5,
+          "hash_after": "62ad8df2efc04ddf6c9df3ffe86c3b4c2ca672c94633009597667d4446a26aae",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "lastUserText",
+          "op": "add",
+          "type": "string",
+          "size": 18,
+          "hash_after": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "last_message_id",
+          "op": "add",
+          "type": "string",
+          "size": 38,
+          "hash_after": "5d6fdd5a4ca2763cdcccadf01348863afccd2be8070ba2c6c63e50e430a7bfae",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "chatbotToken",
+          "op": "add",
+          "reserved": true,
+          "by": "message_in",
+          "secret": true,
+          "type": "secret",
+          "size": 0
+        },
+        {
+          "key": "lastUserMessage",
+          "op": "add",
+          "type": "object",
+          "size": 206,
+          "hash_after": "23fe7f92c1bf1ce0d06563f1e52b848c6fa99b3174d14ead9188abe8615b2cca",
+          "reserved": true,
+          "by": "message_in"
+        }
+      ],
+      "state_keyframe": true,
+      "state_manifest": [
+        {
+          "key": "chatbot_jwt_token",
+          "type": "secret",
+          "size": 0,
+          "hash": null,
+          "reserved": true
+        },
+        {
+          "key": "project_id",
+          "type": "string",
+          "size": 11,
+          "hash": "117f913783032005b05b6ebbe766b3293369a4b812831fe3a0f106bc70ea0430",
+          "reserved": true
+        },
+        {
+          "key": "last_user_text",
+          "type": "string",
+          "size": 18,
+          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "reserved": true
+        },
+        {
+          "key": "transcript",
+          "type": "string",
+          "size": 36,
+          "hash": "9006a37c1a1831532fe913498571c4a6646c07e15f05c96a6194803832fe505e",
+          "reserved": true
+        },
+        {
+          "key": "conversation_id",
+          "type": "string",
+          "size": 58,
+          "hash": "d95e123b6b4f74bc09d0c053e610427decca4f2cbbb2b022d515559d748fb70d",
+          "reserved": true
+        },
+        {
+          "key": "lastUserMessageType",
+          "type": "string",
+          "size": 6,
+          "hash": "fab5525dc10d34fc0776b82d86a8f78172718e6ba97cea86b541762e10674546",
+          "reserved": true
+        },
+        {
+          "key": "chatbot_name",
+          "type": "string",
+          "size": 12,
+          "hash": "7aa65354891d403ad2a747d98e2c4c8f199e179587a27b9141852413e25d8df3",
+          "reserved": true
+        },
+        {
+          "key": "strongAuthenticated",
+          "type": "boolean",
+          "size": 5,
+          "hash": "62ad8df2efc04ddf6c9df3ffe86c3b4c2ca672c94633009597667d4446a26aae",
+          "reserved": true
+        },
+        {
+          "key": "lastUserText",
+          "type": "string",
+          "size": 18,
+          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "reserved": true
+        },
+        {
+          "key": "last_message_id",
+          "type": "string",
+          "size": 38,
+          "hash": "5d6fdd5a4ca2763cdcccadf01348863afccd2be8070ba2c6c63e50e430a7bfae",
+          "reserved": true
+        },
+        {
+          "key": "chatbotToken",
+          "type": "secret",
+          "size": 0,
+          "hash": null,
+          "reserved": true
+        },
+        {
+          "key": "lastUserMessage",
+          "type": "object",
+          "size": 206,
+          "hash": "23fe7f92c1bf1ce0d06563f1e52b848c6fa99b3174d14ead9188abe8615b2cca",
+          "reserved": true
+        }
+      ],
+      "sealed_state": {
+        "alg": "RSA-OAEP-256+A256GCM",
+        "kid": "kid-subagent",
+        "wrapped_key": "jLQy6QxQF35ycvf06ZLDN2uP87g4F3gcyLexty6/IT0DtbpzPJin07IO5j2JZD9ceQH3FQNokR/fU9KaYD8Fu7PSeeB8QZ7wyl2bJctjKqWYTOE67nQxIAapKRdPKHGb//ppl+m/xLtVVzQdm2yv+1gxq9YTUFu9bL0DIZlyqsIZJpntEQJDf0qEAvMtD4uUiwfDl+sDXscqPATITorWrUTBtEhJHLnczDnH9GtFXx7wU9Y1U2oNFdBWoulN+9nrGv7rAW+ca3R9tZfPGh3N0F7DXBgh1nZbQEKCZmnpufVoZ3dlJJ4uVBO5ujvhLbxNnqaQW3b1Rtly6FC/+DhrYQ==",
+        "iv": "QP16r0+M+IImNYZf",
+        "tag": "cV4RDpaf99bjCiqMlQi+Mg==",
+        "ct": "Fnu8H2rkxuKYyhrI8cPGvuanbDVgCNPXkH1pl80VXsoi9qn+Mjan21cq2/xUhdeZmu3e6bpslhoKciai301ldyk+Oc2RVW0NZj0IZGXGs3/+QqxlqJa1v8hhLkS/npdM+JvlTSWIiOxPnNdhCPXQ8TRUvahcgheG0y7JWNeHPHvc/suoZa4oanJV0vGn/1BGAByfmqhITx4SB0Gc6rzl4Hy75XmBjvtAr+OHp50FPb7+xiyNuaJorKAoDlkQ9rkgDNuUdcx3eKktajxgsYJaivBZ4yeITHwRgOLhUeUGAfNVuSsr1ydnDVQ4nLoMXm4mD+XS4UU6tyb5wz7hY7jaxBX8l0dubLb0ry0mT4B2o3M+/emorNmAgeFjKzy5rCCW50qBI/JR7CCi8KfvPlZzbbkDFefSbfX1QmRS3/Bn+D4ffEb3XDl2JBoeHPRw0lMoaN1qTa54cHCQn/hyHzMlx+MAG/IwyuOZdpk1yiDnfQia8j0CpSx7p48MaQRcoPEUBzuL/2Ry45QOoJDsaUZVrctcDx4EB5tf6Z2uY+I/tgSiMlC5UcbwI0Y1FamzSAdaR/l9TOZTfqY0jtUucXRZ6b7zoU1Bq6wIkr0ew8MIlZWGFXFNWIzddkebpFultYWnijOFueNnGQXYkOch1kGi0eJ7m6LwtUndPpBrxdRslcxLSIwzr7i3pXcc2xvpUS8OuJRTXVacTYRgxwHG5MSC/L/Rhy451lCBFVyyTcfkT/mzsuIIsJzdReF/f7Fd7QdV/L/T5burRDQPn28EaNSjx0DqmxIiYCY81oZ0p/Ky1vqbDe2Qhf2TsxT9ZzJQwcUYIFEOLmk7g4nInAHYxc2HTdF05fSgTsEOPwU=",
+        "size": 650
+      }
+    }
+  }
+]

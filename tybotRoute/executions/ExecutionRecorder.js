@@ -436,6 +436,54 @@ const ExecutionRecorder = {
     return withinBudget(Promise.resolve(recorded), getConfig().jumpBudgetMs);
   },
 
+  /**
+   * Call subagent, after the replace call: the subagent's first /ext (no execution_id) resolves
+   * through the alias to this execution, and the caller's frame goes on agent_stack.
+   * No root id known: neither is written, and the subagent starts its own execution.
+   */
+  async onSubagentCall(ctx, { subagentRootId, returnBlock } = {}) {
+    if (!ctx) return null;
+    try {
+      if (!subagentRootId) {
+        winston.warn('(ExecutionRecorder) subagent call without a root id: the subagent will start its own execution');
+        return null;
+      }
+      await ctx._store.setAlias(ctx.request_id, subagentRootId, ctx.execution_id);
+      await ctx._store.pushFrame(ctx.execution_id, { agent_id: ctx.agent_id, agent_version: ctx.agent_version, return_block: returnBlock || null });
+    } catch (err) {
+      warn('onSubagentCall', err);
+    }
+    return null;
+  },
+
+  /**
+   * Return stack, after the replace call: pops the caller's frame and deletes this agent's alias.
+   * No frame (a return after a replace bot, not a subagent call): the request key is this
+   * agent's own execution, and is left alone.
+   */
+  async onSubagentReturn(ctx) {
+    if (!ctx) return null;
+    try {
+      const frame = await ctx._store.popFrame(ctx.execution_id);
+      if (frame) await ctx._store.deleteAlias(ctx.request_id, ctx.agent_id);
+    } catch (err) {
+      warn('onSubagentReturn', err);
+    }
+    return null;
+  },
+
+  /** Replace bot, after the replace call: the next bot's first execution becomes a child of this one. */
+  async onHandedToBot(ctx, { toAgentId } = {}) {
+    if (!ctx) return null;
+    try {
+      await ctx._store.setHandoff(ctx.request_id, { parent_execution_id: ctx.execution_id, to_agent_id: toAgentId });
+      return await emit(ctx, 'execution.handed_to_bot', () => ({ to_bot_id: toAgentId }));
+    } catch (err) {
+      warn('onHandedToBot', err);
+      return null;
+    }
+  },
+
   /** The theend of a directives run, wrapped so the block exit and the chain end are recorded once. */
   wrapTheEnd(ctx, theend) {
     if (!ctx) return theend;
