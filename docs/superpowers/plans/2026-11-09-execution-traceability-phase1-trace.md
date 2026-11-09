@@ -9,7 +9,7 @@
 **Tech Stack:**
 - **tybot:** Node 24, CommonJS, mocha, node-redis v4, amqplib, node `crypto`, `AsyncLocalStorage`.
 - **server:** Node, amqplib 0.5.
-- **service:** Node 22+, TypeScript ESM, Express, zod, pino, mongoose 8, amqplib, ioredis, vitest, mongodb-memory-server.
+- **service:** Node 22+, TypeScript ESM, Express, zod, pino, mongoose 8, amqplib, ioredis, vitest. Tests use a throwaway container from the `mongo:7` image already on this machine, never mongodb-memory-server, which downloads its own binary (see Storage).
 - **dashboard:** Angular 15, Karma.
 
 **Spec:** `docs/superpowers/specs/2026-11-09-agent-execution-traceability-design.md` (in this worktree). Read §6, §7.1, §7.2, §7.3, §7.4, §8, §10.1, §10.2, §11.1–§11.4, §11.8 and §14.1 before starting.
@@ -63,6 +63,45 @@ Phase 1 calls not spelled out in the spec (all marked *my call* for the user's r
   - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Dashboard strings:** through the translate pipe, English first (`src/assets/i18n/en.json`).
 
+## Storage
+
+The disk is shared with other sessions and applications, so this work checks its own footprint and cleans up only what it created.
+
+**Measured 2026-11-09:**
+- Mac data volume: 89 GB free of 460 GB.
+- Docker Desktop disk: 46 GB free of 125 GB, with 47.9 GB of images. Other stacks run there too: `saggio-*`, `tiledesk-cpv2-*`, and `testcontainers` from another session.
+- `~/.npm`: 9.4 GB, so most installs resolve from the cache.
+
+**Expected for Phase 1:** about 10 GB at peak.
+
+| What | Size |
+|---|---|
+| `node_modules` in the 4 worktrees | ~3.5 GB (server 1.5, dashboard 0.75, chatbot 0.2, service 0.2) |
+| Angular build cache | up to ~1 GB |
+| First image build | ~6 GB (server 3.2, chatbot 2.1, executions ~0.3, dashboard 0.1) |
+| Mongo and Redis data | < 1 GB |
+
+The real risk is image rebuilds: each rebuild of server or chatbot leaves the old image behind (2–3 GB) unless it is removed.
+
+**Rules:**
+- **Check before every `npm ci`, image build, `bin/dev up` and `--scale`.** Run `bin/exec-disk` (Task 22; before Task 22 exists, run its two commands by hand):
+  - `df -g /System/Volumes/Data | awk 'NR==2{print $4}'` (free GB on the Mac);
+  - `docker run --rm alpine df -BG / | awk 'NR==2{print $4}'` (free GB in Docker).
+- **Thresholds.** Stop and tell the user when the Mac has less than **20 GB** free, or Docker has less than **15 GB** free. Never free space by deleting anything you did not create.
+- **Never run** `docker system prune`, `docker image prune`, `docker volume prune`, `docker builder prune`, or any `rm`/`rmi` outside the list below. Never touch `tiledesk-dev*`, `tiledesk-cpv2-*`, `saggio-*` or `testcontainers*` images, containers or volumes, or another session's worktree.
+- **A separate compose project.** The dev stack runs with `COMPOSE_PROJECT_NAME=tiledesk-exec`, so its images (`tiledesk-exec-*`), containers and volumes (`tiledesk-exec_*`) are ours alone. It does not overwrite the `tiledesk-dev-*` images other sessions use, and cleanup can target it by name.
+- **Only the services Phase 1 needs:** profiles `infra,core,exec`. `compose/exec.yml` adds the `exec` profile to `dashboard` and `proxy`, so chat21, cds, ionic, widget and the 6 GB `llm` image are neither built nor started.
+- **Rebuilds go through `bin/exec-rebuild <service>`** (Task 22). It records the current image id of `tiledesk-exec-<service>`, rebuilds, and removes the old id only when it is now untagged and unused.
+- **Tests reuse local images.** `redis:7` and `mongo:7` are already present: `docker run -d --rm --name exec-test-redis -p 6379:6379 redis:7` and `docker run -d --rm --name exec-test-mongo -p 27018:27017 mongo:7`. The service tests read `TEST_MONGO_URI=mongodb://localhost:27018/exec-test-<random>` and drop their database at the end. No mongodb-memory-server and no testcontainers downloads.
+- **Installs:** `npm ci --prefer-offline --no-audit --no-fund`.
+- **Angular build cache:** after each dashboard build or test run, delete it with `rm -rf .angular/cache` (inside the dashboard worktree only).
+- **Stop the test containers** at the end of each working session: `docker stop exec-test-redis exec-test-mongo`.
+- **Record the usage.** Write `bin/exec-disk` output and `docker system df` into `docs/superpowers/notes/phase1-storage.md` at the start, after Task 22, and after Task 23.
+- **Cleanup after Phase 1** (only on the user's go-ahead; Phase 2 reuses all of it):
+  - `docker compose -p tiledesk-exec down` (add `-v` only if the user wants the local data gone);
+  - `docker images 'tiledesk-exec-*' -q | xargs docker rmi`;
+  - remove the `node_modules` and `.angular` folders in the four worktrees.
+
 ## Review Focus
 
 1. **First two messages of a conversation reach two tybot pods at once:** one execution, not two. Test: `ExecutionStore resolve is single under concurrency` (Task 3).
@@ -96,9 +135,11 @@ git -C /Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-dev-env worktree add -b 
 
   - The dev-env main checkout has uncommitted changes in `compose/ai.yml` and `compose/core.yml` that are not ours. Never edit them there.
 
+- [ ] **Check the disk** (see Storage) and write the first entry of `docs/superpowers/notes/phase1-storage.md`. Stop if a threshold is not met.
+
 - [ ] **Baseline the tybot suite before any change.**
-  - Start a local Redis: `docker run -d --name exec-redis -p 6379:6379 redis:7`.
-  - Run: `cd tybotRoute && npm ci && REDIS_HOST=localhost REDIS_PORT=6379 API_ENDPOINT=http://localhost:10002 TILEBOT_ENDPOINT=http://localhost:10001 npm test 2>&1 | tail -40`.
+  - Start the test Redis: `docker run -d --rm --name exec-test-redis -p 6379:6379 redis:7`.
+  - Run: `cd tybotRoute && npm ci --prefer-offline --no-audit --no-fund && REDIS_HOST=localhost REDIS_PORT=6379 API_ENDPOINT=http://localhost:10002 TILEBOT_ENDPOINT=http://localhost:10001 npm test 2>&1 | tail -40`.
   - Save the pass/fail list to `docs/superpowers/notes/phase1-tybot-baseline.txt`. A test that already fails here is not a regression later.
 
 ---
@@ -521,7 +562,7 @@ Repo: `/Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-executions`. Set it up w
 
 **Files:**
 - Create: `src/db.ts`, `src/model/*.ts`, `src/ingest/status.ts`, `src/ingest/projector.ts`
-- Test: `test/projector.test.ts` (mongodb-memory-server), `test/status.test.ts`
+- Test: `test/projector.test.ts` (test Mongo from `TEST_MONGO_URI`, see Storage), `test/status.test.ts`
 
 **Interfaces:**
 - Produces:
@@ -651,7 +692,7 @@ Repo: `/Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-executions`. Set it up w
 
 **Files:**
 - Create: `src/api/app.ts` (express app: `/healthz`, `/metrics`, router mounted at `/executions/api/v1`), `src/api/routes/executions.ts`
-- Test: `test/api.executions.test.ts` (supertest + mongodb-memory-server, with the role stubbed)
+- Test: `test/api.executions.test.ts` (supertest + the test Mongo, with the role stubbed)
 
 **Interfaces:**
 - Consumes: the models (Task 12), `requireUser` and `requirePermission('executions_read')` (Task 14).
@@ -852,7 +893,7 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
   - `history drawer lists changes in order`
   - `polling only while running`
 - [ ] **Step 2: Run them to see them fail, implement, run them to see them pass.** `--include='src/app/bots/executions/**/*.spec.ts'`
-- [ ] **Step 3: Build.** `npx ng build --configuration development`. Expected: success, no new warnings in the executions files.
+- [ ] **Step 3: Build.** `npx ng build --configuration development`. Expected: success, no new warnings in the executions files. Then `rm -rf .angular/cache`.
 - [ ] **Step 4: Commit.** `git commit -m "feat(executions): execution detail with timeline and flow state"`
 
 ### Task 21: Links from the conversation and the webhook logs
@@ -894,7 +935,14 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
       - `chatbot`: `EXECUTIONS_ENABLED`, `EXECUTIONS_AMQP_URL`, `EXECUTIONS_SEAL_PUBLIC_KEY`, `EXECUTIONS_SEAL_KID`, `EXECUTIONS_STATE_HASH_KEY`
       - `server`: `EXECUTIONS_AMQP_URL`
       - `dashboard`: `EXECUTIONS_BASE_URL=/executions/api/v1/`
+    - adds the profile `exec` to `dashboard` and `proxy` (`profiles: [ui, exec]`), so `infra,core,exec` starts them without chat21, cds, ionic, widget or llm (see Storage);
     - Do not edit `compose/core.yml` or `compose/ui.yml`.
+  - `bin/exec-disk`: prints the Mac and Docker free GB (the two commands in Storage), and exits 1 when either is under its threshold (20 GB / 15 GB).
+  - `bin/exec-rebuild <service>`:
+    - runs `bin/exec-disk` first;
+    - records `docker image inspect tiledesk-exec-<service> -f '{{.Id}}'`;
+    - runs `COMPOSE_PROJECT_NAME=tiledesk-exec bin/dev build <service>`;
+    - removes the recorded id with `docker rmi` only if it differs from the new one and `docker ps -a --filter ancestor=<id>` is empty.
   - `bin/exec-keys`: writes `.exec/exec.env`. It creates an RSA-3072 keypair (public key base64 for tybot, private key kept for Phase 4), a `kid` (`local-<date>`) and a 32-byte hash key. It is idempotent: it never overwrites an existing file.
   - `bin/seed-executions`: idempotent; through the server API as the seeded admin:
     - creates and publishes "Exec demo · webhook" (webhook start, the blocks of Task 7's fixture, the failing request pointing at a closed port);
@@ -903,12 +951,12 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
     - prints their ids and the webhook URL.
 
 - [ ] **Step 1: Bring the stack up.**
-  - `EXECUTIONS_ENABLED=true COMPOSE_PROFILES=infra,core,ui,exec bin/dev up`, with `CHATBOT_PATH`, `SERVER_PATH`, `DASHBOARD_PATH` and `EXECUTIONS_PATH` pointing at the four feature worktrees.
+  - `bin/exec-disk`, then `COMPOSE_PROJECT_NAME=tiledesk-exec EXECUTIONS_ENABLED=true COMPOSE_PROFILES=infra,core,exec bin/dev up`, with `CHATBOT_PATH`, `SERVER_PATH`, `DASHBOARD_PATH` and `EXECUTIONS_PATH` pointing at the four feature worktrees.
   - Then `bin/seed`, `bin/exec-keys` and `bin/seed-executions`.
 - [ ] **Step 2: Smoke test.**
   - `bin/smoke` passes.
   - `curl -s localhost:8081/executions/api/healthz` returns `{"ok":true}`.
-  - `docker compose logs executions-ingest` shows the queue bound.
+  - `docker compose -p tiledesk-exec logs executions-ingest` shows the queue bound. Record the after-Task-22 entry in `phase1-storage.md`.
 - [ ] **Step 3: Commit.** `git commit -m "feat: exec profile for tiledesk-executions, keys and seed"`
 
 ### Task 23: Phase 1 local acceptance
@@ -931,7 +979,7 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
   - `POST /api/modules/tilebot/block/<pid>/<bot>/<block>` with `async: true`.
   - Expected: no conversation link, status `completed` (`execution.ended`).
 - [ ] **Step 4: Jump across pods.**
-  - `docker compose up -d --scale chatbot=2`, then fire the webhook 10 times.
+  - `bin/exec-disk`, then `COMPOSE_PROJECT_NAME=tiledesk-exec bin/dev up -d --scale chatbot=2` (same image, no new build), then fire the webhook 10 times.
   - Expected: every execution has no "outside the flow" row for changes made by actions, and `trace_complete` is never false.
 - [ ] **Step 5: Subagent.**
   - Run a seeded agent that calls a subagent.
@@ -943,9 +991,10 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
   - Restart with `EXECUTIONS_ENABLED=false` and repeat Steps 1 and 3.
   - Expected:
     - the same replies;
-    - `docker compose exec redis redis-cli --scan --pattern 'exec:*'` prints nothing;
+    - `docker compose -p tiledesk-exec exec redis redis-cli --scan --pattern 'exec:*'` prints nothing;
     - the queue gets no new messages.
   - The tybot suite matches the baseline.
 - [ ] **Step 8: Measure the hot path.**
   - With the flag on and off, time 50 webhook runs end to end (first message → `execution.idle`). Record the p95 difference per action next to §12's 1–3 ms budget.
-- [ ] **Step 9: Commit the notes.** `git commit -m "docs: phase 1 local acceptance results"`. Report to the user before planning Phase 2.
+- [ ] **Step 9: Record the storage.** Add the after-Task-23 entry to `phase1-storage.md`, and list what the Storage cleanup would free. Do not run the cleanup without the user's go-ahead.
+- [ ] **Step 10: Commit the notes.** `git commit -m "docs: phase 1 local acceptance results"`. Report to the user before planning Phase 2.
