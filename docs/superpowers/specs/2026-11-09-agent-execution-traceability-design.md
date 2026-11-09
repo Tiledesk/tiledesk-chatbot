@@ -1254,7 +1254,7 @@ each repo's tags):
 |---|---|---|---|
 | tiledesk-chatbot (tybot) | `tiledesk/tiledesk-chatbot:3.0.5` | tag `3.0.5` = `origin/main` `af406feb` | Prod runs tybot as its own pod: the server's `TILEBOT_ENDPOINT` points at the chatbot service (configmap). So tybot changes ship in the chatbot image; the copy of `@tiledesk/tiledesk-tybot-connector` (3.0.2) embedded in the server is not on the flow path and is not touched. The design branch is already cut here. |
 | tiledesk-server | `tiledeskrepo/tiledesk-server-enterprise:3.3.1` (built with `Dockerfile-en`); workers `tiledesk-server-worker:3.3.1` | tag `3.3.1` = `origin/master` `68700f80` | The Activities consumer runs in the server process; the refire route too. |
-| tiledesk-dashboard | Published to S3 by the team; argo's image tag (2.7.136) is stale and not what users get | the release tag that is live on prod. Latest tag 2.8.39 (`9ad65f5de`); `origin/master` is 6 commits past it (2.8.40 version commit, untagged) | **To confirm before cutting the branch:** which build is live on the prod S3. Cut from that tag. |
+| tiledesk-dashboard | 2.8.40, published to S3 by the team (confirmed 2026-11-09); argo's image tag (2.7.136) is stale and not what users get | `origin/master` `d07380426` (2.8.40 version commit; no git tag for it) | Cut from that commit, not from tag 2.8.39, which is 6 commits behind. |
 | tiledesk-executions | not deployed (new) | new repo, `main` | Version 0.1.0. |
 | tiledesk-argo | — | — | No change during the local phase. The `executions` values block is written only at the release step (prod `my-tiledesk-prod` syncs automatically on push). |
 | scheduler (phase 3 link only) | prod tag of the scheduler | that tag | Only if phase 3 needs a change there. |
