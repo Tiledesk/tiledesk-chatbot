@@ -27,6 +27,12 @@ describe('executions: config, secrets, Sealer', function () {
     for (const f of ['wrapped_key', 'iv', 'tag', 'ct']) assert.ok(sealed[f]);
   });
 
+  it('seal works with a null kid and records kid: null', function () {
+    const sealed = Sealer.seal({ a: 1 }, { sealPublicKeyPem: keys.publicKeyPem, sealKid: null });
+    assert.strictEqual(sealed.kid, null);
+    assert.deepStrictEqual(openSealed(sealed, keys.privateKeyPem), { a: 1 });
+  });
+
   it('isSecretName', function () {
     for (const n of ['Authorization', 'api_key', 'accessToken', 'password', 'client_secret']) {
       assert.strictEqual(isSecretName(n), true, n);
@@ -60,6 +66,9 @@ describe('executions: config, secrets, Sealer', function () {
       const c = getConfig();
       assert.strictEqual(c.enabled, false);
       assert.strictEqual(c.stateEnabled, false);
+      assert.strictEqual(c.bufferMax, 10000);
+      assert.strictEqual(c.dataMaxBytes, 262144);
+      assert.strictEqual(c.sealKid, null);
       assert.strictEqual(c.stateValueMaxBytes, 262144);
       assert.strictEqual(c.keyframeEvery, 20);
       assert.strictEqual(c.keyframeMaxDeltaBytes, 1048576);
