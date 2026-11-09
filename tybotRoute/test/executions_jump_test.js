@@ -14,6 +14,7 @@ const WriteTap = require('../executions/WriteTap');
 const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
+const { DirMessageToBot } = require('../tiledeskChatbotPlugs/directives/DirMessageToBot');
 const bots_data = require('./executions_lifecycle_bot.js').bots_data;
 
 const PROJECT_ID = 'projectID';
@@ -25,7 +26,7 @@ const API_PORT = 10022;
 const FAIL_PORT = 10003; // the fixture's web request target, always 500
 
 const ENV_KEYS = ['EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
-  'EXECUTIONS_AMQP_URL', 'AMQP_MANAGER_URL', 'CHATBOT_MAX_STEPS'];
+  'EXECUTIONS_AMQP_URL', 'AMQP_MANAGER_URL', 'CHATBOT_MAX_STEPS', 'EXECUTIONS_JUMP_BUDGET_MS'];
 
 const app = express();
 app.use('/', tybot.router);
@@ -312,6 +313,59 @@ describe('Executions: jumps across blocks and pods', function () {
       assert.deepStrictEqual(await finished, [null, { ok: true }]);
       assert.strictEqual(calls.length, 1);
       assert.strictEqual(calls[0].json.payload.attributes.execution_id, 'exec-2');
+    });
+
+    it('a block exit that never settles is cut at EXECUTIONS_JUMP_BUDGET_MS and the post goes on', async function () {
+      process.env.EXECUTIONS_JUMP_BUDGET_MS = '80';
+      try {
+        const onJump = () => new Promise(() => {}); // a hung exec Redis call
+        let done;
+        const finished = new Promise((r) => { done = r; });
+        const t0 = Date.now();
+        WriteTap.runAction({ executionId: 'exec-3', requestId: 'r1', onJump }, () => {
+          tilebotService.sendMessageToBot(message(), BOT_ID, (...args) => done(args));
+        });
+        assert.deepStrictEqual(await finished, [null, { ok: true }]);
+        const waited = Date.now() - t0;
+        assert.ok(waited >= 70 && waited < 1000, 'posted after about the budget, waited ' + waited + ' ms');
+        assert.strictEqual(calls.length, 1);
+        assert.strictEqual(calls[0].json.payload.attributes.execution_id, 'exec-3');
+      } finally {
+        delete process.env.EXECUTIONS_JUMP_BUDGET_MS;
+      }
+    });
+
+    it('tracing on: a post that throws synchronously reaches the callback as an error', async function () {
+      httpUtils.request = function () { throw new Error('bad request options'); };
+      let done;
+      const finished = new Promise((r) => { done = r; });
+      WriteTap.runAction({ executionId: 'exec-4', requestId: 'r1', onJump: async () => {} }, () => {
+        tilebotService.sendMessageToBot(message(), BOT_ID, (...args) => done(args));
+      });
+      const [err] = await finished;
+      assert.strictEqual(err.message, 'bad request options');
+    });
+
+    it('DirReplyV2 no-match fallback (DirMessageToBot) is recorded as a jump; the current execution_id overwrites a stale one', async function () {
+      const rid = newRequestId();
+      requestIds.push(rid);
+      const ctx = await ExecutionRecorder.onMessageIn({ message: { request: { request_id: rid } }, bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN });
+      await ExecutionRecorder.blockEntry(ctx, { blockId: 'blk', blockName: 'blk' });
+      // the user's original message, re-sent to the bot: it may carry the attributes of an older execution
+      const original = { _id: uuidv4(), text: 'something else', sender: 'A-SENDER', recipient: rid, attributes: { execution_id: 'stale-exec', x: 1 }, request: { request_id: rid } };
+      const directive = { name: 'replyv2', action: { _tdActionId: 'act_reply', _tdActionType: 'replyv2' } };
+      await new Promise((resolve) => {
+        ExecutionRecorder.runAction(ctx, { index: 0, directive }, () => {
+          new DirMessageToBot({ supportRequest: { bot_id: BOT_ID }, token: CHATBOT_TOKEN }).execute({ action: { message: original } }, () => resolve());
+        });
+      });
+      await ExecutionRecorder._drainForTests();
+      assert.strictEqual(calls.length, 1);
+      assert.deepStrictEqual(calls[0].json.payload.attributes, { execution_id: ctx.execution_id, x: 1 });
+      const act = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_reply');
+      assert.strictEqual(act.data.exit_taken, 'jump');
+      assert.strictEqual(ofType(rid, 'step.completed').length, 1, 'the block exit is recorded before the post');
+      assert.ok(ctx.jumpInFlight);
     });
   });
 });

@@ -68,7 +68,13 @@ class TilebotService {
         recorded
             .catch((err) => winston.warn("(TilebotService) beforeJump failed: " + (err && err.message)))
             .then(post)
-            .catch((err) => winston.error("(TilebotService) sendMessageToBot error: ", err));
+            .catch((err) => {
+                // post() threw synchronously (the untraced path would have thrown to the caller)
+                winston.error("(TilebotService) sendMessageToBot error: ", err);
+                if (callback) {
+                    callback(err);
+                }
+            });
     }
 
     /**

@@ -51,6 +51,19 @@ async function captureData(store, idProject) {
   return value;
 }
 
+/** p, but settled within ms at the latest (resolved, with a warning, on timeout). Rejections pass through. */
+function withinBudget(p, ms) {
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      warn('beforeJump', new Error('block exit not recorded within ' + ms + ' ms, posting the jump anyway'));
+      resolve();
+    }, ms);
+    if (timer.unref) timer.unref();
+  });
+  return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
+}
+
 /** Runs job off the flow path (next macrotask). Never throws. */
 function defer(job) {
   const p = new Promise((resolve) => setImmediate(() => {
@@ -395,6 +408,8 @@ const ExecutionRecorder = {
    * In one: onJump runs synchronously (it marks the jump before the action's own callback can
    * reach theend), execution_id goes into the message attributes, and the returned promise
    * resolves once the block exit is recorded, so the next block (on any pod) reads its state.
+   * The wait is bounded by jumpBudgetMs: past it the promise resolves (with a warning) and the
+   * jump is posted anyway, so a hung exec:* Redis call never stalls the conversation.
    */
   beforeJump(message) {
     let store;
@@ -418,7 +433,7 @@ const ExecutionRecorder = {
     } catch (err) {
       warn('beforeJump', err);
     }
-    return Promise.resolve(recorded);
+    return withinBudget(Promise.resolve(recorded), getConfig().jumpBudgetMs);
   },
 
   /** The theend of a directives run, wrapped so the block exit and the chain end are recorded once. */

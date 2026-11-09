@@ -156,6 +156,7 @@ class DirReplyV2 {
               else {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
 
+                // traced as a jump (exit 'jump', block exit recorded first); the message gets the current execution_id
                 const messageDir = new DirMessageToBot(this.context);
                 messageDir.execute( { action: { message: this.originalMessage }  }, () => {
                   winston.debug("(DirReplyV2) messageDir invoked");
