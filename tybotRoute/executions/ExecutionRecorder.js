@@ -9,6 +9,7 @@ const StateDiff = require('./StateDiff');
 const WriteTap = require('./WriteTap');
 const { mapOutcome } = require('./OutcomeMapper');
 const { detectTrigger } = require('./trigger');
+const { rootIdOf } = require('./botIdentity');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2 };
@@ -160,9 +161,10 @@ const ExecutionRecorder = {
       const st = store || state.store;
       if (!st) return null;
       const cfg = getConfig();
-      const agentId = (bot && bot.root_id) || botId;
+      const rootId = rootIdOf(bot);
+      const agentId = rootId || botId;
       const agentName = (bot && bot.name) || null;
-      const test = !(bot && bot.root_id);
+      const test = !rootId;
       const trigger = detectTrigger(message, requestId, botId);
       const resolved = await st.resolve({
         requestId,
