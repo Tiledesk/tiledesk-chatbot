@@ -12,7 +12,7 @@
 - **service:** Node 22+, TypeScript ESM, Express, zod, pino, mongoose 8, amqplib, ioredis, vitest. Tests use a throwaway container from the `mongo:7` image already on this machine, never mongodb-memory-server, which downloads its own binary (see Storage).
 - **dashboard:** Angular 15, Karma.
 
-**Spec:** `docs/superpowers/specs/2026-11-09-agent-execution-traceability-design.md` (in this worktree). Read §6, §7.1, §7.2, §7.3, §7.4, §8, §10.1, §10.2, §11.1–§11.4, §11.8 and §14.1 before starting.
+**Spec:** `docs/superpowers/specs/2026-11-09-agent-execution-traceability-design.md` (in `tiledesk-chatbot`). Read §6, §7.1, §7.2, §7.3, §7.4, §8, §10.1, §10.2, §11.1–§11.4, §11.8 and §14.1 before starting.
 
 **This plan covers Phase 1 of §14 only.** Phases 2 (stop, destroy, audit, Activities), 3 (checkpoints, resume, start new) and 4 (grants, values, data view, Audit tab, retention settings) get their own plans after Phase 1 passes local acceptance (Task 23).
 
@@ -59,7 +59,8 @@ Phase 1 calls not spelled out in the spec (all marked *my call* for the user's r
 - **Branches and commits:**
   - Branch `feature/execution-traceability` in every repo.
   - Bases: chatbot `af406feb` (3.0.5), server `68700f80` (3.3.1), dashboard `d07380426` (2.8.40), dev-env `origin/main`; the new service starts from an empty `main`.
-  - No push, nothing on stage or prod.
+  - No push of implementation work unless the user asks; nothing on stage or prod.
+  - No new worktrees or clones: all work happens in the main repo folders (Before you start).
   - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Dashboard strings:** through the translate pipe, English first (`src/assets/i18n/en.json`).
 
@@ -76,7 +77,7 @@ The disk is shared with other sessions and applications, so this work checks its
 
 | What | Size |
 |---|---|
-| `node_modules` in the 4 worktrees | ~3.5 GB (server 1.5, dashboard 0.75, chatbot 0.2, service 0.2) |
+| `node_modules` in the 4 repo folders | ~3.5 GB (server 1.5, dashboard 0.75, chatbot 0.2, service 0.2) |
 | Angular build cache | up to ~1 GB |
 | First image build | ~6 GB (server 3.2, chatbot 2.1, executions ~0.3, dashboard 0.1) |
 | Mongo and Redis data | < 1 GB |
@@ -88,19 +89,19 @@ The real risk is image rebuilds: each rebuild of server or chatbot leaves the ol
   - `df -g /System/Volumes/Data | awk 'NR==2{print $4}'` (free GB on the Mac);
   - `docker run --rm alpine df -BG / | awk 'NR==2{print $4}'` (free GB in Docker).
 - **Thresholds.** Stop and tell the user when the Mac has less than **20 GB** free, or Docker has less than **15 GB** free. Never free space by deleting anything you did not create.
-- **Never run** `docker system prune`, `docker image prune`, `docker volume prune`, `docker builder prune`, or any `rm`/`rmi` outside the list below. Never touch `tiledesk-dev*`, `tiledesk-cpv2-*`, `saggio-*` or `testcontainers*` images, containers or volumes, or another session's worktree.
+- **Never run** `docker system prune`, `docker image prune`, `docker volume prune`, `docker builder prune`, or any `rm`/`rmi` outside the list below. Never touch `tiledesk-dev*`, `tiledesk-cpv2-*`, `saggio-*` or `testcontainers*` images, containers or volumes, or another repo's working files.
 - **A separate compose project.** The dev stack runs with `COMPOSE_PROJECT_NAME=tiledesk-exec`, so its images (`tiledesk-exec-*`), containers and volumes (`tiledesk-exec_*`) are ours alone. It does not overwrite the `tiledesk-dev-*` images other sessions use, and cleanup can target it by name.
 - **Only the services Phase 1 needs:** profiles `infra,core,exec`. `compose/exec.yml` adds the `exec` profile to `dashboard` and `proxy`, so chat21, cds, ionic, widget and the 6 GB `llm` image are neither built nor started.
 - **Rebuilds go through `bin/exec-rebuild <service>`** (Task 22). It records the current image id of `tiledesk-exec-<service>`, rebuilds, and removes the old id only when it is now untagged and unused.
 - **Tests reuse local images.** `redis:7` and `mongo:7` are already present: `docker run -d --rm --name exec-test-redis -p 6379:6379 redis:7` and `docker run -d --rm --name exec-test-mongo -p 27018:27017 mongo:7`. The service tests read `TEST_MONGO_URI=mongodb://localhost:27018/exec-test-<random>` and drop their database at the end. No mongodb-memory-server and no testcontainers downloads.
 - **Installs:** `npm ci --prefer-offline --no-audit --no-fund`.
-- **Angular build cache:** after each dashboard build or test run, delete it with `rm -rf .angular/cache` (inside the dashboard worktree only).
+- **Angular build cache:** after each dashboard build or test run, delete it with `rm -rf .angular/cache` (inside `tiledesk-dashboard` only).
 - **Stop the test containers** at the end of each working session: `docker stop exec-test-redis exec-test-mongo`.
 - **Record the usage.** Write `bin/exec-disk` output and `docker system df` into `docs/superpowers/notes/phase1-storage.md` at the start, after Task 22, and after Task 23.
 - **Cleanup after Phase 1** (only on the user's go-ahead; Phase 2 reuses all of it):
   - `docker compose -p tiledesk-exec down` (add `-v` only if the user wants the local data gone);
   - `docker images 'tiledesk-exec-*' -q | xargs docker rmi`;
-  - remove the `node_modules` and `.angular` folders in the four worktrees.
+  - remove the `node_modules` and `.angular` folders in the four repo folders.
 
 ## Review Focus
 
@@ -117,23 +118,18 @@ The real risk is image rebuilds: each rebuild of server or chatbot leaves the ol
 
 ## Before you start
 
-- [ ] **Worktrees.**
-  - **tybot:** the design worktree already exists at `/Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-chatbot.worktrees/execution-traceability`, branch `feature/execution-traceability` on top of `af406feb` (docs commits only).
-  - **server, dashboard, dev-env:** create the worktrees:
+- [ ] **Work in the main repo folders. Create no worktrees or clones.** The user works on one item at a time, in the same folders. The folders were set up on 2026-11-09, all on `feature/execution-traceability` and clean:
 
-```bash
-git -C /Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-server worktree add -b feature/execution-traceability ../tiledesk-server.worktrees/execution-traceability 68700f80
-```
+  | Folder (under `/Users/nicocardone/Desktop/DEV/TILEDESK/`) | Branch base |
+  |---|---|
+  | `tiledesk-chatbot` | `af406feb` + the design/plan docs commits (also on `origin/feature/execution-traceability`) |
+  | `tiledesk-server` | `68700f80` |
+  | `tiledesk-dashboard` | `d07380426` |
+  | `tiledesk-dev-env` | `origin/main` `8a76325` |
+  | `tiledesk-executions` | new local repo: empty `main` commit, then the feature branch |
 
-```bash
-git -C /Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-dashboard worktree add -b feature/execution-traceability ../tiledesk-dashboard.worktrees/execution-traceability d07380426
-```
-
-```bash
-git -C /Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-dev-env worktree add -b feature/execution-traceability ../tiledesk-dev-env.worktrees/execution-traceability origin/main
-```
-
-  - The dev-env main checkout has uncommitted changes in `compose/ai.yml` and `compose/core.yml` that are not ours. Never edit them there.
+  - Before each task, check that the folder is still on `feature/execution-traceability` and that `git status` holds only this task's changes. If it is not, stop and ask: the user may have switched it for other work.
+  - The `node_modules` left in these folders belong to the branches checked out before. Run `npm ci --prefer-offline --no-audit --no-fund` once per folder before its first task (see Storage).
 
 - [ ] **Check the disk** (see Storage) and write the first entry of `docs/superpowers/notes/phase1-storage.md`. Stop if a threshold is not met.
 
@@ -759,7 +755,7 @@ Repo: `/Users/nicocardone/Desktop/DEV/TILEDESK/tiledesk-executions`. Set it up w
 
 ## Part D — tiledesk-dashboard
 
-Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
+Folder: `tiledesk-dashboard`.
 - Tests: `npx ng test --watch=false --browsers=ChromeHeadless --include='<glob>'`.
 - Build check: `npx ng build --configuration development`.
 
@@ -920,7 +916,7 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
 
 ### Task 22: dev-env `exec` profile, keys, seed
 
-**Files** (in `tiledesk-dev-env.worktrees/execution-traceability`):
+**Files** (in `tiledesk-dev-env`):
 - Modify:
   - `components.sh`: add `"executions|Tiledesk/tiledesk-executions|main|Dockerfile|exec"` (not on GitHub yet, so `EXECUTIONS_PATH` is required)
   - `bin/dev`: add `compose/exec.yml` to `COMPOSE_FILES` the same way as the other files
@@ -951,7 +947,7 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
     - prints their ids and the webhook URL.
 
 - [ ] **Step 1: Bring the stack up.**
-  - `bin/exec-disk`, then `COMPOSE_PROJECT_NAME=tiledesk-exec EXECUTIONS_ENABLED=true COMPOSE_PROFILES=infra,core,exec bin/dev up`, with `CHATBOT_PATH`, `SERVER_PATH`, `DASHBOARD_PATH` and `EXECUTIONS_PATH` pointing at the four feature worktrees.
+  - `bin/exec-disk`, then `COMPOSE_PROJECT_NAME=tiledesk-exec EXECUTIONS_ENABLED=true COMPOSE_PROFILES=infra,core,exec bin/dev up`, with `CHATBOT_PATH`, `SERVER_PATH`, `DASHBOARD_PATH` and `EXECUTIONS_PATH` pointing at `tiledesk-chatbot`, `tiledesk-server`, `tiledesk-dashboard` and `tiledesk-executions`.
   - Then `bin/seed`, `bin/exec-keys` and `bin/seed-executions`.
 - [ ] **Step 2: Smoke test.**
   - `bin/smoke` passes.
@@ -962,7 +958,7 @@ Worktree: `tiledesk-dashboard.worktrees/execution-traceability`.
 ### Task 23: Phase 1 local acceptance
 
 **Files:**
-- Create: `docs/superpowers/notes/phase1-acceptance.md` (in the tybot worktree). For each scenario: what was run, what was seen, pass or fail.
+- Create: `docs/superpowers/notes/phase1-acceptance.md` (in `tiledesk-chatbot`). For each scenario: what was run, what was seen, pass or fail.
 
 - [ ] **Step 1: Webhook run that ends in a failure condition.**
   - Fire the seeded webhook.
