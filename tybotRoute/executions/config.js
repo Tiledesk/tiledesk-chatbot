@@ -28,7 +28,7 @@ function pem(v) {
  */
 function getConfig() {
   const env = process.env;
-  const enabled = bool(env.EXECUTIONS_ENABLED, false);
+  const enabled = isEnabled();
   return {
     enabled,
     stateEnabled: bool(env.EXECUTIONS_STATE_ENABLED, enabled),
@@ -44,4 +44,9 @@ function getConfig() {
   };
 }
 
-module.exports = { getConfig };
+/** Cheap check of the off switch only (same rule as getConfig().enabled). */
+function isEnabled() {
+  return bool(process.env.EXECUTIONS_ENABLED, false);
+}
+
+module.exports = { getConfig, isEnabled };

@@ -9,6 +9,7 @@ const { ConnectorsV3 } = require('../utils/ConnectorsV3');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 const winston = require('../utils/winston');
+const WriteTap = require('../executions/WriteTap');
 const { AnalyticsClient } = require('../AnalyticsClient');
 
 class TiledeskChatbot {
@@ -596,6 +597,7 @@ class TiledeskChatbot {
     }
     const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s, { EX: ttl });
+    WriteTap.note(requestId, parameter_name, 'set');
   }
 
   async allParameters() {
@@ -637,8 +639,10 @@ class TiledeskChatbot {
   }
 
   static async deleteParameterStatic(_tdcache, requestId, paramName) {
-    return await _tdcache.hdel(
+    const res = await _tdcache.hdel(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
+    WriteTap.note(requestId, paramName, 'del');
+    return res;
   }
 
   static async checkStep(_tdcache, requestId, max_steps, max_execution_time) {
