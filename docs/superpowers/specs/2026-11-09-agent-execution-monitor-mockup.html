@@ -1,0 +1,529 @@
+<title>Agent Executions Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: dashboard-style app shell, top bar + one working column (list / detail / audit), dialogs inline over a scrim. Follows tiledesk-dashboard: Poppins, blue #1b6ef3, hairline #dfe3ed. */
+:root{
+  --bg:#f4f6fa; --surface:#ffffff; --surface-2:#f8f9fc; --fg:#1f2a3d; --muted:#5d6b82; --faint:#8b97aa;
+  --line:#dfe3ed; --line-strong:#c9d0de; --accent:#1b6ef3; --accent-weak:#e8f0fe; --accent-fg:#ffffff;
+  --run:#1b6ef3; --run-bg:#e8f0fe; --wait:#5d6b82; --wait-bg:#eef1f6; --warn:#a15c00; --warn-bg:#fff3e0;
+  --bad:#c62f2f; --bad-bg:#fdecec; --ok:#1f7a45; --ok-bg:#e6f4ec; --dead:#3b4250; --dead-bg:#e3e6eb;
+  --scrim:rgba(20,28,45,.42); --shadow:0 12px 40px rgba(20,28,45,.18);
+  --font:"Poppins",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161f; --surface:#18202c; --surface-2:#1d2633; --fg:#e4e9f2; --muted:#a3aec0; --faint:#7d8899;
+  --line:#2a3443; --line-strong:#3a4658; --accent:#5b97ff; --accent-weak:#1c2c48; --accent-fg:#0b1220;
+  --run:#7aaeff; --run-bg:#1c2c48; --wait:#a3aec0; --wait-bg:#252f3d; --warn:#f2b45c; --warn-bg:#3a2c16;
+  --bad:#ff8a80; --bad-bg:#3d1f22; --ok:#6fd39a; --ok-bg:#17352a; --dead:#c3cad6; --dead-bg:#2b323d;
+  --scrim:rgba(0,0,0,.6); --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161f; --surface:#18202c; --surface-2:#1d2633; --fg:#e4e9f2; --muted:#a3aec0; --faint:#7d8899;
+  --line:#2a3443; --line-strong:#3a4658; --accent:#5b97ff; --accent-weak:#1c2c48; --accent-fg:#0b1220;
+  --run:#7aaeff; --run-bg:#1c2c48; --wait:#a3aec0; --wait-bg:#252f3d; --warn:#f2b45c; --warn-bg:#3a2c16;
+  --bad:#ff8a80; --bad-bg:#3d1f22; --ok:#6fd39a; --ok-bg:#17352a; --dead:#c3cad6; --dead-bg:#2b323d;
+  --scrim:rgba(0,0,0,.6); --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--line);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:500}
+.brand .dot{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:var(--accent-fg);font-size:12px;font-weight:600}
+.crumbs{color:var(--muted)}
+.spacer{flex:1}
+.mock{font-size:12px;color:var(--warn);background:var(--warn-bg);border-radius:20px;padding:3px 10px}
+.role{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 12px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+main{max-width:1180px;margin:0 auto;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1{font-size:22px;font-weight:500;margin:0;text-wrap:balance}
+h2{font-size:15px;font-weight:500;margin:0}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.sub{color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px}
+.filters input[type=search],.filters select{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;min-width:0}
+.filters input[type=search]{flex:1 1 180px}
+.check{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.counters{display:flex;gap:8px;flex-wrap:wrap}
+.counter{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.counter b{font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
+.counter[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-weak);color:var(--fg)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.03em;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:2px 10px 2px 8px;font-size:12px;font-weight:500}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-running{color:var(--run);background:var(--run-bg)} .s-waiting{color:var(--wait);background:var(--wait-bg)}
+.s-stopping,.s-stopped{color:var(--warn);background:var(--warn-bg)} .s-failed{color:var(--bad);background:var(--bad-bg)}
+.s-completed{color:var(--ok);background:var(--ok-bg)} .s-destroyed{color:var(--dead);background:var(--dead-bg);text-decoration:line-through}
+@media (prefers-reduced-motion:no-preference){.s-running::before,.s-stopping::before{animation:pulse 1.2s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.25}}
+.trig{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.trig svg{width:14px;height:14px}
+.fail{color:var(--bad);font-weight:500}
+.warnicon{color:var(--warn);margin-left:4px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.counter:focus-visible,.seg button:focus-visible,a:focus-visible,tbody tr:focus-visible,.step-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.danger.solid{background:var(--bad);color:var(--surface)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.link{color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:0;padding:0;font:inherit}
+.link:hover{text-decoration:underline}
+.back{font-size:13px}
+.ex-head{padding:16px;display:grid;gap:10px}
+.ex-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.meta{display:flex;gap:6px 16px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.controls .spacer{flex:1}
+.banner{border-radius:8px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.bad{background:var(--bad-bg);color:var(--bad)}
+.banner.info{background:var(--accent-weak);color:var(--fg)}
+.lineage{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.tl-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.step-row{display:grid;grid-template-columns:94px 22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.step-row:hover{background:var(--surface-2)}
+.step-row[aria-expanded="true"]{background:var(--surface-2)}
+.step-ic{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}
+.o-success{background:var(--ok-bg);color:var(--ok)} .o-failure_condition{background:var(--warn-bg);color:var(--warn)}
+.o-error{background:var(--bad-bg);color:var(--bad)} .o-interrupted{background:var(--dead-bg);color:var(--dead)}
+.o-running{background:var(--run-bg);color:var(--run)}
+.step-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step-sub{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{padding:4px 16px 12px 142px;border-bottom:1px solid var(--line);background:var(--surface-2);display:grid;gap:6px}
+@media (max-width:640px){.step-row{grid-template-columns:22px minmax(0,1fr) auto}.step-row .when{display:none}.actions{padding-left:16px}}
+.act{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.act .k{color:var(--muted)}
+.side{display:grid;gap:16px}
+.side .card{padding:14px 16px;display:grid;gap:10px}
+dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:0;font-size:13px}
+dt{color:var(--muted)} dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.audit-mini{display:grid;gap:8px;font-size:12.5px}
+.audit-mini div{display:grid;gap:2px}
+.sealed{border:1px dashed var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;background:var(--accent-weak)}
+.sealed-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+pre.json{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:12px;overflow-x:auto;white-space:pre}
+.secret{color:var(--faint)}
+.scrim{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:20}
+.dialog{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);width:min(480px,100%);padding:20px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.dialog h2{font-size:17px}
+.dialog p{margin:0;color:var(--muted)}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-weak)}
+.opt small{grid-column:2;color:var(--muted)}
+.field{display:grid;gap:6px}
+.field input,.field textarea{border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.field .err{color:var(--bad);font-size:12px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+.tip{position:relative}
+.note{font-size:12px;color:var(--muted)}
+@media (max-width:720px){
+  .tbl-wrap table thead{display:none}
+  .tbl-wrap table,.tbl-wrap tbody,.tbl-wrap tr,.tbl-wrap td{display:block;width:100%}
+  .tbl-wrap tr{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .tbl-wrap td{border:0;padding:2px 0;white-space:normal}
+  .tbl-wrap td[data-l]::before{content:attr(data-l) " · ";color:var(--faint);font-size:12px}
+}
+</style>
+
+<header class="top">
+  <div class="brand"><div class="dot" aria-hidden="true">td</div><span>Lab Nico</span><span class="crumbs">/ Executions</span></div>
+  <span class="mock">Mockup · sample data</span>
+  <div class="spacer"></div>
+  <div class="role">Viewing as
+    <div class="seg" role="group" aria-label="Role">
+      <button id="role-owner" aria-pressed="true" data-role="owner">Owner</button>
+      <button id="role-admin" aria-pressed="false" data-role="admin">Admin</button>
+    </div>
+  </div>
+</header>
+<main id="app"></main>
+<div id="layer"></div>
+
+<script>
+const ICONS={
+ scheduled:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ webhook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 15a4 4 0 1 1 4-6.9"/><path d="M12 8l3 6"/><path d="M16 9a4 4 0 1 1-2 7.5"/><path d="M15 16H9"/></svg>',
+ automation:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>',
+ widget:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>'
+};
+const UNATTENDED=['scheduled','webhook','automation'];
+const CALLS_OUT=['Web request v2','Send email','Send WhatsApp'];
+let role='owner';
+let auditLog=[
+ {at:'09 Nov 08:13',who:'nico@lab',action:'data viewed',ex:'0193a2f4',details:'reason "500 from status API, check payload" · 1 step'},
+ {at:'09 Nov 08:12',who:'nico@lab',action:'data access requested',ex:'0193a2f4',details:'scope: step 3'},
+ {at:'08 Nov 03:00',who:'anna@lab',action:'hard stop',ex:'01939f10',details:'interrupted "Generate summary"'},
+ {at:'07 Nov 17:02',who:'marco@lab',action:'data access denied',ex:'0193b1d3',details:'role agent'}
+];
+function act(type,title,outcome,exit,dur,extra){return Object.assign({type,title,outcome,exit,dur,data:true},extra||{})}
+let execs=[
+ {id:'0193a2f4',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'09 Nov 03:00:00',status:'failed',err:'web_request_error',errText:'Web request "GET status" answered HTTP 500',failures:1,dur:'2.1 s',version:'07 Nov 18:20',conv:true,checkpoint:true,
+  steps:[
+   {t:'03:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'10 ms',actions:[act('Start','scheduled start','success','next','4 ms')]},
+   {t:'03:00:00.120',name:'Fetch config',outcome:'success',sub:'Web request · true exit',dur:'98 ms',actions:[act('Web request v2','GET config','success','true','91 ms'),act('Set attribute','config_loaded','success','next','2 ms',{data:false})]},
+   {t:'03:00:00.240',name:'Check thresholds',outcome:'failure_condition',sub:'Condition · fallback branch',dur:'6 ms',actions:[act('JSON condition','cpu above limit','failure_condition','false','5 ms')]},
+   {t:'03:00:00.300',name:'Call status API',outcome:'error',sub:'Web request · HTTP 500',dur:'1.8 s',actions:[act('Web request v2','GET status','error','false','1.8 s',{err:'http_500'})]}
+  ]},
+ {id:'0193b7c1',agent:'Order sync',trigger:'webhook',src:'Webhook "Shop orders"',started:'09 Nov 10:41:12',status:'running',failures:0,dur:'live',version:'08 Nov 09:02',conv:true,checkpoint:true,live:0,
+  steps:[
+   {t:'10:41:12.002',name:'start',outcome:'success',sub:'Webhook start',dur:'8 ms',actions:[act('Start','webhook start','success','next','3 ms')]},
+   {t:'10:41:12.050',name:'Validate order',outcome:'success',sub:'Condition · true',dur:'4 ms',actions:[act('JSON condition','has items','success','true','3 ms')]},
+   {t:'10:41:12.090',name:'Push to ERP',outcome:'running',sub:'Web request · in progress',dur:'',actions:[act('Web request v2','POST /erp/orders','running','—','…')]}
+  ]},
+ {id:'0193b6e0',agent:'HITL alerts',trigger:'webhook',src:'Webhook "Stage alerts"',started:'09 Nov 10:40:03',status:'waiting',waitText:'Waiting for the on-call engineer to answer',failures:0,dur:'—',version:'30 Oct 15:44',conv:true,checkpoint:true,
+  steps:[
+   {t:'10:40:03.010',name:'start',outcome:'success',sub:'Webhook start',dur:'9 ms',actions:[act('Start','webhook start','success','next','3 ms')]},
+   {t:'10:40:03.080',name:'Invite on call',outcome:'success',sub:'Invite human · department',dur:'420 ms',actions:[act('Invite human','HITL E2E dept','success','invited','418 ms')]},
+   {t:'10:40:03.520',name:'Ask approval',outcome:'success',sub:'Reply · buttons, waiting for answer',dur:'12 ms',actions:[act('Reply','Approve restart?','success','wait','10 ms')]}
+  ]},
+ {id:'01939f10',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'08 Nov 03:00:00',status:'stopped',stopText:'Hard stop by anna@lab · "Generate summary" interrupted, it will run again on resume',interrupted:true,failures:0,dur:'0.4 s',version:'07 Nov 18:20',conv:true,checkpoint:true,
+  steps:[
+   {t:'03:00:00.009',name:'start',outcome:'success',sub:'Scheduled start',dur:'9 ms',actions:[act('Start','scheduled start','success','next','3 ms')]},
+   {t:'03:00:00.100',name:'Generate summary',outcome:'interrupted',sub:'AI prompt · interrupted by hard stop',dur:'310 ms',actions:[act('AI prompt','Daily summary','interrupted','—','310 ms')]}
+  ]},
+ {id:'0193b2aa',agent:'Lead enrichment',trigger:'automation',src:'Automation "CRM import"',started:'09 Nov 09:15:40',status:'completed',failures:2,dur:'5.4 s',version:'05 Nov 11:30',conv:false,checkpoint:false,
+  steps:[
+   {t:'09:15:40.001',name:'start',outcome:'success',sub:'Automation start',dur:'3 ms',actions:[act('Start','automation','success','next','2 ms')]},
+   {t:'09:15:40.020',name:'Lookup company',outcome:'failure_condition',sub:'Ask KB · nothing found',dur:'2.2 s',actions:[act('Ask KB','company profile','failure_condition','false','2.2 s')]},
+   {t:'09:15:42.230',name:'Fallback search',outcome:'failure_condition',sub:'Web request · false exit',dur:'3.1 s',actions:[act('Web request v2','GET search','failure_condition','false','3.1 s')]},
+   {t:'09:15:45.400',name:'Return result',outcome:'success',sub:'Web response',dur:'4 ms',actions:[act('Web response','200','success','end','3 ms')]}
+  ]},
+ {id:'0193b1d3',agent:'Support bot',trigger:'widget',src:'Widget',started:'09 Nov 10:12:05',status:'completed',failures:0,dur:'3 min',version:'01 Nov 10:00',conv:true,checkpoint:false,
+  steps:[
+   {t:'10:12:05.010',name:'welcome',outcome:'success',sub:'Reply',dur:'11 ms',actions:[act('Reply','Hi! How can I help?','success','wait','9 ms')]},
+   {t:'10:13:40.200',name:'Answer from KB',outcome:'success',sub:'Ask KB · answer found',dur:'2.8 s',actions:[act('Ask KB','shipping times','success','true','2.8 s')]},
+   {t:'10:15:02.010',name:'Close',outcome:'success',sub:'Close conversation',dur:'30 ms',actions:[act('Close','','success','end','28 ms',{data:false})]}
+  ]},
+ {id:'01939a77',agent:'Invoice reminder',trigger:'scheduled',src:'Schedule Mon 08:00',started:'09 Nov 08:00:00',status:'failed',err:'lost_owner',errText:'The agent server stopped while running "Send reminders"',incomplete:'seq 9–11',failures:0,dur:'41 s',version:'02 Nov 16:10',conv:true,checkpoint:true,
+  steps:[
+   {t:'08:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'8 ms',actions:[act('Start','scheduled start','success','next','3 ms')]},
+   {t:'08:00:00.050',name:'Load overdue',outcome:'success',sub:'Web request · true',dur:'640 ms',actions:[act('Web request v2','GET overdue','success','true','630 ms')]},
+   {t:'08:00:00.700',name:'Send reminders',outcome:'interrupted',sub:'Send email · server lost',dur:'—',actions:[act('Send email','Reminder template','interrupted','—','—')]}
+  ]},
+ {id:'01938c02',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'07 Nov 03:00:00',status:'destroyed',failures:0,dur:'12 min',version:'01 Nov 12:00',conv:true,checkpoint:false,
+  steps:[{t:'03:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'9 ms',actions:[act('Start','scheduled start','success','next','3 ms')]}]}
+];
+let filt={q:'',agent:'',trigger:'unattended',status:'',failures:false};
+let openStep=null, grant=null, grantTimer=null, liveTimer=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const find=id=>execs.find(e=>e.id===id);
+function chip(s){return `<span class="chip s-${s}">${s}</span>`}
+function trig(t){return `<span class="trig">${ICONS[t]||''}${t}</span>`}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)}
+function now(){const d=new Date();return '09 Nov '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function audit(action,ex,details){auditLog.unshift({at:now(),who:role==='owner'?'nico@lab':'giulia@lab',action,ex,details})}
+
+function allowed(e){
+  const s=e.status, un=UNATTENDED.includes(e.trigger);
+  const resumable=e.checkpoint&&(e.conv?true:true);
+  return {
+    soft:['running','waiting'].includes(s), hard:['running','waiting','stopping'].includes(s),
+    resume:['stopped','failed'].includes(s)&&resumable,
+    startNew:un&&['stopped','failed','completed','destroyed'].includes(s),
+    destroy:['running','waiting','stopping','stopped','failed'].includes(s)
+  };
+}
+
+function route(){
+  clearInterval(liveTimer);
+  const h=location.hash.replace('#','');
+  if(h==='audit') renderAudit();
+  else if(h.startsWith('exec-')&&find(h.slice(5))) renderDetail(find(h.slice(5)));
+  else renderList();
+  window.scrollTo(0,0);
+}
+
+function renderList(){
+  const base=execs.filter(e=>filt.trigger==='all'||(filt.trigger==='unattended'?UNATTENDED.includes(e.trigger):e.trigger===filt.trigger));
+  const counts={};['running','waiting','stopped','failed'].forEach(s=>counts[s]=base.filter(e=>e.status===s||(s==='stopped'&&e.status==='stopping')).length);
+  const rows=base.filter(e=>(!filt.status||e.status===filt.status||(filt.status==='stopped'&&e.status==='stopping'))&&(!filt.agent||e.agent===filt.agent)&&(!filt.failures||e.failures>0)&&(!filt.q||e.id.includes(filt.q.trim())));
+  const agents=[...new Set(execs.map(e=>e.agent))];
+  $('#app').innerHTML=`
+  <div class="head"><div><h1>Executions</h1><div class="sub">Every run of every agent in this project, newest first</div></div><div class="spacer"></div>
+    ${role==='owner'?'<a class="btn" href="#audit">Audit log</a>':''}</div>
+  <div class="counters" role="group" aria-label="Status shortcuts">
+    ${['running','waiting','failed','stopped'].map(s=>`<button class="counter" data-st="${s}" aria-pressed="${filt.status===s}"><span class="chip s-${s}" style="padding:0;background:none"></span>${s[0].toUpperCase()+s.slice(1)} <b>${counts[s]}</b></button>`).join('')}
+  </div>
+  <section class="card">
+    <div class="filters">
+      <input type="search" id="f-q" placeholder="Search execution id…" value="${esc(filt.q)}" aria-label="Search execution id">
+      <select id="f-agent" aria-label="Agent"><option value="">All agents</option>${agents.map(a=>`<option ${filt.agent===a?'selected':''}>${esc(a)}</option>`).join('')}</select>
+      <select id="f-trigger" aria-label="Trigger">
+        <option value="unattended" ${filt.trigger==='unattended'?'selected':''}>Unattended triggers</option>
+        <option value="all" ${filt.trigger==='all'?'selected':''}>All triggers</option>
+        ${['scheduled','webhook','automation','widget'].map(t=>`<option value="${t}" ${filt.trigger===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select id="f-status" aria-label="Status"><option value="">Any status</option>${['running','waiting','stopped','failed','completed','destroyed'].map(s=>`<option ${filt.status===s?'selected':''}>${s}</option>`).join('')}</select>
+      <label class="check"><input type="checkbox" id="f-fail" ${filt.failures?'checked':''}> With failure conditions</label>
+      <select aria-label="Period" id="f-period"><option>Last 7 days</option><option>Last 24 hours</option><option>Last 30 days</option></select>
+    </div>
+    <div class="tbl-wrap">
+    ${rows.length?`<table><thead><tr><th>Status</th><th>Agent</th><th>Trigger</th><th>Started</th><th>Blocks</th><th>Failure cond.</th><th>Duration</th><th>Execution</th></tr></thead><tbody>
+    ${rows.map(e=>`<tr tabindex="0" data-id="${e.id}">
+      <td data-l="Status">${chip(e.status)}${e.incomplete?'<span class="warnicon" title="Trace incomplete">⚠</span>':''}</td>
+      <td data-l="Agent"><b style="font-weight:500">${esc(e.agent)}</b></td>
+      <td data-l="Trigger">${trig(e.trigger)}</td>
+      <td data-l="Started">${e.started}</td>
+      <td data-l="Blocks">${e.steps.length}</td>
+      <td data-l="Failure cond." class="${e.failures?'fail':'muted'}">${e.failures}</td>
+      <td data-l="Duration" class="muted">${e.dur}</td>
+      <td data-l="Execution" class="mono muted">${e.id}</td></tr>`).join('')}
+    </tbody></table>`:`<div class="empty">No executions match these filters. <button class="link" id="clear">Clear filters</button></div>`}
+    </div>
+  </section>
+  <p class="note">The default view shows unattended runs (scheduled, webhook, automation). Widget and channel conversations are under "All triggers". Design Studio test runs are hidden.</p>`;
+  document.querySelectorAll('.counter').forEach(b=>b.onclick=()=>{filt.status=filt.status===b.dataset.st?'':b.dataset.st;renderList()});
+  $('#f-q').oninput=ev=>{filt.q=ev.target.value;const pos=ev.target.selectionStart;renderList();const i=$('#f-q');i.focus();i.setSelectionRange(pos,pos)};
+  $('#f-agent').onchange=ev=>{filt.agent=ev.target.value;renderList()};
+  $('#f-trigger').onchange=ev=>{filt.trigger=ev.target.value;renderList()};
+  $('#f-status').onchange=ev=>{filt.status=ev.target.value;renderList()};
+  $('#f-fail').onchange=ev=>{filt.failures=ev.target.checked;renderList()};
+  const c=$('#clear'); if(c) c.onclick=()=>{filt={q:'',agent:'',trigger:'all',status:'',failures:false};renderList()};
+  document.querySelectorAll('tbody tr').forEach(r=>{r.onclick=()=>location.hash='exec-'+r.dataset.id;r.onkeydown=ev=>{if(ev.key==='Enter')location.hash='exec-'+r.dataset.id}});
+}
+
+function controlsHtml(e){
+  const a=allowed(e), owner=role==='owner';
+  const b=[];
+  if(a.soft||a.hard) b.push(`<button class="btn" id="c-stop">${e.status==='stopping'?'Hard stop now':'Stop…'}</button>`);
+  if(a.resume) b.push(`<button class="btn primary" id="c-resume">Resume</button>`);
+  if(e.status!=='running'&&['stopped','failed'].includes(e.status)&&!e.checkpoint) b.push(`<span class="note">No checkpoint: this execution cannot be resumed</span>`);
+  if(a.startNew) b.push(`<button class="btn" id="c-new">Start new</button>`);
+  if(a.destroy) b.push(`<button class="btn danger" id="c-destroy" ${owner?'':'disabled title="Only the project owner can destroy executions"'}>Destroy</button>`);
+  b.push('<span class="spacer"></span>');
+  if(e.status!=='destroyed'||true) b.push(`<button class="btn" id="c-data">View data</button>`);
+  return b.join('');
+}
+
+function statusBanner(e){
+  if(e.status==='failed') return `<div class="banner bad"><b style="font-weight:500">${esc(e.err)}</b>&nbsp;${esc(e.errText)}</div>`;
+  if(e.status==='waiting') return `<div class="banner info">${esc(e.waitText||'Waiting for a reply')}</div>`;
+  if(e.status==='stopped') return `<div class="banner warn">${esc(e.stopText||'Stopped')}</div>`;
+  if(e.status==='stopping') return `<div class="banner warn">Soft stop requested: the current action finishes, then the execution stops.</div>`;
+  if(e.status==='destroyed') return `<div class="banner warn">Destroyed by ${esc(e.destroyedBy||'nico@lab')}. Live state removed; the trace and audit are kept.</div>`;
+  return '';
+}
+
+function renderDetail(e){
+  const showFail=renderDetail.failOnly||false;
+  const steps=e.steps.map((s,i)=>({...s,i})).filter(s=>!showFail||s.outcome!=='success');
+  const exAudit=auditLog.filter(x=>x.ex===e.id);
+  const sym={success:'✓',failure_condition:'!',error:'✕',interrupted:'■',running:'…'};
+  $('#app').innerHTML=`
+  <a class="link back" href="#list">← Executions</a>
+  <section class="card ex-head">
+    <div class="ex-title"><h1>${esc(e.agent)}</h1>${chip(e.status)}</div>
+    <div class="meta"><span>${trig(e.trigger)}</span><span>${esc(e.src)}</span><span>version ${e.version}</span><span>started ${e.started}</span><span>${e.dur}</span>
+      <span class="mono">${e.id}</span>${e.conv?'<button class="link" data-toast="Opens the conversation in the agent app">conversation ↗</button>':'<span>no conversation (automation)</span>'}</div>
+    ${(e.retryOf||e.retriedAs)?`<div class="lineage">${e.retryOf?`<span>retry of <a class="link mono" href="#exec-${e.retryOf}">${e.retryOf} ↗</a></span>`:''}${e.retriedAs?`<span>retried as <a class="link mono" href="#exec-${e.retriedAs}">${e.retriedAs} ↗</a></span>`:''}</div>`:''}
+    ${statusBanner(e)}
+    ${e.incomplete?`<div class="banner warn">⚠ Some events of this execution were not received (${e.incomplete}). The status is still reliable.</div>`:''}
+    <div class="controls">${controlsHtml(e)}</div>
+  </section>
+  <div id="sealed-slot"></div>
+  <div class="grid2">
+    <section class="card">
+      <div class="tl-head"><h2>Timeline</h2><span class="sub">${e.steps.length} blocks · ${e.failures} failure condition${e.failures===1?'':'s'}</span><span class="spacer" style="flex:1"></span>
+        <div class="seg" role="group" aria-label="Timeline filter"><button id="tl-all" aria-pressed="${!showFail}">All</button><button id="tl-fail" aria-pressed="${showFail}">Not successful</button></div></div>
+      ${steps.map(s=>`
+        <div class="step-row" tabindex="0" role="button" aria-expanded="${openStep===e.id+':'+s.i}" data-i="${s.i}">
+          <span class="when mono muted">${s.t}</span>
+          <span class="step-ic o-${s.outcome}" aria-hidden="true">${sym[s.outcome]}</span>
+          <span style="min-width:0"><div class="step-name">${esc(s.name)}</div><div class="step-sub">${esc(s.sub)}</div></span>
+          <span class="mono muted">${s.dur}</span>
+        </div>
+        ${openStep===e.id+':'+s.i?`<div class="actions">${s.actions.map((a,k)=>`
+          <div class="act"><b style="font-weight:500">${esc(a.type)}</b><span class="muted">${esc(a.title)}</span>
+            <span><span class="k">outcome</span> ${a.outcome.replace('_',' ')}</span><span><span class="k">exit</span> ${esc(a.exit)}</span>
+            <span><span class="k">time</span> ${a.dur}</span>${a.err?`<span><span class="k">error</span> <span class="mono">${a.err}</span></span>`:''}
+            ${a.data?`<button class="link" data-step="${s.i}">View data</button>`:'<span class="note">no data</span>'}
+          </div>`).join('')}</div>`:''}`).join('')}
+      ${e.status==='running'?'<div class="step-row" style="cursor:default"><span class="when"></span><span class="step-ic o-running">…</span><span class="muted">running…</span><span></span></div>':''}
+    </section>
+    <aside class="side">
+      <section class="card"><h2>Details</h2><dl>
+        <dt>Execution</dt><dd class="mono">${e.id}</dd><dt>Agent</dt><dd>${esc(e.agent)}</dd><dt>Version</dt><dd>${e.version}</dd>
+        <dt>Trigger</dt><dd>${esc(e.src)}</dd><dt>Checkpoint</dt><dd>${e.checkpoint?'yes, resumable while kept':'none'}</dd>
+        <dt>Data kept until</dt><dd>09 Dec 2026</dd><dt>Trace kept until</dt><dd>07 Feb 2027</dd></dl></section>
+      ${role==='owner'?`<section class="card"><h2>Audit for this execution</h2><div class="audit-mini">${exAudit.length?exAudit.map(x=>`<div><span class="muted">${x.at} · ${esc(x.who)}</span><span>${esc(x.action)}</span><span class="note">${esc(x.details)}</span></div>`).join(''):'<span class="note">Nothing recorded yet.</span>'}</div><a class="link" href="#audit">Full audit log</a></section>`:''}
+    </aside>
+  </div>`;
+  document.querySelectorAll('.step-row[data-i]').forEach(r=>{const go=()=>{const k=e.id+':'+r.dataset.i;openStep=openStep===k?null:k;renderDetail(e)};r.onclick=go;r.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();go()}}});
+  document.querySelectorAll('[data-step]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();dataDialog(e,+b.dataset.step)});
+  document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+  $('#tl-all').onclick=()=>{renderDetail.failOnly=false;renderDetail(e)};
+  $('#tl-fail').onclick=()=>{renderDetail.failOnly=true;renderDetail(e)};
+  const on=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
+  on('#c-stop',()=>e.status==='stopping'?doHardStop(e):stopDialog(e));
+  on('#c-resume',()=>resumeDialog(e));
+  on('#c-new',()=>newDialog(e));
+  on('#c-destroy',()=>destroyDialog(e));
+  on('#c-data',()=>dataDialog(e,null));
+  if(grant&&grant.ex===e.id) renderSealed(e);
+  if(e.status==='running') liveTimer=setInterval(()=>liveTick(e),2500);
+}
+
+function liveTick(e){
+  if(location.hash!=='#exec-'+e.id||e.status!=='running'){clearInterval(liveTimer);return}
+  const last=e.steps[e.steps.length-1];
+  if(last.outcome==='running'){last.outcome='success';last.sub='Web request · true exit';last.dur='1.4 s';last.actions[0]=act('Web request v2',last.actions[0].title,'success','true','1.4 s')}
+  else if(e.steps.length<6){const n=e.steps.length;const names=['Notify warehouse','Update customer','Log result'];e.steps.push({t:'10:41:1'+(3+n)+'.0'+n+'0',name:names[(n-3)%3],outcome:'running',sub:'in progress',dur:'',actions:[act(n%2?'Send email':'Web request v2',names[(n-3)%3],'running','—','…')]})}
+  else {e.status='waiting';e.waitText='Chain finished, waiting for the next message';e.dur='9.8 s';toast('Order sync is now waiting')}
+  renderDetail(e);
+}
+
+function dialog(html,bind){
+  $('#layer').innerHTML=`<div class="scrim" id="scrim"><div class="dialog" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#scrim').onclick=ev=>{if(ev.target.id==='scrim')close()};
+  document.onkeydown=ev=>{if(ev.key==='Escape')close()};
+  const f=$('.dialog input,.dialog textarea,.dialog button.primary,.dialog button.danger');if(f)f.focus();
+  bind&&bind();
+}
+function close(){$('#layer').innerHTML='';document.onkeydown=null}
+
+function stopDialog(e){
+  const cur=e.steps[e.steps.length-1];
+  const idle=e.status==='waiting';
+  dialog(`<h2>Stop execution</h2>
+   ${idle?'<p>Nothing is running right now: the execution stops at once and no new message will run the agent until you resume it.</p>':''}
+   <label class="opt"><input type="radio" name="mode" value="soft" id="m-soft" checked><span>Soft stop</span><small>Let ${idle?'the next block':`"${esc(cur.name)}"`} finish its current action, then stop.</small></label>
+   <label class="opt"><input type="radio" name="mode" value="hard" id="m-hard"><span>Hard stop</span><small>${idle?'Stop now.':`Interrupt "${esc(cur.name)}" now. It will run again from the start on resume.`}</small></label>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Stop</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{const m=document.querySelector('input[name=mode]:checked').value;close();
+      if(m==='hard'||idle){doHardStop(e,idle&&m==='soft')}
+      else {audit('soft stop',e.id,'requested');e.status='stopping';renderDetail(e);toast('Soft stop requested');
+        setTimeout(()=>{const last=e.steps[e.steps.length-1];if(last.outcome==='running'){last.outcome='success';last.sub='finished, then stopped';last.dur='1.2 s';last.actions[0].outcome='success'}
+          e.status='stopped';e.stopText='Soft stop by '+(role==='owner'?'nico@lab':'giulia@lab')+' · resume continues with the next block';e.interrupted=false;if(location.hash==='#exec-'+e.id)renderDetail(e);toast('Execution stopped')},2200)}
+    }});
+}
+function doHardStop(e,soft){
+  const last=e.steps[e.steps.length-1];
+  audit(soft?'soft stop':'hard stop',e.id,last.outcome==='running'?`interrupted "${last.name}"`:'nothing running');
+  if(last.outcome==='running'){last.outcome='interrupted';last.sub='interrupted by hard stop';last.dur='0.6 s';last.actions[0].outcome='interrupted';e.interrupted=true;
+    e.stopText=`Hard stop by ${role==='owner'?'nico@lab':'giulia@lab'} · "${last.name}" interrupted, it will run again on resume`}
+  else e.stopText=`Stopped by ${role==='owner'?'nico@lab':'giulia@lab'} while waiting`;
+  e.status='stopped';renderDetail(e);toast('Execution stopped');
+}
+function resumeDialog(e){
+  const last=e.steps[e.steps.length-1];
+  const rerun=e.interrupted||e.status==='failed';
+  const callsOut=rerun&&last.actions.some(a=>CALLS_OUT.includes(a.type));
+  dialog(`<h2>Resume execution</h2>
+   <p>${rerun?`Continues by running "${esc(last.name)}" again`:'Continues with the next block'}, using version ${e.version} (the one that was running).</p>
+   ${callsOut?`<div class="banner warn">⚠ "${esc(last.name)}" calls an external system (${esc(last.actions[0].type)}) and may already have reached it. Running it again can repeat that call.</div>`:''}
+   ${!e.conv?'<p class="note">The original caller is no longer waiting: the result will not be returned to it.</p>':''}
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">${callsOut?'Run it again and resume':'Resume'}</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{close();audit('resume',e.id,callsOut?`confirmed rerun of "${last.name}"`:'from checkpoint');
+      if(rerun){last.outcome='running';last.sub='running again after resume';last.dur='';last.actions.forEach(a=>{a.outcome='running';a.err=null})}
+      e.status='running';e.err=null;e.interrupted=false;toast('Execution resumed');renderDetail(e);
+      setTimeout(()=>{last.outcome='success';last.sub='succeeded after resume';last.dur='0.9 s';last.actions.forEach(a=>{a.outcome='success';a.exit='true';a.dur='0.9 s'});
+        e.status='completed';e.dur='—';if(location.hash==='#exec-'+e.id)renderDetail(e);toast(e.agent+' completed')},3500)}
+  });
+}
+function newDialog(e){
+  dialog(`<h2>Start new execution</h2>
+   <p>Runs ${esc(e.agent)} again with the same input, using the current published version. This execution stays as it is and gets a link to the new one.</p>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Start new</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{close();const id='0193'+Math.random().toString(16).slice(2,6);
+      const n={id,agent:e.agent,trigger:e.trigger,src:e.src,started:now()+':00',status:'running',failures:0,dur:'live',version:'09 Nov 08:30',conv:e.conv,checkpoint:true,retryOf:e.id,
+        steps:[{t:'now',name:'start',outcome:'success',sub:'Start (retry)',dur:'9 ms',actions:[act('Start','retry of '+e.id,'success','next','3 ms')]},{t:'now',name:e.steps[1]?e.steps[1].name:'First block',outcome:'running',sub:'in progress',dur:'',actions:[act('Web request v2','retry','running','—','…')]}]};
+      e.retriedAs=id;execs.unshift(n);audit('start new',e.id,'new execution '+id);toast('New execution started');location.hash='exec-'+id}
+  });
+}
+function destroyDialog(e){
+  dialog(`<h2>Destroy execution</h2>
+   <p>This ${['running','stopping'].includes(e.status)?'hard-stops it, ':''}${e.conv?'closes its conversation, ':''}and removes its live state and checkpoints. It cannot be resumed afterwards. The trace, data and audit are kept for their retention period.</p>
+   <div class="field"><label for="d-confirm">Type <span class="mono">${e.id.slice(0,6)}</span> to confirm</label><input id="d-confirm" autocomplete="off"><span class="err" id="d-err" hidden></span></div>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn danger solid" id="d-ok">Destroy</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-confirm').oninput=()=>{$('#d-err').hidden=true};
+    $('#d-ok').onclick=()=>{if($('#d-confirm').value.trim()!==e.id.slice(0,6)){const er=$('#d-err');er.textContent='Type '+e.id.slice(0,6)+' exactly to confirm.';er.hidden=false;return}
+      close();audit('destroy',e.id,e.conv?'conversation closed':'no conversation');e.status='destroyed';e.checkpoint=false;e.destroyedBy='nico@lab';toast('Execution destroyed');renderDetail(e)}
+  });
+}
+function dataDialog(e,stepIdx){
+  const stepName=stepIdx!=null?e.steps[stepIdx].name:null;
+  dialog(`<h2>View execution data</h2>
+   <p>The data is sealed. Opening it is recorded in the audit log with your name and reason, and the access lasts 15 minutes.</p>
+   <label class="opt"><input type="radio" name="scope" value="step" id="sc-step" ${stepName?'checked':'disabled'}><span>This step${stepName?`: "${esc(stepName)}"`:''}</span><small>${stepName?'Input, output and attribute changes of its actions.':'Pick "View data" on a step in the timeline.'}</small></label>
+   <label class="opt"><input type="radio" name="scope" value="execution" id="sc-ex" ${stepName?'':'checked'}><span>Whole execution</span><small>Trigger payload and the data of every step.</small></label>
+   <div class="field"><label for="d-reason">Reason <span class="muted">(required)</span></label><textarea id="d-reason" rows="2" placeholder="e.g. investigating the HTTP 500 from the status API"></textarea><span class="err" id="d-err" hidden></span></div>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Request access</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-reason').oninput=()=>{$('#d-err').hidden=true};
+    $('#d-ok').onclick=()=>{const r=$('#d-reason').value.trim();if(r.length<10){const er=$('#d-err');er.textContent='Write at least 10 characters so the reason is clear to whoever reads the audit log.';er.hidden=false;return}
+      const scope=document.querySelector('input[name=scope]:checked').value;close();
+      audit('data access requested',e.id,'scope: '+(scope==='step'?'step "'+stepName+'"':'whole execution'));
+      audit('data viewed',e.id,`reason "${r}" · `+(scope==='step'?'1 step':e.steps.length+' steps'));
+      grant={ex:e.id,scope,step:stepIdx,until:Date.now()+15*60*1000};renderDetail(e);
+      document.getElementById('sealed-slot').scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+}
+function sampleData(e,idx){
+  const s=e.steps[idx];
+  const a=s.actions[0];
+  if(a.type==='Web request v2') return {action:a.type+' · '+a.title,input:{method:a.title.split(' ')[0],url:'https://ops.example.com/api/'+a.title.split(' ').pop().toLowerCase(),headers:{Authorization:'[secret]','X-Api-Key':'[secret]',Accept:'application/json'}},output:a.err?{status:500,body:{error:'upstream timeout',node:'db-2'}}:{status:200,body:{ok:true}},attributes_changed:{last_status:a.err?'500':'200'}};
+  if(a.type==='AI prompt'||a.type==='Ask KB') return {action:a.type+' · '+a.title,input:{prompt:'Summarise the overnight checks for the on-call team.'},output:{text:a.outcome==='failure_condition'?null:'All checks passed except disk usage on db-2 (91%).'},attributes_changed:{}};
+  return {action:a.type+' · '+a.title,input:{},output:{},attributes_changed:{start_type:e.trigger}};
+}
+function hl(json){return esc(JSON.stringify(json,null,2)).replace(/&quot;\[secret\]&quot;/g,'<span class="secret">[secret]</span>')}
+function renderSealed(e){
+  const slot=$('#sealed-slot');if(!slot)return;
+  const idxs=grant.scope==='step'?[grant.step]:e.steps.map((_,i)=>i);
+  const trigger={payload:{source:e.src,host:'db-2',threshold:85}};
+  slot.innerHTML=`<section class="sealed" aria-label="Sealed data">
+    <div class="sealed-head"><h2>Sealed data</h2><span class="note" id="countdown"></span><span style="flex:1"></span><button class="btn" id="seal-close">Close data</button></div>
+    ${grant.scope==='execution'?`<div><div class="note">Trigger payload</div><pre class="json">${hl(trigger)}</pre></div>`:''}
+    ${idxs.map(i=>`<div><div class="note">${esc(e.steps[i].name)}</div><pre class="json">${hl(sampleData(e,i))}</pre></div>`).join('')}
+    <p class="note">Values named like secrets are never stored and show as [secret]. Nothing is cached on this device.</p></section>`;
+  $('#seal-close').onclick=()=>{grant=null;clearInterval(grantTimer);slot.innerHTML=''};
+  clearInterval(grantTimer);
+  const tick=()=>{const left=Math.max(0,grant?grant.until-Date.now():0);const el=$('#countdown');if(!el){clearInterval(grantTimer);return}
+    if(left<=0){grant=null;clearInterval(grantTimer);slot.innerHTML='<div class="banner info">Access expired. Request it again to see the data.</div>';return}
+    el.textContent='Access expires in '+Math.floor(left/60000)+':'+String(Math.floor(left/1000)%60).padStart(2,'0')+' · recorded in the audit log'};
+  tick();grantTimer=setInterval(tick,1000);
+}
+
+function renderAudit(){
+  if(role!=='owner'){$('#app').innerHTML=`<a class="link back" href="#list">← Executions</a><section class="card empty">Only the project owner can read the audit log.</section>`;return}
+  const f=renderAudit.f||'';
+  const rows=auditLog.filter(x=>!f||x.action===f);
+  $('#app').innerHTML=`<a class="link back" href="#list">← Executions</a>
+  <div class="head"><div><h1>Audit log</h1><div class="sub">Every control action and every data access. Entries cannot be edited or deleted and are kept for one year.</div></div></div>
+  <section class="card">
+    <div class="filters"><select id="a-f" aria-label="Action"><option value="">All actions</option>${[...new Set(auditLog.map(x=>x.action))].map(a=>`<option ${f===a?'selected':''}>${a}</option>`).join('')}</select>
+      <select aria-label="Period" id="a-period"><option>Last 30 days</option><option>Last 7 days</option><option>Last year</option></select></div>
+    <div class="tbl-wrap"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Execution</th><th>Reason / details</th></tr></thead><tbody>
+    ${rows.map(x=>`<tr data-id="${x.ex}" tabindex="0"><td data-l="When">${x.at}</td><td data-l="Who">${esc(x.who)}</td><td data-l="Action">${esc(x.action)}</td><td data-l="Execution" class="mono">${x.ex} ↗</td><td data-l="Details" class="muted" style="white-space:normal">${esc(x.details)}</td></tr>`).join('')}
+    </tbody></table></div></section>`;
+  $('#a-f').onchange=ev=>{renderAudit.f=ev.target.value;renderAudit()};
+  document.querySelectorAll('tbody tr').forEach(r=>{r.onclick=()=>location.hash='exec-'+r.dataset.id;r.onkeydown=ev=>{if(ev.key==='Enter')location.hash='exec-'+r.dataset.id}});
+}
+
+document.querySelectorAll('.seg [data-role]').forEach(b=>b.onclick=()=>{role=b.dataset.role;document.querySelectorAll('.seg [data-role]').forEach(x=>x.setAttribute('aria-pressed',x===b));route();toast(role==='owner'?'Viewing as owner':'Viewing as admin: destroy and the audit log are owner-only')});
+window.addEventListener('hashchange',route);
+route();
+</script>
