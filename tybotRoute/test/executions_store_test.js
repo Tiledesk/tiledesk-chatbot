@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const redis = require('redis');
+const winston = require('../utils/winston');
 const { ExecutionStore } = require('../executions/ExecutionStore');
 
 describe('ExecutionStore', function () {
@@ -134,18 +135,71 @@ describe('ExecutionStore', function () {
     assert.strictEqual(await store.popFrame(a.executionId), null);
   });
 
+  it('hinted terminal id is ignored and resolution goes through the request key', async function () {
+    const r = rid('ht');
+    const a = await make(r, 'A');
+    await store.setStatusHint(a.executionId, 'completed');
+    const x = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: a.executionId, meta });
+    execs.add(x.executionId);
+    assert.strictEqual(x.created, true);
+    assert.notStrictEqual(x.executionId, a.executionId);
+    assert.strictEqual(x.previousExecutionId, a.executionId);
+  });
+
+  it('terminal CAS is single under concurrency', async function () {
+    const r = rid('cas');
+    const a = await make(r, 'A');
+    await store.setStatusHint(a.executionId, 'failed');
+    const all = await Promise.all(Array.from({ length: 10 }, () => store.resolve({ requestId: r, agentId: 'A', meta })));
+    all.forEach(x => execs.add(x.executionId));
+    assert.strictEqual(new Set(all.map(x => x.executionId)).size, 1);
+    const created = all.filter(x => x.created);
+    assert.strictEqual(created.length, 1);
+    assert.strictEqual(created[0].previousExecutionId, a.executionId);
+    assert.notStrictEqual(created[0].executionId, a.executionId);
+  });
+
+  it('corrupt handoff does not break creation', async function () {
+    const r = rid('bad');
+    await client.set(`exec:handoff:${r}`, '{not json', { EX: 60 });
+    const orig = winston.warn; winston.warn = () => {};
+    let x;
+    try { x = await make(r, 'A'); } finally { winston.warn = orig; }
+    assert.strictEqual(x.created, true);
+    assert.strictEqual(x.parentExecutionId, null);
+    assert.strictEqual((await client.hGetAll(`exec:${x.executionId}`)).status, 'running');
+  });
+
+  it('failed meta write rolls back the request key and returns null', async function () {
+    const r = rid('rb');
+    const orig = winston.warn; winston.warn = () => {};
+    const failing = Object.create(client);
+    failing.multi = () => { throw new Error('multi boom'); };
+    try {
+      assert.strictEqual(await new ExecutionStore(failing).resolve({ requestId: r, agentId: 'A', meta }), null);
+    } finally { winston.warn = orig; }
+    assert.strictEqual(await client.exists(`exec:req:${r}:A`), 0);
+    const ok = await make(r, 'A');
+    assert.strictEqual(ok.created, true);
+  });
+
   it('resolve returns null when the client throws', async function () {
-    const bad = new Proxy({}, { get: () => () => { throw new Error('boom'); } });
-    const s = new ExecutionStore(bad);
-    assert.strictEqual(await s.resolve({ requestId: 'r', agentId: 'A', meta }), null);
-    assert.strictEqual(await s.nextSeq('x'), null);
-    assert.strictEqual(await s.getState('x'), null);
-    assert.strictEqual(await s.popFrame('x'), null);
-    await s.setState('x', {});
-    await s.setAlias('r', 'a', 'x');
-    await s.deleteAlias('r', 'a');
-    await s.pushFrame('x', {});
-    await s.setHandoff('r', {});
-    await s.setStatusHint('x', 'failed');
+    const calls = [];
+    const orig = winston.warn; winston.warn = (m) => calls.push(m);
+    try {
+      const bad = new Proxy({}, { get: () => async () => { throw new Error('boom'); } });
+      const s = new ExecutionStore(bad);
+      assert.strictEqual(await s.resolve({ requestId: 'r', agentId: 'A', meta }), null);
+      assert.strictEqual(await s.nextSeq('x'), null);
+      assert.strictEqual(await s.getState('x'), null);
+      assert.strictEqual(await s.popFrame('x'), null);
+      await s.setState('x', {});
+      await s.setAlias('r', 'a', 'x');
+      await s.deleteAlias('r', 'a');
+      await s.pushFrame('x', {});
+      await s.setHandoff('r', {});
+      await s.setStatusHint('x', 'failed');
+    } finally { winston.warn = orig; }
+    assert.strictEqual(calls.length, 10);
   });
 });

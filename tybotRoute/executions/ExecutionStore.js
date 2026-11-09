@@ -12,6 +12,8 @@ const TERMINAL = ['completed', 'failed', 'destroyed'];
 const CAS_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
   "redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3]); return 1 else return 0 end";
 
+const CAD_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end";
+
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
 
@@ -33,7 +35,10 @@ class ExecutionStore {
     try {
       const c = this.client;
       if (hintedExecutionId && await c.exists(execKey(hintedExecutionId))) {
-        return { executionId: hintedExecutionId, created: false, previousExecutionId: null, parentExecutionId: null };
+        const hintedStatus = await c.hGet(execKey(hintedExecutionId), 'status');
+        if (!TERMINAL.includes(hintedStatus)) {
+          return { executionId: hintedExecutionId, created: false, previousExecutionId: null, parentExecutionId: null };
+        }
       }
       const key = reqKey(requestId, agentId);
       const current = await c.get(key);
@@ -60,27 +65,40 @@ class ExecutionStore {
       }
 
       const m = meta || {};
-      await c.hSet(execKey(id), {
-        id_project: String(m.id_project),
-        agent_id: String(agentId),
-        agent_version: String(m.agent_version),
-        agent_name: String(m.agent_name == null ? '' : m.agent_name),
-        request_id: String(requestId),
-        test: m.test ? 'true' : 'false',
-        trigger: JSON.stringify(m.trigger == null ? null : m.trigger),
-        status: 'running',
-        created_at: new Date().toISOString()
-      });
-      await c.expire(execKey(id), TTL);
+      try {
+        await c.multi()
+          .hSet(execKey(id), {
+            id_project: String(m.id_project),
+            agent_id: String(agentId),
+            agent_version: String(m.agent_version),
+            agent_name: String(m.agent_name == null ? '' : m.agent_name),
+            request_id: String(requestId),
+            test: m.test ? 'true' : 'false',
+            trigger: JSON.stringify(m.trigger == null ? null : m.trigger),
+            status: 'running',
+            created_at: new Date().toISOString()
+          })
+          .expire(execKey(id), TTL)
+          .exec();
+      } catch (err) {
+        // roll back the request key (only if still ours) so the next message retries creation
+        try { await c.eval(CAD_SCRIPT, { keys: [key], arguments: [id] }); } catch (e) { this._warn('resolve rollback', e); }
+        throw err;
+      }
 
       let parentExecutionId = null;
-      const raw = await c.get(`exec:handoff:${requestId}`);
-      if (raw) {
-        const h = JSON.parse(raw);
-        if (h && h.to_agent_id === agentId) {
-          await c.getDel(`exec:handoff:${requestId}`);
-          parentExecutionId = h.parent_execution_id || null;
+      try {
+        const raw = await c.get(`exec:handoff:${requestId}`);
+        if (raw) {
+          const h = JSON.parse(raw);
+          if (h && h.to_agent_id === agentId) {
+            await c.getDel(`exec:handoff:${requestId}`);
+            parentExecutionId = h.parent_execution_id || null;
+          }
         }
+      } catch (err) {
+        this._warn('resolve handoff', err);
+        parentExecutionId = null;
       }
       return { executionId: id, created: true, previousExecutionId, parentExecutionId };
     } catch (err) {
