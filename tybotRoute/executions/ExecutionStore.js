@@ -1,0 +1,183 @@
+'use strict';
+
+const { v7: uuidv7 } = require('uuid');
+const winston = require('../utils/winston');
+
+const TTL = 604800; // 7 d
+const HANDOFF_TTL = 600;
+const TERMINAL = ['completed', 'failed', 'destroyed'];
+
+// Replace the request key only if it still holds the terminal id we saw: of
+// concurrent resolvers exactly one wins, the others re-read the winner's id.
+const CAS_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
+  "redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3]); return 1 else return 0 end";
+
+function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
+function execKey(id) { return `exec:${id}`; }
+
+/**
+ * Redis access for the exec:* keys (spec 8.2). Takes a node-redis v4 client.
+ * No method throws: Redis errors are logged at warn and the method returns
+ * null (or resolves void), so the flow never depends on this store.
+ */
+class ExecutionStore {
+  constructor(redisClient) {
+    this.client = redisClient;
+  }
+
+  _warn(op, err) {
+    winston.warn(`[ExecutionStore] ${op} failed: ${err && err.message}`);
+  }
+
+  async resolve({ requestId, agentId, hintedExecutionId, meta }) {
+    try {
+      const c = this.client;
+      if (hintedExecutionId && await c.exists(execKey(hintedExecutionId))) {
+        return { executionId: hintedExecutionId, created: false, previousExecutionId: null, parentExecutionId: null };
+      }
+      const key = reqKey(requestId, agentId);
+      const current = await c.get(key);
+      let previousExecutionId = null;
+      if (current) {
+        const status = await c.hGet(execKey(current), 'status');
+        if (!TERMINAL.includes(status)) {
+          return { executionId: current, created: false, previousExecutionId: null, parentExecutionId: null };
+        }
+        previousExecutionId = current;
+      }
+
+      const id = uuidv7();
+      let won;
+      if (current) {
+        won = (await c.eval(CAS_SCRIPT, { keys: [key], arguments: [current, id, String(TTL)] })) === 1;
+      } else {
+        won = (await c.set(key, id, { NX: true, EX: TTL })) !== null;
+      }
+      if (!won) {
+        const winner = await c.get(key);
+        if (!winner) return null;
+        return { executionId: winner, created: false, previousExecutionId: null, parentExecutionId: null };
+      }
+
+      const m = meta || {};
+      await c.hSet(execKey(id), {
+        id_project: String(m.id_project),
+        agent_id: String(agentId),
+        agent_version: String(m.agent_version),
+        agent_name: String(m.agent_name == null ? '' : m.agent_name),
+        request_id: String(requestId),
+        test: m.test ? 'true' : 'false',
+        trigger: JSON.stringify(m.trigger == null ? null : m.trigger),
+        status: 'running',
+        created_at: new Date().toISOString()
+      });
+      await c.expire(execKey(id), TTL);
+
+      let parentExecutionId = null;
+      const raw = await c.get(`exec:handoff:${requestId}`);
+      if (raw) {
+        const h = JSON.parse(raw);
+        if (h && h.to_agent_id === agentId) {
+          await c.getDel(`exec:handoff:${requestId}`);
+          parentExecutionId = h.parent_execution_id || null;
+        }
+      }
+      return { executionId: id, created: true, previousExecutionId, parentExecutionId };
+    } catch (err) {
+      this._warn('resolve', err);
+      return null;
+    }
+  }
+
+  async nextSeq(id) {
+    try {
+      const key = `exec:${id}:seq`;
+      const n = await this.client.incr(key);
+      if (n === 1) await this.client.expire(key, TTL);
+      return n;
+    } catch (err) {
+      this._warn('nextSeq', err);
+      return null;
+    }
+  }
+
+  async getState(id) {
+    try {
+      const raw = await this.client.get(`exec:${id}:state`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      this._warn('getState', err);
+      return null;
+    }
+  }
+
+  async setState(id, value) {
+    try {
+      await this.client.set(`exec:${id}:state`, JSON.stringify(value), { EX: TTL });
+    } catch (err) {
+      this._warn('setState', err);
+    }
+  }
+
+  async setAlias(requestId, agentId, executionId) {
+    try {
+      await this.client.set(reqKey(requestId, agentId), executionId, { EX: TTL });
+    } catch (err) {
+      this._warn('setAlias', err);
+    }
+  }
+
+  async deleteAlias(requestId, agentId) {
+    try {
+      await this.client.del(reqKey(requestId, agentId));
+    } catch (err) {
+      this._warn('deleteAlias', err);
+    }
+  }
+
+  async _stack(id) {
+    const raw = await this.client.hGet(execKey(id), 'agent_stack');
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  async pushFrame(id, frame) {
+    try {
+      const stack = await this._stack(id);
+      stack.push(frame);
+      await this.client.hSet(execKey(id), 'agent_stack', JSON.stringify(stack));
+    } catch (err) {
+      this._warn('pushFrame', err);
+    }
+  }
+
+  async popFrame(id) {
+    try {
+      const stack = await this._stack(id);
+      if (stack.length === 0) return null;
+      const frame = stack.pop();
+      await this.client.hSet(execKey(id), 'agent_stack', JSON.stringify(stack));
+      return frame;
+    } catch (err) {
+      this._warn('popFrame', err);
+      return null;
+    }
+  }
+
+  async setHandoff(requestId, value) {
+    try {
+      await this.client.set(`exec:handoff:${requestId}`, JSON.stringify(value), { EX: HANDOFF_TTL });
+    } catch (err) {
+      this._warn('setHandoff', err);
+    }
+  }
+
+  async setStatusHint(id, status) {
+    try {
+      await this.client.hSet(execKey(id), 'status', status);
+    } catch (err) {
+      this._warn('setStatusHint', err);
+    }
+  }
+}
+
+module.exports = { ExecutionStore, TERMINAL };
