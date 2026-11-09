@@ -15,6 +15,8 @@ const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const { detectTrigger } = require('../executions/trigger');
 const { ExecutionStore } = require('../executions/ExecutionStore');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
+const Sealer = require('../executions/Sealer');
+const StateDiff = require('../executions/StateDiff');
 const { TiledeskRequestVariables } = require('../tiledeskChatbotPlugs/TiledeskRequestVariables');
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
 const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
@@ -110,6 +112,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
 
   /** Waits until the request's events stop changing for quietMs. */
   async function settle(requestId, quietMs = 500) {
+    await ExecutionRecorder._drainForTests();
     let n = -1;
     let since = Date.now();
     await waitFor(() => {
@@ -189,9 +192,10 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     await close(failListener);
   });
 
-  it('flag off: no events, no exec:* keys', async function () {
+  it('flag off: no events, no exec:* keys, no recorder Redis call', async function () {
     process.env.EXECUTIONS_ENABLED = 'false';
     try {
+      useProxiedStore();
       const keysBefore = await scanExec();
       const logBefore = log.length;
       const rid = newRequestId();
@@ -200,11 +204,12 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       const reply = replies.find((r) => r.requestId === rid && r.message).message;
       assert.strictEqual(reply.attributes.commands[0].message.text, 'done');
       await new Promise((r) => setTimeout(r, 300));
-      assert.strictEqual(log.length, logBefore, 'no events emitted');
+      assert.strictEqual(log.length, logBefore, 'no events emitted and no call on the recorder store');
       assert.deepStrictEqual(await scanExec(), keysBefore, 'no exec:* keys written');
       assert.ok(!replies.some((r) => r.requestId === rid && r.attributesPatch), 'no execution_id patch');
     } finally {
       process.env.EXECUTIONS_ENABLED = 'true';
+      await startTybot(); // back to the store startApp wires
     }
   });
 
@@ -472,16 +477,99 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
   });
 
   /** Points the recorder at a store whose client logs every call into `log`. */
-  function useProxiedStore() {
-    const calls = new Proxy(client, {
+  /** A client that logs every call into `log` (with its resolved value); fail(prop) can make a method throw. */
+  function proxiedClient(fail = () => false) {
+    return new Proxy(client, {
       get(target, prop) {
         const v = target[prop];
         if (typeof v !== 'function') return v;
-        return (...args) => { log.push({ call: String(prop), args }); return v.apply(target, args); };
+        return (...args) => {
+          const entry = { call: String(prop), args };
+          log.push(entry);
+          if (fail(String(prop))) return Promise.reject(new Error('injected ' + String(prop) + ' failure'));
+          const r = v.apply(target, args);
+          if (r && typeof r.then === 'function') r.then((value) => { entry.result = value; }, () => {});
+          return r;
+        };
       }
     });
-    ExecutionRecorder.init({ store: new ExecutionStore(calls) });
   }
+
+  function useProxiedStore() {
+    ExecutionRecorder.init({ store: new ExecutionStore(proxiedClient()) });
+  }
+
+  /** onMessageIn + blockEntry on a given store, outside the engine. */
+  async function openCtx(store) {
+    const rid = newRequestId();
+    requestIds.push(rid);
+    const ctx = await ExecutionRecorder.onMessageIn({ message: { request: { request_id: rid } }, bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store });
+    await ExecutionRecorder.blockEntry(ctx, { blockId: 'blk', blockName: 'blk' });
+    return { rid, ctx };
+  }
+
+  it('diffing and sealing are not awaited by the flow (slow Sealer)', async function () {
+    const origSeal = Sealer.seal;
+    const origDiff = StateDiff.diffStates;
+    let seals = 0;
+    let diffs = 0;
+    Sealer.seal = function (...args) {
+      seals++;
+      const until = Date.now() + 150;
+      while (Date.now() < until) { /* a slow seal */ }
+      return origSeal.apply(Sealer, args);
+    };
+    StateDiff.diffStates = function (...args) { diffs++; return origDiff.apply(StateDiff, args); };
+    try {
+      const store = new ExecutionStore(client);
+      const { rid, ctx } = await openCtx(store);
+      assert.strictEqual(diffs + seals, 0, 'blockEntry resolved before its diff and keyframe seal');
+      await ExecutionRecorder._drainForTests();
+      assert.strictEqual(diffs, 1);
+      seals = 0;
+      diffs = 0;
+
+      const directive = { name: 'setattribute', action: { _tdActionId: 'act_slow' } };
+      await ExecutionRecorder.runAction(ctx, { index: 0, directive }, async () => {
+        await client.hSet(`tilebot:requests:${rid}:parameters`, 'slow_var', '"v"');
+        WriteTap.note(rid, 'slow_var', 'set');
+      });
+      const t0 = Date.now();
+      await ExecutionRecorder.afterAction(ctx, { index: 0, directive });
+      const elapsed = Date.now() - t0;
+      assert.strictEqual(diffs + seals, 0, 'afterAction resolved before its diff and seal');
+      assert.ok(elapsed < 150, 'the next action is not delayed by the 150 ms seal (took ' + elapsed + ' ms)');
+      await ExecutionRecorder._drainForTests();
+      assert.strictEqual(seals, 1);
+      const act = ofType(rid, 'action.completed')[0];
+      assert.deepStrictEqual(act.data.state_delta.map((c) => [c.key, c.by]), [['slow_var', 'act_slow']]);
+      assert.ok(act.data.sealed_state.ct);
+      // seq order is kept even though the events are built later
+      const evs = events(rid);
+      for (let i = 1; i < evs.length; i++) assert.ok(evs[i].seq > evs[i - 1].seq);
+    } finally {
+      Sealer.seal = origSeal;
+      StateDiff.diffStates = origDiff;
+    }
+  });
+
+  it('a failed HGETALL at block entry still records the step without state fields', async function () {
+    const store = new ExecutionStore(proxiedClient((prop) => prop === 'hGetAll'));
+    const { rid, ctx } = await openCtx(store);
+    const directive = { name: 'setattribute', action: { _tdActionId: 'act_x' } };
+    await ExecutionRecorder.runAction(ctx, { index: 0, directive }, () => {});
+    await ExecutionRecorder.afterAction(ctx, { index: 0, directive });
+    await ExecutionRecorder.blockExit(ctx);
+    await ExecutionRecorder._drainForTests();
+    const evs = events(rid);
+    assert.deepStrictEqual(evs.map((e) => e.type), ['execution.started', 'step.started', 'action.completed', 'step.completed']);
+    assert.deepStrictEqual(evs[1].data.outside_changes, []);
+    assert.strictEqual(evs[1].data.state_manifest, null);
+    assert.ok(!('state_vars' in evs[1].data));
+    assert.deepStrictEqual(evs[2].data.state_delta, []);
+    assert.ok(!('changed_keys' in evs[3].data));
+    assert.strictEqual(await client.exists(`exec:${ctx.execution_id}:state`), 0, 'no state write over a failed read');
+  });
 
   it('a block that yields no reply still closes its step', async function () {
     const rid = newRequestId();
@@ -554,12 +642,15 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     const rid = newRequestId();
     send('/count', rid);
     await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
-    const from = log.findIndex((e) => e.event && e.event.request_id === rid && e.event.type === 'step.started');
-    const to = log.findIndex((e) => e.event && e.event.request_id === rid && e.event.type === 'step.completed');
-    const window = log.slice(from + 1, to);
-    assert.strictEqual(window.filter((e) => e.event && e.event.type === 'action.completed').length, 3);
+    // events are built after the flow moves on, so the window is cut on the INCRs that allocated their seqs
+    const execId = ofType(rid, 'step.started')[0].execution_id;
+    const seqCall = (seq) => log.findIndex((e) => e.call === 'incr' && e.args[0] === `exec:${execId}:seq` && e.result === seq);
+    const from = seqCall(ofType(rid, 'step.started')[0].seq);
+    const to = seqCall(ofType(rid, 'step.completed')[0].seq);
+    assert.ok(from >= 0 && to > from);
+    assert.strictEqual(ofType(rid, 'action.completed').length, 3);
     // 3 actions x (HGETALL + INCR), then the INCR of step.completed
-    assert.deepStrictEqual(window.filter((e) => e.call).map((e) => e.call),
+    assert.deepStrictEqual(log.slice(from + 1, to + 1).filter((e) => e.call).map((e) => e.call),
       ['hGetAll', 'incr', 'hGetAll', 'incr', 'hGetAll', 'incr', 'incr']);
   });
 });

@@ -15,6 +15,7 @@ const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2 };
 
 let state = { store: null, apiEndpoint: null };
 let policyCache = new Map();
+const deferred = new Set();
 
 function warn(op, err) {
   winston.warn('(ExecutionRecorder) ' + op + ' failed: ' + (err && err.message));
@@ -50,11 +51,33 @@ async function captureData(store, idProject) {
   return value;
 }
 
-/** Allocates the next seq and emits; build(seq) returns the data. Returns the seq or null. */
+/** Runs job off the flow path (next macrotask). Never throws. */
+function defer(job) {
+  const p = new Promise((resolve) => setImmediate(() => {
+    try {
+      job();
+    } catch (err) {
+      warn('deferred trace work', err);
+    }
+    resolve();
+  }));
+  deferred.add(p);
+  p.then(() => deferred.delete(p));
+}
+
+/**
+ * Allocates the next seq (awaited: the only Redis call of an event) and returns it.
+ * build(seq) — diffing, hashing, sealing — and the publish run deferred, in seq order.
+ */
 async function emit(ctx, type, build) {
   const seq = await ctx._store.nextSeq(ctx.execution_id);
   if (seq === null || seq === undefined) return null;
-  getEmitter().emit(buildEnvelope({ ctx, seq, type, data: build(seq) }));
+  const at = new Date().toISOString();
+  defer(() => {
+    const envelope = buildEnvelope({ ctx, seq, type, data: build(seq) });
+    envelope.at = at;
+    getEmitter().emit(envelope);
+  });
   return seq;
 }
 
@@ -111,6 +134,11 @@ const ExecutionRecorder = {
   _resetForTests() {
     state = { store: null, apiEndpoint: null };
     policyCache = new Map();
+  },
+
+  /** Resolves once every deferred event build and publish has run. */
+  async _drainForTests() {
+    while (deferred.size > 0) await Promise.all([...deferred]);
   },
 
   async onMessageIn({ message, bot, botId, requestId, projectId, token, store } = {}) {
@@ -170,8 +198,12 @@ const ExecutionRecorder = {
         if (resolved.previousExecutionId) data.previous_execution_id = resolved.previousExecutionId;
         const request = (message && message.request) || {};
         const payload = (request.attributes && request.attributes.payload) || (message && message.attributes && message.attributes.payload);
-        if (payload !== undefined && payload !== null) sealInto(ctx, data, 'sealed_trigger_payload', stripSecrets(payload));
-        await emit(ctx, 'execution.started', () => data);
+        // a copy now (the flow may change the payload later); the sealing is deferred
+        const plain = payload !== undefined && payload !== null ? stripSecrets(payload) : null;
+        await emit(ctx, 'execution.started', () => {
+          sealInto(ctx, data, 'sealed_trigger_payload', plain);
+          return data;
+        });
         if (!isAutomation(ctx)) writeExecutionId(ctx, token);
       }
       return ctx;
@@ -202,40 +234,46 @@ const ExecutionRecorder = {
     if (!ctx) return null;
     try {
       const cfg = ctx._cfg;
-      if (!cfg.stateEnabled) return await openStep(ctx, blockId, blockName, {}, {
-        block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
-      });
-      const before = await readState(ctx);
-      if (before === null) return null;
       const scopes = ctx.scopes;
-      const outside = StateDiff.diffStates(ctx.prev, before, {
-        projectKey: ctx._projectKey,
-        valueMaxBytes: cfg.stateValueMaxBytes,
-        attribute: (key) => scopes.message_in.has(key) ? 'message_in' : (scopes.jump_params.has(key) ? 'jump_params' : 'external')
-      });
       ctx.scopes = { message_in: new Set(), jump_params: new Set() };
-
+      // state off, or the read failed: the step and its actions still flow, without state fields
+      const before = cfg.stateEnabled ? await readState(ctx) : null;
+      if (before === null) {
+        return await openStep(ctx, blockId, blockName, {}, true, () => ({
+          block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
+        }));
+      }
+      // decided on the block count plus the delta bytes folded in so far (deferred jobs add theirs)
       const keyframe = StateDiff.shouldKeyframe({
         isFirstBlock: !ctx._hasState && ctx._blocks === 0,
         blocksSinceKeyframe: ctx.kf.blocks_since,
         deltaBytesSinceKeyframe: ctx.kf.delta_bytes
       }, cfg);
-      const data = {
-        block_id: blockId,
-        block_name: blockName,
-        state_vars: Object.keys(before).length,
-        outside_changes: outside.changes,
-        state_keyframe: keyframe,
-        state_manifest: keyframe ? StateDiff.buildManifest(before, { projectKey: ctx._projectKey }) : null
-      };
-      if (keyframe) {
-        ctx.kf = { blocks_since: 0, delta_bytes: 0 };
-        sealInto(ctx, data, 'sealed_state', sealableState(before, cfg.stateValueMaxBytes));
-      } else {
-        ctx.kf.delta_bytes += outside.deltaBytes;
-        sealInto(ctx, data, 'sealed_state', outside.sealedValues);
-      }
-      return await openStep(ctx, blockId, blockName, before, data);
+      if (keyframe) ctx.kf = { blocks_since: 0, delta_bytes: 0 };
+      const kf = ctx.kf;
+      const prev = ctx.prev;
+      return await openStep(ctx, blockId, blockName, before, false, () => {
+        const outside = StateDiff.diffStates(prev, before, {
+          projectKey: ctx._projectKey,
+          valueMaxBytes: cfg.stateValueMaxBytes,
+          attribute: (key) => scopes.message_in.has(key) ? 'message_in' : (scopes.jump_params.has(key) ? 'jump_params' : 'external')
+        });
+        const data = {
+          block_id: blockId,
+          block_name: blockName,
+          state_vars: Object.keys(before).length,
+          outside_changes: outside.changes,
+          state_keyframe: keyframe,
+          state_manifest: keyframe ? StateDiff.buildManifest(before, { projectKey: ctx._projectKey }) : null
+        };
+        if (keyframe) {
+          sealInto(ctx, data, 'sealed_state', sealableState(before, cfg.stateValueMaxBytes));
+        } else {
+          kf.delta_bytes += outside.deltaBytes;
+          sealInto(ctx, data, 'sealed_state', outside.sealedValues);
+        }
+        return data;
+      });
     } catch (err) {
       warn('blockEntry', err);
       return null;
@@ -368,16 +406,19 @@ const ExecutionRecorder = {
   }
 };
 
-/** Starts ctx.step with the state before the block and emits step.started. */
-async function openStep(ctx, blockId, blockName, before, data) {
+/**
+ * Starts ctx.step with the state before the block and emits step.started.
+ * stateless: no state fields for this step and its actions, and no state write at its exit.
+ */
+async function openStep(ctx, blockId, blockName, before, stateless, build) {
   ctx.step = {
     seq: null, block_id: blockId, block_name: blockName, started_at: Date.now(),
-    actions: [], outcome: null, exit_taken: null, before, exitPending: null
+    actions: [], outcome: null, exit_taken: null, before, stateless, exitPending: null
   };
   ctx.current = before;
   ctx._chainEnded = false;
   const step = ctx.step;
-  step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, data));
+  step.seq = await emit(ctx, 'step.started', (seq) => Object.assign({ step_seq: seq }, build()));
   return step.seq;
 }
 
@@ -388,15 +429,12 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     const cfg = ctx._cfg;
     const action = (directive && directive.action) || {};
     const actionId = action._tdActionId;
-    const writes = rec.tap ? rec.tap.writes : new Map();
-    const after = cfg.stateEnabled ? await readState(ctx) : null;
-    const delta = !cfg.stateEnabled ? NO_DELTA : StateDiff.diffStates(ctx.current, after || ctx.current, {
-      projectKey: ctx._projectKey,
-      valueMaxBytes: cfg.stateValueMaxBytes,
-      attribute: (key) => writes.has(key) ? (actionId || `action_${index}`) : 'external'
-    });
+    // snapshot now: the deferred diff must not see writes made after this point
+    const writes = new Map(rec.tap ? rec.tap.writes : []);
+    const before = ctx.current;
+    const after = step.stateless ? null : await readState(ctx);
     if (after) ctx.current = after;
-    ctx.kf.delta_bytes += delta.deltaBytes;
+    const kf = ctx.kf;
 
     const jumped = jumpedTo !== undefined ? jumpedTo : rec.jumpedTo;
     const { outcome, exit_taken } = mapOutcome({ action, jumpedTo: jumped, error });
@@ -414,9 +452,17 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
       duration_ms: Date.now() - (startedAt || rec.startedAt)
     };
     if (error) data.error_code = 'action_error';
-    data.state_delta = delta.changes;
-    sealInto(ctx, data, 'sealed_state', delta.sealedValues);
-    return await emit(ctx, 'action.completed', () => data);
+    return await emit(ctx, 'action.completed', () => {
+      const delta = !after ? NO_DELTA : StateDiff.diffStates(before, after, {
+        projectKey: ctx._projectKey,
+        valueMaxBytes: cfg.stateValueMaxBytes,
+        attribute: (key) => writes.has(key) ? (actionId || `action_${index}`) : 'external'
+      });
+      kf.delta_bytes += delta.deltaBytes;
+      data.state_delta = delta.changes;
+      sealInto(ctx, data, 'sealed_state', delta.sealedValues);
+      return data;
+    });
   } catch (err) {
     warn('afterAction', err);
     return null;
@@ -444,15 +490,17 @@ async function recordBlockExit(ctx, step) {
       exit_taken: step.exit_taken,
       duration_ms: Date.now() - step.started_at
     };
-    if (ctx._cfg.stateEnabled) {
-      data.state_vars = Object.keys(current).length;
-      data.changed_keys = countChanged(step.before, current);
-    }
-    const seq = await emit(ctx, 'step.completed', () => data);
+    const seq = await emit(ctx, 'step.completed', () => {
+      if (!step.stateless) {
+        data.state_vars = Object.keys(current).length;
+        data.changed_keys = countChanged(step.before, current);
+      }
+      return data;
+    });
     ctx.kf.blocks_since += 1;
     ctx._blocks += 1;
+    if (step.stateless) return seq;
     ctx.prev = current;
-    if (!ctx._cfg.stateEnabled) return seq;
     await ctx._store.setState(ctx.execution_id, {
       step_seq: step.seq,
       raw: current,

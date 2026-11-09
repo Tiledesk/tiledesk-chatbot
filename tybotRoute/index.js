@@ -162,6 +162,10 @@ router.post('/ext/:botid', async (req, res) => {
   }
   catch(err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
+    if (ctx && ctx.step) { // execIntent may have opened a step: close it
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
     return;
   }
   if (!reply) {
@@ -215,6 +219,10 @@ router.post('/ext/:botid', async (req, res) => {
         success:     directivesSuccess,
         request_id:  requestId || null
       });
+    }
+    if (!directivesSuccess && ctx && ctx.step) { // the directives never started: close the step
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
     }
   }
   else { // text answer (parse text directives to get actions)
