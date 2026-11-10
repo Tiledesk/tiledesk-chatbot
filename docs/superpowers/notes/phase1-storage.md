@@ -83,3 +83,21 @@ Docker free went 35 -> 32 GB, the Mac 77 -> 74 GB. Nothing was cleaned; nothing 
 
 New in `.exec/` (gitignored, a few hundred bytes): `cors.yml` (S5 test override, not active).
 The cleanup list of the "after Task 23" entry still applies; the build cache is now 12.24 GB.
+
+## Phase 2 acceptance (2026-11-10)
+
+Task 15 (`phase2-acceptance.md`), on the Task 14 images; nothing built.
+```
+start: Mac free GB: 70   Docker free GB: 30
+end:   Mac free GB: 70   Docker free GB: 30
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          63        21        51.32GB   17.84GB (34%)
+Containers      27        16        1.597GB   1.591GB (99%)
+Local Volumes   34        17        27.94GB   974.2MB (3%)
+Build Cache     92        0         14.65GB   12.73GB
+```
+Ours unchanged: `tiledesk-exec-chatbot` e22b629902e1, `-server` 2ab953852619, `-executions-api` 45c997bbbd8f,
+`-dashboard` 734e9a3f17dd (Task 14). The chatbot container was recreated twice (flag off, flag on) on the same
+image. Data added: 116 executions (demo, latency and MONITOR runs; the 50 flag-off runs made none) and Redis `exec:*` keys from the demo and latency runs (1128
+keys, all with TTL), 26 screenshots (816 KB) in `phase2-acceptance/`. Nothing cleaned, nothing pruned; the build
+cache (14.65 GB, from the Phase 1/2 rebuilds) is still the user's call.
