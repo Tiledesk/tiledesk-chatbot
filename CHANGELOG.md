@@ -1,7 +1,11 @@
 # Tiledesk native chatbot
 
-# 3.0.4
+# 3.0.6
+- **added**: customHeaders for vllm servers
+
+# 3.0.5
 - **added** possibility to block indexing functions
+
 # 3.0.4
 - **removed** verbose logs
 
