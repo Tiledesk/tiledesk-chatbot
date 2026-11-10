@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const winston = require('../utils/winston');
 const { getConfig, isEnabled } = require('./config');
 const { stripSecrets, isSecretName } = require('./secrets');
@@ -17,6 +18,25 @@ const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2 };
 let state = { store: null, apiEndpoint: null };
 let policyCache = new Map();
 const deferred = new Set();
+
+function stopHeartbeat(ctx) {
+  if (ctx && ctx._heartbeat) {
+    clearInterval(ctx._heartbeat);
+    ctx._heartbeat = null;
+  }
+}
+
+/** Renews the lease on a timer (never on the flow's await path); the timer does not keep the process alive. */
+function startHeartbeat(ctx) {
+  stopHeartbeat(ctx);
+  const timer = setInterval(() => {
+    ctx._store.renewLease(ctx.execution_id, ctx.pod, ctx._cfg.leaseMs).then((ok) => {
+      if (!ok && ctx._heartbeat === timer) stopHeartbeat(ctx); // lost (expired or taken): stop renewing
+    }, () => {});
+  }, ctx._cfg.heartbeatMs);
+  if (timer.unref) timer.unref();
+  ctx._heartbeat = timer;
+}
 
 function warn(op, err) {
   winston.warn('(ExecutionRecorder) ' + op + ' failed: ' + (err && err.message));
@@ -195,16 +215,33 @@ const ExecutionRecorder = {
         _store: st,
         _cfg: cfg,
         _projectKey: Sealer.projectHashKey(projectId, cfg.hashKey),
-        _captureData: await captureData(st, projectId),
+        pod: os.hostname(),
+        leased: false,
+        _heartbeat: null,
+        _captureData: true,
         _hasState: false,
         _blocks: 0,
         _failed: false,
         _chainEnded: false
       };
 
+      // one tick, one connection: the policy and the saved state (resolve tail), the lease, and on a jump the
+      // transit DEL (a further exec:* read for this message is one more line in this array)
+      const hinted = message && message.attributes && message.attributes.execution_id;
+      const needState = cfg.stateEnabled && resolved.state === undefined;
+      const [capture, savedState, leased] = await Promise.all([
+        captureData(st, projectId),
+        needState ? st.getState(ctx.execution_id) : null,
+        st.acquireLease(ctx.execution_id, ctx.pod, cfg.leaseMs),
+        hinted ? st.clearTransit(ctx.execution_id) : null
+      ]);
+      ctx._captureData = capture;
+      // a lost NX (another chain of this execution is running): the message still runs, without a heartbeat
+      ctx.leased = leased === true;
+      if (ctx.leased) startHeartbeat(ctx);
       // resolve read the state with the status (a created execution has none)
       let saved = null;
-      if (cfg.stateEnabled) saved = resolved.state !== undefined ? resolved.state : await st.getState(ctx.execution_id);
+      if (cfg.stateEnabled) saved = resolved.state !== undefined ? resolved.state : savedState;
       if (saved) {
         ctx._hasState = true;
         ctx.prev = saved.raw || null;
@@ -326,6 +363,9 @@ const ExecutionRecorder = {
             ctx.jumpInFlight = true;
             await ExecutionRecorder.afterAction(ctx, { index, directive });
             await ExecutionRecorder.blockExit(ctx);
+            // the next block may run on any pod: mark the hand-over, then let go of the lease
+            await ctx._store.setTransit(ctx.execution_id, ctx._cfg.transitMs);
+            await ExecutionRecorder.releaseLease(ctx);
           } catch (err) {
             warn('onJump', err);
           }
@@ -380,10 +420,25 @@ const ExecutionRecorder = {
     return ctx.step.exitPending;
   },
 
+  /** Stops the heartbeat and gives the lease back (only if this chain took it). Never throws. */
+  async releaseLease(ctx) {
+    if (!ctx) return;
+    try {
+      stopHeartbeat(ctx);
+      if (ctx.leased) {
+        ctx.leased = false;
+        await ctx._store.releaseLease(ctx.execution_id, ctx.pod);
+      }
+    } catch (err) {
+      warn('releaseLease', err);
+    }
+  },
+
   async endOfChain(ctx) {
     if (!ctx || ctx.jumpInFlight || ctx._failed || ctx._chainEnded) return null;
     try {
       ctx._chainEnded = true;
+      await ExecutionRecorder.releaseLease(ctx);
       if (isAutomation(ctx)) {
         const seq = await emit(ctx, 'execution.ended', () => ({ end_reason: 'completed' }));
         await ctx._store.setStatusHint(ctx.execution_id, 'completed');
@@ -400,6 +455,7 @@ const ExecutionRecorder = {
     if (!ctx || ctx._failed) return null;
     try {
       ctx._failed = true;
+      await ExecutionRecorder.releaseLease(ctx);
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
       const seq = await emit(ctx, 'execution.failed', () => data);
