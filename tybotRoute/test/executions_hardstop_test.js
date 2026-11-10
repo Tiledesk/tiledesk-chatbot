@@ -27,7 +27,7 @@ const CHATBOT_TOKEN = 'XXX';
 const APP_PORT = 10051;
 const API_PORT = 10052;
 
-const ENV_KEYS = ['EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
+const ENV_KEYS = ['KB_ENDPOINT', 'GPTKEY', 'EXECUTIONS_ENABLED', 'EXECUTIONS_STATE_ENABLED', 'EXECUTIONS_STATE_HASH_KEY', 'EXECUTIONS_SEAL_PUBLIC_KEY', 'EXECUTIONS_SEAL_KID',
   'EXECUTIONS_AMQP_URL', 'AMQP_MANAGER_URL', 'CHATBOT_MAX_STEPS', 'EXECUTIONS_LEASE_MS', 'EXECUTIONS_HEARTBEAT_MS', 'EXECUTIONS_TRANSIT_MS'];
 
 const app = express();
@@ -62,6 +62,11 @@ function buildBots() {
     reply('act_after_web', 'after web')
   ]);
   add('falseblock', [reply('act_false', 'false branch')]);
+  add('askkb', [
+    { _tdActionType: 'askgpt', _tdActionId: 'act_ask', _tdActionTitle: 'ask kb', question: 'what?', kbid: 'kb1',
+      assignReplyTo: 'kb_answer', falseIntent: '#falseblock' },
+    reply('act_after_ask', 'after ask')
+  ]);
   add('email', [
     { _tdActionType: 'email', _tdActionId: 'act_email', _tdActionTitle: 'send email', subject: 'hi', text: 'body', to: 'a@b.c' },
     reply('act_after_email', 'after email')
@@ -168,6 +173,8 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
     delete process.env.AMQP_MANAGER_URL;
     delete process.env.CHATBOT_MAX_STEPS;
     delete process.env.EXECUTIONS_STATE_ENABLED;
+    process.env.KB_ENDPOINT = `http://localhost:${API_PORT}/kb`; // its /qa hangs
+    process.env.GPTKEY = 'sk-hardstop-test';
     setEmitterForTests(fakeEmitter);
 
     client = redis.createClient({ url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}` });
@@ -186,6 +193,7 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
     api.post('/:projectId/emails/internal/send', (req, res) => setTimeout(() => res.send({ queued: true }), emailDelayMs));
     api.post('/modules/whatsapp/api/tiledesk/broadcast', (req, res) => res.send({ success: true }));
     api.get('/hang', (req, res) => { hanging.push(res); }); // never answers
+    api.post('/kb/qa', (req, res) => { hanging.push(res); }); // never answers
     apiListener = await listen(api, API_PORT);
 
     await startTybot();
@@ -280,6 +288,41 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
     assert.strictEqual(ofType(rid, 'execution.idle').length, 0);
     assert.strictEqual(sentTo(rid).length, 0, 'neither the next action nor the false block replied');
     assert.strictEqual(await owner(id), null, 'lease released');
+  });
+
+  it('hard stop during askgpt: interrupted + stopped, no unhandled rejection, process alive', async function () {
+    const rejections = [];
+    const onRejection = (reason) => rejections.push(reason);
+    process.on('unhandledRejection', onRejection);
+    try {
+      const rid = newRequestId();
+      const before = hanging.length;
+      send('/askkb', rid);
+      await waitFor(() => hanging.length > before && ofType(rid, 'step.started').length === 1, 'the hanging /qa call');
+      const id = execIdOf(rid);
+      await hardStop(id);
+      await waitFor(() => ofType(rid, 'execution.stopped').length === 1, 'execution.stopped', 2000);
+      await sleep(800); // the aborted request's callback has run
+      await ExecutionRecorder._drainForTests();
+      assert.deepStrictEqual(rejections.map((r) => String(r && r.stack || r)), [], 'no unhandled rejection');
+      const acts = ofType(rid, 'action.completed');
+      assert.strictEqual(acts.length, 1);
+      assert.strictEqual(acts[0].data.outcome, 'interrupted');
+      assert.strictEqual(acts[0].data.error_code, 'hard_stop');
+      const stopped = ofType(rid, 'execution.stopped');
+      assert.strictEqual(stopped[0].data.mode, 'hard');
+      assert.deepStrictEqual(stopped[0].data.interrupted_action, { index: 0, action_id: 'act_ask', type: 'askgpt', title: 'ask kb' });
+      assert.deepStrictEqual(ofType(rid, 'step.started').map((s) => s.data.block_id), ['askkb'], 'the false block never ran');
+      assert.strictEqual(jumps.filter((j) => j.rid === rid).length, 0, 'no jump posted');
+      assert.strictEqual(sentTo(rid).length, 0);
+      assert.strictEqual(await owner(id), null, 'lease released');
+      // the pod still serves
+      const rid2 = newRequestId();
+      send('/after', rid2);
+      await waitFor(() => sentTo(rid2).length === 1, 'a reply after the stop');
+    } finally {
+      process.removeListener('unhandledRejection', onRejection);
+    }
   });
 
   it('hard stop during an action without abort support → that action completes with hard_degraded true, then stopped before the next action', async function () {
