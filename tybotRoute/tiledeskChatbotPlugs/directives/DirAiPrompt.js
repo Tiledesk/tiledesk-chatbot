@@ -146,8 +146,7 @@ class DirAiPrompt {
     } else if (action.llm === 'vllm') {
       try {
         const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
-        vllm_model = await aiController.resolveLLMConfig(
-          this.projectId, action.llm, filled_model, this.token, filled_vllm_server);
+        vllm_model = await aiController.resolveLLMConfig(this.projectId, action.llm, filled_model, this.token, filled_vllm_server);
         key = vllm_model.api_key;
       } catch (err) {
         const errorMsg = err?.error || err?.message || "vllm integration not found";
@@ -309,13 +308,13 @@ class DirAiPrompt {
 
     }
 
-    if (action.llm === 'vllm' && vllm_server_config) {
+    if (action.llm === 'vllm' && vllm_model) {
       json.model = {
         name: filled_model,
-        url: vllm_server_config.url,
-        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
+        url: vllm_model.url,
+        api_key: vllm_model.api_key || vllm_model.token || null,
         provider: 'vllm'
-      }
+      };
     }
 
     if (action.llm === 'openrouter') {
