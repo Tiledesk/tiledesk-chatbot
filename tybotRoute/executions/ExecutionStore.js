@@ -17,6 +17,9 @@ const CAD_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.c
 // HSET only on a live hash: an expired exec:{id} is never recreated (it would have no TTL).
 const HSET_IF_EXISTS = "if redis.call('EXISTS', KEYS[1]) == 1 then return redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) else return 0 end";
 
+// Lease renew / release only by the pod whose id is stored (compare-and-act).
+const RENEW_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('PEXPIRE', KEYS[1], ARGV[2]) else return 0 end";
+
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
 
@@ -196,6 +199,59 @@ class ExecutionStore {
       await this.client.set(`exec:handoff:${requestId}`, JSON.stringify(value), { EX: HANDOFF_TTL });
     } catch (err) {
       this._warn('setHandoff', err);
+    }
+  }
+
+  /** 'soft' | 'hard' | null (no flag, unknown value, or Redis error). */
+  async getStop(id) {
+    try {
+      const v = await this.client.get(`exec:${id}:stop`);
+      return v === 'soft' || v === 'hard' ? v : null;
+    } catch (err) {
+      this._warn('getStop', err);
+      return null;
+    }
+  }
+
+  async acquireLease(id, pod, ms) {
+    try {
+      return (await this.client.set(`exec:${id}:owner`, pod, { NX: true, PX: ms })) !== null;
+    } catch (err) {
+      this._warn('acquireLease', err);
+      return false;
+    }
+  }
+
+  async renewLease(id, pod, ms) {
+    try {
+      return (await this.client.eval(RENEW_SCRIPT, { keys: [`exec:${id}:owner`], arguments: [pod, String(ms)] })) === 1;
+    } catch (err) {
+      this._warn('renewLease', err);
+      return false;
+    }
+  }
+
+  async releaseLease(id, pod) {
+    try {
+      await this.client.eval(CAD_SCRIPT, { keys: [`exec:${id}:owner`], arguments: [pod] });
+    } catch (err) {
+      this._warn('releaseLease', err);
+    }
+  }
+
+  async setTransit(id, ms) {
+    try {
+      await this.client.set(`exec:${id}:transit`, String(Date.now()), { PX: ms });
+    } catch (err) {
+      this._warn('setTransit', err);
+    }
+  }
+
+  async clearTransit(id) {
+    try {
+      await this.client.del(`exec:${id}:transit`);
+    } catch (err) {
+      this._warn('clearTransit', err);
     }
   }
 

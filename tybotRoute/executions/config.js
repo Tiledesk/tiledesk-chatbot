@@ -42,7 +42,10 @@ function getConfig() {
     keyframeEvery: int(env.EXECUTIONS_STATE_KEYFRAME_EVERY, 20),
     keyframeMaxDeltaBytes: int(env.EXECUTIONS_STATE_KEYFRAME_MAX_DELTA_BYTES, 1048576),
     hashKey: env.EXECUTIONS_STATE_HASH_KEY || null,
-    jumpBudgetMs: int(env.EXECUTIONS_JUMP_BUDGET_MS, 1000)
+    jumpBudgetMs: int(env.EXECUTIONS_JUMP_BUDGET_MS, 1000),
+    leaseMs: int(env.EXECUTIONS_LEASE_MS, 15000),
+    heartbeatMs: int(env.EXECUTIONS_HEARTBEAT_MS, 5000),
+    transitMs: int(env.EXECUTIONS_TRANSIT_MS, 120000)
   };
 }
 
