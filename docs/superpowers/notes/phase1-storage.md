@@ -62,3 +62,24 @@ What the Storage cleanup would free (not run; it needs the user's go-ahead):
 
 Total that the listed cleanup frees: about 8 GB of images and node_modules, plus 9.65 GB if the build
 cache is pruned.
+
+## after e2e re-run (2026-11-10)
+
+After rebuilding the four images on the final code and the re-acceptance (`phase1-acceptance-final.md`).
+```
+Mac free GB: 74
+Docker free GB: 32
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          63        20        51.31GB   17.85GB (34%)
+Containers      25        14        1.593GB   1.591GB (99%)
+Local Volumes   32        15        27.61GB   974.2MB (3%)
+Build Cache     84        0         12.24GB   10.32GB
+```
+Ours: `tiledesk-exec-server` 3.6 GB (d70854137a71), `tiledesk-exec-chatbot` 2.09 GB (bb6ba7a19d39),
+`tiledesk-exec-executions-api` 283 MB (d137bd14f483), `tiledesk-exec-dashboard` 88 MB (fb5fb9be2b43).
+The old ids went with their tags (containerd image store), so the image total did not grow. The four
+rebuilds added 2.6 GB of build cache (9.65 -> 12.24 GB), most of it the dashboard's Angular build.
+Docker free went 35 -> 32 GB, the Mac 77 -> 74 GB. Nothing was cleaned; nothing was pruned.
+
+New in `.exec/` (gitignored, a few hundred bytes): `cors.yml` (S5 test override, not active).
+The cleanup list of the "after Task 23" entry still applies; the build cache is now 12.24 GB.
