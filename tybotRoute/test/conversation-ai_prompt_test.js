@@ -1258,6 +1258,123 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
+    it('AiPrompt with MCP OAuth success - sends the bearer from the server token endpoint', (done) => {
+
+      let listener;
+      let tokenRequests = 0;
+      let endpointServer = express();
+      endpointServer.use(bodyParser.json());
+
+      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
+        res.send({ success: true });
+        const message = req.body;
+        assert(message.attributes.commands !== null);
+        assert(message.attributes.commands.length === 2);
+        const command2 = message.attributes.commands[1];
+        assert(command2.type === "message");
+        assert(command2.message.text === "Answer: Risposta dall'agent");
+        assert.strictEqual(tokenRequests, 1);
+        listener.close(() => {
+          done();
+        });
+      });
+
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+
+        assert(req.params.name === 'myllm' || req.params.name === 'mcp');
+
+        let reply = {};
+        if (req.params.name === 'myllm') {
+          reply = {
+            _id: "656728224b45965b69111111",
+            id_project: "62c3f10152dc740035000000",
+            name: "myllm",
+            value: {
+              apikey: "example_api_key",
+            }
+          }
+        }
+        else if (req.params.name === 'mcp') {
+          reply = {
+            _id: "656728224b45965b69111112",
+            id_project: "62c3f10152dc740035000000",
+            name: "mcp",
+            value: {
+              servers: [
+                {
+                  name: "gmail",
+                  url: "example_oauth.com/mcp",
+                  transport: "streamable_http",
+                  oauth: { connection_id: "conn-e2e", mode: "mcp" },
+                  customHeaders: [
+                    { key: "Authorization", value: "Bearer stale", enabled: true },
+                    { key: "X-Tenant", value: "acme", enabled: true }
+                  ]
+                },
+                {
+                  name: "email",
+                  url: "example_url1.com/mcp",
+                  transport: "streamable_http",
+                  customHeaders: [
+                    { key: "X-Tenant", value: "email", enabled: true }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+
+        res.status(200).send(reply);
+      })
+
+      endpointServer.get('/:project_id/mcp/oauth/connections/:connection_id/token', function (req, res) {
+        tokenRequests++;
+        assert.strictEqual(req.params.project_id, PROJECT_ID);
+        assert.strictEqual(req.params.connection_id, "conn-e2e");
+        assert.strictEqual(req.headers.authorization, "JWT " + CHATBOT_TOKEN);
+        res.status(200).send({ access_token: "oauth-e2e-token", token_type: "Bearer", expires_at: null });
+      })
+
+      endpointServer.post('/api/ask', function (req, res) {
+
+        assert.strictEqual(req.body.servers.gmail.url, "example_oauth.com/mcp");
+        assert.strictEqual(req.body.servers.gmail.headers['Authorization'], "Bearer oauth-e2e-token");
+        assert.strictEqual(req.body.servers.gmail.headers['X-Tenant'], "acme");
+        assert.strictEqual(req.body.servers.gmail.oauth, undefined);
+        assert.strictEqual(req.body.servers.email.headers['Authorization'], undefined);
+        assert.strictEqual(req.body.servers.email.headers['X-Tenant'], "email");
+
+        res.status(200).send({
+          answer: "Risposta dall'agent",
+          chat_history_dict: {},
+          prompt_token_info: null
+        });
+      });
+
+      listener = endpointServer.listen(10002, '0.0.0.0', () => {
+        winston.verbose('endpointServer started' + listener.address());
+        let request = {
+          "payload": {
+            "senderFullname": "guest#367e",
+            "type": "text",
+            "sender": "A-SENDER",
+            "recipient": REQUEST_ID,
+            "text": '/ai_prompt_mcp_oauth',
+            "id_project": PROJECT_ID,
+            "metadata": "",
+            "request": {
+              "request_id": REQUEST_ID
+            }
+          },
+          "token": CHATBOT_TOKEN
+        }
+        tilebotService.sendMessageToBot(request, BOT_ID, () => {
+          winston.verbose("Message sent:\n", request);
+        });
+      });
+
+    })
+
     it('AiPrompt with internal-MCP success - invokes the aiprompt mockup and test the returning attributes', (done) => {
       
       let listener;

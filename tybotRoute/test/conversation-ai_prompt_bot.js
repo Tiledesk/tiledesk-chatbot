@@ -291,6 +291,31 @@ const bot = {
 			"webhook_enabled": false,
 			"enabled": true,
 			"language": "en",
+			"intent_display_name": "ai_prompt_mcp_oauth",
+			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
+			"form": {},
+			"question": "",
+			"actions": [{
+				"_tdActionType": "ai_prompt",
+				"_tdActionTitle": "ai action",
+				"assignReplyTo": "ai_reply",
+				"question": "this is the question",
+				"servers": [
+					{ name: "gmail", transport: "streamable_http", url: "example_oauth.com/mcp", tools: ["gmail_send"] },
+					{ name: "email", transport: "streamable_http", url: "example_url1.com/mcp", tools: ["email_send"] }
+				],
+				"llm": "myllm",
+				"model": "llmmodel",
+				"max_tokens": 512,
+				"temperature": 0.7,
+				"trueIntent": "#SUCCESS",
+				"falseIntent": "#FAILURE",
+			}]
+		},
+		{
+			"webhook_enabled": false,
+			"enabled": true,
+			"language": "en",
 			"intent_display_name": "ai_prompt_internal_mcp",
 			"intent_id": "00f93b97-89ee-466d-a09c-e47a18943057",
 			"form": {},
