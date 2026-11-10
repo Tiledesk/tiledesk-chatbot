@@ -13,7 +13,7 @@ const { detectTrigger } = require('./trigger');
 const { rootIdOf } = require('./botIdentity');
 
 const POLICY_TTL_MS = 60000;
-const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2 };
+const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
 
 let state = { store: null, apiEndpoint: null };
 let policyCache = new Map();
@@ -159,6 +159,25 @@ function isAutomation(ctx) {
   return typeof ctx.request_id === 'string' && ctx.request_id.startsWith('automation-request-');
 }
 
+/** execution.stopped, once per chain. */
+async function emitStopped(ctx, mode) {
+  if (ctx._stoppedEmitted) return null;
+  ctx._stoppedEmitted = true;
+  return emit(ctx, 'execution.stopped', (seq) => ({ mode, last_seq: seq }));
+}
+
+/** Automation sync caller (index.js /block): the 409 on its /webhooks topic, once per chain. Never throws. */
+async function publishStopped(ctx) {
+  if (!isAutomation(ctx) || ctx._stopPublished) return;
+  ctx._stopPublished = true;
+  try {
+    const webResponse = { status: 409, payload: { error: 'execution_stopped', execution_id: ctx.execution_id } };
+    await ctx._store.client.publish(`/webhooks/${ctx.request_id}`, JSON.stringify(webResponse));
+  } catch (err) {
+    warn('publish 409', err);
+  }
+}
+
 const ExecutionRecorder = {
 
   /** Called by startApp once Redis is connected. */
@@ -229,13 +248,15 @@ const ExecutionRecorder = {
       // transit DEL (a further exec:* read for this message is one more line in this array)
       const hinted = message && message.attributes && message.attributes.execution_id;
       const needState = cfg.stateEnabled && resolved.state === undefined;
-      const [capture, savedState, leased] = await Promise.all([
+      const [capture, savedState, leased, , stop] = await Promise.all([
         captureData(st, projectId),
         needState ? st.getState(ctx.execution_id) : null,
         st.acquireLease(ctx.execution_id, ctx.pod, cfg.leaseMs),
-        hinted ? st.clearTransit(ctx.execution_id) : null
+        hinted ? st.clearTransit(ctx.execution_id) : null,
+        st.getStop(ctx.execution_id)
       ]);
       ctx._captureData = capture;
+      ctx._stopAtStart = stop || null; // read by gateMessage
       // a lost NX (another chain of this execution is running): the message still runs, without a heartbeat
       ctx.leased = leased === true;
       if (ctx.leased) startHeartbeat(ctx);
@@ -421,6 +442,63 @@ const ExecutionRecorder = {
     return ctx.step.exitPending;
   },
 
+  /**
+   * Before anything runs for a message (index.js /ext). Stop flag set: a jump emits execution.stopped
+   * (once per chain), a user message execution.message_while_stopped; the lease is released and an
+   * automation sync caller gets its 409. Returns 'blocked' then, 'run' otherwise (and for a null ctx).
+   */
+  async gateMessage(ctx, message) {
+    if (!ctx) return 'run';
+    let mode;
+    try {
+      mode = ctx._stopAtStart !== undefined ? ctx._stopAtStart : await ctx._store.getStop(ctx.execution_id);
+    } catch (err) {
+      warn('gateMessage', err);
+      return 'run';
+    }
+    if (!mode) return 'run';
+    ctx._stopped = true;
+    try {
+      await ExecutionRecorder.releaseLease(ctx);
+      if (message && message.sender === '_tdinternal') await emitStopped(ctx, mode);
+      else await emit(ctx, 'execution.message_while_stopped', () => ({}));
+      await publishStopped(ctx);
+    } catch (err) {
+      warn('gateMessage', err);
+    }
+    return 'blocked';
+  },
+
+  /**
+   * Before each action (DirectivesChatbotPlug.nextDirective): one GET of the stop flag. Set: the block
+   * exit is recorded (outcome unchanged), execution.stopped emitted, the lease released, an automation
+   * sync caller gets its 409, and the chain ends with nothing more (ctx._stopped). true = stop here.
+   */
+  async checkStopBeforeAction(ctx, { index, directive } = {}) {
+    if (!ctx || ctx._failed) return false;
+    if (ctx._stopped) return true;
+    let mode;
+    try {
+      mode = await ctx._store.getStop(ctx.execution_id);
+    } catch (err) {
+      warn('checkStopBeforeAction', err);
+      return false;
+    }
+    if (!mode) return false;
+    ctx._stopped = true;
+    // a jump already left this block (exit recorded, lease released): the next /ext emits stopped
+    if (ctx.jumpInFlight) return true;
+    try {
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.releaseLease(ctx);
+      await emitStopped(ctx, mode);
+      await publishStopped(ctx);
+    } catch (err) {
+      warn('checkStopBeforeAction', err);
+    }
+    return true;
+  },
+
   /** Stops the heartbeat and gives the lease back (only if this chain took it). Never throws. */
   async releaseLease(ctx) {
     if (!ctx) return;
@@ -436,7 +514,7 @@ const ExecutionRecorder = {
   },
 
   async endOfChain(ctx) {
-    if (!ctx || ctx.jumpInFlight || ctx._failed || ctx._chainEnded) return null;
+    if (!ctx || ctx.jumpInFlight || ctx._failed || ctx._chainEnded || ctx._stopped) return null;
     try {
       ctx._chainEnded = true;
       await ExecutionRecorder.releaseLease(ctx);
@@ -453,7 +531,7 @@ const ExecutionRecorder = {
   },
 
   async failed(ctx, { error_code, message } = {}) {
-    if (!ctx || ctx._failed) return null;
+    if (!ctx || ctx._failed || ctx._stopped) return null;
     try {
       ctx._failed = true;
       await ExecutionRecorder.releaseLease(ctx);

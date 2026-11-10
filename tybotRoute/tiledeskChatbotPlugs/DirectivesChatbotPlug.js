@@ -188,6 +188,12 @@ class DirectivesChatbotPlug {
   }
 
   async nextDirective(directives) {
+    // stop flag, before the next action only (one GET per action; none when the list is done)
+    const next_index = this.curr_directive_index + 1;
+    if (this.execution && next_index < directives.length &&
+        await ExecutionRecorder.checkStopBeforeAction(this.execution, { index: next_index, directive: directives[next_index] })) {
+      return null;
+    }
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 

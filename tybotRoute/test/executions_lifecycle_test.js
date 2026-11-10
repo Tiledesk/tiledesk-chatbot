@@ -633,7 +633,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     }
   });
 
-  it('no extra awaited Redis call per action beyond HGETALL+INCR', async function () {
+  it('no extra awaited Redis call per action beyond the stop GET and HGETALL+INCR', async function () {
     useProxiedStore();
     const rid = newRequestId();
     send('/count', rid);
@@ -645,19 +645,20 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     const to = seqCall(ofType(rid, 'step.completed')[0].seq);
     assert.ok(from >= 0 && to > from);
     assert.strictEqual(ofType(rid, 'action.completed').length, 3);
-    // 3 actions x (HGETALL + INCR), then the INCR of step.completed with the state write
+    // 3 actions x (stop GET before it, Phase 2; HGETALL + INCR after it), then the INCR of step.completed with the state write
     const calls = log.slice(from + 1).filter((e) => e.call);
-    assert.deepStrictEqual(calls.slice(0, 8).map((e) => e.call),
-      ['hGetAll', 'incr', 'hGetAll', 'incr', 'hGetAll', 'incr', 'incr', 'set']);
-    // pipelined: each action's INCR goes out with its HGETALL (1 round trip per action), and the
+    assert.deepStrictEqual(calls.slice(0, 11).map((e) => e.call),
+      ['get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'incr', 'set']);
+    for (const i of [0, 3, 6]) assert.strictEqual(calls[i].args[0], `exec:${execId}:stop`, 'GET ' + i + ' is the stop flag');
+    // pipelined: each action's INCR goes out with its HGETALL (1 round trip after each action), and the
     // state write with the step.completed INCR (1 round trip at block exit)
-    for (const i of [1, 3, 5]) assert.ok(calls[i].pendingBefore >= 1, 'INCR ' + i + ' issued with its HGETALL');
-    assert.strictEqual(calls[6].args[0], `exec:${execId}:seq`);
-    assert.strictEqual(calls[7].args[0], `exec:${execId}:state`);
-    assert.ok(calls[7].pendingBefore >= 1, 'state write issued with the step.completed INCR');
+    for (const i of [2, 5, 8]) assert.ok(calls[i].pendingBefore >= 1, 'INCR ' + i + ' issued with its HGETALL');
+    assert.strictEqual(calls[9].args[0], `exec:${execId}:seq`);
+    assert.strictEqual(calls[10].args[0], `exec:${execId}:state`);
+    assert.ok(calls[10].pendingBefore >= 1, 'state write issued with the step.completed INCR');
     const roundTrips = (slice) => slice.filter((e) => e.pendingBefore === 0).length;
-    for (const i of [0, 2, 4]) assert.strictEqual(roundTrips(calls.slice(i, i + 2)), 1, 'one round trip for action at ' + i);
-    assert.strictEqual(roundTrips(calls.slice(6, 8)), 1, 'one round trip at block exit');
+    for (const i of [0, 3, 6]) assert.strictEqual(roundTrips(calls.slice(i, i + 3)), 2, 'stop GET + one round trip for action at ' + i);
+    assert.strictEqual(roundTrips(calls.slice(9, 11)), 1, 'one round trip at block exit');
   });
 
   it('a message resolves without EXISTS, its status and state read together (T3b)', async function () {

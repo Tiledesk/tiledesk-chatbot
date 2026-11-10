@@ -116,6 +116,8 @@ router.post('/ext/:botid', async (req, res) => {
   });
   // flag off: no call at all (not even an awaited null), the flow runs as in 3.0.5
   const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
+  // stop flag set: nothing runs (the 200 is already sent); the gate emitted and released the lease
+  if (ctx && await ExecutionRecorder.gateMessage(ctx, message) === 'blocked') return;
   
   let intentsMachine;
   let backupMachine;
