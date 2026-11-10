@@ -142,12 +142,15 @@ class DirAiPrompt {
       });
 
     } else if (action.llm === 'vllm') {
-      const vllm_integration = await integrationService.getIntegration(this.projectId, action.llm, this.token);
-      
-      if (!vllm_integration?.value) {
-        this.logger.error("[AI Prompt] Error getting vllm integration.");
-        winston.error("DirAiPrompt Error getting vllm integration");
-        await this.chatbot.addParameter("flowError", "Vllm integration not found");
+      try {
+        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
+        vllm_model = await aiController.resolveLLMConfig(this.projectId, action.llm, filled_model, this.token, filled_vllm_server);
+        key = vllm_model.api_key;
+      } catch (err) {
+        const errorMsg = err?.error || err?.message || "vllm integration not found";
+        this.logger.error("[AI Prompt] vllm integration not resolved: ", errorMsg);
+        winston.error("Error: DirAiPrompt vllm integration not resolved: " + errorMsg);
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + errorMsg);
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
@@ -334,13 +337,13 @@ class DirAiPrompt {
 
     }
 
-    if (action.llm === 'vllm' && vllm_server_config) {
+    if (action.llm === 'vllm' && vllm_model) {
       json.model = {
         name: filled_model,
-        url: vllm_server_config.url,
-        api_key: vllm_server_config.apikey || vllm_server_config.token || null,
+        url: vllm_model.url,
+        api_key: vllm_model.api_key || vllm_model.token || null,
         provider: 'vllm'
-      }
+      };
     }
 
     if (action.llm === 'openrouter') {
