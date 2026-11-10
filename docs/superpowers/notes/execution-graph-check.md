@@ -79,3 +79,21 @@ last data and retries on the 5 s pace), noted for the review.
 
 Stack running: dashboard on 5542cb1cb4a7, chatbot (restarted 15:21:55, healthy), executions-api (restarted
 15:27:52, healthy). New executions: the failed one, two hang runs (waiting), two slow runs (completed).
+
+## After fixes (2026-11-10, dashboard 192be078a)
+
+Final-review fixes on `feature/execution-graph` (9eb11eb4d feed timeout, f2ee7bbb8 model, 192be078a component and
+i18n). `DASHBOARD_PATH=../tiledesk-dashboard bin/exec-rebuild dashboard`: image 5542cb1cb4a7 → **3118b7594331**;
+`bin/dev up -d --no-build dashboard` recreated only the dashboard. Same data as above (250 waiting, nothing running).
+
+| check | result | evidence |
+|---|---|---|
+| Busy agent capped | PASS | 10; "Exec demo · webhook" draws 12 waiting + one `+234` node (12 + 234 + 2 + 2 = the 250 in the counts line); 31 nodes in all, first fit at zoom 0.64 with every agent label readable |
+| Overflow tooltip | PASS | "234 more executions not drawn" / "waiting: 234" |
+| Agents coloured by activity | PASS | the 3 agents with waiting runs only are `rgb(93,107,130)` (wait colour), none `active`; blue now means something runs |
+| Tooltip en | PASS | 10; "Status: waiting", "Started: 10/11/2026, 16:22:10", "Trigger: webhook", "Steps: 3" |
+| Tooltip it | PASS | 11 (`<userId>_lang` = `it` in localStorage, removed afterwards); "Stato: in attesa", "Avviata: …", "Passi: 3"; overflow "Altre 234 esecuzioni non mostrate" / "in attesa: 234" |
+| Stale note with the api stopped | PASS | 12; `docker stop` at 15:44:14, the cycle started 15:44:17.28 is aborted by the 10 s client timeout, note at 15:44:27.47 (**13.5 s**, was ~60 s); last data kept (31 nodes, same counts); next cycle 15:44:32.29 (5 s, 502) |
+| Note clears after start | PASS | started 15:44:43, healthy 15:44:49, note gone 15:44:48.2 with the first 200 cycle |
+
+Left running: dashboard on 3118b7594331, executions-api started again (healthy), everything else untouched.
