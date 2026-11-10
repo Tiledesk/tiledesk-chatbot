@@ -30,16 +30,41 @@ function stopHeartbeat(ctx) {
   }
 }
 
-/** Renews the lease on a timer (never on the flow's await path); the timer does not keep the process alive. */
+/**
+ * Every chain heartbeats while it runs, on a timer (never on the flow's await path; the timer does not keep
+ * the process alive), with acquire-or-renew: a chain that lost the SET NX, or whose lease expired, takes the
+ * key once it is free, so a running chain is never left without an owner. A Redis error (null) or a key held
+ * by another pod's chain (false) does not stop the timer; only the chain's exit (releaseLease) does.
+ */
 function startHeartbeat(ctx) {
   stopHeartbeat(ctx);
   const timer = setInterval(() => {
-    ctx._store.renewLease(ctx.execution_id, ctx.pod, ctx._cfg.leaseMs).then((ok) => {
-      if (!ok && ctx._heartbeat === timer) stopHeartbeat(ctx); // lost (expired or taken): stop renewing
-    }, () => {});
+    ctx._store.renewLease(ctx.execution_id, ctx.pod, ctx._cfg.leaseMs).then(() => {}, () => {});
   }, ctx._cfg.heartbeatMs);
   if (timer.unref) timer.unref();
   ctx._heartbeat = timer;
+}
+
+// chains of an execution running on this pod: the lease (one key per execution, value = pod) is given back
+// only when the last of them exits, so a second chain is not left ownerless by the first one's release
+const podChains = new Map();
+
+function chainIn(ctx) {
+  podChains.set(ctx.execution_id, (podChains.get(ctx.execution_id) || 0) + 1);
+  ctx._counted = true;
+}
+
+/** true when this was the pod's last chain of the execution. Once per ctx. */
+function chainOut(ctx) {
+  if (!ctx._counted) return false;
+  ctx._counted = false;
+  const n = (podChains.get(ctx.execution_id) || 1) - 1;
+  if (n <= 0) {
+    podChains.delete(ctx.execution_id);
+    return true;
+  }
+  podChains.set(ctx.execution_id, n);
+  return false;
 }
 
 function warn(op, err) {
@@ -233,6 +258,7 @@ const ExecutionRecorder = {
 
   async onMessageIn({ message, bot, botId, requestId, projectId, token, store } = {}) {
     if (!isEnabled()) return null;
+    let ctx = null;
     try {
       const st = store || state.store;
       if (!st) return null;
@@ -251,7 +277,7 @@ const ExecutionRecorder = {
       });
       if (!resolved) return null;
 
-      const ctx = {
+      ctx = {
         execution_id: resolved.executionId,
         id_project: projectId,
         agent_id: agentId,
@@ -276,7 +302,8 @@ const ExecutionRecorder = {
         _hasState: false,
         _blocks: 0,
         _failed: false,
-        _chainEnded: false
+        _chainEnded: false,
+        created: !!resolved.created
       };
 
       // one tick, one connection: the policy and the saved state (resolve tail), the lease, and on a jump the
@@ -292,9 +319,11 @@ const ExecutionRecorder = {
       ]);
       ctx._captureData = capture;
       ctx._stopAtStart = stop || null; // read by gateMessage
-      // a lost NX (another chain of this execution is running): the message still runs, without a heartbeat
+      // a lost NX (another chain of this execution is running): the message still runs, and its
+      // heartbeat takes the lease once the other chain gives it back
       ctx.leased = leased === true;
-      if (ctx.leased) startHeartbeat(ctx);
+      chainIn(ctx);
+      startHeartbeat(ctx);
       // resolve read the state with the status (a created execution has none)
       let saved = null;
       if (cfg.stateEnabled) saved = resolved.state !== undefined ? resolved.state : savedState;
@@ -334,6 +363,7 @@ const ExecutionRecorder = {
       return ctx;
     } catch (err) {
       warn('onMessageIn', err);
+      if (ctx) await ExecutionRecorder.releaseLease(ctx); // no heartbeat or chain count left behind
       return null;
     }
   },
@@ -432,12 +462,13 @@ const ExecutionRecorder = {
             ctx.jumpInFlight = true;
             await ExecutionRecorder.afterAction(ctx, { index, directive });
             await ExecutionRecorder.blockExit(ctx);
-            // the next block may run on any pod: mark the hand-over, then let go of the lease
-            await ctx._store.setTransit(ctx.execution_id, ctx._cfg.transitMs);
           } catch (err) {
             warn('onJump', err);
           } finally {
-            await ExecutionRecorder.releaseLease(ctx); // also when recording threw: endOfChain no-ops after a jump
+            // also when recording threw: the next block may run on any pod, so mark the hand-over (setTransit
+            // never throws), then let go of the lease (endOfChain no-ops after a jump)
+            await ctx._store.setTransit(ctx.execution_id, ctx._cfg.transitMs);
+            await ExecutionRecorder.releaseLease(ctx);
           }
         }
       };
@@ -585,19 +616,31 @@ const ExecutionRecorder = {
     return ctx._hardStop;
   },
 
-  /** Stops the heartbeat and gives the lease back (only if this chain took it), and drops the abort controller. Never throws. */
+  /**
+   * Stops the heartbeat, drops the abort controller and, when this is the pod's last running chain of the
+   * execution, gives the lease back (compare-and-delete on the pod id). Never throws.
+   */
   async releaseLease(ctx) {
     if (!ctx) return;
     try {
       if (ctx._abort) AbortRegistry.release(ctx.execution_id, ctx._abort);
       stopHeartbeat(ctx);
-      if (ctx.leased) {
-        ctx.leased = false;
-        await ctx._store.releaseLease(ctx.execution_id, ctx.pod);
-      }
+      ctx.leased = false;
+      if (chainOut(ctx)) await ctx._store.releaseLease(ctx.execution_id, ctx.pod);
     } catch (err) {
       warn('releaseLease', err);
     }
+  },
+
+  /**
+   * A chain exit where no block ran (no reply, an error before the directives). An execution this
+   * message created ends like any chain that did not jump (idle, or ended completed for an automation),
+   * so it is never left running without an owner; otherwise only the lease goes. Never throws.
+   */
+  async endWithoutChain(ctx) {
+    if (!ctx) return;
+    if (ctx.created && !ctx.step) await ExecutionRecorder.endOfChain(ctx);
+    await ExecutionRecorder.releaseLease(ctx);
   },
 
   async endOfChain(ctx) {

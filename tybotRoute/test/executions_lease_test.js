@@ -49,6 +49,7 @@ function buildBots() {
     bot.intents_by_intent_id[name] = intent;
   };
   add('slow', [{ _tdActionType: 'wait', _tdActionId: 'act_wait', _tdActionTitle: 'wait', millis: 1500 }]);
+  add('slower', [{ _tdActionType: 'wait', _tdActionId: 'act_wait_long', _tdActionTitle: 'long wait', millis: 3000 }]);
   add('hop', [{ _tdActionType: 'intent', _tdActionId: 'act_goto_slow', _tdActionTitle: 'go to slow', intentName: '#slow' }]);
   return data;
 }
@@ -268,7 +269,25 @@ describe('Executions: lease, heartbeat and transit', function () {
     assert.strictEqual(await owner(id), null);
   });
 
-  it('flag off: no owner/transit keys', async function () {
+  it('a second concurrent chain keeps the lease alive after the first one releases', async function () {
+    process.env.EXECUTIONS_LEASE_MS = '300';
+    process.env.EXECUTIONS_HEARTBEAT_MS = '100';
+    const rid = newRequestId();
+    send('/slow', rid); // 1.5 s
+    await waitFor(() => execIdOf(rid), 'the execution');
+    const id = execIdOf(rid);
+    await waitFor(async () => (await owner(id)) !== null, 'the lease');
+    send('/slower', rid); // 3 s, loses the SET NX
+    await waitFor(() => ofType(rid, 'step.started').some((s) => s.data.block_id === 'slower'), 'the second chain');
+    await waitFor(() => ofType(rid, 'execution.idle').length >= 1, 'the first chain to end', 5000);
+    await sleep(700); // > 2 x leaseMs after the first chain's release
+    assert.strictEqual(ofType(rid, 'execution.idle').length, 1, 'the second chain is still waiting');
+    assert.strictEqual(await owner(id), os.hostname(), 'the second chain holds the lease');
+    await settle(rid, 2);
+    assert.strictEqual(await owner(id), null, 'released by the last chain');
+  });
+
+    it('flag off: no owner/transit keys', async function () {
     process.env.EXECUTIONS_ENABLED = 'false';
     const count = async () => {
       let n = 0;
@@ -318,6 +337,61 @@ describe('Executions: lease, heartbeat and transit', function () {
       assert.strictEqual(await owner(id), null);
     });
 
+    it('a message that creates an execution and runs no block ends it as idle (waiting), not leaseless', async function () {
+      const rid = newRequestId();
+      send('/no_such_intent_at_all', rid);
+      await waitFor(() => ofType(rid, 'execution.idle').length === 1, 'execution.idle');
+      await sleep(200);
+      await ExecutionRecorder._drainForTests();
+      const id = execIdOf(rid);
+      assert.strictEqual(ofType(rid, 'execution.started').length, 1, 'the message created the execution');
+      assert.strictEqual(ofType(rid, 'step.started').length, 0, 'no block ran');
+      assert.strictEqual(ofType(rid, 'execution.idle').length, 1);
+      assert.strictEqual(ofType(rid, 'execution.failed').length, 0);
+      assert.strictEqual(await owner(id), null, 'lease released');
+      // an existing waiting execution that matches nothing: no further idle
+      send('/no_such_intent_again', rid);
+      await sleep(600);
+      await ExecutionRecorder._drainForTests();
+      assert.strictEqual(ofType(rid, 'execution.idle').length, 1, 'only the created execution is idled');
+      assert.strictEqual(await owner(id), null);
+    });
+
+    it('an automation that creates an execution and runs no block ends completed', async function () {
+      const rid = 'automation-request-' + PROJECT_ID + '-' + uuidv4().replace(/-/g, '');
+      send('/no_such_intent_at_all', rid);
+      await waitFor(() => ofType(rid, 'execution.ended').length === 1, 'execution.ended');
+      await sleep(200);
+      await ExecutionRecorder._drainForTests();
+      const id = execIdOf(rid);
+      assert.strictEqual(ofType(rid, 'execution.ended')[0].data.end_reason, 'completed');
+      assert.strictEqual(ofType(rid, 'execution.idle').length, 0);
+      assert.strictEqual(await client.hGet(`exec:${id}`, 'status'), 'completed', 'completed hint');
+      assert.strictEqual(await owner(id), null);
+    });
+
+    it('a Redis error on a renew does not stop the heartbeat', async function () {
+      process.env.EXECUTIONS_LEASE_MS = '300';
+      process.env.EXECUTIONS_HEARTBEAT_MS = '100';
+      const ctx = await directCtx();
+      const realEval = client.eval;
+      let failed = 0;
+      client.eval = function (...args) {
+        if (failed === 0) { failed++; return Promise.reject(new Error('blip')); }
+        return realEval.apply(this, args);
+      };
+      try {
+        await sleep(900); // the first renew fails; a stopped heartbeat would let the 300 ms lease expire
+        assert.strictEqual(failed, 1, 'one renew failed');
+        assert.strictEqual(await owner(ctx.execution_id), os.hostname(), 'still renewed');
+        assert.ok(ctx._heartbeat, 'heartbeat still running');
+      } finally {
+        client.eval = realEval;
+        await ExecutionRecorder.releaseLease(ctx);
+      }
+      assert.strictEqual(await owner(ctx.execution_id), null);
+    });
+
     it('a throw while recording the block exit of a jump still releases the lease', async function () {
       const ctx = await directCtx();
       ctx.step = { seq: 1, actions: [], block_id: 'b' };
@@ -330,6 +404,8 @@ describe('Executions: lease, heartbeat and transit', function () {
       }
       assert.strictEqual(await owner(ctx.execution_id), null);
       assert.strictEqual(ctx._heartbeat, null);
+      assert.ok(/^\d+$/.test(await transit(ctx.execution_id) || ''), 'the hand-over marker is still written');
+      await client.del(`exec:${ctx.execution_id}:transit`);
     });
   });
 });

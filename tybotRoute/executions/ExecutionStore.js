@@ -17,8 +17,12 @@ const CAD_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.c
 // HSET only on a live hash: an expired exec:{id} is never recreated (it would have no TTL).
 const HSET_IF_EXISTS = "if redis.call('EXISTS', KEYS[1]) == 1 then return redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) else return 0 end";
 
-// Lease renew / release only by the pod whose id is stored (compare-and-act).
-const RENEW_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('PEXPIRE', KEYS[1], ARGV[2]) else return 0 end";
+// Heartbeat: acquire-or-renew. Held by this pod: PEXPIRE; absent: SET PX (a chain that lost the NX, or
+// whose lease expired, takes it); held by another pod: 0 (never taken). Release stays compare-and-delete.
+const RENEW_SCRIPT = "local v = redis.call('GET', KEYS[1]) " +
+  "if v == ARGV[1] then return redis.call('PEXPIRE', KEYS[1], ARGV[2]) end " +
+  "if not v then redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2]) return 1 end " +
+  "return 0";
 
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
@@ -222,12 +226,13 @@ class ExecutionStore {
     }
   }
 
+  /** true: held by this pod (renewed or acquired); false: held by another pod; null: Redis error (unknown). */
   async renewLease(id, pod, ms) {
     try {
       return (await this.client.eval(RENEW_SCRIPT, { keys: [`exec:${id}:owner`], arguments: [pod, String(ms)] })) === 1;
     } catch (err) {
       this._warn('renewLease', err);
-      return false;
+      return null;
     }
   }
 

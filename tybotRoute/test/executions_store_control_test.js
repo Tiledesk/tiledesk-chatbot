@@ -46,7 +46,16 @@ describe('ExecutionStore control keys', function () {
     assert.ok(await client.pTTL(`exec:${id}:owner`) <= 3000);
     assert.strictEqual(await store.renewLease(id, 'podA', 60000), true);
     assert.ok(await client.pTTL(`exec:${id}:owner`) > 3000);
-    assert.strictEqual(await store.renewLease(eid('renew-none'), 'podA', 1000), false);
+  });
+
+  it('renewLease acquires an absent key (acquire-or-renew) and never takes another pod\'s', async function () {
+    const id = eid('renew-none');
+    assert.strictEqual(await store.renewLease(id, 'podA', 3000), true, 'absent: acquired');
+    assert.strictEqual(await client.get(`exec:${id}:owner`), 'podA');
+    const pttl = await client.pTTL(`exec:${id}:owner`);
+    assert.ok(pttl > 0 && pttl <= 3000, `PX set, pttl ${pttl}`);
+    assert.strictEqual(await store.renewLease(id, 'podB', 3000), false, 'owned by another pod');
+    assert.strictEqual(await client.get(`exec:${id}:owner`), 'podA');
   });
 
   it('releaseLease by a non-owner keeps the key; by the owner deletes it', async function () {
@@ -94,7 +103,7 @@ describe('ExecutionStore control keys', function () {
     const s = new ExecutionStore({ get: bad, set: bad, del: bad, eval: bad, pExpire: bad });
     assert.strictEqual(await s.getStop('x'), null);
     assert.strictEqual(await s.acquireLease('x', 'p', 1000), false);
-    assert.strictEqual(await s.renewLease('x', 'p', 1000), false);
+    assert.strictEqual(await s.renewLease('x', 'p', 1000), null, 'a Redis error is not a lost lease');
     assert.strictEqual(await s.releaseLease('x', 'p'), undefined);
     assert.strictEqual(await s.setTransit('x', 1000), undefined);
     assert.strictEqual(await s.clearTransit('x'), undefined);

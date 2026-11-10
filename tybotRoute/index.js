@@ -166,7 +166,7 @@ router.post('/ext/:botid', async (req, res) => {
     }
   } catch (e) {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
-    await ExecutionRecorder.releaseLease(ctx); // no chain will run
+    await ExecutionRecorder.endWithoutChain(ctx); // no chain will run (a created execution still ends: idle / completed)
     return;
   }
   
@@ -180,7 +180,7 @@ router.post('/ext/:botid', async (req, res) => {
       await ExecutionRecorder.blockExit(ctx);
       await ExecutionRecorder.endOfChain(ctx);
     }
-    await ExecutionRecorder.releaseLease(ctx); // no step opened: the chain never started
+    await ExecutionRecorder.endWithoutChain(ctx); // no step opened: the chain never started (a created execution still ends: idle / completed)
     return;
   }
   if (!reply) {
@@ -189,7 +189,7 @@ router.post('/ext/:botid', async (req, res) => {
       await ExecutionRecorder.blockExit(ctx);
       await ExecutionRecorder.endOfChain(ctx);
     }
-    await ExecutionRecorder.releaseLease(ctx); // no step opened: nothing runs
+    await ExecutionRecorder.endWithoutChain(ctx); // no step opened: nothing runs (a created execution still ends: idle / completed)
     return;
   }
   
@@ -240,7 +240,7 @@ router.post('/ext/:botid', async (req, res) => {
       await ExecutionRecorder.blockExit(ctx);
       await ExecutionRecorder.endOfChain(ctx);
     }
-    if (!directivesSuccess) await ExecutionRecorder.releaseLease(ctx); // the directives never started
+    if (!directivesSuccess) await ExecutionRecorder.endWithoutChain(ctx); // the directives never started (a created execution still ends: idle / completed)
   }
   else { // text answer (parse text directives to get actions)
     winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)

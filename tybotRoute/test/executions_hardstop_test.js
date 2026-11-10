@@ -62,6 +62,11 @@ function buildBots() {
     reply('act_after_web', 'after web')
   ]);
   add('falseblock', [reply('act_false', 'false branch')]);
+  add('webv1', [
+    { _tdActionType: 'webrequest', _tdActionId: 'act_web1', _tdActionTitle: 'hanging v1 call', method: 'GET',
+      url: `http://localhost:${API_PORT}/hang`, headersString: {}, assignTo: 'result' },
+    reply('act_after_web1', 'after web v1')
+  ]);
   add('askkb', [
     { _tdActionType: 'askgpt', _tdActionId: 'act_ask', _tdActionTitle: 'ask kb', question: 'what?', kbid: 'kb1',
       assignReplyTo: 'kb_answer', falseIntent: '#falseblock' },
@@ -290,6 +295,38 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
     assert.strictEqual(await owner(id), null, 'lease released');
   });
 
+  it('hard stop during a v1 webrequest: interrupted + stopped, no unhandled rejection, process alive', async function () {
+    const rejections = [];
+    const onRejection = (reason) => rejections.push(reason);
+    process.on('unhandledRejection', onRejection);
+    try {
+      const rid = newRequestId();
+      const before = hanging.length;
+      send('/webv1', rid);
+      await waitFor(() => hanging.length > before && ofType(rid, 'step.started').length === 1, 'the hanging v1 call');
+      const id = execIdOf(rid);
+      await hardStop(id);
+      await waitFor(() => ofType(rid, 'execution.stopped').length === 1, 'execution.stopped', 2000);
+      await sleep(800); // the aborted request's .catch has run
+      await ExecutionRecorder._drainForTests();
+      assert.deepStrictEqual(rejections.map((r) => String(r && r.stack || r)), [], 'no unhandled rejection');
+      const acts = ofType(rid, 'action.completed');
+      assert.strictEqual(acts.length, 1, 'the reply after the call never ran');
+      assert.strictEqual(acts[0].data.outcome, 'interrupted');
+      assert.strictEqual(acts[0].data.error_code, 'hard_stop');
+      const stopped = ofType(rid, 'execution.stopped');
+      assert.strictEqual(stopped[0].data.mode, 'hard');
+      assert.deepStrictEqual(stopped[0].data.interrupted_action, { index: 0, action_id: 'act_web1', type: 'webrequest', title: 'hanging v1 call' });
+      assert.strictEqual(sentTo(rid).length, 0);
+      assert.strictEqual(await owner(id), null, 'lease released');
+      const rid2 = newRequestId();
+      send('/after', rid2);
+      await waitFor(() => sentTo(rid2).length === 1, 'a reply after the stop');
+    } finally {
+      process.removeListener('unhandledRejection', onRejection);
+    }
+  });
+
   it('hard stop during askgpt: interrupted + stopped, no unhandled rejection, process alive', async function () {
     const rejections = [];
     const onRejection = (reason) => rejections.push(reason);
@@ -371,11 +408,14 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
   });
 
   it('flag off: no subscription, HttpUtils call options unchanged (signal undefined)', async function () {
+    // the Redis may be shared (a live stack's tybot is subscribed too): count this process's subscriber only
+    const numsub = async () => Number((await client.sendCommand(['PUBSUB', 'NUMSUB', 'exec:control']))[1]);
+    assert.ok(ControlListener.isRunning(), 'subscribed with the flag on');
+    const before = await numsub();
     process.env.EXECUTIONS_ENABLED = 'false';
     await startTybot();
     assert.strictEqual(ControlListener.isRunning(), false);
-    const subs = await client.sendCommand(['PUBSUB', 'NUMSUB', 'exec:control']);
-    assert.strictEqual(Number(subs[1]), 0, 'nobody subscribed to exec:control');
+    assert.strictEqual(await numsub(), before - 1, 'this process dropped its exec:control subscription');
 
     // the axios options HttpUtils builds: no signal key without a signal, the signal with one
     const base = { url: 'http://localhost:1/x', method: 'POST', params: { a: 1 }, headers: { h: 'v' }, json: { b: 2 }, timeout: 5 };
