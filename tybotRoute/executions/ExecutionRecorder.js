@@ -365,9 +365,10 @@ const ExecutionRecorder = {
             await ExecutionRecorder.blockExit(ctx);
             // the next block may run on any pod: mark the hand-over, then let go of the lease
             await ctx._store.setTransit(ctx.execution_id, ctx._cfg.transitMs);
-            await ExecutionRecorder.releaseLease(ctx);
           } catch (err) {
             warn('onJump', err);
+          } finally {
+            await ExecutionRecorder.releaseLease(ctx); // also when recording threw: endOfChain no-ops after a jump
           }
         }
       };

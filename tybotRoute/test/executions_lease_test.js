@@ -15,6 +15,8 @@ const winston = require('../utils/winston');
 const httpUtils = require('../utils/HttpUtils');
 const tilebotService = require('../services/TilebotService');
 const ExecutionRecorder = require('../executions/ExecutionRecorder');
+const WriteTap = require('../executions/WriteTap');
+const { ExecutionStore } = require('../executions/ExecutionStore');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
 const lifecycle = require('./executions_lifecycle_bot.js').bots_data;
 
@@ -283,5 +285,51 @@ describe('Executions: lease, heartbeat and transit', function () {
     await sleep(1400);
     assert.strictEqual(events(rid).length, 0, 'nothing traced');
     assert.strictEqual(await count(), before);
+  });
+  describe('no path leaves the lease or the heartbeat behind', function () {
+    async function directCtx() {
+      const rid = newRequestId();
+      requestIds.push(rid);
+      const ctx = await ExecutionRecorder.onMessageIn({
+        message: { text: '/x', request: { request_id: rid } }, bot: {}, botId: BOT_ID, requestId: rid,
+        projectId: PROJECT_ID, token: CHATBOT_TOKEN, store: new ExecutionStore(client)
+      });
+      assert.ok(ctx && ctx.leased && ctx._heartbeat, 'lease taken, heartbeat running');
+      assert.strictEqual(await owner(ctx.execution_id), os.hostname());
+      return ctx;
+    }
+
+    it('a failed chain releases the lease and stops the heartbeat', async function () {
+      const ctx = await directCtx();
+      await ExecutionRecorder.failed(ctx, { error_code: 'x', message: 'boom' });
+      assert.strictEqual(await owner(ctx.execution_id), null);
+      assert.strictEqual(ctx._heartbeat, null);
+      assert.strictEqual(ctx.leased, false);
+    });
+
+    it('a message with no matching intent / no reply releases the lease', async function () {
+      process.env.EXECUTIONS_LEASE_MS = '300';
+      process.env.EXECUTIONS_HEARTBEAT_MS = '100';
+      const rid = newRequestId();
+      send('/no_such_intent_at_all', rid);
+      await waitFor(() => execIdOf(rid), 'the execution');
+      const id = execIdOf(rid);
+      await sleep(1200); // a leaked heartbeat would keep renewing the 300 ms lease
+      assert.strictEqual(await owner(id), null);
+    });
+
+    it('a throw while recording the block exit of a jump still releases the lease', async function () {
+      const ctx = await directCtx();
+      ctx.step = { seq: 1, actions: [], block_id: 'b' };
+      const original = ExecutionRecorder.afterAction;
+      ExecutionRecorder.afterAction = () => { throw new Error('boom'); };
+      try {
+        await ExecutionRecorder.runAction(ctx, { index: 0, directive: {} }, () => WriteTap.current().onJump('/#next'));
+      } finally {
+        ExecutionRecorder.afterAction = original;
+      }
+      assert.strictEqual(await owner(ctx.execution_id), null);
+      assert.strictEqual(ctx._heartbeat, null);
+    });
   });
 });
