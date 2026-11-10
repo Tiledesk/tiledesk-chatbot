@@ -61,6 +61,13 @@ class TilebotService {
         // is posted. Synchronous here, so onJump runs before the caller's own callback. Off (no
         // traced action): undefined, and the post goes out right away as before.
         const recorded = ExecutionRecorder.beforeJump(message);
+        if (recorded === 'skip') {
+            // hard stop: the aborted action's jump (e.g. its error exit) is never posted; its
+            // caller goes on as if it had been, and the chain stops at the plug's callback
+            winston.verbose("(TilebotService) execution aborted: jump not posted");
+            setImmediate(() => { if (callback) callback(null, { success: true }); });
+            return;
+        }
         if (!recorded) {
             post();
             return;

@@ -103,7 +103,8 @@ class DirWebRequestV2 {
       headers: headers,
       json: json,
       method: action.method,
-      timeout: timeout
+      timeout: timeout,
+      signal: this.context.signal
     };
     winston.debug("DirWebRequestV2 HttpRequest: ", HTTPREQUEST);
     
@@ -206,9 +207,9 @@ class DirWebRequestV2 {
             let field = formData[i];
             if (field.enabled && field.value && field.type === "URL") {
               let response = await axios.get(field.value,
-                {
+                Object.assign({
                   responseType: 'stream'
-                }
+                }, this.context.signal ? { signal: this.context.signal } : {})
               );
               let stream = response.data;
               json[field.name] = stream;
@@ -331,6 +332,9 @@ class DirWebRequestV2 {
           rejectUnauthorized: false,
         });
         axios_options.httpsAgent = httpsAgent;
+      }
+      if (options.signal) {
+        axios_options.signal = options.signal;
       }
 
       axios(axios_options)

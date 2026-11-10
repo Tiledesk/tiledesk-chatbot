@@ -40,6 +40,7 @@ const tilebotService = require('./services/TilebotService.js');
 const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
 const ExecutionRecorder = require('./executions/ExecutionRecorder');
 const { ExecutionStore } = require('./executions/ExecutionStore');
+const ControlListener = require('./executions/ControlListener');
 const { isEnabled: executionsEnabled } = require('./executions/config');
 
 let API_ENDPOINT = null;
@@ -801,6 +802,9 @@ async function connectRedis() {
     }
     winston.info("(Tilebot) Redis connected");
     ExecutionRecorder.init({ store: new ExecutionStore(tdcache.client), apiEndpoint: API_ENDPOINT });
+    // hard stop / cleanup aborts (exec:control); off switch: no subscription at all
+    if (executionsEnabled()) await ControlListener.start(tdcache);
+    else await ControlListener.stop();
   }
   return;
 }

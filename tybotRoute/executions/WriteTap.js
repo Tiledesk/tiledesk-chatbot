@@ -9,9 +9,9 @@ const als = new AsyncLocalStorage();
  * Records which flow-variable keys the running action (or an incoming-message /
  * jump-params scope) writes. Only requires node built-ins and executions/config.
  */
-function runAction({ executionId, stepSeq, actionIndex, actionId, requestId, onJump }, fn) {
+function runAction({ executionId, stepSeq, actionIndex, actionId, requestId, onJump, isAborted }, fn) {
   const store = {
-    kind: 'action', requestId, executionId, stepSeq, actionIndex, actionId, onJump,
+    kind: 'action', requestId, executionId, stepSeq, actionIndex, actionId, onJump, isAborted,
     writes: new Map()
   };
   return als.run(store, fn);

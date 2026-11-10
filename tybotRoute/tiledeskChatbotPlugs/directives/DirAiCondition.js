@@ -357,6 +357,7 @@ class DirAiCondition {
     winston.debug("DirAiCondition json: ", json);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: AI_endpoint + "/ask",
       headers: headers,
       json: json,
@@ -591,6 +592,7 @@ class DirAiCondition {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',

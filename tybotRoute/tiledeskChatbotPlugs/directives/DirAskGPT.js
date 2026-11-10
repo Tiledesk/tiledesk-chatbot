@@ -135,6 +135,7 @@ class DirAskGPT {
     winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: kb_endpoint + "/qa",
       json: json,
       method: "POST"
@@ -247,6 +248,7 @@ class DirAskGPT {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',

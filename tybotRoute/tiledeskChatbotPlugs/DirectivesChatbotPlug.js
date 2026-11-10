@@ -175,7 +175,8 @@ class DirectivesChatbotPlug {
       TILEBOT_ENDPOINT: TILEBOT_ENDPOINT,
       departmentId: depId,
       tdcache: tdcache,
-      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT
+      HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
+      signal: this.execution?.signal // hard stop: abortable directives pass it on (undefined when executions are off)
     }
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
@@ -340,6 +341,12 @@ class DirectivesChatbotPlug {
       return this.process(next_dir);
     }
 
+    // hard stop landed between the gate and here: the action does not start
+    if (this.execution?.aborted) {
+      await ExecutionRecorder.stopHard(this.execution);
+      return this.theend();
+    }
+
     const handler = new HandlerClass(context);
 
     // Esegue l'handler e chiama next se non stop
@@ -371,6 +378,10 @@ class DirectivesChatbotPlug {
         });
       }
       if (this.execution) await ExecutionRecorder.afterAction(this.execution, { index: actionIndex, directive, startedAt: blockStart });
+      if (this.execution?.aborted) { // hard stop: no next action, whatever the directive asked for
+        await ExecutionRecorder.stopHard(this.execution);
+        return this.theend();
+      }
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();

@@ -67,7 +67,8 @@ class DirWebRequest {
       url: url,
       headers: headers,
       json: json,
-      method: action.method
+      method: action.method,
+      signal: this.context.signal
     };
     winston.debug("(DirWebRequest) HttpRequest ", HTTPREQUEST);
     this.myrequest(
@@ -138,6 +139,9 @@ class DirWebRequest {
         rejectUnauthorized: false,
       });
       axios_options.httpsAgent = httpsAgent;
+    }
+    if (options.signal) {
+      axios_options.signal = options.signal;
     }
     axios(axios_options)
     .then((res) => {

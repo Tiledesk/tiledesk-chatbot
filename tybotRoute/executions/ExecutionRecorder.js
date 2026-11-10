@@ -11,9 +11,13 @@ const WriteTap = require('./WriteTap');
 const { mapOutcome } = require('./OutcomeMapper');
 const { detectTrigger } = require('./trigger');
 const { rootIdOf } = require('./botIdentity');
+const AbortRegistry = require('./AbortRegistry');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
+// directives that pass ctx.signal to what they wait on (spec §7.1.6); any other one runs to
+// completion on a hard stop (hard_degraded) and the chain stops before the next action
+const ABORTABLE = new Set(['wait', 'webrequest', 'webrequestv2', 'gpt_task', 'ai_prompt', 'askgpt', 'askgptv2', 'ai_condition', 'send_whatsapp']);
 
 let state = { store: null, apiEndpoint: null };
 let policyCache = new Map();
@@ -160,10 +164,41 @@ function isAutomation(ctx) {
 }
 
 /** execution.stopped, once per chain. */
-async function emitStopped(ctx, mode) {
+async function emitStopped(ctx, mode, interruptedAction) {
   if (ctx._stoppedEmitted) return null;
   ctx._stoppedEmitted = true;
-  return emit(ctx, 'execution.stopped', (seq) => ({ mode, last_seq: seq }));
+  return emit(ctx, 'execution.stopped', (seq) => {
+    const data = { mode };
+    if (interruptedAction) data.interrupted_action = interruptedAction;
+    data.last_seq = seq;
+    return data;
+  });
+}
+
+function isAbortable(directive) {
+  return !!(directive && typeof directive.name === 'string' && ABORTABLE.has(directive.name.toLowerCase()));
+}
+
+/**
+ * The abort listener (AbortRegistry, fired by the ControlListener). Synchronous part first, so it
+ * runs before any directive's own abort listener: ctx.aborted, and the action in flight marked
+ * interrupted (abortable) or hard_degraded (not). An interrupted action is recorded and the chain
+ * stopped right away, whatever its directive does next; a degraded one stops after it completes.
+ */
+function onAbort(ctx) {
+  ctx.aborted = true;
+  if (ctx._failed || ctx._stopped || ctx.jumpInFlight || !ctx.step) return;
+  const rec = ctx.step.actions[ctx.step.actions.length - 1];
+  if (!rec || rec.pending) return; // between actions: the next gate stops the chain
+  if (!isAbortable(rec.directive)) {
+    rec.hardDegraded = true;
+    return;
+  }
+  rec.interrupted = true;
+  ctx._interrupted = rec;
+  ctx._stopped = true; // now: a rejection of the aborted action must not reach endOfChain (idle) before stopHard runs
+  ExecutionRecorder.afterAction(ctx, { index: rec.index, directive: rec.directive })
+    .then(() => ExecutionRecorder.stopHard(ctx), (err) => warn('onAbort', err));
 }
 
 /** Automation sync caller (index.js /block): the 409 on its /webhooks topic, once per chain. Never throws. */
@@ -284,6 +319,18 @@ const ExecutionRecorder = {
         });
         if (!isAutomation(ctx)) writeExecutionId(ctx, token);
       }
+      // hard stop: this chain's controller, released with the lease at every chain exit
+      const ac = AbortRegistry.register(ctx.execution_id);
+      ctx._abort = ac;
+      ctx.signal = ac.signal;
+      ctx.aborted = false;
+      ac.signal.addEventListener('abort', () => {
+        try {
+          onAbort(ctx);
+        } catch (err) {
+          warn('onAbort', err);
+        }
+      }, { once: true });
       return ctx;
     } catch (err) {
       warn('onMessageIn', err);
@@ -367,7 +414,7 @@ const ExecutionRecorder = {
     let rec;
     try {
       const step = ctx.step;
-      rec = { index, startedAt: Date.now(), jumpedTo: undefined, pending: null, tap: null, outcome: null, exit_taken: null };
+      rec = { index, directive, startedAt: Date.now(), jumpedTo: undefined, pending: null, tap: null, outcome: null, exit_taken: null };
       step.actions.push(rec);
       const actionId = directive && directive.action ? directive.action._tdActionId : undefined;
       tapOptions = {
@@ -376,6 +423,7 @@ const ExecutionRecorder = {
         actionIndex: index,
         actionId,
         requestId: ctx.request_id,
+        isAborted: () => ctx.aborted === true,
         // called before a block jump is posted (Task 8): the block's exit is recorded first
         onJump: async (target) => {
           try {
@@ -476,6 +524,10 @@ const ExecutionRecorder = {
    */
   async checkStopBeforeAction(ctx, { index, directive } = {}) {
     if (!ctx || ctx._failed) return false;
+    if (ctx.aborted) { // hard stop seen on this pod: no GET needed
+      await ExecutionRecorder.stopHard(ctx);
+      return true;
+    }
     if (ctx._stopped) return true;
     let mode;
     try {
@@ -499,10 +551,45 @@ const ExecutionRecorder = {
     return true;
   },
 
-  /** Stops the heartbeat and gives the lease back (only if this chain took it). Never throws. */
+  /**
+   * The chain's end on a hard stop (ctx.aborted), once: the block exit (an interrupted action makes
+   * the step outcome interrupted), the lease, execution.stopped {mode:'hard', interrupted_action?}
+   * (shared once-guard with the soft stop) and the automation 409. Nothing runs after it
+   * (ctx._stopped: no idle/ended/failed). Never throws.
+   */
+  stopHard(ctx) {
+    if (!ctx) return Promise.resolve();
+    if (!ctx._hardStop) {
+      ctx._hardStop = (async () => {
+        if (ctx._failed) return;
+        ctx._stopped = true;
+        // a jump already left this block (exit recorded, lease released): the next pod's gate emits stopped
+        if (ctx.jumpInFlight) return;
+        try {
+          await ExecutionRecorder.blockExit(ctx);
+          await ExecutionRecorder.releaseLease(ctx);
+          const rec = ctx._interrupted;
+          const action = (rec && rec.directive && rec.directive.action) || {};
+          await emitStopped(ctx, 'hard', rec ? {
+            index: rec.index,
+            action_id: action._tdActionId === undefined ? null : action._tdActionId,
+            type: rec.directive ? rec.directive.name : null,
+            title: action._tdActionTitle === undefined ? null : action._tdActionTitle
+          } : undefined);
+          await publishStopped(ctx);
+        } catch (err) {
+          warn('stopHard', err);
+        }
+      })();
+    }
+    return ctx._hardStop;
+  },
+
+  /** Stops the heartbeat and gives the lease back (only if this chain took it), and drops the abort controller. Never throws. */
   async releaseLease(ctx) {
     if (!ctx) return;
     try {
+      if (ctx._abort) AbortRegistry.release(ctx.execution_id, ctx._abort);
       stopHeartbeat(ctx);
       if (ctx.leased) {
         ctx.leased = false;
@@ -560,6 +647,8 @@ const ExecutionRecorder = {
     try {
       store = WriteTap.current();
       if (!store || store.kind !== 'action' || typeof store.onJump !== 'function' || !store.executionId) return undefined;
+      // hard stop: the aborted action's jump (its error exit, say) is not posted
+      if (typeof store.isAborted === 'function' && store.isAborted()) return 'skip';
     } catch (err) {
       warn('beforeJump', err);
       return undefined;
@@ -678,7 +767,11 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     const kf = ctx.kf;
 
     const jumped = jumpedTo !== undefined ? jumpedTo : rec.jumpedTo;
-    const { outcome, exit_taken } = mapOutcome({ action, jumpedTo: jumped, error });
+    let { outcome, exit_taken } = mapOutcome({ action, jumpedTo: jumped, error });
+    if (rec.interrupted) {
+      outcome = 'interrupted';
+      exit_taken = null;
+    }
     rec.outcome = outcome;
     rec.exit_taken = exit_taken;
 
@@ -692,7 +785,9 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
       exit_taken,
       duration_ms: Date.now() - (startedAt || rec.startedAt)
     };
-    if (error) data.error_code = 'action_error';
+    if (rec.interrupted) data.error_code = 'hard_stop';
+    else if (error) data.error_code = 'action_error';
+    if (rec.hardDegraded) data.hard_degraded = true;
     return await emit(ctx, 'action.completed', () => {
       const delta = !after ? NO_DELTA : StateDiff.diffStates(before, after, {
         projectKey: ctx._projectKey,
