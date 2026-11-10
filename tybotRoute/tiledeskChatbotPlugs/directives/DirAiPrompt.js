@@ -123,7 +123,7 @@ class DirAiPrompt {
     let key;
     let publicKey = false;
     let ollama_integration;
-    let vllm_server_config;
+    let vllm_model;
     let openrouter_model;
     let agentplatform_model;
 
@@ -158,37 +158,6 @@ class DirAiPrompt {
         }
         callback();
         return;
-      }
-
-      const vllm_value = vllm_integration.value;
-      if (Array.isArray(vllm_value.servers)) {
-        const filled_vllm_server = filler.fill(action.vllmServer, requestVariables);
-        if (!filled_vllm_server) {
-          this.logger.error("[AI Prompt] missing vllmServer for multi-server vllm integration");
-          await this.chatbot.addParameter("flowError", "AiPrompt Error: 'vllmServer' attribute is undefined");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        vllm_server_config = vllm_value.servers.find(s => s.name === filled_vllm_server);
-        if (!vllm_server_config) {
-          this.logger.error("[AI Prompt] vllm server not found: ", filled_vllm_server);
-          await this.chatbot.addParameter("flowError", "AiPrompt Error: vllm server '" + filled_vllm_server + "' not found");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
-          }
-          callback();
-          return;
-        }
-        key = vllm_server_config.apikey;
-      } else {
-        key = vllm_value.apikey;
       }
 
       if (!key) {
