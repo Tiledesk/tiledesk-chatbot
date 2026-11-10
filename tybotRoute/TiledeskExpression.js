@@ -140,7 +140,9 @@ class TiledeskExpression {
         },
         "endsWith": {
             name: "endsWith",
-            applyPattern: "#1?.toLowerCase().endsWith(#2.toLowerCase())"
+            // Case-insensitive (legacy behaviour kept). Null-safe: an undefined or null
+            // left operand is false, never the string "undefined".
+            applyPattern: "(#1)?.toString().toLowerCase().endsWith((#2)?.toString().toLowerCase()) ?? false"
         },
         "isEmpty": {
             name: "isEmpty",

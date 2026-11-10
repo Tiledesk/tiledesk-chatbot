@@ -23,6 +23,7 @@ const { DirAssignFromFunction } = require('./directives/DirAssignFromFunction');
 const { DirCondition } = require('./directives/DirCondition');
 const { DirJSONCondition } = require('./directives/DirJSONCondition');
 const { DirJSONConditionV2 } = require('./directives/DirJSONConditionV2');
+const { DirJSONConditionMulti } = require('./directives/DirJSONConditionMulti');
 const { DirAssign } = require('./directives/DirAssign');
 const { DirSetAttribute } = require('./directives/DirSetAttribute');
 const { DirSetAttributeV2 } = require('./directives/DirSetAttributeV2');
@@ -46,9 +47,12 @@ const { DirHubspot } = require('./directives/DirHubspot');
 const { DirCustomerio } = require('./directives/DirCustomerio');
 const { DirBrevo } = require('./directives/DirBrevo');
 const { DirAskGPTV2 } = require('./directives/DirAskGPTV2');
+const { DirDocparseExtract } = require('./directives/DirDocparseExtract');
 const { DirAssistant } = require('./directives/DirAssistant');
 const { DirReplyV2 } = require('./directives/DirReplyV2');
 const { DirIfOnlineAgentsV2 } = require('./directives/DirIfOnlineAgentsV2');
+const { DirInviteHuman } = require('./directives/DirInviteHuman');
+const { DirRemoveHuman } = require('./directives/DirRemoveHuman');
 const { DirContactUpdate } = require('./directives/DirContactUpdate');
 const { DirClearTranscript } = require('./directives/DirClearTranscript');
 const { DirMoveToUnassigned } = require('./directives/DirMoveToUnassigned');
@@ -240,8 +244,8 @@ class DirectivesChatbotPlug {
 
     const directive_name = directive.name.toLowerCase();
 
-    // Controllo lock action
-    if (directive.action) {
+    // Controllo lock action (internal jumps to another block are not subject to it: the lock stays for the user's reply)
+    if (directive.action && this.message?.sender !== "_tdinternal") {
       const action_id = directive.action["_tdActionId"];
       const locked_action_id = await this.chatbot.currentLockedAction(this.supportRequest.request_id);
       if (locked_action_id && locked_action_id !== action_id) {
@@ -271,6 +275,7 @@ class DirectivesChatbotPlug {
       [Directives.FUNCTION_VALUE]: DirAssignFromFunction,
       [Directives.JSON_CONDITION]: DirJSONCondition,
       [Directives.JSON_CONDITION_2]: DirJSONConditionV2, // NEW: JSON Condition V2 (tipo dedicato dal DS); V1 dispatch invariato
+      [Directives.JSON_CONDITION_MULTI]: DirJSONConditionMulti, // NEW: condizione a piu' casi; V1 e V2 dispatch invariati
       [Directives.ASSIGN]: DirAssign,
       [Directives.SET_ATTRIBUTE]: DirSetAttribute,
       [Directives.SET_ATTRIBUTE_V2]: DirSetAttributeV2,
@@ -296,6 +301,7 @@ class DirectivesChatbotPlug {
       [Directives.ASK_HELP_CENTER]: DirDeflectToHelpCenter,
       [Directives.ASK_GPT]: DirAskGPT,
       [Directives.ASK_GPT_V2]: DirAskGPTV2,
+      [Directives.DOCPARSE_EXTRACT]: DirDocparseExtract,
       [Directives.ADD_KB_CONTENT]: DirAddKbContent,
       [Directives.GPT_TASK]: DirGptTask,
       [Directives.AI_PROMPT]: DirAiPrompt,
@@ -317,6 +323,8 @@ class DirectivesChatbotPlug {
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
       [Directives.DATA_TABLES]: DirDataTables,
+      [Directives.INVITE_HUMAN]: DirInviteHuman,
+      [Directives.REMOVE_HUMAN]: DirRemoveHuman,
       [Directives.SET_RATING]: DirSetRating,
       [Directives.GET_RATING]: DirGetRating,
     };

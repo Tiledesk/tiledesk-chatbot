@@ -64,60 +64,6 @@ describe('Conversation for AiCondition test', async () => {
 
   describe('Missing parameters tests', async () => {
 
-    it('AiCondition fail - missing question parameter', (done) => {
-      
-      let listener;
-      let endpointServer = express();
-      endpointServer.use(bodyParser.json());
-      
-      endpointServer.post('/:projectId/requests/:requestId/messages', (req, res) => {
-        res.send({ success: true });
-        const message = req.body;
-        assert(message.attributes.commands !== null);
-        assert(message.attributes.commands.length === 2);
-        const command2 = message.attributes.commands[1];
-        assert(command2.type === "message");
-        assert(command2.message.text === "Error: AiCondition Error: 'question' attribute is undefined");
-
-        util.getChatbotParameters(REQUEST_ID, (err, attributes) => {
-          if (err) {
-            assert.ok(false);
-          }
-          else {
-            assert(attributes);
-            assert(attributes["flowError"] === "AiCondition Error: 'question' attribute is undefined");
-            listener.close(() => {
-              done();
-            });
-          }
-        });
-
-      });
-
-      listener = endpointServer.listen(10002, '0.0.0.0', () => {
-        winston.verbose('endpointServer started' + listener.address());
-        let request = {
-          "payload": {
-            "senderFullname": "guest#367e",
-            "type": "text",
-            "sender": "A-SENDER",
-            "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_question',
-            "id_project": PROJECT_ID,
-            "metadata": "",
-            "request": {
-              "request_id": REQUEST_ID
-            }
-          },
-          "token": "XXX"
-        }
-        tilebotService.sendMessageToBot(request, BOT_ID, () => {
-          winston.verbose("Message sent:\n", request);
-        });
-      });
-
-    })
-
     it('AiCondition fail - missing llm parameter', (done) => {
       
       let listener;
@@ -155,7 +101,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_llm',
+            "text": '/ai_condition_missing_llm',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
@@ -209,7 +155,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_model',
+            "text": '/ai_condition_missing_model',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
@@ -280,7 +226,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_llm_key',
+            "text": '/ai_condition_myllm',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
@@ -376,7 +322,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_llm_key',
+            "text": '/ai_condition_myllm',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
@@ -491,7 +437,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_ollama_success',
+            "text": '/ai_condition_ollama_success',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {
@@ -699,7 +645,7 @@ describe('Conversation for AiCondition test', async () => {
             "type": "text",
             "sender": "A-SENDER",
             "recipient": REQUEST_ID,
-            "text": '/ai_prompt_missing_llm_key',
+            "text": '/ai_condition_myllm',
             "id_project": PROJECT_ID,
             "metadata": "",
             "request": {

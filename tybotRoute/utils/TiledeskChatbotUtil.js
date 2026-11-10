@@ -1,7 +1,6 @@
 const { TiledeskExpression } = require('../TiledeskExpression');
 const { Filler } = require('../tiledeskChatbotPlugs/Filler');
 const { TiledeskChatbotConst } = require('../engine/TiledeskChatbotConst');
-const { TiledeskChatbot } = require('../engine/TiledeskChatbot.js');
 let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
@@ -854,6 +853,12 @@ class TiledeskChatbotUtil {
                 message.attributes.payload = { ...message.attributes.payload, ...message.request.attributes.payload }
                 winston.debug("(TiledeskChatbotUtil) Forced Set message.attributes.payload ", message.attributes.payload); 
             }
+            // --- START TYPE (set by the request creator, e.g. "webhook") ---
+            if (message && message.request && message.request.attributes && message.request.attributes.start_type) {
+                add("start_type", message.request.attributes.start_type);
+            }
+
+            // --- ATTRIBUTES ---
             if (message.attributes) {
                 winston.debug("(TiledeskChatbotUtil) Ok message.attributes ", message.attributes);
 
@@ -882,6 +887,11 @@ class TiledeskChatbotUtil {
                 }
                 if (message.attributes.ani) {
                     add("ani", message.attributes.ani);
+                }
+
+                // --- VOICE STREAMING ---
+                if (message.attributes?.voice_mode) {
+                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voice_mode);
                 }
             }
 

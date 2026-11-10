@@ -1,5 +1,49 @@
 # Tiledesk native chatbot
 
+# 3.0.6
+- **added**: customHeaders for vllm servers
+
+# 3.0.5
+- **added** possibility to block indexing functions
+
+# 3.0.4
+- **removed** verbose logs
+
+# 3.0.3
+- **fixed**: Docparse Extract derives the right file name when the action has no `filename` and the url carries the file path in the query string, as Tiledesk file urls do (`/api/files?path=uploads/.../4939_001.pdf` now gives `4939_001.pdf` instead of `files`):
+  - the first query parameter whose last path segment has an extension (`.pdf`, `.docx`, ...) is used, whatever the parameter name (`path`, `name`, `file`, ...)
+  - otherwise the last segment of the url path is used, as before
+
+# 3.0.2
+- **updated** node version to 24.x to improve vulnerability
+
+# 3.0.1
+- **fixed**: Docparse Extract works for V3 bots (Design Studio V3 3.0.20):
+  - the file name is taken from the url after its variables are filled, so `{{variable}}` urls work
+  - `confidence` (1-100) is sent as the OCR quality threshold
+  - the vision model is sent as `vision_llm`
+  - the true/false exits are routed from the bot `connectors` list (ConnectorsV3 `docparse_extract`)
+  - after the Redis completion event the job result is re-read with `GET /v1/jobs/{id}`
+- **added**: Docparse Extract falls back to the sync `POST /v1/extract` when docsparse has no async jobs (`/v1/jobs/extract` answers 404, as on docsparse 1.2.0): same request in mode `full` without `vision_llm`, 300 s timeout (`DOCPARSE_SYNC_TIMEOUT_MS`), the `text` field goes to the reply variable; success takes the true exit, any error or timeout the false exit with `flowError`. With async jobs available nothing changes
+- **added**: human-in-the-loop directives `invite_human` and `remove_human`, with the start-point fallback (a `/start` naming a missing start box falls back to the default start block, and `start_type` is exposed as a flow variable) and the lock-ownership fixes
+- **added**: ConnectorsV3 `invite_human` and `remove_human` exits (TRUE_FALSE), so V3 agents route the invited/removed branches from the connectors list
+- **added**: a condition can hold several cases, evaluated in order. The first one that matches sends the conversation to its own block and the action stops there; when none matches, the flow leaves through a final *otherwise* exit. It replaces the chain of one-condition blocks, one per branch
+- **added**: a case left without a condition is skipped instead of counting as true, and a case that cannot be evaluated does not shadow the sound ones below it — the flow carries on to the next case and the error is recorded
+- **kept**: **ends with** stays case-insensitive, as before (production keeps the legacy behaviour); an undefined or null left operand never matches
+
+# 3.0.0
+- V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
+- V3 agents: Iteration runs the "when the list is done" block after the last item or when the list is empty
+- Iteration continues from the block exit when the list is empty, missing or unreadable, when "Go to block" is missing, or when an element errors, instead of stopping the conversation. An unfinished loop is not resumed by a later run on a different list
+- Fixed block jumps to use the endpoint given at start-up, with the environment as fallback
+- Fixed AI Condition vLLM error paths (missing integration, server or key) so they go to the error block instead of crashing
+
+# 2.6.0
+- Added voice_mode system-defined flow variable
+
+# 2.4.0
+- Updated ReplaceBot to manage return
+
 # 2.3.0
 - Added support for Subagent with CallSubagent and ReturnStack actions
 

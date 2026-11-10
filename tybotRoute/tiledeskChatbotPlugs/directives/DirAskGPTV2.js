@@ -387,7 +387,6 @@ class DirAskGPTV2 {
     }
     
     winston.debug("DirAskGPTV2 json:", json);
-    console.log("DirAskGPTV2 json:", JSON.stringify(json));
 
     let kb_endpoint = process.env.KB_ENDPOINT_QA;
     if (ns.hybrid === true) {
@@ -428,7 +427,6 @@ class DirAskGPTV2 {
         }
         else if (resbody.success === true) {
           winston.debug("DirAskGPTV2 resbody: ", resbody);
-          console.log("DirAskGPTV2 resbody: ", JSON.stringify(resbody));
           if (chunks_only) {
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.chunks);
             if (trueIntent) {

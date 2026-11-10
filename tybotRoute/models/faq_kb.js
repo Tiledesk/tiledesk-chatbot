@@ -73,6 +73,17 @@ var Faq_kbSchema = new Schema({
   attributes: {
     type: Object,
   },
+  /** 'v3' for an agent of the Design Studio V3 (a field of the bot since 15/10/2026, no longer `attributes.dsVersion`). */
+  ds_version: {
+    type: String,
+    required: false
+  },
+  /** V3 agents: the connectors list the engine executes the flow from (ConnectorsV3). The server
+   *  stores it unselected by default, so the data source asks for it explicitly. */
+  connectors: {
+    type: Object,
+    required: false
+  },
   createdBy: {
     type: String,
     required: true
