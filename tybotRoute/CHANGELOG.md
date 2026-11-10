@@ -6,6 +6,12 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 
+# features-2611/rating-actions 10/11/2026
+- added: **Set rating** action (`set_rating`). It sets the rating of the conversation, from 1 to 5. The value can come from a variable. Any other value is not saved. An optional rating message, which can also hold variables, is saved as the comment of the rating; an empty one is not sent. With **Force update** off (the default) a rating already given is kept; with it on, the rating is always overwritten
+- added: **Set rating** has two exits, as Web Request: **Success** when the rating is saved or kept because already given, **else** when the value is not valid or the request fails. On failure the reason goes to the chosen error variable and to `flowError`; on success an error left by an earlier run is removed. With no exit connected the flow goes on to the next action
+- added: **Get rating** action (`get_rating`). It reads the rating of the conversation and its comment and saves them in two variables chosen in the action. A value the conversation does not have removes its variable, so no older value is left behind. A failed read sets `flowError`
+- added: tests for the two actions
+
 # this branch
 - added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
 

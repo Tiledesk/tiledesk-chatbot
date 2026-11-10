@@ -68,6 +68,8 @@ const { AnalyticsClient } = require('../AnalyticsClient');
 const { DirCallSubAgent } = require('./directives/DirCallSubagent');
 const { DirReturnStack } = require('./directives/DirReturnStack');
 const { DirDataTables } = require('./directives/DirDataTables');
+const { DirSetRating } = require('./directives/DirSetRating');
+const { DirGetRating } = require('./directives/DirGetRating');
 
 class DirectivesChatbotPlug {
 
@@ -315,6 +317,8 @@ class DirectivesChatbotPlug {
       [Directives.FLOW_LOG]: DirFlowLog,
       [Directives.ITERATION]: DirIteration,
       [Directives.DATA_TABLES]: DirDataTables,
+      [Directives.SET_RATING]: DirSetRating,
+      [Directives.GET_RATING]: DirGetRating,
     };
 
     const HandlerClass = handlers[directive_name];
