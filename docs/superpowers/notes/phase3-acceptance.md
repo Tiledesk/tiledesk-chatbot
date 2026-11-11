@@ -280,3 +280,137 @@ their audit entries and `EXECUTION_*` activities.
   execution's trigger is `webhook` (`01a1ca3a…` cp); resume did not depend on it.
 - Execution ids still print as 6-character prefixes that collide (`01a1ca41` → `01a1ca41`).
 - A sync automation call (`async:false`) to an agent with no reply times out after 20 s, flag on and off (pre-existing).
+
+## Fix-wave re-check (2026-11-11)
+
+Code under test, rebuilt with `bin/exec-rebuild` (chatbot, executions, server, dashboard) and recreated with
+`bin/dev up -d --no-build` (stack `tiledesk-exec`, profiles `infra,core,exec`; no prune): chatbot `c44956e1`
+(image 6a003f321c70), executions `8f06419` (e3d96d3f7aa5), server `81b81b04` (4d6b29b69f89), dashboard `1c292885b`
+(7b6383e07431). The build did not create `tiledesk-dashboard/.angular/cache` (an empty `.angular/` was already there).
+All containers healthy (dashboard and blackhole have no health check). The images were checked for the fix-wave code
+(`no_trigger_source` in the API's `dist` and the dashboard's main bundle, `multi().incr().expire()` in tybot's
+`ExecutionStore`, `slice(-6)` in the server's `activityMessageUtil.js`). Proxy: the live nginx config was dev-env
+`c6e8294` at the start and `d7b7b32` ("encoded-character check covers the path only", committed and reloaded at
+12:41 UTC by another session during this run); R9 ran after that reload.
+
+Same method as above: Resume, Start new and Destroy clicked in the dashboard as `exec-demo-owner@` (signed in through
+the login form, the pane reloaded so it ran the new bundle); scenario-only stops sent to the API with the owner's JWT
+(private scratch file, deleted at the end); results read from the API, Mongo, Redis and the container logs.
+
+| R | Check | Result |
+|---|---|---|
+| R1 | Scenarios 1, 2, 5 regression | PASS |
+| R2 | F1: Start new greyed on a direct `/block` automation run | PASS |
+| R3 | F2: `max_steps` failure leaves no step running | PASS |
+| R4 | C1: resume after `:seq`, hash and `:cp` deleted | PASS |
+| R5 | M3: stop banner gone after resume | PASS |
+| R6 | I3: rejected start new = one "tried to … (rejected: …)" row; success = one row | PASS |
+| R7 | I6/U3: structure only without `executions_data_access`; owner prefilled + `data_viewed` | PASS |
+| R8 | M5: tail short ids; destroy confirm takes the last 6 hex | PASS |
+| R9 | Dashboard through the proxy: list, filters, pagination, detail, graph; no 400 | PASS |
+| R10 | I2: start new on a sync automation webhook returns fast, one run | PASS |
+
+**R1.** S1: "Exec demo · hang" fired → `01a1ca9b-df40-75cf-b2d4-b0d008d13126`, hard stop 10 s into `hang`
+(`fw-r1-s1-hard-stopped.jpg`; the header id now reads `08d13126`). Resume → 409 `confirm_required` → dialog "This
+action calls an external system…" (`fw-r1-s1-resume-confirm-required.jpg`) → Resume:
+```
+audit resume requested 12:37:50.644 {confirm: true, rerun_action {index 0, type webrequestv2}}, then accepted 12:37:50.652 (of_audit_id = the first)
+resumed_from_seq 9, resumed_seq 11; step 12 hang failure_condition 120015 ms (request ran again) -> step 15 after success -> waiting
+```
+S2: slow via `/block`, soft stop 4 s in → `01a1ca9d-9529-740d-9691-06939e340f53` stopped after `act_wait_1` (cp `{seq 6,
+start, action_index 2, next run intent}`); Resume (automation note shown): step 9 `act_goto_second` 1 ms (the 20 s wait
+did not run again), step 12 `second` → completed 12:39:08.657 (`fw-r1-s2-slow-soft-stopped.jpg`,
+`fw-r1-s2-resumed-continues-at-jump.jpg`). S5: webhook fired with a secret `customer.api_key` → `01a1ca9e-697f-…`,
+soft-stopped; Start new dialog prefilled with `api_key: null`, "required", Start new disabled
+(`fw-r1-s5-r7-owner-start-new-prefilled-masked-required.jpg`); value typed → "filled" → Start new:
+```
+audit start_new requested 12:39:49.406 / accepted 12:39:49.453 {input_provided, masked_filled: 1} (no values)
+new 01a1ca9f-23d5-778f-9475-2c044809d439 (waiting), retry_of = old (accepted by the projector, contract 8); old retried_as [new]
+second POST start-new within 30 s -> 409 already_started
+```
+(`fw-r1-s5-old-execution-retried-as.jpg`).
+
+**R2.** "Exec demo · automation" fired with the seed's `/modules/tilebot/block/<pid>/<pub>/start` line →
+`01a1ca9e-6937-…` (trigger `{automation, source_id: null}`), completed. Start new greyed; tooltip "Started by a
+direct call, not through a webhook: there is nothing to run again" (`fw-r2-automation-start-new-greyed-tooltip.jpg`;
+the tooltip is clipped by the sidebar, as the Phase 2 supervisor tooltip). API: `allowed_controls [{start_new, allowed
+false, reason no_trigger_source}]`; a forced POST start-new → 409 `not_allowed`. The direct-`/block` slow runs show
+the same greyed button.
+
+**R3.** As in S3: slow run `01a1ca9f-a9ec-747a-9b01-6c17de38b91f`, 7 s into the wait `SET tilebot:requests:<rid>:step
+1000 KEEPTTL` (it read 0):
+```
+failed {code max_steps_exceeded, step_seq 2}; step 2 start outcome error, 20016 ms, ended    (fw-r3-failed-max-steps-step-error.jpg)
+Resume: step 2 still "error 20.0 s", only the new `second` step shows running…              (fw-r3-resumed-failed-step-stays-error.jpg)
+completed 12:41:31.374: step 2 error / step 9 start success / step 12 second success      (fw-r3-completed-failed-step-closed.jpg)
+```
+No step is left open or "running…" at any point.
+
+**R4.** Slow run `01a1caa1-0e64-74c8-b85b-d01e3d95efda`, soft-stopped (last_seq 7; `exec:{id}:seq` = 7; cp `{seq 6,
+start, action_index 2}`). Then `DEL exec:{id}:seq exec:{id} exec:{id}:cp` (3 deleted, `EXISTS` 0) and Resume in the
+dashboard:
+```
+executions-api "internal checkpoint: served" 12:42:42 (durable copy)
+resumed_from_seq 6, resumed_seq 8; steps 9 (start, jump 3 ms) and 12 (second 20016 ms); last_seq 16; completed 12:43:02.124
+exec:{id}:seq after the run: 16, TTL 604795 s (restored to the floor 7, then INCRed; TTL refreshed)
+```
+Every resumed event was projected (no drop, the status reached completed) and the new seqs (8–16) are above the old
+last_seq 7 (`fw-r4-resumed-after-seq-hash-cp-deleted.jpg`).
+
+**R5.** After resume the header loses "hard stop · interrupted …" / "soft stop" / the failure code: S1 running
+(`fw-r5-s1-resumed-running-no-stop-banner.jpg`) and waiting (`fw-r1-r5-s1-waiting-after-false-exit-no-stop-banner.jpg`);
+S2 and R3 running likewise. Mongo: `stop_mode`, `stopped_at`, `interrupted_action` unset; `resumed_at` set.
+
+**R6.** On the R10 run `01a1caa4-309a-…` after deleting its temporary webhook, Start new → the page says "This run
+cannot be started again (webhook_not_found)." (`fw-r6-start-new-not-startable.jpg`):
+```
+audit start_new requested 12:47:20.236, then rejected:not_startable:webhook_not_found 12:47:20.250 (of_audit_id)
+API 409 not_startable
+```
+Activities (API and page, plan temporarily `Custom`): one row "Exec Owner tried to start a new run of execution c3aee8 of
+Exec demo · slow (rejected: not_startable:webhook_not_found)" and, for the successful start new on the same run at
+12:46:36, exactly one row "started a new run of execution c3aee8". No row for any `requested` or `data_viewed` audit
+(`fw-r6-r8-owner-activities-tail-ids-rejected-row.jpg`).
+
+**R7.** Temporary custom role `fw_exec_control_nodata` (`flows_read, executions_read, executions_control`) created with
+`POST /api/<pid>/roles` and given to `exec-agent@` (`PUT /project_users/:id`, cachegoose key dropped). As exec-agent:
+`GET …/start-new/input` → `{"input":{"order_id":null,"customer":{"name":null,"api_key":null},"items":[null,null],
+"webhook_http_method":null},"masked":["customer.api_key"],"stored":"structure_only"}`; the dialog shows "Values are hidden
+for your role: fill in the input." with empty values and the masked field still required
+(`fw-r7-custom-role-values-hidden.jpg`); no `data_viewed` audit by a non-owner. As the owner the values are prefilled
+(R1/S5) and each prefill wrote `data_viewed {purpose: start_new_prefill}` (12:39:28, 12:39:36). Restored: `exec-agent@`
+back to `agent` (`/project_users/me` answers `agent`), role deleted (0 left), cache keys dropped.
+
+**R8.** Detail page: breadcrumb and header use the last 8 hex (`08d13126`, `9e340f53`, `de38b91f`); lineage links
+likewise (`4809d439`). Activities: last 6 (`c3aee8`, `95efda`, `38b91f`, `99df9a`, `340f53`). Destroy on a throwaway
+webhook run `01a1caa8-6398-7394-8214-abea57d2ddad`: API with the old prefix `01a1ca` → 400 `confirm_mismatch`; dialog
+"Type d2ddad to confirm", button disabled for any other text, `d2ddad` → destroyed (`fw-r8-destroy-confirm-tail.jpg`,
+`fw-r8-destroyed.jpg`); audit `destroy accepted waiting -> destroyed`, its durable checkpoints gone (0).
+
+**R9.** Through `localhost:8081`: list with status, trigger, period, agent filter, id search and "With failure
+conditions"; "Load more" (25 → 50, cursor request 200); detail pages; Monitor → Graph (`fw-r9-list-filtered.jpg`,
+`fw-r9-list-load-more.jpg`, `fw-r9-graph.jpg`). Browser network panel for `/executions/api`: all 200/202/304 except the
+two expected 409s (`confirm_required`, `not_startable`); no 400. The proxy log's only 400s on `/executions/api` are
+curl probes (encoded `..%2F`, `%0D%0A`, and before the 12:41 reload `?q=a%5Cb`) and the deliberate destroy mismatch. On
+`d7b7b32`: `/executions/%2e%2e`, `..%2F..%2Finternal`, `x%0D%0AX:1` in the path → 400; `?q=a%5Cb` → reaches the app.
+
+**R10.** Temporary webhook on "Exec demo · slow" (`POST /api/<pid>/webhooks {chatbot_id, block_id: start, async:
+false}` → `4xv9…60lw`, mode automation). Fired once (the sync caller got nothing in 60 s: the agent sends no reply, as
+noted in Scenario 8) → `01a1caa4-309a-779d-ae76-28f1efc3aee8` completed in 40 s. Start new (prefill without
+`request_id`/`preloaded_request_id`, M2) → 202:
+```
+audit requested 12:46:36.012 -> accepted 12:46:36.034 (22 ms; the dashboard showed "New execution started" within 3 s)
+new 01a1caa5-5802-7503-a616-373d4a8e66e1 started 12:46:36.035, trigger {automation, 4xv9…}; slow runs started after 12:46:30: 1
+```
+(`fw-r10-sync-webhook-start-new-retried-as.jpg`). The webhook was then deleted (`DELETE /api/<pid>/webhooks/<chatbot_id>`;
+the project has its 5 webhooks again) and used for R6.
+
+Restored: temporary webhook deleted; custom role deleted and `exec-agent@` back to `agent`; project plan back to
+`Sandbox` (cache key dropped, API answers `Sandbox`); JWT scratch files deleted; browser pane viewport reset, signed in
+as the owner. Left behind (data only): the executions above and their audit entries and activities.
+
+Observations (no failure):
+- A deep link to an execution opened right after sign-in (no project chosen yet) renders an empty page for the custom
+  role user; choosing the project first works. Not re-checked for the owner; likely pre-existing.
+- The no_trigger_source tooltip is clipped by the sidebar (same layout issue as the Phase 2 supervisor tooltip).
+- The dev-env proxy rule changed mid-run (`c6e8294` → `d7b7b32`, another session); R9 results are for `d7b7b32`.
