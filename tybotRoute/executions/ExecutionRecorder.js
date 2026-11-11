@@ -247,6 +247,11 @@ const ExecutionRecorder = {
     if (apiEndpoint !== undefined) state.apiEndpoint = apiEndpoint || null;
   },
 
+  /** The store init gave (the resume driver works on the same one). */
+  store() {
+    return state.store;
+  },
+
   _resetForTests() {
     state = { store: null, apiEndpoint: null };
     policyCache = new Map();
@@ -400,9 +405,14 @@ const ExecutionRecorder = {
     if (!ctx) return null;
     try {
       const seq = await enterBlock(ctx, { blockId, blockName });
+      // the resumed block (attributes.resume): its first write points at the resume action, not at 0
+      const resumeAt = ctx._resumeAt;
+      ctx._resumeAt = null;
       if (ctx.step) {
         ctx.step.directive_names = Checkpointer.directiveNames(actions);
-        Checkpointer.writeAt(ctx, ctx.step, { action_index: 0, next_action: 'run', seq });
+        Checkpointer.writeAt(ctx, ctx.step, resumeAt
+          ? { action_index: resumeAt.action_index, next_action: resumeAt.next_action, seq }
+          : { action_index: 0, next_action: 'run', seq });
       }
       return seq;
     } catch (err) {
@@ -522,13 +532,92 @@ const ExecutionRecorder = {
     ctx._stopped = true;
     try {
       await ExecutionRecorder.releaseLease(ctx);
-      if (message && message.sender === '_tdinternal') await emitStopped(ctx, mode);
+      if (message && message.sender === '_tdinternal') {
+        const seq = await emitStopped(ctx, mode);
+        // the jump (or resume) never reached its block: the checkpoint points at it, so resume posts it again
+        await parkAtGate(ctx, message, seq);
+      }
       else await emit(ctx, 'execution.message_while_stopped', () => ({}));
       await publishStopped(ctx);
     } catch (err) {
       warn('gateMessage', err);
     }
     return 'blocked';
+  },
+
+  /**
+   * attributes.resume of the message, when it is the resumed run of ctx's execution: an internal
+   * message, the execution id it names is the resolved one, and no stop flag is set (a stop set
+   * after the resume blocks it at the gate like any jump). Null otherwise: the message is an ordinary
+   * one and attributes.resume has no effect. Never throws.
+   */
+  resumeOf(ctx, message) {
+    try {
+      if (!ctx || !message || message.sender !== '_tdinternal' || ctx._stopAtStart) return null;
+      const attrs = message.attributes || {};
+      const r = attrs.resume;
+      if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
+      if (r.execution_id !== ctx.execution_id || attrs.execution_id !== ctx.execution_id) return null;
+      if (!Number.isInteger(r.action_index) || r.action_index < 0) return null;
+      return {
+        execution_id: r.execution_id,
+        action_index: r.action_index,
+        next_action: r.next_action === 'rerun' ? 'rerun' : 'run',
+        from_seq: r.from_seq === undefined ? null : r.from_seq,
+        checkpoint_unsealed: r.checkpoint_unsealed === true
+      };
+    } catch (err) {
+      warn('resumeOf', err);
+      return null;
+    }
+  },
+
+  /** An internal message with attributes.resume that resumeOf did not accept (and no stop flag blocked). */
+  isStaleResume(ctx, message) {
+    try {
+      const r = message && message.sender === '_tdinternal' && message.attributes && message.attributes.resume;
+      return !!(ctx && r && typeof r === 'object');
+    } catch (err) {
+      return false;
+    }
+  },
+
+  /**
+   * /ext, the resumed message (resumeOf): takes the driver's claim of that checkpoint once, then the
+   * block entry points at the resume action and execution.resumed goes out. false (a duplicate, or
+   * the claim could not be read): nothing runs and the lease is released. Never throws.
+   */
+  async startResume(ctx, resume) {
+    if (!ctx || !resume) return false;
+    try {
+      const taken = await ctx._store.takeResume(ctx.execution_id, resume.from_seq, ctx._cfg.checkpointTtlS);
+      if (taken !== true) {
+        winston.warn(`(ExecutionRecorder) resume of ${ctx.execution_id} at cp_seq ${resume.from_seq} not run: ` +
+          (taken === false ? 'already run or never claimed' : 'claim not readable'));
+        await ExecutionRecorder.releaseLease(ctx);
+        return false;
+      }
+      ctx._resumeAt = { action_index: resume.action_index, next_action: resume.next_action };
+      await ExecutionRecorder.onResumed(ctx, resume);
+      return true;
+    } catch (err) {
+      warn('startResume', err);
+      await ExecutionRecorder.releaseLease(ctx);
+      return false;
+    }
+  },
+
+  /** execution.resumed {from_seq, checkpoint_unsealed}, once per chain. */
+  async onResumed(ctx, { from_seq, checkpoint_unsealed } = {}) {
+    if (!ctx || ctx._resumedEmitted) return null;
+    ctx._resumedEmitted = true;
+    try {
+      const data = { from_seq: from_seq === undefined ? null : from_seq, checkpoint_unsealed: checkpoint_unsealed === true };
+      return await emit(ctx, 'execution.resumed', () => data);
+    } catch (err) {
+      warn('onResumed', err);
+      return null;
+    }
   },
 
   /**
@@ -770,6 +859,37 @@ const ExecutionRecorder = {
     };
   }
 };
+
+/**
+ * gateMessage, an internal message (a jump, or a resume) blocked by the stop flag: no checkpoint exists
+ * for its block, so one is written that resume can continue from: `pending_jump` is the message text
+ * (posted again as is), at action 0 for a jump, at the resume action for a resume. With the seq of
+ * execution.stopped, and sealed like every park. Never throws.
+ */
+async function parkAtGate(ctx, message, seq) {
+  try {
+    if (seq === null || seq === undefined) return;
+    const text = message.text;
+    if (typeof text !== 'string' || !text.startsWith('/')) return;
+    const attrs = message.attributes || {};
+    const r = attrs.resume && typeof attrs.resume === 'object' && attrs.resume.execution_id === ctx.execution_id ? attrs.resume : null;
+    const name = text.substring(1).split('{')[0].trim();
+    await Checkpointer.loadContext(ctx); // stacks and locks (no block entry ran for this message)
+    const pointer = Checkpointer.build(ctx, {
+      block_id: name.startsWith('#') ? name.substring(1) : null,
+      action_index: r && Number.isInteger(r.action_index) && r.action_index >= 0 ? r.action_index : 0,
+      next_action: r && r.next_action === 'rerun' ? 'rerun' : 'run',
+      next_action_type: r && typeof r.next_action_type === 'string' ? r.next_action_type : null,
+      seq,
+      pending_jump: text
+    });
+    Checkpointer.writePointer(ctx, pointer);
+    const raw = await readState(ctx); // untouched while stopped: the gate runs before updateRequestAttributes
+    Checkpointer.sealedPark(ctx, pointer, raw || {});
+  } catch (err) {
+    warn('gateMessage checkpoint', err);
+  }
+}
 
 /**
  * The block-entry body: the state before the block (HGETALL), the step.started seq (INCR) and the checkpoint

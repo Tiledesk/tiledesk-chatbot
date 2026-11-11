@@ -108,9 +108,9 @@ async function loadContext(ctx) {
  * The Redis pointer (Global Constraints shape). agent_stack, locks and the subagent stack come from what
  * loadContext cached on ctx; subagentStack (frames, tokens are dropped) overrides the cached stack.
  */
-function build(ctx, { block_id, action_index, next_action, next_action_type, subagentStack, seq } = {}) {
+function build(ctx, { block_id, action_index, next_action, next_action_type, subagentStack, seq, pending_jump } = {}) {
   const st = cpState(ctx);
-  return {
+  const pointer = {
     version: VERSION,
     seq: seq === undefined ? null : seq,
     block_id: block_id === undefined ? null : block_id,
@@ -124,6 +124,23 @@ function build(ctx, { block_id, action_index, next_action, next_action_type, sub
     trigger: ctx.trigger === undefined ? null : ctx.trigger,
     written_at: new Date().toISOString()
   };
+  // a stop seen on a jump in transit (gateMessage): the jump text the resume posts again
+  if (typeof pending_jump === 'string' && pending_jump) pointer.pending_jump = pending_jump;
+  return pointer;
+}
+
+/** SETs a built pointer (seq-guarded, fire-and-forget) and keeps it as the newest on ctx. Never throws. */
+function writePointer(ctx, pointer) {
+  try {
+    if (!ctx || !pointer || pointer.seq === null || pointer.seq === undefined) return null;
+    const st = cpState(ctx);
+    if (!st.last || st.last.seq < pointer.seq) st.last = pointer;
+    track(ctx._store.setCheckpoint(ctx.execution_id, pointer, ctx._cfg && ctx._cfg.checkpointTtlS));
+    return pointer;
+  } catch (err) {
+    warn('write', err);
+    return null;
+  }
 }
 
 /**
@@ -203,6 +220,7 @@ module.exports = {
   loadLocks,
   loadContext,
   build,
+  writePointer,
   writeAt,
   sealedPark,
   park,

@@ -41,6 +41,7 @@ const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an
 const ExecutionRecorder = require('./executions/ExecutionRecorder');
 const { ExecutionStore } = require('./executions/ExecutionStore');
 const ControlListener = require('./executions/ControlListener');
+const ResumeDriver = require('./executions/ResumeDriver');
 const { isEnabled: executionsEnabled } = require('./executions/config');
 
 let API_ENDPOINT = null;
@@ -117,8 +118,21 @@ router.post('/ext/:botid', async (req, res) => {
   });
   // flag off: no call at all (not even an awaited null), the flow runs as in 3.0.5
   const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
+  // resumed run (attributes.resume of this execution, posted by the ResumeDriver, no stop flag): no gate,
+  // the block runs from the checkpoint action; a duplicate is dropped. Anything else: attributes.resume is ignored
+  const resume = ctx ? ExecutionRecorder.resumeOf(ctx, message) : null;
+  if (resume) {
+    if (!await ExecutionRecorder.startResume(ctx, resume)) return;
+  }
   // stop flag set: nothing runs (the 200 is already sent); the gate emitted and released the lease
-  if (ctx && await ExecutionRecorder.gateMessage(ctx, message) === 'blocked') return;
+  else if (ctx && await ExecutionRecorder.gateMessage(ctx, message) === 'blocked') return;
+  // an internal resume for another execution (it ended, or was replaced, while the resume was in transit):
+  // never run as a plain jump from the block's first action
+  else if (ctx && ExecutionRecorder.isStaleResume(ctx, message)) {
+    winston.warn("(tybotRoute) resume message for an execution that is not the current one: dropped");
+    await ExecutionRecorder.endWithoutChain(ctx);
+    return;
+  }
   
   let intentsMachine;
   let backupMachine;
@@ -211,7 +225,8 @@ router.post('/ext/:botid', async (req, res) => {
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache,
-          execution: ctx
+          execution: ctx,
+          startIndex: resume ? resume.action_index : undefined
         }
       );
       directivesPlug.processDirectives( () => {
@@ -811,10 +826,19 @@ async function connectRedis() {
     winston.info("(Tilebot) Redis connected");
     ExecutionRecorder.init({ store: new ExecutionStore(tdcache.client), apiEndpoint: API_ENDPOINT });
     // hard stop / cleanup aborts (exec:control); off switch: no subscription at all
-    if (executionsEnabled()) await ControlListener.start(tdcache);
+    if (executionsEnabled()) await ControlListener.start(tdcache, { onResume: (executionId) => ResumeDriver.handle(executionId, resumeDeps()) });
     else await ControlListener.stop();
   }
   return;
+}
+
+/** What the resume driver needs from this module: the bots of the deployment (+secret). It posts where jumps go. */
+function resumeDeps() {
+  return {
+    botsDataSource: (botId, projectId) => staticBots
+      ? new MockBotsDataSource(staticBots)
+      : new MongodbBotsDataSource({ projectId: projectId, botId: botId })
+  };
 }
 
 async function checkRequest(request_id, id_project) {

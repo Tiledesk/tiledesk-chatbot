@@ -6,11 +6,15 @@ const AbortRegistry = require('./AbortRegistry');
 const CHANNEL = 'exec:control';
 
 let subscriber = null;
+// injected by index.js (start): drives a {type:"resume"} message; returns the driver's outcome
+let hooks = { onResume: null };
 
 /**
  * One exec:control message: {type:"stop", mode:"hard", execution_id} or {type:"cleanup", execution_id}
- * aborts the chains of that execution running on this pod. Anything else is ignored (a soft stop
- * acts through the stop flag only); malformed messages with a warning.
+ * aborts the chains of that execution running on this pod; {type:"resume", execution_id} goes to the
+ * injected onResume (every pod gets it, the lease winner drives it) and the promise of its outcome is
+ * returned. Anything else is ignored (a soft stop acts through the stop flag only); malformed messages
+ * with a warning.
  */
 function handle(raw) {
   let msg;
@@ -27,6 +31,15 @@ function handle(raw) {
   if ((msg.type === 'stop' && msg.mode === 'hard') || msg.type === 'cleanup') {
     return AbortRegistry.abort(msg.execution_id);
   }
+  if (msg.type === 'resume') {
+    if (typeof hooks.onResume !== 'function') return false;
+    return Promise.resolve()
+      .then(() => hooks.onResume(msg.execution_id))
+      .catch((err) => {
+        winston.warn('(ControlListener) resume failed: ' + (err && err.message));
+        return null;
+      });
+  }
   return false;
 }
 
@@ -37,8 +50,9 @@ const ControlListener = {
    * subscribed node-redis v4 client can't run other commands). Restarts if already running.
    * Never throws: false when it could not subscribe.
    */
-  async start(tdcache) {
+  async start(tdcache, { onResume } = {}) {
     await ControlListener.stop();
+    hooks = { onResume: typeof onResume === 'function' ? onResume : null };
     if (!tdcache || !tdcache.client) return false;
     let sub;
     try {
@@ -68,6 +82,7 @@ const ControlListener = {
   async stop() {
     const sub = subscriber;
     subscriber = null;
+    hooks = { onResume: null };
     if (!sub) return;
     try {
       await sub.quit();

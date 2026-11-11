@@ -94,6 +94,8 @@ class DirectivesChatbotPlug {
     this.chatbot = config.chatbot;
     this.message = config.message;
     this.execution = config.execution || null;
+    // resume (executions on only): the first action to run; the earlier ones of the block are skipped
+    this.startIndex = config.startIndex;
   }
 
   exec(pipeline) {
@@ -181,6 +183,7 @@ class DirectivesChatbotPlug {
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
     this.curr_directive_index = -1;
+    if (this.execution && Number.isInteger(this.startIndex) && this.startIndex > 0) this.curr_directive_index = this.startIndex - 1;
     if (this.execution) ExecutionRecorder.setDirectives(this.execution, directives); // the checkpoint's next_action_type
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
     

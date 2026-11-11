@@ -46,7 +46,10 @@ function getConfig() {
     leaseMs: int(env.EXECUTIONS_LEASE_MS, 15000),
     heartbeatMs: int(env.EXECUTIONS_HEARTBEAT_MS, 5000),
     transitMs: int(env.EXECUTIONS_TRANSIT_MS, 120000),
-    checkpointTtlS: int(env.EXECUTIONS_CHECKPOINT_TTL, 604800)
+    checkpointTtlS: int(env.EXECUTIONS_CHECKPOINT_TTL, 604800),
+    // resume past the Redis checkpoint: GET {serviceUrl}/internal/executions/:id/checkpoint with the service token
+    serviceUrl: env.EXECUTIONS_SERVICE_URL ? String(env.EXECUTIONS_SERVICE_URL).replace(/\/+$/, '') : null,
+    serviceToken: env.EXECUTIONS_SERVICE_TOKEN || null
   };
 }
 

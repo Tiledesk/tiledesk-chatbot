@@ -32,6 +32,15 @@ const CP_SCRIPT = "local cur = redis.call('GET', KEYS[1]) " +
   "if ok and type(obj) == 'table' and tonumber(obj.seq) and tonumber(obj.seq) >= tonumber(ARGV[2]) then return 0 end end " +
   "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3]) return 1";
 
+// Resume claim of one checkpoint seq: taken unless that seq is already pending or ran.
+const RESUME_CLAIM_SCRIPT = "local v = redis.call('GET', KEYS[1]) " +
+  "if v == ARGV[1] or v == ARGV[2] then return 0 end " +
+  "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3]) return 1";
+
+// The resumed /ext run: pending -> ran, once.
+const RESUME_TAKE_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
+  "redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3]) return 1 else return 0 end";
+
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
 
@@ -291,6 +300,44 @@ class ExecutionStore {
       return raw ? JSON.parse(raw) : null;
     } catch (err) {
       this._warn('getCheckpoint', err);
+      return null;
+    }
+  }
+
+  /**
+   * Resume of the checkpoint at seq, claimed once (exec:{id}:resume = "pending:<seq>"): a second driver
+   * for the same checkpoint (a late duplicate that got the lease after the winner let it go) gets false.
+   * A newer checkpoint (higher seq) can be claimed again. null: Redis error.
+   */
+  async claimResume(id, seq, ttlS) {
+    try {
+      const ttl = Number(ttlS) > 0 ? Number(ttlS) : getConfig().checkpointTtlS;
+      return (await this.client.eval(RESUME_CLAIM_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`, `ran:${seq}`, String(ttl)] })) === 1;
+    } catch (err) {
+      this._warn('claimResume', err);
+      return null;
+    }
+  }
+
+  /** The driver could not post the resume: the claim goes, so the same checkpoint can be resumed again. */
+  async releaseResumeClaim(id, seq) {
+    try {
+      await this.client.eval(CAD_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`] });
+    } catch (err) {
+      this._warn('releaseResumeClaim', err);
+    }
+  }
+
+  /**
+   * /ext, the resumed message: "pending:<seq>" -> "ran:<seq>". true once per posted resume; false for a
+   * duplicate delivery or a message nobody posted; null: Redis error.
+   */
+  async takeResume(id, seq, ttlS) {
+    try {
+      const ttl = Number(ttlS) > 0 ? Number(ttlS) : getConfig().checkpointTtlS;
+      return (await this.client.eval(RESUME_TAKE_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`, `ran:${seq}`, String(ttl)] })) === 1;
+    } catch (err) {
+      this._warn('takeResume', err);
       return null;
     }
   }
