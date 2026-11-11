@@ -297,6 +297,7 @@ const ResumeDriver = {
             execution_id: id,
             resume: {
               execution_id: id,
+              block_id: cp.block_id || null, // the index applies to this block only (contract 9)
               action_index: cp.action_index,
               next_action: cp.next_action === 'rerun' ? 'rerun' : 'run',
               next_action_type: cp.next_action_type === undefined ? null : cp.next_action_type,

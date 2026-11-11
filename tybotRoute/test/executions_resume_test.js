@@ -595,6 +595,23 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.strictEqual((await params(rid)).sl, '"1"');
   });
 
+  it('the resume action index applies only to the checkpoint block (block_id), another block runs from its start', async function () {
+    const { rid, id, cp } = await stoppedThree();
+    // the self-jump lands on another block than the checkpoint's (here: a pending jump text that disagrees)
+    cp.pending_jump = '/midwait';
+    cp.action_index = 1;
+    await client.set(`exec:${id}:cp`, JSON.stringify(cp));
+    await serviceRestore(id, rid);
+    let posted = null;
+    betweenBlocks = (message) => { if (message.payload.attributes && message.payload.attributes.resume) posted = message.payload.attributes.resume; };
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'started');
+    await settle(rid, 'execution.idle');
+    assert.strictEqual(posted.block_id, 'three', 'attributes.resume carries the checkpoint block');
+    const { step, indices } = lastStep(rid);
+    assert.strictEqual(step.data.block_id, 'midwait');
+    assert.deepStrictEqual(indices, [0, 1], 'not from action 1: the index belongs to block three');
+  });
+
   it('a user message with attributes.resume does not bypass a stop', async function () {
     const { rid, id, cp } = await stoppedThree();
     const stepsBefore = ofType(rid, 'step.started').length;

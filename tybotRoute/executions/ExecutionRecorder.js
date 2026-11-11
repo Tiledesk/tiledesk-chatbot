@@ -405,11 +405,21 @@ const ExecutionRecorder = {
    */
   async blockEntry(ctx, { blockId, blockName, actions } = {}) {
     if (!ctx) return null;
+    // the resumed block (attributes.resume): it runs from the resume action (DirectivesChatbotPlug startIndex,
+    // decided before any Redis call so it stands even if the entry fails) and its first write points there.
+    // Only the checkpoint's block: another block (an intent lock took the message, say) runs from its start
+    let resumeAt = ctx._resumeAt;
+    ctx._resumeAt = null;
+    if (resumeAt && resumeAt.block_id !== blockId) {
+      if (resumeAt.block_id !== null || resumeAt.action_index > 0) {
+        winston.warn(`(ExecutionRecorder) resume of ${ctx.execution_id} at action ${resumeAt.action_index} of block ` +
+          `${resumeAt.block_id} dropped: block ${blockId} runs instead, from its first action`);
+      }
+      resumeAt = null;
+    }
+    ctx._resumeStartIndex = resumeAt ? resumeAt.action_index : undefined;
     try {
       const seq = await enterBlock(ctx, { blockId, blockName });
-      // the resumed block (attributes.resume): its first write points at the resume action, not at 0
-      const resumeAt = ctx._resumeAt;
-      ctx._resumeAt = null;
       if (ctx.step) {
         ctx.step.directive_names = Checkpointer.directiveNames(actions);
         Checkpointer.writeAt(ctx, ctx.step, resumeAt
@@ -563,6 +573,7 @@ const ExecutionRecorder = {
       if (!Number.isInteger(r.action_index) || r.action_index < 0) return null;
       return {
         execution_id: r.execution_id,
+        block_id: typeof r.block_id === 'string' && r.block_id ? r.block_id : null,
         action_index: r.action_index,
         next_action: r.next_action === 'rerun' ? 'rerun' : 'run',
         from_seq: r.from_seq === undefined ? null : r.from_seq,
@@ -604,7 +615,7 @@ const ExecutionRecorder = {
         await ExecutionRecorder.releaseLease(ctx);
         return false;
       }
-      ctx._resumeAt = { action_index: resume.action_index, next_action: resume.next_action };
+      ctx._resumeAt = { block_id: resume.block_id, action_index: resume.action_index, next_action: resume.next_action };
       await ExecutionRecorder.onResumed(ctx, resume);
       return true;
     } catch (err) {

@@ -232,7 +232,8 @@ router.post('/ext/:botid', async (req, res) => {
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache,
           execution: ctx,
-          startIndex: resume ? resume.action_index : undefined
+          // the resume index, only when the block that ran is the checkpoint's (set at its block entry)
+          startIndex: resume ? ctx._resumeStartIndex : undefined
         }
       );
       directivesPlug.processDirectives( () => {
