@@ -242,3 +242,71 @@ No image built, nothing pruned, no product code touched.
   `data_access_requested rejected:data_expired` has no Activities row (only accepted and denied are mirrored); the
   admin's Activities row shows the email next to the name, unlike the others; a deep link right after a page load
   still renders empty until a reload (pre-existing, Phase 3).
+
+# Fix-wave re-check (2026-11-11)
+
+Code under test, rebuilt with `bin/exec-rebuild` and recreated with `bin/dev up -d --no-build`: executions `3f7486c`
+(image 6cbf6904848b; api, ingest and jobs recreated), dashboard `128f42d69` (image 68946c2416b3). The server was not
+rebuilt. All services healthy; the browser pane was reloaded onto the new bundle. Disk was 59 GiB free before and
+after; nothing pruned. As owner `exec-demo-owner@`, same method as above (JWT in a mode-600 scratch file, deleted).
+Screenshots are `phase4-acceptance/fw-*`.
+
+| # | Check | Result |
+|---|---|---|
+| R1 | Scenario 1: values visible in a covered block, countdown runs, Close masks | **PASS** |
+| R2 | Scenario 2: whole-execution grant, Flow state tab, history drawer, trigger input show values | **PASS** |
+| R3 | F1: nested `customer.api_key` shows `[secret]`, siblings visible | **PASS** |
+| R4 | `data_viewed` dedupe on a live run (about 30 s with the grant open) | **PASS** |
+| R5 | Dialog buttons normal size | **PASS** |
+| R6 | Retention card: two confirm lines; data 0 text; data above trace inline; Save disabled when unchanged | **PASS** |
+| R7 | Run captured at data 0: 404 `no_data`, "No data was stored" | **PASS** |
+| R8 | Server-ended grant: next refused read ends the strip and masks values | **PASS** |
+
+- **R1.** Run `01a1cc2b-be61-751a-bc29-bec62200230c` (fired with a payload carrying `customer.api_key` and marker
+  `MRKFW1`). Block `start` → Flow state → View values → "This block (start)". The strip reads "Sealed data · block start
+  · access expires in 14:59" and the After cells show `"42"` and `"new"`
+  (`fw-r1-values-visible-block-grant.jpg`). The `pre.vc-json` elements have a computed line-height of 17.4px and
+  offsetHeight 17 (B1 had 0). The countdown went 14:59 → 14:44 in about 8 s. Close removes the strip and the cells
+  go back to `••• (4 B) string`, 0 `pre.vc-json` (`fw-r1-closed-masks-back.jpg`).
+- **R2.** Header View data, "Whole execution" only. Trigger input in the strip shows the payload with `api_key`
+  `[secret]` (`fw-r2-trigger-input.jpg`); Flow state tab, block "after": all 13 attributes with values
+  (`fw-r2-r3-flow-state-tab-customer-secret.jpg`); history drawer of `order_total`: `start · added · "42"`
+  (`fw-r2-history-drawer.jpg`).
+- **R3.** Under the whole-execution grant the `customer` attribute reads `{"name": "Ada MRKFW1", "api_key": "[secret]"}`
+  and `payload` the same way. Three `[secret]` in the DOM text; `MRKFWKEY` and `demo-secret` appear nowhere in the
+  page text or HTML. Same screenshot as R2.
+- **R4.** A fresh "Exec demo · hang" run `01a1cc2d-d83c-77f8-85cd-f5e6743709c5` (running for 120 s), grant on block
+  `hang` (step 6), left open and polling about 60 s. audit_log: 1
+  `data_access_requested` and 1 `data_viewed` {step_seq 6} with `view_key` `<grant>|step:6`. The proxy log shows 2 grant
+  state reads in the window (the page no longer force-reads every 2 s). Then 5 more direct API reads of the same
+  step with the same grant all answered 200 and the count stayed at 1.
+- **R5.** `fw-r5-dialog-normal-buttons.jpg`: Cancel 71x36 px and View data 90x36 px, 14px font, both
+  `mat-mdc-button` (small before).
+- **R6.** Both lowered (90/30 → 60/10): the confirm reads "Traces of runs older than 60 days will be deleted within a
+  few minutes." / "Attribute values, inputs and checkpoints of runs older than 10 days will be deleted within a few
+  minutes." / "This cannot be undone." once (`fw-r6-two-confirm-lines.jpg`); cancelled, nothing saved. Data 80 with trace
+  60: inline "Sealed data cannot be kept longer than the trace (60 days).", no dialog, no PUT (proxy log 0 PUTs, API
+  still 90/30) (`fw-r6-data-above-trace-inline-no-dialog.jpg`). Data 0: "All stored attribute values, inputs and
+  checkpoints will be deleted within a few minutes." plus "Attribute values and inputs will no longer be captured;
+  stopped runs can no longer be resumed from stored data.", no "0 days" (`fw-r6-data-zero-confirm.jpg`). Save is
+  disabled with nothing changed (button `disabled` true on load).
+- **R7.** With data 0 saved (sealed 23 → 0, checkpoints 3 → 0, `exec:policy` `capture_data` false), a new webhook run
+  `01a1cc32-2436-73fb-bc34-62dcf780917f` stored 0 sealed docs. `POST data-access` → 404 `{"error":"no_data"}`; the
+  dialog shows "No data was stored for this execution" (`fw-r7-no-data-was-stored.jpg`), not "no longer kept".
+- **R8.** On the R2 grant, `POST …/data-access/<grant>/revoke` through the API (204) while the page stayed open (the
+  values stayed, there had been no read since). Clicking another attribute's history made a read that the server
+  refused: the strip vanished, every value went back to a mask (`••• (5 B) string`, also in the drawer), 0 `pre.vc-json`,
+  no marker in the DOM, View data back in the header (`fw-r8-server-ended-grant-masked.jpg`).
+
+**Retention side effects (R7 needs data 0, so this was not avoidable).** Retention was changed 90/30 → 90/80 (an
+accidental lengthen: a mis-aimed click on the layout that shifts when the inline message shows) → 90/0 → 90/30. The
+data 0 step deleted every sealed doc and checkpoint of the project (23 and 3), so the runs of this session and of
+earlier ones can no longer show values or be resumed from a checkpoint; traces stay. The last save (0 → 30) is a
+lengthen: nothing more was deleted. `retention_update` audit entries at 19:58:14, 19:58:51 and 20:00:41.
+
+**Restored.** Retention 90/30 (`GET settings/retention` 90/30, `capture_data` true); plan name `Sandbox` (not changed in
+this pass); no custom role or role change was made; no active grant (R1 closed in the UI, R2 revoked through the API,
+R4 closed in the UI); JWT scratch files deleted; no server or tool process left running. Left behind: the runs
+`01a1cc2b…`, `01a1cc2d…` (hang) and `01a1cc32…` (data 0) with their audit entries.
+
+No product bugs found in this pass.
