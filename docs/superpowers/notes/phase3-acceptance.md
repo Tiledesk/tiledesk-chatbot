@@ -467,3 +467,16 @@ pane was still running the bundle loaded before the rebuild. After a reload, the
 the 24 execution nodes have 24 distinct labels (`fu-graph.jpg`).
 
 Left behind: the test executions, their audit entries and Activities rows. No other state was changed.
+
+**D2 fixed (chatbot b9d31992, cherry-picked from fix/dirmessage-error-log 234546ef).** DirMessage creates its
+TiledeskClient only when the run has a token. Without one, the message is skipped with a warning and the flow
+continues. Re-run live on the rebuilt chatbot: "Exec demo · slow" by direct `/block` → `01a1cb22-5e74-…`, step
+counter set to 1000:
+```
+warn: (DirMessage) No token for request automation-request-…: message not sent
+debug: (DirectivesChatbotPlug) Stopping Actions on: …
+```
+No `uncaughtException`. The run failed with `max_steps_exceeded`, and step 2 `start` closed with outcome error
+(20025 ms). DirectivesChatbotPlug's own "An error occurred while creating TiledeskClient … options.token can NOT be
+null" is a separate log that was already handled and is unchanged. Tests: executions + DirMessage 203 passing,
+0 failing.
