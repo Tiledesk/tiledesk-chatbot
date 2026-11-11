@@ -147,6 +147,18 @@ describe('Executions: retry_of and automation trigger id', function () {
     assert.ok(!('retry_of' in started().find((e) => e.request_id === rid).data));
   });
 
+  it('retry_of in the message attributes is ignored (only the request attributes the server refire sets count)', async function () {
+    const rid = 'support-group-' + PROJECT_ID + '-' + uuidv4().replace(/-/g, '');
+    requestIds.push(rid);
+    tilebotService.sendMessageToBot({
+      payload: { _id: uuidv4(), type: 'text', sender: 'A-SENDER', recipient: rid, text: '/count', id_project: PROJECT_ID,
+        attributes: { retry_of: 'exec-spoofed' }, request: { request_id: rid } },
+      token: CHATBOT_TOKEN
+    }, BOT_ID, () => {});
+    await waitFor(() => started().some((e) => e.request_id === rid), 'execution.started');
+    assert.ok(!('retry_of' in started().find((e) => e.request_id === rid).data));
+  });
+
   it('/block lifts retry_of out of the payload', async function () {
     const before = started().length;
     const res = await axios.request({ method: 'post', url: `http://localhost:${APP_PORT}/block/${PROJECT_ID}/${BOT_ID}/count`,

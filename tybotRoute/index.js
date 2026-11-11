@@ -692,7 +692,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     token: token
   }
-  if (retry_of) message.payload.attributes.retry_of = retry_of;
+  // in the request attributes, where the webhook and scheduled refires put it too (the recorder reads it only there)
+  if (retry_of) message.payload.request.attributes = { retry_of: retry_of };
 
   if (async) {
     winston.verbose("Async webhook");
