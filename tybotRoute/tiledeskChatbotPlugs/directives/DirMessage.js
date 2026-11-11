@@ -116,7 +116,7 @@ class DirMessage {
       message,
       (err) => {
         if (err) {
-          winston.err("(DirMessage) Error sending reply: ", err);
+          winston.error("(DirMessage) Error sending reply: ", err);
         }
         winston.debug("(DirMessage) Reply message sent: ", message);
         callback();
