@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 3.0.7-rc2
+- **added**: **Set rating** and **Get rating** take an optional **Request ID**, the conversation to rate or read (variables allowed, empty = current conversation). In a webhook it must be given, e.g. `{{payload.payload.request_id}}` for a webhook called when a conversation is closed; without it the server is not called and Set rating goes to its **else** exit
+
 # 3.0.7-rc1
 - **added**: **Set rating** action (`set_rating`): sets the rating of the conversation (1-5, also from a variable) with an optional comment. With **Force update** off a rating already given is kept. **Success** and **else** exits; on failure the reason goes to the error variable and to `flowError`
 - **added**: **Get rating** action (`get_rating`): saves the rating of the conversation and its comment in two variables; a missing value removes its variable

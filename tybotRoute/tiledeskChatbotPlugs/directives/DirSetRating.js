@@ -13,8 +13,14 @@ const winston = require('../../utils/winston');
  * action.assignErrorTo: optional variable for the reason of a failure; removed on success
  * action.trueIntent / action.falseIntent: the Success exit (rating saved, or kept because already given)
  * and the else exit (invalid value or request failed), with their optional *IntentAttributes
+ * action.requestId: optional id of the conversation to rate, a template that may hold {{variables}};
+ * empty means the current conversation. A webhook run (`automation-request-...`) has no conversation,
+ * so there it must be given (e.g. {{payload.payload.request_id}} from a request.close subscription).
  */
 class DirSetRating {
+
+  static AUTOMATION_PREFIX = 'automation-request-';
+  static NO_CONVERSATION_ERROR = "no conversation: in a webhook set the Request ID of the action";
 
   constructor(context) {
     if (!context) {
@@ -58,6 +64,13 @@ class DirSetRating {
 
     const requestVariables = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
     const filler = new Filler();
+    const targetRequestId = DirSetRating.targetRequestId(this.requestId, action, filler, requestVariables);
+    if (!targetRequestId) {
+      this.logger.error("[Set Rating] No conversation to rate: in a webhook set the Request ID of the action");
+      await this.fail(action, DirSetRating.NO_CONVERSATION_ERROR, callback);
+      return;
+    }
+
     const filled = filler.fill(action.rating, requestVariables);
     const rating = DirSetRating.parseRating(filled);
     if (rating === null) {
@@ -75,15 +88,15 @@ class DirSetRating {
 
     try {
       if (action.forceUpdate !== true) {
-        const request = await this.tdClient.getRequestById(this.requestId);
+        const request = await this.tdClient.getRequestById(targetRequestId);
         if (request && request.rating !== undefined && request.rating !== null) {
           this.logger.native("[Set Rating] The conversation already has a rating, not updated:", request.rating);
           await this.succeed(action, callback);
           return;
         }
       }
-      await this.tdClient.updateRequestProperties(this.requestId, properties);
-      this.logger.native("[Set Rating] Rating set to", rating);
+      await this.tdClient.updateRequestProperties(targetRequestId, properties);
+      this.logger.native("[Set Rating] Rating set to", rating, "on", targetRequestId);
     }
     catch (err) {
       this.logger.error("[Set Rating] Error setting the rating:", err?.message);
@@ -92,6 +105,21 @@ class DirSetRating {
       return;
     }
     await this.succeed(action, callback);
+  }
+
+  /**
+   * The conversation the action works on: the filled action.requestId when given, otherwise the current one.
+   * Null when there is none: a webhook run without a Request ID, a Request ID that fills to
+   * empty (no fallback to the current conversation, it would rate the wrong one), or a webhook run id.
+   */
+  static targetRequestId(requestId, action, filler, requestVariables) {
+    const template = action?.requestId;
+    const hasTemplate = typeof template === 'string' ? template.trim() !== '' : (template !== undefined && template !== null);
+    const id = hasTemplate ? DirSetRating.fillMessage(template, filler, requestVariables) : requestId;
+    if (!id || id.startsWith(DirSetRating.AUTOMATION_PREFIX)) {
+      return null;
+    }
+    return id;
   }
 
   /** The rating as an integer from 1 to 5, or null */

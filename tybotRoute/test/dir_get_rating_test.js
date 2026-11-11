@@ -75,3 +75,34 @@ describe('Directive DirGetRating', function () {
     assert.strictEqual(await get(tdcache, "rating_value"), null);
   });
 });
+
+describe('Directive DirGetRating with a Request ID', function () {
+
+  const WEBHOOK_ID = "automation-request-project-0123456789abcdef";
+  const CLOSED_ID = "support-group-project-closed-conversation";
+
+  function directiveOn(requestId, tdcache, calls) {
+    const dir = new DirGetRating({ projectId: "project", token: "JWT token", requestId: requestId, API_ENDPOINT: "http://api", tdcache: tdcache });
+    dir.tdClient = { async getRequestById(id) { calls.push(id); return { request_id: id, rating: 5, rating_message: "ottimo" }; } };
+    return dir;
+  }
+
+  it('in a webhook reads the conversation named by the Request ID', async () => {
+    const tdcache = memoryCache();
+    await TiledeskChatbot.addParameterStatic(tdcache, WEBHOOK_ID, "closed_id", CLOSED_ID);
+    const calls = [];
+    await run(directiveOn(WEBHOOK_ID, tdcache, calls), { requestId: "{{closed_id}}", assignRatingTo: "rating_value", assignRatingMessageTo: "rating_message" });
+    assert.deepStrictEqual(calls, [CLOSED_ID]);
+    assert.strictEqual(await TiledeskChatbot.getParameterStatic(tdcache, WEBHOOK_ID, "rating_value"), 5);
+    assert.strictEqual(await TiledeskChatbot.getParameterStatic(tdcache, WEBHOOK_ID, "rating_message"), "ottimo");
+  });
+
+  it('in a webhook without Request ID sets flowError and calls no API', async () => {
+    const tdcache = memoryCache();
+    const calls = [];
+    await run(directiveOn(WEBHOOK_ID, tdcache, calls), { assignRatingTo: "rating_value", assignRatingMessageTo: "rating_message" });
+    assert.deepStrictEqual(calls, []);
+    const flowError = await TiledeskChatbot.getParameterStatic(tdcache, WEBHOOK_ID, "flowError");
+    assert.strictEqual(flowError, "Get rating Error: " + require('../tiledeskChatbotPlugs/directives/DirSetRating.js').DirSetRating.NO_CONVERSATION_ERROR);
+  });
+});
