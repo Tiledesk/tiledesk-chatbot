@@ -25,4 +25,21 @@ describe('Directive DirMessage - send error', function() {
     });
   });
 
+  it('without a token (direct /block run) it does not throw and calls back without sending', function(done) {
+    let dir;
+    assert.doesNotThrow(() => {
+      dir = new DirMessage({
+        projectId: "projectID",
+        requestId: "automation-request-projectID-req",
+        API_ENDPOINT: "http://localhost:1"
+      });
+    });
+    const timer = setTimeout(() => done(new Error("callback never called")), 1000);
+    dir.execute({ action: { text: "Anomaly detection.", isInfo: true, _tdThenStop: true } }, (stop) => {
+      clearTimeout(timer);
+      assert.strictEqual(stop, true);
+      done();
+    });
+  });
+
 });
