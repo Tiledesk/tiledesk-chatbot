@@ -2,13 +2,13 @@
   {
     "event_version": 1,
     "type": "action.completed",
-    "execution_id": "01a1c193-4e44-73c1-91d5-373a5c5d748a",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
     "seq": 3,
-    "at": "2026-11-09T18:30:18.973Z",
+    "at": "2026-11-11T08:28:22.493Z",
     "id_project": "projectID",
     "agent_id": "parentBotID",
     "agent_version": "parentBotID",
-    "request_id": "support-group-projectID-6a0726bf311f45dd96a8743b63bc5404",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
     "pod": "Mac",
     "data": {
       "step_seq": 2,
@@ -18,20 +18,44 @@
       "title": "Invoke subagent",
       "outcome": "success",
       "exit_taken": null,
-      "duration_ms": 7,
+      "duration_ms": 9,
       "state_delta": []
     }
   },
   {
     "event_version": 1,
+    "type": "execution.checkpoint",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
+    "seq": 6,
+    "at": "2026-11-11T08:28:22.497Z",
+    "id_project": "projectID",
+    "agent_id": "parentBotID",
+    "agent_version": "parentBotID",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
+    "pod": "Mac",
+    "data": {
+      "sealed": {
+        "alg": "RSA-OAEP-256+A256GCM",
+        "kid": "kid-subagent",
+        "wrapped_key": "TI6aZjqp/lEbFHdxQL1VhJaGqfbkuRQmJuUXVm9DUR9fw1d+INrjnCu4GM2CErmd2Pr6EzUv7KnPM64GHwdFQ8UqrhS2u4gzblKGEM5JC3fj8pIbiNF+eZLzmlZxSg7wbiLcAX/X9v0DiVqEZr9pbf/MrtA+V2mF3xLGA4MkPdqd3S6oKiRNlnBzApvPXsR9tTintadnBpxqyd1uJiM0H0+dQ4K7vskxMimoO/UjcbdpIpcRrx7H9Gf3mKRn+jTSMR+ga1b9R9iurJntzsAFOw5jLsc21ZRkxp4F2Pm80sAvQAq7kFRr2a+mjfN4H2dxc0ob7TF1C+Aw9XpZ6d2Uog==",
+        "iv": "q6dc4UW23E68AMYS",
+        "tag": "2wqpr6dmKYxPfaFf962GBQ==",
+        "ct": "w2DBO17R/sE0ZafEsfWikFMc8mIKH5MdFOiQFiKgsC5PMyRo294fGQ8HVE17I9tj+6ZlyEbbCEJMelu9kVk8OB2KMMeM9EbXq/aRzZA5bKsFU9YiaQprp0rhFuvAMmIG16P/5a+6ENpoNYkjS/dLmXHedDqSy70plo54rzQXxVeRb8KsP7AhRz4wXDc9Ef6NBwoHPEEbjKqe2a3kTQ5jLyHwrRxZ9vkqUnBzqNu9vZ3RZBPpuom4N8bBD8FgnJEXkY6qnQ91XHz41eNdKwBm2OrzyI/UiFKAkQLCVz6qbHsavCwKKyt+ygpdX2HPR1tGvT0cGA6doSR7PHX2hC7X42OKs9Yx5OAnIgLqcB7qVdp0Bl8JQWtUwWihAWwT3Pag85qE4dQTEu2cqxNJR4Xvgl6/OAfUKqnG5DOHGj9/nosvqUmMHkpBYxIr/B96Yn1o4P36xDtUVH9Ee1LqRGxvYc+fpnGg95Xv2eipEEYCfOFNikkg/7b7+aqT46fy0cplizBwcrKuBTPQRkjaSnLUDCEwPIB5QMnzKO4kzfbNAE8J9R8E0D6+EPJv2pW56W8x+WfRZM7hKUKLQFGovmZ/DY1irD+c73+mYrDaeFNNorrJwSe76L4QvkwkYX+d4ha/zeHN1ozA7NhlAePZdID9FaJuQVfyTa/RSe1xxanI3rGFwjNUABfFNi8VTd7vT0W7jBH6Qk7mtwwYMmd94CE/6f2uamUJaQM5XBPhf3HKXD8RYdziqb6PO7ZeTxgu5gpFzRSkRa+r8yyJYA8OOvng0Od1KyX5Dr5jtVKVDaMo6TEDA/pVfoP0WFRQrxbi9y0IeT67B9+XmIecG3LStGwW7ijHZAKx/sMzQDKBqxfAUKFjGn+GFI1e7raHC7pkbC63eS2UcITSR7f8Pp3WxKSr6MvJVSMXqfUaCDnbE9kVKiFGEuuGQBsQrpPO1dze3ljBjiM4yjeMGe9xDiUa3QDbJ7BIBF+jqqXVHzjSpPgMFQgbXMq1vV69hqnbM1lQja8iRjZFoC0U5/hsOhar15w3hf2nn90VdhA9msM85gBGpu1mFE5ycRzGN+jwUJEk9RcQoPhebrMbn0WjQz7fg46cXOdd7ZfmwTuTz2VFEZaq+Y3OSdxgiLzyXUR+2JSI656p4pLZAHzuc37/Vua1XVBXcTxs2sagWtYX8WoCsbLYvQwX4Rsg/QxGI6Gap6K1Btpy2xeIbfsl5/Fv5topikikenax2sFHB7zgnvKJqQGkMEEm/QGfdCHsXMz6txMmzriLzbB1w3rFZXvP7+s0uR4zb0t39N3ejDvZEN0iECHzCOwpo+iEaGNJ4OVhemaudBm+PIklJzQnqIoJ/tlG70sIdg0AfHZjANkue94bJGfKZSNo",
+        "size": 1041
+      },
+      "cp_seq": 3
+    }
+  },
+  {
+    "event_version": 1,
     "type": "execution.handed_to_bot",
-    "execution_id": "01a1c193-508b-72fb-b960-edcd60862265",
+    "execution_id": "01a1c9b8-f0bb-7488-a5c7-447e25a386cd",
     "seq": 3,
-    "at": "2026-11-09T18:30:19.551Z",
+    "at": "2026-11-11T08:28:23.137Z",
     "id_project": "projectID",
     "agent_id": "replacerV3BotID",
     "agent_version": "replacerV3BotID",
-    "request_id": "support-group-projectID-2a2183f81327494f9d182adfbaebfd30",
+    "request_id": "support-group-projectID-413623d5c43f404e81b576e662538db8",
     "pod": "Mac",
     "data": {
       "to_bot_id": "targetBotID"
@@ -40,13 +64,13 @@
   {
     "event_version": 1,
     "type": "execution.idle",
-    "execution_id": "01a1c193-4e44-73c1-91d5-373a5c5d748a",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
     "seq": 5,
-    "at": "2026-11-09T18:30:18.975Z",
+    "at": "2026-11-11T08:28:22.496Z",
     "id_project": "projectID",
     "agent_id": "parentBotID",
     "agent_version": "parentBotID",
-    "request_id": "support-group-projectID-6a0726bf311f45dd96a8743b63bc5404",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
     "pod": "Mac",
     "data": {
       "last_seq": 5
@@ -55,13 +79,13 @@
   {
     "event_version": 1,
     "type": "execution.started",
-    "execution_id": "01a1c193-4e44-73c1-91d5-373a5c5d748a",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
     "seq": 1,
-    "at": "2026-11-09T18:30:18.952Z",
+    "at": "2026-11-11T08:28:22.463Z",
     "id_project": "projectID",
     "agent_id": "parentBotID",
     "agent_version": "parentBotID",
-    "request_id": "support-group-projectID-6a0726bf311f45dd96a8743b63bc5404",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
     "pod": "Mac",
     "data": {
       "trigger": {
@@ -76,19 +100,19 @@
   {
     "event_version": 1,
     "type": "step.completed",
-    "execution_id": "01a1c193-4e44-73c1-91d5-373a5c5d748a",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
     "seq": 4,
-    "at": "2026-11-09T18:30:18.974Z",
+    "at": "2026-11-11T08:28:22.494Z",
     "id_project": "projectID",
     "agent_id": "parentBotID",
     "agent_version": "parentBotID",
-    "request_id": "support-group-projectID-6a0726bf311f45dd96a8743b63bc5404",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
     "pod": "Mac",
     "data": {
       "step_seq": 2,
       "outcome": "success",
       "exit_taken": null,
-      "duration_ms": 13,
+      "duration_ms": 17,
       "state_vars": 12,
       "changed_keys": 0
     }
@@ -96,13 +120,13 @@
   {
     "event_version": 1,
     "type": "step.started",
-    "execution_id": "01a1c193-4e44-73c1-91d5-373a5c5d748a",
+    "execution_id": "01a1c9b8-ee39-71db-851e-3d3fcf7ea135",
     "seq": 2,
-    "at": "2026-11-09T18:30:18.962Z",
+    "at": "2026-11-11T08:28:22.476Z",
     "id_project": "projectID",
     "agent_id": "parentBotID",
     "agent_version": "parentBotID",
-    "request_id": "support-group-projectID-6a0726bf311f45dd96a8743b63bc5404",
+    "request_id": "support-group-projectID-7b34424b199d4db0977890264ad00c0d",
     "pod": "Mac",
     "data": {
       "step_seq": 2,
@@ -111,13 +135,13 @@
       "state_vars": 12,
       "outside_changes": [
         {
-          "key": "chatbot_jwt_token",
+          "key": "last_user_text",
           "op": "add",
+          "type": "string",
+          "size": 18,
+          "hash_after": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
           "reserved": true,
-          "by": "message_in",
-          "secret": true,
-          "type": "secret",
-          "size": 0
+          "by": "message_in"
         },
         {
           "key": "project_id",
@@ -129,13 +153,13 @@
           "by": "message_in"
         },
         {
-          "key": "last_user_text",
+          "key": "chatbotToken",
           "op": "add",
-          "type": "string",
-          "size": 18,
-          "hash_after": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
           "reserved": true,
-          "by": "message_in"
+          "by": "message_in",
+          "secret": true,
+          "type": "secret",
+          "size": 0
         },
         {
           "key": "transcript",
@@ -151,7 +175,16 @@
           "op": "add",
           "type": "string",
           "size": 58,
-          "hash_after": "e5c2e8fbd09e2ba217f256353885bce333371a211fcf36bd320c54b8e9015aa9",
+          "hash_after": "e42327e34bd4b352faf9d1123205c3832c70d17f56990d15e6b83a20373ca246",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "last_message_id",
+          "op": "add",
+          "type": "string",
+          "size": 38,
+          "hash_after": "6c409ba0ac131b9612ec53f233078005fbedce4de4ecea6ef9acc4416bc11b0b",
           "reserved": true,
           "by": "message_in"
         },
@@ -165,24 +198,6 @@
           "by": "message_in"
         },
         {
-          "key": "chatbot_name",
-          "op": "add",
-          "type": "string",
-          "size": 12,
-          "hash_after": "7aa65354891d403ad2a747d98e2c4c8f199e179587a27b9141852413e25d8df3",
-          "reserved": true,
-          "by": "message_in"
-        },
-        {
-          "key": "strongAuthenticated",
-          "op": "add",
-          "type": "boolean",
-          "size": 5,
-          "hash_after": "62ad8df2efc04ddf6c9df3ffe86c3b4c2ca672c94633009597667d4446a26aae",
-          "reserved": true,
-          "by": "message_in"
-        },
-        {
           "key": "lastUserText",
           "op": "add",
           "type": "string",
@@ -192,16 +207,25 @@
           "by": "message_in"
         },
         {
-          "key": "last_message_id",
+          "key": "lastUserMessage",
           "op": "add",
-          "type": "string",
-          "size": 38,
-          "hash_after": "3c2e5ca78057936b55a39b9b8f5e034868496d9b37991fa02fc44a0fb576aa21",
+          "type": "object",
+          "size": 206,
+          "hash_after": "f6655905cb62b5110a8511cae5112fa5b0adac6536734c54ad706ce536533fee",
           "reserved": true,
           "by": "message_in"
         },
         {
-          "key": "chatbotToken",
+          "key": "chatbot_name",
+          "op": "add",
+          "type": "string",
+          "size": 12,
+          "hash_after": "7aa65354891d403ad2a747d98e2c4c8f199e179587a27b9141852413e25d8df3",
+          "reserved": true,
+          "by": "message_in"
+        },
+        {
+          "key": "chatbot_jwt_token",
           "op": "add",
           "reserved": true,
           "by": "message_in",
@@ -210,11 +234,11 @@
           "size": 0
         },
         {
-          "key": "lastUserMessage",
+          "key": "strongAuthenticated",
           "op": "add",
-          "type": "object",
-          "size": 206,
-          "hash_after": "ba474c47dd01de3927f4072ecd5fea374145f37bc740ad24ca19bd2b67755f62",
+          "type": "boolean",
+          "size": 5,
+          "hash_after": "62ad8df2efc04ddf6c9df3ffe86c3b4c2ca672c94633009597667d4446a26aae",
           "reserved": true,
           "by": "message_in"
         }
@@ -222,10 +246,10 @@
       "state_keyframe": true,
       "state_manifest": [
         {
-          "key": "chatbot_jwt_token",
-          "type": "secret",
-          "size": 0,
-          "hash": null,
+          "key": "last_user_text",
+          "type": "string",
+          "size": 18,
+          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
           "reserved": true
         },
         {
@@ -236,10 +260,10 @@
           "reserved": true
         },
         {
-          "key": "last_user_text",
-          "type": "string",
-          "size": 18,
-          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "key": "chatbotToken",
+          "type": "secret",
+          "size": 0,
+          "hash": null,
           "reserved": true
         },
         {
@@ -253,7 +277,14 @@
           "key": "conversation_id",
           "type": "string",
           "size": 58,
-          "hash": "e5c2e8fbd09e2ba217f256353885bce333371a211fcf36bd320c54b8e9015aa9",
+          "hash": "e42327e34bd4b352faf9d1123205c3832c70d17f56990d15e6b83a20373ca246",
+          "reserved": true
+        },
+        {
+          "key": "last_message_id",
+          "type": "string",
+          "size": 38,
+          "hash": "6c409ba0ac131b9612ec53f233078005fbedce4de4ecea6ef9acc4416bc11b0b",
           "reserved": true
         },
         {
@@ -264,10 +295,31 @@
           "reserved": true
         },
         {
+          "key": "lastUserText",
+          "type": "string",
+          "size": 18,
+          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
+          "reserved": true
+        },
+        {
+          "key": "lastUserMessage",
+          "type": "object",
+          "size": 206,
+          "hash": "f6655905cb62b5110a8511cae5112fa5b0adac6536734c54ad706ce536533fee",
+          "reserved": true
+        },
+        {
           "key": "chatbot_name",
           "type": "string",
           "size": 12,
           "hash": "7aa65354891d403ad2a747d98e2c4c8f199e179587a27b9141852413e25d8df3",
+          "reserved": true
+        },
+        {
+          "key": "chatbot_jwt_token",
+          "type": "secret",
+          "size": 0,
+          "hash": null,
           "reserved": true
         },
         {
@@ -276,43 +328,15 @@
           "size": 5,
           "hash": "62ad8df2efc04ddf6c9df3ffe86c3b4c2ca672c94633009597667d4446a26aae",
           "reserved": true
-        },
-        {
-          "key": "lastUserText",
-          "type": "string",
-          "size": 18,
-          "hash": "d29d59f36a662e3a7d5a39f7f81d45012a0a669ec5f1299c6e6b023bc8476e8a",
-          "reserved": true
-        },
-        {
-          "key": "last_message_id",
-          "type": "string",
-          "size": 38,
-          "hash": "3c2e5ca78057936b55a39b9b8f5e034868496d9b37991fa02fc44a0fb576aa21",
-          "reserved": true
-        },
-        {
-          "key": "chatbotToken",
-          "type": "secret",
-          "size": 0,
-          "hash": null,
-          "reserved": true
-        },
-        {
-          "key": "lastUserMessage",
-          "type": "object",
-          "size": 206,
-          "hash": "ba474c47dd01de3927f4072ecd5fea374145f37bc740ad24ca19bd2b67755f62",
-          "reserved": true
         }
       ],
       "sealed_state": {
         "alg": "RSA-OAEP-256+A256GCM",
         "kid": "kid-subagent",
-        "wrapped_key": "fCJjMKa4ysU7mpsTC06eKCaYI/U1ubQmyQ/dRtClWDiStXsuDtdE7ao+fidCaVqmfOLboIfzbcKPmzQ7iuz5fU63ha28brPjxZW6TUZF5kjGXC0lUKCDJgw0pvW+Mc0GFQblpnCO64+AwFgxBLyq0ebGOLDTVw/nM/Xv4/9pL4tK3BSAYYxnmazcmOEr8V+CU+wmhjwGw3phcGnrsPuieZ1Y4GrmROKtqLyKzcC/lPZvBa0flGuF9/h9bpkE/49d/iFRDjIXLVHoplnmEvNwQdt0NEwCdkSFXPfbhMMqFUm0GhXXe4kNHUoL0HvoH4HnuYIEfV8WD2w6AH9noGYwvA==",
-        "iv": "XsKU4iP2J4VjSB+7",
-        "tag": "wOUHNLRseE64a4w/2gqh9Q==",
-        "ct": "tSS60SXXu44zGull7kTGkaJOUnaJh4MVwZp1j+F/WsecEEwHhLuarTxP0r3SxKhr3pZPovogr5E/SDUV9GoFKDLa5/IuHc5xVJqAJtc1CgXFLC/8nUTw1tuXwas6HRI7WLoCvOG4wNH51QDGYJMy1s6QZBM2UpSJSUej0GWuJgzxRQELIf/kPaCF094Xobixv5YVEqoKZBy0kUGJl9Vu/nT0BDnTcz13ryoli7IRnU7TtsrJhBWTg3hz6dwJUYxk5se6YxFCYK1sEnGLHtLWd4YdH3CnZq/fHioqDTHML+72VcC7hI6ykB6FXbIdl4AkHI+dwt/JKIobk5dKxLvqHRD84HuQrVEc9q9u8C5qLPvWPTvqYpKVd9ymj0GJit2AsrTyf9m12anauo7YuFECGtYBN3TmU4YaQiJ7PWZeck5SVUQcmxpGWvTBpGCcLJEFmWzmKW+DdWN5yyh70zdS1Kc5gAwNFhwKX6eLlv3aYKBDfd2WnbxmSkkijhkuC+98TaDBh3YX8LSTUv/GyQYT3U95F9xL67iyozRzAzkAoKHgtavA8UAwPZerXthZT2oLGef8ZCoAnzLr/3ja1cEjxIM5WyvhXMGY+0Qo7tcTUwaklvF+XU5eLfS97aI77EpcTqql+fQyR266EcZHv9ZWyFqcw19O+RA1oXl9ubapgi1UQJX/REXY5WWnNrJByeK9qfREpvfp5YuHJY3TXUVb4yto+xe5QAoDKKAr2emkoZSPdlWp/Jv63ELZCCid+i6+AFgnxinDdgl+LkWi3dAQSSmtgEH5Ne6Z5h2Q16TusQV3C9INIGW9kkHaQqlPziIhgnawoZyK5mTdK/O30adQ2eoVsfrOP9cxUyw=",
+        "wrapped_key": "R6bhpNRM9+FpQo8IeXuNnH/hgHOXZpgwMzAbg7iQ+9PYZHJkag5cJpJHvkDc8JanoZPA8TzVYJZGv5YCg2EO3Rfjzxaul6QIxKOIWyym7LDc9Ilaaul4RbSJq1UPoipS6BbbE9c/Fzp16rM/PU+/SnZUNFmdnVZKMpmhvlz6Uyklb7MJAeZGvw2Efu+w8KTFy0vGbtVVu+4jG9Qwy2HFZqM0Op5gAiEmSmFJrR3Bka/mgfVzyEi7MIwnBWITmRpoOTwm2Bv9K3X9K6Sg2+yQlhc9zIsoHVe256UwFyAIArShh3IU/YESPSJEB+cVHr4btJxLcCqHApttPMwzjzWn0w==",
+        "iv": "5dKfD7zDnea77chN",
+        "tag": "dwJ4r7mBwW769sgBcR85xw==",
+        "ct": "72nyWQAmQM53oS8W9eLDyRZPOHhoq7tsMVn5czruFTOTn6toWz7BCsF0/Kn+ZVlq+7eRvfwvSMkEee6IzKOECX1ulmUZPc3ZH54PFn3WIRnRCuWt4d9UQVinWbpOBKIZpa74x/igeBDn5m8gAiaQlGE3Bfhf4FNX5pG/7qisuVg5bleM6ujrxTfvWjLCcn19U2ZnI6hPeSc8J5UDnGC8GCFNqfoej9ZiS1DbIFQgbcd5ZqDclHF2LkBdKTMEvRKhZSnlOS1qfgiuHM53DIYvg/1OLw6tpbJjW8cgzB/wzkO/P/HDYR7zly3dQt+pUUMktlwT4U1MoRu6x5NFXIWKE6y237qEDXy3VtLNxBY4TSBstD6u/oKecsvejU0526mpU8vhK8uI2VGGsNXq7ai8Jq9ze/IwEH1pn9uF0j0HkIHVjSabWg2NzDx+d7VAObFUxaJmBGA1RsYdaL6ChK2QO74JmMNtr1MFaogxsuQlOFlJ77hwPGBNpm8iYPG2WOYEvCYL4E18YgdbfRj8XNJkXbxQEghkNsCy5MEIRxTLn0kQ7CTZgNioLP7g8gQTjAF68ynH8JQ+PO78A4YJbzYSMsU1F87Ja7MV+AttyeSQyP8xhgUXg9g8aGFfBc52ZsXwWuE+ZLAASZoQjjprz4Lz+8hL2z1CSoI57TlcupTQVuVwANbeyQcKyjXDPC2IasiXqx2dMthO9xoamlIhcDvSkAQrx8p9EZt+2D3UzNbvtAuTV1BwWPuwaKR0gI9WxjDx3h1wgwARycP+RiuUL/18YFQa9i3bC0i/betQ6MR710w6bdgqjMnoog16ImBDNoxG7zsTrECUXW4iwZInaWJv9GtmaG6FOv/Fyrc=",
         "size": 650
       }
     }

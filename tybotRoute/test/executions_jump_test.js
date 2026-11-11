@@ -218,7 +218,9 @@ describe('Executions: jumps across blocks and pods', function () {
     it('exactly one execution.idle, at the end of the chain', function () {
       const evs = events(rid);
       assert.strictEqual(ofType(rid, 'execution.idle').length, 1);
-      assert.strictEqual(evs[evs.length - 1].type, 'execution.idle');
+      // the parked checkpoint (Phase 3) follows the idle; apart from it, idle is the last event
+      const flow = evs.filter((e) => e.type !== 'execution.checkpoint');
+      assert.strictEqual(flow[flow.length - 1].type, 'execution.idle');
     });
 
     it('next block\'s outside_changes are empty when nothing changed between blocks', function () {

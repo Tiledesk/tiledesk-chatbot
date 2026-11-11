@@ -365,7 +365,7 @@ class TiledeskChatbot {
   }
   
   async execIntent(faq, message, lead, matchContext = {}) {//, bot) {
-    if (this.execution) await ExecutionRecorder.blockEntry(this.execution, { blockId: faq.intent_id, blockName: faq.intent_display_name });
+    if (this.execution) await ExecutionRecorder.blockEntry(this.execution, { blockId: faq.intent_id, blockName: faq.intent_display_name, actions: faq.actions });
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
 

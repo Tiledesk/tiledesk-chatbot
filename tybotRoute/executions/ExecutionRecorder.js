@@ -12,6 +12,7 @@ const { mapOutcome } = require('./OutcomeMapper');
 const { detectTrigger } = require('./trigger');
 const { rootIdOf } = require('./botIdentity');
 const AbortRegistry = require('./AbortRegistry');
+const Checkpointer = require('./Checkpointer');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
@@ -253,7 +254,10 @@ const ExecutionRecorder = {
 
   /** Resolves once every deferred event build and publish has run. */
   async _drainForTests() {
-    while (deferred.size > 0) await Promise.all([...deferred]);
+    while (deferred.size > 0 || Checkpointer._pending.size > 0) {
+      await Promise.all([...deferred]);
+      await Checkpointer.drain();
+    }
   },
 
   async onMessageIn({ message, bot, botId, requestId, projectId, token, store } = {}) {
@@ -303,6 +307,7 @@ const ExecutionRecorder = {
         _blocks: 0,
         _failed: false,
         _chainEnded: false,
+        _cp: Checkpointer.emptyContext(), // stacks and locks for the checkpoint, read at block entry
         created: !!resolved.created
       };
 
@@ -385,55 +390,31 @@ const ExecutionRecorder = {
     });
   },
 
-  async blockEntry(ctx, { blockId, blockName } = {}) {
+  /**
+   * actions: the block's actions (the checkpoint's next_action_type); the directives run later can
+   * replace the names (setDirectives). Writes the checkpoint at action 0 of this block (fire-and-forget).
+   */
+  async blockEntry(ctx, { blockId, blockName, actions } = {}) {
     if (!ctx) return null;
     try {
-      const cfg = ctx._cfg;
-      const scopes = ctx.scopes;
-      ctx.scopes = { message_in: new Set(), jump_params: new Set() };
-      // state off, or the read failed: the step and its actions still flow, without state fields
-      const beforeP = cfg.stateEnabled ? readState(ctx) : null;
-      const seqP = ctx._store.nextSeq(ctx.execution_id); // goes out with the HGETALL: one round trip
-      const before = await beforeP;
-      if (before === null) {
-        return await openStep(ctx, blockId, blockName, {}, true, () => ({
-          block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
-        }), seqP);
+      const seq = await enterBlock(ctx, { blockId, blockName });
+      if (ctx.step) {
+        ctx.step.directive_names = Checkpointer.directiveNames(actions);
+        Checkpointer.writeAt(ctx, ctx.step, { action_index: 0, next_action: 'run', seq });
       }
-      // decided on the block count plus the delta bytes folded in so far (deferred jobs add theirs)
-      const keyframe = StateDiff.shouldKeyframe({
-        isFirstBlock: !ctx._hasState && ctx._blocks === 0,
-        blocksSinceKeyframe: ctx.kf.blocks_since,
-        deltaBytesSinceKeyframe: ctx.kf.delta_bytes
-      }, cfg);
-      if (keyframe) ctx.kf = { blocks_since: 0, delta_bytes: 0 };
-      const kf = ctx.kf;
-      const prev = ctx.prev;
-      return await openStep(ctx, blockId, blockName, before, false, () => {
-        const outside = StateDiff.diffStates(prev, before, {
-          projectKey: ctx._projectKey,
-          valueMaxBytes: cfg.stateValueMaxBytes,
-          attribute: (key) => scopes.message_in.has(key) ? 'message_in' : (scopes.jump_params.has(key) ? 'jump_params' : 'external')
-        });
-        const data = {
-          block_id: blockId,
-          block_name: blockName,
-          state_vars: Object.keys(before).length,
-          outside_changes: outside.changes,
-          state_keyframe: keyframe,
-          state_manifest: keyframe ? StateDiff.buildManifest(before, { projectKey: ctx._projectKey }) : null
-        };
-        if (keyframe) {
-          sealInto(ctx, data, 'sealed_state', sealableState(before, cfg.stateValueMaxBytes));
-        } else {
-          kf.delta_bytes += outside.deltaBytes;
-          sealInto(ctx, data, 'sealed_state', outside.sealedValues);
-        }
-        return data;
-      }, seqP);
+      return seq;
     } catch (err) {
       warn('blockEntry', err);
       return null;
+    }
+  },
+
+  /** The directives DirectivesChatbotPlug runs for the open step: their names become next_action_type. Never throws. */
+  setDirectives(ctx, directives) {
+    try {
+      if (ctx && ctx.step && Array.isArray(directives)) ctx.step.directive_names = directives.map((d) => (d && d.name) || null);
+    } catch (err) {
+      warn('setDirectives', err);
     }
   },
 
@@ -574,7 +555,10 @@ const ExecutionRecorder = {
     try {
       await ExecutionRecorder.blockExit(ctx);
       await ExecutionRecorder.releaseLease(ctx);
-      await emitStopped(ctx, mode);
+      const seq = await emitStopped(ctx, mode);
+      // action k did not start: resume runs it (fire-and-forget write, then the sealed park)
+      Checkpointer.writeAt(ctx, ctx.step, { action_index: index, next_action: 'run', seq });
+      Checkpointer.park(ctx);
       await publishStopped(ctx);
     } catch (err) {
       warn('checkStopBeforeAction', err);
@@ -601,12 +585,15 @@ const ExecutionRecorder = {
           await ExecutionRecorder.releaseLease(ctx);
           const rec = ctx._interrupted;
           const action = (rec && rec.directive && rec.directive.action) || {};
-          await emitStopped(ctx, 'hard', rec ? {
+          const seq = await emitStopped(ctx, 'hard', rec ? {
             index: rec.index,
             action_id: action._tdActionId === undefined ? null : action._tdActionId,
             type: rec.directive ? rec.directive.name : null,
             title: action._tdActionTitle === undefined ? null : action._tdActionTitle
           } : undefined);
+          // the interrupted action k is run again on resume; without one, the after-action write stands
+          if (rec) Checkpointer.writeAt(ctx, ctx.step, { action_index: rec.index, next_action: 'rerun', seq });
+          Checkpointer.park(ctx);
           await publishStopped(ctx);
         } catch (err) {
           warn('stopHard', err);
@@ -653,14 +640,17 @@ const ExecutionRecorder = {
         await ctx._store.setStatusHint(ctx.execution_id, 'completed');
         return seq;
       }
-      return await emit(ctx, 'execution.idle', (seq) => ({ last_seq: seq }));
+      const seq = await emit(ctx, 'execution.idle', (seq) => ({ last_seq: seq }));
+      Checkpointer.park(ctx);
+      return seq;
     } catch (err) {
       warn('endOfChain', err);
       return null;
     }
   },
 
-  async failed(ctx, { error_code, message } = {}) {
+  /** action_index: the action that did not run (a limit hit before it): the checkpoint points at it. */
+  async failed(ctx, { error_code, message, action_index } = {}) {
     if (!ctx || ctx._failed || ctx._stopped) return null;
     try {
       ctx._failed = true;
@@ -668,6 +658,8 @@ const ExecutionRecorder = {
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
       const seq = await emit(ctx, 'execution.failed', () => data);
+      if (Number.isInteger(action_index)) Checkpointer.writeAt(ctx, ctx.step, { action_index, next_action: 'run', seq });
+      Checkpointer.park(ctx);
       await ctx._store.setStatusHint(ctx.execution_id, 'failed');
       return seq;
     } catch (err) {
@@ -778,6 +770,58 @@ const ExecutionRecorder = {
 };
 
 /**
+ * The block-entry body: the state before the block (HGETALL), the step.started seq (INCR) and the checkpoint
+ * context (stacks, locks) go out in one tick; then the step opens. Throws are caught by blockEntry.
+ */
+async function enterBlock(ctx, { blockId, blockName }) {
+  const cfg = ctx._cfg;
+  const scopes = ctx.scopes;
+  ctx.scopes = { message_in: new Set(), jump_params: new Set() };
+  // state off, or the read failed: the step and its actions still flow, without state fields
+  const beforeP = cfg.stateEnabled ? readState(ctx) : null;
+  const seqP = ctx._store.nextSeq(ctx.execution_id); // goes out with the HGETALL: one round trip
+  const cpP = Checkpointer.loadContext(ctx); // stacks and locks: same tick, same round trip; never rejects
+  const before = await beforeP;
+  await cpP;
+  if (before === null) {
+    return await openStep(ctx, blockId, blockName, {}, true, () => ({
+      block_id: blockId, block_name: blockName, outside_changes: [], state_keyframe: false, state_manifest: null
+    }), seqP);
+  }
+  // decided on the block count plus the delta bytes folded in so far (deferred jobs add theirs)
+  const keyframe = StateDiff.shouldKeyframe({
+    isFirstBlock: !ctx._hasState && ctx._blocks === 0,
+    blocksSinceKeyframe: ctx.kf.blocks_since,
+    deltaBytesSinceKeyframe: ctx.kf.delta_bytes
+  }, cfg);
+  if (keyframe) ctx.kf = { blocks_since: 0, delta_bytes: 0 };
+  const kf = ctx.kf;
+  const prev = ctx.prev;
+  return await openStep(ctx, blockId, blockName, before, false, () => {
+    const outside = StateDiff.diffStates(prev, before, {
+      projectKey: ctx._projectKey,
+      valueMaxBytes: cfg.stateValueMaxBytes,
+      attribute: (key) => scopes.message_in.has(key) ? 'message_in' : (scopes.jump_params.has(key) ? 'jump_params' : 'external')
+    });
+    const data = {
+      block_id: blockId,
+      block_name: blockName,
+      state_vars: Object.keys(before).length,
+      outside_changes: outside.changes,
+      state_keyframe: keyframe,
+      state_manifest: keyframe ? StateDiff.buildManifest(before, { projectKey: ctx._projectKey }) : null
+    };
+    if (keyframe) {
+      sealInto(ctx, data, 'sealed_state', sealableState(before, cfg.stateValueMaxBytes));
+    } else {
+      kf.delta_bytes += outside.deltaBytes;
+      sealInto(ctx, data, 'sealed_state', outside.sealedValues);
+    }
+    return data;
+  }, seqP);
+}
+
+/**
  * Starts ctx.step with the state before the block and emits step.started.
  * stateless: no state fields for this step and its actions, and no state write at its exit.
  */
@@ -805,7 +849,10 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     const before = ctx.current;
     const afterP = step.stateless ? null : readState(ctx);
     const seqP = ctx._store.nextSeq(ctx.execution_id); // goes out with the HGETALL: one round trip
+    // a directive that (un)locks the intent/action: the checkpoint's locks are re-read in the same tick
+    const locksP = directive && Checkpointer.LOCK_TYPES.has(String(directive.name).toLowerCase()) ? Checkpointer.loadLocks(ctx) : null;
     const after = await afterP;
+    await locksP;
     if (after) ctx.current = after;
     const kf = ctx.kf;
 
@@ -831,7 +878,7 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     if (rec.interrupted) data.error_code = 'hard_stop';
     else if (error) data.error_code = 'action_error';
     if (rec.hardDegraded) data.hard_degraded = true;
-    return await emit(ctx, 'action.completed', () => {
+    const seq = await emit(ctx, 'action.completed', () => {
       const delta = !after ? NO_DELTA : StateDiff.diffStates(before, after, {
         projectKey: ctx._projectKey,
         valueMaxBytes: cfg.stateValueMaxBytes,
@@ -842,6 +889,11 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
       sealInto(ctx, data, 'sealed_state', delta.sealedValues);
       return data;
     }, seqP);
+    // the per-action checkpoint: one SET, fire-and-forget; an interrupted action is run again (rerun)
+    Checkpointer.writeAt(ctx, step, rec.interrupted
+      ? { action_index: index, next_action: 'rerun', seq }
+      : { action_index: index + 1, next_action: 'run', seq });
+    return seq;
   } catch (err) {
     warn('afterAction', err);
     return null;
@@ -911,5 +963,9 @@ function writeExecutionId(ctx, token) {
     warn('updateRequestAttributes', err);
   }
 }
+
+// for the Checkpointer (lazy require): the event and sealing paths every other event uses
+ExecutionRecorder._emit = emit;
+ExecutionRecorder._sealInto = sealInto;
 
 module.exports = ExecutionRecorder;

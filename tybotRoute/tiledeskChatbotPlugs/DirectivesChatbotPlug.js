@@ -181,6 +181,7 @@ class DirectivesChatbotPlug {
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
     
     this.curr_directive_index = -1;
+    if (this.execution) ExecutionRecorder.setDirectives(this.execution, directives); // the checkpoint's next_action_type
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
     
     const next_dir = await this.nextDirective(directives);
@@ -210,7 +211,7 @@ class DirectivesChatbotPlug {
           request_id:    this.context.requestId || null
         });
       }
-      if (this.execution) await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error });
+      if (this.execution) await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error, action_index: next_index });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }

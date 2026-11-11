@@ -286,8 +286,11 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       assert.strictEqual(ofType(rid, 'step.completed').length, 3);
       assert.strictEqual(ofType(rid, 'execution.started').length, 1);
       assert.strictEqual(ofType(rid, 'execution.idle').length, 1, 'no idle mid-chain at the jumps');
-      assert.strictEqual(evs[evs.length - 1].type, 'execution.idle');
-      assert.strictEqual(evs[evs.length - 1].data.last_seq, evs[evs.length - 1].seq);
+      // the parked checkpoint (Phase 3) follows the idle; apart from it, idle is the last event
+      const flow = evs.filter((e) => e.type !== 'execution.checkpoint');
+      assert.strictEqual(flow[flow.length - 1].type, 'execution.idle');
+      assert.strictEqual(flow[flow.length - 1].data.last_seq, flow[flow.length - 1].seq);
+      assert.ok(ofType(rid, 'execution.checkpoint').every((c) => c.seq > flow[flow.length - 1].seq));
       for (let i = 1; i < evs.length; i++) {
         assert.ok(evs[i].seq > evs[i - 1].seq, `seq ${evs[i].seq} after ${evs[i - 1].seq}`);
       }
@@ -481,7 +484,10 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
           log.push(entry);
           if (fail(String(prop))) return Promise.reject(new Error('injected ' + String(prop) + ' failure'));
           const r = v.apply(target, args);
-          if (r && typeof r.then === 'function') {
+          // the checkpoint SET is fire-and-forget (never awaited by the flow): not counted as pending
+          const cpWrite = entry.call === 'eval' && args[1] && Array.isArray(args[1].keys) && /^exec:.+:cp$/.test(args[1].keys[0]);
+          if (cpWrite) entry.cpWrite = true;
+          if (r && typeof r.then === 'function' && !cpWrite) {
             pending.n++;
             r.then((value) => { entry.result = value; pending.n--; }, () => { pending.n--; });
           }
@@ -610,8 +616,10 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       const rid = newRequestId();
       send('/count', rid);
       await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
+      await ExecutionRecorder._drainForTests();
       const evs = events(rid);
-      assert.deepStrictEqual(evs.map((e) => e.type), ['execution.started', 'step.started', 'action.completed', 'action.completed', 'action.completed', 'step.completed', 'execution.idle']);
+      assert.deepStrictEqual(evs.map((e) => e.type), ['execution.started', 'step.started', 'action.completed', 'action.completed', 'action.completed', 'step.completed', 'execution.idle',
+        'execution.checkpoint']);
       const step = evs[1].data;
       assert.deepStrictEqual(step.outside_changes, []);
       assert.strictEqual(step.state_keyframe, false);
@@ -645,8 +653,19 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     const to = seqCall(ofType(rid, 'step.completed')[0].seq);
     assert.ok(from >= 0 && to > from);
     assert.strictEqual(ofType(rid, 'action.completed').length, 3);
+    // Phase 3: the checkpoint context read at block entry (agent_stack, subagent stack, three locks), issued with
+    // the block's HGETALL + INCR, and one fire-and-forget checkpoint SET per action plus one at block entry
+    const all = log.slice(from + 1).filter((e) => e.call);
+    const isCtxRead = (e) => (e.call === 'hGet' && e.args[0] === `exec:${execId}` && e.args[1] === 'agent_stack') ||
+      (e.call === 'lRange' && e.args[0] === `subagent:stack:${rid}`) ||
+      (e.call === 'get' && /^tilebot:requests:.+:(locked|action:locked|mcp:locked)$/.test(String(e.args[0])));
+    const ctxReads = all.filter(isCtxRead);
+    assert.deepStrictEqual(ctxReads.map((e) => e.call), ['hGet', 'lRange', 'get', 'get', 'get'], 'checkpoint context read once, at block entry');
+    assert.ok(ctxReads.every((e) => e.pendingBefore >= 1), 'issued with the block entry HGETALL + INCR (same round trip)');
+    const cpWrites = log.filter((e) => e.cpWrite && e.args[1].keys[0] === `exec:${execId}:cp`);
+    assert.strictEqual(cpWrites.length, 4, 'one checkpoint SET at block entry, one per action');
     // 3 actions x (stop GET before it, Phase 2; HGETALL + INCR after it), then the INCR of step.completed with the state write
-    const calls = log.slice(from + 1).filter((e) => e.call);
+    const calls = all.filter((e) => !isCtxRead(e) && !e.cpWrite);
     assert.deepStrictEqual(calls.slice(0, 11).map((e) => e.call),
       ['get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'incr', 'set']);
     for (const i of [0, 3, 6]) assert.strictEqual(calls[i].args[0], `exec:${execId}:stop`, 'GET ' + i + ' is the stop flag');

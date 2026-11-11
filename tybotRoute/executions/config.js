@@ -45,7 +45,8 @@ function getConfig() {
     jumpBudgetMs: int(env.EXECUTIONS_JUMP_BUDGET_MS, 1000),
     leaseMs: int(env.EXECUTIONS_LEASE_MS, 15000),
     heartbeatMs: int(env.EXECUTIONS_HEARTBEAT_MS, 5000),
-    transitMs: int(env.EXECUTIONS_TRANSIT_MS, 120000)
+    transitMs: int(env.EXECUTIONS_TRANSIT_MS, 120000),
+    checkpointTtlS: int(env.EXECUTIONS_CHECKPOINT_TTL, 604800)
   };
 }
 

@@ -2,6 +2,7 @@
 
 const { v7: uuidv7 } = require('uuid');
 const winston = require('../utils/winston');
+const { getConfig } = require('./config');
 
 const TTL = 604800; // 7 d
 const HANDOFF_TTL = 600;
@@ -23,6 +24,13 @@ const RENEW_SCRIPT = "local v = redis.call('GET', KEYS[1]) " +
   "if v == ARGV[1] then return redis.call('PEXPIRE', KEYS[1], ARGV[2]) end " +
   "if not v then redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2]) return 1 end " +
   "return 0";
+
+// Checkpoint write, seq-guarded: written only when its seq is above the stored one's, so a late
+// fire-and-forget SET never takes an older position over a newer one.
+const CP_SCRIPT = "local cur = redis.call('GET', KEYS[1]) " +
+  "if cur then local ok, obj = pcall(cjson.decode, cur) " +
+  "if ok and type(obj) == 'table' and tonumber(obj.seq) and tonumber(obj.seq) >= tonumber(ARGV[2]) then return 0 end end " +
+  "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3]) return 1";
 
 function reqKey(requestId, agentId) { return `exec:req:${requestId}:${agentId}`; }
 function execKey(id) { return `exec:${id}`; }
@@ -257,6 +265,33 @@ class ExecutionStore {
       await this.client.del(`exec:${id}:transit`);
     } catch (err) {
       this._warn('clearTransit', err);
+    }
+  }
+
+  /**
+   * exec:{id}:cp, only if cp.seq is above the stored checkpoint's seq (Lua). true: written, false: an
+   * equal or newer one is stored (or no seq), null: Redis error. Callers never await it on the flow path.
+   */
+  async setCheckpoint(id, cp, ttlS) {
+    try {
+      const seq = cp && Number(cp.seq);
+      if (!Number.isFinite(seq)) return false;
+      const ttl = Number(ttlS) > 0 ? Number(ttlS) : getConfig().checkpointTtlS;
+      return (await this.client.eval(CP_SCRIPT, { keys: [`exec:${id}:cp`], arguments: [JSON.stringify(cp), String(seq), String(ttl)] })) === 1;
+    } catch (err) {
+      this._warn('setCheckpoint', err);
+      return null;
+    }
+  }
+
+  /** The stored checkpoint pointer, or null (none, unparsable, or Redis error). */
+  async getCheckpoint(id) {
+    try {
+      const raw = await this.client.get(`exec:${id}:cp`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      this._warn('getCheckpoint', err);
+      return null;
     }
   }
 
