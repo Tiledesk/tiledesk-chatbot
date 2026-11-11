@@ -40,6 +40,8 @@ build/Release
 
 # Dependency directories
 node_modules/
+# also a symlink or file named node_modules (a trailing slash matches directories only)
+node_modules
 ./tybotRoute/node_modules/
 jspm_packages/
 
@@ -108,9 +110,9 @@ dist
 
 ./tybotRoute/uploads/*
 
+temp/*
+
 deploy_chatbot.sh
 WhenExpression-vs-Expression.md
 json-condition-when-refactor.md
 json-condition-when-grammar.md
-
-temp/*

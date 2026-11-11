@@ -1,6 +1,7 @@
 const assert = require('assert');
 const mongoose = require('mongoose');
 const integrationService = require('../services/IntegrationService');
+const winston = require('../utils/winston');
 
 // findOne(...).lean().exec() with the query captured for inspection.
 function modelStub(result, captured) {
@@ -139,6 +140,25 @@ describe('IntegrationService credentials', () => {
     assert.strictEqual(integrationService.looksMasked('sk-********alue'), true);
     assert.strictEqual(integrationService.looksMasked('sk-proj-realkeyvalue'), false);
     assert.strictEqual(integrationService.looksMasked(undefined), false);
+  });
+
+  it('warns about masked vllm custom header values, without logging them', () => {
+    const errors = [];
+    const error = winston.error;
+    winston.error = (...args) => errors.push(args.join(' '));
+    try {
+      integrationService.warnIfMasked({
+        value: { servers: [{ name: 'aruba', customHeaders: [{ key: 'x-api-key', value: '123****5678' }] }] }
+      }, 'project-1', 'vllm');
+      integrationService.warnIfMasked({
+        value: { servers: [{ name: 'aruba', customHeaders: [{ key: 'x-api-key', value: '12345678' }] }] }
+      }, 'project-1', 'vllm');
+    } finally {
+      winston.error = error;
+    }
+
+    assert.strictEqual(errors.length, 1);
+    assert.ok(!errors[0].includes('5678'));
   });
 
   it('requires both the project and the integration name before querying', async () => {

@@ -5,13 +5,26 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# features-2611/rating-actions 11/11/2026
+- added: **Set rating** `saveTo`: `rating` (the default, also when missing: rating and comment of the conversation, as before) or `attributes`, which saves the value and the message as the AI evaluation `ai_rating` / `ai_sentiment` in the conversation attributes. The other attributes are kept, the conversation rating is not touched and no satisfaction analytics event is sent, so the rating the user gives after the close webhook and the AI evaluation never overwrite each other. With force update off an `ai_rating` already saved is kept
+- added: **Get rating** `readFrom`: `rating` (the default, as before) or `attributes`, which reads `ai_rating` / `ai_sentiment` into the two variables
+- added: tests for saving to and reading from the attributes
+- added: **Set rating** and **Get rating** take an optional **Request ID** (`requestId`), the conversation to rate or read; it can hold variables and empty means the current conversation. A webhook run has no conversation of its own, so there it must be given (for a webhook called when a conversation is closed: `{{payload.payload.request_id}}`)
+- added: with no conversation to work on (a webhook run without Request ID, a Request ID that fills to empty, or the id of a webhook run) the server is not called: **Set rating** goes to the **else** exit with the reason in the error variable and in `flowError`, **Get rating** sets `flowError`. It never falls back to the current conversation, so the wrong one is never rated
+- added: tests for the Request ID
+
+# features-2611/rating-actions 10/11/2026
+- added: **Set rating** action (`set_rating`). It sets the rating of the conversation, from 1 to 5. The value can come from a variable. Any other value is not saved. An optional rating message, which can also hold variables, is saved as the comment of the rating; an empty one is not sent. With **Force update** off (the default) a rating already given is kept; with it on, the rating is always overwritten
+- added: **Set rating** has two exits, as Web Request: **Success** when the rating is saved or kept because already given, **else** when the value is not valid or the request fails. On failure the reason goes to the chosen error variable and to `flowError`; on success an error left by an earlier run is removed. With no exit connected the flow goes on to the next action
+- added: **Get rating** action (`get_rating`). It reads the rating of the conversation and its comment and saves them in two variables chosen in the action. A value the conversation does not have removes its variable, so no older value is left behind. A failed read sets `flowError`
+- added: tests for the two actions
+
 # 3.0.0
 - V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
 - V3 agents: Iteration runs the "when the list is done" block after the last item or when the list is empty
 - Iteration continues from the block exit when the list is empty, missing or unreadable, when "Go to block" is missing, or when an element errors, instead of stopping the conversation. An unfinished loop is not resumed by a later run on a different list
 - Fixed block jumps to use the endpoint given at start-up, with the environment as fallback
 - Fixed AI Condition vLLM error paths (missing integration, server or key) so they go to the error block instead of crashing
-
 
 # 2.6.0
 - Added voice_mode system-defined flow variable
@@ -23,7 +36,31 @@ available on:
 - Added support for Subagent with CallSubagent and ReturnStack actions
 
 # 2.2.0
-- Normalized custom headers in AiPrompt action 
+- Normalized custom headers in AiPrompt action
+
+# features-2610/v3-fields 15/10/2026
+- changed: V3 agents — `ds_version` and `connectors` are fields of the bot (server 2.30.0): the model knows them, the data sources load the connectors list and hand both over; agents without the label are untouched
+
+# features-2610/connectors-v3 14/10/2026
+- changed: V3 agents — the connectors list adds and replaces destinations, never removes them: an exit without a record keeps what the block carries, an empty list changes nothing, a missing block descriptor is rebuilt from the block record
+- added: V3 agents — Iteration runs the "when the list is done" block after the last item or at once with an empty list; agents without the label go on from the block's exit as before
+- fixed: block jumps use the endpoint given at start-up (environment as fallback); AI Condition's vLLM error path no longer crashes and goes to the error block
+
+# 2.2.1-rc16
+- added: V3 agents — reply buttons (reply, replyv2, random reply, voice) are filled from the bot connectors list before the reply is sent: `button.action` gets `#id` plus the record params, so the agent JSON may carry buttons without `action`; a button with no record becomes a text button; bots without the V3 label or without the list are untouched
+
+# 2.2.1-rc15
+- added: V3 agents (`attributes.dsVersion = 'v3'`) with a connectors list in the bot attributes are routed from that list: before a block runs, every exit (block dot, true/false, cases, branches, noInput/noMatch, go-to) is resolved from the list, so the action fields may be empty on the server; reply buttons are unchanged. Bots without the version label or without the list run exactly as before
+
+# 2.2.1-rc12
+- fixed: Iteration — an empty, missing or unreadable list, a missing "Go to block" or an error on an element no longer stop the conversation: the flow goes on from the block's exit, as when the list is done
+- fixed: Iteration — a loop left unfinished is not resumed by a later run on a different list: it starts over
+
+# 2.2.0-rc22
+- added: Web Request V2 — support for `bodyType: 'raw'` with `rawType` `'text' | 'javascript' | 'json' | 'html' | 'xml'` (raw string body sent verbatim with the Content-Type set in headers; `'json'` keeps the legacy parse/falseIntent semantics); existing `'json'`, `'form-data'` and `'none'` body types unchanged
+
+# 2.2.0-rc9
+- added: JSON Condition V2 runtime — new `jsoncondition2` type routed to `DirJSONConditionV2` (evaluates the `when` expression via `TiledeskWhenExpression`, no eval/vm2); V1 `jsoncondition` dispatch left unchanged (`DirJSONCondition`) for full backward-compatibility
 
 # 2.1.15
 - Added support for OpenRouter provider
@@ -38,7 +75,7 @@ available on:
 # 2.1.10
 - Cleaned up codebase by removing references to deprecated API endpoints for improved maintainability and clarity.
 
-# 2.1.9 
+# 2.1.9
 - Enhanced flow attribute retention by implementing cache with time-to-live (TTL) support, ensuring more reliable state persistence.
 
 # 2.1.6
@@ -77,6 +114,9 @@ available on:
 
 # 2.0.26
 
+# 2.0.26-rc1
+- added: check and skip private message from internal-notes
+
 # 2.0.9
 
 # 2.0.9-rc1
@@ -92,6 +132,8 @@ available on:
 
 # v0.5.0
 - added: AI_ENDPOINT env var
+
+# v0.5.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # v0.4.2
@@ -106,6 +148,19 @@ available on:
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# v0.3.5-rc4
+- added: webhook action (same as intent one)
+
+# v0.3.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# v0.3.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# v0.3.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # v0.3.4
 -bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -114,6 +169,18 @@ available on:
 
 # v0.3.2
 - bug-fixed: minor improvement
+
+# v0.2.153-rc9
+- changed: updated tiledesk-multi-worker to 0.2.1-rc2   
+
+# v0.2.153-rc8
+- added: fixToken function in TiledeskService utils class
+
+# v0.2.153-rc4
+- log added
+
+# v0.2.153-rc3
+- added: specchToText function to transcript audio file
 
 # v0.2.153-rc1
 - changed: context for gpt-40 and gpt-40-mini
