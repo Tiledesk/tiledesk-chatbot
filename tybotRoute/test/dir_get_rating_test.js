@@ -106,3 +106,30 @@ describe('Directive DirGetRating with a Request ID', function () {
     assert.strictEqual(flowError, "Get rating Error: " + require('../tiledeskChatbotPlugs/directives/DirSetRating.js').DirSetRating.NO_CONVERSATION_ERROR);
   });
 });
+
+describe('Directive DirGetRating reading the AI evaluation', function () {
+
+  it('readFrom attributes reads ai_rating and ai_sentiment', async () => {
+    const tdcache = memoryCache();
+    const dir = directive(tdcache, { rating: 2, rating_message: "utente", attributes: { ai_rating: 5, ai_sentiment: "Molto soddisfatto" } });
+    await run(dir, { readFrom: "attributes", assignRatingTo: "rating_value", assignRatingMessageTo: "rating_message" });
+    assert.strictEqual(await get(tdcache, "rating_value"), 5);
+    assert.strictEqual(await get(tdcache, "rating_message"), "Molto soddisfatto");
+  });
+
+  it('without readFrom it still reads the rating of the conversation', async () => {
+    const tdcache = memoryCache();
+    const dir = directive(tdcache, { rating: 2, rating_message: "utente", attributes: { ai_rating: 5 } });
+    await run(dir, { assignRatingTo: "rating_value", assignRatingMessageTo: "rating_message" });
+    assert.strictEqual(await get(tdcache, "rating_value"), 2);
+    assert.strictEqual(await get(tdcache, "rating_message"), "utente");
+  });
+
+  it('readFrom attributes without an AI evaluation removes the variables', async () => {
+    const tdcache = memoryCache();
+    await TiledeskChatbot.addParameterStatic(tdcache, REQUEST_ID, "rating_value", 4);
+    const dir = directive(tdcache, { rating: 2 });
+    await run(dir, { readFrom: "attributes", assignRatingTo: "rating_value", assignRatingMessageTo: "rating_message" });
+    assert.strictEqual(await get(tdcache, "rating_value"), null);
+  });
+});

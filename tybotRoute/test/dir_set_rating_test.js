@@ -232,3 +232,63 @@ describe('Directive DirSetRating with a Request ID', function () {
     }
   });
 });
+
+describe('Directive DirSetRating saving to the conversation attributes', function () {
+
+  function directiveWith(tdcache, currentAttributes) {
+    const dir = new DirSetRating({ projectId: "project", token: "JWT token", requestId: REQUEST_ID, API_ENDPOINT: "http://api", tdcache: tdcache });
+    const calls = { get: 0, properties: [], attributes: [], intents: [] };
+    dir.intentDir = { execute(intentDirective, callback) { calls.intents.push(intentDirective.action.intentName); callback(); } };
+    dir.tdClient = {
+      async getRequestById() { calls.get++; return { request_id: REQUEST_ID, rating: 2, attributes: currentAttributes }; },
+      async updateRequestProperties(id, properties) { calls.properties.push(properties); return {}; },
+      updateRequestAttributes(id, attributes, callback) { calls.attributes.push({ id, attributes }); callback(null, {}); }
+    };
+    return { dir, calls };
+  }
+
+  it('without saveTo it still saves rating and rating_message, never the attributes', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveWith(tdcache, {});
+    await run(dir, { rating: "4", ratingMessage: "ok", forceUpdate: true });
+    assert.deepStrictEqual(calls.properties, [{ rating: 4, rating_message: "ok" }]);
+    assert.deepStrictEqual(calls.attributes, []);
+  });
+
+  it('saveTo attributes saves ai_rating and ai_sentiment and never touches rating', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveWith(tdcache, {});
+    const stop = await run(dir, Object.assign({ saveTo: "attributes", rating: "5", ratingMessage: "Molto soddisfatto", forceUpdate: true }, EXITS));
+    assert.deepStrictEqual(calls.attributes, [{ id: REQUEST_ID, attributes: { ai_rating: 5, ai_sentiment: "Molto soddisfatto" } }]);
+    assert.deepStrictEqual(calls.properties, []);
+    assert.strictEqual(stop, true);
+    assert.deepStrictEqual(calls.intents, ["#success"]);
+  });
+
+  it('saveTo attributes ignores the user rating already given and an empty message is not sent', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveWith(tdcache, { other: "kept" });
+    await run(dir, { saveTo: "attributes", rating: "3", ratingMessage: "" });
+    assert.strictEqual(calls.get, 1);
+    assert.deepStrictEqual(calls.attributes, [{ id: REQUEST_ID, attributes: { ai_rating: 3 } }]);
+  });
+
+  it('saveTo attributes with force update off keeps an ai_rating already saved', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveWith(tdcache, { ai_rating: 1 });
+    const stop = await run(dir, Object.assign({ saveTo: "attributes", rating: "5" }, EXITS));
+    assert.deepStrictEqual(calls.attributes, []);
+    assert.strictEqual(stop, true);
+    assert.deepStrictEqual(calls.intents, ["#success"]);
+  });
+
+  it('saveTo attributes: an API error goes to the else exit with the reason', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveWith(tdcache, {});
+    dir.tdClient.updateRequestAttributes = (id, attributes, callback) => callback(new Error("boom"));
+    const stop = await run(dir, Object.assign({ saveTo: "attributes", rating: "5", forceUpdate: true }, EXITS));
+    assert.strictEqual(stop, true);
+    assert.deepStrictEqual(calls.intents, ["#else"]);
+    assert.strictEqual(await TiledeskChatbot.getParameterStatic(tdcache, REQUEST_ID, "rating_error"), "boom");
+  });
+});

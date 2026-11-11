@@ -10,6 +10,9 @@ const winston = require('../../utils/winston');
  * action.assignRatingTo: the variable for the rating (1-5)
  * action.assignRatingMessageTo: the variable for the comment
  * action.requestId: optional id of the conversation to read, as in Set rating (empty = current conversation)
+ * action.readFrom: 'rating' (default, also when missing) reads rating / rating_message;
+ * 'attributes' reads the AI evaluation ai_rating / ai_sentiment of the conversation attributes
+
  * A value the conversation does not have removes its variable, so an older read is not left behind.
  */
 class DirGetRating {
@@ -74,9 +77,13 @@ class DirGetRating {
       return;
     }
 
-    await this.assign(action.assignRatingTo, request?.rating);
-    await this.assign(action.assignRatingMessageTo, request?.rating_message);
-    this.logger.native("[Get Rating] Rating:", request?.rating, "message:", request?.rating_message);
+    // readFrom 'attributes' reads the AI evaluation saved by Set rating with saveTo 'attributes'
+    const fromAttributes = action.readFrom === DirSetRating.SAVE_TO_ATTRIBUTES;
+    const rating = fromAttributes ? request?.attributes?.[DirSetRating.AI_RATING_KEY] : request?.rating;
+    const message = fromAttributes ? request?.attributes?.[DirSetRating.AI_SENTIMENT_KEY] : request?.rating_message;
+    await this.assign(action.assignRatingTo, rating);
+    await this.assign(action.assignRatingMessageTo, message);
+    this.logger.native("[Get Rating] " + (fromAttributes ? "AI rating:" : "Rating:"), rating, "message:", message);
     callback();
   }
 
