@@ -328,12 +328,17 @@ class ExecutionStore {
     }
   }
 
-  /** The driver could not post the resume: the claim goes, so the same checkpoint can be resumed again. */
+  /**
+   * The driver could not post the resume: the claim goes, so the same checkpoint can be resumed again.
+   * true: the pending claim was deleted (no /ext run took it); false: it was not pending any more (the
+   * /ext pod took it: the run started) or had expired; null: Redis error (unknown).
+   */
   async releaseResumeClaim(id, seq) {
     try {
-      await this.client.eval(CAD_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`] });
+      return (await this.client.eval(CAD_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`] })) === 1;
     } catch (err) {
       this._warn('releaseResumeClaim', err);
+      return null;
     }
   }
 

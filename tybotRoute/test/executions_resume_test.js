@@ -129,6 +129,7 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
   const requestIds = [];
   const durable = new Map(); // execution id -> the unsealed checkpoint the fake service returns
   const svcHits = [];
+  const slowSvc = new Set(); // execution ids the fake service answers 300 ms late
   let betweenBlocks = null;
   const originalRequest = httpUtils.request;
   const fakeEmitter = {
@@ -258,10 +259,18 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
       svcHits.push({ id: req.params.id, token: req.headers['x-executions-service-token'] });
       if (req.headers['x-executions-service-token'] !== SERVICE_TOKEN) return res.status(401).send({ error: 'unauthorized' });
       const cp = durable.get(req.params.id);
-      if (!cp) return res.status(404).send({ error: 'not_found' });
-      return res.send(cp);
+      const answer = () => (cp ? res.send(cp) : res.status(404).send({ error: 'not_found' }));
+      if (slowSvc.has(req.params.id)) return setTimeout(answer, 300);
+      return answer();
     });
     svc.post('/blackhole/ext/:botId', (req, res) => res.send({ success: true })); // accepted, never run
+    svc.post('/failing/ext/:botId', (req, res) => res.status(500).send({ error: 'boom' })); // never reached /ext
+    // the /ext pod took the claim (the run started), then the answer to the driver was lost
+    svc.post('/tookclaim/ext/:botId', express.json(), async (req, res) => {
+      const r = req.body.payload.attributes.resume;
+      await client.set(`exec:${r.execution_id}:resume`, 'ran:' + r.from_seq, { EX: 600 });
+      res.status(500).send({ error: 'lost' });
+    });
     svcListener = await listen(svc, SVC_PORT);
 
     await startTybot();
@@ -473,6 +482,58 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.deepStrictEqual(lastStep(rid).indices, [2]);
     const ttl = await client.ttl(`exec:${id}:resume`);
     assert.ok(ttl > 86400, 'ran:<seq> keeps the long TTL, got ' + ttl);
+  });
+
+  it('a failed resume post releases the claim, clears transit and emits failed once', async function () {
+    const { rid, id } = await stoppedThree();
+    await serviceRestore(id, rid);
+    const endpoint = `http://localhost:${SVC_PORT}/failing`;
+    const r = await ResumeDriver.handle(id, { endpoint, botsDataSource: () => new MockBotsDataSource(buildBots()) });
+    assert.strictEqual(r, 'post_failed');
+    await settle(rid, 'execution.failed');
+    const failed = ofType(rid, 'execution.failed');
+    assert.strictEqual(failed.length, 1);
+    assert.deepStrictEqual(failed[0].data.error, { code: 'resume_failed', message: 'resume post failed' });
+    assert.strictEqual(await client.get(`exec:${id}:resume`), null, 'claim released');
+    assert.strictEqual(await client.get(`exec:${id}:transit`), null, 'transit cleared: no jump is in flight');
+    assert.strictEqual(await client.get(`exec:${id}:owner`), null);
+  });
+
+  it('a post that failed after the /ext pod took the claim emits no failed (the run is going)', async function () {
+    const { rid, id, cp } = await stoppedThree();
+    await serviceRestore(id, rid);
+    const endpoint = `http://localhost:${SVC_PORT}/tookclaim`;
+    const r = await ResumeDriver.handle(id, { endpoint, botsDataSource: () => new MockBotsDataSource(buildBots()) });
+    assert.strictEqual(r, 'started');
+    await sleep(300);
+    await ExecutionRecorder._drainForTests();
+    assert.strictEqual(ofType(rid, 'execution.failed').length, 0, 'no failed for a running resume');
+    assert.strictEqual(await client.get(`exec:${id}:resume`), 'ran:' + cp.seq, 'the claim of the /ext run stays');
+    assert.ok(await client.get(`exec:${id}:transit`), 'transit left to the /ext pod');
+    assert.strictEqual(await client.hGet(`exec:${id}`, 'status'), 'running');
+    await client.del(`exec:${id}:transit`);
+  });
+
+  it('a duplicate resume without a checkpoint emits failed once', async function () {
+    const { rid, id, cp } = await stoppedThree();
+    await client.del(`exec:${id}:cp`);
+    durable.delete(id);
+    await serviceRestore(id, rid, { seq: cp.seq });
+    slowSvc.add(id);
+    try {
+      const cfg = Object.assign({}, getConfig(), { leaseMs: 100 });
+      const deps = (pod) => ({ cfg, pod, botsDataSource: () => new MockBotsDataSource(buildBots()) });
+      const first = ResumeDriver.handle(id, deps('pod-a'));
+      await sleep(200); // the first driver's lease expired while it waits for the service: a second one gets in
+      const second = ResumeDriver.handle(id, deps('pod-b'));
+      const results = await Promise.all([first, second]);
+      await sleep(300);
+      await ExecutionRecorder._drainForTests();
+      assert.strictEqual(ofType(rid, 'execution.failed').length, 1, 'failed once, results ' + results.join(','));
+      assert.deepStrictEqual(results, ['no_checkpoint', 'not_owner']);
+    } finally {
+      slowSvc.delete(id);
+    }
   });
 
   it('a second handle after the resumed block advanced the checkpoint does nothing', async function () {

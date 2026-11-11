@@ -251,6 +251,9 @@ const ResumeDriver = {
       };
       const ctx = eventCtx(store, cfg, id, ident);
       if (!cp || !ident.request_id || !ident.id_project) {
+        // claimed first, on the requested seq, like any resume: a second driver of the same publish (its lease
+        // expired during the durable fetch) emits nothing. The claim is kept: it expires on its own
+        if ((await store.claimResume(id, requested, Math.max(cfg.transitMs, cfg.leaseMs))) !== true) return 'not_owner';
         await emitFailed(ctx, 'no checkpoint');
         return 'no_checkpoint';
       }
@@ -311,6 +314,17 @@ const ResumeDriver = {
       // lazy: TilebotService requires the recorder
       const endpoint = deps.endpoint || require('../services/TilebotService').endpoint();
       if (!(await post(`${endpoint}/ext/${cp.agent_version}`, message))) {
+        // a failed or timed-out post may still have reached /ext: only a claim still pending (deleted here)
+        // proves no run took it. Then nothing is in flight: transit goes and the resume failed. Otherwise
+        // the /ext pod runs the block and owns transit
+        const released = await store.releaseResumeClaim(id, claimed);
+        claimed = null;
+        if (released !== true) {
+          winston.warn('(ResumeDriver) resume post of ' + id + ' reported a failure, but ' +
+            (released === false ? 'the /ext run took the claim: running' : 'the claim could not be released: left to expire'));
+          return released === false ? 'started' : 'post_failed';
+        }
+        await store.clearTransit(id);
         await emitFailed(ctx, 'resume post failed');
         return 'post_failed';
       }
