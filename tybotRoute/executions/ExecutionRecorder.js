@@ -344,6 +344,8 @@ const ExecutionRecorder = {
         if (resolved.parentExecutionId) data.parent_execution_id = resolved.parentExecutionId;
         if (resolved.previousExecutionId) data.previous_execution_id = resolved.previousExecutionId;
         const request = (message && message.request) || {};
+        const retryOf = (request.attributes && request.attributes.retry_of) || (message && message.attributes && message.attributes.retry_of);
+        if (typeof retryOf === 'string' && retryOf) data.retry_of = retryOf;
         const payload = (request.attributes && request.attributes.payload) || (message && message.attributes && message.attributes.payload);
         // a copy now (the flow may change the payload later); the sealing is deferred
         const plain = payload !== undefined && payload !== null ? stripSecrets(payload) : null;

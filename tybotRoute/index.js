@@ -628,6 +628,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   const async = body.async;
   const token = body.token;
+  // start new (executions): the old execution id, not part of the trigger payload
+  // (only with executions on: off, the body stays as it always was)
+  let retry_of;
+  if (executionsEnabled() && typeof body.retry_of === 'string' && body.retry_of) {
+    retry_of = body.retry_of;
+    delete body.retry_of;
+  }
   delete body.async;
   delete body.token;
 
@@ -663,6 +670,7 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     token: token
   }
+  if (retry_of) message.payload.attributes.retry_of = retry_of;
 
   if (async) {
     winston.verbose("Async webhook");
