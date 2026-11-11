@@ -32,10 +32,11 @@ const CP_SCRIPT = "local cur = redis.call('GET', KEYS[1]) " +
   "if ok and type(obj) == 'table' and tonumber(obj.seq) and tonumber(obj.seq) >= tonumber(ARGV[2]) then return 0 end end " +
   "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3]) return 1";
 
-// Resume claim of one checkpoint seq: taken unless that seq is already pending or ran.
+// Resume claim of one checkpoint seq: taken unless that seq is already pending or ran. pending lives
+// only ARGV[3] ms (a driver or /ext pod that dies before the run must not block the checkpoint for good).
 const RESUME_CLAIM_SCRIPT = "local v = redis.call('GET', KEYS[1]) " +
   "if v == ARGV[1] or v == ARGV[2] then return 0 end " +
-  "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3]) return 1";
+  "redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[3]) return 1";
 
 // The resumed /ext run: pending -> ran, once.
 const RESUME_TAKE_SCRIPT = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
@@ -305,14 +306,15 @@ class ExecutionStore {
   }
 
   /**
-   * Resume of the checkpoint at seq, claimed once (exec:{id}:resume = "pending:<seq>"): a second driver
-   * for the same checkpoint (a late duplicate that got the lease after the winner let it go) gets false.
-   * A newer checkpoint (higher seq) can be claimed again. null: Redis error.
+   * Resume of the checkpoint at seq, claimed once (exec:{id}:resume = "pending:<seq>", PX pendingMs): a
+   * second driver for the same checkpoint (a late duplicate that got the lease after the winner let it go)
+   * gets false. Once pending expires (nobody ran it) the checkpoint can be claimed again. null: Redis error.
    */
-  async claimResume(id, seq, ttlS) {
+  async claimResume(id, seq, pendingMs) {
     try {
-      const ttl = Number(ttlS) > 0 ? Number(ttlS) : getConfig().checkpointTtlS;
-      return (await this.client.eval(RESUME_CLAIM_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`, `ran:${seq}`, String(ttl)] })) === 1;
+      const cfg = getConfig();
+      const ms = Number(pendingMs) > 0 ? Number(pendingMs) : Math.max(cfg.transitMs, cfg.leaseMs);
+      return (await this.client.eval(RESUME_CLAIM_SCRIPT, { keys: [`exec:${id}:resume`], arguments: [`pending:${seq}`, `ran:${seq}`, String(ms)] })) === 1;
     } catch (err) {
       this._warn('claimResume', err);
       return null;

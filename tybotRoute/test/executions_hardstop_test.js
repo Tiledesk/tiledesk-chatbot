@@ -442,6 +442,7 @@ describe('Executions: hard stop (abort registry, control listener, abortable dir
     const rid = newRequestId();
     send('/after', rid);
     await waitFor(() => ofType(rid, 'execution.idle').length === 1, 'the chain to end');
+    await ExecutionRecorder._drainForTests(); // the idle park (execution.checkpoint) goes out after idle
     const before = log.length;
     assert.strictEqual(AbortRegistry.abort('exec-not-here-' + uuidv4()), false);
     AbortRegistry.release('exec-not-here'); // unknown id: nothing to release, no throw

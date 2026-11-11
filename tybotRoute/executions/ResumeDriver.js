@@ -12,6 +12,10 @@ const Checkpointer = require('./Checkpointer');
 const { TiledeskChatbotConst } = require('../engine/TiledeskChatbotConst');
 
 const SUBAGENT_STACK_TTL_S = 60 * 60 * 24; // SubagentStack.push
+const RESTORED_KEY_TTL_S = 86400; // TdCache.set default, for the locks and the step counters
+const TERMINAL = ['completed', 'failed', 'destroyed'];
+// not in the server's default selection of a faq_kb (select:false there), or not for a token: never in the payload
+const NOT_IN_TOKEN = ['secret', 'connectors', 'description', 'attributes'];
 const DURABLE_TIMEOUT_MS = 5000;
 
 function warn(op, err) {
@@ -39,9 +43,7 @@ function mintBotToken(bot, fallbackId) {
   if (!secret) return null;
   const id = String(plain._id || fallbackId);
   const payload = JSON.parse(JSON.stringify(plain));
-  delete payload.secret;
-  delete payload.description;
-  delete payload.attributes;
+  for (const k of NOT_IN_TOKEN) delete payload[k];
   payload._id = id;
   return jwt.sign(payload, String(secret), {
     issuer: 'https://tiledesk.com',
@@ -139,11 +141,12 @@ async function restoreRequest(client, { requestId, cp, token, unsealed }) {
     [TiledeskChatbotConst.REQ_CHATBOT_TOKEN_v2]: JSON.stringify('JWT ' + token)
   });
   m.expire(pkey, ttl);
-  if (locks.intent) m.set(lk.intent, String(locks.intent)); else m.del(lk.intent);
-  if (locks.action) m.set(lk.action, String(locks.action)); else m.del(lk.action);
+  const ex = { EX: RESTORED_KEY_TTL_S };
+  if (locks.intent) m.set(lk.intent, String(locks.intent), ex); else m.del(lk.intent);
+  if (locks.action) m.set(lk.action, String(locks.action), ex); else m.del(lk.action);
   m.del(lk.mcp);
-  m.set(base + ':step', '0');
-  m.set(base + ':started', '0');
+  m.set(base + ':step', '0', ex);
+  m.set(base + ':started', '0', ex);
   await m.exec();
 }
 
@@ -201,7 +204,9 @@ const ResumeDriver = {
    * checkpoint (Redis, then the service), loads the version, mints the token, restores the request keys, sets
    * transit, lets go of the lease and posts the self-jump to /ext/<agent_version> with attributes.resume (C6).
    * deps: { botsDataSource(botId) -> data source, store?, cfg?, pod?, endpoint?, http? }.
-   * 'disabled' with the flag off (nothing at all is touched). Never throws.
+   * 'disabled' with the flag off (nothing at all is touched); 'no_checkpoint' (silent) for a gone or terminal
+   * execution; 'not_requested' when the hash is not running with resume_requested_seq = the checkpoint seq
+   * (P5); 'not_owner' when another pod or claim has it. Never throws.
    */
   async handle(executionId, deps = {}) {
     if (!isEnabled()) return 'disabled';
@@ -222,6 +227,12 @@ const ResumeDriver = {
     };
     try {
       const meta = await readMeta(store, id);
+      // gone, expired or terminal (destroyed...): nothing to resume, and the hash is never written to
+      if (!meta.status || TERMINAL.includes(meta.status)) return 'no_checkpoint';
+      // P5: the service sets status running and resume_requested_seq (the checkpoint it resumes) before it
+      // publishes; anything else is a late or foreign copy of a publish
+      const requested = meta.resume_requested_seq;
+      if (meta.status !== 'running' || requested === undefined || requested === null || requested === '') return 'not_requested';
       let cp = await store.getCheckpoint(id);
       let unsealed = false;
       let extra = {};
@@ -243,7 +254,9 @@ const ResumeDriver = {
         await emitFailed(ctx, 'no checkpoint');
         return 'no_checkpoint';
       }
-      if ((await store.claimResume(id, cp.seq, cfg.checkpointTtlS)) !== true) return 'not_owner';
+      // the checkpoint moved on (the resumed block ran): this publish was already served
+      if (String(cp.seq) !== String(requested)) return 'not_requested';
+      if ((await store.claimResume(id, cp.seq, Math.max(cfg.transitMs, cfg.leaseMs))) !== true) return 'not_owner';
       claimed = cp.seq;
 
       const ds = typeof deps.botsDataSource === 'function' ? deps.botsDataSource(cp.agent_version, ident.id_project) : null;

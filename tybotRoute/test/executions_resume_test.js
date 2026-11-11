@@ -17,6 +17,8 @@ const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const ControlListener = require('../executions/ControlListener');
 const ResumeDriver = require('../executions/ResumeDriver');
 const { ExecutionStore } = require('../executions/ExecutionStore');
+const { MockBotsDataSource } = require('../engine/mock/MockBotsDataSource');
+const { getConfig } = require('../executions/config');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
 const { getTestKeys, openSealed } = require('./helpers/executionsTestKeys');
 const lifecycle = require('./executions_lifecycle_bot.js').bots_data;
@@ -64,6 +66,8 @@ function buildBots() {
   const data = JSON.parse(JSON.stringify(lifecycle));
   const bot = data.bots[BOT_ID];
   bot.secret = BOT_SECRET;
+  // a V2 bot (no ds_version) with a connectors list: ignored by the flow, never in a minted token
+  bot.connectors = [{ id: 'conn-1', fromId: 'three/act_s1', toId: 'slow' }];
   const add = (b, name, actions) => {
     const i = intent(name, actions);
     b.intents[name] = i;
@@ -188,10 +192,14 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     await ExecutionRecorder._drainForTests();
   }
 
-  /** What the service does before it publishes (Task 7): exec:req NX, status running, no stop flag, transit. */
-  async function serviceRestore(id, rid, agentId = BOT_ID) {
+  /**
+   * What the service does before it publishes (Task 7): exec:req NX, status running, the seq it resumes
+   * from (resume_requested_seq: the checkpoint it read, the Redis one unless given), no stop flag, transit.
+   */
+  async function serviceRestore(id, rid, { agentId = BOT_ID, seq } = {}) {
+    const requested = seq !== undefined ? seq : (await getCp(id)).seq;
     await client.set(`exec:req:${rid}:${agentId}`, id, { NX: true, EX: 604800 });
-    await client.hSet(`exec:${id}`, 'status', 'running');
+    await client.hSet(`exec:${id}`, { status: 'running', resume_requested_seq: String(requested) });
     await client.del(`exec:${id}:stop`);
     await client.set(`exec:${id}:transit`, String(Date.now()), { PX: 120000 });
   }
@@ -253,6 +261,7 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
       if (!cp) return res.status(404).send({ error: 'not_found' });
       return res.send(cp);
     });
+    svc.post('/blackhole/ext/:botId', (req, res) => res.send({ success: true })); // accepted, never run
     svcListener = await listen(svc, SVC_PORT);
 
     await startTybot();
@@ -318,6 +327,8 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.ok(p.chatbotToken && p.chatbot_jwt_token, 'the minted token is in the state');
     const decoded = jwt.verify(JSON.parse(p.chatbotToken), BOT_SECRET, { audience: 'https://tiledesk.com/bots/' + BOT_ID, issuer: 'https://tiledesk.com', subject: 'bot' });
     assert.strictEqual(decoded.secret, undefined, 'the bot secret is not in the token payload');
+    assert.ok((await new MockBotsDataSource(buildBots()).getBotById(BOT_ID)).connectors, 'the loaded bot has a connectors list');
+    assert.strictEqual(decoded.connectors, undefined, 'nor the connectors (the flow) of the bot');
     const after = await getCp(id);
     assert.deepStrictEqual([after.block_id, after.action_index], ['three', 3]);
     assert.strictEqual(await client.get(`exec:${id}:transit`), null, 'transit cleared by the /ext pod');
@@ -376,7 +387,7 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     // past the Redis TTLs: no pointer and no :parameters
     await client.del([`exec:${id}:cp`, `tilebot:requests:${rid}:parameters`]);
     svcHits.length = 0;
-    await serviceRestore(id, rid);
+    await serviceRestore(id, rid, { seq: unsealed.seq });
     assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'started');
     await settle(rid, 'execution.idle');
     assert.deepStrictEqual(svcHits, [{ id, token: SERVICE_TOKEN }]);
@@ -393,10 +404,10 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
   });
 
   it('no checkpoint anywhere emits execution.failed resume_failed', async function () {
-    const { rid, id } = await stoppedThree();
+    const { rid, id, cp } = await stoppedThree();
     await client.del(`exec:${id}:cp`);
     durable.delete(id);
-    await serviceRestore(id, rid);
+    await serviceRestore(id, rid, { seq: cp.seq });
     assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'no_checkpoint');
     await settle(rid, 'execution.failed');
     const failed = ofType(rid, 'execution.failed');
@@ -420,6 +431,10 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.strictEqual(await client.get(`${base}:locked`), '#three');
     assert.strictEqual(await client.get(`${base}:action:locked`), 'act_s2');
     assert.strictEqual(await client.get(`${base}:mcp:locked`), null);
+    for (const k of [`${base}:locked`, `${base}:action:locked`]) {
+      const ttl = await client.ttl(k);
+      assert.ok(ttl > 0 && ttl <= 86400, k + ' restored with a TTL (TdCache default), got ' + ttl);
+    }
   });
 
   it('resume resets step and started', async function () {
@@ -435,6 +450,71 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.deepStrictEqual(lastStep(rid).indices, [2]);
     assert.ok(Number(await client.get(`${base}:step`)) <= 2, 'the step counter starts again from the resume');
     assert.ok(Number(await client.get(`${base}:started`)) >= t0, 'started is the resume time');
+    assert.ok(await client.ttl(`${base}:step`) > 0, ':step has a TTL');
+    assert.ok(await client.ttl(`${base}:started`) > 0, ':started has a TTL');
+  });
+
+  it('an expired pending claim lets the next resume proceed', async function () {
+    const { rid, id, cp } = await stoppedThree();
+    await serviceRestore(id, rid);
+    // a driver whose post went nowhere (the /ext pod died before it took the claim): short lease and transit
+    const blackhole = `http://localhost:${SVC_PORT}/blackhole`;
+    const cfg = Object.assign({}, getConfig(), { leaseMs: 400, transitMs: 400 });
+    const r = await ResumeDriver.handle(id, { cfg, endpoint: blackhole, botsDataSource: () => new MockBotsDataSource(buildBots()) });
+    assert.strictEqual(r, 'started');
+    assert.strictEqual(await client.get(`exec:${id}:resume`), 'pending:' + cp.seq);
+    const pttl = await client.pTTL(`exec:${id}:resume`);
+    assert.ok(pttl > 0 && pttl <= 400, 'the pending claim lives max(transit, lease), got ' + pttl);
+    await sleep(500);
+    assert.strictEqual(await client.get(`exec:${id}:resume`), null, 'expired');
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'started');
+    await settle(rid, 'execution.idle');
+    assert.strictEqual(ofType(rid, 'execution.resumed').length, 1);
+    assert.deepStrictEqual(lastStep(rid).indices, [2]);
+    const ttl = await client.ttl(`exec:${id}:resume`);
+    assert.ok(ttl > 86400, 'ran:<seq> keeps the long TTL, got ' + ttl);
+  });
+
+  it('a second handle after the resumed block advanced the checkpoint does nothing', async function () {
+    const { rid, id } = await stoppedThree();
+    await resume(id, rid);
+    await settle(rid, 'execution.idle');
+    const steps = ofType(rid, 'step.started').length;
+    assert.strictEqual((await getCp(id)).action_index, 3, 'the resumed block moved the checkpoint on');
+    // a late copy of the same publish: the lease is free (idle), the claim of the old seq ran
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'not_requested');
+    await sleep(600);
+    await ExecutionRecorder._drainForTests();
+    assert.strictEqual(ofType(rid, 'step.started').length, steps, 'the block did not run twice');
+    assert.strictEqual(ofType(rid, 'execution.resumed').length, 1);
+    assert.strictEqual(await client.get(`exec:${id}:owner`), null);
+  });
+
+  it('no resume_requested_seq or a status other than running: the driver refuses', async function () {
+    const { rid, id } = await stoppedThree();
+    await serviceRestore(id, rid);
+    await client.hDel(`exec:${id}`, 'resume_requested_seq');
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'not_requested');
+    await serviceRestore(id, rid);
+    await client.hSet(`exec:${id}`, 'status', 'stopped');
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'not_requested');
+    await sleep(300);
+    assert.strictEqual(ofType(rid, 'execution.resumed').length, 0);
+    assert.strictEqual(ofType(rid, 'execution.failed').length, 0);
+  });
+
+  it('a destroyed or expired execution: no_checkpoint, no event, hash untouched', async function () {
+    const { rid, id } = await stoppedThree();
+    await client.hSet(`exec:${id}`, 'status', 'destroyed');
+    assert.strictEqual(await ControlListener._handle(resumeMsg(id)), 'no_checkpoint');
+    assert.strictEqual(await client.hGet(`exec:${id}`, 'status'), 'destroyed', 'never overwritten');
+    const gone = 'gone-' + uuidv4();
+    assert.strictEqual(await ControlListener._handle(resumeMsg(gone)), 'no_checkpoint');
+    assert.strictEqual(await client.exists(`exec:${gone}`), 0, 'no hash created');
+    await sleep(300);
+    await ExecutionRecorder._drainForTests();
+    assert.strictEqual(ofType(rid, 'execution.failed').length, 0);
+    assert.strictEqual(log.filter((e) => e.execution_id === gone).length, 0);
   });
 
   it('resume inside a subagent re-pushes the stack with fresh tokens', async function () {
