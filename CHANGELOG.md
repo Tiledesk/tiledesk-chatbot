@@ -1,7 +1,7 @@
 # Tiledesk native chatbot
 
 
-# features-2611/rating-actions 11/11/2026
+# 3.0.7-rc3
 - **added**: **Set rating** can save the value as an AI evaluation (`saveTo: "attributes"`) in the conversation attributes `ai_rating` and `ai_sentiment`, so the rating the user gives in the chat after the close webhook does not overwrite it; **Get rating** reads it back with `readFrom: "attributes"`. Without these fields both actions work as before
 
 # 3.0.7-rc2
