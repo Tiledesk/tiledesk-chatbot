@@ -138,11 +138,15 @@ class ExecutionStore {
     }
   }
 
+  /**
+   * INCR + EXPIRE in one MULTI (one round trip): the TTL is refreshed on every call, so a seq key the
+   * service restored on resume (or one close to its TTL) never expires while the execution still runs.
+   */
   async nextSeq(id) {
     try {
       const key = `exec:${id}:seq`;
-      const n = await this.client.incr(key);
-      if (n === 1) await this.client.expire(key, TTL);
+      const [n] = await this.client.multi().incr(key).expire(key, TTL).exec();
+      if (!Number.isInteger(n)) throw (n instanceof Error ? n : new Error('INCR reply ' + typeof n));
       return n;
     } catch (err) {
       this._warn('nextSeq', err);

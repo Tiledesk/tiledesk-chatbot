@@ -477,6 +477,32 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       get(target, prop) {
         const v = target[prop];
         if (typeof v !== 'function') return v;
+        // a MULTI goes out as one write at exec(): logged once there, as 'multi' with its queued commands
+        // (args: the first command's), result: the first command's reply
+        if (prop === 'multi') {
+          return (...margs) => {
+            const real = v.apply(target, margs);
+            const cmds = [];
+            const chain = new Proxy(real, {
+              get(t, p) {
+                const f = t[p];
+                if (typeof f !== 'function') return f;
+                if (p === 'exec') {
+                  return (...eargs) => {
+                    const entry = { call: 'multi', cmds: cmds.map((c) => c.call), args: cmds.length ? cmds[0].args : [], pendingBefore: pending.n };
+                    log.push(entry);
+                    const r = f.apply(t, eargs);
+                    pending.n++;
+                    r.then((value) => { entry.result = Array.isArray(value) ? value[0] : value; pending.n--; }, () => { pending.n--; });
+                    return r;
+                  };
+                }
+                return (...a) => { cmds.push({ call: String(p), args: a }); f.apply(t, a); return chain; };
+              }
+            });
+            return chain;
+          };
+        }
         return (...args) => {
           // pendingBefore: calls of this client still awaiting their reply when this one was issued
           // (node-redis sends commands issued in the same tick in one write: one round trip)
@@ -648,7 +674,9 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     await waitFor(() => ofType(rid, 'execution.idle').length > 0, 'execution.idle');
     // events are built after the flow moves on, so the window is cut on the INCRs that allocated their seqs
     const execId = ofType(rid, 'step.started')[0].execution_id;
-    const seqCall = (seq) => log.findIndex((e) => e.call === 'incr' && e.args[0] === `exec:${execId}:seq` && e.result === seq);
+    // nextSeq is one MULTI (INCR + EXPIRE, the TTL refreshed every time): one entry, one round trip
+    const isSeq = (e) => e.call === 'multi' && e.cmds[0] === 'incr' && e.args[0] === `exec:${execId}:seq`;
+    const seqCall = (seq) => log.findIndex((e) => isSeq(e) && e.result === seq);
     const from = seqCall(ofType(rid, 'step.started')[0].seq);
     const to = seqCall(ofType(rid, 'step.completed')[0].seq);
     assert.ok(from >= 0 && to > from);
@@ -667,7 +695,8 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     // 3 actions x (stop GET before it, Phase 2; HGETALL + INCR after it), then the INCR of step.completed with the state write
     const calls = all.filter((e) => !isCtxRead(e) && !e.cpWrite);
     assert.deepStrictEqual(calls.slice(0, 11).map((e) => e.call),
-      ['get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'get', 'hGetAll', 'incr', 'incr', 'set']);
+      ['get', 'hGetAll', 'multi', 'get', 'hGetAll', 'multi', 'get', 'hGetAll', 'multi', 'multi', 'set']);
+    for (const i of [2, 5, 8, 9]) assert.deepStrictEqual(calls[i].cmds, ['incr', 'expire'], 'INCR + EXPIRE in one MULTI');
     for (const i of [0, 3, 6]) assert.strictEqual(calls[i].args[0], `exec:${execId}:stop`, 'GET ' + i + ' is the stop flag');
     // pipelined: each action's INCR goes out with its HGETALL (1 round trip after each action), and the
     // state write with the step.completed INCR (1 round trip at block exit)

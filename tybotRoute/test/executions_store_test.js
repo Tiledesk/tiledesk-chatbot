@@ -121,6 +121,31 @@ describe('ExecutionStore', function () {
     assert.ok(await client.ttl(`exec:${a.executionId}:seq`) > 0);
   });
 
+  it('nextSeq refreshes the TTL on every INCR, in the same round trip', async function () {
+    const a = await make(rid('qt'), 'A');
+    const key = `exec:${a.executionId}:seq`;
+    assert.strictEqual(await store.nextSeq(a.executionId), 1);
+    // a key restored with a short TTL, or one about to expire: the next INCR gives it the full week again
+    await client.expire(key, 30);
+    assert.strictEqual(await store.nextSeq(a.executionId), 2);
+    assert.ok(await client.ttl(key) > 604000, 'TTL refreshed on a later INCR');
+    // a seq key without a TTL (raised by hand, say) gets one
+    await client.persist(key);
+    assert.strictEqual(await store.nextSeq(a.executionId), 3);
+    assert.ok(await client.ttl(key) > 604000);
+    // one transaction: INCR and EXPIRE are queued together (no second round trip after the INCR reply)
+    const seen = [];
+    const spy = new Proxy(client, {
+      get(target, prop) {
+        const v = target[prop];
+        if (typeof v !== 'function') return v;
+        return (...args) => { seen.push(String(prop)); return v.apply(target, args); };
+      }
+    });
+    assert.strictEqual(await new ExecutionStore(spy).nextSeq(a.executionId), 4);
+    assert.deepStrictEqual(seen, ['multi']);
+  });
+
   it('state and agent stack round trip', async function () {
     const a = await make(rid('st'), 'A');
     assert.strictEqual(await store.getState(a.executionId), null);
