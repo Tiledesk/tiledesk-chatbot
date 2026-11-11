@@ -1456,7 +1456,7 @@ describe('Conversation for AiPrompt test', async () => {
 
     })
 
-    it('AIPROMPT-SUCCESS-MCP-OAUTH', (done) => {
+    it('AiPrompt with MCP OAuth success - sends the bearer from the server token endpoint', (done) => {
 
       let listener;
       let tokenRequests = 0;
