@@ -16,9 +16,15 @@ const winston = require('../../utils/winston');
  * action.requestId: optional id of the conversation to rate, a template that may hold {{variables}};
  * empty means the current conversation. A webhook run (`automation-request-...`) has no conversation,
  * so there it must be given (e.g. {{payload.payload.request_id}} from a request.close subscription).
+ * action.saveTo: 'rating' (default, also when missing) sets rating / rating_message of the conversation;
+ * 'attributes' saves the value as an AI evaluation in the conversation attributes ai_rating / ai_sentiment.
  */
 class DirSetRating {
 
+  static SAVE_TO_RATING = 'rating';
+  static SAVE_TO_ATTRIBUTES = 'attributes';
+  static AI_RATING_KEY = 'ai_rating';
+  static AI_SENTIMENT_KEY = 'ai_sentiment';
   static AUTOMATION_PREFIX = 'automation-request-';
   static NO_CONVERSATION_ERROR = "no conversation: in a webhook set the Request ID of the action";
 
@@ -80,8 +86,13 @@ class DirSetRating {
       return;
     }
 
-    const properties = { rating: rating };
     const ratingMessage = DirSetRating.fillMessage(action.ratingMessage, filler, requestVariables);
+    if (action.saveTo === DirSetRating.SAVE_TO_ATTRIBUTES) {
+      await this.saveToAttributes(action, targetRequestId, rating, ratingMessage, callback);
+      return;
+    }
+
+    const properties = { rating: rating };
     if (ratingMessage) {
       properties.rating_message = ratingMessage;
     }
@@ -105,6 +116,53 @@ class DirSetRating {
       return;
     }
     await this.succeed(action, callback);
+  }
+
+  /**
+   * saveTo 'attributes': the evaluation goes to the conversation attributes ai_rating / ai_sentiment
+   * (PATCH /requests/:id/attributes, which merges the keys), so the rating the user gives in the widget
+   * and the AI evaluation never overwrite each other, and no satisfaction analytics event is emitted.
+   * Force update off keeps an ai_rating already saved.
+   */
+  async saveToAttributes(action, targetRequestId, rating, ratingMessage, callback) {
+    const attributes = { [DirSetRating.AI_RATING_KEY]: rating };
+    if (ratingMessage) {
+      attributes[DirSetRating.AI_SENTIMENT_KEY] = ratingMessage;
+    }
+    try {
+      if (action.forceUpdate !== true) {
+        const request = await this.tdClient.getRequestById(targetRequestId);
+        const current = request?.attributes?.[DirSetRating.AI_RATING_KEY];
+        if (current !== undefined && current !== null) {
+          this.logger.native("[Set Rating] The conversation already has an AI rating, not updated:", current);
+          await this.succeed(action, callback);
+          return;
+        }
+      }
+      await this.updateRequestAttributes(targetRequestId, attributes);
+      this.logger.native("[Set Rating] AI rating set to", rating, "on", targetRequestId);
+    }
+    catch (err) {
+      this.logger.error("[Set Rating] Error setting the AI rating:", err?.message);
+      winston.error("(DirSetRating) Error setting the AI rating: " + err?.message);
+      await this.fail(action, err?.message || String(err), callback);
+      return;
+    }
+    await this.succeed(action, callback);
+  }
+
+  /** The client method works with a callback only */
+  updateRequestAttributes(requestId, attributes) {
+    return new Promise((resolve, reject) => {
+      this.tdClient.updateRequestAttributes(requestId, attributes, (err, result) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(result);
+        }
+      });
+    });
   }
 
   /**

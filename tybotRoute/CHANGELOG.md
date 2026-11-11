@@ -6,6 +6,9 @@ available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
 # features-2611/rating-actions 11/11/2026
+- added: **Set rating** `saveTo`: `rating` (the default, also when missing: rating and comment of the conversation, as before) or `attributes`, which saves the value and the message as the AI evaluation `ai_rating` / `ai_sentiment` in the conversation attributes. The other attributes are kept, the conversation rating is not touched and no satisfaction analytics event is sent, so the rating the user gives after the close webhook and the AI evaluation never overwrite each other. With force update off an `ai_rating` already saved is kept
+- added: **Get rating** `readFrom`: `rating` (the default, as before) or `attributes`, which reads `ai_rating` / `ai_sentiment` into the two variables
+- added: tests for saving to and reading from the attributes
 - added: **Set rating** and **Get rating** take an optional **Request ID** (`requestId`), the conversation to rate or read; it can hold variables and empty means the current conversation. A webhook run has no conversation of its own, so there it must be given (for a webhook called when a conversation is closed: `{{payload.payload.request_id}}`)
 - added: with no conversation to work on (a webhook run without Request ID, a Request ID that fills to empty, or the id of a webhook run) the server is not called: **Set rating** goes to the **else** exit with the reason in the error variable and in `flowError`, **Get rating** sets `flowError`. It never falls back to the current conversation, so the wrong one is never rated
 - added: tests for the Request ID
