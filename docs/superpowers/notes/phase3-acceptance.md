@@ -414,3 +414,56 @@ Observations (no failure):
   role user; choosing the project first works. Not re-checked for the owner; likely pre-existing.
 - The no_trigger_source tooltip is clipped by the sidebar (same layout issue as the Phase 2 supervisor tooltip).
 - The dev-env proxy rule changed mid-run (`c6e8294` → `d7b7b32`, another session); R9 results are for `d7b7b32`.
+
+## Follow-up check (2026-11-11, after m2/m3/m6 and the DirMessage fix)
+
+Run by the controller on the live `tiledesk-exec` stack (chatbot daa5fd51, executions cada9c4, server 6d328a8c,
+dashboard aeee6bba2). API calls used the seeded owner's JWT from `/api/auth/signin`, kept in a private scratch file
+and deleted afterwards. The browser pane was already signed in as the owner.
+
+| # | Check | Result |
+|---|---|---|
+| D1 | DirMessage: a failed send no longer stops the flow | PASS |
+| D2 | Direct `/block` run + max_steps: the failing step closes | PASS, plus a separate pre-existing bug (below) |
+| m2 | An unconfirmed Start new reads as "started … (unconfirmed)" | PASS |
+| m3 | A resume that throws after the "requested" entry records `rejected:error` | PASS |
+| m6 | Graph execution labels use the id tail, with no duplicates | PASS (after a page reload) |
+
+**D1.** "Exec demo · hang" fired through its webhook (so the run has a token) → `01a1cae6-a277-…-23c18d215cec`.
+The request's step counter was set to 1000 during the 120 s web request, and the server container was stopped. When
+the request returned, the limit check failed the run, and the error message went through DirMessage while the server was
+unreachable:
+```
+error: (DirMessage) Error sending reply:  getaddrinfo ENOTFOUND server
+debug: (DirMessage) Reply message sent: …
+debug: (DirectivesChatbotPlug) Stopping Actions on: …
+```
+There was no `winston.err is not a function`, and the callback ran and the chain went on. Status failed
+(`max_steps_exceeded`, step_seq 9); step 9 `after` closed with outcome error. The server was started again
+afterwards. (The hang demo's own "after the request" message is a `reply` action, which DirMessage does not handle.)
+
+**D2.** "Exec demo · slow" fired by a direct `/block` call → `01a1cae1-eedc-…`, step counter set to 1000 during the
+first wait. The run failed with `max_steps_exceeded`, and step 2 `start` closed with outcome error (20017 ms).
+**Pre-existing bug, separate from the winston.err fix:** these runs have no token, so the error-message directive
+throws while DirMessage is being created (`TiledeskClient`: "options.token can NOT be null",
+DirMessage.js:21 via DirectivesChatbotPlug.js:354). It is logged as an `uncaughtException`. The process survives and
+the run is recorded correctly, but the error message is never attempted. This code is unchanged on `main`.
+
+**m2.** The owner role was cached by one GET. Then the server was stopped and `POST …/01a1cae6…/start-new` was sent:
+`504 {"error":"refire_unconfirmed"}`. The audit has `requested`, then `rejected:refire_unconfirmed` with `of_audit_id`.
+The server consumed the queued audit after it restarted. Its activities API and the dashboard both read "Exec Owner
+started a new run of execution 215cec of Exec demo · hang (unconfirmed) · "e2e m2 unconfirmed""
+(`fu-activities-unconfirmed-and-error-rows.jpg`; the plan was temporarily `Custom` for the page, then restored to
+`Sandbox` and its cache key dropped).
+
+**m3.** For the failed slow run `01a1cae1…`, `exec:{id}:seq` (value 7) was replaced with a list key, so
+RESTORE_SCRIPT fails with WRONGTYPE after the audit entry. Resume (with and without confirm) answered
+`503 control_unavailable`. Each attempt left `requested`, then `rejected:error` with `of_audit_id`. The status stayed
+`failed`. Activities read "tried to resume execution 1a274f of Exec demo · slow (rejected: error)". The key was put
+back (7). A normal resume then answered 202, and the run completed.
+
+**m6.** On the Graph tab, the cytoscape node data first showed head labels (`01a1cae6`, and `01a1c60d` twice). The
+pane was still running the bundle loaded before the rebuild. After a reload, the hang run's label is `8d215cec`, and
+the 24 execution nodes have 24 distinct labels (`fu-graph.jpg`).
+
+Left behind: the test executions, their audit entries and Activities rows. No other state was changed.
