@@ -406,6 +406,20 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       assert.strictEqual(ofType(rid, 'execution.idle').length, 0);
       assert.strictEqual(await client.hGet(`exec:${failed.execution_id}`, 'status'), 'failed');
     });
+
+    it('max_steps closes the open step with outcome error', async function () {
+      const rid = newRequestId();
+      send('/start', rid);
+      await waitFor(() => ofType(rid, 'execution.failed').length > 0, 'execution.failed');
+      await settle(rid);
+      const failed = ofType(rid, 'execution.failed')[0];
+      const done = ofType(rid, 'step.completed').filter((e) => e.data.step_seq === failed.data.step_seq);
+      // closed by the failure itself, before execution.failed: not left to the runtime error message the
+      // engine sends next (whose directive may never reach the end of the chain)
+      assert.strictEqual(done.length, 1, 'the step is closed once');
+      assert.strictEqual(done[0].data.outcome, 'error');
+      assert.ok(done[0].seq < failed.seq, 'step.completed (' + done[0].seq + ') before execution.failed (' + failed.seq + ')');
+    });
   });
 
   it('TiledeskRequestVariables.set(name, v, cb) stays inside the action chain', async function () {

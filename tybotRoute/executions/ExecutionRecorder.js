@@ -745,6 +745,8 @@ const ExecutionRecorder = {
     if (!ctx || ctx._failed || ctx._stopped) return null;
     try {
       ctx._failed = true;
+      // the open step ends here (outcome error, ctx._failed): never left to the engine's runtime error message
+      if (ctx.step && !ctx.jumpInFlight) await ExecutionRecorder.blockExit(ctx);
       await ExecutionRecorder.releaseLease(ctx);
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
