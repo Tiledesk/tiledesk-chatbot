@@ -294,7 +294,7 @@
 **Interfaces:**
 - `POST /projects/:pid/executions/:id/resume`, body `{confirm?: boolean, reason?}`, requires `executions_control`. Order:
   1. Validate, load, check `allowedControls` (409 `not_allowed`).
-  2. Probe Redis (R3 of Phase 2).
+  2. Probe Redis with `isDriven` before any audit (Phase 2 ruling R3); unavailable → 503 with no audit.
   3. Snapshot check (C11).
   4. Side-effect check: the next action from the checkpoint is calling, it is a `rerun` / lost owner / soft stop, and there is no `confirm` → 409 `confirm_required {action: {index, type, title}}`. No audit.
   5. `recordAudit(resume)`.
