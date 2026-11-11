@@ -62,8 +62,9 @@ class ExecutionStore {
   /**
    * withState: the reused execution's exec:{id}:state is read together with its status (one round
    * trip) and returned as `state`; a created execution has none (null). Without it `state` is undefined.
+   * noCreate: null instead of creating an execution (nothing written).
    */
-  async resolve({ requestId, agentId, hintedExecutionId, meta, withState }) {
+  async resolve({ requestId, agentId, hintedExecutionId, meta, withState, noCreate }) {
     try {
       const c = this.client;
       // status and state of a candidate in one round trip; status is always written, so null means gone
@@ -81,6 +82,8 @@ class ExecutionStore {
         if (!TERMINAL.includes(status)) return reused(current, state);
         previousExecutionId = current;
       }
+      // noCreate (a resume message): only an existing, non-terminal execution resolves
+      if (noCreate) return null;
 
       const id = uuidv7();
       let won;

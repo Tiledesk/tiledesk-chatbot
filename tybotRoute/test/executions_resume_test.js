@@ -621,6 +621,33 @@ describe('Executions: resume driver (exec:control resume, self-jump, /ext startI
     assert.strictEqual(ofType(rid, 'execution.resumed').length, 0);
   });
 
+  it('a stale resume message creates no execution (no phantom started / idle)', async function () {
+    const rid = newRequestId();
+    const ghost = 'ghost-' + uuidv4();
+    send('/#three', rid, { sender: '_tdinternal', attributes: { execution_id: ghost, resume: { execution_id: ghost, block_id: 'three', action_index: 2, next_action: 'run', from_seq: 9 } } });
+    await sleep(800);
+    await ExecutionRecorder._drainForTests();
+    assert.deepStrictEqual(events(rid).map((e) => e.type), [], 'no event at all');
+    assert.strictEqual(await client.get(`exec:req:${rid}:${BOT_ID}`), null, 'no execution resolved for the conversation');
+    assert.strictEqual((await params(rid)).s1, undefined, 'the block did not run');
+  });
+
+  it('flag on, a resume message with no execution context (Redis error) is dropped, not run from action 0', async function () {
+    const { rid, id, cp } = await stoppedThree();
+    await serviceRestore(id, rid);
+    const broken = new ExecutionStore(client);
+    broken.resolve = async () => null; // what resolve gives on a Redis error
+    ExecutionRecorder.init({ store: broken });
+    await client.hDel(`tilebot:requests:${rid}:parameters`, 's1');
+    const n = events(rid).length;
+    send('/#three', rid, { sender: '_tdinternal', attributes: { execution_id: id, resume: { execution_id: id, block_id: 'three', action_index: 2, next_action: 'run', from_seq: cp.seq } } });
+    await sleep(800);
+    await ExecutionRecorder._drainForTests();
+    const p = await params(rid);
+    assert.strictEqual(p.s1, undefined, 'action 0 did not run');
+    assert.strictEqual(events(rid).length, n, 'nothing emitted');
+  });
+
   it('flag off: resume messages are ignored', async function () {
     const { rid, id, cp } = await stoppedThree();
     await serviceRestore(id, rid);

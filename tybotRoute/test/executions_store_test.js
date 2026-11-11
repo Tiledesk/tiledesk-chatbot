@@ -114,6 +114,18 @@ describe('ExecutionStore', function () {
     assert.strictEqual(again.parentExecutionId, null);
   });
 
+  it('noCreate resolves only a live execution, and writes nothing otherwise', async function () {
+    const r = rid('nc');
+    assert.strictEqual(await store.resolve({ requestId: r, agentId: 'A', meta, noCreate: true }), null);
+    assert.strictEqual(await client.exists(`exec:req:${r}:A`), 0);
+    const a = await make(r, 'A');
+    const x = await store.resolve({ requestId: r, agentId: 'A', meta, noCreate: true });
+    assert.strictEqual(x.executionId, a.executionId);
+    await store.setStatusHint(a.executionId, 'completed');
+    assert.strictEqual(await store.resolve({ requestId: r, agentId: 'A', meta, noCreate: true }), null);
+    assert.strictEqual(await client.get(`exec:req:${r}:A`), a.executionId, 'request key untouched');
+  });
+
   it('nextSeq counts from 1', async function () {
     const a = await make(rid('q'), 'A');
     assert.strictEqual(await store.nextSeq(a.executionId), 1);

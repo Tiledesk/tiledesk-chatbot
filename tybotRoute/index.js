@@ -118,6 +118,12 @@ router.post('/ext/:botid', async (req, res) => {
   });
   // flag off: no call at all (not even an awaited null), the flow runs as in 3.0.5
   const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
+  // a resume message with no execution (Redis error, or a stale resume: no execution is created for it): never
+  // run as a plain jump from the block's first action
+  if (!ctx && executionsEnabled() && ExecutionRecorder.isResumeMessage(message)) {
+    winston.warn("(tybotRoute) resume message without an execution context: dropped");
+    return;
+  }
   // resumed run (attributes.resume of this execution, posted by the ResumeDriver, no stop flag): no gate,
   // the block runs from the checkpoint action; a duplicate is dropped. Anything else: attributes.resume is ignored
   const resume = ctx ? ExecutionRecorder.resumeOf(ctx, message) : null;

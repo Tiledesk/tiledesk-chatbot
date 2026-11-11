@@ -282,7 +282,9 @@ const ExecutionRecorder = {
         agentId,
         hintedExecutionId: message && message.attributes && message.attributes.execution_id,
         meta: { id_project: projectId, agent_version: botId, agent_name: agentName, test, trigger },
-        withState: cfg.stateEnabled
+        withState: cfg.stateEnabled,
+        // a resume continues an execution, never starts one: a stale resume resolves to nothing (no phantom)
+        noCreate: ExecutionRecorder.isResumeMessage(message)
       });
       if (!resolved) return null;
 
@@ -572,14 +574,19 @@ const ExecutionRecorder = {
     }
   },
 
-  /** An internal message with attributes.resume that resumeOf did not accept (and no stop flag blocked). */
-  isStaleResume(ctx, message) {
+  /** An internal message carrying attributes.resume (the ResumeDriver's self-jump, or a copy of one). Never throws. */
+  isResumeMessage(message) {
     try {
       const r = message && message.sender === '_tdinternal' && message.attributes && message.attributes.resume;
-      return !!(ctx && r && typeof r === 'object');
+      return !!(r && typeof r === 'object');
     } catch (err) {
       return false;
     }
+  },
+
+  /** An internal message with attributes.resume that resumeOf did not accept (and no stop flag blocked). */
+  isStaleResume(ctx, message) {
+    return !!ctx && ExecutionRecorder.isResumeMessage(message);
   },
 
   /**
