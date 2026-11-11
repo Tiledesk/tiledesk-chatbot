@@ -1,5 +1,7 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
+const { Filler } = require("../Filler");
+const { DirSetRating } = require("./DirSetRating");
 const { Logger } = require("../../Logger");
 const winston = require('../../utils/winston');
 
@@ -7,6 +9,7 @@ const winston = require('../../utils/winston');
  * Reads the rating of the conversation and its comment into two flow variables.
  * action.assignRatingTo: the variable for the rating (1-5)
  * action.assignRatingMessageTo: the variable for the comment
+ * action.requestId: optional id of the conversation to read, as in Set rating (empty = current conversation)
  * A value the conversation does not have removes its variable, so an older read is not left behind.
  */
 class DirGetRating {
@@ -50,9 +53,18 @@ class DirGetRating {
       return;
     }
 
+    const requestVariables = await TiledeskChatbot.allParametersStatic(this.tdcache, this.requestId);
+    const targetRequestId = DirSetRating.targetRequestId(this.requestId, action, new Filler(), requestVariables);
+    if (!targetRequestId) {
+      this.logger.error("[Get Rating] No conversation to read: in a webhook set the Request ID of the action");
+      await TiledeskChatbot.addParameterStatic(this.tdcache, this.requestId, "flowError", "Get rating Error: " + DirSetRating.NO_CONVERSATION_ERROR);
+      callback();
+      return;
+    }
+
     let request;
     try {
-      request = await this.tdClient.getRequestById(this.requestId);
+      request = await this.tdClient.getRequestById(targetRequestId);
     }
     catch (err) {
       this.logger.error("[Get Rating] Error reading the conversation:", err?.message);

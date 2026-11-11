@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# features-2611/rating-actions 11/11/2026
+- **added**: **Set rating** and **Get rating** take an optional **Request ID**, the conversation to rate or read (variables allowed, empty = current conversation). In a webhook it must be given, e.g. `{{payload.payload.request_id}}` for a webhook called when a conversation is closed; without it the server is not called and Set rating goes to its **else** exit
+
 # 3.0.6
 - **added**: customHeaders for vllm servers
 

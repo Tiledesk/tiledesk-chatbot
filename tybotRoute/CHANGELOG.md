@@ -5,6 +5,11 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# features-2611/rating-actions 11/11/2026
+- added: **Set rating** and **Get rating** take an optional **Request ID** (`requestId`), the conversation to rate or read; it can hold variables and empty means the current conversation. A webhook run has no conversation of its own, so there it must be given (for a webhook called when a conversation is closed: `{{payload.payload.request_id}}`)
+- added: with no conversation to work on (a webhook run without Request ID, a Request ID that fills to empty, or the id of a webhook run) the server is not called: **Set rating** goes to the **else** exit with the reason in the error variable and in `flowError`, **Get rating** sets `flowError`. It never falls back to the current conversation, so the wrong one is never rated
+- added: tests for the Request ID
+
 # features-2611/rating-actions 10/11/2026
 - added: **Set rating** action (`set_rating`). It sets the rating of the conversation, from 1 to 5. The value can come from a variable. Any other value is not saved. An optional rating message, which can also hold variables, is saved as the comment of the rating; an empty one is not sent. With **Force update** off (the default) a rating already given is kept; with it on, the rating is always overwritten
 - added: **Set rating** has two exits, as Web Request: **Success** when the rating is saved or kept because already given, **else** when the value is not valid or the request fails. On failure the reason goes to the chosen error variable and to `flowError`; on success an error left by an earlier run is removed. With no exit connected the flow goes on to the next action

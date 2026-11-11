@@ -174,3 +174,61 @@ describe('Directive DirSetRating', function () {
     assert.strictEqual(DirSetRating.parseRating(null), null);
   });
 });
+
+describe('Directive DirSetRating with a Request ID', function () {
+
+  const WEBHOOK_ID = "automation-request-project-0123456789abcdef";
+  const CLOSED_ID = "support-group-project-closed-conversation";
+
+  function directiveOn(requestId, tdcache) {
+    const dir = new DirSetRating({ projectId: "project", token: "JWT token", requestId: requestId, API_ENDPOINT: "http://api", tdcache: tdcache });
+    const calls = { get: [], update: [], intents: [] };
+    dir.intentDir = { execute(intentDirective, callback) { calls.intents.push(intentDirective.action.intentName); callback(); } };
+    dir.tdClient = {
+      async getRequestById(id) { calls.get.push(id); return { request_id: id }; },
+      async updateRequestProperties(id, properties) { calls.update.push({ id, properties }); return {}; }
+    };
+    return { dir, calls };
+  }
+
+  it('in a webhook rates the conversation named by the Request ID', async () => {
+    const tdcache = memoryCache();
+    await TiledeskChatbot.addParameterStatic(tdcache, WEBHOOK_ID, "payload", { payload: { request_id: CLOSED_ID } });
+    const { dir, calls } = directiveOn(WEBHOOK_ID, tdcache);
+    const stop = await run(dir, Object.assign({ requestId: "{{payload.payload.request_id}}", rating: "4", ratingMessage: "Positive" }, EXITS));
+    assert.deepStrictEqual(calls.get, [CLOSED_ID]);
+    assert.deepStrictEqual(calls.update, [{ id: CLOSED_ID, properties: { rating: 4, rating_message: "Positive" } }]);
+    assert.strictEqual(stop, true);
+    assert.deepStrictEqual(calls.intents, ["#success"]);
+  });
+
+  it('in a conversation an empty Request ID rates the current conversation', async () => {
+    for (const requestId of [undefined, "", "  "]) {
+      const tdcache = memoryCache();
+      const { dir, calls } = directiveOn(REQUEST_ID, tdcache);
+      await run(dir, { requestId: requestId, rating: "5", forceUpdate: true });
+      assert.deepStrictEqual(calls.update, [{ id: REQUEST_ID, properties: { rating: 5 } }], "requestId " + requestId);
+    }
+  });
+
+  it('in a webhook without Request ID goes to the else exit and calls no API', async () => {
+    const tdcache = memoryCache();
+    const { dir, calls } = directiveOn(WEBHOOK_ID, tdcache);
+    const stop = await run(dir, Object.assign({ rating: "3", forceUpdate: true }, EXITS));
+    assert.deepStrictEqual(calls.get, []);
+    assert.deepStrictEqual(calls.update, []);
+    assert.strictEqual(stop, true);
+    assert.deepStrictEqual(calls.intents, ["#else"]);
+    assert.strictEqual(await TiledeskChatbot.getParameterStatic(tdcache, WEBHOOK_ID, "rating_error"), DirSetRating.NO_CONVERSATION_ERROR);
+  });
+
+  it('a Request ID that fills to empty or to a webhook run id is an error, never the current conversation', async () => {
+    for (const requestId of ["{{missing}}", WEBHOOK_ID]) {
+      const tdcache = memoryCache();
+      const { dir, calls } = directiveOn(REQUEST_ID, tdcache);
+      await run(dir, Object.assign({ requestId: requestId, rating: "3", forceUpdate: true }, EXITS));
+      assert.deepStrictEqual(calls.update, [], "requestId " + requestId);
+      assert.deepStrictEqual(calls.intents, ["#else"], "requestId " + requestId);
+    }
+  });
+});
