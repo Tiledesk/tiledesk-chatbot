@@ -178,3 +178,14 @@ Final Menu clicks "button: <text>" with resolved_at; T Open Hours one action; Ch
 at 18:29:02 and its execution completed / closed at the same second (worker publisher). DLQs unchanged (2 / 2).
 Not seen: the "running…" next-action row (needs a hanging action). Observation: terminal blocks (department,
 close, move to unassigned) still show a trailing `intent` action with no exit — the V3 block's implicit connector.
+
+### 12.2 The list shows every run (2026-11-12 ~19:00 UTC)
+
+User: "waiting still does not appear; executions should be at least as many as conversations". Stage data
+(read-only): 52 conversations in Lab Nico today, 50 carry an execution and every one of those exists (53
+executions: +2 automation, one conversation with 2); the two without one are a draft test at 11:03 (before the
+chatbot switch) and a conversation with no bot participant. The gap was the list: default trigger "unattended"
+hid every widget run (all the waiting ones) and test runs were always hidden.
+Fix, live: executions 0.1.0-rc3 (list and summary take test=all), dashboard 2.8.40-exec-4 (default all triggers,
+test runs shown with a badge, "Test runs" toggle = tests=false, counters follow it). Agent check: 31 executions
+today in the list (incl. 3 test, 2 waiting). Chrome cached the old bundle until a reload.
