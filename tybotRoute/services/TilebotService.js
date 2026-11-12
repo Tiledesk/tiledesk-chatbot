@@ -1,5 +1,6 @@
 const httpUtils = require("../utils/HttpUtils");
 const winston = require('../utils/winston');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 // L'endpoint dei salti fra blocchi (`/ext`, `/exec`). Vale, nell'ordine: il `TILEBOT_ENDPOINT`
 // passato a `startApp`, la variabile d'ambiente, l'endpoint che `startApp` ha ricavato da
 // `API_ENDPOINT`, infine l'ambiente `API_ENDPOINT`. Prima (14/10/2026) il modulo leggeva solo
@@ -7,6 +8,36 @@ const winston = require('../utils/winston');
 // endpoint diverso dall'ambiente mandava i salti al posto sbagliato.
 let configuredEndpoint = null;
 let computedEndpoint = null;
+
+/**
+ * Execution tracing, for both block-jump posts (`/ext` and `/exec`): inside a traced action the block
+ * exit is recorded before the jump is posted. Synchronous here, so onJump runs before the caller's own
+ * callback. Off (no traced action): beforeJump returns undefined and the post goes out right away as before.
+ */
+function postJump(post, message, callback, label) {
+    const recorded = ExecutionRecorder.beforeJump(message);
+    if (recorded === 'skip') {
+        // hard stop: the aborted action's jump (e.g. its error exit) is never posted; its
+        // caller goes on as if it had been, and the chain stops at the plug's callback
+        winston.verbose("(TilebotService) execution aborted: jump not posted");
+        setImmediate(() => { if (callback) callback(null, { success: true }); });
+        return;
+    }
+    if (!recorded) {
+        post();
+        return;
+    }
+    recorded
+        .catch((err) => winston.warn("(TilebotService) beforeJump failed: " + (err && err.message)))
+        .then(post)
+        .catch((err) => {
+            // post() threw synchronously (the untraced path would have thrown to the caller)
+            winston.error("(TilebotService) " + label + " error: ", err);
+            if (callback) {
+                callback(err);
+            }
+        });
+}
 
 class TilebotService {
 
@@ -41,7 +72,7 @@ class TilebotService {
             json: message,
             method: 'POST'
         };
-        httpUtils.request(
+        const post = () => httpUtils.request(
             HTTPREQUEST,
             function (err, resbody) {
                 if (err) {
@@ -56,6 +87,7 @@ class TilebotService {
                 }
             }, false
         );
+        postJump(post, message, callback, 'sendMessageToBot');
     }
 
     /**
@@ -77,7 +109,7 @@ class TilebotService {
             json: message,
             method: 'POST'
         };
-        httpUtils.request(
+        const post = () => httpUtils.request(
             HTTPREQUEST,
             function (err, resbody) {
                 if (err) {
@@ -92,6 +124,8 @@ class TilebotService {
                 }
             }, false
         );
+        // block jumps arrive on /exec (DirIntent): traced like the /ext ones
+        postJump(post, message, callback, 'executeBlock');
     }
 }
 

@@ -74,6 +74,7 @@ const { DirInvokeSubAgent } = require('./directives/DirInvokeSubAgent');
 const { DirReturn } = require('./directives/DirReturn');
 const { DirSetRating } = require('./directives/DirSetRating');
 const { DirGetRating } = require('./directives/DirGetRating');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 
 const winston = require('../utils/winston');
 
@@ -98,6 +99,9 @@ class DirectivesChatbotPlug {
     this.message = config.message;
     // Set only on streaming channels (voice): id of the caller message that started this turn
     this.turnId = config.turnId;
+    this.execution = config.execution || null;
+    // resume (executions on only): the first action to run; the earlier ones of the block are skipped
+    this.startIndex = config.startIndex;
   }
 
   exec(pipeline) {
@@ -133,7 +137,8 @@ class DirectivesChatbotPlug {
   }
 
   async processDirectives(theend) {
-    this.theend = typeof theend === 'function' ? theend : () => {};
+    // executions off (no execution): wrapTheEnd returns the function as is
+    this.theend = ExecutionRecorder.wrapTheEnd(this.execution, typeof theend === 'function' ? theend : () => {});
     const directives = this.directives;
     if (!directives || directives.length === 0) {
       winston.verbose("(DirectivesChatbotPlug) No directives to process.");
@@ -179,11 +184,14 @@ class DirectivesChatbotPlug {
       departmentId: depId,
       tdcache: tdcache,
       HELP_CENTER_API_ENDPOINT: this.HELP_CENTER_API_ENDPOINT,
-      turnId: this.turnId
+      turnId: this.turnId,
+      signal: this.execution?.signal // hard stop: abortable directives pass it on (undefined when executions are off)
     };
     winston.debug("(DirectivesChatbotPlug) this.context.departmentId: " + this.context.departmentId);
 
     this.curr_directive_index = -1;
+    if (this.execution && Number.isInteger(this.startIndex) && this.startIndex > 0) this.curr_directive_index = this.startIndex - 1;
+    if (this.execution) ExecutionRecorder.setDirectives(this.execution, directives); // the checkpoint's next_action_type
     winston.verbose("(DirectivesChatbotPlug) processing directives...");
 
     const next_dir = await this.nextDirective(directives);
@@ -192,6 +200,12 @@ class DirectivesChatbotPlug {
   }
 
   async nextDirective(directives) {
+    // stop flag, before the next action only (one GET per action; none when the list is done)
+    const next_index = this.curr_directive_index + 1;
+    if (this.execution && next_index < directives.length &&
+        await ExecutionRecorder.checkStopBeforeAction(this.execution, { index: next_index, directive: directives[next_index] })) {
+      return null;
+    }
     winston.debug("(DirectivesChatbotPlug) ....nextDirective() checkStep()");
     const go_on = await TiledeskChatbot.checkStep(this.context.tdcache, this.context.requestId, this.chatbot?.MAX_STEPS,  this.chatbot?.MAX_EXECUTION_TIME);
 
@@ -207,6 +221,7 @@ class DirectivesChatbotPlug {
           request_id:    this.context.requestId || null
         });
       }
+      if (this.execution) await ExecutionRecorder.failed(this.execution, { error_code: go_on.error_code, message: go_on.error, action_index: next_index });
       winston.debug("(DirectivesChatbotPlug) go_on == false! nextDirective() Stopped!");
       return this.errorMessage(go_on.error); //"Request error: anomaly detection. MAX ACTIONS exeeded.");
     }
@@ -346,12 +361,19 @@ class DirectivesChatbotPlug {
       return this.process(next_dir);
     }
 
+    // hard stop landed between the gate and here: the action does not start
+    if (this.execution?.aborted) {
+      await ExecutionRecorder.stopHard(this.execution);
+      return this.theend();
+    }
+
     const handler = new HandlerClass(context);
 
     winston.verbose("(DirectivesChatbotPlug) Execut directive: " + directive_name);
 
     const blockStart = Date.now();
-    handler.execute(directive, async (stop) => {
+    const actionIndex = this.curr_directive_index;
+    ExecutionRecorder.runAction(this.execution, { index: actionIndex, directive }, () => handler.execute(directive, async (stop) => {
       // [analytics-debug] Trace the block_executed decision per directive so we can
       // see whether the event is emitted and why (missing root_id, draft, etc.).
       winston.debug("(DirectivesChatbotPlug) [analytics] block_executed decision:" +
@@ -375,6 +397,11 @@ class DirectivesChatbotPlug {
           request_id:     this.context.requestId || null
         });
       }
+      if (this.execution) await ExecutionRecorder.afterAction(this.execution, { index: actionIndex, directive, startedAt: blockStart });
+      if (this.execution?.aborted) { // hard stop: no next action, whatever the directive asked for
+        await ExecutionRecorder.stopHard(this.execution);
+        return this.theend();
+      }
       if (stop) {
         winston.debug(`(DirectivesChatbotPlug) Stopping Actions on:`, directive);
         return this.theend();
@@ -382,7 +409,7 @@ class DirectivesChatbotPlug {
       const next_dir = await this.nextDirective(this.directives);
       let process_next_dir = await this.process(next_dir);
       return process_next_dir;
-    });
+    }));
   }
 
   // DEPRECATED

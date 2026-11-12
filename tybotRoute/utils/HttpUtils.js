@@ -54,7 +54,8 @@ class HttpUtils {
 
   constructor() { }
 
-  request(options, callback) {
+  /** The axios options of request(options). A signal (hard stop) is copied only when there is one. */
+  axiosOptions(options) {
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -81,6 +82,14 @@ class HttpUtils {
         axios_options.httpAgent = getSharedHttpAgent();
       }
     }
+    if (options.signal) {
+      axios_options.signal = options.signal
+    }
+    return axios_options;
+  }
+
+  request(options, callback) {
+    const axios_options = this.axiosOptions(options);
 
     const requestStarted = process.hrtime.bigint();
     const httpRoundTripMs = () => Number(process.hrtime.bigint() - requestStarted) / 1e6;

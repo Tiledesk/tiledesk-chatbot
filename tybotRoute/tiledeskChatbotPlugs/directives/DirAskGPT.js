@@ -135,6 +135,7 @@ class DirAskGPT {
     winston.debug("(DirAskGPT)DirAskGPT json:", json); 
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: kb_endpoint + "/qa",
       json: json,
       method: "POST"
@@ -145,12 +146,15 @@ class DirAskGPT {
       HTTPREQUEST, async (err, resbody) => {
 
         winston.debug("(DirAskGPT) resbody:", resbody); 
-        let answer = resbody.answer;
-        let source = resbody.source_url;
+        // resbody is null on an error (an aborted call, any HTTP failure): read it null-safe, the
+        // error branch below handles the failure (a throw here was an unhandled rejection)
+        let answer = resbody?.answer;
+        let source = resbody?.source_url;
         await this.#assignAttributes(action, answer, source);
         
         if (err) {
-          winston.error("(DirAskGPT) error: ", err);
+          // never the error object: its config carries the request body (gptkey)
+          winston.error("(DirAskGPT) error: ", { message: err?.message, code: err?.code, status: err?.response?.status });
           if (callback) {
             if (falseIntent) {
               await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -161,7 +165,7 @@ class DirAskGPT {
             return;
           }
         }
-        else if (resbody.success === true) {
+        else if (resbody?.success === true) {
 
           // if (publicKey === true) {
           //   let token_usage = resbody.usage.total_tokens;
@@ -247,6 +251,7 @@ class DirAskGPT {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',

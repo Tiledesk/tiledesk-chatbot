@@ -37,6 +37,12 @@ const { TiledeskChatbotUtil } = require('./utils/TiledeskChatbotUtil.js'); //req
 
 const AiService = require('./services/AIService.js');
 const tilebotService = require('./services/TilebotService.js');
+const HttpUtils = require('./utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
+const ExecutionRecorder = require('./executions/ExecutionRecorder');
+const { ExecutionStore } = require('./executions/ExecutionStore');
+const ControlListener = require('./executions/ControlListener');
+const ResumeDriver = require('./executions/ResumeDriver');
+const { isEnabled: executionsEnabled } = require('./executions/config');
 
 let API_ENDPOINT = null;
 let API_URL = null;
@@ -110,6 +116,29 @@ router.post('/ext/:botid', async (req, res) => {
     Promise.reject(err);
     return;
   });
+  // flag off: no call at all (not even an awaited null), the flow runs as in 3.0.5
+  const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
+  // a resume message with no execution (Redis error, or a stale resume: no execution is created for it): never
+  // run as a plain jump from the block's first action
+  if (!ctx && executionsEnabled() && ExecutionRecorder.isResumeMessage(message)) {
+    winston.warn("(tybotRoute) resume message without an execution context: dropped");
+    return;
+  }
+  // resumed run (attributes.resume of this execution, posted by the ResumeDriver, no stop flag): no gate,
+  // the block runs from the checkpoint action; a duplicate is dropped. Anything else: attributes.resume is ignored
+  const resume = ctx ? ExecutionRecorder.resumeOf(ctx, message) : null;
+  if (resume) {
+    if (!await ExecutionRecorder.startResume(ctx, resume)) return;
+  }
+  // stop flag set: nothing runs (the 200 is already sent); the gate emitted and released the lease
+  else if (ctx && await ExecutionRecorder.gateMessage(ctx, message) === 'blocked') return;
+  // an internal resume for another execution (it ended, or was replaced, while the resume was in transit):
+  // never run as a plain jump from the block's first action
+  else if (ctx && ExecutionRecorder.isStaleResume(ctx, message)) {
+    winston.warn("(tybotRoute) resume message for an execution that is not the current one: dropped");
+    await ExecutionRecorder.endWithoutChain(ctx);
+    return;
+  }
   
   let intentsMachine;
   let backupMachine;
@@ -137,15 +166,27 @@ router.post('/ext/:botid', async (req, res) => {
     MAX_STEPS: MAX_STEPS,
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
+  chatbot.execution = ctx;
   winston.verbose("(tybotRoute) Message text: " + message.text)
 
   try {
-    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
-    if (requestId.startsWith("support-group-")) {
-      await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    if (ctx) {
+      await ExecutionRecorder.withScope(ctx, 'message_in', async () => {
+        await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+        if (requestId.startsWith("support-group-")) {
+          await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+        }
+      });
+    }
+    else { // tracing off: unchanged
+      await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+      if (requestId.startsWith("support-group-")) {
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+      }
     }
   } catch (e) {
     winston.error("Error on /ext updating request attributes or transcript: ", e)
+    await ExecutionRecorder.endWithoutChain(ctx); // no chain will run (a created execution still ends: idle / completed)
     return;
   }
 
@@ -177,10 +218,20 @@ router.post('/ext/:botid', async (req, res) => {
   }
   catch(err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
+    if (ctx && ctx.step) { // execIntent may have opened a step: close it
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
+    await ExecutionRecorder.endWithoutChain(ctx); // no step opened: the chain never started (a created execution still ends: idle / completed)
     return;
   }
   if (!reply) {
     winston.verbose("(tybotRoute) No reply. Stop flow.")
+    if (ctx && ctx.step) { // execIntent opened a step: close it
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
+    await ExecutionRecorder.endWithoutChain(ctx); // no step opened: nothing runs (a created execution still ends: idle / completed)
     return;
   }
   
@@ -203,7 +254,10 @@ router.post('/ext/:botid', async (req, res) => {
           token: token,
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache,
-          turnId: turnId
+          turnId: turnId,
+          execution: ctx,
+          // the resume index, only when the block that ran is the checkpoint's (set at its block entry)
+          startIndex: resume ? ctx._resumeStartIndex : undefined
         }
       );
 
@@ -228,6 +282,11 @@ router.post('/ext/:botid', async (req, res) => {
         request_id:  requestId || null
       });
     }
+    if (!directivesSuccess && ctx && ctx.step) { // the directives never started: close the step
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
+    if (!directivesSuccess) await ExecutionRecorder.endWithoutChain(ctx); // the directives never started (a created execution still ends: idle / completed)
   }
   else { // text answer (parse text directives to get actions)
     winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
@@ -259,6 +318,10 @@ router.post('/ext/:botid', async (req, res) => {
         success:     true,
         request_id:  requestId || null
       });
+    }
+    if (ctx) {
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
     }
   }
 
@@ -330,6 +393,25 @@ router.post('/exec/:botid', async (req, res) => {
       return;
     }),
   ]).then(([, b]) => b);
+  // executions: block jumps (DirIntent) arrive here, not on /ext; the same hooks as /ext.
+  // Flag off: no call at all, the route runs as before
+  const ctx = executionsEnabled() ? await ExecutionRecorder.onMessageIn({ message, bot, botId, requestId, projectId, token }) : null;
+  // a resume message with no execution: never run as a plain jump from the block's first action
+  if (!ctx && executionsEnabled() && ExecutionRecorder.isResumeMessage(message)) {
+    winston.warn("(tybotRoute) /exec resume message without an execution context: dropped");
+    return;
+  }
+  const resume = ctx ? ExecutionRecorder.resumeOf(ctx, message) : null;
+  if (resume) {
+    if (!await ExecutionRecorder.startResume(ctx, resume)) return;
+  }
+  // stop flag set: nothing runs (the 200 is already sent); the gate emitted and released the lease
+  else if (ctx && await ExecutionRecorder.gateMessage(ctx, message) === 'blocked') return;
+  else if (ctx && ExecutionRecorder.isStaleResume(ctx, message)) {
+    winston.warn("(tybotRoute) /exec resume message for an execution that is not the current one: dropped");
+    await ExecutionRecorder.endWithoutChain(ctx);
+    return;
+  }
 
   let intentsMachine;
   let backupMachine;
@@ -349,16 +431,28 @@ router.post('/exec/:botid', async (req, res) => {
     MAX_STEPS: MAX_STEPS,
     MAX_EXECUTION_TIME: MAX_EXECUTION_TIME
   });
+  chatbot.execution = ctx;
   winston.verbose("(tybotRoute) Message text: " + message.text);
 
 
   try {
-    await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
-    if (requestId.startsWith("support-group-")) {
-      await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+    if (ctx) {
+      await ExecutionRecorder.withScope(ctx, 'message_in', async () => {
+        await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+        if (requestId.startsWith("support-group-")) {
+          await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+        }
+      });
+    }
+    else { // tracing off: unchanged
+      await TiledeskChatbotUtil.updateRequestAttributes(chatbot, token, message, projectId, requestId);
+      if (requestId.startsWith("support-group-")) {
+        await TiledeskChatbotUtil.updateConversationTranscript(chatbot, message);
+      }
     }
   } catch (e) {
     winston.error("Error on /exec updating request attributes or transcript: ", e)
+    await ExecutionRecorder.endWithoutChain(ctx);
     return;
   }
   
@@ -368,12 +462,16 @@ router.post('/exec/:botid', async (req, res) => {
   } 
   catch (err) {
     winston.error("(tybotRoute) An error occurred replying to message: ", err);
+    await ExecutionRecorder.endWithoutChain(ctx); // findBlock opens no step
     return;
   }
   if (!reply) {
     winston.verbose("(tybotRoute) No reply. Stop flow.")
+    await ExecutionRecorder.endWithoutChain(ctx); // findBlock opens no step
     return;
   }
+  // findBlock does not go through execIntent: the block entry is recorded here
+  if (ctx) await ExecutionRecorder.blockEntry(ctx, { blockId: reply.intent_id, blockName: reply.intent_display_name, actions: reply.actions });
 
   if (!reply.attributes) {
     reply.attributes = {};
@@ -411,7 +509,10 @@ router.post('/exec/:botid', async (req, res) => {
           // HELP_CENTER_API_ENDPOINT: process.env.HELP_CENTER_API_ENDPOINT,
           cache: tdcache,
           // voice turn carried by DirIntent across block jumps
-          turnId: message.voice_turn_id
+          turnId: message.voice_turn_id,
+          execution: ctx,
+          // the resume index, only when the block that ran is the checkpoint's (set at its block entry)
+          startIndex: resume ? ctx._resumeStartIndex : undefined
         }
       );
       await directivesPlug.processDirectives();
@@ -434,6 +535,11 @@ router.post('/exec/:botid', async (req, res) => {
         request_id:  requestId || null
       });
     }
+    if (!directivesSuccess && ctx && ctx.step) { // the directives never started: close the step
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
+    }
+    if (!directivesSuccess) await ExecutionRecorder.endWithoutChain(ctx);
   }
   else { // text answer (parse text directives to get actions)
     winston.verbose("(tybotRoute) No actions. Reply text: ", reply.text)
@@ -463,6 +569,10 @@ router.post('/exec/:botid', async (req, res) => {
         success:     true,
         request_id:  requestId || null
       });
+    }
+    if (ctx) {
+      await ExecutionRecorder.blockExit(ctx);
+      await ExecutionRecorder.endOfChain(ctx);
     }
   }
 
@@ -672,6 +782,13 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
 
   const async = body.async;
   const token = body.token;
+  // start new (executions): the old execution id, not part of the trigger payload
+  // (only with executions on: off, the body stays as it always was)
+  let retry_of;
+  if (executionsEnabled() && typeof body.retry_of === 'string' && body.retry_of) {
+    retry_of = body.retry_of;
+    delete body.retry_of;
+  }
   delete body.async;
   delete body.token;
 
@@ -707,6 +824,8 @@ router.post('/block/:project_id/:bot_id/:block_id', async (req, res) => {
     },
     token: token
   }
+  // in the request attributes, where the webhook and scheduled refires put it too (the recorder reads it only there)
+  if (retry_of) message.payload.request.attributes = { retry_of: retry_of };
 
   if (async) {
     winston.verbose("Async webhook");
@@ -853,8 +972,21 @@ async function connectRedis() {
       process.exit(1);
     }
     winston.info("(Tilebot) Redis connected");
+    ExecutionRecorder.init({ store: new ExecutionStore(tdcache.client), apiEndpoint: API_ENDPOINT });
+    // hard stop / cleanup aborts (exec:control); off switch: no subscription at all
+    if (executionsEnabled()) await ControlListener.start(tdcache, { onResume: (executionId) => ResumeDriver.handle(executionId, resumeDeps()) });
+    else await ControlListener.stop();
   }
   return;
+}
+
+/** What the resume driver needs from this module: the bots of the deployment (+secret). It posts where jumps go. */
+function resumeDeps() {
+  return {
+    botsDataSource: (botId, projectId) => staticBots
+      ? new MockBotsDataSource(staticBots)
+      : new MongodbBotsDataSource({ projectId: projectId, botId: botId })
+  };
 }
 
 async function checkRequest(request_id, id_project) {

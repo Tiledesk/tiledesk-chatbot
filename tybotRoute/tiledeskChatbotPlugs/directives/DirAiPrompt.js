@@ -8,6 +8,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const mcpOAuthTokenService = require("../../services/McpOAuthTokenService");
 const aiController = require("../../services/AIController");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
@@ -364,6 +365,18 @@ class DirAiPrompt {
         return;
       }
 
+      const { tokens: oauthTokens, error: oauthError } = await this.resolveOAuthTokens(action.servers, mcp_integration);
+      if (oauthError) {
+        await this.chatbot.addParameter("flowError", oauthError);
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback(true);
+          return;
+        }
+        callback();
+        return;
+      }
+
       const flowVariables = {
         'x-chatbotToken': requestVariables.chatbotToken,
         'x-project-id': requestVariables.project_id,
@@ -375,7 +388,7 @@ class DirAiPrompt {
         'x-last-user-text': requestVariables.lastUserText,
       };
 
-      json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables);
+      json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables, oauthTokens);
       json.tools = [];
       // server definitions can carry credentials (headers, tokens): log the names only
       winston.info("DirAiPrompt json.servers: " + (json.servers ? Object.keys(json.servers).join(",") : json.servers));
@@ -410,15 +423,21 @@ class DirAiPrompt {
       json.thinking = this.#buildThinkingObject(reasoningLevel, action.max_tokens);
     }
 
-    winston.debug("DirAiPrompt json: ", json);
+    const loggableJson = json.servers ? { ...json, servers: DirAiPrompt.redactServers(json.servers) } : json;
+    console.log("DirAiPrompt json: ", loggableJson);
+    winston.debug("DirAiPrompt json: ", loggableJson);
+    console.log("DirAiPrompt MCP headers: ", Object.fromEntries(
+      Object.entries(json.servers || {}).map(([name, s]) => [name, Object.keys(s.headers || {})])
+    ));;
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", JSON.stringify(HTTPREQUEST));
+    winston.debug("DirAiPrompt HttpRequest: ", JSON.stringify({ ...HTTPREQUEST, json: loggableJson }));
 
     // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
     if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
@@ -730,6 +749,7 @@ class DirAiPrompt {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
@@ -787,7 +807,7 @@ class DirAiPrompt {
   // customHeaders, oauth, tools, ...) is internal and must not be forwarded.
   static SERVER_ALLOWED_FIELDS = ['transport', 'url', 'command', 'args', 'api_key', 'headers', 'parameters'];
 
-  arrayToObject(arr, mcp_integration, flowVariables) {
+  arrayToObject(arr, mcp_integration, flowVariables, oauthTokens = {}) {
     if (!Array.isArray(arr)) {
       winston.warn("DirAiPrompt Can't process MCP Severs: 'servers' must be an array")
       this.logger.warn("[AI Prompt] Can't process MCP Severs: 'servers' must be an array");
@@ -815,9 +835,85 @@ class DirAiPrompt {
       const serverFlowVariables = server.native === true ? flowVariables : null;
       cleanServer.headers = this.mergeHeadersWithVariables(integrationHeaders, serverFlowVariables);
 
+      // The OAuth bearer wins over any Authorization from custom headers or flow variables.
+      if (oauthTokens[server.name]) {
+        for (const key of Object.keys(cleanServer.headers)) {
+          if (key.toLowerCase() === 'authorization') {
+            delete cleanServer.headers[key];
+          }
+        }
+        cleanServer.headers.Authorization = oauthTokens[server.name];
+      }
+
       acc[server.name] = cleanServer;
       return acc;
     }, {});
+  }
+
+  /**
+   * Bearer tokens of the action servers whose integration entry references an
+   * MCP OAuth connection, asked to tiledesk-server in parallel. Native servers
+   * never carry OAuth: the server rejects it on native entries.
+   */
+  async resolveOAuthTokens(servers, mcp_integration) {
+    const integrationServers = mcp_integration?.value?.servers;
+    if (!Array.isArray(servers) || !Array.isArray(integrationServers)) {
+      return { tokens: {} };
+    }
+
+    const requests = [];
+    for (const server of servers) {
+      if (!server || server.native === true) continue;
+      const connection_id = this.getIntegrationServer(integrationServers, server)?.oauth?.connection_id;
+      if (!connection_id) continue;
+      requests.push(
+        mcpOAuthTokenService.getToken(this.projectId, connection_id, this.token)
+          .then((oauthToken) => ({ name: server.name, value: 'Bearer ' + oauthToken.access_token }))
+          .catch((err) => ({ name: server.name, err: err }))
+      );
+    }
+    if (requests.length === 0) {
+      return { tokens: {} };
+    }
+
+    const results = await Promise.all(requests);
+    const tokens = {};
+    let error;
+    for (const result of results) {
+      if (result.err) {
+        winston.error("DirAiPrompt MCP OAuth token not resolved for server " + result.name + ": status " + result.err.status + (result.err.code ? ", code " + result.err.code : ""));
+        this.logger.error("[AI Prompt] MCP OAuth token not resolved for server " + result.name);
+        if (!error) {
+          error = result.err.status === 409
+            ? "MCP server " + result.name + " needs to be reconnected"
+            : "MCP server " + result.name + " OAuth token unavailable";
+        }
+      } else {
+        tokens[result.name] = result.value;
+      }
+    }
+    return error ? { tokens: tokens, error: error } : { tokens: tokens };
+  }
+
+  // Copy of the servers safe to log: the OAuth bearer replaced.
+  static redactServers(servers) {
+    if (!servers || typeof servers !== 'object') return servers;
+    const redacted = {};
+    for (const name of Object.keys(servers)) {
+      const server = servers[name];
+      if (server?.headers && typeof server.headers === 'object') {
+        const headers = { ...server.headers };
+        for (const key of Object.keys(headers)) {
+          if (key.toLowerCase() === 'authorization') {
+            headers[key] = '[REDACTED]';
+          }
+        }
+        redacted[name] = { ...server, headers: headers };
+      } else {
+        redacted[name] = server;
+      }
+    }
+    return redacted;
   }
 
   buildEnabledTools(server) {
@@ -1011,6 +1107,7 @@ class DirAiPrompt {
   async fetchNativeMcpServers() {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
         headers: {
           'Content-Type': 'application/json',

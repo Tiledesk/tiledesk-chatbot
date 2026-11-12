@@ -26,6 +26,10 @@ class MockBotsDataSource {
         // V3 agents: the version label and the connectors list are fields of the bot.
         if (source.ds_version !== undefined) { bot.ds_version = source.ds_version; }
         if (source.connectors !== undefined) { bot.connectors = source.connectors; }
+        // like the Mongo source (+secret): id, published-version root and secret, when the test data has them
+        if (source._id !== undefined) { bot._id = source._id; }
+        if (source.root_id !== undefined) { bot.root_id = source.root_id; }
+        if (source.secret !== undefined) { bot.secret = source.secret; }
         resolve(bot)
       }catch(err){
         reject(err);

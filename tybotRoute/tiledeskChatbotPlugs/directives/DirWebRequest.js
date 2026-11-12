@@ -5,6 +5,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskJSONEval } = require('../../TiledeskJSONEval');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const winston = require('../../utils/winston');
+const HttpUtils = require('../../utils/HttpUtils').constructor; // module exports an instance; errorSummary is static
 
 class DirWebRequest {
   constructor(context) {
@@ -75,7 +76,8 @@ class DirWebRequest {
       url: url,
       headers: headers,
       json: json,
-      method: action.method
+      method: action.method,
+      signal: this.context.signal
     };
     winston.debug("(DirWebRequest) HttpRequest ", HTTPREQUEST);
     this.myrequest(
@@ -147,6 +149,9 @@ class DirWebRequest {
       });
       axios_options.httpsAgent = httpsAgent;
     }
+    if (options.signal) {
+      axios_options.signal = options.signal;
+    }
     axios(axios_options)
     .then((res) => {
       if (res && res.status == 200 && res.data) {
@@ -161,7 +166,8 @@ class DirWebRequest {
       }
     })
     .catch( (error) => {
-      winston.error("(DirWebRequest) Axios error: ", error.response.data);
+      // a canceled (hard stop) or network error has no response: never read it unguarded
+      winston.error("(DirWebRequest) Axios error: ", HttpUtils.errorSummary(error, options.url));
       if (callback) {
         callback(error, null);
       }

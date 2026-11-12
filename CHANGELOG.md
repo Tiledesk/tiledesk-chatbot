@@ -1,7 +1,11 @@
 # Tiledesk native chatbot
 
 
-# features-2611/rating-actions 11/11/2026
+# 3.0.7-rc4
+- **added**: **AI Prompt** sends the OAuth2 access token to the MCP servers connected with OAuth. When the server entry in the `mcp` integration has `oauth.connection_id`, the token is asked to tiledesk-server (`GET /:id_project/mcp/oauth/connections/:id/token`, with the chatbot token) and sent as `Authorization: Bearer …`, replacing any `Authorization` from the custom headers. The tokens stay encrypted on the server, which also refreshes them; the chatbot keeps them in memory until 60 s before they expire and never logs them
+- **added**: when the token cannot be obtained the action fails as with a missing MCP integration: `flowError` is `MCP server <name> needs to be reconnected` when the connection must be authorized again, `MCP server <name> OAuth token unavailable` otherwise, then the false block if set. MCP servers without OAuth and native MCP servers work as before, with no extra request
+
+# 3.0.7-rc3
 - **added**: **Set rating** can save the value as an AI evaluation (`saveTo: "attributes"`) in the conversation attributes `ai_rating` and `ai_sentiment`, so the rating the user gives in the chat after the close webhook does not overwrite it; **Get rating** reads it back with `readFrom: "attributes"`. Without these fields both actions work as before
 
 # 3.0.7-rc2
