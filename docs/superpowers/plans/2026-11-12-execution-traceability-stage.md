@@ -88,3 +88,19 @@ Known from the chatbot merge: pre moved block jumps to `/exec` (hooks added ther
 - 1c979f77 chatbot `executionsAddon.chatbot.enabled: "true"` → `(ControlListener) subscribed to exec:control`; Design Studio run of "Test email" recorded (01a1cf91…, 4 steps, test run).
 - b2d45c8c + d38ec61d dashboard `executionsAddon.dashboard.baseUrl: "/executions/api/v1/"` (the first value lacked `/v1/` → "Could not load"); Monitor tabs, list and the run's detail (timeline, flow state, audit tabs, controls) render.
 - Open: 2 server conversation events without `request_id` dead-lettered (`executions.ingest.dlq`) at 11:40 UTC, after the server switch, before recording; to trace. The executions list hides test runs (Design Studio) by design; real runs need a published agent via widget/webhook.
+
+## 10. Stage e2e (2026-11-12, Chrome as Nico/owner, project Lab Nico)
+
+| Check | Result |
+|---|---|
+| Real run: "test webhook" fired by its webhook (`{"note","customer":{"name","api_key"},"items"}`) | 01a1cfa5…aeca28d8 completed, automation, 2 blocks, 96 ms; in the list (All triggers), detail correct |
+| Graph tab | renders project + 55 agents (labels unreadable at that size: UX note); completed runs not drawn by design |
+| View data, whole execution, reason given | strip + 15-min countdown; trigger input and attribute values shown; nested `customer.api_key` = `[secret]` in attribute and payload |
+| Close | strip gone, no values left in the page, nothing in session/local storage |
+| Start new | prefill without server keys, masked `customer.api_key` required (invalid JSON refused); new run 2ef0053e completed, `retry_of` / `retried_as` correct |
+| Soft stop (Design Studio run, waiting) | stopped · soft stop; Resume/Start new disabled for a test run |
+| Audit tab | "Nico soft-stopped execution fd35b8 of Test email" · accepted |
+| Activities | soft-stopped, started a new run, viewed the data … · whole execution (wording as server) |
+| Logs since the switches | chatbot, executions api/ingest/jobs: 0 errors; server: 7 unrelated (tiledesk-queues webhook timeouts, a data-table lookup) |
+
+Not covered on stage: resume (needs a stopped non-test run; no Lab Nico agent has a wait/long action), retention card (would delete shared stage data), denied access for a supervisor/custom role. Open: 2 dead-lettered server events without `request_id` (no new ones since).
