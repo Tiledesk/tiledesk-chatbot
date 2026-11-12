@@ -406,7 +406,7 @@ A table keyed by action type. Examples (full table in the tybot plan):
 |---|---|---|
 | Web request v2 | `trueIntent` taken | `falseIntent` taken |
 | Ask KB / AI prompt | answer found | `falseIntent` / no answer |
-| JSON condition / condition | the matching branch | the fallback branch, only if it is marked as else-on-error in the action config, otherwise success |
+| Condition, JSON condition (v1, v2), if online agents (v1, v2), if open hours | either branch (`true` or `false`) | — (`errorIntent`, where present, stays a failure) |
 | Capture user reply | reply received | `timeout` exit |
 | Others (reply, set attribute…) | completed | — |
 
@@ -417,8 +417,16 @@ A thrown error is always `error`.
 'falseIntent' | 'errorIntent' | 'fallbackIntent' | 'noMatchIntent' | 'noInputIntent' | 'goToIntent' |
 'jump')` on the running action's store. The mapper uses that signal first: a failure field
 (`falseIntent`, `noMatchIntent`, `noInputIntent`, `errorIntent`) gives `failure_condition`, anything
-else `success`, and `exit_taken` is the field without `Intent`. The signal stands with no jump too (a
-false result with no block connected is `failure_condition` / `false`). Only without a signal is the
+else `success`, and `exit_taken` is the field without `Intent`. Exception: for a pure condition
+(directive `condition`, `jsoncondition`, `jsoncondition2`, `ifonlineagents`, `ifonlineagentsv2`,
+`ifopenhours`; the mapper's `CONDITION_TYPES`, keyed on the directive name the recorder passes, else
+`_tdActionType`) the false branch is a normal outcome: `success` / `false`, with or without a signal.
+Where false means something went wrong (web request, AI Prompt, Ask KB, gpt task, make, brevo,
+customerio, hubspot, qapla, whatsapp, data tables, docparse, form, assistant, invite/remove human) it
+stays `failure_condition`. AI condition has no false exit: its condition branches are `success`
+(`jump`), `errorIntent` a failure. Iteration's `fallbackIntent` is "the list is done", `success`. The signal stands with no jump too (a
+false result with no block connected is `failure_condition` / `false`, or `success` / `false` for a
+pure condition). Only without a signal is the
 jump target matched against the exit fields; if it matches both a failure and a success exit (both
 exits on the same block) the branch is unknown and the record is `success` with `exit_taken:
 'ambiguous'`, never `failure_condition`. Flag off, `noteExit` is a no-op (no action store exists).

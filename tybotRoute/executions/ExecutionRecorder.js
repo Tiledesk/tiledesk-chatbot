@@ -1003,7 +1003,7 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     const jumped = jumpedTo !== undefined ? jumpedTo : rec.jumpedTo;
     // the exit the directive noted at its branch point (WriteTap.noteExit), when it noted one
     const exit = rec.tap ? rec.tap.exit : undefined;
-    let { outcome, exit_taken } = mapOutcome({ action, jumpedTo: jumped, error, exit });
+    let { outcome, exit_taken } = mapOutcome({ action, jumpedTo: jumped, error, exit, type: directive && directive.name });
     if (rec.interrupted) {
       outcome = 'interrupted';
       exit_taken = null;

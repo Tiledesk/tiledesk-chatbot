@@ -75,7 +75,7 @@ async function traced(make, directive) {
     return exec(d, directive);
   });
   const jumpedTo = d._jumps.length ? '/' + d._jumps[d._jumps.length - 1] : undefined;
-  const { outcome, exit_taken } = mapOutcome({ action: directive.action, jumpedTo, exit: store.exit });
+  const { outcome, exit_taken } = mapOutcome({ action: directive.action, jumpedTo, exit: store.exit, type: directive.name });
   return { outcome, exit_taken, exit: store.exit, jumps: d._jumps, stops };
 }
 
@@ -97,11 +97,11 @@ async function untraced(make, directive) {
  * The family check: true -> success/true, false -> failure_condition/false (both exits on '#same'),
  * different targets still map by target, and flag off the directive does the same jumps and callbacks.
  */
-function family(name, { make, action, arrange }) {
+function family(name, { make, action, arrange, type = name, falseOutcome = 'failure_condition' }) {
   describe(name, function () {
     const run = async (result, fields, mode = traced) => {
       if (arrange) arrange(result);
-      return mode(make, { name, action: Object.assign(action(result), fields) });
+      return mode(make, { name: type, action: Object.assign(action(result), fields) });
     };
     const same = { trueIntent: '#same', falseIntent: '#same' };
 
@@ -111,17 +111,17 @@ function family(name, { make, action, arrange }) {
       assert.strictEqual(r.exit, 'trueIntent');
       assert.deepStrictEqual([r.outcome, r.exit_taken], ['success', 'true']);
     });
-    it('same-target exits, false result -> failure_condition / false', async function () {
+    it(`same-target exits, false result -> ${falseOutcome} / false`, async function () {
       const r = await run(false, same);
       assert.deepStrictEqual(r.jumps, ['#same']);
       assert.strictEqual(r.exit, 'falseIntent');
-      assert.deepStrictEqual([r.outcome, r.exit_taken], ['failure_condition', 'false']);
+      assert.deepStrictEqual([r.outcome, r.exit_taken], [falseOutcome, 'false']);
     });
     it('different targets still map to their exit', async function () {
       const t = await run(true, { trueIntent: '#t', falseIntent: '#f' });
       assert.deepStrictEqual([t.jumps, t.outcome, t.exit_taken], [['#t'], 'success', 'true']);
       const f = await run(false, { trueIntent: '#t', falseIntent: '#f' });
-      assert.deepStrictEqual([f.jumps, f.outcome, f.exit_taken], [['#f'], 'failure_condition', 'false']);
+      assert.deepStrictEqual([f.jumps, f.outcome, f.exit_taken], [['#f'], falseOutcome, 'false']);
     });
     it('flag off, no recorder context: the same jumps and callbacks', async function () {
       for (const result of [true, false]) {
@@ -182,6 +182,7 @@ describe('executions: the branch a conditional action took (B1)', function () {
   });
 
   family('gpt_task (AI Prompt)', {
+    type: 'gpt_task',
     make: () => new DirAiPrompt(makeContext()),
     action: () => ({ question: 'q', llm: 'openai', model: 'gpt-4o', assignReplyTo: 'answer' }),
     arrange: (result) => {
@@ -191,6 +192,7 @@ describe('executions: the branch a conditional action took (B1)', function () {
   });
 
   family('askgptv2 (Ask KB)', {
+    type: 'askgptv2',
     make: () => {
       const d = new DirAskGPTV2(makeContext());
       d.getNamespace = async () => ({ id: 'ns1', hybrid: false });
@@ -208,11 +210,13 @@ describe('executions: the branch a conditional action took (B1)', function () {
   });
 
   family('condition', {
+    falseOutcome: 'success', // a pure condition: false is a normal outcome
     make: () => new DirCondition(makeContext({ score: 10 })),
     action: (result) => ({ scriptCondition: result ? '$score == 10' : '$score == 3', jsonCondition: null })
   });
 
   family('jsoncondition', {
+    falseOutcome: 'success',
     make: () => new DirJSONCondition(makeContext({ score: 10 })),
     action: (result) => ({
       groups: [{
@@ -223,11 +227,14 @@ describe('executions: the branch a conditional action took (B1)', function () {
   });
 
   family('jsonconditionv2', {
+    type: 'jsoncondition2',
+    falseOutcome: 'success',
     make: () => new DirJSONConditionV2(makeContext({ score: 10 })),
     action: (result) => ({ when: result ? 'score == 10' : 'score == 3' })
   });
 
   family('make (integrations with #executeCondition)', {
+    type: 'make',
     make: () => new DirMake(makeContext()),
     // Make's false branch: a request error or no body parameters (any HTTP reply takes the true branch)
     action: (result) => ({ url: `${BASE}/ok`, bodyParameters: result ? { a: '1' } : undefined })

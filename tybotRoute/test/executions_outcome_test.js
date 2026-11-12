@@ -40,6 +40,32 @@ describe('executions: OutcomeMapper', function () {
     assert.deepStrictEqual(r2, { outcome: 'success', exit_taken: 'ambiguous' });
   });
 
+  describe('pure conditions: false is a normal outcome (success / false)', function () {
+    for (const type of ['condition', 'jsoncondition', 'jsoncondition2', 'ifonlineagents', 'ifonlineagentsv2', 'ifopenhours']) {
+      it(`${type}: false with the same target and with a different target -> success / false`, function () {
+        const same = { trueIntent: '#a', falseIntent: '#a' };
+        assert.deepStrictEqual(mapOutcome({ action: same, jumpedTo: '/#a', exit: 'falseIntent', type }), { outcome: 'success', exit_taken: 'false' });
+        const diff = { trueIntent: '#t', falseIntent: '#f' };
+        assert.deepStrictEqual(mapOutcome({ action: diff, jumpedTo: '/#f', exit: 'falseIntent', type }), { outcome: 'success', exit_taken: 'false' });
+        assert.deepStrictEqual(mapOutcome({ action: diff, jumpedTo: '/#f', type }), { outcome: 'success', exit_taken: 'false' }, 'no signal');
+        assert.deepStrictEqual(mapOutcome({ action: diff, jumpedTo: null, exit: 'falseIntent', type }), { outcome: 'success', exit_taken: 'false' }, 'no block connected');
+      });
+    }
+    it('the type falls back to action._tdActionType, case-insensitively', function () {
+      const r = mapOutcome({ action: { _tdActionType: 'JSONCondition', falseIntent: '#f' }, jumpedTo: '/#f' });
+      assert.deepStrictEqual(r, { outcome: 'success', exit_taken: 'false' });
+    });
+    it('webrequestv2 false is still failure_condition (signal, no signal, same target)', function () {
+      const type = 'webrequestv2';
+      assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/#f1', exit: 'falseIntent', type }), { outcome: 'failure_condition', exit_taken: 'false' });
+      assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/#f1', type }), { outcome: 'failure_condition', exit_taken: 'false' });
+      assert.deepStrictEqual(mapOutcome({ action: { trueIntent: '#a', falseIntent: '#a' }, jumpedTo: '/#a', exit: 'falseIntent', type }), { outcome: 'failure_condition', exit_taken: 'false' });
+    });
+    it('other failure exits stay failures on a condition type', function () {
+      assert.deepStrictEqual(mapOutcome({ action: { errorIntent: '#e' }, jumpedTo: '/#e', exit: 'errorIntent', type: 'condition' }), { outcome: 'failure_condition', exit_taken: 'error' });
+    });
+  });
+
   describe('the exit the directive noted (WriteTap.noteExit)', function () {
     const same = { _tdActionType: 'webrequestv2', trueIntent: '#same', falseIntent: '#same' };
     it('same-target exits, true result -> success / true', function () {
