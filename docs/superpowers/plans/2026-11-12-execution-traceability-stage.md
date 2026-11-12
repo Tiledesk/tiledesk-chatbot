@@ -130,3 +130,38 @@ Open / follow-ups:
 - DirInvokeSubAgent outcome (continuation after the record) still by target matching.
 - V3 start boxes (webhook/scheduled) could not be connected by automated drag (unconfirmed product issue).
 - Widget test page opens conversations by itself (pre-existing).
+
+## 12. "Agent testing all chatbot blocks" findings and exec-3 fixes (2026-11-12, local, not pushed)
+
+The user's all-blocks agent (draft 6af5c9bc5126760013b152d6, published 6af5cd855126760013b18ed6) ran through the
+test chat, 7 widget runs, 2 webhook runs and the hourly schedule; every block works with recording on.
+
+Data check (stage Mongo, read-only, all executions of Lab Nico since 00:00): no shared contents. Every step lies
+inside its own execution's time window, no duplicate seqs, step counts match. The growing step counts of
+successive runs (59 → 81) are the Iteration block walking a data table the flow itself appends to each run.
+
+List check: the counter chips count every trigger (summary API) while the default list shows unattended triggers
+only, so "waiting 3" showed with none of the three (all widget runs) in the list. The three are conversations
+the scheduler's unresponsive-bot close ended in the jobs worker, which never published conversation.closed.
+
+Fixes (heads): chatbot 7c080ed5, executions e374e51, server d341fa2b, dashboard 2d54ee932 (feature/execution-graph),
+argo stage 620d737a. All local.
+- Multi condition / AI condition: exit = the case label (was "jump"); else → "else".
+- Menu buttons: a typed match records "button: <text>"; a click emits the new tybot event `action.resolved`
+  { step_seq, action_index, action_id, exit_taken, outcome } on the menu's action (exec:{id}:menu, taken by the
+  next user message). Executions projects it onto the action (resolved, resolved_at), out-of-order safe.
+- Executions: steps still open when the execution ends close as `interrupted`; summary counts stopping as stopped.
+- Dashboard: chips set trigger = all with status, labelled "last 24 hours · all triggers"; a running step shows a
+  row for its next action; interrupted steps styled.
+- Server: jobs.js starts the executions publisher, publish only (listen({ audit: false })). Argo: EXECUTIONS_AMQP_URL
+  on serverworker and serverworker-chat21-events under executionsAddon.server.amqp.
+- Engine (team code, flag-independent): DirIfOpenHours called back twice (the block's next action ran after the
+  jump — the "phantom intent"); DirDepartment hung on no match / no bot and never filled {{department_name}}.
+
+Release order for exec-3: executions first (else chatbot's action.resolved dead-letters), then server + argo
+worker env, then chatbot, then dashboard. The 3 stuck waiting runs (01a1d03e-a147, 01a1d060-d25a, 01a1d066-de1f)
+are not repaired by this; destroy them from the UI, or leave them.
+
+Not fixed (by design or not ours): "Move to another AI Agent" targeting the same agent never runs its target
+block; the widget test page opens conversations by itself. Chatbot full suite: 249 failures identical before and
+after (port 10002 collisions between files), 666 passing with the 19 new tests.
