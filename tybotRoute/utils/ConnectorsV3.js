@@ -69,6 +69,7 @@ const OUTPUT_CATALOG = {
   askgpt:              TRUE_FALSE,
   askgptv2:            TRUE_FALSE,
   docparse_extract:    TRUE_FALSE,
+  set_rating:          TRUE_FALSE,
   gpt_task:            TRUE_FALSE,
   gpt_assistant:       TRUE_FALSE,
   ai_prompt:           TRUE_FALSE,

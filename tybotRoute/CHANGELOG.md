@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# features-2611/rating-actions 12/11/2026
+- fixed: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue (`OUTPUT_CATALOG`), so `trueIntent`/`falseIntent` were never filled from the `connectors` list: the rating was saved but the flow stopped after the action. Found by the regression tests of the "Test Connettori" agent on stage. **Get rating** has no exits of its own and is unchanged
+- added: tests for the `set_rating` exits in V3 (`test/connectorsV3_rating_test.js`)
+
 # features-2611/rating-actions 11/11/2026
 - added: **Set rating** `saveTo`: `rating` (the default, also when missing: rating and comment of the conversation, as before) or `attributes`, which saves the value and the message as the AI evaluation `ai_rating` / `ai_sentiment` in the conversation attributes. The other attributes are kept, the conversation rating is not touched and no satisfaction analytics event is sent, so the rating the user gives after the close webhook and the AI evaluation never overwrite each other. With force update off an `ai_rating` already saved is kept
 - added: **Get rating** `readFrom`: `rating` (the default, as before) or `attributes`, which reads `ai_rating` / `ai_sentiment` into the two variables
