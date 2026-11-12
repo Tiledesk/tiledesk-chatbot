@@ -409,7 +409,7 @@ class DirAiCondition {
               }
             });
             if (answer_found) {
-              WriteTap.noteExit('jump'); // execution tracing: the branch taken (no-op when off)
+              WriteTap.noteExit(String(answer_found.label)); // execution tracing: the condition taken, by its label (no-op when off)
               await this.#executeIntent(answer_found.conditionIntentId) 
               if (callback) {
                 callback(true);
