@@ -57,7 +57,25 @@ Rollback at any step: flags back off (`EXECUTIONS_ENABLED=false`, unset `EXECUTI
 - D3 tags: suffix on the team line — server `3.4.0-exec-1`, chatbot `3.0.7-exec-1`, dashboard `2.8.40-exec-1`, executions `0.1.0-rc1` (next candidates `-exec-2`, `-rc2`).
 - D4 recording: chatbot deployed with `EXECUTIONS_ENABLED=false` first, checked, then on for all stage together with the dashboard.
 
-## 7. Questions as first asked
+- D5 (2026-11-12) executions is a **separate Helm release** (paid add-on model): chart `tiledesk-executions/deploy/helm/tiledesk-executions` (values-stage.yml, values-example.yaml for on-prem), Argo Application `deploy/argocd/executions-stage.yaml` (`tiledesk-executions`, project tiledesk-stage, namespace tiledesk, targetRevision HEAD, automated sync), modelled on the agent runtime. Secrets are parameters on that Application; image tag bumped by hand in values-stage.yml. The main chart only carries an inert `executionsAddon:` block (tiledesk-argo local `stage` commit 6bdbadf9, not pushed). Contract: Secret `tiledesk-executions` keys `EXECUTIONS_SEAL_PUBLIC_KEY`, `EXECUTIONS_SEAL_KID`, `EXECUTIONS_STATE_HASH_KEY`, `EXECUTIONS_SERVICE_TOKEN` (+ `VAULT_KEYS` for the api); internal URL `http://tiledesk-executions-internal:3100`.
+- D6 no version commits on the shared pre branches (team numbering kept: dashboard `2.7.27x-stage`, server tags on merges); only our tags carry `-exec-N`.
+
+## 7. Stage state (2026-11-12)
+
+| Component | On stage | From |
+|---|---|---|
+| executions | `tiledeskrepo/tiledesk-executions:0.1.0-rc1`, Application `tiledesk-executions` Synced/Healthy, keyring loaded | repo `main` 215b2bd, tag 0.1.0-rc1 |
+| server + workers | `3.4.0-exec-1` | `master-COLLAUDO` a44a6755 (pushed), tag on it |
+| dashboard | `2.8.40-exec-1`, `EXECUTIONS_BASE_URL` empty (UI hidden) | `master-STAGE-NEW` 453e23c99 (pushed) |
+| chatbot | `3.0.7-exec-1`, no `EXECUTIONS_*` env (recording off) | `main_pre` 55bdae71 (pushed: our merge + team rc6) |
+
+Argo repo secret `repo-tiledesk-executions` (copy of the runtime's tiledeskDev credential, name set). The executions public healthz path is not routed (in-cluster probes only).
+
+Remaining: push the argo `stage` addon commit (rebased) → flag-off behaviour check on stage → switches one at a time on app `tiledesk` (`executionsAddon.server.amqp=true`, `executionsAddon.chatbot.enabled=true`, `executionsAddon.dashboard.baseUrl=/executions/api`) → stage e2e. Tell the team their pre branches now contain the (inert) traceability work.
+
+Known from the chatbot merge: pre moved block jumps to `/exec` (hooks added there in the merge); pre's new DirInvokeSubAgent/DirReturn have no subagent linking; a superseded voice turn ends as idle/completed, not stopped; pre's streaming HTTP in DirAiPrompt has no abort signal; flag-off differences vs pre: replace-bot bodies carry `reason`, kept `HttpUtils` require fixes a pre ReferenceError on the async `/block` error path. Test env gap: `API_URL` unset made ~50 pre conversation test files fail before-all on both runs. Feature-branch follow-up: `executions_subagent_test.js` load-order failure (RequestService reads API_ENDPOINT at load).
+
+## 8. Questions as first asked
 
 1. **executions repository**: create `Tiledesk/tiledesk-executions` on GitHub (and the Docker Hub image name, e.g. `tiledeskrepo/tiledesk-executions`) — who creates it and adds the CI secrets.
 2. **Durable vs throwaway stage branches**: merge our features into `main_pre` / `master-COLLAUDO` / `master-STAGE-NEW` themselves (durable; flags keep it inert for the team) or only into throwaway stage branches.
