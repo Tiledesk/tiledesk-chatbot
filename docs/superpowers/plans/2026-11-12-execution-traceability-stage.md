@@ -165,3 +165,16 @@ are not repaired by this; destroy them from the UI, or leave them.
 Not fixed (by design or not ours): "Move to another AI Agent" targeting the same agent never runs its target
 block; the widget test page opens conversations by itself. Chatbot full suite: 249 failures identical before and
 after (port 10002 collisions between files), 666 passing with the 19 new tests.
+
+### 12.1 exec-3 on stage (2026-11-12 ~18:00 UTC)
+
+Live: executions 0.1.0-rc2 (main 3fa457c, stage values bumped), server 3.4.0-exec-2 (master-COLLAUDO b4989db2, also
+both workers), argo stage worker env (fbc7c751), chatbot 3.0.7-exec-3 (main_pre merge), dashboard 2.8.40-exec-3
+(master-STAGE-NEW: cherry-picks 3da61be06, 12fc01c2d — a merge of feature/execution-graph conflicts, it is cut from
+the 2.8.40 prod line).
+Recheck with the all-blocks agent: Multi Condition exit "hello"; AI Condition "positive" / "negative" / "fallback";
+Final Menu clicks "button: <text>" with resolved_at; T Open Hours one action; Change department continues
+(handed_to_human); waiting chip → all triggers; the idle conversation 01a1d0ef-d122 closed by `_bot_unresponsive`
+at 18:29:02 and its execution completed / closed at the same second (worker publisher). DLQs unchanged (2 / 2).
+Not seen: the "running…" next-action row (needs a hanging action). Observation: terminal blocks (department,
+close, move to unassigned) still show a trailing `intent` action with no exit — the V3 block's implicit connector.
