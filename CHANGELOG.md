@@ -1,6 +1,9 @@
 # Tiledesk native chatbot
 
 
+# 3.0.7-rc8
+- **fixed**: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue, so the exits drawn in the Design Studio were never read: the rating was saved but the flow stopped after the action. **Get rating** is unchanged
+
 # 3.0.7-rc4
 - **added**: **AI Prompt** sends the OAuth2 access token to the MCP servers connected with OAuth. When the server entry in the `mcp` integration has `oauth.connection_id`, the token is asked to tiledesk-server (`GET /:id_project/mcp/oauth/connections/:id/token`, with the chatbot token) and sent as `Authorization: Bearer …`, replacing any `Authorization` from the custom headers. The tokens stay encrypted on the server, which also refreshes them; the chatbot keeps them in memory until 60 s before they expire and never logs them
 - **added**: when the token cannot be obtained the action fails as with a missing MCP integration: `flowError` is `MCP server <name> needs to be reconnected` when the connection must be authorized again, `MCP server <name> OAuth token unavailable` otherwise, then the false block if set. MCP servers without OAuth and native MCP servers work as before, with no extra request
