@@ -12,7 +12,8 @@ const als = new AsyncLocalStorage();
 function runAction({ executionId, stepSeq, actionIndex, actionId, requestId, onJump, isAborted }, fn) {
   const store = {
     kind: 'action', requestId, executionId, stepSeq, actionIndex, actionId, onJump, isAborted,
-    writes: new Map()
+    writes: new Map(),
+    exit: undefined // the exit the directive took (noteExit), read by the recorder's OutcomeMapper call
   };
   return als.run(store, fn);
 }
@@ -29,8 +30,21 @@ function note(requestId, key, op) {
   store.writes.set(key, op);
 }
 
+/**
+ * A conditional directive says which exit it took ('trueIntent', 'falseIntent', ... or 'jump' for a
+ * target that is no exit field), at the point where it picks its branch. The OutcomeMapper prefers it
+ * to matching the jump target, which cannot tell two exits apart when they lead to the same block.
+ * Flag off, or outside a traced action: a no-op (no store, nothing written). Last call wins.
+ */
+function noteExit(exit) {
+  if (!isEnabled()) return;
+  const store = als.getStore();
+  if (!store || store.kind !== 'action' || typeof exit !== 'string' || !exit) return;
+  store.exit = exit;
+}
+
 function current() {
   return als.getStore();
 }
 
-module.exports = { runAction, runScope, note, current };
+module.exports = { runAction, runScope, note, noteExit, current };

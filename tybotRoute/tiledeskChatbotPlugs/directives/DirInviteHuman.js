@@ -4,6 +4,7 @@ const { Filler } = require('../Filler');
 const httpUtils = require('../../utils/HttpUtils');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 const SEPARATORS = /[,;\n]/;
 const SINGLE_PLACEHOLDER = /^\{\{\s*([\w.]+)\s*\}\}$/;
@@ -67,7 +68,7 @@ class DirInviteHuman {
     if (this.requestId && this.requestId.startsWith(AUTOMATION_PREFIX)) {
       this.logger.error("[Invite Human] requires a conversation");
       await this.setParameter("flowError", "(Invite human) requires a conversation");
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
       return;
     }
 
@@ -80,7 +81,7 @@ class DirInviteHuman {
       this.logger.error("[Invite Human] Error resolving members: " + summary.message);
       winston.error("(DirInviteHuman) error resolving members: " + JSON.stringify(summary));
       await this.setParameter("flowError", "(Invite human) An error occurred: " + summary.message);
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
       return;
     }
 
@@ -96,7 +97,7 @@ class DirInviteHuman {
       this.logger.error("[Invite Human] Error: " + summary.message);
       winston.error("(DirInviteHuman) invite error: " + JSON.stringify(summary));
       await this.setParameter("flowError", "(Invite human) An error occurred: " + summary.message);
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
       return;
     }
 
@@ -106,14 +107,16 @@ class DirInviteHuman {
 
     if (invited.length > 0) {
       this.logger.native("[Invite Human] Invited: " + invited.map((i) => i.fullname || i.id_user).join(', '));
-      this.jump(trueIntent, action.trueIntentAttributes, callback);
+      this.jump(trueIntent, action.trueIntentAttributes, callback, 'trueIntent');
     } else {
       this.logger.native("[Invite Human] No human available");
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
     }
   }
 
-  jump(intent, attributes, callback) {
+  jump(intent, attributes, callback, exit) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(exit);
     if (!intent) {
       callback();
       return;

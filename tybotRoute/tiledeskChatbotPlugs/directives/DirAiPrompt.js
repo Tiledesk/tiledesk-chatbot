@@ -17,6 +17,7 @@ const path = require("path");
 const mime = require("mime-types");
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { LlmStream } = require("../../utils/LlmStream");
+const WriteTap = require('../../executions/WriteTap');
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
@@ -652,6 +653,8 @@ class DirAiPrompt {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

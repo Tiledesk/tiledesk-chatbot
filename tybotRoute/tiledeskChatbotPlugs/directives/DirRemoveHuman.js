@@ -4,6 +4,7 @@ const { DirInviteHuman } = require('./DirInviteHuman');
 const httpUtils = require('../../utils/HttpUtils');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirRemoveHuman {
 
@@ -53,7 +54,7 @@ class DirRemoveHuman {
     if (this.requestId && this.requestId.startsWith(DirInviteHuman.AUTOMATION_PREFIX)) {
       this.logger.error("[Remove Human] requires a conversation");
       await this.setParameter("flowError", "(Remove human) requires a conversation");
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
       return;
     }
 
@@ -65,7 +66,7 @@ class DirRemoveHuman {
       this.logger.error("[Remove Human] Error: " + summary.message);
       winston.error("(DirRemoveHuman) remove error: " + JSON.stringify(summary));
       await this.setParameter("flowError", "(Remove human) An error occurred: " + summary.message);
-      this.jump(falseIntent, action.falseIntentAttributes, callback);
+      this.jump(falseIntent, action.falseIntentAttributes, callback, 'falseIntent');
       return;
     }
 
@@ -73,10 +74,12 @@ class DirRemoveHuman {
     await this.setParameter("removed_humans", removed);
     await this.setParameter("removed_humans_count", removed.length);
     this.logger.native("[Remove Human] Removed: " + (removed.length > 0 ? removed.map((r) => r.fullname || r.id_user).join(', ') : 'nobody'));
-    this.jump(trueIntent, action.trueIntentAttributes, callback);
+    this.jump(trueIntent, action.trueIntentAttributes, callback, 'trueIntent');
   }
 
-  jump(intent, attributes, callback) {
+  jump(intent, attributes, callback, exit) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(exit);
     if (!intent) {
       callback();
       return;

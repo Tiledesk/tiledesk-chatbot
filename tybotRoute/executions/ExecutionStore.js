@@ -63,6 +63,8 @@ class ExecutionStore {
    * withState: the reused execution's exec:{id}:state is read together with its status (one round
    * trip) and returned as `state`; a created execution has none (null). Without it `state` is undefined.
    * noCreate: null instead of creating an execution (nothing written).
+   * hintedExecutionId: the execution a continuation belongs to. Live: reused. Not live: the live one on
+   * the request key, else null (a continuation never creates an execution).
    */
   async resolve({ requestId, agentId, hintedExecutionId, meta, withState, noCreate }) {
     try {
@@ -84,6 +86,12 @@ class ExecutionStore {
       }
       // noCreate (a resume message): only an existing, non-terminal execution resolves
       if (noCreate) return null;
+      // a hinted id is only on tybot's own continuations (a block jump posted from a traced action,
+      // a resume): the chain of that execution goes on. It ended (the conversation was closed while a
+      // wait ran, say) or is gone, and no live execution holds the request: the continuation records
+      // nothing rather than start a phantom execution (no start block, no lineage, waiting forever).
+      // A user message carries no hint and still starts a new one.
+      if (hintedExecutionId) return null;
 
       const id = uuidv7();
       let won;

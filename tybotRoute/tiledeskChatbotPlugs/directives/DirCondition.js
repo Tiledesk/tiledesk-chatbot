@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskExpression } = require('../../TiledeskExpression');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirCondition {
 
@@ -109,6 +110,8 @@ class DirCondition {
       result = new TiledeskExpression().evaluateStaticExpression(expression);
     }
     winston.debug("(DirCondition) executed condition: " + JSON.stringify(scriptCondition) + " result: " + JSON.stringify(result));
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {

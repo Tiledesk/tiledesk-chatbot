@@ -7,6 +7,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const WriteTap = require('../../executions/WriteTap');
 
 class DirAskGPT {
 
@@ -193,6 +194,8 @@ class DirAskGPT {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

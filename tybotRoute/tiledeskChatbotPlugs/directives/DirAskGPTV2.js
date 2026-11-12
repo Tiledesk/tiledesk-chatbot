@@ -22,6 +22,7 @@ const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
 const llmService = require("../../services/LLMService");
 const { LlmStream } = require("../../utils/LlmStream");
+const WriteTap = require('../../executions/WriteTap');
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -614,6 +615,8 @@ class DirAskGPTV2 {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

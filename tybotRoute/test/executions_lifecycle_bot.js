@@ -101,7 +101,45 @@ const bot = {
 			setAttribute("act_c2", "c2", "2"),
 			setAttribute("act_c3", "c3", "3")
 		]
+	},
+	sameTarget("same_ok", "http://localhost:10003/ok"),
+	sameTarget("same_fail", "http://localhost:10003/fail"),
+	{
+		// a wait, then a jump: the conversation can close while the wait runs
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "wait_hop",
+		"intent_id": "wait_hop",
+		"question": "",
+		"actions": [
+			{ "_tdActionType": "wait", "_tdActionId": "act_wait_hop", "_tdActionTitle": "wait", "millis": 1000 },
+			{ "_tdActionType": "intent", "_tdActionId": "act_goto_after", "_tdActionTitle": "go to after", "intentName": "#after" }
+		]
 	}]
+}
+
+// a web request whose true and false exits both lead to the after block
+function sameTarget(name, url) {
+	return {
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": name,
+		"intent_id": name,
+		"question": "",
+		"actions": [{
+			"_tdActionType": "webrequestv2",
+			"_tdActionId": "act_" + name,
+			"_tdActionTitle": "GET " + name,
+			"url": url,
+			"headersString": { "Content-Type": "*/*" },
+			"method": "GET",
+			"assignStatusTo": "status_code",
+			"trueIntent": "#after",
+			"falseIntent": "#after"
+		}]
+	};
 }
 
 // normalize the bot structure for the static intent search

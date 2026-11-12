@@ -57,9 +57,50 @@ Rollback at any step: flags back off (`EXECUTIONS_ENABLED=false`, unset `EXECUTI
 - D3 tags: suffix on the team line — server `3.4.0-exec-1`, chatbot `3.0.7-exec-1`, dashboard `2.8.40-exec-1`, executions `0.1.0-rc1` (next candidates `-exec-2`, `-rc2`).
 - D4 recording: chatbot deployed with `EXECUTIONS_ENABLED=false` first, checked, then on for all stage together with the dashboard.
 
-## 7. Questions as first asked
+- D5 (2026-11-12) executions is a **separate Helm release** (paid add-on model): chart `tiledesk-executions/deploy/helm/tiledesk-executions` (values-stage.yml, values-example.yaml for on-prem), Argo Application `deploy/argocd/executions-stage.yaml` (`tiledesk-executions`, project tiledesk-stage, namespace tiledesk, targetRevision HEAD, automated sync), modelled on the agent runtime. Secrets are parameters on that Application; image tag bumped by hand in values-stage.yml. The main chart only carries an inert `executionsAddon:` block (tiledesk-argo local `stage` commit 6bdbadf9, not pushed). Contract: Secret `tiledesk-executions` keys `EXECUTIONS_SEAL_PUBLIC_KEY`, `EXECUTIONS_SEAL_KID`, `EXECUTIONS_STATE_HASH_KEY`, `EXECUTIONS_SERVICE_TOKEN` (+ `VAULT_KEYS` for the api); internal URL `http://tiledesk-executions-internal:3100`.
+- D6 no version commits on the shared pre branches (team numbering kept: dashboard `2.7.27x-stage`, server tags on merges); only our tags carry `-exec-N`.
+
+## 7. Stage state (2026-11-12)
+
+| Component | On stage | From |
+|---|---|---|
+| executions | `tiledeskrepo/tiledesk-executions:0.1.0-rc1`, Application `tiledesk-executions` Synced/Healthy, keyring loaded | repo `main` 215b2bd, tag 0.1.0-rc1 |
+| server + workers | `3.4.0-exec-1` | `master-COLLAUDO` a44a6755 (pushed), tag on it |
+| dashboard | `2.8.40-exec-1`, `EXECUTIONS_BASE_URL` empty (UI hidden) | `master-STAGE-NEW` 453e23c99 (pushed) |
+| chatbot | `3.0.7-exec-1`, no `EXECUTIONS_*` env (recording off) | `main_pre` 55bdae71 (pushed: our merge + team rc6) |
+
+Argo repo secret `repo-tiledesk-executions` (copy of the runtime's tiledeskDev credential, name set). The executions public healthz path is not routed (in-cluster probes only).
+
+Remaining: push the argo `stage` addon commit (rebased) → flag-off behaviour check on stage → switches one at a time on app `tiledesk` (`executionsAddon.server.amqp=true`, `executionsAddon.chatbot.enabled=true`, `executionsAddon.dashboard.baseUrl=/executions/api/v1/`) → stage e2e. Tell the team their pre branches now contain the (inert) traceability work.
+
+Known from the chatbot merge: pre moved block jumps to `/exec` (hooks added there in the merge); pre's new DirInvokeSubAgent/DirReturn have no subagent linking; a superseded voice turn ends as idle/completed, not stopped; pre's streaming HTTP in DirAiPrompt has no abort signal; flag-off differences vs pre: replace-bot bodies carry `reason`, kept `HttpUtils` require fixes a pre ReferenceError on the async `/block` error path. Test env gap: `API_URL` unset made ~50 pre conversation test files fail before-all on both runs. Feature-branch follow-up: `executions_subagent_test.js` load-order failure (RequestService reads API_ENDPOINT at load).
+
+## 8. Questions as first asked
 
 1. **executions repository**: create `Tiledesk/tiledesk-executions` on GitHub (and the Docker Hub image name, e.g. `tiledeskrepo/tiledesk-executions`) — who creates it and adds the CI secrets.
 2. **Durable vs throwaway stage branches**: merge our features into `main_pre` / `master-COLLAUDO` / `master-STAGE-NEW` themselves (durable; flags keep it inert for the team) or only into throwaway stage branches.
 3. **Tags**: the team owns server `3.4.0-rcN` and chatbot `3.0.7-rcN`; our candidates need their own names.
 4. **Flags on stage**: turn recording on for all of stage after the flag-off check, or keep it off until the dashboard is in.
+
+## 9. Switches on stage (2026-11-12, all via commits on argo `stage` helm/values.yaml; pods rolled out on their own since the env sits in the pod spec)
+
+- c7bb16e5 server `executionsAddon.server.amqp: true` → refire route 401 (mounted), `server.executions.audit` and `executions.ingest` each 1 consumer.
+- 1c979f77 chatbot `executionsAddon.chatbot.enabled: "true"` → `(ControlListener) subscribed to exec:control`; Design Studio run of "Test email" recorded (01a1cf91…, 4 steps, test run).
+- b2d45c8c + d38ec61d dashboard `executionsAddon.dashboard.baseUrl: "/executions/api/v1/"` (the first value lacked `/v1/` → "Could not load"); Monitor tabs, list and the run's detail (timeline, flow state, audit tabs, controls) render.
+- Open: 2 server conversation events without `request_id` dead-lettered (`executions.ingest.dlq`) at 11:40 UTC, after the server switch, before recording; to trace. The executions list hides test runs (Design Studio) by design; real runs need a published agent via widget/webhook.
+
+## 10. Stage e2e (2026-11-12, Chrome as Nico/owner, project Lab Nico)
+
+| Check | Result |
+|---|---|
+| Real run: "test webhook" fired by its webhook (`{"note","customer":{"name","api_key"},"items"}`) | 01a1cfa5…aeca28d8 completed, automation, 2 blocks, 96 ms; in the list (All triggers), detail correct |
+| Graph tab | renders project + 55 agents (labels unreadable at that size: UX note); completed runs not drawn by design |
+| View data, whole execution, reason given | strip + 15-min countdown; trigger input and attribute values shown; nested `customer.api_key` = `[secret]` in attribute and payload |
+| Close | strip gone, no values left in the page, nothing in session/local storage |
+| Start new | prefill without server keys, masked `customer.api_key` required (invalid JSON refused); new run 2ef0053e completed, `retry_of` / `retried_as` correct |
+| Soft stop (Design Studio run, waiting) | stopped · soft stop; Resume/Start new disabled for a test run |
+| Audit tab | "Nico soft-stopped execution fd35b8 of Test email" · accepted |
+| Activities | soft-stopped, started a new run, viewed the data … · whole execution (wording as server) |
+| Logs since the switches | chatbot, executions api/ingest/jobs: 0 errors; server: 7 unrelated (tiledesk-queues webhook timeouts, a data-table lookup) |
+
+Not covered on stage: resume (needs a stopped non-test run; no Lab Nico agent has a wait/long action), retention card (would delete shared stage data), denied access for a supervisor/custom role. Open: 2 dead-lettered server events without `request_id` (no new ones since).

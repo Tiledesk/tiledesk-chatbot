@@ -6,6 +6,7 @@ const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirIfOnlineAgentsV2 {
 
@@ -96,6 +97,7 @@ class DirIfOnlineAgentsV2 {
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
             if (falseIntent) { // no agents available
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
@@ -117,6 +119,7 @@ class DirIfOnlineAgentsV2 {
         if (agents && agents.length > 0) {
           if (trueIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+            WriteTap.noteExit('trueIntent'); // execution tracing: the branch taken (no-op when off)
             winston.debug("(DirIfOnlineAgentsV2) agents (openHours) => trueIntent");
             this.intentDir.execute(intentDirective, () => {
               callback(stopOnConditionMet);
@@ -131,6 +134,7 @@ class DirIfOnlineAgentsV2 {
         }
         else if (falseIntent) { // no agents available
           let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+          WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
           winston.debug("(DirIfOnlineAgentsV2) !agents (openHours) => falseIntent", intentDirective);
           this.intentDir.execute(intentDirective, () => {
             callback(stopOnConditionMet);
@@ -144,6 +148,7 @@ class DirIfOnlineAgentsV2 {
       } else {
         if (falseIntent) {
           let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+          WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
           winston.debug("(DirIfOnlineAgentsV2) !agents (!openHours) => falseIntent");
           this.intentDir.execute(intentDirective, () => {
             callback();

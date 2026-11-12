@@ -250,6 +250,14 @@ and a block jump both end in `theend()`. So the boundaries come from explicit si
 `status` in `exec:{id}` (ingest gets the same limited Redis ACL user as the api). The next
 `/ext` then creates a new execution instead of continuing a finished one.
 
+That holds for a message from outside (a user message, a server event). tybot's own continuations
+(a block jump posted from a traced action carries `attributes.execution_id`, a resume too) never
+create one: when the hinted execution has ended or is gone and no live execution holds the request
+key, the continuation runs unrecorded. Example: the conversation is closed while a Wait runs; the
+execution ends `completed` (`closed`), the wait ends, the flow jumps on as it always did, and nothing
+is recorded for it (no phantom execution without start block or lineage left `waiting`). A user
+message on the reopened conversation starts a new execution as usual.
+
 ### 6.3 Automation runs (no conversation)
 
 In scope (unattended). Differences from conversation executions:
@@ -398,11 +406,30 @@ A table keyed by action type. Examples (full table in the tybot plan):
 |---|---|---|
 | Web request v2 | `trueIntent` taken | `falseIntent` taken |
 | Ask KB / AI prompt | answer found | `falseIntent` / no answer |
-| JSON condition / condition | the matching branch | the fallback branch, only if it is marked as else-on-error in the action config, otherwise success |
+| Condition, JSON condition (v1, v2), if online agents (v1, v2), if open hours | either branch (`true` or `false`) | — (`errorIntent`, where present, stays a failure) |
 | Capture user reply | reply received | `timeout` exit |
 | Others (reply, set attribute…) | completed | — |
 
 A thrown error is always `error`.
+
+**Which exit was taken.** The directive says it: at the point where it picks its branch
+(`#executeCondition(result, …)`, or its inline `if`) it calls `WriteTap.noteExit('trueIntent' |
+'falseIntent' | 'errorIntent' | 'fallbackIntent' | 'noMatchIntent' | 'noInputIntent' | 'goToIntent' |
+'jump')` on the running action's store. The mapper uses that signal first: a failure field
+(`falseIntent`, `noMatchIntent`, `noInputIntent`, `errorIntent`) gives `failure_condition`, anything
+else `success`, and `exit_taken` is the field without `Intent`. Exception: for a pure condition
+(directive `condition`, `jsoncondition`, `jsoncondition2`, `ifonlineagents`, `ifonlineagentsv2`,
+`ifopenhours`; the mapper's `CONDITION_TYPES`, keyed on the directive name the recorder passes, else
+`_tdActionType`) the false branch is a normal outcome: `success` / `false`, with or without a signal.
+Where false means something went wrong (web request, AI Prompt, Ask KB, gpt task, make, brevo,
+customerio, hubspot, qapla, whatsapp, data tables, docparse, form, assistant, invite/remove human) it
+stays `failure_condition`. AI condition has no false exit: its condition branches are `success`
+(`jump`), `errorIntent` a failure. Iteration's `fallbackIntent` is "the list is done", `success`. The signal stands with no jump too (a
+false result with no block connected is `failure_condition` / `false`, or `success` / `false` for a
+pure condition). Only without a signal is the
+jump target matched against the exit fields; if it matches both a failure and a success exit (both
+exits on the same block) the branch is unknown and the record is `success` with `exit_taken:
+'ambiguous'`, never `failure_condition`. Flag off, `noteExit` is a no-op (no action store exists).
 
 #### 7.1.8 Configuration
 
