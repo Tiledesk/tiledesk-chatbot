@@ -71,7 +71,7 @@ Rollback at any step: flags back off (`EXECUTIONS_ENABLED=false`, unset `EXECUTI
 
 Argo repo secret `repo-tiledesk-executions` (copy of the runtime's tiledeskDev credential, name set). The executions public healthz path is not routed (in-cluster probes only).
 
-Remaining: push the argo `stage` addon commit (rebased) → flag-off behaviour check on stage → switches one at a time on app `tiledesk` (`executionsAddon.server.amqp=true`, `executionsAddon.chatbot.enabled=true`, `executionsAddon.dashboard.baseUrl=/executions/api`) → stage e2e. Tell the team their pre branches now contain the (inert) traceability work.
+Remaining: push the argo `stage` addon commit (rebased) → flag-off behaviour check on stage → switches one at a time on app `tiledesk` (`executionsAddon.server.amqp=true`, `executionsAddon.chatbot.enabled=true`, `executionsAddon.dashboard.baseUrl=/executions/api/v1/`) → stage e2e. Tell the team their pre branches now contain the (inert) traceability work.
 
 Known from the chatbot merge: pre moved block jumps to `/exec` (hooks added there in the merge); pre's new DirInvokeSubAgent/DirReturn have no subagent linking; a superseded voice turn ends as idle/completed, not stopped; pre's streaming HTTP in DirAiPrompt has no abort signal; flag-off differences vs pre: replace-bot bodies carry `reason`, kept `HttpUtils` require fixes a pre ReferenceError on the async `/block` error path. Test env gap: `API_URL` unset made ~50 pre conversation test files fail before-all on both runs. Feature-branch follow-up: `executions_subagent_test.js` load-order failure (RequestService reads API_ENDPOINT at load).
 
@@ -81,3 +81,10 @@ Known from the chatbot merge: pre moved block jumps to `/exec` (hooks added ther
 2. **Durable vs throwaway stage branches**: merge our features into `main_pre` / `master-COLLAUDO` / `master-STAGE-NEW` themselves (durable; flags keep it inert for the team) or only into throwaway stage branches.
 3. **Tags**: the team owns server `3.4.0-rcN` and chatbot `3.0.7-rcN`; our candidates need their own names.
 4. **Flags on stage**: turn recording on for all of stage after the flag-off check, or keep it off until the dashboard is in.
+
+## 9. Switches on stage (2026-11-12, all via commits on argo `stage` helm/values.yaml; pods rolled out on their own since the env sits in the pod spec)
+
+- c7bb16e5 server `executionsAddon.server.amqp: true` → refire route 401 (mounted), `server.executions.audit` and `executions.ingest` each 1 consumer.
+- 1c979f77 chatbot `executionsAddon.chatbot.enabled: "true"` → `(ControlListener) subscribed to exec:control`; Design Studio run of "Test email" recorded (01a1cf91…, 4 steps, test run).
+- b2d45c8c + d38ec61d dashboard `executionsAddon.dashboard.baseUrl: "/executions/api/v1/"` (the first value lacked `/v1/` → "Could not load"); Monitor tabs, list and the run's detail (timeline, flow state, audit tabs, controls) render.
+- Open: 2 server conversation events without `request_id` dead-lettered (`executions.ingest.dlq`) at 11:40 UTC, after the server switch, before recording; to trace. The executions list hides test runs (Design Studio) by design; real runs need a published agent via widget/webhook.
