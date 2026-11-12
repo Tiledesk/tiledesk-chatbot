@@ -250,6 +250,14 @@ and a block jump both end in `theend()`. So the boundaries come from explicit si
 `status` in `exec:{id}` (ingest gets the same limited Redis ACL user as the api). The next
 `/ext` then creates a new execution instead of continuing a finished one.
 
+That holds for a message from outside (a user message, a server event). tybot's own continuations
+(a block jump posted from a traced action carries `attributes.execution_id`, a resume too) never
+create one: when the hinted execution has ended or is gone and no live execution holds the request
+key, the continuation runs unrecorded. Example: the conversation is closed while a Wait runs; the
+execution ends `completed` (`closed`), the wait ends, the flow jumps on as it always did, and nothing
+is recorded for it (no phantom execution without start block or lineage left `waiting`). A user
+message on the reopened conversation starts a new execution as usual.
+
 ### 6.3 Automation runs (no conversation)
 
 In scope (unattended). Differences from conversation executions:

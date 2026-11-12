@@ -172,15 +172,45 @@ describe('ExecutionStore', function () {
     assert.strictEqual(await store.popFrame(a.executionId), null);
   });
 
-  it('hinted terminal id is ignored and resolution goes through the request key', async function () {
+  it('hinted terminal id with a live execution on the request key: that one is reused', async function () {
     const r = rid('ht');
     const a = await make(r, 'A');
     await store.setStatusHint(a.executionId, 'completed');
+    const b = await make(r, 'A'); // a new user message started the next execution
+    assert.strictEqual(b.created, true);
     const x = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: a.executionId, meta });
-    execs.add(x.executionId);
+    assert.strictEqual(x.created, false);
+    assert.strictEqual(x.executionId, b.executionId);
+  });
+
+  it('a continuation (hinted id) of an execution that ended, no live one on the request: nothing is created (B2)', async function () {
+    for (const [name, prep] of [
+      // ingest projected the close: status terminal, exec:req deleted
+      ['closed', async (r, id) => { await store.setStatusHint(id, 'completed'); await client.del(`exec:req:${r}:A`); }],
+      // terminal status, the request key not yet deleted
+      ['terminal', async (r, id) => { await store.setStatusHint(id, 'failed'); }],
+      // the hinted execution is gone (destroyed, expired)
+      ['gone', async (r, id) => { await client.del([`exec:${id}`, `exec:req:${r}:A`]); }]
+    ]) {
+      const r = rid('cont-' + name);
+      const a = await make(r, 'A');
+      await prep(r, a.executionId);
+      const before = await client.get(`exec:req:${r}:A`);
+      const x = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: a.executionId, meta });
+      assert.strictEqual(x, null, name + ': no execution resolved');
+      assert.strictEqual(await client.get(`exec:req:${r}:A`), before, name + ': exec:req untouched');
+    }
+  });
+
+  it('a user message (no hint) after the close still starts a new execution', async function () {
+    const r = rid('reopen');
+    const a = await make(r, 'A');
+    await store.setStatusHint(a.executionId, 'completed');
+    await client.del(`exec:req:${r}:A`);
+    const x = await make(r, 'A');
     assert.strictEqual(x.created, true);
     assert.notStrictEqual(x.executionId, a.executionId);
-    assert.strictEqual(x.previousExecutionId, a.executionId);
+    assert.strictEqual(await client.get(`exec:req:${r}:A`), x.executionId);
   });
 
   it('terminal CAS is single under concurrency', async function () {

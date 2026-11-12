@@ -344,6 +344,31 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     });
   }
 
+  it('a jump after the conversation closed during a wait records no new execution; a new user message starts one (B2)', async function () {
+    const rid = newRequestId();
+    send('/wait_hop', rid);
+    await waitFor(() => ofType(rid, 'step.started').some((s) => s.data.block_id === 'wait_hop'), 'the wait block to start');
+    const id = ofType(rid, 'execution.started')[0].execution_id;
+    // the server closes the conversation; ingest projects it: terminal status, exec:req deleted
+    await client.hSet(`exec:${id}`, 'status', 'completed');
+    await client.del(`exec:req:${rid}:${BOT_ID}`);
+    // the flow itself goes on as before: the wait ends, the jump runs the after block and replies
+    await waitFor(() => replies.some((r) => r.requestId === rid && r.message && r.message.text === 'done'), 'the after block reply', 8000);
+    await settle(rid);
+    assert.deepStrictEqual([...new Set(events(rid).map((e) => e.execution_id))], [id], 'every event is the closed execution\'s');
+    assert.strictEqual(ofType(rid, 'execution.started').length, 1, 'no phantom execution.started');
+    assert.ok(!ofType(rid, 'step.started').some((s) => s.data.block_id === 'after'), 'the continuation is not recorded');
+    assert.strictEqual(await client.get(`exec:req:${rid}:${BOT_ID}`), null, 'no exec:req written');
+
+    // a real new user message on the reopened conversation starts a new execution
+    send('/start', rid);
+    await waitFor(() => ofType(rid, 'execution.started').length === 2, 'the new execution');
+    await settle(rid);
+    const next = ofType(rid, 'execution.started')[1];
+    assert.notStrictEqual(next.execution_id, id);
+    assert.strictEqual(await client.get(`exec:req:${rid}:${BOT_ID}`), next.execution_id);
+  });
+
   it('/start{"a":1} records a as jump_params in outside_changes', async function () {
     const rid = newRequestId();
     send('/start{"a":1}', rid);

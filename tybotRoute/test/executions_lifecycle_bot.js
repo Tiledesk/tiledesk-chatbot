@@ -103,8 +103,20 @@ const bot = {
 		]
 	},
 	sameTarget("same_ok", "http://localhost:10003/ok"),
-	sameTarget("same_fail", "http://localhost:10003/fail")
-]
+	sameTarget("same_fail", "http://localhost:10003/fail"),
+	{
+		// a wait, then a jump: the conversation can close while the wait runs
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "wait_hop",
+		"intent_id": "wait_hop",
+		"question": "",
+		"actions": [
+			{ "_tdActionType": "wait", "_tdActionId": "act_wait_hop", "_tdActionTitle": "wait", "millis": 1000 },
+			{ "_tdActionType": "intent", "_tdActionId": "act_goto_after", "_tdActionTitle": "go to after", "intentName": "#after" }
+		]
+	}]
 }
 
 // a web request whose true and false exits both lead to the after block
