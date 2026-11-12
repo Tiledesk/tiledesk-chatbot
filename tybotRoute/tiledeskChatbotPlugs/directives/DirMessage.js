@@ -18,7 +18,10 @@ class DirMessage {
     this.token = context.token;
     this.supportRequest = this.context.supportRequest
 
-    this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
+    // A run started by a direct /block call has no token: TiledeskClient would throw here, outside any callback.
+    if (this.token) {
+      this.tdClient = new TiledeskClient({ projectId: this.context.projectId, token: this.context.token, APIURL: this.API_ENDPOINT, APIKEY: "___", log: this.log });
+    }
   }
 
   execute(directive, callback) {
@@ -95,6 +98,11 @@ class DirMessage {
       return;
     }
     delete action.isInfo
+    if (!this.tdClient) {
+      winston.warn("(DirMessage) No token for request " + this.requestId + ": message not sent");
+      callback();
+      return;
+    }
     // if (this.projectId === "656054000410fa00132e5dcc") {
     //   if (!message.text.startsWith('/')) {
     //     callback();
@@ -116,7 +124,7 @@ class DirMessage {
       message,
       (err) => {
         if (err) {
-          winston.err("(DirMessage) Error sending reply: ", err);
+          winston.error("(DirMessage) Error sending reply: ", err);
         }
         winston.debug("(DirMessage) Reply message sent: ", message);
         callback();

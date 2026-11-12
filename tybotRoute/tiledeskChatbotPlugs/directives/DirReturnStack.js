@@ -5,6 +5,7 @@ const winston = require('../../utils/winston.js');
 const requestService = require("../../services/RequestService.js");
 const tilebotService = require("../../services/TilebotService.js");
 const { v4: uuidv4 } = require('uuid');
+const ExecutionRecorder = require("../../executions/ExecutionRecorder.js");
 
 class DirReturnStack {
 
@@ -55,7 +56,8 @@ class DirReturnStack {
                 parentParticipantId: parentParticipantId,
                 nextBlock: data.nextBlock && data.nextBlock.intentName
             }));
-            await requestService.replaceBot(this.context.projectId, this.requestId, { id: parentParticipantId }, this.context.token);
+            await requestService.replaceBot(this.context.projectId, this.requestId, { id: parentParticipantId, reason: "subagent_return" }, this.context.token);
+            if (this.context.chatbot?.execution) await ExecutionRecorder.onSubagentReturn(this.context.chatbot.execution);
         } catch (error) {
             winston.error("(DirReturnStack) error: ", error);
             this.logger.error("(ReturnStack) Invoke subagent error: ", error);

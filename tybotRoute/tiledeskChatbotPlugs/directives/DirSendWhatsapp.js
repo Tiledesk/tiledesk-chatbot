@@ -89,6 +89,7 @@ class DirSendWhatsapp {
     winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsapp_api_url);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: whatsapp_api_url + "/tiledesk/broadcast",
       headers: {
         'Content-Type': 'application/json'

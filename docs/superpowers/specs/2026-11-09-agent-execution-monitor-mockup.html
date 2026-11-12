@@ -1,0 +1,804 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Executions Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tiledesk-dashboard shell (top bar + icon rail) with the real entry points: agents list cards → executions list → detail (timeline, flow state, audit), and the Activities page. Poppins, blue #1b6ef3, hairline #dfe3ed. */
+:root{
+  --bg:#f4f6fa; --surface:#ffffff; --surface-2:#f8f9fc; --fg:#1f2a3d; --muted:#5d6b82; --faint:#8b97aa;
+  --line:#dfe3ed; --line-strong:#c9d0de; --accent:#1b6ef3; --accent-weak:#e8f0fe; --accent-fg:#ffffff;
+  --run:#1b6ef3; --run-bg:#e8f0fe; --wait:#5d6b82; --wait-bg:#eef1f6; --warn:#a15c00; --warn-bg:#fff3e0;
+  --bad:#c62f2f; --bad-bg:#fdecec; --ok:#1f7a45; --ok-bg:#e6f4ec; --dead:#3b4250; --dead-bg:#e3e6eb;
+  --scrim:rgba(20,28,45,.42); --shadow:0 12px 40px rgba(20,28,45,.18);
+  --font:"Poppins",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161f; --surface:#18202c; --surface-2:#1d2633; --fg:#e4e9f2; --muted:#a3aec0; --faint:#7d8899;
+  --line:#2a3443; --line-strong:#3a4658; --accent:#5b97ff; --accent-weak:#1c2c48; --accent-fg:#0b1220;
+  --run:#7aaeff; --run-bg:#1c2c48; --wait:#a3aec0; --wait-bg:#252f3d; --warn:#f2b45c; --warn-bg:#3a2c16;
+  --bad:#ff8a80; --bad-bg:#3d1f22; --ok:#6fd39a; --ok-bg:#17352a; --dead:#c3cad6; --dead-bg:#2b323d;
+  --scrim:rgba(0,0,0,.6); --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161f; --surface:#18202c; --surface-2:#1d2633; --fg:#e4e9f2; --muted:#a3aec0; --faint:#7d8899;
+  --line:#2a3443; --line-strong:#3a4658; --accent:#5b97ff; --accent-weak:#1c2c48; --accent-fg:#0b1220;
+  --run:#7aaeff; --run-bg:#1c2c48; --wait:#a3aec0; --wait-bg:#252f3d; --warn:#f2b45c; --warn-bg:#3a2c16;
+  --bad:#ff8a80; --bad-bg:#3d1f22; --ok:#6fd39a; --ok-bg:#17352a; --dead:#c3cad6; --dead-bg:#2b323d;
+  --scrim:rgba(0,0,0,.6); --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--line);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:500}
+.brand .dot{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:var(--accent-fg);font-size:12px;font-weight:600}
+.crumbs{color:var(--muted)}
+.spacer{flex:1}
+.mock{font-size:12px;color:var(--warn);background:var(--warn-bg);border-radius:20px;padding:3px 10px}
+.role{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 12px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+main{max-width:1180px;margin:0 auto;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+h1{font-size:22px;font-weight:500;margin:0;text-wrap:balance}
+h2{font-size:15px;font-weight:500;margin:0}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.sub{color:var(--muted);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px}
+.filters input[type=search],.filters select{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;min-width:0}
+.filters input[type=search]{flex:1 1 180px}
+.check{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.counters{display:flex;gap:8px;flex-wrap:wrap}
+.counter{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.counter b{font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
+.counter[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-weak);color:var(--fg)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.03em;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:2px 10px 2px 8px;font-size:12px;font-weight:500}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-running{color:var(--run);background:var(--run-bg)} .s-waiting{color:var(--wait);background:var(--wait-bg)}
+.s-stopping,.s-stopped{color:var(--warn);background:var(--warn-bg)} .s-failed{color:var(--bad);background:var(--bad-bg)}
+.s-completed{color:var(--ok);background:var(--ok-bg)} .s-destroyed{color:var(--dead);background:var(--dead-bg);text-decoration:line-through}
+@media (prefers-reduced-motion:no-preference){.s-running::before,.s-stopping::before{animation:pulse 1.2s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.25}}
+.trig{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.trig svg{width:14px;height:14px}
+.fail{color:var(--bad);font-weight:500}
+.warnicon{color:var(--warn);margin-left:4px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500;font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;color:var(--fg)}
+.btn svg{width:16px;height:16px}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.counter:focus-visible,.seg button:focus-visible,a:focus-visible,tbody tr:focus-visible,.step-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.danger.solid{background:var(--bad);color:var(--surface)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.link{color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:0;padding:0;font:inherit}
+.link:hover{text-decoration:underline}
+.back{font-size:13px}
+.ex-head{padding:16px;display:grid;gap:10px}
+.ex-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.meta{display:flex;gap:6px 16px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.controls .spacer{flex:1}
+.banner{border-radius:8px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.bad{background:var(--bad-bg);color:var(--bad)}
+.banner.info{background:var(--accent-weak);color:var(--fg)}
+.lineage{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.tl-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.step-row{display:grid;grid-template-columns:94px 22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.step-row:hover{background:var(--surface-2)}
+.step-row[aria-expanded="true"]{background:var(--surface-2)}
+.step-ic{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}
+.o-success{background:var(--ok-bg);color:var(--ok)} .o-failure_condition{background:var(--warn-bg);color:var(--warn)}
+.o-error{background:var(--bad-bg);color:var(--bad)} .o-interrupted{background:var(--dead-bg);color:var(--dead)}
+.o-running{background:var(--run-bg);color:var(--run)}
+.step-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step-sub{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{padding:4px 16px 12px 142px;border-bottom:1px solid var(--line);background:var(--surface-2);display:grid;gap:6px}
+@media (max-width:640px){.step-row{grid-template-columns:22px minmax(0,1fr) auto}.step-row .when{display:none}.actions{padding-left:16px}}
+.act{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.act .k{color:var(--muted)}
+.side{display:grid;gap:16px}
+.side .card{padding:14px 16px;display:grid;gap:10px}
+dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:0;font-size:13px}
+dt{color:var(--muted)} dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.audit-mini{display:grid;gap:8px;font-size:12.5px}
+.audit-mini div{display:grid;gap:2px}
+.sealed{border:1px dashed var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:10px;background:var(--accent-weak)}
+.sealed-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+pre.json{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:12px;overflow-x:auto;white-space:pre}
+.secret{color:var(--faint)}
+.scrim{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:16px;z-index:20}
+.dialog{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);width:min(480px,100%);padding:20px;display:grid;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.dialog h2{font-size:17px}
+.dialog p{margin:0;color:var(--muted)}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-weak)}
+.opt small{grid-column:2;color:var(--muted)}
+.field{display:grid;gap:6px}
+.field input,.field textarea{border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.field .err{color:var(--bad);font-size:12px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+.tip{position:relative}
+.note{font-size:12px;color:var(--muted)}
+@media (max-width:720px){
+  .tbl-wrap table thead{display:none}
+  .tbl-wrap table,.tbl-wrap tbody,.tbl-wrap tr,.tbl-wrap td{display:block;width:100%}
+  .tbl-wrap tr{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .tbl-wrap td{border:0;padding:2px 0;white-space:normal}
+  .tbl-wrap td[data-l]::before{content:attr(data-l) " · ";color:var(--faint);font-size:12px}
+}
+/* Dashboard shell: icon rail on the left (like tiledesk-dashboard's sidebar), page column on the right. */
+.shell{display:grid;grid-template-columns:72px minmax(0,1fr);min-height:calc(100vh - 53px)}
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0}
+.rail a{width:58px;display:grid;justify-items:center;gap:2px;padding:7px 0;border-radius:10px;color:var(--muted);text-decoration:none;font-size:10.5px}
+.rail a svg{width:20px;height:20px}
+.rail a:hover{background:var(--surface-2);color:var(--fg)}
+.rail a[aria-current="page"]{background:var(--accent-weak);color:var(--accent)}
+.rail a.off{opacity:.45;pointer-events:none}
+@media (max-width:640px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{flex-direction:row;justify-content:space-around;border-right:0;border-bottom:1px solid var(--line);padding:4px 8px;position:sticky;top:0;z-index:5}
+  .rail a{width:auto;flex:1}
+}
+.crumb{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.crumb a{color:var(--accent);text-decoration:none}
+.crumb a:hover{text-decoration:underline}
+.agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.agent{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 14px 10px;display:grid;gap:10px;align-content:start}
+.agent-top{display:flex;gap:10px;align-items:center;min-width:0}
+.avatar{width:38px;height:38px;border-radius:10px;background:var(--accent-weak);color:var(--accent);display:grid;place-items:center;flex:none}
+.avatar svg{width:20px;height:20px}
+.agent-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-type{font-size:12px;color:var(--muted)}
+.agent-acts{display:flex;gap:2px;border-top:1px solid var(--line);padding-top:8px;align-items:center}
+.ibtn{position:relative;width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.ibtn svg{width:19px;height:19px}
+.ibtn:hover{background:var(--surface-2);color:var(--fg)}
+.ibtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ibtn.new{color:var(--accent)}
+.badge{position:absolute;top:1px;right:0;min-width:16px;height:16px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px;border:2px solid var(--surface)}
+.badge.live{background:var(--run);min-width:10px;width:10px;height:10px;padding:0;top:5px;right:5px}
+.newtag{font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-weak);border-radius:6px;padding:1px 6px;margin-left:auto}
+.menu{position:absolute;z-index:15;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px;min-width:190px;display:grid}
+.menu button{border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;gap:10px;align-items:center}
+.menu button svg{width:17px;height:17px;color:var(--muted)}
+.menu button:hover{background:var(--surface-2)}
+.menu button.hl{color:var(--accent)} .menu button.hl svg{color:var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 8px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:10px 12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.vars{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.vars th{font-size:11.5px;padding:7px 10px;background:var(--surface-2)}
+.vars td{padding:7px 10px;white-space:normal;vertical-align:top;cursor:default}
+.vars tbody tr{cursor:default}
+.vars tr.chg td{background:color-mix(in srgb,var(--accent-weak) 70%,transparent)}
+.vars tr.var-row{cursor:pointer}
+.vars td.k{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+.mask{color:var(--faint);font-family:var(--mono);font-size:12px}
+.val{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+.by{font-size:12px;color:var(--muted)}
+.tag{font-size:10.5px;border-radius:5px;padding:0 5px;background:var(--wait-bg);color:var(--wait);margin-left:6px;font-family:var(--font)}
+.state-head{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.outside{display:flex;gap:10px;align-items:center;padding:6px 16px 6px 142px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);background:repeating-linear-gradient(135deg,transparent 0 8px,var(--surface-2) 8px 16px)}
+@media (max-width:640px){.outside{padding-left:16px}}
+.vc{font-size:12px;color:var(--accent);white-space:nowrap}
+.pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pick select{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;max-width:100%}
+.panel-pad{padding:12px 16px;display:grid;gap:10px}
+.hist{display:grid;gap:6px;font-size:12.5px}
+.hist div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.act-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-bottom:1px solid var(--line)}
+.act-row:last-child{border-bottom:0}
+.act-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent-weak);color:var(--accent)}
+.act-ic svg{width:17px;height:17px}
+.act-ic.old{background:var(--surface-2);color:var(--muted)}
+.act-text{font-size:13.5px;min-width:0}
+.act-text .note{display:block;margin-top:2px}
+.act-when{font-size:12px;color:var(--muted);white-space:nowrap}
+.hidden-note{padding:10px 16px;font-size:12.5px;color:var(--muted);background:var(--surface-2);border-bottom:1px solid var(--line)}
+</style>
+
+<header class="top">
+  <div class="brand"><div class="dot" aria-hidden="true">td</div><span>Lab Nico</span></div>
+  <span class="mock">Mockup · sample data</span>
+  <div class="spacer"></div>
+  <div class="role">Viewing as
+    <div class="seg" role="group" aria-label="Role">
+      <button id="role-owner" aria-pressed="true" data-role="owner">Owner</button>
+      <button id="role-admin" aria-pressed="false" data-role="admin">Admin</button>
+    </div>
+  </div>
+</header>
+<div class="shell">
+  <nav class="rail" aria-label="Dashboard">
+    <a class="off" href="#" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/></svg>Home</a>
+    <a class="off" href="#" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>Chats</a>
+    <a href="#agents" id="nav-agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/></svg>Agents</a>
+    <a class="off" href="#" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5h11l5 5v9z"/></svg>KB</a>
+    <a href="#activities" id="nav-activities"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 7 4-14 3 7h4"/></svg>Activities</a>
+    <a class="off" href="#" aria-hidden="true" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>Settings</a>
+  </nav>
+  <main id="app"></main>
+</div>
+<div id="layer"></div>
+
+<script>
+const SVG=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${p}</svg>`;
+const IC={
+ scheduled:SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+ webhook:SVG('<path d="M8 15a4 4 0 1 1 4-6.9"/><path d="M12 8l3 6"/><path d="M16 9a4 4 0 1 1-2 7.5"/><path d="M15 16H9"/>'),
+ automation:SVG('<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>'),
+ widget:SVG('<path d="M4 5h16v11H9l-5 4z"/>'),
+ chatbot:SVG('<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>'),
+ voice:SVG('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'),
+ stats:SVG('<path d="M5 20V10M12 20V4M19 20v-7"/>'),
+ execs:SVG('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>'),
+ share:SVG('<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/>'),
+ more:SVG('<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>'),
+ eye:SVG('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+ copy:SVG('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>'),
+ trash:SVG('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+ stop:SVG('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+ play:SVG('<path d="M7 4l13 8-13 8z"/>'),
+ plus:SVG('<path d="M12 5v14M5 12h14"/>'),
+ lock:SVG('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+ deny:SVG('<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>'),
+ conv:SVG('<path d="M4 5h16v11H9l-5 4z"/><path d="M9 10l2 2 4-4"/>'),
+ flow:SVG('<path d="M5 4h6v6H5zM13 14h6v6h-6z"/><path d="M8 10v4a2 2 0 0 0 2 2h3"/>'),
+ user:SVG('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')
+};
+const UNATTENDED=['scheduled','webhook','automation'];
+const CALLS_OUT=['Web request v2','Send email','Send WhatsApp'];
+const RESERVED=new Set(['project_id','conversation_id','chatbot_name','start_type','lastUserText','lastUserMessage','transcript','user_language','department_id','lastUserMessageType']);
+const AGENTS=[
+ {slug:'nightly',name:'Nightly checks',kind:'automation',updated:'07 Nov 18:20'},
+ {slug:'orders',name:'Order sync',kind:'webhook',updated:'08 Nov 09:02'},
+ {slug:'hitl',name:'HITL alerts',kind:'webhook',updated:'30 Oct 15:44'},
+ {slug:'leads',name:'Lead enrichment',kind:'automation',updated:'05 Nov 11:30'},
+ {slug:'support',name:'Support bot',kind:'chatbot',updated:'01 Nov 10:00'},
+ {slug:'invoice',name:'Invoice reminder',kind:'automation',updated:'02 Nov 16:10'},
+ {slug:'voice',name:'Front desk voice',kind:'voice',updated:'28 Oct 09:12'}
+];
+const agentBy=n=>AGENTS.find(a=>a.name===n||a.slug===n);
+let role='owner';
+const ME={owner:'Nico Cardone',admin:'Giulia Verdi'};
+let auditLog=[
+ {ts:13453,at:'09 Nov 08:13',who:'Nico Cardone',verb:'EXECUTION_DATA_ACCESS',ex:'0193a2f4',agent:'Nightly checks',details:'reason "500 from status API, check payload" · block "Call status API"'},
+ {ts:11700,at:'08 Nov 03:00',who:'Anna Rossi',verb:'EXECUTION_STOP_HARD',ex:'01939f10',agent:'Nightly checks',details:'"Generate summary" interrupted'},
+ {ts:10982,at:'07 Nov 17:02',who:'Marco Bianchi',verb:'EXECUTION_DATA_ACCESS_DENIED',ex:'0193b1d3',agent:'Support bot',details:'role agent'}
+];
+const OTHER_ACTIVITIES=[
+ {ts:13995,at:'09 Nov 10:15',icon:'conv',text:'<b>Support bot</b> closed the conversation with <b>Mario R.</b>'},
+ {ts:13401,at:'09 Nov 07:21',icon:'user',text:'<b>Giulia Verdi</b> changed their availability to <b>available</b>'},
+ {ts:11060,at:'07 Nov 18:20',icon:'flow',text:'<b>Nico Cardone</b> published the flow <b>Nightly checks</b>'},
+ {ts:9662,at:'06 Nov 11:02',icon:'user',text:'<b>Anna Rossi</b> invited <b>marco@lab</b> as agent'}
+];
+function act(type,title,outcome,exit,dur,w,extra){return Object.assign({type,title,outcome,exit,dur,data:true,w:w||{}},extra||{})}
+const SYS=(name,conv)=>({project_id:'65f0c2…',conversation_id:conv,chatbot_name:name,user_language:'it'});
+let execs=[
+ {id:'0193a2f4',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'09 Nov 03:00:00',status:'failed',err:'web_request_error',errText:'Web request "GET status" answered HTTP 500',failures:1,dur:'2.1 s',version:'07 Nov 18:20',conv:true,checkpoint:true,
+  init:SYS('Nightly checks','automation-request-65f0…a2f4'),
+  steps:[
+   {t:'03:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'10 ms',actions:[act('Start','scheduled start','success','next','4 ms',{start_type:'scheduled',host:'db-2',threshold:85})]},
+   {t:'03:00:00.120',name:'Fetch config',outcome:'success',sub:'Web request · true exit',dur:'98 ms',actions:[act('Web request v2','GET config','success','true','91 ms',{config:{hosts:['db-1','db-2','db-3'],cpu_limit:80}}),act('Set attribute','config_loaded','success','next','2 ms',{config_loaded:true})]},
+   {t:'03:00:00.240',name:'Check thresholds',outcome:'failure_condition',sub:'Condition · fallback branch',dur:'6 ms',actions:[act('JSON condition','cpu above limit','failure_condition','false','5 ms',{},{data:false})]},
+   {t:'03:00:00.300',name:'Call status API',outcome:'error',sub:'Web request · HTTP 500',dur:'1.8 s',actions:[act('Web request v2','GET status','error','false','1.8 s',{last_status:500,status_body:{error:'upstream timeout',node:'db-2'}},{err:'http_500'})]}
+  ]},
+ {id:'0193b7c1',agent:'Order sync',trigger:'webhook',src:'Webhook "Shop orders"',started:'09 Nov 10:41:12',status:'running',failures:0,dur:'live',version:'08 Nov 09:02',conv:true,checkpoint:true,
+  init:SYS('Order sync','automation-request-65f0…b7c1'),
+  steps:[
+   {t:'10:41:12.002',name:'start',outcome:'success',sub:'Webhook start',dur:'8 ms',actions:[act('Start','webhook start','success','next','3 ms',{start_type:'webhook',order_id:'A-1042',items:3,customer_email:'mario.r@example.com'})]},
+   {t:'10:41:12.050',name:'Validate order',outcome:'success',sub:'Condition · true',dur:'4 ms',actions:[act('JSON condition','has items','success','true','3 ms',{order_valid:true})]},
+   {t:'10:41:12.090',name:'Push to ERP',outcome:'running',sub:'Web request · in progress',dur:'',actions:[act('Web request v2','POST /erp/orders','running','—','…',{})]}
+  ]},
+ {id:'0193b6e0',agent:'HITL alerts',trigger:'webhook',src:'Webhook "Stage alerts"',started:'09 Nov 10:40:03',status:'waiting',waitText:'Waiting for the on-call engineer to answer',failures:0,dur:'—',version:'30 Oct 15:44',conv:true,checkpoint:true,
+  init:SYS('HITL alerts','support-group-65f0…b6e0'),
+  steps:[
+   {t:'10:40:03.010',name:'start',outcome:'success',sub:'Webhook start',dur:'9 ms',actions:[act('Start','webhook start','success','next','3 ms',{start_type:'webhook',alert:'disk 91% on db-2',severity:'high'})]},
+   {t:'10:40:03.080',name:'Invite on call',outcome:'success',sub:'Invite human · department',dur:'420 ms',actions:[act('Invite human','HITL E2E dept','success','invited','418 ms',{department_id:'6612…e2e'})]},
+   {t:'10:40:03.520',name:'Ask approval',outcome:'success',sub:'Reply · buttons, waiting for answer',dur:'12 ms',actions:[act('Reply','Approve restart?','success','wait','10 ms',{approval_asked_at:'10:40:03'})]}
+  ]},
+ {id:'01939f10',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'08 Nov 03:00:00',status:'stopped',stopText:'Hard stop by Anna Rossi · "Generate summary" interrupted, it will run again on resume',interrupted:true,failures:0,dur:'0.4 s',version:'07 Nov 18:20',conv:true,checkpoint:true,
+  init:SYS('Nightly checks','automation-request-65f0…9f10'),
+  steps:[
+   {t:'03:00:00.009',name:'start',outcome:'success',sub:'Scheduled start',dur:'9 ms',actions:[act('Start','scheduled start','success','next','3 ms',{start_type:'scheduled',host:'db-2',threshold:85})]},
+   {t:'03:00:00.100',name:'Generate summary',outcome:'interrupted',sub:'AI prompt · interrupted by hard stop',dur:'310 ms',actions:[act('AI prompt','Daily summary','interrupted','—','310 ms',{})]}
+  ]},
+ {id:'0193b2aa',agent:'Lead enrichment',trigger:'automation',src:'Automation "CRM import"',started:'09 Nov 09:15:40',status:'completed',failures:2,dur:'5.4 s',version:'05 Nov 11:30',conv:false,checkpoint:false,
+  init:SYS('Lead enrichment','automation-request-65f0…b2aa'),
+  steps:[
+   {t:'09:15:40.001',name:'start',outcome:'success',sub:'Automation start',dur:'3 ms',actions:[act('Start','automation','success','next','2 ms',{start_type:'automation',company:'Acme S.r.l.',lead_email:'laura@acme.example'})]},
+   {t:'09:15:40.020',name:'Lookup company',outcome:'failure_condition',sub:'Ask KB · nothing found',dur:'2.2 s',actions:[act('Ask KB','company profile','failure_condition','false','2.2 s',{kb_answer:null})]},
+   {t:'09:15:42.230',name:'Fallback search',outcome:'failure_condition',sub:'Web request · false exit',dur:'3.1 s',actions:[act('Web request v2','GET search','failure_condition','false','3.1 s',{search_status:404})]},
+   {t:'09:15:45.400',name:'Return result',outcome:'success',sub:'Web response',dur:'4 ms',actions:[act('Web response','200','success','end','3 ms',{enriched:false})]}
+  ]},
+ {id:'0193b1d3',agent:'Support bot',trigger:'widget',src:'Widget',started:'09 Nov 10:12:05',status:'completed',failures:0,dur:'3 min',version:'01 Nov 10:00',conv:true,checkpoint:false,
+  init:SYS('Support bot','support-group-65f0…b1d3'),
+  steps:[
+   {t:'10:12:05.010',name:'welcome',outcome:'success',sub:'Reply',dur:'11 ms',outside:{by:'message_in',w:{lastUserText:'hi',transcript:'user: hi'}},actions:[act('Reply','Hi! How can I help?','success','wait','9 ms',{})]},
+   {t:'10:13:40.200',name:'Answer from KB',outcome:'success',sub:'Ask KB · answer found',dur:'2.8 s',outside:{by:'message_in',w:{lastUserText:'how long is shipping to Milan?',transcript:'user: hi\nbot: Hi! How can I help?\nuser: how long is shipping to Milan?'}},actions:[act('Ask KB','shipping times','success','true','2.8 s',{kb_answer:'2–3 working days for Milan.',kb_source:'shipping.md'})]},
+   {t:'10:15:02.010',name:'Close',outcome:'success',sub:'Close conversation',dur:'30 ms',outside:{by:'external',w:{ticket_priority:'high'}},actions:[act('Close','','success','end','28 ms',{},{data:false})]}
+  ]},
+ {id:'01939a77',agent:'Invoice reminder',trigger:'scheduled',src:'Schedule Mon 08:00',started:'09 Nov 08:00:00',status:'failed',err:'lost_owner',errText:'The agent server stopped while running "Send reminders"',incomplete:'seq 9–11',failures:0,dur:'41 s',version:'02 Nov 16:10',conv:true,checkpoint:true,
+  init:SYS('Invoice reminder','automation-request-65f0…9a77'),
+  steps:[
+   {t:'08:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'8 ms',actions:[act('Start','scheduled start','success','next','3 ms',{start_type:'scheduled'})]},
+   {t:'08:00:00.050',name:'Load overdue',outcome:'success',sub:'Web request · true',dur:'640 ms',actions:[act('Web request v2','GET overdue','success','true','630 ms',{overdue:[{inv:'F-221',days:12},{inv:'F-230',days:5}],overdue_count:2})]},
+   {t:'08:00:00.700',name:'Send reminders',outcome:'interrupted',sub:'Send email · server lost',dur:'—',actions:[act('Send email','Reminder template','interrupted','—','—',{})]}
+  ]},
+ {id:'01938c02',agent:'Nightly checks',trigger:'scheduled',src:'Schedule 03:00 Europe/Rome',started:'07 Nov 03:00:00',status:'destroyed',failures:0,dur:'12 min',version:'01 Nov 12:00',conv:true,checkpoint:false,
+  init:SYS('Nightly checks','automation-request-65f0…8c02'),
+  steps:[{t:'03:00:00.010',name:'start',outcome:'success',sub:'Scheduled start',dur:'9 ms',actions:[act('Start','scheduled start','success','next','3 ms',{start_type:'scheduled'})]}]}
+];
+let filt={q:'',trigger:'unattended',status:'',failures:false};
+let openStep=null, grant=null, grantTimer=null, liveTimer=null, tab='timeline', showSys=false, fsStep=null, fsWhen='after', fsKey=null, actFilter='', menuOpen=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const find=id=>execs.find(e=>e.id===id);
+function chip(s){return `<span class="chip s-${s}">${s}</span>`}
+function trig(t){return `<span class="trig">${IC[t]||''}${t}</span>`}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)}
+function nowParts(){const d=new Date();return {h:d.getHours(),m:d.getMinutes()}}
+function now(){const p=nowParts();return '09 Nov '+String(p.h).padStart(2,'0')+':'+String(p.m).padStart(2,'0')}
+function audit(verb,e,details){const p=nowParts();auditLog.unshift({ts:13380+p.h*60+p.m+Math.random()/10,at:now(),who:ME[role],verb,ex:e.id,agent:e.agent,details})}
+const isOwner=()=>role==='owner';
+
+/* ---------- flow state: replay the writes to know the state before / after each block ---------- */
+const clone=o=>JSON.parse(JSON.stringify(o));
+function replay(e){
+  let cur=clone(e.init||{}); const out=[];
+  e.steps.forEach((s,i)=>{
+    const outsideCh=[];
+    if(s.outside){for(const [k,v] of Object.entries(s.outside.w)){outsideCh.push({key:k,before:cur[k],after:v,by:s.outside.by});cur[k]=v}}
+    const before=clone(cur); const by={};
+    s.actions.forEach(a=>{for(const [k,v] of Object.entries(a.w||{})){if(v===undefined)delete cur[k];else cur[k]=v;by[k]=a.type+' "'+a.title+'"'}});
+    const after=clone(cur);
+    out.push({before,after,by,outsideCh});
+  });
+  return out;
+}
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+function typeOf(v){return v===null?'null':Array.isArray(v)?'array':typeof v}
+function sizeOf(v){return v===undefined?0:new Blob([JSON.stringify(v)]).size}
+const covers=(e,i)=>grant&&grant.ex===e.id&&(grant.scope==='execution'||grant.step===i);
+function shown(v,open){
+  if(v===undefined) return '<span class="muted">—</span>';
+  if(open) return `<span class="val">${esc(JSON.stringify(v))}</span>`;
+  return `<span class="mask">••• </span><span class="note">${typeOf(v)}, ${sizeOf(v)} B</span>`;
+}
+function changedKeys(st){const ks=new Set([...Object.keys(st.before),...Object.keys(st.after)]);return [...ks].filter(k=>!same(st.before[k],st.after[k]))}
+
+function allowed(e){
+  const s=e.status, un=UNATTENDED.includes(e.trigger);
+  return {
+    soft:['running','waiting'].includes(s), hard:['running','waiting','stopping'].includes(s),
+    resume:['stopped','failed'].includes(s)&&e.checkpoint,
+    startNew:un&&['stopped','failed','completed','destroyed'].includes(s),
+    destroy:['running','waiting','stopping','stopped','failed'].includes(s)
+  };
+}
+
+function route(){
+  clearInterval(liveTimer); menuOpen=null;
+  const h=location.hash.replace('#','')||'agents';
+  $('#nav-agents').removeAttribute('aria-current');$('#nav-activities').removeAttribute('aria-current');
+  if(h==='activities'){ $('#nav-activities').setAttribute('aria-current','page'); renderActivities(); }
+  else {
+    $('#nav-agents').setAttribute('aria-current','page');
+    if(h.startsWith('exec-')&&find(h.slice(5))) renderDetail(find(h.slice(5)));
+    else if(h==='execs') renderList(null);
+    else if(h.startsWith('execs-')&&agentBy(h.slice(6))) renderList(agentBy(h.slice(6)));
+    else renderAgents();
+  }
+  window.scrollTo(0,0);
+}
+
+/* ---------- agents list (bots-list) with the new Executions button ---------- */
+function attention(a){const ex=execs.filter(e=>e.agent===a.name);return {bad:ex.filter(e=>['failed','stopped'].includes(e.status)).length,live:ex.some(e=>['running','stopping'].includes(e.status)),n:ex.length}}
+function renderAgents(){
+  $('#app').innerHTML=`
+  <div class="head"><div><h1>Agents</h1><div class="sub">Your existing agents list. New: the <b style="font-weight:500">Executions</b> button on each card and "All executions".</div></div><div class="spacer"></div>
+    <a class="btn" href="#execs">${IC.execs}All executions</a><button class="btn primary" data-toast="Create agent (existing flow)">${IC.plus}Create</button></div>
+  <div class="agents">
+  ${AGENTS.map(a=>{const at=attention(a);const tip=at.bad?`${at.bad} execution${at.bad>1?'s need':' needs'} attention in the last 24 hours`:at.live?'An execution is running':'Executions';
+    return `<article class="agent">
+      <div class="agent-top"><div class="avatar">${IC[a.kind==='chatbot'?'chatbot':a.kind==='voice'?'voice':a.kind]}</div>
+        <div style="min-width:0"><div class="agent-name">${esc(a.name)}</div><div class="agent-type">${a.kind} · updated ${a.updated}</div></div></div>
+      <div class="agent-acts">
+        ${a.kind==='chatbot'||a.kind==='voice'?`<button class="ibtn" title="Messages" data-toast="Messages analytics (existing)">${IC.stats}</button>`:''}
+        <button class="ibtn new" title="${tip}" aria-label="${tip}" data-go="execs-${a.slug}">${IC.execs}${at.bad?`<span class="badge">${at.bad}</span>`:at.live?'<span class="badge live"></span>':''}</button>
+        <button class="ibtn" title="Share" data-toast="Share (existing)">${IC.share}</button>
+        <button class="ibtn" title="Actions" data-menu="${a.slug}" aria-haspopup="menu">${IC.more}</button>
+        ${at.n===0?'<span class="note" style="margin-left:auto">no runs yet</span>':''}
+      </div></article>`}).join('')}
+  </div>
+  <p class="note">The Executions button shows for every agent type, including webhook and automation flows (the analytics button hides for those today).</p>`;
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
+  document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+  document.querySelectorAll('[data-menu]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();openMenu(b,b.dataset.menu)});
+}
+function openMenu(btn,slug){
+  closeMenu();
+  const r=btn.getBoundingClientRect();
+  const m=document.createElement('div');m.className='menu';m.id='menu';m.setAttribute('role','menu');
+  m.innerHTML=`<button role="menuitem" data-t="Test it out (existing)">${IC.eye}Test it out</button><button role="menuitem" data-t="Duplicate (existing)">${IC.copy}Duplicate</button>
+    <button role="menuitem" class="hl" id="m-ex">${IC.execs}Executions</button><button role="menuitem" data-t="Delete (existing)">${IC.trash}Delete</button>`;
+  document.body.appendChild(m);
+  const left=Math.min(window.scrollX+r.left,window.scrollX+document.documentElement.clientWidth-206);
+  m.style.left=Math.max(8,left)+'px';m.style.top=(window.scrollY+r.bottom+4)+'px';
+  m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{closeMenu();toast(b.dataset.t)});
+  $('#m-ex').onclick=()=>{closeMenu();location.hash='execs-'+slug};
+  $('#m-ex').focus();
+  setTimeout(()=>document.addEventListener('click',closeMenu,{once:true}),0);
+  document.onkeydown=ev=>{if(ev.key==='Escape')closeMenu()};
+}
+function closeMenu(){const m=$('#menu');if(m)m.remove()}
+
+/* ---------- execution list (one agent or all) ---------- */
+function renderList(agent){
+  const base=execs.filter(e=>(!agent||e.agent===agent.name)&&(filt.trigger==='all'||(filt.trigger==='unattended'?UNATTENDED.includes(e.trigger):e.trigger===filt.trigger)));
+  const counts={};['running','waiting','stopped','failed'].forEach(s=>counts[s]=base.filter(e=>e.status===s||(s==='stopped'&&e.status==='stopping')).length);
+  const rows=base.filter(e=>(!filt.status||e.status===filt.status||(filt.status==='stopped'&&e.status==='stopping'))&&(!filt.failures||e.failures>0)&&(!filt.q||e.id.includes(filt.q.trim())));
+  const varsChanged=e=>{const st=replay(e);return new Set(st.flatMap(changedKeys)).size};
+  $('#app').innerHTML=`
+  <nav class="crumb" aria-label="Breadcrumb"><a href="#agents">Agents</a><span>›</span>${agent?`<span>${esc(agent.name)}</span><span>›</span>`:''}<span>Executions</span></nav>
+  <div class="head"><div><h1>${agent?esc(agent.name)+' · executions':'All executions'}</h1><div class="sub">${agent?'Every run of this agent, newest first':'Every run of every agent in this project'}</div></div><div class="spacer"></div>
+    <select id="f-agent" aria-label="Agent" class="btn" style="font-weight:400"><option value="">All agents</option>${AGENTS.map(a=>`<option value="${a.slug}" ${agent&&agent.slug===a.slug?'selected':''}>${esc(a.name)}</option>`).join('')}</select></div>
+  <div class="counters" role="group" aria-label="Status shortcuts">
+    ${['running','waiting','failed','stopped'].map(s=>`<button class="counter" data-st="${s}" aria-pressed="${filt.status===s}"><span class="chip s-${s}" style="padding:0;background:none"></span>${s[0].toUpperCase()+s.slice(1)} <b>${counts[s]}</b></button>`).join('')}
+  </div>
+  <section class="card">
+    <div class="filters">
+      <input type="search" id="f-q" placeholder="Search execution id…" value="${esc(filt.q)}" aria-label="Search execution id">
+      <select id="f-trigger" aria-label="Trigger">
+        <option value="unattended" ${filt.trigger==='unattended'?'selected':''}>Unattended triggers</option>
+        <option value="all" ${filt.trigger==='all'?'selected':''}>All triggers</option>
+        ${['scheduled','webhook','automation','widget'].map(t=>`<option value="${t}" ${filt.trigger===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <select id="f-status" aria-label="Status"><option value="">Any status</option>${['running','waiting','stopped','failed','completed','destroyed'].map(s=>`<option ${filt.status===s?'selected':''}>${s}</option>`).join('')}</select>
+      <label class="check"><input type="checkbox" id="f-fail" ${filt.failures?'checked':''}> With failure conditions</label>
+      <select aria-label="Period"><option>Last 7 days</option><option>Last 24 hours</option><option>Last 30 days</option></select>
+    </div>
+    <div class="tbl-wrap">
+    ${rows.length?`<table><thead><tr><th>Status</th>${agent?'':'<th>Agent</th>'}<th>Trigger</th><th>Started</th><th>Blocks</th><th>Failure cond.</th><th>Vars changed</th><th>Duration</th><th>Execution</th></tr></thead><tbody>
+    ${rows.map(e=>`<tr tabindex="0" data-id="${e.id}">
+      <td data-l="Status">${chip(e.status)}${e.incomplete?'<span class="warnicon" title="Trace incomplete">⚠</span>':''}</td>
+      ${agent?'':`<td data-l="Agent"><b style="font-weight:500">${esc(e.agent)}</b></td>`}
+      <td data-l="Trigger">${trig(e.trigger)}</td>
+      <td data-l="Started">${e.started}</td>
+      <td data-l="Blocks">${e.steps.length}</td>
+      <td data-l="Failure cond." class="${e.failures?'fail':'muted'}">${e.failures}</td>
+      <td data-l="Vars changed" class="muted">${varsChanged(e)}</td>
+      <td data-l="Duration" class="muted">${e.dur}</td>
+      <td data-l="Execution" class="mono muted">${e.id}</td></tr>`).join('')}
+    </tbody></table>`:`<div class="empty">${base.length||filt.status||filt.q||filt.failures?'No executions match these filters. <button class="link" id="clear">Clear filters</button>':'No executions yet for this agent. They appear here when it runs.'+(filt.trigger!=='all'?' <button class="link" id="clear">Show all triggers</button>':'')}</div>`}
+    </div>
+  </section>
+  <p class="note">The default view shows unattended runs (scheduled, webhook, automation). Widget and channel conversations are under "All triggers". Design Studio test runs are hidden.</p>`;
+  const again=()=>renderList(agent);
+  document.querySelectorAll('.counter').forEach(b=>b.onclick=()=>{filt.status=filt.status===b.dataset.st?'':b.dataset.st;again()});
+  $('#f-q').oninput=ev=>{filt.q=ev.target.value;const pos=ev.target.selectionStart;again();const i=$('#f-q');i.focus();i.setSelectionRange(pos,pos)};
+  $('#f-agent').onchange=ev=>{location.hash=ev.target.value?'execs-'+ev.target.value:'execs'};
+  $('#f-trigger').onchange=ev=>{filt.trigger=ev.target.value;again()};
+  $('#f-status').onchange=ev=>{filt.status=ev.target.value;again()};
+  $('#f-fail').onchange=ev=>{filt.failures=ev.target.checked;again()};
+  const c=$('#clear'); if(c) c.onclick=()=>{filt={q:'',trigger:'all',status:'',failures:false};again()};
+  document.querySelectorAll('tbody tr').forEach(r=>{r.onclick=()=>{tab='timeline';openStep=null;location.hash='exec-'+r.dataset.id};r.onkeydown=ev=>{if(ev.key==='Enter')r.onclick()}});
+}
+
+/* ---------- execution detail ---------- */
+function controlsHtml(e){
+  const a=allowed(e), owner=isOwner(); const b=[];
+  if(a.soft||a.hard) b.push(`<button class="btn" id="c-stop">${IC.stop}${e.status==='stopping'?'Hard stop now':'Stop…'}</button>`);
+  if(a.resume) b.push(`<button class="btn primary" id="c-resume">${IC.play}Resume</button>`);
+  if(['stopped','failed'].includes(e.status)&&!e.checkpoint) b.push(`<span class="note">No checkpoint: this execution cannot be resumed</span>`);
+  if(a.startNew) b.push(`<button class="btn" id="c-new">Start new</button>`);
+  if(a.destroy) b.push(`<button class="btn danger" id="c-destroy" ${owner?'':'disabled title="Only the project owner can destroy executions"'}>Destroy</button>`);
+  b.push('<span class="spacer"></span>');
+  b.push(`<button class="btn" id="c-data">${IC.lock}View data</button>`);
+  return b.join('');
+}
+function statusBanner(e){
+  if(e.status==='failed') return `<div class="banner bad"><b style="font-weight:500">${esc(e.err)}</b>&nbsp;${esc(e.errText)}</div>`;
+  if(e.status==='waiting') return `<div class="banner info">${esc(e.waitText||'Waiting for a reply')}</div>`;
+  if(e.status==='stopped') return `<div class="banner warn">${esc(e.stopText||'Stopped')}</div>`;
+  if(e.status==='stopping') return `<div class="banner warn">Soft stop requested: the current action finishes, then the execution stops.</div>`;
+  if(e.status==='destroyed') return `<div class="banner warn">Destroyed by ${esc(e.destroyedBy||'Nico Cardone')}. Live state removed; the trace and audit are kept.</div>`;
+  return '';
+}
+function stateTable(e,i,st){
+  const open=covers(e,i);
+  let keys=[...new Set([...Object.keys(st.before),...Object.keys(st.after)])];
+  if(!showSys) keys=keys.filter(k=>!RESERVED.has(k));
+  const ch=keys.filter(k=>!same(st.before[k],st.after[k])), un=keys.filter(k=>same(st.before[k],st.after[k]));
+  return `<div class="state-head"><b style="font-weight:500">Flow state</b><span class="muted">before → after this block</span><span class="spacer" style="flex:1"></span>
+      <label class="check"><input type="checkbox" class="sys-t" ${showSys?'checked':''}> Show system variables</label>
+      ${open?'<span class="note">values open · recorded in the audit log</span>':`<button class="link" data-vals="${i}">View values</button>`}</div>
+    <div class="tbl-wrap"><table class="vars"><thead><tr><th>Variable</th><th>Before</th><th>After</th><th>Changed by</th></tr></thead><tbody>
+    ${ch.map(k=>`<tr class="chg"><td class="k">${esc(k)}${RESERVED.has(k)?'<span class="tag">system</span>':''}</td><td data-l="Before">${shown(st.before[k],open)}</td><td data-l="After">${shown(st.after[k],open)}</td><td data-l="Changed by" class="by">${esc(st.by[k]||'')}</td></tr>`).join('')}
+    ${un.map(k=>`<tr><td class="k">${esc(k)}${RESERVED.has(k)?'<span class="tag">system</span>':''}</td><td data-l="Before">${shown(st.before[k],open)}</td><td data-l="After" class="muted">= unchanged</td><td></td></tr>`).join('')}
+    ${!keys.length?'<tr><td colspan="4" class="muted">No user variables yet. Tick "Show system variables" to see the reserved ones.</td></tr>':''}
+    </tbody></table></div>`;
+}
+function renderDetail(e){
+  closeMenu();
+  const ag=agentBy(e.agent); const st=replay(e);
+  const exAudit=auditLog.filter(x=>x.ex===e.id);
+  const tabs=[['timeline','Timeline'],['state','Flow state']].concat(isOwner()?[['audit','Audit']]:[]);
+  if(tab==='audit'&&!isOwner()) tab='timeline';
+  $('#app').innerHTML=`
+  <nav class="crumb" aria-label="Breadcrumb"><a href="#agents">Agents</a><span>›</span><a href="#execs-${ag.slug}">${esc(e.agent)}</a><span>›</span><a href="#execs-${ag.slug}">Executions</a><span>›</span><span class="mono">${e.id}</span></nav>
+  <section class="card ex-head">
+    <div class="ex-title"><h1>${esc(e.agent)}</h1>${chip(e.status)}</div>
+    <div class="meta"><span>${trig(e.trigger)}</span><span>${esc(e.src)}</span><span>version ${e.version}</span><span>started ${e.started}</span><span>${e.dur}</span>
+      <span class="mono">${e.id}</span>${e.conv?'<button class="link" data-toast="Opens the conversation in the agent app">conversation ↗</button>':'<span>no conversation (automation)</span>'}</div>
+    ${(e.retryOf||e.retriedAs)?`<div class="lineage">${e.retryOf?`<span>retry of <a class="link mono" href="#exec-${e.retryOf}">${e.retryOf} ↗</a></span>`:''}${e.retriedAs?`<span>retried as <a class="link mono" href="#exec-${e.retriedAs}">${e.retriedAs} ↗</a></span>`:''}</div>`:''}
+    ${statusBanner(e)}
+    ${e.incomplete?`<div class="banner warn">⚠ Some events of this execution were not received (${e.incomplete}). The status is still reliable.</div>`:''}
+    <div class="controls">${controlsHtml(e)}</div>
+  </section>
+  <div id="sealed-slot"></div>
+  <section class="card">
+    <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-tab="${k}">${l}</button>`).join('')}</div>
+    <div id="tab-body">${tab==='timeline'?timelineHtml(e,st):tab==='state'?stateTabHtml(e,st):auditTabHtml(e,exAudit)}</div>
+  </section>`;
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;renderDetail(e)});
+  document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+  bindTab(e,st);
+  const on=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
+  on('#c-stop',()=>e.status==='stopping'?doHardStop(e):stopDialog(e));
+  on('#c-resume',()=>resumeDialog(e));
+  on('#c-new',()=>newDialog(e));
+  on('#c-destroy',()=>destroyDialog(e));
+  on('#c-data',()=>dataDialog(e,null));
+  if(grant&&grant.ex===e.id) renderSealed(e);
+  if(e.status==='running') liveTimer=setInterval(()=>liveTick(e),2500);
+}
+function timelineHtml(e,st){
+  const showFail=timelineHtml.failOnly||false;
+  const sym={success:'✓',failure_condition:'!',error:'✕',interrupted:'■',running:'…'};
+  const steps=e.steps.map((s,i)=>({...s,i})).filter(s=>!showFail||s.outcome!=='success');
+  return `<div class="tl-head"><span class="sub">${e.steps.length} blocks · ${e.failures} failure condition${e.failures===1?'':'s'}</span><span class="spacer" style="flex:1"></span>
+      <div class="seg" role="group" aria-label="Timeline filter"><button id="tl-all" aria-pressed="${!showFail}">All</button><button id="tl-fail" aria-pressed="${showFail}">Not successful</button></div></div>
+    ${steps.map(s=>{const x=st[s.i];const nch=changedKeys(x).filter(k=>showSys||!RESERVED.has(k)).length;
+      const outs=x.outsideCh.filter(c=>showSys||!RESERVED.has(c.key)||c.by==='message_in');
+      return `
+      ${outs.length?`<div class="outside">${x.outsideCh.length} variable${x.outsideCh.length>1?'s':''} changed ${x.outsideCh[0].by==='message_in'?'by the incoming message':'outside the flow'}: <span class="mono">${x.outsideCh.map(c=>esc(c.key)).join(', ')}</span></div>`:''}
+      <div class="step-row" tabindex="0" role="button" aria-expanded="${openStep===e.id+':'+s.i}" data-i="${s.i}">
+        <span class="when mono muted">${s.t}</span>
+        <span class="step-ic o-${s.outcome}" aria-hidden="true">${sym[s.outcome]}</span>
+        <span style="min-width:0"><div class="step-name">${esc(s.name)}</div><div class="step-sub">${esc(s.sub)}</div></span>
+        <span style="display:grid;justify-items:end;gap:2px"><span class="mono muted">${s.dur}</span>${nch?`<span class="vc">${nch} var${nch>1?'s':''} changed</span>`:''}</span>
+      </div>
+      ${openStep===e.id+':'+s.i?`<div class="actions">${s.actions.map(a=>`
+        <div class="act"><b style="font-weight:500">${esc(a.type)}</b><span class="muted">${esc(a.title)}</span>
+          <span><span class="k">outcome</span> ${a.outcome.replace('_',' ')}</span><span><span class="k">exit</span> ${esc(a.exit)}</span>
+          <span><span class="k">time</span> ${a.dur}</span>${a.err?`<span><span class="k">error</span> <span class="mono">${a.err}</span></span>`:''}
+          <span><span class="k">wrote</span> ${Object.keys(a.w||{}).length?`<span class="mono">${Object.keys(a.w).map(esc).join(', ')}</span>`:'—'}</span>
+        </div>`).join('')}
+        ${stateTable(e,s.i,x)}</div>`:''}`}).join('')}
+    ${e.status==='running'?'<div class="step-row" style="cursor:default"><span class="when"></span><span class="step-ic o-running">…</span><span class="muted">running…</span><span></span></div>':''}`;
+}
+function stateTabHtml(e,st){
+  if(fsStep==null||fsStep>=e.steps.length) fsStep=e.steps.length-1;
+  const i=fsStep, x=st[i], state=fsWhen==='before'?x.before:x.after, open=covers(e,i);
+  let keys=Object.keys(state); if(!showSys) keys=keys.filter(k=>!RESERVED.has(k));
+  const hist=fsKey?historyOf(e,st,fsKey):null;
+  return `<div class="pick"><label for="fs-step" class="muted">Block</label>
+      <select id="fs-step">${e.steps.map((s,k)=>`<option value="${k}" ${k===i?'selected':''}>${k+1}. ${esc(s.name)} · ${s.t}</option>`).join('')}</select>
+      <div class="seg" role="group" aria-label="When"><button data-when="before" aria-pressed="${fsWhen==='before'}">Before</button><button data-when="after" aria-pressed="${fsWhen==='after'}">After</button></div>
+      <label class="check"><input type="checkbox" class="sys-t" ${showSys?'checked':''}> Show system variables</label>
+      <span class="spacer" style="flex:1"></span>${open?'<span class="note">values open</span>':`<button class="link" data-vals="${i}">View values</button>`}</div>
+    <div class="panel-pad">
+      <div class="note">The whole flow state ${fsWhen} "${esc(e.steps[i].name)}": ${keys.length} variable${keys.length===1?'':'s'}. Click one for its history in this execution.</div>
+      <div class="tbl-wrap"><table class="vars"><thead><tr><th>Variable</th><th>Value</th><th>Type</th><th>Size</th></tr></thead><tbody>
+      ${keys.map(k=>`<tr class="var-row ${fsKey===k?'chg':''}" data-key="${esc(k)}" tabindex="0"><td class="k">${esc(k)}${RESERVED.has(k)?'<span class="tag">system</span>':''}</td><td data-l="Value">${open?`<span class="val">${esc(JSON.stringify(state[k]))}</span>`:'<span class="mask">•••</span>'}</td><td data-l="Type" class="muted">${typeOf(state[k])}</td><td data-l="Size" class="muted">${sizeOf(state[k])} B</td></tr>`).join('')}
+      </tbody></table></div>
+      ${hist?`<div><h2 style="margin-bottom:8px">History of <span class="mono">${esc(fsKey)}</span></h2><div class="hist">${hist.map(h=>`<div><span class="muted">${esc(h.when)}</span><span>${esc(h.by)}</span><span></span><span>${shown(h.before,covers(e,h.i))} → ${shown(h.after,covers(e,h.i))}</span></div>`).join('')||'<span class="note">Not changed in this execution.</span>'}</div></div>`:''}
+    </div>`;
+}
+function historyOf(e,st,key){
+  const out=[];
+  st.forEach((x,i)=>{
+    x.outsideCh.filter(c=>c.key===key).forEach(c=>out.push({i,when:'before "'+e.steps[i].name+'"',by:c.by==='message_in'?'incoming message':'outside the flow',before:c.before,after:c.after}));
+    let prev=x.before[key];
+    e.steps[i].actions.forEach(a=>{if(a.w&&key in a.w){out.push({i,when:'block "'+e.steps[i].name+'"',by:a.type+' "'+a.title+'"',before:prev,after:a.w[key]});prev=a.w[key]}});
+  });
+  return out;
+}
+function auditTabHtml(e,list){
+  return `<div class="panel-pad"><div class="note">Everything done on this execution, from the service audit (kept one year). The same entries appear in Activities for 30 days.</div>
+    <div class="audit-mini">${list.length?list.map(x=>`<div><span class="muted">${x.at} · ${esc(x.who)}</span><span>${esc(verbLabel(x.verb))}</span><span class="note">${esc(x.details)}</span></div>`).join(''):'<span class="note">Nothing recorded yet.</span>'}</div>
+    <a class="link" href="#activities">Open in Activities</a></div>`;
+}
+function bindTab(e,st){
+  const rr=()=>renderDetail(e);
+  document.querySelectorAll('.step-row[data-i]').forEach(r=>{const go=()=>{const k=e.id+':'+r.dataset.i;openStep=openStep===k?null:k;rr()};r.onclick=go;r.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();go()}}});
+  const a=$('#tl-all'),f=$('#tl-fail'); if(a){a.onclick=()=>{timelineHtml.failOnly=false;rr()};f.onclick=()=>{timelineHtml.failOnly=true;rr()}}
+  document.querySelectorAll('.sys-t').forEach(c=>c.onchange=ev=>{showSys=ev.target.checked;rr()});
+  document.querySelectorAll('[data-vals]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();dataDialog(e,+b.dataset.vals)});
+  const s=$('#fs-step'); if(s) s.onchange=ev=>{fsStep=+ev.target.value;rr()};
+  document.querySelectorAll('[data-when]').forEach(b=>b.onclick=()=>{fsWhen=b.dataset.when;rr()});
+  document.querySelectorAll('.var-row').forEach(r=>{const go=()=>{fsKey=fsKey===r.dataset.key?null:r.dataset.key;rr()};r.onclick=go;r.onkeydown=ev=>{if(ev.key==='Enter')go()}});
+}
+function liveTick(e){
+  if(location.hash!=='#exec-'+e.id||e.status!=='running'){clearInterval(liveTimer);return}
+  const last=e.steps[e.steps.length-1];
+  if(last.outcome==='running'){last.outcome='success';last.sub='Web request · true exit';last.dur='1.4 s';const t=last.actions[0].title;last.actions[0]=act('Web request v2',t,'success','true','1.4 s',e.steps.length===3?{erp_order_ref:'ERP-88310',erp_status:201}:{notified:true})}
+  else if(e.steps.length<6){const n=e.steps.length;const names=['Notify warehouse','Update customer','Log result'];e.steps.push({t:'10:41:1'+(3+n)+'.0'+n+'0',name:names[(n-3)%3],outcome:'running',sub:'in progress',dur:'',actions:[act(n%2?'Send email':'Web request v2',names[(n-3)%3],'running','—','…',{})]})}
+  else {e.status='waiting';e.waitText='Chain finished, waiting for the next message';e.dur='9.8 s';toast('Order sync is now waiting')}
+  renderDetail(e);
+}
+
+/* ---------- dialogs ---------- */
+function dialog(html,bind){
+  $('#layer').innerHTML=`<div class="scrim" id="scrim"><div class="dialog" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#scrim').onclick=ev=>{if(ev.target.id==='scrim')close()};
+  document.onkeydown=ev=>{if(ev.key==='Escape')close()};
+  const f=$('.dialog input,.dialog textarea,.dialog button.primary,.dialog button.danger');if(f)f.focus();
+  bind&&bind();
+}
+function close(){$('#layer').innerHTML='';document.onkeydown=null}
+function stopDialog(e){
+  const cur=e.steps[e.steps.length-1]; const idle=e.status==='waiting';
+  dialog(`<h2>Stop execution</h2>
+   ${idle?'<p>Nothing is running right now: the execution stops at once and no new message will run the agent until you resume it.</p>':''}
+   <label class="opt"><input type="radio" name="mode" value="soft" checked><span>Soft stop</span><small>Let ${idle?'the next block':`"${esc(cur.name)}"`} finish its current action, then stop.</small></label>
+   <label class="opt"><input type="radio" name="mode" value="hard"><span>Hard stop</span><small>${idle?'Stop now.':`Interrupt "${esc(cur.name)}" now. It will run again from the start on resume.`}</small></label>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Stop</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{const m=document.querySelector('input[name=mode]:checked').value;close();
+      if(m==='hard'||idle){doHardStop(e,idle&&m==='soft')}
+      else {audit('EXECUTION_STOP_SOFT',e,'requested');e.status='stopping';renderDetail(e);toast('Soft stop requested');
+        setTimeout(()=>{const last=e.steps[e.steps.length-1];if(last.outcome==='running'){last.outcome='success';last.sub='finished, then stopped';last.dur='1.2 s';last.actions[0].outcome='success';last.actions[0].w={erp_order_ref:'ERP-88310'}}
+          e.status='stopped';e.stopText='Soft stop by '+ME[role]+' · resume continues with the next block';e.interrupted=false;if(location.hash==='#exec-'+e.id)renderDetail(e);toast('Execution stopped')},2200)}
+    }});
+}
+function doHardStop(e,soft){
+  const last=e.steps[e.steps.length-1];
+  audit(soft?'EXECUTION_STOP_SOFT':'EXECUTION_STOP_HARD',e,last.outcome==='running'?`"${last.name}" interrupted`:'nothing running');
+  if(last.outcome==='running'){last.outcome='interrupted';last.sub='interrupted by hard stop';last.dur='0.6 s';last.actions[0].outcome='interrupted';e.interrupted=true;
+    e.stopText=`Hard stop by ${ME[role]} · "${last.name}" interrupted, it will run again on resume`}
+  else e.stopText=`Stopped by ${ME[role]} while waiting`;
+  e.status='stopped';renderDetail(e);toast('Execution stopped');
+}
+function resumeDialog(e){
+  const last=e.steps[e.steps.length-1];
+  const rerun=e.interrupted||e.status==='failed';
+  const callsOut=rerun&&last.actions.some(a=>CALLS_OUT.includes(a.type));
+  dialog(`<h2>Resume execution</h2>
+   <p>${rerun?`Continues by running "${esc(last.name)}" again`:'Continues with the next block'}, using version ${e.version} (the one that was running), with the flow state as it was before that block.</p>
+   ${callsOut?`<div class="banner warn">⚠ "${esc(last.name)}" calls an external system (${esc(last.actions[0].type)}) and may already have reached it. Running it again can repeat that call.</div>`:''}
+   ${!e.conv?'<p class="note">The original caller is no longer waiting: the result will not be returned to it.</p>':''}
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">${callsOut?'Run it again and resume':'Resume'}</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{close();audit('EXECUTION_RESUME',e,callsOut?`confirmed rerun of "${last.name}"`:'from checkpoint');
+      if(rerun){last.outcome='running';last.sub='running again after resume';last.dur='';last.actions.forEach(a=>{a.outcome='running';a.err=null})}
+      e.status='running';e.err=null;e.interrupted=false;toast('Execution resumed');renderDetail(e);
+      setTimeout(()=>{last.outcome='success';last.sub='succeeded after resume';last.dur='0.9 s';last.actions.forEach(a=>{a.outcome='success';a.exit='true';a.dur='0.9 s';if(a.type==='Web request v2')a.w={last_status:200,status_body:{ok:true}}});
+        e.status='completed';e.dur='—';if(location.hash==='#exec-'+e.id)renderDetail(e);toast(e.agent+' completed')},3500)}
+  });
+}
+function newDialog(e){
+  dialog(`<h2>Start new execution</h2>
+   <p>Runs ${esc(e.agent)} again with the same input, using the current published version. This execution stays as it is and gets a link to the new one.</p>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Start new</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-ok').onclick=()=>{close();const id='0193'+Math.random().toString(16).slice(2,6);
+      const first=e.steps[0].actions[0].w;
+      const n={id,agent:e.agent,trigger:e.trigger,src:e.src,started:now()+':00',status:'running',failures:0,dur:'live',version:'09 Nov 08:30',conv:e.conv,checkpoint:true,retryOf:e.id,init:clone(e.init),
+        steps:[{t:'now',name:'start',outcome:'success',sub:'Start (retry)',dur:'9 ms',actions:[act('Start','retry of '+e.id,'success','next','3 ms',clone(first))]},{t:'now',name:e.steps[1]?e.steps[1].name:'First block',outcome:'running',sub:'in progress',dur:'',actions:[act('Web request v2','retry','running','—','…',{})]}]};
+      e.retriedAs=id;execs.unshift(n);audit('EXECUTION_START_NEW',e,'new execution '+id);toast('New execution started');tab='timeline';location.hash='exec-'+id}
+  });
+}
+function destroyDialog(e){
+  dialog(`<h2>Destroy execution</h2>
+   <p>This ${['running','stopping'].includes(e.status)?'hard-stops it, ':''}${e.conv?'closes its conversation, ':''}and removes its live state and checkpoints. It cannot be resumed afterwards. The trace, data and audit are kept for their retention period.</p>
+   <div class="field"><label for="d-confirm">Type <span class="mono">${e.id.slice(0,6)}</span> to confirm</label><input id="d-confirm" autocomplete="off"><span class="err" id="d-err" hidden></span></div>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn danger solid" id="d-ok">Destroy</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-confirm').oninput=()=>{$('#d-err').hidden=true};
+    $('#d-ok').onclick=()=>{if($('#d-confirm').value.trim()!==e.id.slice(0,6)){const er=$('#d-err');er.textContent='Type '+e.id.slice(0,6)+' exactly to confirm.';er.hidden=false;return}
+      close();audit('EXECUTION_DESTROY',e,e.conv?'conversation closed':'no conversation');e.status='destroyed';e.checkpoint=false;e.destroyedBy=ME[role];toast('Execution destroyed');renderDetail(e)}
+  });
+}
+function dataDialog(e,stepIdx){
+  const stepName=stepIdx!=null?e.steps[stepIdx].name:null;
+  dialog(`<h2>View execution data</h2>
+   <p>The data is sealed. Opening it is recorded in the audit log (and in Activities) with your name and reason. The access lasts 15 minutes.</p>
+   <label class="opt"><input type="radio" name="scope" value="step" ${stepName?'checked':'disabled'}><span>This block${stepName?`: "${esc(stepName)}"`:''}</span><small>${stepName?'Inputs and outputs of its actions, and the flow variable values before and after it.':'Pick "View values" on a block.'}</small></label>
+   <label class="opt"><input type="radio" name="scope" value="execution" ${stepName?'':'checked'}><span>Whole execution</span><small>Trigger payload, every block's data and every variable value.</small></label>
+   <div class="field"><label for="d-reason">Reason <span class="muted">(required)</span></label><textarea id="d-reason" rows="2" placeholder="e.g. investigating the HTTP 500 from the status API"></textarea><span class="err" id="d-err" hidden></span></div>
+   <div class="dlg-actions"><button class="btn" id="d-cancel">Cancel</button><button class="btn primary" id="d-ok">Request access</button></div>`,()=>{
+    $('#d-cancel').onclick=close;
+    $('#d-reason').oninput=()=>{$('#d-err').hidden=true};
+    $('#d-ok').onclick=()=>{const r=$('#d-reason').value.trim();if(r.length<10){const er=$('#d-err');er.textContent='Write at least 10 characters so the reason is clear to whoever reads the audit log.';er.hidden=false;return}
+      const scope=document.querySelector('input[name=scope]:checked').value;close();
+      audit('EXECUTION_DATA_ACCESS',e,`reason "${r}" · `+(scope==='step'?'block "'+stepName+'"':'whole execution'));
+      grant={ex:e.id,scope,step:stepIdx,until:Date.now()+15*60*1000};renderDetail(e);
+      document.getElementById('sealed-slot').scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+}
+function sampleData(e,idx){
+  const s=e.steps[idx]; const a=s.actions[0];
+  if(a.type==='Web request v2') return {action:a.type+' · '+a.title,input:{method:a.title.split(' ')[0],url:'https://ops.example.com/api/'+a.title.split(' ').pop().toLowerCase(),headers:{Authorization:'[secret]','X-Api-Key':'[secret]',Accept:'application/json'}},output:a.err?{status:500,body:{error:'upstream timeout',node:'db-2'}}:{status:200,body:{ok:true}}};
+  if(a.type==='AI prompt'||a.type==='Ask KB') return {action:a.type+' · '+a.title,input:{prompt:'Summarise the overnight checks for the on-call team.'},output:{text:a.outcome==='failure_condition'?null:'All checks passed except disk usage on db-2 (91%).'}};
+  return {action:a.type+' · '+a.title,input:{},output:{}};
+}
+function hl(json){return esc(JSON.stringify(json,null,2)).replace(/&quot;\[secret\]&quot;/g,'<span class="secret">[secret]</span>')}
+function renderSealed(e){
+  const slot=$('#sealed-slot');if(!slot)return;
+  const idxs=grant.scope==='step'?[grant.step]:e.steps.map((_,i)=>i);
+  slot.innerHTML=`<section class="sealed" aria-label="Sealed data">
+    <div class="sealed-head"><h2>Sealed data open</h2><span class="note" id="countdown"></span><span style="flex:1"></span><button class="btn" id="seal-close">Close data</button></div>
+    <p class="note" style="margin:0">Variable values are now shown in the Flow state tables for ${grant.scope==='step'?'block "'+esc(e.steps[grant.step].name)+'"':'every block'}. Action inputs and outputs:</p>
+    ${grant.scope==='execution'?`<div><div class="note">Trigger payload</div><pre class="json">${hl({payload:e.steps[0].actions[0].w})}</pre></div>`:''}
+    ${idxs.map(i=>`<div><div class="note">${esc(e.steps[i].name)}</div><pre class="json">${hl(sampleData(e,i))}</pre></div>`).join('')}
+    <p class="note">Values named like secrets are never stored and show as [secret]. Nothing is cached on this device.</p></section>`;
+  $('#seal-close').onclick=()=>{grant=null;clearInterval(grantTimer);renderDetail(e)};
+  clearInterval(grantTimer);
+  const tick=()=>{const left=Math.max(0,grant?grant.until-Date.now():0);const el=$('#countdown');if(!el){clearInterval(grantTimer);return}
+    if(left<=0){grant=null;clearInterval(grantTimer);renderDetail(e);toast('Data access expired');return}
+    el.textContent='Access expires in '+Math.floor(left/60000)+':'+String(Math.floor(left/1000)%60).padStart(2,'0')+' · recorded in the audit log'};
+  tick();grantTimer=setInterval(tick,1000);
+}
+
+/* ---------- Activities page (activities-new) with the new Executions group ---------- */
+const VERBS={EXECUTION_STOP_SOFT:'Soft stop',EXECUTION_STOP_HARD:'Hard stop',EXECUTION_RESUME:'Resume',EXECUTION_START_NEW:'Start new',EXECUTION_DESTROY:'Destroy',EXECUTION_DATA_ACCESS:'Data access',EXECUTION_DATA_ACCESS_DENIED:'Data access denied'};
+const verbLabel=v=>VERBS[v]||v;
+const VERB_IC={EXECUTION_STOP_SOFT:'stop',EXECUTION_STOP_HARD:'stop',EXECUTION_RESUME:'play',EXECUTION_START_NEW:'plus',EXECUTION_DESTROY:'trash',EXECUTION_DATA_ACCESS:'lock',EXECUTION_DATA_ACCESS_DENIED:'deny'};
+function sentence(x){
+  const ex=`<a class="link mono" href="#exec-${x.ex}">${x.ex.slice(0,6)}</a>`, ag=`<b>${esc(x.agent)}</b>`, w=`<b>${esc(x.who)}</b>`;
+  return {EXECUTION_STOP_SOFT:`${w} soft-stopped execution ${ex} of ${ag}`,EXECUTION_STOP_HARD:`${w} hard-stopped execution ${ex} of ${ag}`,EXECUTION_RESUME:`${w} resumed execution ${ex} of ${ag}`,
+    EXECUTION_START_NEW:`${w} started a new execution of ${ag} from ${ex}`,EXECUTION_DESTROY:`${w} destroyed execution ${ex} of ${ag}`,
+    EXECUTION_DATA_ACCESS:`${w} viewed the data of execution ${ex} of ${ag}`,EXECUTION_DATA_ACCESS_DENIED:`${w} was denied access to the data of execution ${ex} of ${ag}`}[x.verb];
+}
+function renderActivities(){
+  const exRows=isOwner()?auditLog.map(x=>({ts:x.ts,at:x.at,icon:VERB_IC[x.verb],text:sentence(x),note:x.details,verb:x.verb,isEx:true})):[];
+  let rows=exRows.concat(OTHER_ACTIVITIES.map(o=>({...o,verb:'OTHER'})));
+  if(actFilter==='EXECUTIONS') rows=rows.filter(r=>r.isEx); else if(actFilter) rows=rows.filter(r=>r.verb===actFilter);
+  rows.sort((a,b)=>b.ts-a.ts);
+  $('#app').innerHTML=`
+  <div class="head"><div><h1>Activities</h1><div class="sub">The existing Activities page. New: the <b style="font-weight:500">Executions</b> group, fed by the executions audit.</div></div></div>
+  <section class="card">
+    <div class="filters">
+      <select aria-label="Period"><option>Last 7 days</option><option>Last 30 days</option></select>
+      <select aria-label="Teammate"><option>All teammates</option></select>
+      <select id="a-type" aria-label="Activity type">
+        <option value="">All activity types</option>
+        <optgroup label="Conversations"><option value="X1" disabled>Conversation created</option><option value="X2" disabled>Conversation closed</option></optgroup>
+        <optgroup label="Chatbot"><option value="X3" disabled>Flow published</option></optgroup>
+        <optgroup label="Executions (new)"><option value="EXECUTIONS" ${actFilter==='EXECUTIONS'?'selected':''}>All execution actions</option>${Object.entries(VERBS).map(([k,v])=>`<option value="${k}" ${actFilter===k?'selected':''}>${v}</option>`).join('')}</optgroup>
+      </select>
+      <button class="btn" data-toast="CSV export includes the execution rows">Export CSV</button>
+    </div>
+    ${isOwner()?'':'<div class="hidden-note">Execution audit rows are shown to the project owner only. You see the other activities as before.</div>'}
+    <div>${rows.length?rows.map(r=>`<div class="act-row"><div class="act-ic ${r.isEx?'':'old'}">${IC[r.icon]||''}</div><div class="act-text">${r.text}${r.note?`<span class="note">${esc(r.note)}</span>`:''}</div><div class="act-when">${r.at}</div></div>`).join(''):'<div class="empty">No activities match this filter.</div>'}</div>
+  </section>
+  <p class="note">The Activities page shows the last 30 days, as for every activity. Each execution's Audit tab keeps the full year.</p>`;
+  $('#a-type').onchange=ev=>{actFilter=ev.target.value;renderActivities()};
+  document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+}
+
+document.querySelectorAll('.seg [data-role]').forEach(b=>b.onclick=()=>{role=b.dataset.role;document.querySelectorAll('.seg [data-role]').forEach(x=>x.setAttribute('aria-pressed',x===b));route();toast(role==='owner'?'Viewing as owner':'Viewing as admin: destroy and the execution audit are owner-only')});
+window.addEventListener('hashchange',route);
+route();
+</script>

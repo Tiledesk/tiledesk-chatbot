@@ -427,6 +427,7 @@ class DirAiPrompt {
     winston.debug("DirAiPrompt json: ", loggableJson);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
@@ -744,6 +745,7 @@ class DirAiPrompt {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
@@ -1101,6 +1103,7 @@ class DirAiPrompt {
   async fetchNativeMcpServers() {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
         headers: {
           'Content-Type': 'application/json',

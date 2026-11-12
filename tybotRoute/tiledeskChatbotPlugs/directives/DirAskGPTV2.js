@@ -400,6 +400,7 @@ class DirAskGPTV2 {
     winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: kb_endpoint + "/qa",
       headers: {
         'Content-Type': 'application/json',
@@ -747,6 +748,7 @@ class DirAskGPTV2 {
   async getNamespace(name, id) {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
         headers: {
           'Content-Type': 'application/json',

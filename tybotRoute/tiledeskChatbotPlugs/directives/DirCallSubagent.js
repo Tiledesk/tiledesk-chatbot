@@ -10,6 +10,7 @@ const { Logger } = require('../../Logger');
 const { AnalyticsClient } = require('../../AnalyticsClient');
 const requestService = require('../../services/RequestService');
 const { pushCallerSnapshot } = require('../pushCallerSnapshot');
+const ExecutionRecorder = require('../../executions/ExecutionRecorder');
 
 class DirCallSubagent {
 
@@ -67,7 +68,9 @@ class DirCallSubagent {
       data.id = botId;
     }
 
-    const { subagentStack } = await pushCallerSnapshot(this.context, "DirCallSubAgent", {
+    data.reason = "subagent_call";
+
+    const { subagentStack, nextBlock } = await pushCallerSnapshot(this.context, "DirCallSubAgent", {
       targetBotId: botId,
       blockName: blockName
     });
@@ -75,6 +78,12 @@ class DirCallSubagent {
     console.log("Context token before replaceBot: ", this.context.token);
     try {
       const resbody = await requestService.replaceBot(this.context.projectId, this.requestId, data, this.context.token);
+      if (this.context.chatbot?.execution) {
+        await ExecutionRecorder.onSubagentCall(this.context.chatbot.execution, {
+          subagentRootId: resbody?.replaced_bot_root_id,
+          returnBlock: nextBlock?.intentName
+        });
+      }
       if (this.context.chatbot?.bot.root_id) {
         AnalyticsClient.track('agent.bot_switched', this.context.projectId, {
           from_agent_id:  this.context.chatbot?.bot.root_id,
