@@ -8,6 +8,7 @@ const assert = require('assert');
 const express = require('express');
 const WriteTap = require('../executions/WriteTap');
 const { mapOutcome } = require('../executions/OutcomeMapper');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const { TiledeskExpression } = require('../TiledeskExpression');
 const httpUtils = require('../utils/HttpUtils');
 const integrationService = require('../services/IntegrationService');
@@ -22,6 +23,10 @@ const { DirJSONConditionV2 } = require('../tiledeskChatbotPlugs/directives/DirJS
 const { DirMake } = require('../tiledeskChatbotPlugs/directives/DirMake');
 const { DirRemoveHuman } = require('../tiledeskChatbotPlugs/directives/DirRemoveHuman');
 const { DirInviteHuman } = require('../tiledeskChatbotPlugs/directives/DirInviteHuman');
+const { DirIfOpenHours } = require('../tiledeskChatbotPlugs/directives/DirIfOpenHours');
+const { DirSetRating } = require('../tiledeskChatbotPlugs/directives/DirSetRating'); // main_pre only
+const { DirIfOnlineAgentsV2 } = require('../tiledeskChatbotPlugs/directives/DirIfOnlineAgentsV2');
+const { TiledeskWhenExpression } = require('../TiledeskWhenExpression');
 
 const RID = 'support-group-projectBranch-0123456789abcdef';
 const HTTP_PORT = 10045;
@@ -176,13 +181,38 @@ describe('executions: the branch a conditional action took (B1)', function () {
     assert.strictEqual(on.exit, 'trueIntent', 'last call wins');
   });
 
+  it('untraced continuation: its jumps keep the ended execution id and post at once; flag off: no marker (I1)', async function () {
+    // in a setImmediate callback: enterWith only reaches that callback's context, never mocha's
+    const inFreshContext = (fn) => new Promise((resolve) => setImmediate(() => resolve(fn())));
+    const on = await inFreshContext(() => {
+      ExecutionRecorder.continueUntraced({ sender: '_tdinternal', attributes: { execution_id: 'ended-1' } }, RID);
+      const msg = { payload: { text: '/#next', attributes: { a: 1 } } };
+      return { ret: ExecutionRecorder.beforeJump(msg), msg, kind: WriteTap.current() && WriteTap.current().kind };
+    });
+    assert.strictEqual(on.kind, 'untraced');
+    assert.strictEqual(on.ret, undefined, 'posted right away, nothing recorded');
+    assert.deepStrictEqual(on.msg.payload.attributes, { a: 1, execution_id: 'ended-1' });
+    const user = await inFreshContext(() => {
+      ExecutionRecorder.continueUntraced({ sender: 'u1', attributes: {} }, RID); // no hint: a user message
+      return WriteTap.current();
+    });
+    assert.strictEqual(user, undefined);
+    process.env.EXECUTIONS_ENABLED = 'false';
+    try {
+      const off = await inFreshContext(() => { WriteTap.enterUntraced(RID, 'ended-1'); return WriteTap.current(); });
+      assert.strictEqual(off, undefined);
+    } finally {
+      process.env.EXECUTIONS_ENABLED = 'true';
+    }
+  });
+
   family('webrequestv2', {
     make: () => new DirWebRequestV2(makeContext()),
     action: (result) => ({ url: `${BASE}/${result ? 'ok' : 'fail'}`, method: 'GET', headersString: {}, assignStatusTo: 'status_code' })
   });
 
-  family('gpt_task (AI Prompt)', {
-    type: 'gpt_task',
+  family('ai_prompt (AI Prompt)', {
+    type: 'ai_prompt',
     make: () => new DirAiPrompt(makeContext()),
     action: () => ({ question: 'q', llm: 'openai', model: 'gpt-4o', assignReplyTo: 'answer' }),
     arrange: (result) => {
@@ -240,6 +270,17 @@ describe('executions: the branch a conditional action took (B1)', function () {
     action: (result) => ({ url: `${BASE}/ok`, bodyParameters: result ? { a: '1' } : undefined })
   });
 
+  family('set_rating (main_pre only)', {
+    type: 'set_rating',
+    make: () => {
+      const d = new DirSetRating(makeContext());
+      d.tdClient = { updateRequestProperties: async () => ({}), getRequestById: async () => ({}) };
+      return d;
+    },
+    // false: an invalid rating (the else exit)
+    action: (result) => ({ rating: result ? '4' : 'x', forceUpdate: true })
+  });
+
   let humanOk = true; // the outcome the stubbed human call gives
   family('remove_human', {
     make: () => {
@@ -262,5 +303,37 @@ describe('executions: the branch a conditional action took (B1)', function () {
     },
     action: () => ({ members: [] }),
     arrange: (result) => { humanOk = result; }
+  });
+
+  // M1: a condition-type directive that fails on its way (and so goes to its false exit) is a failure
+  describe('condition-type error paths -> failure_condition / error (still jumping to the false exit)', function () {
+    const action = { trueIntent: '#t', falseIntent: '#f' };
+    const check = async (type, make, extra = {}) => {
+      const r = await traced(make, { name: type, action: Object.assign({}, action, extra) });
+      assert.deepStrictEqual(r.jumps, ['#f']);
+      assert.deepStrictEqual([r.outcome, r.exit_taken], ['failure_condition', 'error']);
+    };
+    it('jsoncondition: the expression evaluates to null', async function () {
+      stub(TiledeskExpression.prototype, 'evaluateStaticExpression', () => null);
+      await check('jsoncondition', () => new DirJSONCondition(makeContext({ score: 10 })), {
+        groups: [{ type: 'expression', conditions: [{ type: 'condition', operand1: 'score', operator: TiledeskExpression.OPERATORS.equalAsNumbers.name, operand2: { type: 'const', value: '10' } }] }]
+      });
+    });
+    it('jsonconditionv2: the when expression throws', async function () {
+      stub(TiledeskWhenExpression.prototype, 'evaluate', () => { throw new Error('bad expression'); });
+      await check('jsoncondition2', () => new DirJSONConditionV2(makeContext({ score: 10 })), { when: 'score == 10' });
+    });
+    it('ifopenhours: the isopen call fails', async function () {
+      stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(new Error('down'))));
+      await check('ifopenhours', () => new DirIfOpenHours(makeContext()));
+    });
+    it('ifonlineagentsv2: no department_id in the attributes', async function () {
+      await check('ifonlineagentsv2', () => new DirIfOnlineAgentsV2(makeContext()), { ignoreOperatingHours: true, selectedOption: 'currentDep' });
+    });
+    it('the plain false outcomes stay success / false', async function () {
+      stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(null, { isopen: false })));
+      const r = await traced(() => new DirIfOpenHours(makeContext()), { name: 'ifopenhours', action: Object.assign({}, action) });
+      assert.deepStrictEqual([r.jumps, r.outcome, r.exit_taken], [['#f'], 'success', 'false']);
+    });
   });
 });

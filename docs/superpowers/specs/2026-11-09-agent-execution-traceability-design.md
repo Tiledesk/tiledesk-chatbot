@@ -251,12 +251,18 @@ and a block jump both end in `theend()`. So the boundaries come from explicit si
 `/ext` then creates a new execution instead of continuing a finished one.
 
 That holds for a message from outside (a user message, a server event). tybot's own continuations
-(a block jump posted from a traced action carries `attributes.execution_id`, a resume too) never
-create one: when the hinted execution has ended or is gone and no live execution holds the request
-key, the continuation runs unrecorded. Example: the conversation is closed while a Wait runs; the
-execution ends `completed` (`closed`), the wait ends, the flow jumps on as it always did, and nothing
-is recorded for it (no phantom execution without start block or lineage left `waiting`). A user
-message on the reopened conversation starts a new execution as usual.
+(a block jump carries `attributes.execution_id`, a resume too) never create one and never join
+another one: when the hinted execution has ended or is gone, `resolve` gives nothing, even if a newer
+live execution holds the request key (a stale chain is not recorded inside it). The rest of that
+`/ext` then runs under an untraced marker carrying the hint, so the chain's later jumps keep it and
+stay unrecorded hop after hop. Example: the conversation is closed while a Wait runs; the execution
+ends `completed` (`closed`), the wait ends, the flow jumps on as it always did (step_2b, step_3, ...),
+and nothing is recorded for it: no phantom execution without start block or lineage left `waiting`. A
+user message on the reopened conversation carries no hint and starts a new execution as usual.
+
+Known limit: the `exec:{id}` hash has a 7-day TTL that is not refreshed while the execution lives, so
+a hinted jump arriving after a longer idle period finds no hash and is dropped from the trace (the flow
+itself runs).
 
 ### 6.3 Automation runs (no conversation)
 
@@ -414,8 +420,12 @@ A thrown error is always `error`.
 
 **Which exit was taken.** The directive says it: at the point where it picks its branch
 (`#executeCondition(result, …)`, or its inline `if`) it calls `WriteTap.noteExit('trueIntent' |
-'falseIntent' | 'errorIntent' | 'fallbackIntent' | 'noMatchIntent' | 'noInputIntent' | 'goToIntent' |
-'jump')` on the running action's store. The mapper uses that signal first: a failure field
+'falseIntent' | 'errorIntent' | 'fallbackIntent' | 'noMatchIntent' | 'goToIntent' | 'jump')` on the
+running action's store. A condition-type directive that fails on its way and still takes its false
+exit notes `errorIntent`, a failure: JSON condition (v1, v2) with a null result (evaluation error,
+`flowError` set), if open hours when the isopen call fails, if online agents v2 with no
+`department_id`. Reply v2's no-input exit fires from a timer after the action's record is written, so
+it is not noted (target matching applies, as before). The mapper uses that signal first: a failure field
 (`falseIntent`, `noMatchIntent`, `noInputIntent`, `errorIntent`) gives `failure_condition`, anything
 else `success`, and `exit_taken` is the field without `Intent`. Exception: for a pure condition
 (directive `condition`, `jsoncondition`, `jsoncondition2`, `ifonlineagents`, `ifonlineagentsv2`,

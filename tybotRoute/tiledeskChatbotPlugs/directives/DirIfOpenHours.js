@@ -93,7 +93,7 @@ class DirIfOpenHours {
           if (callback) {
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
-              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
+              WriteTap.noteExit('errorIntent'); // execution tracing: the isopen call failed, a failure (no-op when off)
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);

@@ -97,7 +97,7 @@ class DirIfOnlineAgentsV2 {
             await this.chatbot.addParameter("flowError", "(If online Agents) No departmentId found in attributes.");
             if (falseIntent) { // no agents available
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
-              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
+              WriteTap.noteExit('errorIntent'); // execution tracing: an error that takes the false exit, a failure (no-op when off)
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
