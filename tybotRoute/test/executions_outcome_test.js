@@ -33,9 +33,39 @@ describe('executions: OutcomeMapper', function () {
   it('unmatched jump -> success / jump', function () {
     assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/other', error: null }), { outcome: 'success', exit_taken: 'jump' });
   });
-  it('failure exit wins when one value matches several fields', function () {
+  it('no signal, a failure and a success exit on the same target -> success / ambiguous (never failure_condition)', function () {
     const r = mapOutcome({ action: { trueIntent: '#a', falseIntent: '#a' }, jumpedTo: '/#a', error: null });
-    assert.deepStrictEqual(r, { outcome: 'failure_condition', exit_taken: 'false' });
+    assert.deepStrictEqual(r, { outcome: 'success', exit_taken: 'ambiguous' });
+    const r2 = mapOutcome({ action: { errorIntent: '#a', fallbackIntent: '#a{"x":1}' }, jumpedTo: '/#a', error: null });
+    assert.deepStrictEqual(r2, { outcome: 'success', exit_taken: 'ambiguous' });
+  });
+
+  describe('the exit the directive noted (WriteTap.noteExit)', function () {
+    const same = { _tdActionType: 'webrequestv2', trueIntent: '#same', falseIntent: '#same' };
+    it('same-target exits, true result -> success / true', function () {
+      assert.deepStrictEqual(mapOutcome({ action: same, jumpedTo: '/#same', exit: 'trueIntent' }), { outcome: 'success', exit_taken: 'true' });
+    });
+    it('same-target exits, false result -> failure_condition / false', function () {
+      assert.deepStrictEqual(mapOutcome({ action: same, jumpedTo: '/#same', exit: 'falseIntent' }), { outcome: 'failure_condition', exit_taken: 'false' });
+    });
+    it('different targets: the signal agrees with target matching', function () {
+      assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/#t1', exit: 'trueIntent' }), { outcome: 'success', exit_taken: 'true' });
+      assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/#f1', exit: 'falseIntent' }), { outcome: 'failure_condition', exit_taken: 'false' });
+    });
+    it('the signal stands without a jump (no block connected to the exit taken)', function () {
+      assert.deepStrictEqual(mapOutcome({ action: { trueIntent: '#t' }, jumpedTo: null, exit: 'falseIntent' }), { outcome: 'failure_condition', exit_taken: 'false' });
+    });
+    it('other exits: noMatch fails, fallback / jump succeed', function () {
+      assert.deepStrictEqual(mapOutcome({ action: { noMatchIntent: '#a' }, jumpedTo: '/#a', exit: 'noMatchIntent' }), { outcome: 'failure_condition', exit_taken: 'noMatch' });
+      assert.deepStrictEqual(mapOutcome({ action: { errorIntent: '#a', fallbackIntent: '#a' }, jumpedTo: '/#a', exit: 'fallbackIntent' }), { outcome: 'success', exit_taken: 'fallback' });
+      assert.deepStrictEqual(mapOutcome({ action: { noMatchIntent: '#a' }, jumpedTo: '/#a', exit: 'jump' }), { outcome: 'success', exit_taken: 'jump' });
+    });
+    it('an error still wins over the signal', function () {
+      assert.deepStrictEqual(mapOutcome({ action: same, jumpedTo: '/#same', exit: 'trueIntent', error: new Error('x') }), { outcome: 'error', exit_taken: null });
+    });
+    it('a non-string signal is ignored (target matching)', function () {
+      assert.deepStrictEqual(mapOutcome({ action: web, jumpedTo: '/#f1', exit: 5 }), { outcome: 'failure_condition', exit_taken: 'false' });
+    });
   });
   it('first field in order wins within the same kind', function () {
     const r = mapOutcome({ action: { noInputIntent: '#a', falseIntent: '#a' }, jumpedTo: '#a', error: null });

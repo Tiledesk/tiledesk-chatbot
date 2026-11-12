@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirReplyV2 {
 
@@ -108,6 +109,7 @@ class DirReplyV2 {
                     await this.chatbot.unlockAction(this.requestId);
                     winston.debug("(DirReplyV2) Unlocked (for noInput) ReplyV2");
                     let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
+                    WriteTap.noteExit('noInputIntent'); // execution tracing: the branch taken (no-op when off)
                     this.intentDir.execute(noinput_action, () => {
                       winston.debug("(DirReplyV2) noinput action invoked", noinput_action);
                     });
@@ -127,6 +129,7 @@ class DirReplyV2 {
             // invoke button
             if (button && button.action) {
               let button_action = DirIntent.intentDirectiveFor(button.action, null);
+              WriteTap.noteExit('jump'); // execution tracing: a button, not an exit field (no-op when off)
               this.intentDir.execute(button_action, () => {
                 winston.debug("(DirReplyV2) action invoked", button_action);
               });
@@ -147,6 +150,7 @@ class DirReplyV2 {
               // }
               if (action.noMatchIntent) {
                 let nomatch_action = DirIntent.intentDirectiveFor(action.noMatchIntent, null);
+                WriteTap.noteExit('noMatchIntent'); // execution tracing: the branch taken (no-op when off)
                 this.intentDir.execute(nomatch_action, () => {
                   winston.debug("(DirReplyV2) nomatch action invoked", nomatch_action);
                 });

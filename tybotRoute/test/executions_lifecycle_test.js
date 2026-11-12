@@ -157,6 +157,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
 
     const fail = express();
     fail.get('/fail', (req, res) => res.status(500).send({ error: 'boom' }));
+    fail.get('/ok', (req, res) => res.status(200).send({ ok: true }));
     failListener = await listen(fail, FAIL_PORT);
 
     await startTybot();
@@ -328,6 +329,20 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     assert.strictEqual(jump.data.exit_taken, 'jump');
     assert.strictEqual(ofType(rid, 'action.completed').filter((a) => a.data.action_id === 'act_fail_request').length, 1, 'afterAction is idempotent');
   });
+
+  for (const [block, outcome, exit] of [['same_ok', 'success', 'true'], ['same_fail', 'failure_condition', 'false']]) {
+    it(`web request, true and false exits on the same block: ${block} records ${outcome} / ${exit}`, async function () {
+      const rid = newRequestId();
+      send('/' + block, rid);
+      await waitFor(() => ofType(rid, 'execution.idle').length > 0 && ofType(rid, 'step.completed').length === 2, 'the chain to end');
+      await settle(rid);
+      const web = ofType(rid, 'action.completed').find((a) => a.data.action_id === 'act_' + block);
+      assert.deepStrictEqual([web.data.outcome, web.data.exit_taken], [outcome, exit]);
+      const step = ofType(rid, 'step.started').find((s) => s.data.block_id === block);
+      const done = ofType(rid, 'step.completed').find((s) => s.data.step_seq === step.seq);
+      assert.deepStrictEqual([done.data.outcome, done.data.exit_taken], [outcome, exit]);
+    });
+  }
 
   it('/start{"a":1} records a as jump_params in outside_changes', async function () {
     const rid = newRequestId();

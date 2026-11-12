@@ -14,6 +14,7 @@ const integrationService = require("../../services/IntegrationService");
 const aiController = require("../../services/AIController");
 const { Logger } = require("../../Logger");
 const { randomUUID } = require("crypto");
+const WriteTap = require('../../executions/WriteTap');
 
 
 class DirAiCondition {
@@ -77,6 +78,7 @@ class DirAiCondition {
       this.logger.error(error);
       await this.chatbot.addParameter("flowError", error);
       if (errorIntent) {
+        WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
         await this.#executeIntent(errorIntent);
         callback(true);
         return;
@@ -135,6 +137,7 @@ class DirAiCondition {
         winston.error("DirAiCondition Error getting ollama integration: ", err);
         await this.chatbot.addParameter("flowError", "Ollama integration not found");
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -151,6 +154,7 @@ class DirAiCondition {
         winston.error("DirAiCondition Error getting vllm integration");
         await this.chatbot.addParameter("flowError", "Vllm integration not found");
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -166,6 +170,7 @@ class DirAiCondition {
           this.logger.error("[AI Condition] missing vllmServer for multi-server vllm integration");
           await this.chatbot.addParameter("flowError", "AiCondition Error: 'vllmServer' attribute is undefined");
           if (errorIntent) {
+            WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
             await this.#executeIntent(errorIntent);
             callback(true);
             return;
@@ -178,6 +183,7 @@ class DirAiCondition {
           this.logger.error("[AI Condition] vllm server not found: ", filled_vllm_server);
           await this.chatbot.addParameter("flowError", "AiCondition Error: vllm server '" + filled_vllm_server + "' not found");
           if (errorIntent) {
+            WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
             await this.#executeIntent(errorIntent);
             callback(true);
             return;
@@ -195,6 +201,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition llm key not found in vllm integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm vllm");
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -215,6 +222,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition openrouter integration not resolved: " + (err?.error || err?.message));
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm " + action.llm);
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -235,6 +243,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition agentplatform integration not resolved: " + errorMsg);
         await this.chatbot.addParameter("flowError", "AiCondition Error: " + errorMsg);
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -248,6 +257,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition llm key not found in agentplatform integration");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm " + action.llm);
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -270,6 +280,7 @@ class DirAiCondition {
         winston.error("Error: DirAiCondition llm key not found");
         await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm " + action.llm);
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
           return;
@@ -286,6 +297,7 @@ class DirAiCondition {
           this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
           await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
           if (errorIntent) {
+            WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
             await this.#executeIntent(errorIntent);
             callback();
             return;
@@ -297,6 +309,7 @@ class DirAiCondition {
         this.logger.error("An error occured on checking token quota availability");
         await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
         if (errorIntent) {
+          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback();
           return;
@@ -384,6 +397,7 @@ class DirAiCondition {
           this.logger.error("[AI Condition] error executing action: ", error);
           if (errorIntent) {
             await this.chatbot.addParameter("flowError", "AiCondition Error: " + error);
+            WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
             await this.#executeIntent(errorIntent);
             callback(true);
             return;
@@ -408,6 +422,7 @@ class DirAiCondition {
 
           if (answer === "fallback") {
             if (fallbackIntent) {
+              WriteTap.noteExit('fallbackIntent'); // execution tracing: the branch taken (no-op when off)
               await this.#executeIntent(fallbackIntent) 
               if (callback) {
                 callback(true);
@@ -423,6 +438,7 @@ class DirAiCondition {
               }
             });
             if (answer_found) {
+              WriteTap.noteExit('jump'); // execution tracing: the branch taken (no-op when off)
               await this.#executeIntent(answer_found.conditionIntentId) 
               if (callback) {
                 callback(true);
@@ -431,6 +447,7 @@ class DirAiCondition {
             }
             else { // if (answer === "fallback") {
               if (fallbackIntent) {
+                WriteTap.noteExit('fallbackIntent'); // execution tracing: the branch taken (no-op when off)
                 await this.#executeIntent(fallbackIntent) 
                 if (callback) {
                   callback(true);

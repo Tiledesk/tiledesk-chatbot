@@ -4,6 +4,7 @@ let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirIfOpenHours {
 
@@ -92,6 +93,7 @@ class DirIfOpenHours {
           if (callback) {
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
@@ -103,6 +105,7 @@ class DirIfOpenHours {
             this.logger.native("[If Operating Hours] is open: true")
             if (trueIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
+              WriteTap.noteExit('trueIntent'); // execution tracing: the branch taken (no-op when off)
               winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
@@ -114,6 +117,7 @@ class DirIfOpenHours {
             this.logger.native("[If Operating Hours] is open: false")
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);

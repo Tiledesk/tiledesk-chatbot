@@ -14,18 +14,31 @@ function normalize(v) {
   return s.trim();
 }
 
-function mapOutcome({ action, jumpedTo, error } = {}) {
+const exitName = (field) => (field.endsWith('Intent') ? field.slice(0, -'Intent'.length) : field);
+
+/**
+ * exit: the exit field the directive noted when it picked its branch (WriteTap.noteExit: 'trueIntent',
+ * 'falseIntent', ... or 'jump'). It wins over target matching, which cannot tell apart two exits that
+ * lead to the same block. With no signal the jump target is matched against the exit fields; when it
+ * matches both a failure and a success exit the branch is unknown, and the record is success /
+ * 'ambiguous', never failure_condition (spec §7.1.7).
+ */
+function mapOutcome({ action, jumpedTo, error, exit } = {}) {
   if (error) return { outcome: 'error', exit_taken: null };
+  if (typeof exit === 'string' && exit) {
+    return { outcome: FAILURE_EXITS.includes(exit) ? 'failure_condition' : 'success', exit_taken: exitName(exit) };
+  }
   const target = normalize(jumpedTo);
   if (!target) return { outcome: 'success', exit_taken: null };
   const find = (fields) => fields.find((f) => {
-    const exit = normalize(action && action[f]);
-    return exit && exit === target;
+    const field = normalize(action && action[f]);
+    return field && field === target;
   });
   const fail = find(FAILURE_EXITS);
-  if (fail) return { outcome: 'failure_condition', exit_taken: fail.slice(0, -'Intent'.length) };
   const ok = find(SUCCESS_EXITS);
-  if (ok) return { outcome: 'success', exit_taken: ok.slice(0, -'Intent'.length) };
+  if (fail && ok) return { outcome: 'success', exit_taken: 'ambiguous' };
+  if (fail) return { outcome: 'failure_condition', exit_taken: exitName(fail) };
+  if (ok) return { outcome: 'success', exit_taken: exitName(ok) };
   return { outcome: 'success', exit_taken: 'jump' };
 }
 

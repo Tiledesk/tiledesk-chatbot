@@ -4,6 +4,7 @@ const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
 const { Logger } = require("../../Logger");
 const dataTablesService = require("../../services/DataTablesService");
+const WriteTap = require('../../executions/WriteTap');
 
 const SUPPORTED_OPERATIONS = ['get', 'insert', 'update', 'delete', 'upsert'];
 const ROW_DOCUMENT_OPERATIONS = ['insert', 'update', 'delete', 'upsert'];
@@ -236,6 +237,8 @@ class DirDataTables {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

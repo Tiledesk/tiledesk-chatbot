@@ -404,6 +404,17 @@ A table keyed by action type. Examples (full table in the tybot plan):
 
 A thrown error is always `error`.
 
+**Which exit was taken.** The directive says it: at the point where it picks its branch
+(`#executeCondition(result, …)`, or its inline `if`) it calls `WriteTap.noteExit('trueIntent' |
+'falseIntent' | 'errorIntent' | 'fallbackIntent' | 'noMatchIntent' | 'noInputIntent' | 'goToIntent' |
+'jump')` on the running action's store. The mapper uses that signal first: a failure field
+(`falseIntent`, `noMatchIntent`, `noInputIntent`, `errorIntent`) gives `failure_condition`, anything
+else `success`, and `exit_taken` is the field without `Intent`. The signal stands with no jump too (a
+false result with no block connected is `failure_condition` / `false`). Only without a signal is the
+jump target matched against the exit fields; if it matches both a failure and a success exit (both
+exits on the same block) the branch is unknown and the record is `success` with `exit_taken:
+'ambiguous'`, never `failure_condition`. Flag off, `noteExit` is a no-op (no action store exists).
+
 #### 7.1.8 Configuration
 
 | Env | Default | Purpose |
