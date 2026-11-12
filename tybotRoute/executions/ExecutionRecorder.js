@@ -13,6 +13,7 @@ const { detectTrigger } = require('./trigger');
 const { rootIdOf } = require('./botIdentity');
 const AbortRegistry = require('./AbortRegistry');
 const Checkpointer = require('./Checkpointer');
+const MenuWait = require('./MenuWait');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
@@ -181,6 +182,45 @@ function countChanged(before, after) {
   return n;
 }
 
+/**
+ * The menu this chain ends waiting on: the last action of the last step is a replyv2 with action buttons that
+ * took no exit (it asked and stopped). null otherwise.
+ */
+function menuWaitOf(ctx) {
+  try {
+    const step = ctx.step;
+    if (!step || step.seq === null || step.seq === undefined || !step.actions.length) return null;
+    const rec = step.actions.reduce((a, b) => (b.index > a.index ? b : a));
+    const directive = rec.directive;
+    if (!directive || String(directive.name).toLowerCase() !== 'replyv2' || rec.exit_taken) return null;
+    const buttons = MenuWait.buttonsOf(directive.action);
+    if (buttons.length === 0) return null;
+    const actionId = directive.action && directive.action._tdActionId;
+    return { step_seq: step.seq, action_index: rec.index, action_id: actionId === undefined ? null : actionId, buttons };
+  } catch (err) {
+    warn('menuWaitOf', err);
+    return null;
+  }
+}
+
+/** A click on the menu the last chain waited on: action.resolved names the button on that menu's action. */
+async function resolveMenu(ctx, menu, message) {
+  try {
+    const button = MenuWait.clicked(menu.buttons, message);
+    if (!button) return null;
+    return await emit(ctx, 'action.resolved', () => ({
+      step_seq: menu.step_seq,
+      action_index: menu.action_index,
+      action_id: menu.action_id === undefined ? null : menu.action_id,
+      exit_taken: MenuWait.exitFor(button),
+      outcome: 'success'
+    }));
+  } catch (err) {
+    warn('resolveMenu', err);
+    return null;
+  }
+}
+
 function actionRecord(ctx, index) {
   return ctx.step.actions.find((a) => a.index === index);
 }
@@ -322,12 +362,15 @@ const ExecutionRecorder = {
       // transit DEL (a further exec:* read for this message is one more line in this array)
       const hinted = message && message.attributes && message.attributes.execution_id;
       const needState = cfg.stateEnabled && resolved.state === undefined;
-      const [capture, savedState, leased, , stop] = await Promise.all([
+      // a user message on a running execution takes the menu its last chain waited on (a click names its button)
+      const fromUser = !!message && message.sender !== '_tdinternal' && !hinted;
+      const [capture, savedState, leased, , stop, menu] = await Promise.all([
         captureData(st, projectId),
         needState ? st.getState(ctx.execution_id) : null,
         st.acquireLease(ctx.execution_id, ctx.pod, cfg.leaseMs),
         hinted ? st.clearTransit(ctx.execution_id) : null,
-        st.getStop(ctx.execution_id)
+        st.getStop(ctx.execution_id),
+        fromUser && !resolved.created ? st.takeMenuWait(ctx.execution_id) : null
       ]);
       ctx._captureData = capture;
       ctx._stopAtStart = stop || null; // read by gateMessage
@@ -364,6 +407,7 @@ const ExecutionRecorder = {
         });
         if (!isAutomation(ctx)) writeExecutionId(ctx, token);
       }
+      if (menu) await resolveMenu(ctx, menu, message);
       // hard stop: this chain's controller, released with the lease at every chain exit
       const ac = AbortRegistry.register(ctx.execution_id);
       ctx._abort = ac;
@@ -751,6 +795,8 @@ const ExecutionRecorder = {
         await ctx._store.setStatusHint(ctx.execution_id, 'completed');
         return seq;
       }
+      const menu = menuWaitOf(ctx);
+      if (menu) ctx._store.setMenuWait(ctx.execution_id, menu); // fire-and-forget: the store never throws
       const seq = await emit(ctx, 'execution.idle', (seq) => ({ last_seq: seq }));
       Checkpointer.park(ctx);
       return seq;

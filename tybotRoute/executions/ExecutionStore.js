@@ -364,6 +364,26 @@ class ExecutionStore {
     }
   }
 
+  /** The menu a chain ended waiting on (MenuWait): { step_seq, action_index, action_id, buttons }. */
+  async setMenuWait(id, value) {
+    try {
+      await this.client.set(`exec:${id}:menu`, JSON.stringify(value), { EX: TTL });
+    } catch (err) {
+      this._warn('setMenuWait', err);
+    }
+  }
+
+  /** Read once: the next user message takes it (GETDEL), whatever it is. null: none or Redis error. */
+  async takeMenuWait(id) {
+    try {
+      const raw = await this.client.getDel(`exec:${id}:menu`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      this._warn('takeMenuWait', err);
+      return null;
+    }
+  }
+
   async setStatusHint(id, status) {
     try {
       await this._hSetIfExists(id, 'status', status);

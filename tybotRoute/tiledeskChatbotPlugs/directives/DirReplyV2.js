@@ -128,7 +128,7 @@ class DirReplyV2 {
             // invoke button
             if (button && button.action) {
               let button_action = DirIntent.intentDirectiveFor(button.action, null);
-              WriteTap.noteExit('jump'); // execution tracing: a button, not an exit field (no-op when off)
+              WriteTap.noteExit('button: ' + button.value); // execution tracing: the button typed, by its text (no-op when off)
               this.intentDir.execute(button_action, () => {
                 winston.debug("(DirReplyV2) action invoked", button_action);
               });

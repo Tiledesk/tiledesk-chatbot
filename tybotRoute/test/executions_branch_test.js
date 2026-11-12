@@ -325,3 +325,128 @@ describe('executions: the branch a conditional action took (B1)', function () {
     });
   });
 });
+
+// Stage findings (2026-11-12): the case a multi condition / AI condition took is recorded by its label, the
+// button of a menu by its text, and two engine hangs / double callbacks found on the same run.
+describe('executions: named branches and engine fixes (stage findings)', function () {
+  this.timeout(10000);
+  const { DirJSONConditionMulti } = require('../tiledeskChatbotPlugs/directives/DirJSONConditionMulti');
+  const { DirAiCondition } = require('../tiledeskChatbotPlugs/directives/DirAiCondition');
+  const { DirDepartment } = require('../tiledeskChatbotPlugs/directives/DirDepartment');
+  let savedEnv;
+  const restores = [];
+  const stub = (obj, key, fn) => {
+    const orig = obj[key];
+    obj[key] = fn;
+    restores.push(() => { obj[key] = orig; });
+  };
+  before(function () { savedEnv = process.env.EXECUTIONS_ENABLED; process.env.EXECUTIONS_ENABLED = 'true'; });
+  after(function () {
+    if (savedEnv === undefined) delete process.env.EXECUTIONS_ENABLED;
+    else process.env.EXECUTIONS_ENABLED = savedEnv;
+  });
+  afterEach(function () { while (restores.length) restores.pop()(); });
+
+  describe('multi condition', function () {
+    const multi = () => new DirJSONConditionMulti(makeContext({ word: 'hello' }));
+    const action = (word) => ({
+      cases: [
+        { label: 'bye', when: `word == "${word === 'bye' ? 'hello' : 'nope'}"`, intent: '#same' },
+        { label: 'hello', when: 'word == "hello"', intent: '#same' }
+      ],
+      elseIntent: '#same'
+    });
+    it('the matched case is the exit, by its label, even when every case leads to the same block', async function () {
+      const r = await traced(multi, { name: 'jsonconditionmulti', action: action('hello') });
+      assert.deepStrictEqual([r.jumps, r.outcome, r.exit_taken], [['#same'], 'success', 'hello']);
+      const first = await traced(multi, { name: 'jsonconditionmulti', action: action('bye') });
+      assert.strictEqual(first.exit_taken, 'bye');
+    });
+    it('no case matched -> success / else', async function () {
+      const r = await traced(multi, { name: 'jsonconditionmulti', action: { cases: [{ label: 'x', when: 'word == "no"', intent: '#a' }], elseIntent: '#same' } });
+      assert.deepStrictEqual([r.jumps, r.outcome, r.exit_taken], [['#same'], 'success', 'else']);
+    });
+    it('flag off: the same jumps and callbacks', async function () {
+      const on = await traced(multi, { name: 'jsonconditionmulti', action: action('hello') });
+      const off = await untraced(multi, { name: 'jsonconditionmulti', action: action('hello') });
+      assert.deepStrictEqual(off, { jumps: on.jumps, stops: on.stops });
+    });
+  });
+
+  describe('AI condition', function () {
+    const make = () => new DirAiCondition(makeContext());
+    const action = {
+      llm: 'openrouter', model: 'm', instructions: '',
+      intents: [{ label: 'positive', prompt: 'p', conditionIntentId: '#same' }, { label: 'negative', prompt: 'n', conditionIntentId: '#same' }],
+      fallbackIntent: '#same', errorIntent: '#err'
+    };
+    const answer = (a) => {
+      stub(aiController, 'resolveLLMConfig', async () => ({ name: 'm', provider: 'openrouter', api_key: 'key' }));
+      stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(null, /\/ask$/.test(req.url) ? { answer: a, success: true } : { isAvailable: true })));
+    };
+    it('a matched condition is the exit, by its label', async function () {
+      answer('negative');
+      const r = await traced(make, { name: 'ai_condition', action });
+      assert.deepStrictEqual([r.jumps, r.outcome, r.exit_taken], [['#same'], 'success', 'negative']);
+    });
+    it('fallback stays success / fallback', async function () {
+      answer('fallback');
+      const r = await traced(make, { name: 'ai_condition', action });
+      assert.deepStrictEqual([r.outcome, r.exit_taken], ['success', 'fallback']);
+    });
+  });
+
+  describe('if open hours: one callback per run (the block\'s next action used to run after the jump)', function () {
+    const make = () => new DirIfOpenHours(makeContext());
+    for (const [isopen, target] of [[true, '#t'], [false, '#f']]) {
+      it(`isopen ${isopen}: one jump, one callback`, async function () {
+        stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(null, { isopen })));
+        const r = await traced(make, { name: 'ifopenhours', action: { trueIntent: '#t', falseIntent: '#f', stopOnConditionMet: true } });
+        assert.deepStrictEqual(r.jumps, [target]);
+        assert.deepStrictEqual(r.stops, [true]);
+      });
+    }
+    it('the isopen call fails and no false exit is set: it calls back (it used to hang)', async function () {
+      stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(new Error('down'))));
+      const r = await traced(make, { name: 'ifopenhours', action: { trueIntent: '#t' } });
+      assert.deepStrictEqual([r.jumps, r.stops.length], [[], 1]);
+    });
+  });
+
+  describe('change department', function () {
+    const deps = [{ _id: 'd1', name: 'Sales', hasBot: false }, { _id: 'd2', name: 'Bots', hasBot: true, id_bot: 'b1' }];
+    const make = (vars, calls) => {
+      const d = new DirDepartment(makeContext(vars));
+      d.tdClient = {
+        getAllDepartments: (cb) => setImmediate(() => cb(null, deps)),
+        updateRequestDepartment: (rid, depId, x, cb) => { calls.push(depId); setImmediate(() => cb(null, {})); },
+        sendSupportMessage: (rid, msg, cb) => { calls.push('msg:' + msg.text); setImmediate(() => cb(null)); }
+      };
+      return d;
+    };
+    const run = (d, action) => new Promise((resolve) => {
+      const t = setTimeout(() => resolve('hung'), 1000);
+      d.execute({ action }, () => { clearTimeout(t); resolve('called back'); });
+    });
+    it('fills {{attributes}} in the department name', async function () {
+      const calls = [];
+      assert.strictEqual(await run(make({ department_name: 'sales' }, calls), { depName: '{{department_name}}' }), 'called back');
+      assert.deepStrictEqual(calls, ['d1']);
+    });
+    it('no department by that name: it calls back (it used to hang)', async function () {
+      const calls = [];
+      assert.strictEqual(await run(make({}, calls), { depName: 'Nowhere' }), 'called back');
+      assert.deepStrictEqual(calls, []);
+    });
+    it('triggerBot on a department with no bot: it calls back (it used to hang)', async function () {
+      const calls = [];
+      assert.strictEqual(await run(make({}, calls), { depName: 'Sales', triggerBot: true }), 'called back');
+      assert.deepStrictEqual(calls, ['d1']);
+    });
+    it('triggerBot on a department with a bot: the hidden /start, then the callback', async function () {
+      const calls = [];
+      assert.strictEqual(await run(make({}, calls), { depName: 'Bots', triggerBot: true }), 'called back');
+      assert.deepStrictEqual(calls, ['d2', 'msg:/start']);
+    });
+  });
+});

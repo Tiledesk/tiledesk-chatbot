@@ -654,6 +654,47 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     assert.strictEqual(await client.exists(`exec:${ctx.execution_id}:state`), 0, 'no state write over a failed read');
   });
 
+  it('a menu the chain waited on: the click names its button on the menu action (action.resolved), once', async function () {
+    const store = new ExecutionStore(client);
+    const { rid, ctx } = await openCtx(store);
+    const buttons = [{ type: 'action', value: 'Close', action: '#close' }, { type: 'action', value: 'Human', action: '#human' }];
+    const directive = { name: 'replyv2', action: { _tdActionId: 'menu_1', attributes: { commands: [{ type: 'message', message: { text: 'Pick', attributes: { attachment: { buttons } } } }] } } };
+    await ExecutionRecorder.runAction(ctx, { index: 0, directive }, () => {});
+    await ExecutionRecorder.afterAction(ctx, { index: 0, directive });
+    await ExecutionRecorder.blockExit(ctx);
+    await ExecutionRecorder.endOfChain(ctx);
+    await ExecutionRecorder._drainForTests();
+    const menuSeq = ofType(rid, 'step.started')[0].data.step_seq;
+    const meta = { bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store };
+
+    const click = await ExecutionRecorder.onMessageIn(Object.assign({ message: { sender: 'u1', text: 'Human', attributes: { action: '#human' }, request: { request_id: rid } } }, meta));
+    assert.strictEqual(click.execution_id, ctx.execution_id);
+    await ExecutionRecorder.endWithoutChain(click);
+    // a second user message (a redelivery, or a later click) finds nothing to resolve
+    const again = await ExecutionRecorder.onMessageIn(Object.assign({ message: { sender: 'u1', text: 'Close', attributes: { action: '#close' }, request: { request_id: rid } } }, meta));
+    await ExecutionRecorder.endWithoutChain(again);
+    await ExecutionRecorder._drainForTests();
+    const resolved = ofType(rid, 'action.resolved');
+    assert.strictEqual(resolved.length, 1);
+    assert.deepStrictEqual(resolved[0].data, { step_seq: menuSeq, action_index: 0, action_id: 'menu_1', exit_taken: 'button: Human', outcome: 'success' });
+    assert.strictEqual(ofType(rid, 'action.completed')[0].data.exit_taken, null, 'the menu itself recorded no exit when it asked');
+  });
+
+  it('a typed reply to a waiting menu resolves nothing (the menu runs again and records its own exit)', async function () {
+    const store = new ExecutionStore(client);
+    const { rid, ctx } = await openCtx(store);
+    const directive = { name: 'replyv2', action: { _tdActionId: 'menu_2', attributes: { commands: [{ type: 'message', message: { attributes: { attachment: { buttons: [{ type: 'action', value: 'Yes', action: '#yes' }] } } } }] } } };
+    await ExecutionRecorder.runAction(ctx, { index: 0, directive }, () => {});
+    await ExecutionRecorder.afterAction(ctx, { index: 0, directive });
+    await ExecutionRecorder.blockExit(ctx);
+    await ExecutionRecorder.endOfChain(ctx);
+    const typed = await ExecutionRecorder.onMessageIn({ message: { sender: 'u1', text: 'Yes', attributes: {}, request: { request_id: rid } }, bot: { name: 'b' }, botId: BOT_ID, requestId: rid, projectId: PROJECT_ID, token: CHATBOT_TOKEN, store });
+    await ExecutionRecorder.endWithoutChain(typed);
+    await ExecutionRecorder._drainForTests();
+    assert.strictEqual(ofType(rid, 'action.resolved').length, 0);
+    assert.strictEqual(await client.exists(`exec:${ctx.execution_id}:menu`), 0, 'taken by the typed message');
+  });
+
   it('a block that yields no reply still closes its step', async function () {
     const rid = newRequestId();
     send('/empty', rid);
