@@ -124,6 +124,9 @@ router.post('/ext/:botid', async (req, res) => {
     winston.warn("(tybotRoute) resume message without an execution context: dropped");
     return;
   }
+  // a continuation of an execution that ended (the conversation was closed during a wait, say): unrecorded,
+  // and its own later jumps too (they keep the hint). The flow runs as before
+  if (!ctx && executionsEnabled()) ExecutionRecorder.continueUntraced(message, requestId);
   // resumed run (attributes.resume of this execution, posted by the ResumeDriver, no stop flag): no gate,
   // the block runs from the checkpoint action; a duplicate is dropped. Anything else: attributes.resume is ignored
   const resume = ctx ? ExecutionRecorder.resumeOf(ctx, message) : null;

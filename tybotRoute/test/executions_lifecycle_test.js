@@ -344,7 +344,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     });
   }
 
-  it('a jump after the conversation closed during a wait records no new execution; a new user message starts one (B2)', async function () {
+  it('jumps after the conversation closed during a wait (two hops) record no new execution; a new user message starts one (B2, I1)', async function () {
     const rid = newRequestId();
     send('/wait_hop', rid);
     await waitFor(() => ofType(rid, 'step.started').some((s) => s.data.block_id === 'wait_hop'), 'the wait block to start');
@@ -357,7 +357,8 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     await settle(rid);
     assert.deepStrictEqual([...new Set(events(rid).map((e) => e.execution_id))], [id], 'every event is the closed execution\'s');
     assert.strictEqual(ofType(rid, 'execution.started').length, 1, 'no phantom execution.started');
-    assert.ok(!ofType(rid, 'step.started').some((s) => s.data.block_id === 'after'), 'the continuation is not recorded');
+    // two hops after the close (wait_hop -> mid -> after): neither is recorded, no phantom on the second
+    assert.ok(!ofType(rid, 'step.started').some((s) => ['mid', 'after'].includes(s.data.block_id)), 'the continuation is not recorded');
     assert.strictEqual(await client.get(`exec:req:${rid}:${BOT_ID}`), null, 'no exec:req written');
 
     // a real new user message on the reopened conversation starts a new execution

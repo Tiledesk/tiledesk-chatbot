@@ -43,8 +43,19 @@ function noteExit(exit) {
   store.exit = exit;
 }
 
+/**
+ * An untraced continuation (a jump of an execution that ended, which resolve left unrecorded): the rest of
+ * this /ext handler, and everything it starts, runs under a marker store carrying that execution id, so
+ * the chain's later jumps carry it too (beforeJump) and resolve to nothing as well, hop after hop.
+ * Synchronous, in the caller's own async context (AsyncLocalStorage.enterWith). Flag off: a no-op.
+ */
+function enterUntraced(requestId, executionId) {
+  if (!isEnabled() || typeof executionId !== 'string' || !executionId) return;
+  als.enterWith({ kind: 'untraced', requestId, executionId, writes: new Map() });
+}
+
 function current() {
   return als.getStore();
 }
 
-module.exports = { runAction, runScope, note, noteExit, current };
+module.exports = { runAction, runScope, note, noteExit, enterUntraced, current };

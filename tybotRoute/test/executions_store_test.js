@@ -68,8 +68,10 @@ describe('ExecutionStore', function () {
     const x = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: other.executionId, meta });
     assert.strictEqual(x.executionId, other.executionId);
     assert.strictEqual(x.created, false);
+    // a gone hint is a continuation of nothing: not attached to the request key's execution (M3)
     const y = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: 'missing-id', meta });
-    assert.strictEqual(y.executionId, a.executionId);
+    assert.strictEqual(y, null);
+    assert.strictEqual(await client.get(`exec:req:${r}:A`), a.executionId);
   });
 
   it('terminal status starts a new execution with previousExecutionId', async function () {
@@ -172,15 +174,17 @@ describe('ExecutionStore', function () {
     assert.strictEqual(await store.popFrame(a.executionId), null);
   });
 
-  it('hinted terminal id with a live execution on the request key: that one is reused', async function () {
+  it('a stale continuation (hint names an ended execution, another one live on the key) attaches to nothing (M3)', async function () {
     const r = rid('ht');
     const a = await make(r, 'A');
     await store.setStatusHint(a.executionId, 'completed');
     const b = await make(r, 'A'); // a new user message started the next execution
     assert.strictEqual(b.created, true);
     const x = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: a.executionId, meta });
-    assert.strictEqual(x.created, false);
-    assert.strictEqual(x.executionId, b.executionId);
+    assert.strictEqual(x, null, 'not recorded inside the newer execution');
+    assert.strictEqual(await client.get(`exec:req:${r}:A`), b.executionId, 'exec:req untouched');
+    const y = await store.resolve({ requestId: r, agentId: 'A', hintedExecutionId: b.executionId, meta });
+    assert.strictEqual(y.executionId, b.executionId, 'a hint naming the live current one is reused');
   });
 
   it('a continuation (hinted id) of an execution that ended, no live one on the request: nothing is created (B2)', async function () {
@@ -305,12 +309,11 @@ describe('ExecutionStore', function () {
     assert.deepStrictEqual(y.state, v);
     assert.deepStrictEqual(calls.map((k) => k.call), ['get', 'hGet', 'get']);
     assert.strictEqual(calls[2].pendingBefore, 1);
-    // a gone hint (null HGET) falls through to the request key
+    // a gone hint (null HGET) resolves to nothing, with that one HGET and no request-key read (M3)
     calls.length = 0;
     const z = await s.resolve({ requestId: r, agentId: 'A', hintedExecutionId: 'missing-id', meta });
-    assert.strictEqual(z.executionId, a.executionId);
-    assert.ok(!calls.some((k) => k.call === 'exists'));
-    assert.strictEqual(z.state, undefined, 'without withState no state is read');
+    assert.strictEqual(z, null);
+    assert.deepStrictEqual(calls.map((k) => k.call), ['hGet']);
   });
 
   it('resolve returns null when the client throws', async function () {

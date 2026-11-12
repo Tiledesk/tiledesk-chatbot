@@ -114,6 +114,17 @@ const bot = {
 		"question": "",
 		"actions": [
 			{ "_tdActionType": "wait", "_tdActionId": "act_wait_hop", "_tdActionTitle": "wait", "millis": 1000 },
+			{ "_tdActionType": "intent", "_tdActionId": "act_goto_mid", "_tdActionTitle": "go to mid", "intentName": "#mid" }
+		]
+	}, {
+		// a second hop after the close: mid -> after
+		"webhook_enabled": false,
+		"enabled": true,
+		"language": "en",
+		"intent_display_name": "mid",
+		"intent_id": "mid",
+		"question": "",
+		"actions": [
 			{ "_tdActionType": "intent", "_tdActionId": "act_goto_after", "_tdActionTitle": "go to after", "intentName": "#after" }
 		]
 	}]

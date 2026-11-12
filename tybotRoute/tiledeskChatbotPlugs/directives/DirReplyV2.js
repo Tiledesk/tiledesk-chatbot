@@ -109,7 +109,6 @@ class DirReplyV2 {
                     await this.chatbot.unlockAction(this.requestId);
                     winston.debug("(DirReplyV2) Unlocked (for noInput) ReplyV2");
                     let noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
-                    WriteTap.noteExit('noInputIntent'); // execution tracing: the branch taken (no-op when off)
                     this.intentDir.execute(noinput_action, () => {
                       winston.debug("(DirReplyV2) noinput action invoked", noinput_action);
                     });

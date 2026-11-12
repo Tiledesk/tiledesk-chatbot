@@ -782,6 +782,21 @@ const ExecutionRecorder = {
   },
 
   /**
+   * /ext, when onMessageIn gave no ctx: a continuation (attributes.execution_id, not a resume) whose
+   * execution ended or is gone runs unrecorded, and so do the jumps it posts (WriteTap.enterUntraced).
+   * Synchronous: it must run in the handler's own async context. Never throws.
+   */
+  continueUntraced(message, requestId) {
+    try {
+      const hinted = message && message.attributes && message.attributes.execution_id;
+      if (!hinted || ExecutionRecorder.isResumeMessage(message)) return;
+      WriteTap.enterUntraced(requestId, hinted);
+    } catch (err) {
+      warn('continueUntraced', err);
+    }
+  },
+
+  /**
    * Called by TilebotService.sendMessageToBot before a block jump is posted.
    * Outside a traced action: undefined, synchronously, and the message is untouched.
    * In one: onJump runs synchronously (it marks the jump before the action's own callback can
@@ -794,6 +809,13 @@ const ExecutionRecorder = {
     let store;
     try {
       store = WriteTap.current();
+      // an untraced continuation's jump keeps the ended execution's id, so the next hop stays untraced
+      if (store && store.kind === 'untraced') {
+        if (message && message.payload) {
+          message.payload.attributes = Object.assign({}, message.payload.attributes || {}, { execution_id: store.executionId });
+        }
+        return undefined;
+      }
       if (!store || store.kind !== 'action' || typeof store.onJump !== 'function' || !store.executionId) return undefined;
       // hard stop: the aborted action's jump (its error exit, say) is not posted
       if (typeof store.isAborted === 'function' && store.isAborted()) return 'skip';

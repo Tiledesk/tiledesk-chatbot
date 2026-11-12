@@ -92,7 +92,8 @@ class DirJSONCondition {
     result = new TiledeskExpression().evaluateStaticExpression(expression, variables);
     winston.debug("(DirJSONCondition) Evaluation result: ", result);
     // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
-    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
+    // a null result is an evaluation error (flowError is set): a failure, though it takes the false exit
+    WriteTap.noteExit(result === true ? 'trueIntent' : (result === null ? 'errorIntent' : 'falseIntent'));
     if (result === true) {
       if (trueIntentDirective) {
         this.intentDir.execute(trueIntentDirective, () => {
