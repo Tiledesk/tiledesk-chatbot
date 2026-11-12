@@ -424,6 +424,7 @@ class DirAiPrompt {
     }
 
     const loggableJson = json.servers ? { ...json, servers: DirAiPrompt.redactServers(json.servers) } : json;
+    console.log("DirAiPrompt json: ", loggableJson);
     winston.debug("DirAiPrompt json: ", loggableJson);
 
     const HTTPREQUEST = {
