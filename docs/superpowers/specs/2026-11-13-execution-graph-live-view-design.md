@@ -114,14 +114,14 @@ different formats"; all filters apply to both views (user choice).
 - **One header** for both views: the big-number cards, the toolbar (agent selector, search, trigger, status,
   with failure conditions, with errors via the card, test runs, time), the Refresh button and the "updated …
   ago" note. Switching view keeps every filter.
-- **One time control**: Now · Last 1 hour · 24 hours · 7 days · 30 days (URL `range`, default now? — **24h** for
-  the list's existing users; my call: keep the list's default 24h... see below). The view rule of the graph
-  (live runs of any age, plus all runs started in the range; Now = live only) applies to **both** views, so
-  the list on Now shows the unfinished runs, and on a range the unfinished ones of any age plus the range.
-  Default range: **Now** (the graph's) — my call, as the page opens on what is happening now.
+- **One time control**: Now · Last 1 hour · 24 hours · 7 days · 30 days (URL `range`). The graph's view rule
+  applies to **both** views: Now = the unfinished runs of any age; a range = those plus every run started in it.
+  So the list on Now shows the unfinished runs. Default: **Now** (my call: the page opens on what is happening).
+  The list's old `period` param (24h/7d/30d) is read as `range` so existing links keep working.
 - **All filters apply to both views**: `/graph` takes the list's filters (agent_id, trigger, status,
   has_failures, has_errors, test, q) on top of the range view; the cards (stats) take the same filters, so
   cards, list and graph always describe the same set. In graph view, the search shows just the matching run
   and its agent. An agent picked in the selector shows only that agent in the graph.
-- **Polling**: one call per refresh in both views (list: page + stats; graph: /graph); every 60 s, paused
-  while hidden, plus the Refresh button. The list's 10 s while-running rule is replaced by this.
+- **Polling** (user: keep the polling): the graph view refreshes every 60 s (one /graph call); the list view keeps
+  its rule (10 s, only while a visible row is running or stopping; one call with the stats). Both pause while the
+  tab is hidden, and the Refresh button and the "updated … ago" note serve both views.
