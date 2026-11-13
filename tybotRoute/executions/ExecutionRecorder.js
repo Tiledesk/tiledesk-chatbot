@@ -604,7 +604,7 @@ const ExecutionRecorder = {
       }
       else {
         await emit(ctx, 'execution.message_while_stopped', () => ({}));
-        // the user's message is dropped: tell them, once per stop (the widget would wait for a reply forever)
+        // the user's message is dropped: tell them, every time (the widget would wait for a reply forever)
         await StopNotice.notify({
           client: ctx._store.client,
           idProject: ctx.id_project,
