@@ -82,3 +82,23 @@ User: "the with errors is important when compromise the flow execution not when 
   waiting · stopped · completed · destroyed; newest first within a group. The first 12 by this order are drawn,
   the rest folded into "+N". A run with errors gets a red mark on its chip; the timeline marks the unhandled
   action ("not handled").
+
+## Addendum 2 (2026-11-13): one call per refresh, slower polling with a Refresh button
+
+User: no WebSocket — "polling once a minute and with a specific button to refresh the state"; "keep the polling
+but optimise" (fewer queries).
+
+- **Graph endpoint** `GET /projects/:pid/executions/graph?range=now|1h|24h|7d|30d[&test=all|true|false]` (default
+  test all), same view and permission as `stats`. One aggregation (`$facet`) returns:
+  `{ range, from, statuses, with_errors, agents: { <agent_id>: { name, counts (statuses + errors +
+  failure_conditions), drawn: [rows, at most 12, chip priority order], hidden: { <status>: n } } } }`.
+  Chip priority as in the first addendum (failed · with errors · stopping · running · waiting · stopped ·
+  completed · destroyed; newest first within a group), done server-side (`$topN`, Mongo ≥ 5.2; stage runs 7).
+  `name` is the agent_name on its newest run (deleted agents keep a name). Rows carry the list row fields.
+- **Graph page**: one call per cycle; refresh every 60 s after the previous answer (paused while hidden, as
+  today); a **Refresh** button next to the time range (disabled while a call is in flight) and an "updated N
+  s/min ago" note; a range change fetches at once. The page no longer pages through lists, so the "some
+  executions are not drawn" note goes (the "+N" nodes say it per agent).
+- **List**: `GET /executions?…&with_stats=true` returns the page and, alongside, the stats of the list's period
+  (agent and test filters applied): one call instead of two. Polling unchanged (10 s, only while a visible
+  row runs). Detail unchanged (already one call).
