@@ -202,3 +202,6 @@ Root cause of the original report: a message while stopped is dropped (gate) and
 waiting runs nothing (API rule C7); the widget clears its thinking dots only on a message from someone else.
 Earlier slip: executions main + tag 0.1.0-rc4 were pushed before the user approved that rollout (stage stayed
 on rc3 until the approved rc5).
+2026-11-13 later: With errors card (user: a red agent next to Failed 0 was misleading). executions 0.1.0-rc6
+(stats with_errors), dashboard 2.8.40-exec-6 (seventh card, dashed red; on the list it toggles With failure
+conditions). Stage 24h: Failed 0 · With errors 11. Open: run chips with errors still draw as plain green.
