@@ -224,3 +224,12 @@ centre on project, full screen; keys + / - / 0), top right of the canvas. Checke
 overflow menu, labelled details grid with copy, six summary tiles, timeline table with duration bars, quiet
 incoming-message rows). Checked on stage. Seen: on real flows an "Incoming message set 1 attribute" row
 (last_message_id, set on every jump) sits between almost every pair of blocks.
+2026-11-13 ~19:30 UTC: executions 0.1.0-rc9 (list sort, sort-aware cursor), server 3.4.0-exec-4 (Activities: pause
+sentences, stop-notice verb) and dashboard 2.8.40-exec-12 live. Dashboard carries the team feedback (no All
+executions icon on the agents list, pointer on graph nodes, sortable columns, Block name / Block type timeline
+filters, borderless detail tiles, "stopped" shown as "paused"), the detail cleanup (no Agent cell, no incoming-message
+rows) and the time strip ("Where the time went": blocks by outcome colour and hatched waits, labels on segments
+≥ 12 %, hover linked with the rows, click opens the row; rows show duration + "+N waiting", no per-row bar).
+Checked on stage: sort by Duration, Paused card, the strip on a 21 min widget run. Seen: when waiting dominates
+(4 s of blocks in 21 min) the blocks are a sliver under 1 % and the wait segment covers them — open.
+master-STAGE-NEW base already fails 21 boilerplate "should create" specs (same before and after the picks).
