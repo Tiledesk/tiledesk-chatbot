@@ -212,3 +212,9 @@ runs fetched on their own, notice hint). Stage check: two messages during a stop
 agent amber, With errors 0 (managed failures no longer count). Found: deleted agents' runs counted in the cards but
 not drawn → fixed, dashboard 2.8.40-exec-8 live ("deleted" mark; checked: cards and chips agree). The team removed the
 DirAiPrompt console.log that printed llm_key (main_pre 31452f5d).
+2026-11-13 later: executions 0.1.0-rc8 (/graph in one aggregation; list range + with_stats; shared filters) and
+dashboard 2.8.40-exec-9 (List | Graph on one Executions page, shared cards and filters, Refresh + updated note,
+graph 60 s, /monitor/graph redirects) live. Stage check: /monitor/graph?range=24h → executions?range=24h&view=graph.
+Found: assets/i18n/*.json are served with no Cache-Control, so a browser kept the old en.json and showed raw keys
+until the file was re-fetched — pre-existing, hits every new label after a deploy (fix: no-cache on i18n in the
+dashboard image's nginx, or a version param in the translate loader).
