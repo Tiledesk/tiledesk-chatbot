@@ -218,3 +218,5 @@ graph 60 s, /monitor/graph redirects) live. Stage check: /monitor/graph?range=24
 Found: assets/i18n/*.json are served with no Cache-Control, so a browser kept the old en.json and showed raw keys
 until the file was re-fetched — pre-existing, hits every new label after a deploy (fix: no-cache on i18n in the
 dashboard image's nginx, or a version param in the translate loader).
+2026-11-13: dashboard 2.8.40-exec-10 live — graph navigation controls (zoom in/out 25 % steps within 0.2–1.75, fit,
+centre on project, full screen; keys + / - / 0), top right of the canvas. Checked on stage: labels, zoom ratio 1.25, fit.
