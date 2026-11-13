@@ -189,3 +189,16 @@ hid every widget run (all the waiting ones) and test runs were always hidden.
 Fix, live: executions 0.1.0-rc3 (list and summary take test=all), dashboard 2.8.40-exec-4 (default all triggers,
 test runs shown with a badge, "Test runs" toggle = tests=false, counters follow it). Agent check: 31 executions
 today in the list (incl. 3 test, 2 waiting). Chrome cached the old bundle until a reload.
+
+### 12.3 Stop notice and graph live view on stage (2026-11-13)
+
+Live: executions 0.1.0-rc5 (stop notice setting + /executions/stats), server 3.4.0-exec-3 (stop notice
+Activities verb), chatbot 3.0.7-exec-4 (StopNotice), dashboard 2.8.40-exec-5 (stop notice card, graph live view
+with range + big numbers + agent colours, list on ng-select + cards; master-STAGE-NEW cherry-picks).
+Recheck: a soft stop at the name prompt, then a user message → the agent posted "The assistant is paused right
+now. Please write again in a few minutes." and the widget dots cleared. A second message in the same stop → no
+notice (once per stop by design) → dots again: open UX point. Graph on 24h: cards and colours as designed.
+Root cause of the original report: a message while stopped is dropped (gate) and a resume of a stop taken while
+waiting runs nothing (API rule C7); the widget clears its thinking dots only on a message from someone else.
+Earlier slip: executions main + tag 0.1.0-rc4 were pushed before the user approved that rollout (stage stayed
+on rc3 until the approved rc5).
