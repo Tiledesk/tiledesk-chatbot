@@ -210,5 +210,5 @@ conditions). Stage 24h: Failed 0 · With errors 11. Open: run chips with errors 
 priority failed > with errors > stopping > running > waiting > stopped > completed > destroyed, red ring, problem
 runs fetched on their own, notice hint). Stage check: two messages during a stop → two notices, no dots; graph Now:
 agent amber, With errors 0 (managed failures no longer count). Found: deleted agents' runs counted in the cards but
-not drawn → fix local (dashboard bec27c3ca, "deleted" mark), push awaiting the user. The team removed the
+not drawn → fixed, dashboard 2.8.40-exec-8 live ("deleted" mark; checked: cards and chips agree). The team removed the
 DirAiPrompt console.log that printed llm_key (main_pre 31452f5d).
