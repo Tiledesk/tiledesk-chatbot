@@ -15,6 +15,7 @@ const winston = require('../utils/winston');
 const httpUtils = require('../utils/HttpUtils');
 const tilebotService = require('../services/TilebotService');
 const ExecutionRecorder = require('../executions/ExecutionRecorder');
+const StopNotice = require('../executions/StopNotice');
 const { ExecutionStore } = require('../executions/ExecutionStore');
 const { setEmitterForTests } = require('../executions/TraceEmitter');
 const lifecycle = require('./executions_lifecycle_bot.js').bots_data;
@@ -181,7 +182,7 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
     const api = express();
     api.use(bodyParser.json());
     api.post('/:projectId/requests/:requestId/messages', (req, res) => {
-      sent.push({ rid: req.params.requestId, text: req.body && req.body.text });
+      sent.push({ rid: req.params.requestId, text: req.body && req.body.text, notice: !!(req.body && req.body.attributes && req.body.attributes.execution_notice) });
       res.send({ success: true });
     });
     api.patch('/:projectId/requests/:requestId/attributes', (req, res) => res.send({ success: true }));
@@ -271,7 +272,7 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
     assert.strictEqual(await owner(id), null, 'lease released');
   });
 
-  it('a user message while stopped emits message_while_stopped and the bot sends nothing (mock server receives no message)', async function () {
+  it('a user message while stopped emits message_while_stopped; the bot sends only the stop notice, once per stop', async function () {
     const rid = newRequestId();
     send('/after', rid);
     await settle(rid);
@@ -282,16 +283,50 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
     await waitFor(() => ofType(rid, 'execution.message_while_stopped').length === 1, 'message_while_stopped');
     await sleep(600);
     await ExecutionRecorder._drainForTests();
-    const blocked = ofType(rid, 'execution.message_while_stopped');
+    const blocked = ofType(rid, 'execution.message_while_stopped').slice(0, 1);
     assert.strictEqual(blocked.length, 1);
     assert.deepStrictEqual(blocked[0].data, {});
     assert.strictEqual(blocked[0].execution_id, id, 'same execution');
-    assert.strictEqual(sentTo(rid).length, 1, 'the bot sent nothing for the second message');
+    // no reply to the message, only the notice (in English: no language on the request)
+    assert.deepStrictEqual(sentTo(rid).slice(1), [{ rid, text: StopNotice.DEFAULTS.en, notice: true }]);
+    // a second message during the same stop: no second notice
+    send('/after', rid);
+    await waitFor(() => ofType(rid, 'execution.message_while_stopped').length === 2, 'second message_while_stopped');
+    await sleep(300);
+    assert.strictEqual(sentTo(rid).length, 2, 'one notice per stop');
     assert.strictEqual(ofType(rid, 'step.started').length, 1, 'no block ran');
     assert.strictEqual(ofType(rid, 'execution.stopped').length, 0);
     assert.strictEqual(ofType(rid, 'execution.idle').length, 1);
     assert.strictEqual(await owner(id), null, 'lease released');
     assert.strictEqual(await ExecutionRecorder.gateMessage(null, {}), 'run');
+  });
+
+  it('the stop notice: a new stop notifies again; the project can change its text or turn it off', async function () {
+    const rid = newRequestId();
+    const project = rid.split('-')[2];
+    send('/after', rid);
+    await settle(rid);
+    const id = execIdOf(rid);
+    const stopAndWrite = async (n) => {
+      await client.del(`exec:${id}:notice`); // what the executions API does with every new stop flag
+      await setStop(id, 'soft');
+      send('/after', rid);
+      await waitFor(() => ofType(rid, 'execution.message_while_stopped').length === n, 'message_while_stopped ' + n);
+      await sleep(300);
+    };
+    try {
+      await client.hSet(`exec:policy:${project}`, 'stop_notice_text', 'Back soon');
+      StopNotice._clearCacheForTests();
+      await stopAndWrite(1);
+      assert.deepStrictEqual(sentTo(rid).slice(1).map((m) => m.text), ['Back soon']);
+      await client.hSet(`exec:policy:${project}`, 'stop_notice', 'false');
+      StopNotice._clearCacheForTests();
+      await stopAndWrite(2);
+      assert.strictEqual(sentTo(rid).length, 2, 'turned off: no notice');
+    } finally {
+      await client.del(`exec:policy:${project}`);
+      StopNotice._clearCacheForTests();
+    }
   });
 
   it('automation sync caller receives 409 execution_stopped once', async function () {

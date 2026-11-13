@@ -14,6 +14,7 @@ const { rootIdOf } = require('./botIdentity');
 const AbortRegistry = require('./AbortRegistry');
 const Checkpointer = require('./Checkpointer');
 const MenuWait = require('./MenuWait');
+const StopNotice = require('./StopNotice');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
@@ -355,6 +356,7 @@ const ExecutionRecorder = {
         _failed: false,
         _chainEnded: false,
         _cp: Checkpointer.emptyContext(), // stacks and locks for the checkpoint, read at block entry
+        _token: token || null, // the bot's token: the stop notice is posted with it
         created: !!resolved.created
       };
 
@@ -595,7 +597,17 @@ const ExecutionRecorder = {
         // the jump (or resume) never reached its block: the checkpoint points at it, so resume posts it again
         await parkAtGate(ctx, message, seq);
       }
-      else await emit(ctx, 'execution.message_while_stopped', () => ({}));
+      else {
+        await emit(ctx, 'execution.message_while_stopped', () => ({}));
+        // the user's message is dropped: tell them, once per stop (the widget would wait for a reply forever)
+        await StopNotice.notify({
+          client: ctx._store.client,
+          idProject: ctx.id_project,
+          executionId: ctx.execution_id,
+          message,
+          send: (text) => sendNotice(ctx, text)
+        });
+      }
       await publishStopped(ctx);
     } catch (err) {
       warn('gateMessage', err);
@@ -1161,6 +1173,21 @@ async function recordBlockExit(ctx, step) {
 }
 
 /** Fire-and-forget: execution_id into the request attributes. */
+/** Posts the stop notice as the agent. Rejects on a send error (StopNotice logs it). */
+function sendNotice(ctx, text) {
+  return new Promise((resolve, reject) => {
+    if (!ctx._token) return reject(new Error('no bot token'));
+    const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+    const client = new TiledeskClient({
+      projectId: ctx.id_project,
+      token: ctx._token,
+      APIURL: state.apiEndpoint || process.env.API_ENDPOINT,
+      APIKEY: '___'
+    });
+    client.sendSupportMessage(ctx.request_id, StopNotice.noticeMessage(text), (err) => (err ? reject(err) : resolve()));
+  });
+}
+
 function writeExecutionId(ctx, token) {
   try {
     const { TiledeskClient } = require('@tiledesk/tiledesk-client');
