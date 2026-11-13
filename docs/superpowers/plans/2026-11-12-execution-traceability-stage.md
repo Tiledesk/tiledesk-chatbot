@@ -220,3 +220,7 @@ until the file was re-fetched — pre-existing, hits every new label after a dep
 dashboard image's nginx, or a version param in the translate loader).
 2026-11-13: dashboard 2.8.40-exec-10 live — graph navigation controls (zoom in/out 25 % steps within 0.2–1.75, fit,
 centre on project, full screen; keys + / - / 0), top right of the canvas. Checked on stage: labels, zoom ratio 1.25, fit.
+2026-11-13: dashboard 2.8.40-exec-11 live — execution detail refresh (direction A: header with grouped actions and
+overflow menu, labelled details grid with copy, six summary tiles, timeline table with duration bars, quiet
+incoming-message rows). Checked on stage. Seen: on real flows an "Incoming message set 1 attribute" row
+(last_message_id, set on every jump) sits between almost every pair of blocks.
