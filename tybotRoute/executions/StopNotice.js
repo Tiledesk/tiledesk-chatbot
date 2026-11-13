@@ -1,13 +1,13 @@
 'use strict';
 
 // A user who writes while the agent's execution is stopped gets no answer (the message is dropped by design),
-// and the widget keeps its "thinking" dots. The stop notice tells them, once per stop: a visible message from the
-// agent in the conversation (it also clears the dots, and the operator sees it in the agent chat).
+// and the widget keeps its "thinking" dots. The stop notice answers each such message: a visible message from the
+// agent in the conversation (it clears the dots every time, and the operator sees it in the agent chat).
 //
 // Per project (the executions service writes them into exec:policy:{id_project}):
 //   stop_notice       "false" turns it off; absent or anything else: on
 //   stop_notice_text  the text; empty or absent: DEFAULTS by the conversation's language
-// Once per stop: SET exec:{id}:notice NX (the executions API deletes it with every new stop flag).
+// Every message: once per stop left the dots on from the second message on (user ruling 2026-11-13).
 
 const winston = require('../utils/winston');
 
@@ -16,7 +16,6 @@ const DEFAULTS = {
   it: "L'assistente è momentaneamente in pausa. Riscrivi tra qualche minuto."
 };
 const POLICY_TTL_MS = 60000;
-const MARK_TTL_S = 604800; // 7 d, as the stop flag
 const cache = new Map();
 
 function warn(op, err) {
@@ -54,16 +53,14 @@ async function policy(client, idProject) {
 }
 
 /**
- * The first user message of this stop gets the notice; later ones nothing. Never throws, and its errors only
- * log: the gate's answer does not depend on it. send(text) posts the message (injected: tests, the client).
- * Resolves 'sent' | 'off' | 'already' | 'failed'.
+ * Each user message of a stop gets the notice. Never throws, and its errors only log: the gate's answer does
+ * not depend on it. send(text) posts the message (injected: tests, the client). Resolves 'sent' | 'off' | 'failed'.
+ * executionId is kept in the signature for the log context of callers.
  */
 async function notify({ client, idProject, executionId, message, send }) {
   try {
     const p = await policy(client, idProject);
     if (!p.enabled) return 'off';
-    const first = (await client.set(`exec:${executionId}:notice`, '1', { NX: true, EX: MARK_TTL_S })) !== null;
-    if (!first) return 'already';
     await send(textFor(p.text, languageOf(message)));
     return 'sent';
   } catch (err) {

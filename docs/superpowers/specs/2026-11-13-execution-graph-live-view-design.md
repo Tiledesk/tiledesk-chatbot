@@ -65,3 +65,20 @@ truncated note), chip colours for completed/destroyed, i18n wording (en, it).
 ## Non-goals
 
 No change to the per-agent badges on the agents list (`summary`), no click-to-filter on the graph cards.
+
+## Addendum (2026-11-13): errors are unhandled ones; chip priority
+
+User: "the with errors is important when compromise the flow execution not when is a managed failure".
+
+- **Error** = an action that compromised the flow: outcome `error` (it threw), or outcome `failure_condition`
+  with **no jump** (the failure exit leads nowhere, the flow stops there). A failure exit that jumps to a block
+  is a **managed failure**: it stays in the timeline (`failure_conditions` keeps counting it) but is no error.
+- tybot marks such an action `unhandled: true` on `action.completed`. The executions service counts them per
+  execution (`errors`, once per action), the stats' `with_errors` and per-agent `errors` count executions with
+  `errors > 0`, and an agent is **red** when it has a failed run or a run with errors (no longer
+  `failure_conditions`). The list gets `has_errors=true` and its With errors card toggles it; the "With failure
+  conditions" filter stays as it is. Runs recorded before have no mark: no errors.
+- **Chip priority** (user: "Problems, live, then finished"): failed · with errors · stopping · running ·
+  waiting · stopped · completed · destroyed; newest first within a group. The first 12 by this order are drawn,
+  the rest folded into "+N". A run with errors gets a red mark on its chip; the timeline marks the unhandled
+  action ("not handled").

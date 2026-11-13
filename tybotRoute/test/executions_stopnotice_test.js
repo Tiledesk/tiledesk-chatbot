@@ -29,11 +29,12 @@ describe('executions: StopNotice', function () {
       .then((r) => ({ r, sent }));
   };
 
-  it('default: on, the default text by the conversation language, once per stop', async function () {
+  it('default: on, the default text by the conversation language, for every message of the stop', async function () {
     const c = fakeClient();
     assert.deepStrictEqual(await run(c, { request: { language: 'it-IT' } }), { r: 'sent', sent: [StopNotice.DEFAULTS.it] });
-    assert.deepStrictEqual(await run(c, { request: { language: 'it-IT' } }), { r: 'already', sent: [] });
-    assert.strictEqual(c.keys.get('exec:e1:notice'), '1');
+    // a second message gets it too: each message is answered, so the widget never keeps its dots
+    assert.deepStrictEqual(await run(c, { request: { language: 'it-IT' } }), { r: 'sent', sent: [StopNotice.DEFAULTS.it] });
+    assert.strictEqual(c.keys.size, 0, 'no marker is kept');
   });
   it('unknown or other languages fall back to English; the user language attribute counts too', async function () {
     assert.strictEqual(StopNotice.textFor(null, 'fr'), StopNotice.DEFAULTS.en);
@@ -45,7 +46,7 @@ describe('executions: StopNotice', function () {
     StopNotice._clearCacheForTests();
     assert.deepStrictEqual((await run(fakeClient({ policy: { stop_notice_text: '' } }), {}, 'p2')).sent, [StopNotice.DEFAULTS.en]);
   });
-  it('turned off: nothing sent, no marker', async function () {
+  it('turned off: nothing sent', async function () {
     const c = fakeClient({ policy: { stop_notice: 'false' } });
     assert.deepStrictEqual(await run(c), { r: 'off', sent: [] });
     assert.strictEqual(c.keys.size, 0);
