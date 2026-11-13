@@ -205,3 +205,10 @@ on rc3 until the approved rc5).
 2026-11-13 later: With errors card (user: a red agent next to Failed 0 was misleading). executions 0.1.0-rc6
 (stats with_errors), dashboard 2.8.40-exec-6 (seventh card, dashed red; on the list it toggles With failure
 conditions). Stage 24h: Failed 0 · With errors 11. Open: run chips with errors still draw as plain green.
+2026-11-13 evening: live — executions 0.1.0-rc7 (errors = unhandled actions; has_errors; stats on errors), chatbot
+3.0.7-exec-5 (action.completed unhandled; stop notice on every message of a stop), dashboard 2.8.40-exec-7 (chip
+priority failed > with errors > stopping > running > waiting > stopped > completed > destroyed, red ring, problem
+runs fetched on their own, notice hint). Stage check: two messages during a stop → two notices, no dots; graph Now:
+agent amber, With errors 0 (managed failures no longer count). Found: deleted agents' runs counted in the cards but
+not drawn → fix local (dashboard bec27c3ca, "deleted" mark), push awaiting the user. The team removed the
+DirAiPrompt console.log that printed llm_key (main_pre 31452f5d).
