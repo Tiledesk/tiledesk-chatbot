@@ -222,6 +222,11 @@ async function resolveMenu(ctx, menu, message) {
   }
 }
 
+/** A jump target worth the name: a non-empty string. */
+function normalizeJump(target) {
+  return typeof target === 'string' && target.trim() !== '' ? target : null;
+}
+
 function actionRecord(ctx, index) {
   return ctx.step.actions.find((a) => a.index === index);
 }
@@ -1103,6 +1108,9 @@ async function recordAction(ctx, step, rec, { index, directive, startedAt, jumpe
     };
     if (rec.interrupted) data.error_code = 'hard_stop';
     else if (error) data.error_code = 'action_error';
+    // compromised the flow: it threw, or took a failure exit that leads nowhere (no jump: the flow stops
+    // there). A failure exit with a block connected is a managed failure, not an error (spec addendum)
+    if (outcome === 'error' || (outcome === 'failure_condition' && !normalizeJump(jumped))) data.unhandled = true;
     if (rec.hardDegraded) data.hard_degraded = true;
     const seq = await emit(ctx, 'action.completed', () => {
       const delta = !after ? NO_DELTA : StateDiff.diffStates(before, after, {

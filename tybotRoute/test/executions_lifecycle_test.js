@@ -320,6 +320,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     assert.strictEqual(web.data.type, 'webrequestv2');
     assert.strictEqual(web.data.outcome, 'failure_condition');
     assert.strictEqual(web.data.exit_taken, 'false');
+    assert.strictEqual(web.data.unhandled, undefined, 'the false exit leads to a block: a managed failure, no error');
     assert.deepStrictEqual(web.data.state_delta.map((c) => [c.key, c.by]), [['status_code', 'act_fail_request']]);
     const checkStep = ofType(rid, 'step.started').find((s) => s.data.block_id === 'check');
     const checkDone = ofType(rid, 'step.completed').find((s) => s.data.step_seq === checkStep.seq);
@@ -693,6 +694,27 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     await ExecutionRecorder._drainForTests();
     assert.strictEqual(ofType(rid, 'action.resolved').length, 0);
     assert.strictEqual(await client.exists(`exec:${ctx.execution_id}:menu`), 0, 'taken by the typed message');
+  });
+
+  it('unhandled: a failure exit that leads nowhere, or an action that threw; a jumping failure exit is managed', async function () {
+    const store = new ExecutionStore(client);
+    const { rid, ctx } = await openCtx(store);
+    const web = { name: 'webrequestv2', action: { _tdActionId: 'w1', falseIntent: '' } };
+    // the false exit taken, no block connected: no jump, the flow stops there
+    await ExecutionRecorder.runAction(ctx, { index: 0, directive: web }, () => { WriteTap.noteExit('falseIntent'); });
+    await ExecutionRecorder.afterAction(ctx, { index: 0, directive: web });
+    // the same exit with a block connected: the jump is the handling
+    const web2 = { name: 'webrequestv2', action: { _tdActionId: 'w2', falseIntent: '#fallback' } };
+    await ExecutionRecorder.runAction(ctx, { index: 1, directive: web2 }, () => { WriteTap.noteExit('falseIntent'); });
+    await ExecutionRecorder.afterAction(ctx, { index: 1, directive: web2, jumpedTo: '/#fallback' });
+    // an action that throws
+    const boom = { name: 'setattribute', action: { _tdActionId: 'b1' } };
+    await assert.rejects(ExecutionRecorder.runAction(ctx, { index: 2, directive: boom }, async () => { throw new Error('boom'); }));
+    await ExecutionRecorder._drainForTests();
+    const by = (id) => ofType(rid, 'action.completed').find((a) => a.data.action_id === id).data;
+    assert.deepStrictEqual([by('w1').outcome, by('w1').unhandled], ['failure_condition', true]);
+    assert.deepStrictEqual([by('w2').outcome, by('w2').unhandled], ['failure_condition', undefined]);
+    assert.deepStrictEqual([by('b1').outcome, by('b1').unhandled], ['error', true]);
   });
 
   it('a block that yields no reply still closes its step', async function () {
