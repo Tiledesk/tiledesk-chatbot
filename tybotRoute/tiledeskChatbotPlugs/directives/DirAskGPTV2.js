@@ -343,7 +343,7 @@ class DirAskGPTV2 {
       json.reranking = {
         "provider": "pinecone",
         "api_key": process.env.PINECONE_API_KEY,
-        "model": process.env.PINECONE_RERANKING_MODEL || process.env.RERANKING_MODEL || "bge-reranker-v2-m3"
+        "name": process.env.PINECONE_RERANKING_MODEL || process.env.RERANKING_MODEL || "bge-reranker-v2-m3"
       }
 
       json.reranking_multiplier = reranking_multiplier || 3;
