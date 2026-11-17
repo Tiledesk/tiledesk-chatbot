@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 3.1.1
+- **fixed**: voice_mode is not assigned if value is false
+
 # 3.1.0
 - **added**: agent execution traceability (off unless `EXECUTIONS_ENABLED=true`): every run of an agent is an execution with its steps, actions, outcomes, exits taken and attribute changes, sent to the executions service over AMQP; attribute values and the trigger input are sealed (encrypted) before they leave tybot
 - **added**: pause (after the current action or now), resume from the checkpoint, start new and destroy of a running execution, driven by the executions service through Redis; a user who writes while the execution is paused gets the project's pause notice (configurable, on by default)
