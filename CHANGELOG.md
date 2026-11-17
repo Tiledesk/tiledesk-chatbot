@@ -1,5 +1,11 @@
 # Tiledesk native chatbot
 
+# 3.1.0
+- **added**: agent execution traceability (off unless `EXECUTIONS_ENABLED=true`): every run of an agent is an execution with its steps, actions, outcomes, exits taken and attribute changes, sent to the executions service over AMQP; attribute values and the trigger input are sealed (encrypted) before they leave tybot
+- **added**: pause (after the current action or now), resume from the checkpoint, start new and destroy of a running execution, driven by the executions service through Redis; a user who writes while the execution is paused gets the project's pause notice (configurable, on by default)
+- **added**: unhandled errors are marked on the action (`unhandled`), menu clicks resolve the waiting action (`action.resolved`), named branches of AI and multi conditions are recorded by their label
+- **fixed**: If open hours called its callback twice; Department hung when no department matched or no bot was set
+
 # 3.0.9
 - **updated** AskGPTV2 reranking with hybrid namespace in order to get model from `RERANKING_MODEL` env variable
 
