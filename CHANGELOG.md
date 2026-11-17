@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 3.1.2
+- **fixed**: cannot read properties of undefined (reading 'applyPattern') evaluating JSonConditions
+
 # 3.1.1
 - **fixed**: voice_mode is not assigned if value is false
 
