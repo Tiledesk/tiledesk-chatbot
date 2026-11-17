@@ -233,3 +233,11 @@ rows) and the time strip ("Where the time went": blocks by outcome colour and ha
 Checked on stage: sort by Duration, Paused card, the strip on a 21 min widget run. Seen: when waiting dominates
 (4 s of blocks in 21 min) the blocks are a sliver under 1 % and the wait segment covers them — open.
 master-STAGE-NEW base already fails 21 boilerplate "should create" specs (same before and after the picks).
+2026-11-17 ~08:20 UTC: executions 0.1.0-rc10 (read cache: list + stats, stats, graph, summary reused per project and
+exact query for EXECUTIONS_READ_CACHE_MS = 5 s; concurrent identical requests share one query; a successful write on
+the project drops its entries; permission still checked per request; detail never cached; metric
+executions_read_cache_total{result}) and dashboard 2.8.40-exec-13 (detail page holds its poll while the tab is hidden,
+loads at once when shown) live. Checked: counter on the new api pod (misses), detail chunk carries the change.
+Hits need two identical reads within 5 s (several viewers of the same view): one viewer polling every 10 s never hits.
+Chrome extension was disconnected, so no browser check this round. Stage indexes checked 2026-11-17: all model indexes
+present; range lists use two index branches then sort in memory (fine at stage size, first to watch on big projects).
