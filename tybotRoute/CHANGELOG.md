@@ -5,13 +5,30 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# features-2611/rating-actions 12/11/2026
+- fixed: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue (`OUTPUT_CATALOG`), so `trueIntent`/`falseIntent` were never filled from the `connectors` list: the rating was saved but the flow stopped after the action. Found by the regression tests of the "Test Connettori" agent on stage. **Get rating** has no exits of its own and is unchanged
+- added: tests for the `set_rating` exits in V3 (`test/connectorsV3_rating_test.js`)
+
+# features-2611/rating-actions 11/11/2026
+- added: **Set rating** `saveTo`: `rating` (the default, also when missing: rating and comment of the conversation, as before) or `attributes`, which saves the value and the message as the AI evaluation `ai_rating` / `ai_sentiment` in the conversation attributes. The other attributes are kept, the conversation rating is not touched and no satisfaction analytics event is sent, so the rating the user gives after the close webhook and the AI evaluation never overwrite each other. With force update off an `ai_rating` already saved is kept
+- added: **Get rating** `readFrom`: `rating` (the default, as before) or `attributes`, which reads `ai_rating` / `ai_sentiment` into the two variables
+- added: tests for saving to and reading from the attributes
+- added: **Set rating** and **Get rating** take an optional **Request ID** (`requestId`), the conversation to rate or read; it can hold variables and empty means the current conversation. A webhook run has no conversation of its own, so there it must be given (for a webhook called when a conversation is closed: `{{payload.payload.request_id}}`)
+- added: with no conversation to work on (a webhook run without Request ID, a Request ID that fills to empty, or the id of a webhook run) the server is not called: **Set rating** goes to the **else** exit with the reason in the error variable and in `flowError`, **Get rating** sets `flowError`. It never falls back to the current conversation, so the wrong one is never rated
+- added: tests for the Request ID
+
+# features-2611/rating-actions 10/11/2026
+- added: **Set rating** action (`set_rating`). It sets the rating of the conversation, from 1 to 5. The value can come from a variable. Any other value is not saved. An optional rating message, which can also hold variables, is saved as the comment of the rating; an empty one is not sent. With **Force update** off (the default) a rating already given is kept; with it on, the rating is always overwritten
+- added: **Set rating** has two exits, as Web Request: **Success** when the rating is saved or kept because already given, **else** when the value is not valid or the request fails. On failure the reason goes to the chosen error variable and to `flowError`; on success an error left by an earlier run is removed. With no exit connected the flow goes on to the next action
+- added: **Get rating** action (`get_rating`). It reads the rating of the conversation and its comment and saves them in two variables chosen in the action. A value the conversation does not have removes its variable, so no older value is left behind. A failed read sets `flowError`
+- added: tests for the two actions
+
 # 3.0.0
 - V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
 - V3 agents: Iteration runs the "when the list is done" block after the last item or when the list is empty
 - Iteration continues from the block exit when the list is empty, missing or unreadable, when "Go to block" is missing, or when an element errors, instead of stopping the conversation. An unfinished loop is not resumed by a later run on a different list
 - Fixed block jumps to use the endpoint given at start-up, with the environment as fallback
 - Fixed AI Condition vLLM error paths (missing integration, server or key) so they go to the error block instead of crashing
-
 
 # 2.6.0
 - Added voice_mode system-defined flow variable

@@ -1,7 +1,17 @@
 # Tiledesk native chatbot
 
-# 3.0.4
+# 3.0.8
+- **fixed**: AskGPTV2 Pinecone reranking (standard namespaces, with `PINECONE_RERANKING` on) sends the reranker model as `name`. The payload used `model`, so the model (`PINECONE_RERANKING_MODEL`, otherwise `RERANKING_MODEL`, otherwise `bge-reranker-v2-m3`) was ignored. Hybrid reranking is unchanged
+
+# 3.0.7
+- **fixed**: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue, so the exits drawn in the Design Studio were never read: the rating was saved but the flow stopped after the action. **Get rating** is unchanged
+
+# 3.0.6
+- **added**: customHeaders for vllm servers
+
+# 3.0.5
 - **added** possibility to block indexing functions
+
 # 3.0.4
 - **removed** verbose logs
 

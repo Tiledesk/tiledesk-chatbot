@@ -73,6 +73,8 @@ const { DirCallSubAgent } = require('./directives/DirCallSubagent');
 const { DirReturnStack } = require('./directives/DirReturnStack');
 const { DirDataTables } = require('./directives/DirDataTables');
 const ExecutionRecorder = require('../executions/ExecutionRecorder');
+const { DirSetRating } = require('./directives/DirSetRating');
+const { DirGetRating } = require('./directives/DirGetRating');
 
 class DirectivesChatbotPlug {
 
@@ -337,6 +339,8 @@ class DirectivesChatbotPlug {
       [Directives.DATA_TABLES]: DirDataTables,
       [Directives.INVITE_HUMAN]: DirInviteHuman,
       [Directives.REMOVE_HUMAN]: DirRemoveHuman,
+      [Directives.SET_RATING]: DirSetRating,
+      [Directives.GET_RATING]: DirGetRating,
     };
 
     const HandlerClass = handlers[directive_name];
