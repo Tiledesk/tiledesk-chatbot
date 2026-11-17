@@ -241,3 +241,12 @@ loads at once when shown) live. Checked: counter on the new api pod (misses), de
 Hits need two identical reads within 5 s (several viewers of the same view): one viewer polling every 10 s never hits.
 Chrome extension was disconnected, so no browser check this round. Stage indexes checked 2026-11-17: all model indexes
 present; range lists use two index branches then sort in memory (fine at stage size, first to watch on big projects).
+2026-11-17 ~08:45 UTC: dashboard 2.8.40-exec-14 live — time strip "Blocks only" scale (default when blocks < 10 % of
+the run; waits as fixed hatched marks; Whole run | Blocks only switch) and nginx Cache-Control: no-cache on index.html
+and assets/i18n/*.json (checked on stage: en.json answers no-cache). Error runs: the graph already draws a red outline
+(with-errors) since exec-7; no run with errors on stage to see it drawn. Stage tests done: resume of a real (widget,
+non-test) paused waiting run — pause notice per message, resume back to waiting, next input continues to the end;
+retention 90/30 → 120/60 (no confirm) → 90/30 (shorten confirm), Activities rows, 133 runs kept, expiries recomputed.
+Not done (user: later): denied access for supervisor/custom role (needs a second user). Seen: Blocks only draws every
+ms-long gap as a mark (noisy on busy runs); the sealed data banner's "Trigger input" label renders under its JSON.
+Screenshots for the presentation: TILEDESK/execution-screenshots/ (20 files).
