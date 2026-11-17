@@ -4,6 +4,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskWhenExpression } = require('../../TiledeskWhenExpression');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 /**
  * DirJSONConditionV2
@@ -117,6 +118,9 @@ class DirJSONConditionV2 {
       this.logger.native("[ConditionV2] Evaluated 'when' result: " + result);
       winston.debug("(DirJSONConditionV2) Evaluation result: " + result);
 
+      // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+      // a null result is an evaluation error (flowError is set): a failure, though it takes the false exit
+      WriteTap.noteExit(result === true ? 'trueIntent' : (result === null ? 'errorIntent' : 'falseIntent'));
       if (result === true) {
         if (trueIntentDirective) {
           this.intentDir.execute(trueIntentDirective, () => done(stopOnConditionMet));

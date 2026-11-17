@@ -1,4 +1,5 @@
 const { TiledeskChatbot } = require('../engine/TiledeskChatbot');
+const WriteTap = require('../executions/WriteTap');
 
 class TiledeskRequestVariables {
     
@@ -18,6 +19,7 @@ class TiledeskRequestVariables {
         const parameter_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":parameters";
         const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
         await this.tdcache.hset(parameter_key, name, value, { EX: ttl });
+        WriteTap.note(this.requestId, name, 'set');
         if (callback) {
             callback();
         }
@@ -36,7 +38,9 @@ class TiledeskRequestVariables {
 
     async delete(name) {
         const parameter_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":parameters";
-        return await this.tdcache.hdel(parameter_key, name);
+        const res = await this.tdcache.hdel(parameter_key, name);
+        WriteTap.note(this.requestId, name, 'del');
+        return res;
     }
 
     async all(callback) {

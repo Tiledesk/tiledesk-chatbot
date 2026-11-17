@@ -1,6 +1,8 @@
 const { TiledeskClient } = require("@tiledesk/tiledesk-client");
 const winston = require('../../utils/winston');
 const { Logger } = require("../../Logger");
+const { Filler } = require("../Filler");
+const { TiledeskChatbot } = require("../../engine/TiledeskChatbot");
 
 class DirDepartment {
 
@@ -32,9 +34,11 @@ class DirDepartment {
         depName: dep_name
       }
     }
-    this.go(action, () => {
-      this.logger.native("[Change Department] Action executed");
-      callback();
+    this.fillDepName(action).then((filled) => {
+      this.go(filled, () => {
+        this.logger.native("[Change Department] Action executed");
+        callback();
+      });
     });
     
   }
@@ -58,9 +62,27 @@ class DirDepartment {
   //     "id": "65204737f8c0cf002cf41a60"
   // }
 
+  /** A copy of the action with {{attributes}} in depName filled. Never rejects: on a read error, the action as it is. */
+  async fillDepName(action) {
+    try {
+      if (!action || typeof action.depName !== 'string' || action.depName.indexOf('{{') === -1 || !this.context.tdcache) return action;
+      const vars = await TiledeskChatbot.allParametersStatic(this.context.tdcache, this.requestId);
+      return Object.assign({}, action, { depName: new Filler().fill(action.depName, vars) });
+    } catch (err) {
+      winston.error("(DirDepartment) Error filling depName: " + (err && err.message));
+      return action;
+    }
+  }
+
   go(action, callback) {
     winston.debug("(DirDepartment) Action: ", action);
-    const depName = action.depName;
+    const depName = typeof action.depName === 'string' ? action.depName.trim() : '';
+    if (!depName) {
+      this.logger.warn("[Change Department] No department name");
+      winston.warn("(DirDepartment) No department name");
+      callback();
+      return;
+    }
     this.moveToDepartment(this.requestId, depName, (deps) => {
       if (!deps) {
         this.logger.warn("[Change Department] Department not found");
@@ -74,7 +96,7 @@ class DirDepartment {
         let i;
         for (i = 0; i < deps.length; i++) {
           let d = deps[i];
-          if (d.name.toLowerCase() === depName.toLowerCase()) {
+          if (d && typeof d.name === 'string' && d.name.toLowerCase() === depName.toLowerCase()) {
             dep = d;
             break;
           }
@@ -102,6 +124,11 @@ class DirDepartment {
               callback();
           });
         }
+        else {
+          // the department has no bot to trigger: nothing to send, the flow goes on (it used to hang here)
+          this.logger.native("[Change Department] No bot in department");
+          callback();
+        }
       }
       else {
         this.logger.native("[Change Department] No triggering bot");
@@ -119,14 +146,23 @@ class DirDepartment {
         callback();
         return;
       }
+      if (!Array.isArray(deps)) {
+        callback();
+        return;
+      }
       let dep = null;
       let i;
       for (i = 0; i < deps.length; i++) {
         let d = deps[i];
-        if (d.name.toLowerCase() === depName.toLowerCase()) {
+        if (d && typeof d.name === 'string' && d.name.toLowerCase() === depName.toLowerCase()) {
           dep = d;
           break;
         }
+      }
+      if (!dep) {
+        // no department by that name: the flow goes on (it used to hang here)
+        callback();
+        return;
       }
       if (dep) {
         this.tdClient.updateRequestDepartment(requestId, dep._id, null, (err, res) => {

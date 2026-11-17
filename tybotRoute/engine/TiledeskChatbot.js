@@ -9,6 +9,8 @@ const { ConnectorsV3 } = require('../utils/ConnectorsV3');
 const { DirLockIntent } = require('../tiledeskChatbotPlugs/directives/DirLockIntent');
 const { DirUnlockIntent } = require('../tiledeskChatbotPlugs/directives/DirUnlockIntent');
 const winston = require('../utils/winston');
+const WriteTap = require('../executions/WriteTap');
+const ExecutionRecorder = require('../executions/ExecutionRecorder');
 const { AnalyticsClient } = require('../AnalyticsClient');
 
 class TiledeskChatbot {
@@ -164,11 +166,19 @@ class TiledeskChatbot {
           if (faq) {
             winston.verbose("(TiledeskChatbot) Got a reply (faq) by Intent name:", faq)
             try {
-              if (intent.parameters) {
+              if (intent.parameters && !this.execution) { // tracing off: unchanged, writes not awaited
                 for (const [key, value] of Object.entries(intent.parameters)) {
                   winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
                   this.addParameter(key, value);                  
                 }
+              }
+              else if (intent.parameters) {
+                await ExecutionRecorder.withScope(this.execution, 'jump_params', async () => {
+                  for (const [key, value] of Object.entries(intent.parameters)) {
+                    winston.verbose("(TiledeskChatbot) Adding attribute from intent invocation /intentName{}: " + key + " " + value);
+                    await this.addParameter(key, value);
+                  }
+                });
               }
               reply = await this.execIntent(faq, message, lead, { match_type: 'explicit' });
               resolve(reply);
@@ -355,6 +365,7 @@ class TiledeskChatbot {
   }
   
   async execIntent(faq, message, lead, matchContext = {}) {//, bot) {
+    if (this.execution) await ExecutionRecorder.blockEntry(this.execution, { blockId: faq.intent_id, blockName: faq.intent_display_name, actions: faq.actions });
     let answerObj = faq; // faqs[0];
     const botId = this.botId;
 
@@ -596,6 +607,7 @@ class TiledeskChatbot {
     }
     const ttl = parseInt(process.env.FLOW_ATTRIBUTES_TTL, 10) || (15 * 24 * 60 * 60); // default 15 days
     await _tdcache.hset(parameter_key, parameter_name, parameter_value_s, { EX: ttl });
+    WriteTap.note(requestId, parameter_name, 'set');
   }
 
   async allParameters() {
@@ -637,8 +649,10 @@ class TiledeskChatbot {
   }
 
   static async deleteParameterStatic(_tdcache, requestId, paramName) {
-    return await _tdcache.hdel(
+    const res = await _tdcache.hdel(
       TiledeskChatbot.requestCacheKey(requestId) + ":parameters", paramName);
+    WriteTap.note(requestId, paramName, 'del');
+    return res;
   }
 
   static async checkStep(_tdcache, requestId, max_steps, max_execution_time) {

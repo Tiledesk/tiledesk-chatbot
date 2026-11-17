@@ -3,6 +3,7 @@ const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 const { ConnectorsV3 } = require('../../utils/ConnectorsV3');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirIteration {
   constructor(context) {
@@ -181,6 +182,7 @@ class DirIteration {
       return;
     }
     this.logger.native("[Iteration] List done: executing fallbackIntent");
+    WriteTap.noteExit('fallbackIntent'); // execution tracing: the branch taken (no-op when off)
     this.#executeIntent(fallbackIntent, () => {
       callback(true);
     });
@@ -199,6 +201,7 @@ class DirIteration {
       // The intent execution is asynchronous and will complete later
       // The iteration will continue when DirIteration is called again (via connector from goToIntent)
       if (goToIntent) {
+        WriteTap.noteExit('goToIntent'); // execution tracing: the branch taken (no-op when off)
         this.#executeIntent(goToIntent, () => {
           // This callback is called when the HTTP request is sent, not when intent completes
           // The actual continuation happens when DirIteration is called again

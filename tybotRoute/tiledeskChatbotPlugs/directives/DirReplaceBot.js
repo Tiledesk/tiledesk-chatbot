@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { Filler } = require('../Filler');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const ExecutionRecorder = require('../../executions/ExecutionRecorder');
 
 class DirReplaceBot {
 
@@ -51,7 +52,10 @@ class DirReplaceBot {
     );
     const filler = new Filler();
     botName = filler.fill(botName, variables);
-    this.tdClient.replaceBotByName(this.requestId, botName, () => {
+    const execution = this.context.chatbot?.execution;
+    this.tdClient.replaceBotByName(this.requestId, botName, async (err) => {
+      // the response carries no bot id: the handoff names the requested bot
+      if (!err && execution) await ExecutionRecorder.onHandedToBot(execution, { toAgentId: botName });
       callback();
     });
   }

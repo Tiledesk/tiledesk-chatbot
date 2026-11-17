@@ -21,6 +21,7 @@ const default_engine_hybrid = require('../../config/kb/engine.hybrid');
 const default_embedding = require("../../config/kb/embedding");
 const PromptManager = require('../../config/kb/prompt/rag/PromptManager');
 const { MODELS_MULTIPLIER } = require("../../utils/aiUtils");
+const WriteTap = require('../../executions/WriteTap');
 
 //const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
 const ragPromptManager = new PromptManager(path.join(__dirname, '../../config/kb/prompt/rag'));
@@ -395,6 +396,7 @@ class DirAskGPTV2 {
     winston.verbose("DirAskGPTV2  KbEndpoint URL: " + kb_endpoint);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: kb_endpoint + "/qa",
       headers: {
         'Content-Type': 'application/json',
@@ -509,6 +511,8 @@ class DirAskGPTV2 {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
@@ -643,6 +647,7 @@ class DirAskGPTV2 {
   async getNamespace(name, id) {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/kb/namespace/all",
         headers: {
           'Content-Type': 'application/json',

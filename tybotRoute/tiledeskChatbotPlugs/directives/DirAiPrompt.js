@@ -14,6 +14,7 @@ const assert = require("assert");
 const quotasService = require("../../services/QuotasService");
 const path = require("path");
 const mime = require("mime-types");
+const WriteTap = require('../../executions/WriteTap');
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
 const reasoningLevels = ['low', 'medium', 'high'];
@@ -409,6 +410,7 @@ class DirAiPrompt {
     winston.debug("DirAiPrompt json: ", json);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: AI_endpoint + apiEndpoint,
       headers: headers,
       json: json,
@@ -537,6 +539,8 @@ class DirAiPrompt {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
@@ -634,6 +638,7 @@ class DirAiPrompt {
     return new Promise((resolve) => {
 
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
         headers: {
           'Content-Type': 'application/json',
@@ -915,6 +920,7 @@ class DirAiPrompt {
   async fetchNativeMcpServers() {
     return new Promise((resolve) => {
       const HTTPREQUEST = {
+        signal: this.context.signal, // hard stop (undefined when executions are off)
         url: this.API_ENDPOINT + "/" + this.projectId + "/mcp/native",
         headers: {
           'Content-Type': 'application/json',

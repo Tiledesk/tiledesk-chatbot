@@ -5,6 +5,7 @@ const { DirIntent } = require("./DirIntent");
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const { Logger } = require("../../Logger");
+const WriteTap = require('../../executions/WriteTap');
 
 let whatsapp_api_url;
 
@@ -89,6 +90,7 @@ class DirSendWhatsapp {
     winston.debug("(DirSendWhatsapp) whatsapp_api_url: " + whatsapp_api_url);
 
     const HTTPREQUEST = {
+      signal: this.context.signal, // hard stop (undefined when executions are off)
       url: whatsapp_api_url + "/tiledesk/broadcast",
       headers: {
         'Content-Type': 'application/json'
@@ -140,6 +142,8 @@ class DirSendWhatsapp {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);

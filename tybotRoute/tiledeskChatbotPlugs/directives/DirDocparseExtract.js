@@ -5,6 +5,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const { Logger } = require("../../Logger");
 const aiController = require("../../services/AIController");
+const WriteTap = require('../../executions/WriteTap');
 
 const JOB_TIMEOUT_MS = 10 * 60 * 1000;
 // Sync POST /v1/extract: docsparse runs gunicorn with a 300 s request timeout.
@@ -522,6 +523,8 @@ class DirDocparseExtract {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
