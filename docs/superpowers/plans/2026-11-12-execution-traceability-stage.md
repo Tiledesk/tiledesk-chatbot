@@ -250,3 +250,4 @@ retention 90/30 → 120/60 (no confirm) → 90/30 (shorten confirm), Activities 
 Not done (user: later): denied access for supervisor/custom role (needs a second user). Seen: Blocks only draws every
 ms-long gap as a mark (noisy on busy runs); the sealed data banner's "Trigger input" label renders under its JSON.
 Screenshots for the presentation: TILEDESK/execution-screenshots/ (20 files).
+2026-11-17 ~10:00 UTC: dashboard 2.8.40-exec-15 live — Blocks only marks only waits >= 1 s (gaps under a second take no room, not drawn); sealed data "Trigger input" label above its value. Checked on stage; presentation screenshots 05, 06, 13, 14, 18 retaken. Release post (EN/IT) for the Sleekplan changelog: TILEDESK/execution-screenshots/whats-new-agent-executions.md.
