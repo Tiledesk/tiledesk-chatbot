@@ -89,8 +89,7 @@ executions release can be scaled to 0 without touching the platform.
 
 ## 6. Chatbot tests on the merge
 
-executions_* and rating tests (25 files) on the merge: 331 passing, 4 pending, 1 failing:
-`executions_resume_test.js` fails 1-2 tests per run, the same on the commit before the merge (so not
-from main). Likely cause: the local dev stack's own tybot container listens on the same Redis
-`exec:control` channel and takes the tests' resume messages. Re-run it with the dev stack's chatbot
-stopped before calling it clean.
+executions_* and rating tests (25 files) on the merge: 331 passing, 4 pending, 1 failing in
+`executions_resume_test.js` while the local dev stack was up. Cause confirmed: the stack's own tybot
+container listens on the same Redis `exec:control` channel and took the tests' resume messages. With
+that container stopped, the file passes 23/23 (twice) on `release/execution-traceability`.
