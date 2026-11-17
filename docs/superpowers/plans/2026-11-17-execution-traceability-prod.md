@@ -1,0 +1,96 @@
+# Agent execution traceability — prod release runbook (2026-11-17)
+
+Prepared locally, nothing pushed. Every prod step is done together, one at a time
+(the user runs or approves each, we verify, then the next). Same shape as stage:
+deploy everything **off**, then switch on component by component.
+
+## 1. What is ready (local only)
+
+| Repo | Branch / tag (local) | Base | Content |
+|---|---|---|---|
+| tiledesk-executions | `main` @ `0.1.0` (tag) | origin/main | version 0.1.0 = rc10 code + `values-prod.yml` + `deploy/argocd/executions-prod.yaml` |
+| tiledesk-server | `release/execution-traceability` @ `3.4.0` (tag) | origin/master (3.3.4) | merge of feature/execution-traceability + version commit |
+| tiledesk-dashboard | `release/execution-traceability` @ `2.9.0` (tag) | origin/master (2.8.43) | merge of feature/execution-graph + version commit |
+| tiledesk-chatbot | `release/execution-traceability` @ `3.1.0` (tag) | origin/main (3.0.8) | merge of feature/execution-traceability (main merged into it first, 2 conflicts resolved) + version commit |
+| tiledesk-argo | `release/executions-addon-prod` | origin/prod | executionsAddon values (all off) + env blocks on chatbot, server, both workers, dashboard |
+
+Release rule: feature branch merged into master/main, version commit + tag there; never a pre branch.
+Pushing master/main + the tag makes CI build the prod image of each repo (as for previous releases).
+
+Tests on the release branches: server executions-publisher 37 + activities 21 pass (the combined
+run has the known pre-existing listener failure); dashboard tsc clean, executions/activities/settings
+specs pass except the 21 boilerplate "should create" specs that fail on master too; chatbot: see §6.
+Argo prod render: with the defaults only the chatbot's inert `EXECUTIONS_*` env changes (ENABLED
+"false"); server, workers and dashboard render as today. With the switches on: server + both workers
+get `EXECUTIONS_AMQP_URL`, dashboard `EXECUTIONS_BASE_URL`, chatbot `EXECUTIONS_ENABLED "true"`.
+
+## 2. Prerequisites on prod (before step 1)
+
+1. **Mongo**: a database `tiledesk-executions` on the prod Mongo with its own user (readWrite on it
+   only), and Secret `tiledesk-executions-mongo` (key `uri`) in namespace `tiledesk` (command in
+   values-prod.yml).
+2. **Keys** (new for prod, never the stage ones): an RSA keyring for sealed data
+   (`{"<kid>": "<PEM private key>"}`), its public key + kid for the chatbot, a service token, a state
+   hash key. They go as Helm parameters of the live `tiledesk-executions` Application (never in git):
+   `secrets.vaultKeysB64`, `secrets.sealPublicKeyB64`, `secrets.sealKid`, `secrets.serviceToken`,
+   `secrets.stateHashKey`. Keep the keyring in the team's secret store: losing it makes the sealed
+   data unreadable.
+3. **Argo repo credential** for the private repo Tiledesk/tiledesk-executions in prod argocd (as on
+   stage: `repo-tiledesk-executions`).
+4. **VERIFY** (values-prod.yml marks them):
+   - the public host/path that reaches the cluster ingress for `/executions/api/` from the
+     dashboard (prod serves the dashboard on panel.tiledesk.com/v3/dashboard behind proxy rules):
+     host in values-prod.yml and the dashboard `executionsAddon.dashboard.baseUrl` must agree;
+   - prod Redis auth (if any, the tybot Redis URL must carry it, via a secretKeyRef);
+   - key name of the JWT public key in Secret `my-tiledesk-prod` (stage: `global-public-key`);
+   - the Argo project of `my-tiledesk-prod` (executions-prod.yaml says `default`).
+5. Docker Hub: the images exist once the tags are pushed (`tiledeskrepo/tiledesk-executions:0.1.0`,
+   server `3.4.0`, dashboard `2.9.0`, chatbot `3.1.0`).
+
+## 3. Steps (one at a time, check after each)
+
+1. **Executions**: push `main` + tag `0.1.0` → CI image. Apply `deploy/argocd/executions-prod.yaml`,
+   set the parameters, sync by hand. Check: api/ingest/jobs pods Ready, api `/health` 200, ingest
+   connected to RabbitMQ, indexes created (startup log), no traffic yet.
+2. **Server 3.4.0**: push master + tag → CI image; bump the server image in tiledesk-argo prod.
+   Inert (EXECUTIONS_AMQP_URL not rendered). Check: pods Ready, smoke of the usual API.
+3. **Chatbot 3.1.0**: push main + tag → image; bump in tiledesk-argo prod. Inert
+   (`EXECUTIONS_ENABLED "false"`). Check: a normal agent conversation works.
+4. **Dashboard 2.9.0**: push master + tag → image; bump in tiledesk-argo prod. Inert (no base URL →
+   no Executions entry). Check: dashboard loads; `en.json` answers `Cache-Control: no-cache`.
+5. **tiledesk-argo prod**: merge `release/executions-addon-prod` (still all off). Note: syncing
+   `my-tiledesk-prod` re-renders `secret/my-tiledesk-prod` (super-password trap, see memory).
+6. **Switch on, one at a time**: `executionsAddon.server.amqp: true` → check Activities consumer,
+   no errors; `executionsAddon.chatbot.enabled: "true"` → run a test agent, see the execution in the
+   API; `executionsAddon.dashboard.baseUrl` → Executions page, graph, detail, pause/resume on a test
+   agent, View data, retention page.
+7. Publish the changelog post (execution-screenshots/whats-new-agent-executions.md) once on.
+
+Rollback: each switch back to off (values) and a sync; images can stay (inert when off). The
+executions release can be scaled to 0 without touching the platform.
+
+## 4. Known gaps going to prod
+
+- Denied access for supervisor / custom roles not tested on stage (tested locally in Phase 1/4);
+  supervisors cannot reach the agents list (RoleGuard owner/admin), only Monitor → Executions.
+- Executions start being recorded from the switch-on; no history before.
+- A message sent while paused is not replayed (by design: the user is told to write again).
+- 2 server conversation events without request_id were dead-lettered on stage (day one), not traced.
+- Range lists sort in memory over the matching rows (fine at stage size; first to watch on big
+  projects with the 30-day range).
+
+## 5. Security notes found while preparing
+
+- tiledesk-argo `prod` `helm/values.yaml` holds secrets in plain text (e.g. `VOICE_TWILIO_SECRET`,
+  `FIREBASE_PRIVATE_KEY`). Not related to this release; worth moving to Helm parameters / Secrets
+  and rotating.
+- `DirAiPrompt` logs the request JSON (with the LLM key) at **debug** level on main (unchanged by this
+  release); on main_pre the servers are redacted. Keep prod log level above debug.
+
+## 6. Chatbot tests on the merge
+
+executions_* and rating tests (25 files) on the merge: 331 passing, 4 pending, 1 failing:
+`executions_resume_test.js` fails 1-2 tests per run, the same on the commit before the merge (so not
+from main). Likely cause: the local dev stack's own tybot container listens on the same Redis
+`exec:control` channel and takes the tests' resume messages. Re-run it with the dev stack's chatbot
+stopped before calling it clean.
