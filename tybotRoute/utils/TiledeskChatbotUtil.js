@@ -954,9 +954,8 @@ class TiledeskChatbotUtil {
                 }
 
                 // --- VOICE STREAMING ---
-                if (message.attributes?.voice_mode) {
-                    add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes?.voice_mode);
-                }
+                // false is a valid value and must be stored; add() already drops undefined/null
+                add(TiledeskChatbotConst.REQ_VOICE_STREAMING, message.attributes.voice_mode);
             }
 
             
