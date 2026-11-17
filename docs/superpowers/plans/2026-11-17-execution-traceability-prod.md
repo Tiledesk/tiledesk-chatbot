@@ -37,13 +37,11 @@ get `EXECUTIONS_AMQP_URL`, dashboard `EXECUTIONS_BASE_URL`, chatbot `EXECUTIONS_
    data unreadable.
 3. **Argo repo credential** for the private repo Tiledesk/tiledesk-executions in prod argocd (as on
    stage: `repo-tiledesk-executions`).
-4. **VERIFY** (values-prod.yml marks them):
-   - the public host/path that reaches the cluster ingress for `/executions/api/` from the
-     dashboard (prod serves the dashboard on panel.tiledesk.com/v3/dashboard behind proxy rules):
-     host in values-prod.yml and the dashboard `executionsAddon.dashboard.baseUrl` must agree;
-   - prod Redis auth (if any, the tybot Redis URL must carry it, via a secretKeyRef);
-   - key name of the JWT public key in Secret `my-tiledesk-prod` (stage: `global-public-key`);
-   - the Argo project of `my-tiledesk-prod` (executions-prod.yaml says `default`).
+4. **Confirmed 2026-11-17** (user): host `panel.tiledesk.com` (ingress path `/executions/api/`,
+   dashboard `executionsAddon.dashboard.baseUrl: /executions/api/v1/` at switch-on); prod Redis has
+   no password (`redis://my-tiledesk-prod-redis-master:6379`); JWT public key in Secret
+   `my-tiledesk-prod`, key `global-public-key` (same chart as stage); Argo project `my-tiledesk-prod`
+   (if `kubectl apply` says the project does not exist, check `kubectl -n argocd get appprojects`).
 5. Docker Hub: the images exist once the tags are pushed (`tiledeskrepo/tiledesk-executions:0.1.0`,
    server `3.4.0`, dashboard `2.9.0`, chatbot `3.1.0`).
 
