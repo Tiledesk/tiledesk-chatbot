@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 3.0.9
+- **updated** AskGPTV2 reranking with hybrid namespace in order to get model from `RERANKING_MODEL` env variable
+
 # 3.0.8
 - **fixed**: AskGPTV2 Pinecone reranking (standard namespaces, with `PINECONE_RERANKING` on) sends the reranker model as `name`. The payload used `model`, so the model (`PINECONE_RERANKING_MODEL`, otherwise `RERANKING_MODEL`, otherwise `bge-reranker-v2-m3`) was ignored. Hybrid reranking is unchanged
 

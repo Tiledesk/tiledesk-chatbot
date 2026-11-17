@@ -325,7 +325,7 @@ class DirAskGPTV2 {
       if (reranking === true) {
         json.reranking = true;
         json.reranking_multiplier = reranking_multiplier || 3;
-        json.reranker_model = "cross-encoder/ms-marco-MiniLM-L-6-v2";
+        json.reranker_model = process.env.RERANKING_MODEL || "cross-encoder/ms-marco-MiniLM-L-6-v2";
 
         if ((top_k * reranking_multiplier) > 100) {
           // Find the largest integer reranking_multiplier so that top_k * reranking_multiplier <= 100
