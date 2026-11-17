@@ -96,3 +96,15 @@ executions_* and rating tests (25 files) on the merge: 331 passing, 4 pending, 1
 `executions_resume_test.js` while the local dev stack was up. Cause confirmed: the stack's own tybot
 container listens on the same Redis `exec:control` channel and took the tests' resume messages. With
 that container stopped, the file passes 23/23 (twice) on `release/execution-traceability`.
+
+## 7. Done on prod (2026-11-17)
+
+- ~11:30Z executions 0.1.0 (Argo app `tiledesk-executions`, project default, ns `my-tiledesk-prod`), ~11:50Z
+  target 0.1.1 (API on eu.rtmv3.tiledesk.com, CORS panel). Mongo URI fix: the SRV host needs `mongodb+srv://`.
+- ~12:10Z chatbot 3.1.0 (argo prod 1dbb5293), ~12:20Z server + workers 3.4.0 (93df368a): tested off.
+- ~12:28Z add-on off (5f2e03a4), ~12:30Z server on (6c74ded2), ~12:33Z chatbot on (d7731c11).
+- E2E on prod with "ZZ Prod test - welcome agent" (widget): run recorded with its 5 steps, checkpoint and sealed
+  data; pause → pause notice in the widget → resume → waiting; audit stop_soft/resume mirrored in Activities.
+  Broker: my-tiledesk-prod-server-rabbitmq (CLOUDAMQP_URL) for publishers and ingest; dlq 0.
+- Dashboard: 2.9.0 on S3; Executions shows once `EXECUTIONS_BASE_URL` is in the S3 dashboard-config.json.
+- Rollback: revert d7731c11 (chatbot off) and/or 6c74ded2 (server off) on argo prod.
