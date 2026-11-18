@@ -388,6 +388,10 @@ const DEFAULT_FUNCTIONS = {
   },
   isNull: (a) => a === null,
   isUndefined: (a) => a === undefined,
+  // exists: the attribute has a value. A variable set to null has none, so it does not
+  // exist -- otherwise "exists" and "is null" would both be true on the same variable.
+  // The design studio writes `exists(x)` / `!exists(x)` for "exists" / "does not exist".
+  exists: (a) => a !== undefined && a !== null,
 
   // --- Date / time (ISO-8601; any invalid/missing date -> false) ---------
   dateEqual: (a, b) => { const x = parseDate(a), y = parseDate(b); return !!(x && y) && x.getTime() === y.getTime(); },

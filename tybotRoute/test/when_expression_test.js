@@ -122,6 +122,23 @@ describe('TiledeskWhenExpression', () => {
       assert.strictEqual(evalIt('isUndefined(x)', { x: null }), false);   // null != undefined
       assert.strictEqual(evalIt('isNull(x)', { x: null }), true);
     });
+    it('exists: a value is there (null is not a value)', () => {
+      assert.strictEqual(evalIt('exists(x)', { x: "a" }), true);
+      assert.strictEqual(evalIt('exists(x)', { x: 0 }), true);         // falsy, but a value
+      assert.strictEqual(evalIt('exists(x)', { x: "" }), true);        // empty, but a value
+      assert.strictEqual(evalIt('exists(x)', { x: false }), true);
+      assert.strictEqual(evalIt('exists(x)', { x: null }), false);     // set to null
+      assert.strictEqual(evalIt('exists(x)', {}), false);              // missing
+      assert.strictEqual(evalIt('!exists(x)', { x: null }), true);     // does not exist
+      assert.strictEqual(evalIt('!exists(x)', {}), true);
+      assert.strictEqual(evalIt('!exists(x)', { x: "a" }), false);
+    });
+    it('exists and isNull are never both true', () => {
+      for (const x of ["a", 0, "", null, undefined]) {
+        const vars = x === undefined ? {} : { x };
+        assert.ok(!(evalIt('exists(x)', vars) && evalIt('isNull(x)', vars)), `x = ${x}`);
+      }
+    });
     it('isEmpty on string / array / object / null', () => {
       assert.strictEqual(evalIt('isEmpty(x)', { x: "" }), true);
       assert.strictEqual(evalIt('isEmpty(x)', { x: [] }), true);

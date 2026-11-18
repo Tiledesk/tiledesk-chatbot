@@ -70,6 +70,22 @@ describe('DirJSONConditionV2', () => {
       assert.ok(d._executed[0].action.intentName.startsWith('#FALSE'));
     });
 
+    it('"exists" / "does not exist" (`exists(x)`): routed, no flowError; null does not exist', async () => {
+      const cases = [
+        [{ email: 'a@b.it' }, 'exists(email)', '#TRUE'],
+        [{ email: null },     'exists(email)', '#FALSE'],
+        [{},                  'exists(email)', '#FALSE'],
+        [{ email: null },     '!exists(email)', '#TRUE'],
+      ];
+      for (const [vars, when, expected] of cases) {
+        const ctx = makeContext(vars);
+        const d = makeDirective(ctx);
+        await run(d, cond({ when, trueIntent: '#TRUE', falseIntent: '#FALSE' }));
+        assert.ok(d._executed[0].action.intentName.startsWith(expected), `${when} with ${JSON.stringify(vars)}`);
+        assert.ok(!ctx.tdcache._hsets.some(h => h.field === 'flowError'), `${when}: no flowError`);
+      }
+    });
+
     it('passes trueIntentAttributes through to the executed intent', async () => {
       const ctx = makeContext({ star_type: 'supernova' });
       const d = makeDirective(ctx);
