@@ -1,10 +1,13 @@
 # Tiledesk native chatbot
 
+# 3.2.0
+- **added**: AI Prompt can call MCP servers connected with OAuth. The access is reused until it is about to expire
+
 # 3.1.2
-- **fixed**: cannot read properties of undefined (reading 'applyPattern') evaluating JSonConditions
+- **fixed**: a filter on a reply, such as "voice mode is on" or "voice mode is off", no longer stops the conversation
 
 # 3.1.1
-- **fixed**: voice_mode is not assigned if value is false
+- **fixed**: voice mode is saved even when it is turned off
 
 # 3.1.0
 - **added**: agent execution traceability (off unless `EXECUTIONS_ENABLED=true`): every run of an agent is an execution with its steps, actions, outcomes, exits taken and attribute changes, sent to the executions service over AMQP; attribute values and the trigger input are sealed (encrypted) before they leave tybot
