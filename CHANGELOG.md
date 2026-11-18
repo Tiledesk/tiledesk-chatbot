@@ -1,6 +1,6 @@
 # Tiledesk native chatbot
 
-# features-2611/reply-filters-when 18/11/2026
+# 3.1.3-rc1
 - **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters. The design studio writes `exists(x)`, which the `when` evaluator did not know: the condition always took the false exit and logged a `flowError`, and the filter never hid its message. A variable set to null does not exist. Conditions saved in the older form, `!isUndefined(x)`, keep their meaning
 - **added**: tests for reply filters: every operator of the condition menu in the `when` form, ignore case, filters saved before `when`, and a broken filter that does not stop the other messages
 
