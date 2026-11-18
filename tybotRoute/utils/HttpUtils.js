@@ -6,7 +6,8 @@ class HttpUtils {
 
   constructor() { }
 
-  request(options, callback) {
+  /** The axios options of request(options). A signal (hard stop) is copied only when there is one. */
+  axiosOptions(options) {
     let axios_options = {
       url: options.url,
       method: options.method,
@@ -25,6 +26,14 @@ class HttpUtils {
       });
       axios_options.httpsAgent = httpsAgent;
     }
+    if (options.signal) {
+      axios_options.signal = options.signal
+    }
+    return axios_options;
+  }
+
+  request(options, callback) {
+    const axios_options = this.axiosOptions(options);
     axios(axios_options)
       .then((res) => {
         if (res && (res.status >= 200 && res.status <= 299) && res.data) {

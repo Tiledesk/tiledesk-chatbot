@@ -70,6 +70,8 @@ class Directives {
   static FLOW_LOG = "flow_log";
   static ADD_KB_CONTENT = "add_kb_content";
   static DATA_TABLES = "data_table";
+  static SET_RATING = "set_rating";
+  static GET_RATING = "get_rating";
   // DOCPARSE
   static DOCPARSE_EXTRACT = "docparse_extract";
 

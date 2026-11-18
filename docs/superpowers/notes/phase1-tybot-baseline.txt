@@ -1,0 +1,254 @@
+Baseline tybot suite at 05ef51c1 (before changes)
+  383 passing (1m)
+  249 failing
+
+Failing tests:
+  1) Conversation for anomaly detection test
+  10) Conversation for AddTags test
+  100) Conversation for Filters in reply test
+  101) Conversation for Filters in reply test
+  102) Conversation for Filters in reply test
+  103) Conversation for Filters in reply test
+  104) Conversation for Filters in reply test
+  105) Conversation for AddTags test
+  106) Conversation for AddTags test
+  107) Conversation for AddTags test
+  108) Conversation1 - Form filling
+  109) Conversation1 - Form filling
+  11) Conversation for AddTags test
+  110) Conversation1 - Form filling
+  111) Conversation1 - Form filling
+  112) Conversation1 - Form filling
+  113) Conversation1 - Form filling
+  114) Conversation1 - Form filling
+  115) Conversation for GptTask test
+  116) Conversation for GptTask test
+  117) Conversation for GptTask test
+  118) Conversation for GptTask test
+  119) Conversation for GptTask test
+  12) Conversation for AiCondition test
+  120) Conversation for GptTask test
+  121) Conversation for GptTask test
+  122) Conversation for GptTask test
+  123) Conversation for GptTask test
+  124) Conversation for GptTask test
+  125) Conversation for GptTask test
+  126) Conversation for GptTask test
+  127) Conversation for GptTask test
+  128) Conversation for hubspot test
+  129) Conversation for hubspot test
+  13) Conversation for AiCondition test
+  130) Conversation for hubspot test
+  131) Conversation for hubspot test
+  132) Conversation for Intent JSON Attributes test
+  133) Conversation for Invite human test
+  134) Conversation for Invite human test
+  135) Conversation for Invite human test
+  136) Conversation for Invite human test
+  137) Conversation for Invite human test
+  138) Conversation for Invite human test
+  139) Conversation for Invite human test
+  14) Conversation for AiCondition test
+  140) Conversation for Invite human test
+  141) Conversation for Iteration test
+  142) Conversation for Iteration test
+  143) Conversation for Iteration test
+  144) Conversation for Iteration test
+  145) Lock and internal jumps
+  146) Lock and internal jumps
+  147) Lock and internal jumps
+  148) Lock ownership
+  149) Lock ownership
+  15) Conversation for AiCondition test
+  150) Lock ownership
+  151) Lock ownership
+  152) Conversation1 - Form filling
+  153) Conversation for make test
+  154) Conversation for make test
+  155) Conversation for make test
+  156) Conversation for Hidden message test
+  157) Conversation for Hidden message test
+  158) Conversation for Hidden message test
+  159) Conversation for message.metadata test
+  16) Conversation for AiCondition test
+  160) Conversation for Intent JSON Attributes test
+  161) Conversation for Intent JSON Attributes test
+  162) Conversation for Operating Hours test
+  163) Conversation for Operating Hours test
+  164) Conversation for Operating Hours test
+  165) Conversation for Operating Hours test
+  166) Conversation for Qapla test
+  167) Conversation for Qapla test
+  168) Conversation for Qapla test
+  169) Conversation for Qapla test
+  17) Conversation for AiCondition test
+  170) Conversation for Qapla test
+  171) Conversation for Qapla test
+  172) Conversation for Qapla test
+  173) Conversation for Remove human test
+  174) Conversation for Remove human test
+  175) Conversation for Remove human test
+  176) Conversation for ReplaceBot return stack
+  177) Conversation for ReplaceBot return stack
+  178) Conversation for ReplaceBot return stack
+  179) Conversation for ReplaceBot return stack
+  18) Conversation for AiCondition test
+  180) Conversation for Reply test
+  181) Conversation for Reply test
+  182) Conversation for Reply test
+  183) Conversation for Reply test
+  184) Conversation for Reply test
+  185) Conversation for Reply test
+  186) Conversation for Reply test
+  187) Conversation for Reply v2 test
+  188) Conversation for Reply v2 test
+  189) Conversation for Reply v2 test
+  19) Conversation for OpenRouter AI actions test
+  190) Conversation for Reply v2 test (noInput)
+  191) Conversation for Reply v2 test (noInput)
+  192) Conversation for GptTask test
+  193) Conversation for GptTask test
+  194) Conversation for Set Attribute (v2) Action test
+  195) Conversation for Set Attribute (v2) Action test
+  196) Conversation for Set Attribute (v2) Action test
+  197) Conversation for Set Attribute (v2) Action test
+  198) Conversation for Start point test
+  199) Conversation for Start point test
+  2) POST /block async error
+  20) Conversation for OpenRouter AI actions test
+  200) Conversation for Start point test
+  201) Conversation for Start point test
+  202) Conversation for WebRequest assign test
+  203) Conversation for WebRequest assign test
+  204) Conversation for WebRequestV2 test
+  205) Conversation for WebRequestV2 test
+  206) Conversation for WebRequestV2 test
+  207) Conversation for WebRequestV2 test
+  208) Conversation for WebRequestV2 test
+  209) Conversation for WebRequestV2 test
+  21) Conversation for OpenRouter AI actions test
+  210) Conversation for WebRequestV2 test
+  211) Conversation for WebRequestV2 test
+  212) Conversation for WebRequestV2 test
+  213) Conversation for WebRequestV2 test
+  214) Conversation for WebRequestV2 test
+  215) Conversation for WebRequestV2 test
+  216) Conversation for WebRequestV2 test
+  217) Conversation for Webhook test
+  218) Conversation for Docparse Extract test
+  219) Conversation for Docparse Extract test
+  22) Conversation for OpenRouter AI actions test
+  220) Conversation for Docparse Extract test
+  221) Conversation for Docparse Extract test
+  222) Conversation for Docparse Extract test
+  223) Conversation for Docparse Extract test
+  224) Conversation for Docparse Extract test
+  225) Conversation for Docparse Extract test
+  226) Conversation for Docparse Extract test
+  227) Conversation for Docparse Extract test
+  228) Conversation for Docparse Extract test
+  229) Conversation for Docparse Extract test
+  23) Conversation for AiPrompt test
+  230) Conversation for Docparse Extract test
+  231) Conversation for Docparse Extract test
+  232) Conversation for Docparse Extract test
+  233) Conversation for Docparse Extract test
+  234) Conversation for Docparse Extract test
+  235) Conversation for Docparse Extract test
+  236) Conversation for Docparse Extract test
+  237) Conversation for Docparse Extract test
+  238) Conversation for Docparse Extract test
+  239) Conversation for Docparse Extract test
+  24) Conversation for AiPrompt test
+  240) Conversation for Docparse Extract test
+  241) Conversation for Docparse Extract test
+  242) Conversation for Docparse Extract test
+  243) Conversation for Docparse Extract test
+  244) Conversation for JSONCondition test
+  245) Conversation for JSONCondition test
+  246) Conversation for JSONCondition test
+  247) Conversation for JSONCondition with intent params test
+  248) Conversation for JSONCondition with intent params test
+  249) Conversation for Performance test
+  25) Conversation for AiPrompt test
+  26) Conversation for AiPrompt test
+  27) Conversation for AiPrompt test
+  28) Conversation for AiPrompt test
+  29) Conversation for AiPrompt test
+  3) Conversation for AddTags test
+  30) Conversation for AiPrompt test
+  31) Conversation for AiPrompt test
+  32) Conversation for AiPrompt test
+  33) Conversation for AiPrompt test
+  34) Conversation for AiPrompt test
+  35) Conversation for AiPrompt test
+  36) Conversation for AiPrompt test
+  37) Conversation for AiPrompt test
+  38) Conversation for AiPrompt test
+  39) Conversation for AskGPT test
+  4) Conversation for AddTags test
+  40) Conversation for AskGPT test
+  41) Conversation for AskGPT test
+  42) Conversation for AskGPT test
+  43) Conversation for AskGPT test
+  44) Conversation for AskGPT test
+  45) Conversation for AskGPT test
+  46) Conversation for AskGPTV2 test
+  47) Conversation for AskGPTV2 test
+  48) Conversation for AskGPTV2 test
+  49) Conversation for AskGPTV2 test
+  5) Conversation for AddTags test
+  50) Conversation for AskGPTV2 test
+  51) Conversation for AskGPTV2 test
+  52) Conversation for AskGPTV2 test
+  53) Conversation for AskGPTV2 test
+  54) Conversation for AskGPTV2 test
+  55) Conversation for AskGPTV2 test
+  56) Conversation for AskGPTV2 test
+  57) Conversation for AskGPTV2 test
+  58) Conversation for AskGPTV2 test
+  59) Conversation for AskGPTV2 test
+  6) Conversation for AddTags test
+  60) Conversation for AskGPTV2 test
+  61) Conversation for AskGPTV2 test
+  62) Conversation for AskGPTV2 test
+  63) Conversation for AskGPTV2 test
+  64) Conversation for AskGPTV2 test
+  65) Conversation for AskGPTV2 test
+  66) Conversation for AskGPTV2 test
+  67) Conversation for brevo test
+  68) Conversation for brevo test
+  69) Conversation for brevo test
+  7) Conversation for AddTags test
+  70) Conversation for brevo test
+  71) Conversation for CallSubAgent test
+  72) Conversation for CallSubAgent test
+  73) Conversation for CallSubAgent test
+  74) Conversation for capture test
+  75) Conversation for Code Action test
+  76) Conversation for V3 connectors (destinations from the bot connectors list)
+  77) Conversation for V3 connectors (destinations from the bot connectors list)
+  78) Conversation for V3 connectors (destinations from the bot connectors list)
+  79) Conversation for V3 connectors (destinations from the bot connectors list)
+  8) Conversation for AddTags test
+  80) Conversation for V3 connectors (destinations from the bot connectors list)
+  81) Conversation for V3 connectors (destinations from the bot connectors list)
+  82) Conversation for V3 connectors (destinations from the bot connectors list)
+  83) Conversation for V3 connectors (destinations from the bot connectors list)
+  84) Conversation for customerio test
+  85) Conversation for customerio test
+  86) Conversation for customerio test
+  87) Conversation for AskGPTV2 test
+  88) Conversation for AskGPTV2 test
+  89) Conversation for AskGPTV2 test
+  9) Conversation for AddTags test
+  90) Conversation for AskGPTV2 test
+  91) Conversation for AskGPTV2 test
+  92) Conversation for test text empty bug
+  93) Api /ext/:boid
+  94) Api /ext/:boid
+  95) Api /ext/:boid
+  96) Conversation for Filters in reply test
+  97) Conversation for Filters in reply test
+  98) Conversation for Filters in reply test
+  99) Conversation for Filters in reply test

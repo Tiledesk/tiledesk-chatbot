@@ -5,6 +5,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirWebRequestV2 {
 
@@ -103,7 +104,8 @@ class DirWebRequestV2 {
       headers: headers,
       json: json,
       method: action.method,
-      timeout: timeout
+      timeout: timeout,
+      signal: this.context.signal
     };
     winston.debug("DirWebRequestV2 HttpRequest: ", HTTPREQUEST);
     
@@ -206,9 +208,9 @@ class DirWebRequestV2 {
             let field = formData[i];
             if (field.enabled && field.value && field.type === "URL") {
               let response = await axios.get(field.value,
-                {
+                Object.assign({
                   responseType: 'stream'
-                }
+                }, this.context.signal ? { signal: this.context.signal } : {})
               );
               let stream = response.data;
               json[field.name] = stream;
@@ -252,6 +254,8 @@ class DirWebRequestV2 {
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // execution tracing: the branch taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(result === true ? 'trueIntent' : 'falseIntent');
     let trueIntentDirective = null;
     if (trueIntent) {
       trueIntentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
@@ -331,6 +335,9 @@ class DirWebRequestV2 {
           rejectUnauthorized: false,
         });
         axios_options.httpsAgent = httpsAgent;
+      }
+      if (options.signal) {
+        axios_options.signal = options.signal;
       }
 
       axios(axios_options)

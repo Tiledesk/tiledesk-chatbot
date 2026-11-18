@@ -1,6 +1,7 @@
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const { DirIntent } = require('./DirIntent');
 const winston = require('../../utils/winston');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirIfOnlineAgents {
 
@@ -69,6 +70,7 @@ class DirIfOnlineAgents {
               if (agents.length > 0) {
                 if (trueIntent) {
                   let intentDirective = DirIntent.intentDirectiveFor(trueIntent, trueIntentAttributes);
+                  WriteTap.noteExit('trueIntent'); // execution tracing: the branch taken (no-op when off)
                   winston.debug("(DirIfOnlineAgents) agents (openHours) => trueIntent");
                   this.intentDir.execute(intentDirective, () => {
                     callback(stopOnConditionMet);
@@ -82,6 +84,7 @@ class DirIfOnlineAgents {
               }
               else if (falseIntent) {
                 let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+                WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
                 winston.debug("(DirIfOnlineAgents) !agents (openHours) => falseIntent: ", intentDirective);
                 this.intentDir.execute(intentDirective, () => {
                   callback(stopOnConditionMet);
@@ -96,6 +99,7 @@ class DirIfOnlineAgents {
         else if (result && !result.isopen) {
           if (falseIntent) {
             let intentDirective = DirIntent.intentDirectiveFor(falseIntent, falseIntentAttributes);
+            WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
             winston.debug("(DirIfOnlineAgents) !agents (!openHours) => falseIntent BECAUSE CLOSED"); //PROD
             this.intentDir.execute(intentDirective, () => {
               callback();

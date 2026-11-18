@@ -49,10 +49,17 @@ class DirWait {
     this.go(action, () => {
       this.logger.native("[Wait] Executed");
       callback();
+    }, () => {
+      this.logger.native("[Wait] Interrupted");
+      callback();
     })
   }
 
-  async go(action, callback) {
+  /**
+   * onAbort: called instead of callback when the hard-stop signal (context.signal) fires during
+   * the wait; the timer is cleared. Without a signal the wait is exactly as before.
+   */
+  async go(action, callback, onAbort) {
     winston.debug("(DirWait) Action: ", action);
     // reset step?
     // const step_key = TiledeskChatbot.requestCacheKey(this.requestId) + ":step";
@@ -61,9 +68,27 @@ class DirWait {
       await TiledeskChatbot.resetStep(this.tdcache, this.requestId);
     }
     this.logger.native("[Wait] Waiting for ", action.millis, "[ms]")
-    setTimeout(() => {
+    const signal = this.context.signal;
+    if (!signal) {
+      setTimeout(() => {
+        callback();
+      }, action.millis);
+      return;
+    }
+    const aborted = () => (onAbort || callback)();
+    if (signal.aborted) {
+      aborted();
+      return;
+    }
+    const abortListener = () => {
+      clearTimeout(timer);
+      aborted();
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', abortListener);
       callback();
     }, action.millis);
+    signal.addEventListener('abort', abortListener, { once: true });
   }
 }
 

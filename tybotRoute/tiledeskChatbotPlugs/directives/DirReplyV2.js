@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const { TiledeskClient } = require('@tiledesk/tiledesk-client');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirReplyV2 {
 
@@ -127,6 +128,7 @@ class DirReplyV2 {
             // invoke button
             if (button && button.action) {
               let button_action = DirIntent.intentDirectiveFor(button.action, null);
+              WriteTap.noteExit('button: ' + button.value); // execution tracing: the button typed, by its text (no-op when off)
               this.intentDir.execute(button_action, () => {
                 winston.debug("(DirReplyV2) action invoked", button_action);
               });
@@ -147,6 +149,7 @@ class DirReplyV2 {
               // }
               if (action.noMatchIntent) {
                 let nomatch_action = DirIntent.intentDirectiveFor(action.noMatchIntent, null);
+                WriteTap.noteExit('noMatchIntent'); // execution tracing: the branch taken (no-op when off)
                 this.intentDir.execute(nomatch_action, () => {
                   winston.debug("(DirReplyV2) nomatch action invoked", nomatch_action);
                 });
@@ -156,6 +159,7 @@ class DirReplyV2 {
               else {
                 // const defaultFallbackAction = { action: { intentName: "defaultFallback" } };
 
+                // traced as a jump (exit 'jump', block exit recorded first); the message gets the current execution_id
                 const messageDir = new DirMessageToBot(this.context);
                 messageDir.execute( { action: { message: this.originalMessage }  }, () => {
                   winston.debug("(DirReplyV2) messageDir invoked");

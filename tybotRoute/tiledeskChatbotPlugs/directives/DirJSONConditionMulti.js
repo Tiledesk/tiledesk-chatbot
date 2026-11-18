@@ -3,6 +3,7 @@ const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
 const { TiledeskWhenExpression } = require('../../TiledeskWhenExpression');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 /**
  * DirJSONConditionMulti
@@ -139,6 +140,7 @@ class DirJSONConditionMulti {
           done();
           return;
         }
+        WriteTap.noteExit(String(label)); // execution tracing: the case taken, by its label (no-op when off)
         this.intentDir.execute(DirIntent.intentDirectiveFor(intent, branch.intentAttributes), () => done(stopOnConditionMet));
         return;
       }
@@ -146,6 +148,7 @@ class DirJSONConditionMulti {
       // Rule 5: nothing matched.
       this.logger.native("[ConditionMulti] No case matched");
       if (elseIntent) {
+        WriteTap.noteExit('elseIntent'); // execution tracing: the branch taken (no-op when off)
         this.intentDir.execute(DirIntent.intentDirectiveFor(elseIntent, elseIntentAttributes), () => done(stopOnConditionMet));
       }
       else {

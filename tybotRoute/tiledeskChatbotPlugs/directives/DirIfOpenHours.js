@@ -4,6 +4,7 @@ let https = require("https");
 const winston = require('../../utils/winston');
 const httpUtils = require('../../utils/HttpUtils');
 const { Logger } = require('../../Logger');
+const WriteTap = require('../../executions/WriteTap');
 
 class DirIfOpenHours {
 
@@ -41,8 +42,8 @@ class DirIfOpenHours {
   go(action, callback) {
     winston.debug("(DirIfOpenHours) Action: ", action);
 
-    const trueIntent = action.trueIntent;
-    const falseIntent = action.falseIntent;
+    let trueIntent = action.trueIntent;
+    let falseIntent = action.falseIntent;
     const trueIntentAttributes = action.trueIntentAttributes;
     const falseIntentAttributes = action.falseIntentAttributes;
     const stopOnConditionMet = action.stopOnConditionMet;
@@ -92,21 +93,26 @@ class DirIfOpenHours {
           if (callback) {
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+              WriteTap.noteExit('errorIntent'); // execution tracing: the isopen call failed, a failure (no-op when off)
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent " + falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
+              return;
             }
+            callback(); // no false exit: the block goes on (it used to hang here)
           }
         } else {
           if (resbody.isopen && resbody.isopen === true) {
             this.logger.native("[If Operating Hours] is open: true")
             if (trueIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(trueIntent);
+              WriteTap.noteExit('trueIntent'); // execution tracing: the branch taken (no-op when off)
               winston.debug("(DirIfOpenHours) agents (openHours) => trueIntent");
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
+              return; // one callback: the jump's (a second one ran the block's next action too)
             }
             callback();
             return;
@@ -114,10 +120,12 @@ class DirIfOpenHours {
             this.logger.native("[If Operating Hours] is open: false")
             if (falseIntent) {
               let intentDirective = DirIntent.intentDirectiveFor(falseIntent);
+              WriteTap.noteExit('falseIntent'); // execution tracing: the branch taken (no-op when off)
               winston.debug("(DirIfOpenHours) !agents (openHours) => falseIntent", falseIntent);
               this.intentDir.execute(intentDirective, () => {
                 callback(stopOnConditionMet);
               });
+              return; // one callback: the jump's (a second one ran the block's next action too)
             }
             callback();
             return;
