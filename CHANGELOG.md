@@ -3,6 +3,7 @@
 # features-2611/reply-filters-when 18/11/2026
 - **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters. The design studio writes `exists(x)`, which the `when` evaluator did not know: the condition always took the false exit and logged a `flowError`, and the filter never hid its message. A variable set to null does not exist. Conditions saved in the older form, `!isUndefined(x)`, keep their meaning
 - **added**: tests for reply filters: every operator of the condition menu in the `when` form, ignore case, filters saved before `when`, and a broken filter that does not stop the other messages
+- **fixed**: the **length** operators count the items of a list held as JSON text, as a list from a web request, a data table or a knowledge base reaches the flow: `["a","b"]` counted as nine characters instead of two items. Text that is not a list is still measured in characters. Brought from stage (main_pre), where it has been since 30/09
 
 # 3.1.2
 - **fixed**: a filter on a reply, such as "voice mode is on" or "voice mode is off", no longer stops the conversation
