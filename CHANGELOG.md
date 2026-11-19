@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# main_pre 19/11/2026
+- **fixed** (main_pre): the connector logs its real version at start (`Starting Tilebot connector v3.2.1`): `tybotRoute/package.json` was still at 3.2.0
+
 # 3.1.3-rc2
 - **fixed**: the **length** operators count the items of a list held as JSON text, as a list from a web request, a data table or a knowledge base reaches the flow: `["a","b"]` counted as nine characters instead of two items. Text that is not a list is still measured in characters. Brought from stage (main_pre), where it has been since 30/09
 
