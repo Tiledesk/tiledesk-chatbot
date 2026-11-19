@@ -37,6 +37,7 @@ describe('Conversation for Performance test', async () => {
             bots: bots_data,
             TILEBOT_ENDPOINT: process.env.TILEBOT_ENDPOINT,
             API_ENDPOINT: process.env.API_ENDPOINT,
+            API_URL: process.env.API_URL,
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -56,11 +57,15 @@ describe('Conversation for Performance test', async () => {
     })
   });
 
-  after(function (done) {
-    app_listener.close(() => {
-      done();
-    });
-  });
+  // after(function (done) {
+  //   try {
+  //     app_listener.close(() => {
+  //       done();
+  //     });
+  //   } catch (error) {
+  //     winston.error("error closing app_listener:", error)
+  //   }
+  // });
 
   it('/performance_singles_wait', (done) => {
 
