@@ -13,7 +13,7 @@ const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const { Logger } = require("../../Logger");
 const kbService = require("../../services/KbService");
-const quotasService = require("../../services/QuotasService");
+const usageService = require("../../services/UsageService");
 const aiController = require("../../services/AIController");
 const namespaceService = require("../../services/NamespaceService");
 const default_engine = require('../../config/kb/engine');
@@ -202,6 +202,34 @@ class DirAskGPTV2 {
       return;
     }
 
+    const ownKey = !!model.api_key;
+    // the model asked by the action, also when the Tiledesk key serves it through OpenRouter
+    const requestedModel = { provider: model.provider || llm, name: model.name || filled_model };
+
+    if (!chunks_only) {
+      const usageCheck = await usageService.check(this.projectId, this.token, {
+        provider: requestedModel.provider,
+        model: requestedModel.name,
+        own_key: ownKey
+      });
+      if (!usageCheck.ok) {
+        this.logger.warn("[Ask Knowledge Base] " + usageService.refusalMessage(usageCheck));
+        await this.chatbot.addParameter("flowError", "GPT Error: " + usageService.refusalMessage(usageCheck));
+        if (falseIntent) {
+          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+          callback();
+          return;
+        }
+        callback();
+        return;
+      }
+      const managed = ownKey ? null : usageService.managedModel(usageCheck);
+      if (managed) {
+        model = managed;
+        publicKey = true;
+      }
+    }
+
     if (!model.api_key && model.provider === 'openai') {
       model.api_key = process.env.GPTKEY;
       publicKey = true;
@@ -217,33 +245,6 @@ class DirAskGPTV2 {
       }
       callback();
       return;
-    }
-
-    if (publicKey === true && !chunks_only) {
-      try {
-        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
-        if (keep_going === false) {
-          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
-          await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback();
-            return;
-          }
-          callback();
-          return;
-        }
-      } catch (err) {
-        this.logger.error("An error occured on checking token quota availability");
-        await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback();
-          return;
-        }
-        callback();
-        return;
-      }
     }
 
     if (!namespace) {
@@ -446,18 +447,18 @@ class DirAskGPTV2 {
             }
             await this.#assignAttributes(action, resbody.answer, resbody.source, resbody.content_chunks, json_sources);
             let tokens = resbody.prompt_token_size;
-            if (publicKey === true && !chunks_only) {
-
-              let tokens_usage = {
-                tokens: resbody.prompt_token_size,
-                model: json.model
-              }
-
-              let multiplier = MODELS_MULTIPLIER[json.model.name] ?? 1;
+            usageService.report(this.projectId, this.token, {
+              provider: requestedModel.provider,
+              model: requestedModel.name,
+              own_key: ownKey,
+              tokens: resbody.prompt_token_size,
+              input_tokens: resbody.prompt_token_info?.input_tokens,
+              output_tokens: resbody.prompt_token_info?.output_tokens,
+              ref: this.requestId
+            });
+            if (publicKey === true) {
+              let multiplier = MODELS_MULTIPLIER[requestedModel.name] ?? 1;
               tokens = tokens * multiplier;
-              quotasService.updateQuote(this.projectId, this.token, tokens_usage).catch((err) => {
-                winston.error("Error updating quota: ", err);
-              })
             }
             
             const data = {

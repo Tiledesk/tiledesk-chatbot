@@ -7,6 +7,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const usageService = require("../../services/UsageService");
 const WriteTap = require('../../executions/WriteTap');
 
 class DirAskGPT {
@@ -116,13 +117,11 @@ class DirAskGPT {
       return;
     }
 
-    if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
-      if (keep_going === false) {
-        winston.debug("(DirAskGPT) - Quota exceeded for tokens. Skip the action")
-        callback();
-        return;
-      }
+    const usageCheck = await usageService.check(this.projectId, this.token, { provider: 'openai', own_key: !publicKey });
+    if (!usageCheck.ok) {
+      winston.debug("(DirAskGPT) - " + usageService.refusalMessage(usageCheck) + ". Skip the action")
+      callback();
+      return;
     }
 
     let json = {
@@ -168,10 +167,16 @@ class DirAskGPT {
         }
         else if (resbody?.success === true) {
 
-          // if (publicKey === true) {
-          //   let token_usage = resbody.usage.total_tokens;
-          //   this.updateQuote(token_usage);
-          // }
+          if (resbody.prompt_token_size !== undefined) {
+            usageService.report(this.projectId, this.token, {
+              provider: 'openai',
+              own_key: !publicKey,
+              tokens: resbody.prompt_token_size,
+              input_tokens: resbody.prompt_token_info?.input_tokens,
+              output_tokens: resbody.prompt_token_info?.output_tokens,
+              ref: this.requestId
+            });
+          }
           
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -248,36 +253,6 @@ class DirAskGPT {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignSourceTo, source);
       }
     }
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        signal: this.context.signal, // hard stop (undefined when executions are off)
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirAskGPT) check quote availability HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
   }
 
 }
