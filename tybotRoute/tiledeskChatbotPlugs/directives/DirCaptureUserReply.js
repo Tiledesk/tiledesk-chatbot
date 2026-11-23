@@ -1,6 +1,8 @@
 const { Filler } = require('../Filler');
 const { TiledeskChatbot } = require('../../engine/TiledeskChatbot');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 const { DirIntent } = require('./DirIntent');
+const { v4: uuidv4 } = require('uuid');
 const winston = require('../../utils/winston');
 const { Logger } = require('../../Logger');
 
@@ -73,6 +75,7 @@ class DirCaptureUserReply {
       await this.chatbot.lockIntent(this.requestId, intent_name);
       await this.chatbot.lockAction(this.requestId, actionId);
       this.logger.native("[Capture User Reply] Waiting for user reply...");
+      await this.#scheduleNoInput(action);
       callback(true);
       return;
     } else {
@@ -113,6 +116,49 @@ class DirCaptureUserReply {
       this.logger.error("[Capture User Reply] Error: ", error);
       winston.error("(DirCaptureUserReply) error: ", error);
     }
+  }
+
+  /**
+   * No input, as in DirReplyV2: when the capture starts waiting, a timer of noInputTimeout ms. If the
+   * user has not replied when it fires, the capture is unlocked and the flow goes to noInputIntent.
+   * "Not replied" is the control variable USER_INPUT still holding this timer's id: every user
+   * message deletes it (TiledeskChatbotUtil, message in), and the lock must still be this action's
+   * (a reply moved the flow on, another capture or reply is waiting now: nothing to do).
+   * Like DirReplyV2's, the timer lives in this process: a restart while waiting loses it.
+   */
+  async #scheduleNoInput(action) {
+    const noInputIntent = action.noInputIntent;
+    const noInputTimeout = Number(action.noInputTimeout);
+    if (!noInputIntent || !(noInputTimeout > 0 && noInputTimeout < 7776000)) {
+      return;
+    }
+    const timeout_id = uuidv4();
+    await this.chatbot.addParameter(TiledeskChatbotConst.USER_INPUT, timeout_id); // deleted by every user input
+    setTimeout(async () => {
+      try {
+        const userInput = await this.chatbot.getParameter(TiledeskChatbotConst.USER_INPUT);
+        const lockedAction = await this.chatbot.currentLockedAction(this.requestId);
+        if (lockedAction !== action["_tdActionId"]) {
+          winston.debug("(DirCaptureUserReply) lock owned by another action, skipping noinput");
+          return;
+        }
+        if (userInput !== timeout_id) {
+          winston.debug("(DirCaptureUserReply) the user replied, skipping noinput");
+          return;
+        }
+        await this.chatbot.unlockIntent(this.requestId);
+        await this.chatbot.unlockAction(this.requestId);
+        this.logger.native("[Capture User Reply] No input: no reply in " + noInputTimeout + " ms");
+        const noinput_action = DirIntent.intentDirectiveFor(noInputIntent, null);
+        this.intentDir.execute(noinput_action, () => {
+          winston.debug("(DirCaptureUserReply) noinput action invoked", noinput_action);
+        });
+      }
+      catch (error) {
+        this.logger.error("[Capture User Reply] No input error: ", error);
+        winston.error("(DirCaptureUserReply) noinput error: ", error);
+      }
+    }, noInputTimeout);
   }
 
   #executeGoTo(intent, callback) {

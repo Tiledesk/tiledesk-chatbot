@@ -13,7 +13,7 @@ const { TiledeskExpression } = require('../TiledeskExpression');
 const httpUtils = require('../utils/HttpUtils');
 const integrationService = require('../services/IntegrationService');
 const aiController = require('../services/AIController');
-const kbService = require('../services/KbService');
+const llmService = require('../services/LLMService'); // main_pre: KbService is LLMService here
 const { DirWebRequestV2 } = require('../tiledeskChatbotPlugs/directives/DirWebRequestV2');
 const { DirAiPrompt } = require('../tiledeskChatbotPlugs/directives/DirAiPrompt');
 const { DirAskGPTV2 } = require('../tiledeskChatbotPlugs/directives/DirAskGPTV2');
@@ -24,6 +24,7 @@ const { DirMake } = require('../tiledeskChatbotPlugs/directives/DirMake');
 const { DirRemoveHuman } = require('../tiledeskChatbotPlugs/directives/DirRemoveHuman');
 const { DirInviteHuman } = require('../tiledeskChatbotPlugs/directives/DirInviteHuman');
 const { DirIfOpenHours } = require('../tiledeskChatbotPlugs/directives/DirIfOpenHours');
+const { DirSetRating } = require('../tiledeskChatbotPlugs/directives/DirSetRating'); // main_pre only
 const { DirIfOnlineAgentsV2 } = require('../tiledeskChatbotPlugs/directives/DirIfOnlineAgentsV2');
 const { TiledeskWhenExpression } = require('../TiledeskWhenExpression');
 
@@ -231,7 +232,7 @@ describe('executions: the branch a conditional action took (B1)', function () {
     action: () => ({ question: 'q', namespace: 'ns1', llm: 'openai', model: 'gpt-4o', assignReplyTo: 'answer' }),
     arrange: (result) => {
       stub(aiController, 'resolveLLMConfig', async () => ({ name: 'gpt-4o', provider: 'openai', api_key: 'key' }));
-      stub(kbService, 'addAnsweredQuestion', async () => ({}));
+      stub(llmService, 'addAnsweredQuestion', async () => ({}));
       stub(httpUtils, 'request', (req, cb) => setImmediate(() => cb(null, result
         ? { success: true, answer: 'a', source: 's', content_chunks: [] }
         : { success: false, answer: 'no' })));
@@ -267,6 +268,17 @@ describe('executions: the branch a conditional action took (B1)', function () {
     make: () => new DirMake(makeContext()),
     // Make's false branch: a request error or no body parameters (any HTTP reply takes the true branch)
     action: (result) => ({ url: `${BASE}/ok`, bodyParameters: result ? { a: '1' } : undefined })
+  });
+
+  family('set_rating (main_pre only)', {
+    type: 'set_rating',
+    make: () => {
+      const d = new DirSetRating(makeContext());
+      d.tdClient = { updateRequestProperties: async () => ({}), getRequestById: async () => ({}) };
+      return d;
+    },
+    // false: an invalid rating (the else exit)
+    action: (result) => ({ rating: result ? '4' : 'x', forceUpdate: true })
   });
 
   let humanOk = true; // the outcome the stubbed human call gives

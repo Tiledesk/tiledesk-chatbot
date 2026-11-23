@@ -4,6 +4,7 @@ const { Filler } = require("../Filler");
 const { DirIntent } = require("./DirIntent");
 const { Logger } = require("../../Logger");
 const winston = require('../../utils/winston');
+const WriteTap = require('../../executions/WriteTap');
 
 /**
  * Sets the rating (1-5) of the conversation.
@@ -224,6 +225,8 @@ class DirSetRating {
 
   /** Moves to the exit's block and stops the current one; without a connected exit the flow goes on */
   goToExit(intent, intentAttributes, label, callback) {
+    // execution tracing: the exit taken, so two exits on the same block are told apart (no-op when off)
+    WriteTap.noteExit(label === "true" ? 'trueIntent' : 'falseIntent');
     if (!intent) {
       winston.debug("(DirSetRating) No " + label + " intent specified");
       callback();
