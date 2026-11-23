@@ -1,8 +1,7 @@
 # Tiledesk native chatbot
 
-# features-2611/capture-no-input 19/11/2026
-- **added**: **Capture user reply** has **No input**, as the Advanced reply: if the user does not reply within `noInputTimeout` (ms), the flow goes to `noInputIntent`. Also on V3 agents, whose No input connector is in the list (`ConnectorsV3`). Needs Design Studio 3.3.2
-- **added**: tests of the capture's No input (timer, reply in time, lock of another action, V3 connector)
+# 3.2.2
+- **added**: **Capture user reply** has **No input**: no reply within the wait, the flow goes to its node (V3 agents too). Needs Design Studio 3.3.2
 
 # 3.2.1
 - **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters (before, the condition always took the false exit). A variable set to null does not exist; conditions saved as `!isUndefined(x)` keep their meaning
