@@ -256,7 +256,7 @@ class DirDocparseExtract {
 
   /**
    * Charges the vision tokens of a model on the Tiledesk key (tiledeskVision, or vision_llm_source "default": the
-   * model configured in docparse), otherwise the pages of the document, native ones included.
+   * model configured in docparse) and, as OCR, every other page of the document, native ones included.
    */
   async #reportUsage(outcome, tiledeskVision, jobId) {
     const llmUsage = outcome.llmUsage && typeof outcome.llmUsage === "object" ? outcome.llmUsage : {};
@@ -264,31 +264,33 @@ class DirDocparseExtract {
     const output = this.#number(llmUsage.output_tokens);
     const total = this.#number(llmUsage.total_tokens);
     const defaultModel = llmUsage.vision_llm_source === "default";
-    let usage;
+    const key = jobId ? "docparse:" + jobId : undefined;
+    let pages = outcome.pages || 0;
     if ((input > 0 || output > 0 || total > 0) && (tiledeskVision || defaultModel)) {
-      usage = tiledeskVision && !defaultModel
+      const usage = tiledeskVision && !defaultModel
         ? Object.assign({}, tiledeskVision)
         : { resource: 'ocr_llm', model: llmUsage.model, own_key: false };
-      Object.assign(usage, {
+      await usageService.report(this.projectId, this.token, Object.assign(usage, {
         tokens: total !== null ? total : undefined,
         input_tokens: input !== null ? input : undefined,
-        output_tokens: output !== null ? output : undefined
-      });
-    } else if (!tiledeskVision && outcome.pages > 0) {
-      usage = { resource: 'ocr', units: outcome.pages };
-    } else {
-      return;
+        output_tokens: output !== null ? output : undefined,
+        ref: this.requestId,
+        key
+      }));
+      pages -= outcome.visionPages || 0;
     }
-    usage.ref = this.requestId;
-    if (jobId) {
-      usage.key = "docparse:" + jobId;
+    if (pages > 0) {
+      await usageService.report(this.projectId, this.token, { resource: 'ocr', units: pages, ref: this.requestId, key });
     }
-    await usageService.report(this.projectId, this.token, usage);
+  }
+
+  #resultBody(result) {
+    return result && typeof result === "object" && result.body && typeof result.body === "object" ? result.body : result;
   }
 
   // pages of the full result; stats.pages_llm counts the vision pages apart only for a single image
   #pageCount(result) {
-    const body = result && typeof result === "object" && result.body && typeof result.body === "object" ? result.body : result;
+    const body = this.#resultBody(result);
     if (!body || typeof body !== "object") {
       return 0;
     }
@@ -298,6 +300,20 @@ class DirDocparseExtract {
     const stats = body.stats && typeof body.stats === "object" ? body.stats : {};
     const count = (this.#integer(stats.pages_digital) || 0) + (this.#integer(stats.pages_ocr) || 0);
     return count > 0 ? count : (this.#integer(stats.pages_llm) || 0);
+  }
+
+  // pages read by the vision LLM
+  #visionPageCount(result) {
+    const body = this.#resultBody(result);
+    if (!body || typeof body !== "object") {
+      return 0;
+    }
+    const stats = body.stats && typeof body.stats === "object" ? body.stats : {};
+    const fromStats = this.#integer(stats.pages_llm);
+    if (fromStats !== null) {
+      return fromStats;
+    }
+    return Array.isArray(body.pages) ? body.pages.filter((page) => page && page.llm_usage).length : 0;
   }
 
   #llmUsage(result) {
@@ -338,7 +354,7 @@ class DirDocparseExtract {
       return { ok: true, text: response };
     }
     if (response && typeof response === "object" && typeof response.text === "string") {
-      return { ok: true, text: response.text, llmUsage: this.#llmUsage(response), pages: this.#pageCount(response) };
+      return this.#succeeded(response, response.text);
     }
     return { ok: false, error: "docparse did not return the extracted text" };
   }
@@ -457,8 +473,14 @@ class DirDocparseExtract {
       : { ok: false, error: "Unrecognized docparse job event" };
   }
 
-  #succeeded(result) {
-    return { ok: true, text: this.#textFromResult(result), llmUsage: this.#llmUsage(result), pages: this.#pageCount(result) };
+  #succeeded(result, text) {
+    return {
+      ok: true,
+      text: text !== undefined ? text : this.#textFromResult(result),
+      llmUsage: this.#llmUsage(result),
+      pages: this.#pageCount(result),
+      visionPages: this.#visionPageCount(result)
+    };
   }
 
   #textFromResult(result) {

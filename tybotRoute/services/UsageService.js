@@ -149,7 +149,11 @@ class UsageService {
   }
 
   async #legacyReport(id_project, token, body) {
-    if (!LEGACY_QUOTA_RESOURCES.includes(body.resource) || body.own_key) {
+    if (!LEGACY_QUOTA_RESOURCES.includes(body.resource)) {
+      winston.warn("(UsageService) the server has no usage API: " + body.resource + " not counted for project " + id_project);
+      return null;
+    }
+    if (body.own_key) {
       return null;
     }
     const tokens = body.tokens !== undefined ? body.tokens : (body.input_tokens || 0) + (body.output_tokens || 0);

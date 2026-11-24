@@ -558,6 +558,68 @@ describe('Conversation for Docparse Extract test', async () => {
     }
   });
 
+  it('/extract_fallback - with the Tiledesk model the pages not read by the vision LLM are charged as OCR', async () => {
+    const id = requestId();
+    const originalManagedKey = process.env.OPENROUTER_MANAGED_KEY;
+    process.env.OPENROUTER_MANAGED_KEY = 'sk-or-managed';
+    const reports = [];
+    try {
+      const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+        endpointServer.post('/:project_id/usage/check', function (req, res) {
+          res.status(200).send({ ok: true, metering: 'credits', managed: { provider: 'openrouter', name: 'openai/gpt-4o' } });
+        });
+
+        endpointServer.post('/:project_id/usage', function (req, res) {
+          reports.push(req.body);
+          res.status(200).send({ metering: 'credits', charged: 1 });
+        });
+
+        endpointServer.post('/v1/jobs/extract', function (req, res) {
+          res.status(202).send({ job_id: "job-mixed", kind: "extract", status: "queued" });
+        });
+
+        endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+          const llm_usage = { input_tokens: 2486, output_tokens: 358, total_tokens: 2844, llm_calls: 1, vision_llm_source: "request", model: "openai/gpt-4o" };
+          res.status(200).send({
+            job_id: "job-mixed",
+            status: "succeeded",
+            error: null,
+            result: {
+              content_type: "application/json",
+              body: {
+                filename: "8.pdf",
+                text: "mixed text",
+                pages: [
+                  { page_number: 1, route: "native", engine: "pymupdf", llm_usage: null },
+                  { page_number: 2, route: "scanned", engine: "tiledesk-llm-vision-ocr", llm_usage },
+                  { page_number: 3, route: "native", engine: "pymupdf", llm_usage: null }
+                ],
+                stats: { pages_digital: 2, pages_ocr: 1, pages_llm: 1 },
+                llm_usage
+              },
+              llm_usage
+            }
+          });
+        });
+      });
+
+      assert.strictEqual(replyText(message), "extracted: mixed text");
+      assert.deepStrictEqual(reports, [
+        {
+          resource: 'ocr_llm', own_key: false, provider: 'openai', model: 'gpt-4o',
+          input_tokens: 2486, output_tokens: 358, tokens: 2844, ref: id, key: 'docparse:job-mixed'
+        },
+        { resource: 'ocr', own_key: false, units: 2, ref: id, key: 'docparse:job-mixed' }
+      ]);
+    } finally {
+      if (originalManagedKey === undefined) {
+        delete process.env.OPENROUTER_MANAGED_KEY;
+      } else {
+        process.env.OPENROUTER_MANAGED_KEY = originalManagedKey;
+      }
+    }
+  });
+
   it('/extract_fallback - a refused usage check takes the false exit without calling docparse', async () => {
     const id = requestId();
     let submitted = false;
