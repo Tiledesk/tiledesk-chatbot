@@ -5,11 +5,14 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const { Logger } = require("../../Logger");
 const aiController = require("../../services/AIController");
+const usageService = require("../../services/UsageService");
 const WriteTap = require('../../executions/WriteTap');
 
 const JOB_TIMEOUT_MS = 10 * 60 * 1000;
 // Sync POST /v1/extract: docsparse runs gunicorn with a 300 s request timeout.
 const SYNC_TIMEOUT_MS = 300 * 1000;
+// providers always called with the configuration of the project, never with a Tiledesk key
+const PROJECT_LLM_PROVIDERS = ['openrouter', 'ollama', 'vllm', 'agentplatform'];
 
 class DirDocparseExtract {
 
@@ -112,13 +115,37 @@ class DirDocparseExtract {
         body.ocr_quality_threshold = confidence;
       }
 
-      const visionLlm = await this.#resolveFallback(action, filler, requestVariables);
-      if (visionLlm) {
+      // With a model on the Tiledesk key the vision tokens are charged as for the other AI actions; otherwise
+      // (key of the project or no vision fallback) the OCR pages are charged.
+      const fallback = await this.#resolveFallback(action, filler, requestVariables);
+      let tiledeskVision = null;
+      if (fallback && !fallback.ownKey) {
+        tiledeskVision = { resource: 'ocr_llm', provider: fallback.provider, model: fallback.model, own_key: false };
+      }
+      const usageCheck = await usageService.check(this.projectId, this.token, tiledeskVision || { resource: 'ocr', units: 1 });
+      if (!usageCheck.ok) {
+        await this.#fail(action, usageService.refusalMessage(usageCheck), trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
+        return;
+      }
+      if (tiledeskVision) {
+        const managed = usageService.managedModel(usageCheck);
+        if (managed) {
+          fallback.visionLlm.llm = managed.provider;
+          fallback.visionLlm.model = managed;
+        } else if (fallback.provider === "openai" && process.env.GPTKEY) {
+          fallback.visionLlm.model.api_key = process.env.GPTKEY;
+        } else {
+          await this.#fail(action, "missing key for llm " + fallback.provider, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
+          return;
+        }
+      }
+      if (fallback) {
         body.enable_vision_fallback = true;
-        body.vision_llm = visionLlm;
+        body.vision_llm = fallback.visionLlm;
       }
 
       let created;
+      let jobId = null;
       let outcome = null;
       try {
         created = await this.#request({
@@ -141,7 +168,7 @@ class DirDocparseExtract {
       }
 
       if (!outcome) {
-        const jobId = created && created.job_id;
+        jobId = created && created.job_id;
         if (!jobId) {
           await this.#fail(action, "docparse did not return a job_id", trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
           return;
@@ -150,6 +177,7 @@ class DirDocparseExtract {
         winston.verbose("DirDocparseExtract job queued: " + jobId);
         outcome = await this.#waitForJob(base, jobId);
       }
+      await this.#reportUsage(outcome, tiledeskVision, jobId);
       if (!outcome.ok) {
         await this.#fail(action, outcome.error, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
         return;
@@ -193,10 +221,8 @@ class DirDocparseExtract {
       throw new Error(detail);
     }
 
-    let apiKey = resolved && resolved.api_key;
-    if (!apiKey && provider === "openai") {
-      apiKey = process.env.GPTKEY;
-    }
+    const apiKey = resolved && resolved.api_key;
+    const ownKey = !!apiKey || PROJECT_LLM_PROVIDERS.includes(provider);
 
     const modelConfig = {
       provider: (resolved && resolved.provider) || provider,
@@ -226,7 +252,55 @@ class DirDocparseExtract {
     const maxTokens = this.#integer(filler.fill(action.max_tokens, requestVariables));
     visionLlm.max_tokens = maxTokens !== null ? maxTokens : 8192;
 
-    return visionLlm;
+    return { visionLlm, ownKey, provider, model };
+  }
+
+  /**
+   * Charges the vision tokens of a model on the Tiledesk key (tiledeskVision, or vision_llm_source "default": the
+   * model configured in docparse), otherwise the OCR pages.
+   */
+  async #reportUsage(outcome, tiledeskVision, jobId) {
+    const llmUsage = outcome.llmUsage && typeof outcome.llmUsage === "object" ? outcome.llmUsage : {};
+    const input = this.#number(llmUsage.input_tokens);
+    const output = this.#number(llmUsage.output_tokens);
+    const total = this.#number(llmUsage.total_tokens);
+    const defaultModel = llmUsage.vision_llm_source === "default";
+    let usage;
+    if ((input > 0 || output > 0 || total > 0) && (tiledeskVision || defaultModel)) {
+      usage = tiledeskVision && !defaultModel
+        ? Object.assign({}, tiledeskVision)
+        : { resource: 'ocr_llm', model: llmUsage.model, own_key: false };
+      Object.assign(usage, {
+        tokens: total !== null ? total : undefined,
+        input_tokens: input !== null ? input : undefined,
+        output_tokens: output !== null ? output : undefined
+      });
+    } else if (!tiledeskVision && this.#integer(outcome.pagesOcr) > 0) {
+      usage = { resource: 'ocr', units: outcome.pagesOcr };
+    } else {
+      return;
+    }
+    usage.ref = this.requestId;
+    if (jobId) {
+      usage.key = "docparse:" + jobId;
+    }
+    await usageService.report(this.projectId, this.token, usage);
+  }
+
+  #pagesOcr(result) {
+    const body = result && typeof result === "object" && result.body && typeof result.body === "object" ? result.body : result;
+    return body && typeof body === "object" && body.stats && typeof body.stats === "object" ? body.stats.pages_ocr : undefined;
+  }
+
+  #llmUsage(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+    if (result.llm_usage && typeof result.llm_usage === "object") {
+      return result.llm_usage;
+    }
+    const body = result.body;
+    return body && typeof body === "object" && body.llm_usage && typeof body.llm_usage === "object" ? body.llm_usage : null;
   }
 
   async #extractSync(base, body) {
@@ -256,7 +330,7 @@ class DirDocparseExtract {
       return { ok: true, text: response };
     }
     if (response && typeof response === "object" && typeof response.text === "string") {
-      return { ok: true, text: response.text };
+      return { ok: true, text: response.text, llmUsage: this.#llmUsage(response), pagesOcr: this.#pagesOcr(response) };
     }
     return { ok: false, error: "docparse did not return the extracted text" };
   }
@@ -353,17 +427,17 @@ class DirDocparseExtract {
       return { pending: true };
     }
     if (payload.status === "succeeded") {
-      return { ok: true, text: this.#textFromResult(payload.result) };
+      return this.#succeeded(payload.result);
     }
     if (payload.status === "failed") {
       return { ok: false, error: this.#formatError(payload.error) };
     }
     if (payload.result && typeof payload.result === "object") {
-      return { ok: true, text: this.#textFromResult(payload.result) };
+      return this.#succeeded(payload.result);
     }
 
     if (Object.prototype.hasOwnProperty.call(payload, "body")) {
-      return { ok: true, text: this.#textFromResult(payload) };
+      return this.#succeeded(payload);
     }
 
     if (payload.code || (typeof payload.error === "string" && payload.detail)) {
@@ -373,6 +447,10 @@ class DirDocparseExtract {
     return fromPoll
       ? { pending: true }
       : { ok: false, error: "Unrecognized docparse job event" };
+  }
+
+  #succeeded(result) {
+    return { ok: true, text: this.#textFromResult(result), llmUsage: this.#llmUsage(result), pagesOcr: this.#pagesOcr(result) };
   }
 
   #textFromResult(result) {
