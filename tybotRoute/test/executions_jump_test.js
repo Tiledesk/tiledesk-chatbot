@@ -46,6 +46,7 @@ function startTybot(endpoints = { TILEBOT_ENDPOINT: `http://localhost:${APP_PORT
       bots: bots_data,
       TILEBOT_ENDPOINT: endpoints.TILEBOT_ENDPOINT,
       API_ENDPOINT: endpoints.API_ENDPOINT,
+      API_URL: endpoints.API_ENDPOINT, // mandatory since 3.0.6 (startApp)
       REDIS_HOST: process.env.REDIS_HOST,
       REDIS_PORT: process.env.REDIS_PORT,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -82,7 +83,7 @@ describe('Executions: jumps across blocks and pods', function () {
 
   /** Sees each jump as posted; betweenBlocks runs after the jumping block's exit, before the next block. */
   function recordingRequest(options, callback, ...rest) {
-    if (options && typeof options.url === 'string' && options.url.startsWith(`http://localhost:${APP_PORT}/ext/`)) {
+    if (options && typeof options.url === 'string' && (options.url.startsWith(`http://localhost:${APP_PORT}/ext/`) || options.url.startsWith(`http://localhost:${APP_PORT}/exec/`)) /* block jumps: /ext, or /exec (DirIntent since 3.0.6) */) {
       posted.push(JSON.parse(JSON.stringify(options.json)));
       if (betweenBlocks) {
         const hook = betweenBlocks;

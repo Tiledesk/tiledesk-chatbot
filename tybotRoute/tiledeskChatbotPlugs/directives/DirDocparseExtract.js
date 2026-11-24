@@ -33,6 +33,7 @@ class DirDocparseExtract {
   }
 
   execute(directive, callback) {
+    console.log("DirDocparseExtract directive: ", directive);
     winston.debug("DirDocparseExtract directive: ", directive);
     let action;
     if (directive.action) {
@@ -54,6 +55,7 @@ class DirDocparseExtract {
   }
 
   async go(action, callback) {
+    console.log("DirDocparseExtract action: ", action);
     winston.debug("DirDocparseExtract action:", action);
     let finished = false;
     const done = (stop) => {
@@ -143,6 +145,7 @@ class DirDocparseExtract {
         body.vision_llm = fallback.visionLlm;
       }
 
+      console.log("DirDocparseExtract body: ", body);
       let created;
       let jobId = null;
       let outcome = null;

@@ -4,6 +4,7 @@ const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
 let axios = require('axios');
 const { Logger } = require('../../Logger');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
 
 class DirWebResponse {
 
@@ -65,9 +66,11 @@ class DirWebResponse {
     this.logger.native("[Web Response] payload: ", webResponse);
 
     const topic = `/webhooks/${this.requestId}`;
-    
+    const readyKey = TiledeskChatbotConst.redisWebhookReadyKey(this.requestId);
+
     try {
-      this.tdcache.publish(topic, JSON.stringify(webResponse));
+      await this.tdcache.publish(topic, JSON.stringify(webResponse));
+      await this.tdcache.set(readyKey, '1', { EX: 120 });
       winston.verbose("DirWebResponse Published webresponse to topic: " + topic);
     }
     catch(e) {

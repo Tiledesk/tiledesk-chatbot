@@ -62,6 +62,7 @@ describe('Executions: retry_of and automation trigger id', function () {
         bots: bots_data,
         TILEBOT_ENDPOINT: endpoints.TILEBOT_ENDPOINT,
         API_ENDPOINT: endpoints.API_ENDPOINT,
+        API_URL: endpoints.API_ENDPOINT, // mandatory since 3.0.6 (startApp)
         REDIS_HOST: process.env.REDIS_HOST,
         REDIS_PORT: process.env.REDIS_PORT,
         REDIS_PASSWORD: process.env.REDIS_PASSWORD
