@@ -259,8 +259,8 @@ describe('DirAiPrompt MCP OAuth bearer', function() {
     await run([servers.gmail]);
 
     assert.strictEqual(sentServers().gmail.headers.Authorization, 'Bearer ' + TOKEN);
-    const serversLog = debugLogs.find((args) => args[0] === 'DirAiPrompt json.servers: ');
-    assert.strictEqual(serversLog[1].gmail.headers.Authorization, '[REDACTED]');
+    const jsonLog = debugLogs.find((args) => args[0] === 'DirAiPrompt json: ');
+    assert.strictEqual(jsonLog[1].servers.gmail.headers.Authorization, '[REDACTED]');
     for (const args of debugLogs) {
       assert.strictEqual(JSON.stringify(args).includes(TOKEN), false, JSON.stringify(args[0]));
     }

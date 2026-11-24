@@ -38,6 +38,7 @@ class MongodbBotsDataSource {
           bot = await this.getBotById(botId);
           winston.debug("(MongodbBotsDataSource) bot found in datasource: ", bot);
           await tdcache.set(botCacheKey, JSON.stringify(bot));
+
           // DEBUG CODE REMOVE
           // let bot_ = await tdcache.get(botCacheKey);
         }

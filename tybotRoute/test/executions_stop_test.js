@@ -63,6 +63,7 @@ function startTybot(endpoints = { TILEBOT_ENDPOINT: `http://localhost:${APP_PORT
       bots,
       TILEBOT_ENDPOINT: endpoints.TILEBOT_ENDPOINT,
       API_ENDPOINT: endpoints.API_ENDPOINT,
+      API_URL: endpoints.API_ENDPOINT, // mandatory since 3.0.6 (startApp)
       REDIS_HOST: process.env.REDIS_HOST,
       REDIS_PORT: process.env.REDIS_PORT,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -100,7 +101,7 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
 
   /** betweenBlocks runs after the jumping block's exit, before the jump is posted. */
   function hookedRequest(options, callback, ...rest) {
-    if (betweenBlocks && options && typeof options.url === 'string' && options.url.startsWith(`http://localhost:${APP_PORT}/ext/`)) {
+    if (betweenBlocks && options && typeof options.url === 'string' && (options.url.startsWith(`http://localhost:${APP_PORT}/ext/`) || options.url.startsWith(`http://localhost:${APP_PORT}/exec/`)) /* block jumps: /ext, or /exec (DirIntent since 3.0.6) */) {
       const hook = betweenBlocks;
       return Promise.resolve(hook(options.json)).then(() => originalRequest.call(httpUtils, options, callback, ...rest));
     }
@@ -207,7 +208,7 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
       del.push(`exec:${id}`, `exec:${id}:seq`, `exec:${id}:state`, `exec:${id}:owner`, `exec:${id}:transit`, `exec:${id}:stop`);
     }
     for (const rid of new Set(requestIds)) {
-      del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`);
+      del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`, `webhook:result:${rid}`);
       for await (const k of client.scanIterator({ MATCH: `tilebot:requests:${rid}*`, COUNT: 1000 })) {
         if (Array.isArray(k)) del.push(...k); else del.push(k);
       }
@@ -248,6 +249,18 @@ describe('Executions: stop gates (soft stop and blocked messages)', function () 
     assert.strictEqual(ofType(rid, 'execution.idle').length, 0, 'no execution.idle');
     assert.strictEqual(sentTo(rid).filter((m) => m.text === 'second').length, 0, 'the reply was not sent');
     assert.strictEqual(await owner(id), null, 'lease released');
+  });
+
+  it('leaves the slot pending on a stop', async function () {
+    const rid = newRequestId();
+    await client.hSet('webhook:result:' + rid, { state: 'pending' });
+    send('/twostep', rid);
+    await waitFor(() => ofType(rid, 'step.started').length === 1, 'the block to start');
+    await setStop(execIdOf(rid), 'soft');
+    await waitFor(() => ofType(rid, 'execution.stopped').length === 1, 'execution.stopped');
+    await sleep(1200);
+    await ExecutionRecorder._drainForTests();
+    assert.strictEqual(await client.hGet('webhook:result:' + rid, 'state'), 'pending');
   });
 
   it('jump arriving after the stop flag emits stopped and runs nothing', async function () {

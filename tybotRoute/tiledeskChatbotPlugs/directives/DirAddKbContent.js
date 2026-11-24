@@ -11,6 +11,7 @@ const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const { vectorStoreWritesFrozen } = require("../../utils/vectorStoreWrites");
 const integrationService = require("../../services/IntegrationService");
+const usageService = require("../../services/UsageService");
 const { Logger } = require("../../Logger");
 
 class DirAddKbContent {
@@ -109,15 +110,13 @@ class DirAddKbContent {
       return;
     }
 
-    if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
-      if (keep_going === false) {
-        this.logger.warn("[Add to KnwoledgeBase] Tokens quota exceeded. Skip the action")
-        winston.verbose("[DirAddKbContent] - Quota exceeded for tokens. Skip the action")
-        await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: tokens quota exceeded");
-        callback(true);  
-        return;
-      }
+    const usageCheck = await usageService.check(this.projectId, this.token, { provider: 'openai', own_key: !publicKey });
+    if (!usageCheck.ok) {
+      this.logger.warn("[Add to KnwoledgeBase] " + usageService.refusalMessage(usageCheck) + ". Skip the action")
+      winston.verbose("[DirAddKbContent] - " + usageService.refusalMessage(usageCheck) + ". Skip the action")
+      await this.chatbot.addParameter("flowError", "[DirAddKbContent] Error: " + usageService.refusalMessage(usageCheck));
+      callback(true);
+      return;
     }
 
     if (!namespace) {
@@ -201,63 +200,6 @@ class DirAddKbContent {
         }
       }
     )
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAddKbContent check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAddKbContent Check quote availability err: ", err);
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAddKbContent update quote HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("DirAddKbContent Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            resolve(true);
-          }
-        }
-      )
-    })
   }
 
   async getNamespace(name, id) {

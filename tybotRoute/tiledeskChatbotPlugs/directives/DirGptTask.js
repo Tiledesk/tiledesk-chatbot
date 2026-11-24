@@ -9,6 +9,7 @@ require('dotenv').config();
 const winston = require('../../utils/winston');
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
+const usageService = require("../../services/UsageService");
 const { Logger } = require("../../Logger");
 const WriteTap = require('../../executions/WriteTap');
 
@@ -145,15 +146,18 @@ class DirGptTask {
       return;
     }
 
-    if (publicKey === true) {
-      let keep_going = await this.checkQuoteAvailability();
-      if (keep_going === false) {
-        this.logger.warn("[ChatGPT Task] OpenAI tokens quota exceeded");
-        await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-        callback();
-        return;
-      }
+    // the OpenAI endpoint is called directly: without the project's key the shared OpenAI key, never OpenRouter
+    const usageCheck = await usageService.check(this.projectId, this.token, {
+      provider: 'openai',
+      model: action.model,
+      own_key: !publicKey
+    });
+    if (!usageCheck.ok) {
+      this.logger.warn("[ChatGPT Task] " + usageService.refusalMessage(usageCheck));
+      await this.chatbot.addParameter("flowError", "GPT Error: " + usageService.refusalMessage(usageCheck));
+      await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      callback();
+      return;
     }
 
     let json = {
@@ -205,14 +209,26 @@ class DirGptTask {
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
           winston.debug("(DirGptTask) openai err: ", err);
+          console.log("(DirGptTask) openai err.data: ", JSON.stringify(err.data));
           winston.debug("(DirGptTask) openai err: " + err.response?.data?.error?.message);
           this.logger.error("[ChatGPT Task] Completions error: ", err.response?.data?.error?.message);
           await this.#assignAttributes(action, answer);
+          console.log("attributes assigned with answer: ", answer)
           if (falseIntent) {
-            await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback(true);
-            return;
+            console.log("false intent");
+            try {
+              await this.chatbot.addParameter("flowError", "GPT Error: " + err.response?.data?.error?.message);
+              console.log("addParamter ok")
+              await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+              console.log("executeCondition ok")
+              console.log("callback")
+              callback(true);
+              return;
+            } catch (e) {
+              console.error("error on false intent: ", e);
+              callback(true);
+              return;
+            }
           }
           callback();
           return;
@@ -228,13 +244,15 @@ class DirGptTask {
           
           await this.#assignAttributes(action, answer);
 
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.usage.total_tokens,
-              model: json.model
-            }
-            this.updateQuote(tokens_usage);
-          }
+          usageService.report(this.projectId, this.token, {
+            provider: 'openai',
+            model: json.model,
+            own_key: !publicKey,
+            tokens: resbody.usage?.total_tokens,
+            input_tokens: resbody.usage?.prompt_tokens,
+            output_tokens: resbody.usage?.completion_tokens,
+            ref: this.requestId
+          });
 
           if (trueIntent) {
             await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
@@ -315,64 +333,6 @@ class DirGptTask {
         await TiledeskChatbot.addParameterStatic(this.context.tdcache, this.context.requestId, action.assignReplyTo, answer);
       }
     }
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        signal: this.context.signal, // hard stop (undefined when executions are off)
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("(DirGptTask) check quote availability HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("(DirGptTask) update quote HttpRequest ", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.debug("(DirGptTask) Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(DirGptTask)  Increment token quote resbody: ", resbody);
-            resolve(true);
-          }
-        }
-      )
-    })
   }
 
 }

@@ -1,15 +1,21 @@
 # Tiledesk native chatbot
 
-# 3.2.2
+# 3.2.2-rc1
 - **added**: **Capture user reply** has **No input**: no reply within the wait, the flow goes to its node (V3 agents too). Needs Design Studio 3.3.2
+- **fixed**: the connector logs its real version at start
 
 # 3.2.1
 - **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters (before, the condition always took the false exit). A variable set to null does not exist; conditions saved as `!isUndefined(x)` keep their meaning
 - **fixed**: the **length** operators count the items of a list held as JSON text: `["a","b"]` is 2, no longer 9
 - **added**: tests for reply filters, with every operator of the condition menu
 
-# 3.2.0
-- **added**: AI Prompt can call MCP servers connected with OAuth. The access is reused until it is about to expire
+# 3.1.3-rc2
+- **fixed**: the **length** operators count the items of a list held as JSON text, as a list from a web request, a data table or a knowledge base reaches the flow: `["a","b"]` counted as nine characters instead of two items. Text that is not a list is still measured in characters. Brought from stage (main_pre), where it has been since 30/09
+
+# 3.1.3-rc1
+- **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters. The design studio writes `exists(x)`, which the `when` evaluator did not know: the condition always took the false exit and logged a `flowError`, and the filter never hid its message. A variable set to null does not exist. Conditions saved in the older form, `!isUndefined(x)`, keep their meaning
+- **added**: tests for reply filters: every operator of the condition menu in the `when` form, ignore case, filters saved before `when`, and a broken filter that does not stop the other messages
+
 
 # 3.1.2
 - **fixed**: a filter on a reply, such as "voice mode is on" or "voice mode is off", no longer stops the conversation
@@ -29,8 +35,22 @@
 # 3.0.8
 - **fixed**: AskGPTV2 Pinecone reranking (standard namespaces, with `PINECONE_RERANKING` on) sends the reranker model as `name`. The payload used `model`, so the model (`PINECONE_RERANKING_MODEL`, otherwise `RERANKING_MODEL`, otherwise `bge-reranker-v2-m3`) was ignored. Hybrid reranking is unchanged
 
-# 3.0.7
+# 3.0.7-rc8
 - **fixed**: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue, so the exits drawn in the Design Studio were never read: the rating was saved but the flow stopped after the action. **Get rating** is unchanged
+
+# 3.0.7-rc4
+- **added**: **AI Prompt** sends the OAuth2 access token to the MCP servers connected with OAuth. When the server entry in the `mcp` integration has `oauth.connection_id`, the token is asked to tiledesk-server (`GET /:id_project/mcp/oauth/connections/:id/token`, with the chatbot token) and sent as `Authorization: Bearer …`, replacing any `Authorization` from the custom headers. The tokens stay encrypted on the server, which also refreshes them; the chatbot keeps them in memory until 60 s before they expire and never logs them
+- **added**: when the token cannot be obtained the action fails as with a missing MCP integration: `flowError` is `MCP server <name> needs to be reconnected` when the connection must be authorized again, `MCP server <name> OAuth token unavailable` otherwise, then the false block if set. MCP servers without OAuth and native MCP servers work as before, with no extra request
+
+# 3.0.7-rc3
+- **added**: **Set rating** can save the value as an AI evaluation (`saveTo: "attributes"`) in the conversation attributes `ai_rating` and `ai_sentiment`, so the rating the user gives in the chat after the close webhook does not overwrite it; **Get rating** reads it back with `readFrom: "attributes"`. Without these fields both actions work as before
+
+# 3.0.7-rc2
+- **added**: **Set rating** and **Get rating** take an optional **Request ID**, the conversation to rate or read (variables allowed, empty = current conversation). In a webhook it must be given, e.g. `{{payload.payload.request_id}}` for a webhook called when a conversation is closed; without it the server is not called and Set rating goes to its **else** exit
+
+# 3.0.7-rc1
+- **added**: **Set rating** action (`set_rating`): sets the rating of the conversation (1-5, also from a variable) with an optional comment. With **Force update** off a rating already given is kept. **Success** and **else** exits; on failure the reason goes to the error variable and to `flowError`
+- **added**: **Get rating** action (`get_rating`): saves the rating of the conversation and its comment in two variables; a missing value removes its variable
 
 # 3.0.6
 - **added**: customHeaders for vllm servers
@@ -76,8 +96,32 @@
 # 2.4.0
 - Updated ReplaceBot to manage return
 
+# 2.3.0-rc3
+- Voice: the AI Prompt history now includes the bot's spoken answers (speech_form replies carry their text in the commands, with an empty `text`, and were left out of the transcript): a caller's "sì" to the bot's "Vuoi sapere di più?" keeps its context
+
+# 2.3.0-rc2
+- Voice streaming (ConversationRelay): on calls marked `voice_stream`, the AI Prompt and Ask Knowledge Base actions stream the LLM answer sentence by sentence to tiledesk-server (`POST /:project_id/requests/:request_id/stream`) while it is generated; the reply that speaks the answer closes the stream instead of re-speaking it. Shared `utils/LlmStream.js`
+- Ask Knowledge Base on voice: `<NOANS>` is never spoken, a miss takes the false branch without speaking the fallback twice, citations are not requested
+- Voice turn supersession: a newer caller message stops the current turn (Redis turn marker, checked before every block and every chunk); the partial answer is saved with `attributes.interrupted`
+- `/ext` keeps `voice_turn_id` on internal block-jump messages
+- Gather calls and other channels unchanged
+
+# 2.3.0-rc1
+- V3 agents: `ds_version` and `connectors` are read as fields of the bot (as the server stores them since 2.30.0), no longer from `attributes`; the bot is loaded with its connectors list. Agents without the label are unchanged
+
 # 2.3.0
 - Added support for Subagent with CallSubagent and ReturnStack actions
+
+# 2.2.2-rc2
+- Voice streaming: the answer is streamed only when the request carries the `voice_stream` attribute (set by the voice connector on `/start` for ConversationRelay calls, including the new conference mode with background ambience); the previous per-message marker `voice_relay` is still accepted. Gather calls are unchanged
+
+# 2.2.2-rc1
+- V3 agents (`attributes.dsVersion = 'v3'`): block exits and reply buttons are resolved from the connectors list in the bot attributes before a block runs; the list adds and replaces destinations but never removes what the block JSON carries. Bots without the label or the list run as before
+- V3 agents: Iteration runs the "when the list is done" block after the last item or with an empty list
+- Fixed: block jumps use the endpoint given at start-up (environment as fallback); the AI Condition vLLM error path no longer crashes and goes to the error block
+
+# 2.2.1
+- Added support for custom headers on vLLM servers
 
 # 2.2.0
 - Normalized custom headers in AiPrompt action 
@@ -111,11 +155,17 @@
 # 2.1.3
 - Fixed bug on analytics integration
 
+# 2.1.3-rc1
+- Updated TiledeskWhenExpression and directive json_condition v2
+
 # 2.1.2
 - Fixed bug on AiPrompt action with vllm models
 
 # 2.1.1
 - Improved support for multiple vLLM servers
+
+# 2.1.1-rc19
+- Added TiledeskWhenExpression and directive json_condition v2
 
 # 2.1.0
 - Added support to analytics
@@ -225,6 +275,8 @@
 
 # 1.3.0
 - added: AI_ENDPOINT env var
+
+# 1.3.0-rc1
 - added: ability to get 'none' as bodytype in webresponse
 
 # 1.2.2
@@ -239,6 +291,19 @@
 - changed: refactoring of DIrWebRequestv2
 - bug-fixed: erro while parsing webrequestv2 body
 
+# 1.1.5-rc4
+- added: webhook action (same as intent one)
+
+# 1.1.5-rc3
+- bug-fixed: jsonBody parse error in web-request-v2
+
+# 1.1.5-rc2
+- bug-fixed: cannot set status of undefined reading res.status in DirAssistant
+
+# 1.1.5-rc1
+- changed: refactoring web-request-v2
+- bug-fixed: jsonBody parse error in web-request-v2
+
 # 1.1.4
 - bug-fixed: slit is undefined in TiledeskChatbotUtils
 
@@ -247,6 +312,12 @@
 
 # 1.1.2
 - bug-fixed: minor improvement
+
+# 1.0.27-rc3
+- added: fixToken function in TiledeskService utils class
+
+# 1.0.27-rc2
+- added: specchToText function to transcript audio file
 
 # 1.0.27-rc1
 - changed: context for gpt-40 and gpt-40-mini
