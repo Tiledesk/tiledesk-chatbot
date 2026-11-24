@@ -80,6 +80,7 @@ describe('DirWebResponse fills the sync webhook slot', function () {
   it('defaults a non-numeric status to 200', async () => {
     await seedPending();
     await run(build(), action('abc'));
+    await waitPublish();
     const slot = await tdcache.client.hGetAll(SLOT);
     assert.strictEqual(slot.state, 'completed');
     assert.strictEqual(slot.status, '200');
@@ -89,6 +90,7 @@ describe('DirWebResponse fills the sync webhook slot', function () {
     await seedPending();
     await run(build(), { status: '201', bodyType: 'json', payload: '{"n":1}' });
     await run(build(), { status: '202', bodyType: 'json', payload: '{"n":2}' });
+    await waitPublish(2);
     const slot = await tdcache.client.hGetAll(SLOT);
     assert.strictEqual(slot.status, '201');
     assert.strictEqual(slot.payload, '{"n":1}');

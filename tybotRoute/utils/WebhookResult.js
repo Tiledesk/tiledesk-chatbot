@@ -28,10 +28,11 @@ async function writeIfPending(client, requestId, fields) {
 }
 
 async function completeIfPending(client, requestId, { status, payload } = {}) {
-  const n = parseInt(status, 10);
+  // same rule as the server's parseMessage: a whole positive number, else 200
+  const n = Number(status);
   const fields = {
     state: 'completed',
-    status: Number.isNaN(n) ? 200 : n,
+    status: Number.isInteger(n) && n > 0 ? n : 200,
     updated_at: new Date().toISOString()
   };
   const json = JSON.stringify(payload === undefined ? null : payload);

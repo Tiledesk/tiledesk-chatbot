@@ -250,6 +250,20 @@ function isAutomation(ctx) {
 }
 
 /** execution.stopped, once per chain. */
+/**
+ * The sync conversation webhook's slot goes to failed, unless the failing agent is a sub-agent (spec §6:
+ * a sub-agent handoff keeps the slot pending, its failure may hand back to the caller, which can still
+ * answer). A sub-agent shares the execution of its caller, and the caller's frames are on agent_stack:
+ * a non-empty stack means a sub-agent. A stack that cannot be read writes nothing. Not awaited, never throws.
+ */
+function markSlotFailed(ctx) {
+  (async () => {
+    const stack = await ctx._store._stack(ctx.execution_id);
+    if (stack.length > 0) return;
+    await finishIfPending(ctx._store.client, ctx.request_id, 'failed');
+  })().catch((err) => warn('webhook result', err));
+}
+
 async function emitStopped(ctx, mode, interruptedAction) {
   if (ctx._stoppedEmitted) return null;
   ctx._stoppedEmitted = true;
@@ -849,7 +863,7 @@ const ExecutionRecorder = {
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
       const seq = await emit(ctx, 'execution.failed', () => data);
-      if (!isAutomation(ctx)) finishIfPending(ctx._store.client, ctx.request_id, 'failed').catch((err) => warn('webhook result', err));
+      if (!isAutomation(ctx)) markSlotFailed(ctx);
       if (Number.isInteger(action_index)) Checkpointer.writeAt(ctx, ctx.step, { action_index, next_action: 'run', seq });
       Checkpointer.park(ctx);
       await ctx._store.setStatusHint(ctx.execution_id, 'failed');

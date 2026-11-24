@@ -51,10 +51,18 @@ describe('WebhookResult slot helper', function () {
   });
 
   it('defaults a non-numeric status to 200', async () => {
-    for (const s of ['', 'abc']) {
+    for (const s of ['', 'abc', '201abc', '201.5', '0', '-1']) {
       await client.hSet(RESULT_PREFIX + 'r1', 'state', 'pending');
       await completeIfPending(client, 'r1', { status: s, payload: {} });
       assert.strictEqual((await client.hGetAll(RESULT_PREFIX + 'r1')).status, '200');
+    }
+  });
+
+  it('keeps a whole numeric status', async () => {
+    for (const s of ['201', 201]) {
+      await client.hSet(RESULT_PREFIX + 'r1', 'state', 'pending');
+      await completeIfPending(client, 'r1', { status: s, payload: {} });
+      assert.strictEqual((await client.hGetAll(RESULT_PREFIX + 'r1')).status, '201');
     }
   });
 

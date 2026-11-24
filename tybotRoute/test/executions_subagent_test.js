@@ -372,6 +372,33 @@ describe('Executions: subagents, replace bot, event fixture', function () {
   });
 
   // last: mocha runs a suite's own tests before its sub-suites, so this sits in a sub-suite of its own
+  describe('failure and the sync webhook slot', function () {
+    // a minimal ctx: failed() needs the store, the ids and no open step
+    async function failWith(stack) {
+      const rid = newRequestId();
+      requestIds.push(rid);
+      const executionId = 'exec-slot-' + rid;
+      await client.hSet('webhook:result:' + rid, { state: 'pending' });
+      await client.hSet('exec:' + executionId, { agent_stack: JSON.stringify(stack), status: 'running' });
+      const ctx = { execution_id: executionId, request_id: rid, agent_id: SUBAGENT_BOT_ID, _store: new ExecutionStore(client), _cfg: {}, step: null };
+      await ExecutionRecorder.failed(ctx, { error_code: 'x', message: 'boom' });
+      await new Promise((r) => setTimeout(r, 300));
+      const state = await client.hGet('webhook:result:' + rid, 'state');
+      await client.del('exec:' + executionId, 'exec:' + executionId + ':seq');
+      // the event fixture test counts the types seen in this file: these synthetic events do not belong
+      for (let i = log.length - 1; i >= 0; i--) if (log[i].request_id === rid) log.splice(i, 1);
+      return state;
+    }
+
+    it('a sub-agent failure keeps the slot pending', async function () {
+      assert.strictEqual(await failWith([{ agent_id: PARENT_BOT_ID, agent_version: PARENT_BOT_ID, return_block: '#x' }]), 'pending');
+    });
+
+    it('a failure of the conversation\'s own agent marks the slot failed', async function () {
+      assert.strictEqual(await failWith([]), 'failed');
+    });
+  });
+
   describe('event fixture', function () {
     it('test/fixtures/executions-events.sample.json holds one envelope per type seen in this file (written with EXECUTIONS_WRITE_FIXTURE=1)', function () {
       const byType = new Map();
