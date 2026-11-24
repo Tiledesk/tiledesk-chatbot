@@ -390,8 +390,8 @@ describe('Executions: subagents, replace bot, event fixture', function () {
       return state;
     }
 
-    it('a sub-agent failure keeps the slot pending', async function () {
-      assert.strictEqual(await failWith([{ agent_id: PARENT_BOT_ID, agent_version: PARENT_BOT_ID, return_block: '#x' }]), 'pending');
+    it('a sub-agent failure marks the slot failed (the execution is terminal)', async function () {
+      assert.strictEqual(await failWith([{ agent_id: PARENT_BOT_ID, agent_version: PARENT_BOT_ID, return_block: '#x' }]), 'failed');
     });
 
     it('a failure of the conversation\'s own agent marks the slot failed', async function () {

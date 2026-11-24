@@ -251,17 +251,12 @@ function isAutomation(ctx) {
 
 /** execution.stopped, once per chain. */
 /**
- * The sync conversation webhook's slot goes to failed, unless the failing agent is a sub-agent (spec §6:
- * a sub-agent handoff keeps the slot pending, its failure may hand back to the caller, which can still
- * answer). A sub-agent shares the execution of its caller, and the caller's frames are on agent_stack:
- * a non-empty stack means a sub-agent. A stack that cannot be read writes nothing. Not awaited, never throws.
+ * The sync conversation webhook's slot goes to failed. A failure while a sub-agent runs counts too: the
+ * sub-agent shares the caller's execution and a failed execution is terminal, so the run really failed.
+ * Not awaited, never throws.
  */
 function markSlotFailed(ctx) {
-  (async () => {
-    const stack = await ctx._store._stack(ctx.execution_id);
-    if (stack.length > 0) return;
-    await finishIfPending(ctx._store.client, ctx.request_id, 'failed');
-  })().catch((err) => warn('webhook result', err));
+  finishIfPending(ctx._store.client, ctx.request_id, 'failed').catch((err) => warn('webhook result', err));
 }
 
 async function emitStopped(ctx, mode, interruptedAction) {
