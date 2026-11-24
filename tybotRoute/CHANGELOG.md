@@ -5,6 +5,10 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# feature/sync-conversation-webhook 24/11/2026
+- added: **Web Response** also fills the server's result slot `webhook:result:<request_id>` of the sync conversation webhook: the first Web Response wins (compare-and-set from `pending`), later ones do not overwrite it. The publish to `/webhooks/<request_id>` is unchanged; when there is no slot nothing is written
+- added: with executions on, a failed execution marks its result slot `failed` and a **Start new** marks the old request's slot `replaced` with `replaced_by`. A stop writes nothing: it is a resumable pause
+
 # features-2611/rating-actions 12/11/2026
 - fixed: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue (`OUTPUT_CATALOG`), so `trueIntent`/`falseIntent` were never filled from the `connectors` list: the rating was saved but the flow stopped after the action. Found by the regression tests of the "Test Connettori" agent on stage. **Get rating** has no exits of its own and is unchanged
 - added: tests for the `set_rating` exits in V3 (`test/connectorsV3_rating_test.js`)
