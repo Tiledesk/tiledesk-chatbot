@@ -80,8 +80,6 @@ class DirDocparseExtract {
       const filler = new Filler();
       const url = filler.fill(action.url, requestVariables);
       const filename = filler.fill(action.filename, requestVariables) || this.#filenameFromUrl(url);
-      const mode = filler.fill(action.mode, requestVariables) || "text";
-
       if (!filename || !url) {
         const missing = !filename ? "filename" : "url";
         await this.#fail(action, `missing attribute '${missing}'`, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, done);
@@ -97,7 +95,8 @@ class DirDocparseExtract {
       const body = {
         filename: filename,
         url: url,
-        mode: mode
+        // only the full result carries the pages, charged by count; the flow gets its text in both modes
+        mode: "full"
       };
 
       const language = filler.fill(action.language, requestVariables);
@@ -257,7 +256,7 @@ class DirDocparseExtract {
 
   /**
    * Charges the vision tokens of a model on the Tiledesk key (tiledeskVision, or vision_llm_source "default": the
-   * model configured in docparse), otherwise the OCR pages.
+   * model configured in docparse), otherwise the pages of the document, native ones included.
    */
   async #reportUsage(outcome, tiledeskVision, jobId) {
     const llmUsage = outcome.llmUsage && typeof outcome.llmUsage === "object" ? outcome.llmUsage : {};
@@ -275,8 +274,8 @@ class DirDocparseExtract {
         input_tokens: input !== null ? input : undefined,
         output_tokens: output !== null ? output : undefined
       });
-    } else if (!tiledeskVision && this.#integer(outcome.pagesOcr) > 0) {
-      usage = { resource: 'ocr', units: outcome.pagesOcr };
+    } else if (!tiledeskVision && outcome.pages > 0) {
+      usage = { resource: 'ocr', units: outcome.pages };
     } else {
       return;
     }
@@ -287,9 +286,18 @@ class DirDocparseExtract {
     await usageService.report(this.projectId, this.token, usage);
   }
 
-  #pagesOcr(result) {
+  // pages of the full result; stats.pages_llm counts the vision pages apart only for a single image
+  #pageCount(result) {
     const body = result && typeof result === "object" && result.body && typeof result.body === "object" ? result.body : result;
-    return body && typeof body === "object" && body.stats && typeof body.stats === "object" ? body.stats.pages_ocr : undefined;
+    if (!body || typeof body !== "object") {
+      return 0;
+    }
+    if (Array.isArray(body.pages) && body.pages.length > 0) {
+      return body.pages.length;
+    }
+    const stats = body.stats && typeof body.stats === "object" ? body.stats : {};
+    const count = (this.#integer(stats.pages_digital) || 0) + (this.#integer(stats.pages_ocr) || 0);
+    return count > 0 ? count : (this.#integer(stats.pages_llm) || 0);
   }
 
   #llmUsage(result) {
@@ -306,7 +314,7 @@ class DirDocparseExtract {
   async #extractSync(base, body) {
     // Same request without the async-only fields: vision_llm is read only by the docsparse job
     // worker (and carries the provider key), and the sync response is read in mode "full".
-    const syncBody = Object.assign({}, body, { mode: "full" });
+    const syncBody = Object.assign({}, body);
     delete syncBody.vision_llm;
     const timeoutMs = this.#syncTimeoutMs();
     let response;
@@ -330,7 +338,7 @@ class DirDocparseExtract {
       return { ok: true, text: response };
     }
     if (response && typeof response === "object" && typeof response.text === "string") {
-      return { ok: true, text: response.text, llmUsage: this.#llmUsage(response), pagesOcr: this.#pagesOcr(response) };
+      return { ok: true, text: response.text, llmUsage: this.#llmUsage(response), pages: this.#pageCount(response) };
     }
     return { ok: false, error: "docparse did not return the extracted text" };
   }
@@ -450,7 +458,7 @@ class DirDocparseExtract {
   }
 
   #succeeded(result) {
-    return { ok: true, text: this.#textFromResult(result), llmUsage: this.#llmUsage(result), pagesOcr: this.#pagesOcr(result) };
+    return { ok: true, text: this.#textFromResult(result), llmUsage: this.#llmUsage(result), pages: this.#pageCount(result) };
   }
 
   #textFromResult(result) {

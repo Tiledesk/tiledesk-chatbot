@@ -180,7 +180,7 @@ describe('Conversation for Docparse Extract test', async () => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
         assert.strictEqual(req.body.filename, '8.pdf');
         assert.strictEqual(req.body.url, 'https://example.com/8.pdf');
-        assert.strictEqual(req.body.mode, 'text');
+        assert.strictEqual(req.body.mode, 'full');
         assert.strictEqual(req.body.enable_vision_fallback, undefined);
         assert.strictEqual(req.body.ocr_quality_threshold, undefined);
         res.status(202).send({
@@ -209,6 +209,51 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(syncCalled, false, "async jobs are available: the sync endpoint must not be called");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["extracted_text"], "hello from pdf");
+  });
+
+  it('/extract_success - every page of a native pdf is charged as OCR', async () => {
+    const id = requestId();
+    let usageCheck = null;
+    let usageReport = null;
+    const message = await invoke(id, '/extract_success', (endpointServer) => {
+      endpointServer.post('/:project_id/usage/check', function (req, res) {
+        usageCheck = req.body;
+        res.status(200).send({ ok: true, metering: 'credits', required: 0.05 });
+      });
+
+      endpointServer.post('/:project_id/usage', function (req, res) {
+        usageReport = req.body;
+        res.status(200).send({ metering: 'credits', charged: 0.15 });
+      });
+
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        res.status(202).send({ job_id: "job-native", kind: "extract", status: "queued" });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        const page = (n) => ({ page_number: n, route: "native", text: "page " + n, engine: "pymupdf" });
+        res.status(200).send({
+          job_id: "job-native",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "application/json",
+            body: {
+              filename: "8.pdf",
+              text: "native text",
+              pages: [page(1), page(2), page(3)],
+              stats: { pages_digital: 3, pages_ocr: 0, pages_llm: 0 },
+              llm_usage: { input_tokens: 0, output_tokens: 0, total_tokens: 0, llm_calls: 0 }
+            },
+            llm_usage: { input_tokens: 0, output_tokens: 0, total_tokens: 0, llm_calls: 0 }
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: native text");
+    assert.deepStrictEqual(usageCheck, { resource: 'ocr', own_key: false, units: 1 });
+    assert.deepStrictEqual(usageReport, { resource: 'ocr', own_key: false, units: 3, ref: id, key: 'docparse:job-native' });
   });
 
   it('/extract_redis - a redis notification is followed by a GET for the result', async () => {
