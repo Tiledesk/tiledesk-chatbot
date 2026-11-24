@@ -82,7 +82,7 @@ const OUTPUT_CATALOG = {
   brevo:               TRUE_FALSE,
   n8n:                 TRUE_FALSE,
   qapla:               TRUE_FALSE,
-  capture_user_reply:  [field('', 'goToIntent')],
+  capture_user_reply:  [field('', 'goToIntent'), field('/noInput', 'noInputIntent')],   // no input as replyv2 (DS 3.3.2)
   iteration:           [field('/goto', 'goToIntent'), field('/fallback', 'fallbackIntent')],
   dtmf_menu:           [BUTTONS, ...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
   dtmf_form:           [BUTTONS, ...VOICE_SETTINGS, lastCommand('/noInput', 'noInputIntent'), lastCommand('/noMatch', 'noMatchIntent')],
