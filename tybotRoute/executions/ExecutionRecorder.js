@@ -15,6 +15,7 @@ const AbortRegistry = require('./AbortRegistry');
 const Checkpointer = require('./Checkpointer');
 const MenuWait = require('./MenuWait');
 const StopNotice = require('./StopNotice');
+const { finishIfPending } = require('../utils/WebhookResult');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
@@ -231,6 +232,19 @@ function actionRecord(ctx, index) {
   return ctx.step.actions.find((a) => a.index === index);
 }
 
+/** The refire replaces the old request's sync webhook result. Fire-and-forget: never throws, never awaited. */
+function markReplaced(ctx, retryOf) {
+  const client = ctx._store.client;
+  Promise.resolve()
+    .then(() => client.hGet('exec:' + retryOf, 'request_id'))
+    .then((oldRequest) => {
+      if (oldRequest && oldRequest !== ctx.request_id) {
+        return finishIfPending(client, oldRequest, 'replaced', { replaced_by: ctx.request_id });
+      }
+    })
+    .catch((err) => warn('webhook result', err));
+}
+
 function isAutomation(ctx) {
   return typeof ctx.request_id === 'string' && ctx.request_id.startsWith('automation-request-');
 }
@@ -413,6 +427,7 @@ const ExecutionRecorder = {
           return data;
         });
         if (!isAutomation(ctx)) writeExecutionId(ctx, token);
+        if (data.retry_of && !isAutomation(ctx)) markReplaced(ctx, data.retry_of);
       }
       if (menu) await resolveMenu(ctx, menu, message);
       // hard stop: this chain's controller, released with the lease at every chain exit
@@ -834,6 +849,7 @@ const ExecutionRecorder = {
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
       const seq = await emit(ctx, 'execution.failed', () => data);
+      if (!isAutomation(ctx)) finishIfPending(ctx._store.client, ctx.request_id, 'failed').catch((err) => warn('webhook result', err));
       if (Number.isInteger(action_index)) Checkpointer.writeAt(ctx, ctx.step, { action_index, next_action: 'run', seq });
       Checkpointer.park(ctx);
       await ctx._store.setStatusHint(ctx.execution_id, 'failed');
