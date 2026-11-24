@@ -178,7 +178,7 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
     const del = [`exec:policy:${NO_CAPTURE_PROJECT_ID}`];
     for (const id of execIds) del.push(`exec:${id}`, `exec:${id}:seq`, `exec:${id}:state`);
     for (const rid of new Set(requestIds)) {
-      del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`);
+      del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`, `webhook:result:${rid}`);
       for await (const k of client.scanIterator({ MATCH: `tilebot:requests:${rid}*`, COUNT: 1000 })) {
         if (Array.isArray(k)) del.push(...k); else del.push(k);
       }
@@ -448,6 +448,29 @@ describe('Executions lifecycle (recorder + engine hooks)', function () {
       assert.strictEqual(ofType(rid, 'step.completed')[0].data.outcome, 'error');
       assert.strictEqual(ofType(rid, 'execution.idle').length, 0);
       assert.strictEqual(await client.hGet(`exec:${failed.execution_id}`, 'status'), 'failed');
+    });
+
+    it('marks the slot failed', async function () {
+      const rid = newRequestId();
+      await client.hSet('webhook:result:' + rid, { state: 'pending' });
+      send('/start', rid);
+      await waitFor(() => ofType(rid, 'execution.failed').length > 0, 'execution.failed');
+      await settle(rid);
+      assert.strictEqual(await client.hGet('webhook:result:' + rid, 'state'), 'failed');
+    });
+
+    it('writes nothing when executions are off', async function () {
+      const rid = newRequestId();
+      await client.hSet('webhook:result:' + rid, { state: 'pending' });
+      process.env.EXECUTIONS_ENABLED = 'false';
+      try {
+        send('/start', rid);
+        await new Promise((r) => setTimeout(r, 1500));
+      } finally {
+        process.env.EXECUTIONS_ENABLED = 'true';
+      }
+      assert.strictEqual(ofType(rid, 'execution.failed').length, 0, 'no recorder events');
+      assert.strictEqual(await client.hGet('webhook:result:' + rid, 'state'), 'pending');
     });
 
     it('max_steps closes the open step with outcome error', async function () {
