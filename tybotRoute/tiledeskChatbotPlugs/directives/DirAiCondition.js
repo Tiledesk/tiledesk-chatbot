@@ -127,7 +127,7 @@ class DirAiCondition {
     let answer = "";
     let key;
     let publicKey = false;
-    // ollama, vllm, openrouter and agentplatform always use the project's own integration
+    // ollama, vllm and agentplatform always use the project's own integration, openrouter when it has one
     let ownKey = true;
     let ollama_integration;
     let vllm_model;
@@ -191,17 +191,9 @@ class DirAiCondition {
         openrouter_model = await aiController.resolveLLMConfig(this.projectId, action.llm, filled_model, this.token);
         key = openrouter_model.api_key;
       } catch (err) {
-        this.logger.error("[AI Condition] llm key not found in openrouter integration");
-        winston.error("Error: DirAiCondition openrouter integration not resolved: " + (err?.error || err?.message));
-        await this.chatbot.addParameter("flowError", "AiCondition Error: missing key for llm " + action.llm);
-        if (errorIntent) {
-          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
-          await this.#executeIntent(errorIntent);
-          callback(true);
-          return;
-        }
-        callback();
-        return;
+        // without its own integration a credits project is served with the Tiledesk OpenRouter key
+        winston.verbose("DirAiCondition openrouter integration not resolved: " + (err?.error || err?.message));
+        ownKey = false;
       }
 
     } else if (action.llm === 'agentplatform') {

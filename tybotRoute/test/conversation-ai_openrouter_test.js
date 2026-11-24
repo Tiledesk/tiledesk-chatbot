@@ -42,17 +42,36 @@ const EXPECTED_MODEL = {
   provider_routing: { order: ["azure", "openai"], allow_fallbacks: false, sort: "price" }
 };
 
+const MANAGED_KEY = "sk-or-managed";
+
+// /usage/check of a credits project without its own key: the model served with the Tiledesk key, which the
+// chatbot adds
+function creditsCheck(body) {
+  return { ok: true, metering: "credits", managed: { provider: "openrouter", name: body.model, url: OPENROUTER_BASE_URL } };
+}
+
+function quotesCheck() {
+  return { ok: true, metering: "quotes" };
+}
+
 /**
  * Sends `text` to the bot while serving what the directive calls: the
- * integration lookup, the LLM /api/ask and the reply message. `onReply` gets
- * the reply text and the /api/ask body (undefined if /api/ask was never called).
+ * integration lookup, the usage check (when `usageCheck` is given), the LLM
+ * /api/ask and the reply message. `onReply` gets the reply text and the
+ * /api/ask body (undefined if /api/ask was never called).
  */
-function converse({ text, integration, answer, onReply }, done) {
+function converse({ text, integration, usageCheck, answer, onReply }, done) {
   const requestId = "support-group-" + PROJECT_ID + "-" + uuidv4().replace(/-/g, "");
   let askBody;
   let listener;
   let endpointServer = express();
   endpointServer.use(bodyParser.json());
+
+  if (usageCheck) {
+    endpointServer.post('/:project_id/usage/check', (req, res) => {
+      res.status(200).send(usageCheck(req.body));
+    });
+  }
 
   endpointServer.get('/:project_id/integration/name/:name', (req, res) => {
     if (req.params.name !== integration.name) {
@@ -136,6 +155,21 @@ describe('Conversation for OpenRouter AI actions test', async () => {
     });
   });
 
+  let originalManagedKey;
+
+  beforeEach(() => {
+    originalManagedKey = process.env.OPENROUTER_MANAGED_KEY;
+    process.env.OPENROUTER_MANAGED_KEY = MANAGED_KEY;
+  });
+
+  afterEach(() => {
+    if (originalManagedKey === undefined) {
+      delete process.env.OPENROUTER_MANAGED_KEY;
+    } else {
+      process.env.OPENROUTER_MANAGED_KEY = originalManagedKey;
+    }
+  });
+
   describe('AiPrompt', async () => {
 
     it('sends the model with its provider routing to the LLM', (done) => {
@@ -157,6 +191,37 @@ describe('Conversation for OpenRouter AI actions test', async () => {
       converse({
         text: '/ai_prompt_openrouter',
         integration: { ...OPENROUTER_INTEGRATION, value: { models: OPENROUTER_INTEGRATION.value.models } },
+        answer: "never returned",
+        onReply: (text, askBody) => {
+          assert.strictEqual(askBody, undefined);
+          assert.strictEqual(text, "Error: AiPrompt Error: missing key for llm openrouter");
+        }
+      }, done);
+    })
+
+    it('uses the Tiledesk OpenRouter key on a credits project without the integration', (done) => {
+      let checkBody;
+      converse({
+        text: '/ai_prompt_openrouter',
+        integration: { name: "none" },
+        usageCheck: (body) => { checkBody = body; return creditsCheck(body); },
+        answer: "this is the answer",
+        onReply: (text, askBody) => {
+          assert.deepStrictEqual(checkBody, { resource: "llm", own_key: false, provider: "openrouter", model: "openai/gpt-4o" });
+          assert.ok(askBody, "/api/ask was not called");
+          assert.strictEqual(askBody.llm, "openrouter");
+          assert.strictEqual(askBody.llm_key, MANAGED_KEY);
+          assert.deepStrictEqual(askBody.model, { provider: "openrouter", name: "openai/gpt-4o", url: OPENROUTER_BASE_URL, api_key: MANAGED_KEY });
+          assert.strictEqual(text, "Answer: this is the answer");
+        }
+      }, done);
+    })
+
+    it('fails without calling the LLM on a quotas project without the integration', (done) => {
+      converse({
+        text: '/ai_prompt_openrouter',
+        integration: { name: "none" },
+        usageCheck: quotesCheck,
         answer: "never returned",
         onReply: (text, askBody) => {
           assert.strictEqual(askBody, undefined);
@@ -187,6 +252,35 @@ describe('Conversation for OpenRouter AI actions test', async () => {
       converse({
         text: '/ai_condition_openrouter',
         integration: { ...OPENROUTER_INTEGRATION, value: { models: OPENROUTER_INTEGRATION.value.models } },
+        answer: "never returned",
+        onReply: (text, askBody) => {
+          assert.strictEqual(askBody, undefined);
+          assert.strictEqual(text, "Error: AiCondition Error: missing key for llm openrouter");
+        }
+      }, done);
+    })
+
+    it('uses the Tiledesk OpenRouter key on a credits project without the integration', (done) => {
+      converse({
+        text: '/ai_condition_openrouter',
+        integration: { name: "none" },
+        usageCheck: creditsCheck,
+        answer: "medical",
+        onReply: (text, askBody) => {
+          assert.ok(askBody, "/api/ask was not called");
+          assert.strictEqual(askBody.llm, "openrouter");
+          assert.strictEqual(askBody.llm_key, MANAGED_KEY);
+          assert.deepStrictEqual(askBody.model, { provider: "openrouter", name: "openai/gpt-4o", url: OPENROUTER_BASE_URL, api_key: MANAGED_KEY });
+          assert.strictEqual(text, "Answer: medical");
+        }
+      }, done);
+    })
+
+    it('fails without calling the LLM on a quotas project without the integration', (done) => {
+      converse({
+        text: '/ai_condition_openrouter',
+        integration: { name: "none" },
+        usageCheck: quotesCheck,
         answer: "never returned",
         onReply: (text, askBody) => {
           assert.strictEqual(askBody, undefined);
