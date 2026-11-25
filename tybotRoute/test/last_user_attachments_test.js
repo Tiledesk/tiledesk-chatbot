@@ -80,6 +80,27 @@ describe('updateRequestAttributes - lastUserAttachments', function () {
     ]);
   });
 
+  it('email from tiledesk-smtp-server: the attachments are read from the payload', async () => {
+    const atts = byId['email-connector-payload'].attributes.payload.attachments;
+    assert.deepStrictEqual(await lastUserAttachments('email-connector-payload'), [
+      { name: 'Biglietti.pdf', url: atts[0].url, type: 'application/pdf' },
+      { name: 'WhatsApp Image 2026-10-15 at 17.59.06.jpeg', url: atts[1].url, type: 'image/jpeg' }
+    ]);
+  });
+
+  it('email from tiledesk-smtp-server: "attachments" (from the payload) keeps its original shape', async () => {
+    const now = await runUpdateRequestAttributes(byId['email-connector-payload']);
+    const attachments = now.added.find(([k]) => k === 'attachments')[1];
+    assert.deepStrictEqual(attachments, byId['email-connector-payload'].attributes.payload.attachments);
+  });
+
+  it('a list in attributes.attachments wins over the payload one, no file counted twice', () => {
+    const out = TiledeskChatbotUtil.buildLastUserAttachments({ attributes: {
+      attachments: [{ filename: 'a.pdf', url: 'https://x/a.pdf' }],
+      payload: { attachments: [{ filename: 'a.pdf', url: 'https://x/a.pdf' }, { filename: 'b.pdf', url: 'https://x/b.pdf' }] } } });
+    assert.deepStrictEqual(out.map(f => f.name), ['a.pdf']);
+  });
+
   ['widget-text', 'email-without-attachments', 'webhook-payload', 'image-without-src',
     'file-without-metadata', 'email-attachments-not-array', 'internal-sender'].forEach(id => {
     it(`${id}: not written when the message brings no file`, async () => {

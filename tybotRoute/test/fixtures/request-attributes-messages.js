@@ -75,6 +75,31 @@ module.exports = [
         ]
       } }) },
 
+  // the shape tiledesk-smtp-server 1.1.1 sends (lib/message-builder.js): the attachments are
+  // in attributes.payload.attachments, and the engine turns every payload key into an attribute
+  { id: 'email-connector-payload', message: base('email-connector-payload', {
+      channel: { name: 'email' }, type: 'text',
+      text: 'testo email\nAttachments:\n[Biglietti.pdf](' + FILES + '/837/Biglietti.pdf)\n',
+      attributes: {
+        email_toEmail: '6b069712c0419e0013c6f5a9@6790c1a05ee3a700132d4fa0.email.stage.tiledesk.com',
+        email_toName: '',
+        email_subject: 'test v3 allegati',
+        email_fromEmail: 'sender@example.com',
+        email_fromName: 'Sender Name',
+        email_messageId: '<CAAoNFRP2Wf1uJ93@mail.gmail.com>',
+        email_references: '',
+        email_replyTo: 'support-group-6790c1a05ee3a700132d4fa0-1795602991909@email.stage.tiledesk.com',
+        email_cc: '[]',
+        email_eml: '[Original eml message](https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml)',
+        link: ['https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml'],
+        payload: {
+          attachments: [
+            { filename: 'uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf', url: `${FILES}/837/Biglietti.pdf` },
+            { filename: 'uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp Image 2026-10-15 at 17.59.06.jpeg', url: `${FILES}/197/WhatsApp%20Image%202026-10-15%20at%2017.59.06.jpeg` }
+          ]
+        }
+      } }) },
+
   { id: 'email-without-attachments', message: base('email-without-attachments', {
       channel: { name: 'email' }, type: 'text', text: 'solo testo',
       attributes: { email_subject: 'Senza allegati', email_fromEmail: 'sender@example.com', email_messageId: '<id2@mail.gmail.com>' } }) },

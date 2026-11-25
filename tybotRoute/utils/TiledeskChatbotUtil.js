@@ -744,8 +744,9 @@ class TiledeskChatbotUtil {
     /**
      * The files of a user message, in the same shape on every channel:
      * [{ name, url, type, size? }]. Widget, WhatsApp and Telegram bring one file in
-     * message.metadata (type image, file or video); the email channel brings a list in
-     * message.attributes.attachments ({ filename, url }, filename being the storage path).
+     * message.metadata (type image, file or video); the email channel brings a list
+     * ({ filename, url }, filename being the storage path) in message.attributes.attachments
+     * or, from tiledesk-smtp-server, in message.attributes.payload.attachments.
      * It never throws: on unexpected data it logs and returns what it could read, or [].
      */
     static buildLastUserAttachments(message) {
@@ -759,7 +760,13 @@ class TiledeskChatbotUtil {
                 && typeof metadata.src === 'string' && metadata.src) {
                 files.push(TiledeskChatbotUtil.attachmentEntry(metadata.name, metadata.src, metadata.type, metadata.size, message.type));
             }
-            const list = message.attributes && message.attributes.attachments;
+            // email: attributes.attachments, or attributes.payload.attachments as
+            // tiledesk-smtp-server 1.1.1 sends them (the payload keys become attributes too)
+            const attributes = message.attributes;
+            let list = attributes && attributes.attachments;
+            if (!Array.isArray(list)) {
+                list = attributes && attributes.payload && typeof attributes.payload === 'object' ? attributes.payload.attachments : undefined;
+            }
             if (Array.isArray(list)) {
                 for (const item of list) {
                     if (item && typeof item === 'object' && typeof item.url === 'string' && item.url) {
