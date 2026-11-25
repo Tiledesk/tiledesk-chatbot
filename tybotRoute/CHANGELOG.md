@@ -5,6 +5,7 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 3.2.3
 # feature/sync-conversation-webhook 24/11/2026
 - added: **Web Response** also fills the server's result slot `webhook:result:<request_id>` of the sync conversation webhook: the first Web Response wins (compare-and-set from `pending`), later ones do not overwrite it. The publish to `/webhooks/<request_id>` is unchanged; when there is no slot nothing is written
 - added: with executions on, a failed execution marks its result slot `failed` and a **Start new** marks the old request's slot `replaced` with `replaced_by`. Automation (`/block`) requests skip both writes. A stop writes nothing: it is a resumable pause
