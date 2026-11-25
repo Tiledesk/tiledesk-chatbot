@@ -6,6 +6,7 @@ let parser = require('accept-language-parser');
 const { Directives } = require('../tiledeskChatbotPlugs/directives/Directives.js');
 require('dotenv').config();
 let axios = require('axios');
+const mime = require('mime-types');
 const winston = require('./winston');
 
 const { CHANNEL_NAME } = require('./constants.js')
@@ -723,6 +724,72 @@ class TiledeskChatbotUtil {
         return message;
     }
 
+    /**
+     * The files of a user message, in the same shape on every channel:
+     * [{ name, url, type, size? }]. Widget, WhatsApp and Telegram bring one file in
+     * message.metadata (type image, file or video); the email channel brings a list in
+     * message.attributes.attachments ({ filename, url }, filename being the storage path).
+     * It never throws: on unexpected data it logs and returns what it could read, or [].
+     */
+    static buildLastUserAttachments(message) {
+        const files = [];
+        try {
+            if (!message || typeof message !== 'object') {
+                return files;
+            }
+            const metadata = message.metadata;
+            if (['image', 'file', 'video'].includes(message.type) && metadata && typeof metadata === 'object'
+                && typeof metadata.src === 'string' && metadata.src) {
+                files.push(TiledeskChatbotUtil.attachmentEntry(metadata.name, metadata.src, metadata.type, metadata.size, message.type));
+            }
+            const list = message.attributes && message.attributes.attachments;
+            if (Array.isArray(list)) {
+                for (const item of list) {
+                    if (item && typeof item === 'object' && typeof item.url === 'string' && item.url) {
+                        files.push(TiledeskChatbotUtil.attachmentEntry(item.name || item.filename, item.url, item.type || item.contentType, item.size, null));
+                    }
+                }
+            }
+        }
+        catch (err) {
+            winston.error("(TiledeskChatbotUtil) buildLastUserAttachments error: ", err);
+        }
+        return files;
+    }
+
+    static attachmentEntry(name, url, type, size, messageType) {
+        let fileName = (typeof name === 'string' && name.trim()) ? name : TiledeskChatbotUtil.fileNameFromUrl(url);
+        fileName = fileName.split('/').pop(); // the email channel gives the storage path
+        let mimeType = (typeof type === 'string' && type.trim()) ? type : mime.lookup(fileName);
+        if (!mimeType) {
+            mimeType = messageType === 'image' ? 'image/*' : messageType === 'video' ? 'video/*' : 'application/octet-stream';
+        }
+        const entry = { name: fileName, url: url, type: mimeType };
+        if (typeof size === 'number' && Number.isFinite(size)) {
+            entry.size = size;
+        }
+        return entry;
+    }
+
+    static fileNameFromUrl(url) {
+        let segment = '';
+        try {
+            const parsed = new URL(url);
+            const path = parsed.searchParams.get('path') || parsed.pathname;
+            segment = path.split('/').pop() || '';
+        }
+        catch (err) {
+            segment = String(url).split('?')[0].split('/').pop() || '';
+        }
+        try {
+            segment = decodeURIComponent(segment);
+        }
+        catch (err) {
+            // keep it encoded
+        }
+        return segment;
+    }
+
     static async updateRequestAttributes(chatbot, chatbotToken, message, projectId, requestId) {
         // update request context
         try {
@@ -890,6 +957,14 @@ class TiledeskChatbotUtil {
                         add(key, message.attributes[attr]);
                     }
                 }
+            }
+
+            // --- LAST USER ATTACHMENTS ---
+            // New attribute only: the ones above are left exactly as they were.
+            // Written only when the message brings files, like lastUserImage* and lastUserDocument*.
+            const lastUserAttachments = TiledeskChatbotUtil.buildLastUserAttachments(message);
+            if (lastUserAttachments.length > 0) {
+                add(TiledeskChatbotConst.REQ_LAST_USER_ATTACHMENTS, lastUserAttachments);
             }
 
             // --- PAYLOAD ---

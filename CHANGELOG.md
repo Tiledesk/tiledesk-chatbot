@@ -1,5 +1,9 @@
 # Tiledesk native chatbot
 
+# features-2611/last-user-attachments 25/11/2026
+- **added** (features-2611/last-user-attachments): new attribute `lastUserAttachments`, the files of the last user message in the same shape on every channel (widget, WhatsApp, Telegram, email): `[{ name, url, type, size? }]`. Written only when a message brings files; `attachments`, `lastUserImage*` and `lastUserDocument*` are unchanged. Shown in Design Studio from 3.4.0-rc9
+- **added** (features-2611/last-user-attachments): tests that pin the attributes written for 16 kinds of incoming message, so a later change to them shows up
+
 # 3.2.2
 - **added**: **Capture user reply** has **No input**: no reply within the wait, the flow goes to its node (V3 agents too). Needs Design Studio 3.3.2
 

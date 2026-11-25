@@ -42,6 +42,8 @@ class TiledeskChatbotConst {
     static REQ_LAST_USER_DOCUMENT_URL = 'lastUserDocumentURL';
     static REQ_LAST_USER_DOCUMENT_NAME = 'lastUserDocumentName';
     static REQ_LAST_USER_DOCUMENT_TYPE = 'lastUserDocumentType';
+    // the files of the last user message, the same shape on every channel: [{ name, url, type, size? }]
+    static REQ_LAST_USER_ATTACHMENTS = 'lastUserAttachments';
     static REQ_EMAIL_ATTACHMENTS_LINK = 'link';
     static REQ_EMAIL_SUBJECT = 'email_subject';
     static REQ_EMAIL_TO = 'email_toEmail';

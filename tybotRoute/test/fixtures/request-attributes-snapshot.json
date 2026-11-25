@@ -1,0 +1,1906 @@
+{
+  "widget-text": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "hello"
+      ],
+      [
+        "lastUserText",
+        "hello"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-widget-text",
+          "sender": "user1",
+          "text": "hello",
+          "channel": {
+            "name": "chat21"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "web"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-widget-text"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "widget-image": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "lastUserImageURL",
+        "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/aaa/photo%201.png"
+      ],
+      [
+        "lastUserImageName",
+        "photo 1.png"
+      ],
+      [
+        "lastUserImageWidth",
+        640
+      ],
+      [
+        "lastUserImageHeight",
+        480
+      ],
+      [
+        "lastUserImageType",
+        "image/png"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-widget-image"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "widget-file": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/bbb/Biglietti.pdf)"
+      ],
+      [
+        "lastUserText",
+        "[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/bbb/Biglietti.pdf)"
+      ],
+      [
+        "lastUserMessageType",
+        "file"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "file",
+          "id": "msg-widget-file",
+          "sender": "user1",
+          "text": "[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/bbb/Biglietti.pdf)",
+          "metadata": {
+            "name": "Biglietti.pdf",
+            "src": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/bbb/Biglietti.pdf",
+            "type": "application/pdf",
+            "uid": "u2",
+            "size": 10240
+          },
+          "channel": {
+            "name": "chat21"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "web"
+      ],
+      [
+        "lastUserDocumentURL",
+        "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/bbb/Biglietti.pdf"
+      ],
+      [
+        "lastUserDocumentName",
+        "Biglietti.pdf"
+      ],
+      [
+        "lastUserDocumentType",
+        "application/pdf"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-widget-file"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "whatsapp-image": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "Image attached"
+      ],
+      [
+        "lastUserText",
+        "Image attached"
+      ],
+      [
+        "lastUserMessageType",
+        "image"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "image",
+          "id": "msg-whatsapp-image",
+          "sender": "user1",
+          "text": "Image attached",
+          "metadata": {
+            "src": "https://api.tiledesk.com/v3/files/download?path=wa-img-123.jpeg"
+          },
+          "channel": {
+            "name": "whatsapp"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "whatsapp"
+      ],
+      [
+        "lastUserImageURL",
+        "https://api.tiledesk.com/v3/files/download?path=wa-img-123.jpeg"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-whatsapp-image"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "whatsapp-document": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "[Dowload document](https://api.tiledesk.com/v3/files/download?path=wa-doc-123.pdf)"
+      ],
+      [
+        "lastUserText",
+        "[Dowload document](https://api.tiledesk.com/v3/files/download?path=wa-doc-123.pdf)"
+      ],
+      [
+        "lastUserMessageType",
+        "file"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "file",
+          "id": "msg-whatsapp-document",
+          "sender": "user1",
+          "text": "[Dowload document](https://api.tiledesk.com/v3/files/download?path=wa-doc-123.pdf)",
+          "metadata": {
+            "name": "document.pdf",
+            "type": "application/pdf",
+            "src": "https://api.tiledesk.com/v3/files/download?path=wa-doc-123.pdf"
+          },
+          "channel": {
+            "name": "whatsapp"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "whatsapp"
+      ],
+      [
+        "lastUserDocumentURL",
+        "https://api.tiledesk.com/v3/files/download?path=wa-doc-123.pdf"
+      ],
+      [
+        "lastUserDocumentName",
+        "document.pdf"
+      ],
+      [
+        "lastUserDocumentType",
+        "application/pdf"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-whatsapp-document"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "whatsapp-video": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "lastUserDocumentURL",
+        "https://api.tiledesk.com/v3/files/download?path=wa-video-123.mp4"
+      ],
+      [
+        "lastUserDocumentName",
+        "video.mp4"
+      ],
+      [
+        "lastUserDocumentType",
+        "video/mp4"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-whatsapp-video"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "telegram-photo": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "lastUserImageURL",
+        "https://api.telegram.org/file/botTOKEN/photos/file_7.jpg"
+      ],
+      [
+        "lastUserImageWidth",
+        1280
+      ],
+      [
+        "lastUserImageHeight",
+        960
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-telegram-photo"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "telegram-document": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "lastUserDocumentURL",
+        "https://api.telegram.org/file/botTOKEN/documents/file_8.docx"
+      ],
+      [
+        "lastUserDocumentName",
+        "report.docx"
+      ],
+      [
+        "lastUserDocumentType",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-telegram-document"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "telegram-video": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-telegram-video"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "email-with-attachments": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf)"
+      ],
+      [
+        "lastUserText",
+        "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf)"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-email-with-attachments",
+          "sender": "user1",
+          "text": "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf)",
+          "attributes": {
+            "email_subject": "Oggetto test email",
+            "email_toEmail": "6b069712@6790c1a05ee3a700132d4fa0.email.stage.tiledesk.com",
+            "email_fromEmail": "sender@example.com",
+            "email_messageId": "<CAAoNFROU1jo@mail.gmail.com>",
+            "email_replyTo": "support-group-6790c1a05ee3a700132d4fa0-1795597726343@email.stage.tiledesk.com",
+            "attachments": [
+              {
+                "filename": "uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf",
+                "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf"
+              },
+              {
+                "filename": "uploads/users/6790b6c75ee3a700132d046f/files/f96/WhatsApp Image 2026-10-15 at 17.59.07.jpeg",
+                "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f96/WhatsApp%20Image%202026-10-15%20at%2017.59.07.jpeg"
+              }
+            ]
+          },
+          "channel": {
+            "name": "email"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "email"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-email-with-attachments"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "email_subject",
+        "Oggetto test email"
+      ],
+      [
+        "email_toEmail",
+        "6b069712@6790c1a05ee3a700132d4fa0.email.stage.tiledesk.com"
+      ],
+      [
+        "email_fromEmail",
+        "sender@example.com"
+      ],
+      [
+        "email_messageId",
+        "<CAAoNFROU1jo@mail.gmail.com>"
+      ],
+      [
+        "email_replyTo",
+        "support-group-6790c1a05ee3a700132d4fa0-1795597726343@email.stage.tiledesk.com"
+      ],
+      [
+        "attachments",
+        [
+          {
+            "filename": "uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf",
+            "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f69/Biglietti.pdf"
+          },
+          {
+            "filename": "uploads/users/6790b6c75ee3a700132d046f/files/f96/WhatsApp Image 2026-10-15 at 17.59.07.jpeg",
+            "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/f96/WhatsApp%20Image%202026-10-15%20at%2017.59.07.jpeg"
+          }
+        ]
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "email-without-attachments": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "solo testo"
+      ],
+      [
+        "lastUserText",
+        "solo testo"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-email-without-attachments",
+          "sender": "user1",
+          "text": "solo testo",
+          "attributes": {
+            "email_subject": "Senza allegati",
+            "email_fromEmail": "sender@example.com",
+            "email_messageId": "<id2@mail.gmail.com>"
+          },
+          "channel": {
+            "name": "email"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "email"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-email-without-attachments"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "email_subject",
+        "Senza allegati"
+      ],
+      [
+        "email_fromEmail",
+        "sender@example.com"
+      ],
+      [
+        "email_messageId",
+        "<id2@mail.gmail.com>"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "webhook-payload": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "/start"
+      ],
+      [
+        "lastUserText",
+        "/start"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-webhook-payload",
+          "sender": "user1",
+          "text": "/start",
+          "attributes": {
+            "payload": {
+              "source": "crm",
+              "order": 42,
+              "customer": {
+                "name": "Ann"
+              }
+            }
+          },
+          "channel": {
+            "name": "chat21"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "web"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-webhook-payload"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "start_type",
+        "webhook"
+      ],
+      [
+        "source",
+        "crm"
+      ],
+      [
+        "order",
+        42
+      ],
+      [
+        "customer",
+        {
+          "name": "Ann"
+        }
+      ],
+      [
+        "payload",
+        {
+          "source": "crm",
+          "order": 42,
+          "customer": {
+            "name": "Ann"
+          }
+        }
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "image-without-src": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-image-without-src"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  },
+  "file-without-metadata": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "x"
+      ],
+      [
+        "lastUserText",
+        "x"
+      ],
+      [
+        "lastUserMessageType",
+        "file"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "file",
+          "id": "msg-file-without-metadata",
+          "sender": "user1",
+          "text": "x",
+          "channel": {
+            "name": "chat21"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "web"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-file-without-metadata"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "email-attachments-not-array": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "x"
+      ],
+      [
+        "lastUserText",
+        "x"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-email-attachments-not-array",
+          "sender": "user1",
+          "text": "x",
+          "attributes": {
+            "attachments": "not-a-list"
+          },
+          "channel": {
+            "name": "email"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "email"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-email-attachments-not-array"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "attachments",
+        "not-a-list"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
+  "internal-sender": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-internal-sender"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": []
+  }
+}
