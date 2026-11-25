@@ -15,6 +15,7 @@ const AbortRegistry = require('./AbortRegistry');
 const Checkpointer = require('./Checkpointer');
 const MenuWait = require('./MenuWait');
 const StopNotice = require('./StopNotice');
+const { finishIfPending } = require('../utils/WebhookResult');
 
 const POLICY_TTL_MS = 60000;
 const OUTCOME_RANK = { success: 0, failure_condition: 1, error: 2, interrupted: 3 };
@@ -231,11 +232,33 @@ function actionRecord(ctx, index) {
   return ctx.step.actions.find((a) => a.index === index);
 }
 
+/** The refire replaces the old request's sync webhook result. Fire-and-forget: never throws, never awaited. */
+function markReplaced(ctx, retryOf) {
+  const client = ctx._store.client;
+  Promise.resolve()
+    .then(() => client.hGet('exec:' + retryOf, 'request_id'))
+    .then((oldRequest) => {
+      if (oldRequest && oldRequest !== ctx.request_id) {
+        return finishIfPending(client, oldRequest, 'replaced', { replaced_by: ctx.request_id });
+      }
+    })
+    .catch((err) => warn('webhook result', err));
+}
+
 function isAutomation(ctx) {
   return typeof ctx.request_id === 'string' && ctx.request_id.startsWith('automation-request-');
 }
 
 /** execution.stopped, once per chain. */
+/**
+ * The sync conversation webhook's slot goes to failed. A failure while a sub-agent runs counts too: the
+ * sub-agent shares the caller's execution and a failed execution is terminal, so the run really failed.
+ * Not awaited, never throws.
+ */
+function markSlotFailed(ctx) {
+  finishIfPending(ctx._store.client, ctx.request_id, 'failed').catch((err) => warn('webhook result', err));
+}
+
 async function emitStopped(ctx, mode, interruptedAction) {
   if (ctx._stoppedEmitted) return null;
   ctx._stoppedEmitted = true;
@@ -413,6 +436,7 @@ const ExecutionRecorder = {
           return data;
         });
         if (!isAutomation(ctx)) writeExecutionId(ctx, token);
+        if (data.retry_of && !isAutomation(ctx)) markReplaced(ctx, data.retry_of);
       }
       if (menu) await resolveMenu(ctx, menu, message);
       // hard stop: this chain's controller, released with the lease at every chain exit
@@ -834,6 +858,7 @@ const ExecutionRecorder = {
       const data = { error_code, message };
       if (ctx.step && ctx.step.seq !== null) data.step_seq = ctx.step.seq;
       const seq = await emit(ctx, 'execution.failed', () => data);
+      if (!isAutomation(ctx)) markSlotFailed(ctx);
       if (Number.isInteger(action_index)) Checkpointer.writeAt(ctx, ctx.step, { action_index, next_action: 'run', seq });
       Checkpointer.park(ctx);
       await ctx._store.setStatusHint(ctx.execution_id, 'failed');

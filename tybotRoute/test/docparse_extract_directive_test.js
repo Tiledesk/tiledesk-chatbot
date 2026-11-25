@@ -180,7 +180,7 @@ describe('Conversation for Docparse Extract test', async () => {
       endpointServer.post('/v1/jobs/extract', function (req, res) {
         assert.strictEqual(req.body.filename, '8.pdf');
         assert.strictEqual(req.body.url, 'https://example.com/8.pdf');
-        assert.strictEqual(req.body.mode, 'text');
+        assert.strictEqual(req.body.mode, 'full');
         assert.strictEqual(req.body.enable_vision_fallback, undefined);
         assert.strictEqual(req.body.ocr_quality_threshold, undefined);
         res.status(202).send({
@@ -209,6 +209,51 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(syncCalled, false, "async jobs are available: the sync endpoint must not be called");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["extracted_text"], "hello from pdf");
+  });
+
+  it('/extract_success - every page of a native pdf is charged as OCR', async () => {
+    const id = requestId();
+    let usageCheck = null;
+    let usageReport = null;
+    const message = await invoke(id, '/extract_success', (endpointServer) => {
+      endpointServer.post('/:project_id/usage/check', function (req, res) {
+        usageCheck = req.body;
+        res.status(200).send({ ok: true, metering: 'credits', required: 0.05 });
+      });
+
+      endpointServer.post('/:project_id/usage', function (req, res) {
+        usageReport = req.body;
+        res.status(200).send({ metering: 'credits', charged: 0.15 });
+      });
+
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        res.status(202).send({ job_id: "job-native", kind: "extract", status: "queued" });
+      });
+
+      endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        const page = (n) => ({ page_number: n, route: "native", text: "page " + n, engine: "pymupdf" });
+        res.status(200).send({
+          job_id: "job-native",
+          status: "succeeded",
+          error: null,
+          result: {
+            content_type: "application/json",
+            body: {
+              filename: "8.pdf",
+              text: "native text",
+              pages: [page(1), page(2), page(3)],
+              stats: { pages_digital: 3, pages_ocr: 0, pages_llm: 0 },
+              llm_usage: { input_tokens: 0, output_tokens: 0, total_tokens: 0, llm_calls: 0 }
+            },
+            llm_usage: { input_tokens: 0, output_tokens: 0, total_tokens: 0, llm_calls: 0 }
+          }
+        });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extracted: native text");
+    assert.deepStrictEqual(usageCheck, { resource: 'ocr', own_key: false, units: 1 });
+    assert.deepStrictEqual(usageReport, { resource: 'ocr', own_key: false, units: 3, ref: id, key: 'docparse:job-native' });
   });
 
   it('/extract_redis - a redis notification is followed by a GET for the result', async () => {
@@ -369,7 +414,19 @@ describe('Conversation for Docparse Extract test', async () => {
 
   it('/extract_fallback - provider and model are sent as vision fallback', async () => {
     const id = requestId();
+    let usageCheck = null;
+    let usageReport = null;
     const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+      endpointServer.post('/:project_id/usage/check', function (req, res) {
+        usageCheck = req.body;
+        res.status(200).send({ ok: true, metering: 'credits' });
+      });
+
+      endpointServer.post('/:project_id/usage', function (req, res) {
+        usageReport = req.body;
+        res.status(200).send({ metering: 'credits', charged: 1 });
+      });
+
       endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
         assert.strictEqual(req.params.name, 'openai');
         res.status(200).send({
@@ -410,13 +467,22 @@ describe('Conversation for Docparse Extract test', async () => {
       });
 
       endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+        const llm_usage = {
+          input_tokens: 2486,
+          output_tokens: 358,
+          total_tokens: 2844,
+          llm_calls: 1,
+          vision_llm_source: "request",
+          model: "gpt-4o"
+        };
         res.status(200).send({
           job_id: "job-fallback",
           status: "succeeded",
           error: null,
           result: {
-            content_type: "text/plain",
-            body: "vision text"
+            content_type: "application/json",
+            body: { filename: "8.pdf", text: "vision text", stats: { pages_ocr: 1, pages_llm: 1 }, llm_usage },
+            llm_usage
           }
         });
       });
@@ -425,6 +491,157 @@ describe('Conversation for Docparse Extract test', async () => {
     assert.strictEqual(replyText(message), "extracted: vision text");
     const attributes = await parameters(id);
     assert.strictEqual(attributes["extracted_text"], "vision text");
+    // with the key of the project only the OCR pages are charged
+    assert.deepStrictEqual(usageCheck, { resource: 'ocr', own_key: false, units: 1 });
+    assert.deepStrictEqual(usageReport, { resource: 'ocr', own_key: false, units: 1, ref: id, key: 'docparse:job-fallback' });
+  });
+
+  it('/extract_fallback - without a key of the project the Tiledesk model is used and its tokens charged', async () => {
+    const id = requestId();
+    const originalManagedKey = process.env.OPENROUTER_MANAGED_KEY;
+    process.env.OPENROUTER_MANAGED_KEY = 'sk-or-managed';
+    let usageCheck = null;
+    let usageReport = null;
+    let submitted = null;
+    try {
+      const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+        endpointServer.post('/:project_id/usage/check', function (req, res) {
+          usageCheck = req.body;
+          res.status(200).send({
+            ok: true, metering: 'credits',
+            managed: { provider: 'openrouter', name: 'openai/gpt-4o', url: 'https://openrouter.ai/api/v1' }
+          });
+        });
+
+        endpointServer.post('/:project_id/usage', function (req, res) {
+          usageReport = req.body;
+          res.status(200).send({ metering: 'credits', charged: 1 });
+        });
+
+        endpointServer.post('/v1/jobs/extract', function (req, res) {
+          submitted = req.body;
+          res.status(202).send({ job_id: "job-managed", kind: "extract", status: "queued" });
+        });
+
+        endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+          const llm_usage = { input_tokens: 2486, output_tokens: 358, total_tokens: 2844, llm_calls: 1, vision_llm_source: "request", model: "openai/gpt-4o" };
+          res.status(200).send({
+            job_id: "job-managed",
+            status: "succeeded",
+            error: null,
+            result: {
+              content_type: "application/json",
+              body: { filename: "8.pdf", text: "vision text", stats: { pages_ocr: 1, pages_llm: 1 }, llm_usage },
+              llm_usage
+            }
+          });
+        });
+      });
+
+      assert.strictEqual(replyText(message), "extracted: vision text");
+      assert.deepStrictEqual(usageCheck, { resource: 'ocr_llm', own_key: false, provider: 'openai', model: 'gpt-4o' });
+      assert.strictEqual(submitted.vision_llm.llm, 'openrouter');
+      assert.deepStrictEqual(submitted.vision_llm.model, {
+        provider: 'openrouter', name: 'openai/gpt-4o', url: 'https://openrouter.ai/api/v1', api_key: 'sk-or-managed'
+      });
+      // priced on the model chosen in the action, as the other AI actions
+      assert.deepStrictEqual(usageReport, {
+        resource: 'ocr_llm', own_key: false, provider: 'openai', model: 'gpt-4o',
+        input_tokens: 2486, output_tokens: 358, tokens: 2844, ref: id, key: 'docparse:job-managed'
+      });
+    } finally {
+      if (originalManagedKey === undefined) {
+        delete process.env.OPENROUTER_MANAGED_KEY;
+      } else {
+        process.env.OPENROUTER_MANAGED_KEY = originalManagedKey;
+      }
+    }
+  });
+
+  it('/extract_fallback - with the Tiledesk model the pages not read by the vision LLM are charged as OCR', async () => {
+    const id = requestId();
+    const originalManagedKey = process.env.OPENROUTER_MANAGED_KEY;
+    process.env.OPENROUTER_MANAGED_KEY = 'sk-or-managed';
+    const reports = [];
+    try {
+      const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+        endpointServer.post('/:project_id/usage/check', function (req, res) {
+          res.status(200).send({ ok: true, metering: 'credits', managed: { provider: 'openrouter', name: 'openai/gpt-4o' } });
+        });
+
+        endpointServer.post('/:project_id/usage', function (req, res) {
+          reports.push(req.body);
+          res.status(200).send({ metering: 'credits', charged: 1 });
+        });
+
+        endpointServer.post('/v1/jobs/extract', function (req, res) {
+          res.status(202).send({ job_id: "job-mixed", kind: "extract", status: "queued" });
+        });
+
+        endpointServer.get('/v1/jobs/:jobId', function (req, res) {
+          const llm_usage = { input_tokens: 2486, output_tokens: 358, total_tokens: 2844, llm_calls: 1, vision_llm_source: "request", model: "openai/gpt-4o" };
+          res.status(200).send({
+            job_id: "job-mixed",
+            status: "succeeded",
+            error: null,
+            result: {
+              content_type: "application/json",
+              body: {
+                filename: "8.pdf",
+                text: "mixed text",
+                pages: [
+                  { page_number: 1, route: "native", engine: "pymupdf", llm_usage: null },
+                  { page_number: 2, route: "scanned", engine: "tiledesk-llm-vision-ocr", llm_usage },
+                  { page_number: 3, route: "native", engine: "pymupdf", llm_usage: null }
+                ],
+                stats: { pages_digital: 2, pages_ocr: 1, pages_llm: 1 },
+                llm_usage
+              },
+              llm_usage
+            }
+          });
+        });
+      });
+
+      assert.strictEqual(replyText(message), "extracted: mixed text");
+      assert.deepStrictEqual(reports, [
+        {
+          resource: 'ocr_llm', own_key: false, provider: 'openai', model: 'gpt-4o',
+          input_tokens: 2486, output_tokens: 358, tokens: 2844, ref: id, key: 'docparse:job-mixed'
+        },
+        { resource: 'ocr', own_key: false, units: 2, ref: id, key: 'docparse:job-mixed' }
+      ]);
+    } finally {
+      if (originalManagedKey === undefined) {
+        delete process.env.OPENROUTER_MANAGED_KEY;
+      } else {
+        process.env.OPENROUTER_MANAGED_KEY = originalManagedKey;
+      }
+    }
+  });
+
+  it('/extract_fallback - a refused usage check takes the false exit without calling docparse', async () => {
+    const id = requestId();
+    let submitted = false;
+    const message = await invoke(id, '/extract_fallback', (endpointServer) => {
+      endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
+        res.status(200).send({ name: "openai", value: { apikey: "sk-test" } });
+      });
+
+      endpointServer.post('/:project_id/usage/check', function (req, res) {
+        res.status(403).send({ success: false, ok: false, metering: 'credits', error_code: 13010, error: "Insufficient credits" });
+      });
+
+      endpointServer.post('/v1/jobs/extract', function (req, res) {
+        submitted = true;
+        res.status(500).send({ error: "should_not_be_called" });
+      });
+    });
+
+    assert.strictEqual(replyText(message), "extract failed: DocparseExtract Error: Insufficient credits");
+    assert.strictEqual(submitted, false);
+    const attributes = await parameters(id);
+    assert.strictEqual(attributes["flowError"], "DocparseExtract Error: Insufficient credits");
   });
 
   it('/extract_confidence - an integer 1-100 becomes ocr_quality_threshold 0.01-1', async () => {
@@ -603,6 +820,7 @@ describe('Conversation for Docparse Extract test', async () => {
     const id = requestId();
     let syncBody = null;
     let asyncBody = null;
+    let usageReport = null;
     const message = await invoke(id, '/extract_fallback', (endpointServer) => {
       endpointServer.get('/:project_id/integration/name/:name', function (req, res) {
         res.status(200).send({
@@ -618,11 +836,23 @@ describe('Conversation for Docparse Extract test', async () => {
       });
       endpointServer.post('/v1/extract', function (req, res) {
         syncBody = req.body;
-        res.status(200).send({ filename: "8.pdf", text: "scanned text", pages: [], stats: {}, warnings: [] });
+        res.status(200).send({
+          filename: "8.pdf", text: "scanned text", pages: [], stats: {}, warnings: [],
+          llm_usage: { input_tokens: 1000, output_tokens: 200, total_tokens: 1200, llm_calls: 1, vision_llm_source: "default", model: "gpt-4o-mini" }
+        });
+      });
+      endpointServer.post('/:project_id/usage', function (req, res) {
+        usageReport = req.body;
+        res.status(200).send({ metering: 'quotes', counted: 1200 });
       });
     });
 
     assert.strictEqual(replyText(message), "extracted: scanned text");
+    // the docparse default model runs with the Tiledesk key, whatever the key of the request
+    assert.deepStrictEqual(usageReport, {
+      resource: 'ocr_llm', own_key: false, model: 'gpt-4o-mini',
+      input_tokens: 1000, output_tokens: 200, tokens: 1200, ref: id
+    });
     assert.ok(asyncBody && asyncBody.vision_llm, "the async submit still carries vision_llm");
     assert.strictEqual(syncBody.vision_llm, undefined);
     assert.ok(JSON.stringify(syncBody).indexOf("sk-test") === -1, "no api key in the sync body");

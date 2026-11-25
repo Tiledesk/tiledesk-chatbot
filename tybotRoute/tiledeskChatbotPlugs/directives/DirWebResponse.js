@@ -4,6 +4,8 @@ const { TiledeskChatbotUtil } = require('../../utils/TiledeskChatbotUtil');
 const winston = require('../../utils/winston');
 let axios = require('axios');
 const { Logger } = require('../../Logger');
+const { TiledeskChatbotConst } = require('../../engine/TiledeskChatbotConst');
+const { completeIfPending } = require('../../utils/WebhookResult');
 
 class DirWebResponse {
 
@@ -64,10 +66,20 @@ class DirWebResponse {
 
     this.logger.native("[Web Response] payload: ", webResponse);
 
-    const topic = `/webhooks/${this.requestId}`;
-    
+    // Sync conversation webhook: fill the result slot (no-op when there is none)
     try {
-      this.tdcache.publish(topic, JSON.stringify(webResponse));
+      await completeIfPending(this.tdcache.client, this.requestId, webResponse);
+    }
+    catch (e) {
+      winston.error("DirWebResponse Error writing webhook result slot: ", e);
+    }
+
+    const topic = `/webhooks/${this.requestId}`;
+    const readyKey = TiledeskChatbotConst.redisWebhookReadyKey(this.requestId);
+
+    try {
+      await this.tdcache.publish(topic, JSON.stringify(webResponse));
+      await this.tdcache.set(readyKey, '1', { EX: 120 });
       winston.verbose("DirWebResponse Published webresponse to topic: " + topic);
     }
     catch(e) {

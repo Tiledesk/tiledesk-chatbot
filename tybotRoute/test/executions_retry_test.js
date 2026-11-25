@@ -62,6 +62,7 @@ describe('Executions: retry_of and automation trigger id', function () {
         bots: bots_data,
         TILEBOT_ENDPOINT: endpoints.TILEBOT_ENDPOINT,
         API_ENDPOINT: endpoints.API_ENDPOINT,
+        API_URL: endpoints.API_ENDPOINT, // mandatory since 3.0.6 (startApp)
         REDIS_HOST: process.env.REDIS_HOST,
         REDIS_PORT: process.env.REDIS_PORT,
         REDIS_PASSWORD: process.env.REDIS_PASSWORD
@@ -101,7 +102,7 @@ describe('Executions: retry_of and automation trigger id', function () {
     ExecutionRecorder._resetForTests();
     const del = [];
     for (const id of new Set(log.filter((e) => e.event).map((e) => e.event.execution_id))) del.push(`exec:${id}`, `exec:${id}:seq`, `exec:${id}:state`, `exec:${id}:cp`);
-    for (const rid of new Set(requestIds)) del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`);
+    for (const rid of new Set(requestIds)) del.push(`exec:req:${rid}:${BOT_ID}`, `tilebot:${rid}`, `tilebot:botId_requests:${rid}`, `webhook:result:${rid}`);
     if (del.length) await client.del(del);
     await client.quit();
     await close(appListener);
@@ -172,5 +173,47 @@ describe('Executions: retry_of and automation trigger id', function () {
     // the payload that gets sealed no longer holds retry_of
     const plain = openSealed(ev.data.sealed_trigger_payload, getTestKeys().privateKeyPem);
     assert.deepStrictEqual(plain, { order: 7 });
+  });
+
+  describe('webhook result: replaced', function () {
+    const newRid = () => 'support-group-' + PROJECT_ID + '-' + uuidv4().replace(/-/g, '');
+    const slotOf = (rid) => client.hGetAll('webhook:result:' + rid);
+    function sendRun(rid, attributes) {
+      requestIds.push(rid);
+      tilebotService.sendMessageToBot({
+        payload: { _id: uuidv4(), type: 'text', sender: 'A-SENDER', recipient: rid, text: '/count', id_project: PROJECT_ID,
+          request: { request_id: rid, attributes } },
+        token: CHATBOT_TOKEN
+      }, BOT_ID, () => {});
+    }
+    async function firstRun() {
+      const old = newRid();
+      sendRun(old);
+      await waitFor(() => started().some((e) => e.request_id === old), 'first execution.started');
+      const oldExec = started().find((e) => e.request_id === old).execution_id;
+      await client.hSet('webhook:result:' + old, { state: 'pending' });
+      return { old, oldExec };
+    }
+
+    it('marks the old request replaced', async function () {
+      const { old, oldExec } = await firstRun();
+      const rid = newRid();
+      sendRun(rid, { retry_of: oldExec });
+      await waitFor(() => started().some((e) => e.request_id === rid), 'second execution.started');
+      for (let i = 0; i < 100 && (await slotOf(old)).state === 'pending'; i++) await new Promise((r) => setTimeout(r, 20));
+      const slot = await slotOf(old);
+      assert.strictEqual(slot.state, 'replaced');
+      assert.strictEqual(slot.replaced_by, rid);
+    });
+
+    it('skips replaced when the old execution is gone', async function () {
+      const { old, oldExec } = await firstRun();
+      await client.del('exec:' + oldExec);
+      const rid = newRid();
+      sendRun(rid, { retry_of: oldExec });
+      await waitFor(() => started().some((e) => e.request_id === rid), 'second execution.started');
+      await new Promise((r) => setTimeout(r, 300));
+      assert.strictEqual((await slotOf(old)).state, 'pending');
+    });
   });
 });

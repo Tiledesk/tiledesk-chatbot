@@ -14,6 +14,8 @@ function automationWebhookId(requestId) {
 /**
  * What started a conversation or a run: {type, source_id, start_point_id}.
  * agentId (the root id): source_id of a scheduled run that names no webhook or chatbot.
+ * email: a conversation opened by a bot's email address (start_type 'email', source_id = email_webhook_id)
+ * or an email sent to a department address (channel 'email', no source_id).
  * Pure, never throws on missing fields.
  */
 function detectTrigger(message, requestId, botId, agentId) {
@@ -30,6 +32,9 @@ function detectTrigger(message, requestId, botId, agentId) {
     return { type: attributes.start_type, source_id: attributes.webhook_id || attributes.chatbot_id || fallback, start_point_id };
   }
   const channel = request.channel && request.channel.name;
+  if (attributes.start_type === 'email' || channel === 'email') {
+    return { type: 'email', source_id: attributes.email_webhook_id || null, start_point_id };
+  }
   if (channel && channel !== 'chat21') {
     return { type: 'channel', source_id: channel, start_point_id };
   }

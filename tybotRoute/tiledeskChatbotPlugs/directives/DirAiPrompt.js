@@ -12,9 +12,11 @@ const mcpOAuthTokenService = require("../../services/McpOAuthTokenService");
 const aiController = require("../../services/AIController");
 const { Logger } = require("../../Logger");
 const assert = require("assert");
-const quotasService = require("../../services/QuotasService");
+const usageService = require("../../services/UsageService");
 const path = require("path");
 const mime = require("mime-types");
+const { TiledeskClient } = require('@tiledesk/tiledesk-client');
+const { LlmStream } = require("../../utils/LlmStream");
 const WriteTap = require('../../executions/WriteTap');
 
 const NATIVE_MCP_CACHE_KEY = 'native_mcp:servers';
@@ -124,6 +126,8 @@ class DirAiPrompt {
     
     let key;
     let publicKey = false;
+    // ollama, vllm, openrouter and agentplatform always use the project's own integration
+    let ownKey = true;
     let ollama_integration;
     let vllm_model;
     let openrouter_model;
@@ -230,8 +234,34 @@ class DirAiPrompt {
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-      
-      if (!key && action.llm === "openai") {
+      ownKey = !!key;
+    }
+
+    const usageCheck = await usageService.check(this.projectId, this.token, {
+      provider: action.llm,
+      model: filled_model,
+      own_key: ownKey
+    });
+    if (!usageCheck.ok) {
+      this.logger.warn("[AI Prompt] " + usageService.refusalMessage(usageCheck));
+      await this.chatbot.addParameter("flowError", "GPT Error: " + usageService.refusalMessage(usageCheck));
+      if (falseIntent) {
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback();
+        return;
+      }
+      callback();
+      return;
+    }
+
+    if (!ownKey) {
+      const managed = usageService.managedModel(usageCheck);
+      if (managed) {
+        this.logger.native("[AI Prompt] Using the Tiledesk key.")
+        openrouter_model = managed;
+        key = managed.api_key;
+        publicKey = true;
+      } else if (action.llm === "openai" && process.env.GPTKEY) {
         this.logger.native("[AI Prompt] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
@@ -244,33 +274,6 @@ class DirAiPrompt {
         if (falseIntent) {
           await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
           callback(true);
-          return;
-        }
-        callback();
-        return;
-      }
-    }
-
-    if (publicKey === true) {
-      try {
-        let keep_going = await quotasService.checkQuoteAvailability(this.projectId, this.token)
-        if (keep_going === false) {
-          this.logger.warn("[AI Prompt] OpenAI tokens quota exceeded");
-          await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-          if (falseIntent) {
-            await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-            callback();
-            return;
-          }
-          callback();
-          return;
-        }
-      } catch (err) {
-        this.logger.error("An error occured on checking token quota availability");
-        await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
-        if (falseIntent) {
-          await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
-          callback();
           return;
         }
         callback();
@@ -317,7 +320,9 @@ class DirAiPrompt {
       };
     }
 
-    if (action.llm === 'openrouter') {
+    if (openrouter_model) {
+      // also a credits project without its own key, served with the Tiledesk OpenRouter key
+      json.llm = 'openrouter';
       json.model = openrouter_model;
     }
 
@@ -388,7 +393,9 @@ class DirAiPrompt {
       };
 
       json.servers = this.arrayToObject(action.servers, mcp_integration, flowVariables, oauthTokens);
-      winston.debug("DirAiPrompt json.servers: ", DirAiPrompt.redactServers(json.servers));
+      json.tools = [];
+      // server definitions can carry credentials (headers, tokens): log the names only
+      winston.info("DirAiPrompt json.servers: " + (json.servers ? Object.keys(json.servers).join(",") : json.servers));
       if (!json.servers) {
         await this.chatbot.addParameter("flowError", "Can't process MCP Servers");
         if (falseIntent) {
@@ -430,7 +437,22 @@ class DirAiPrompt {
       json: json,
       method: 'POST'
     }
-    winston.debug("DirAiPrompt HttpRequest: ", { ...HTTPREQUEST, json: loggableJson });
+    winston.debug("DirAiPrompt HttpRequest: ", JSON.stringify({ ...HTTPREQUEST, json: loggableJson }));
+
+    // Voice turn: stream the answer to the caller while the LLM generates it (plain /ask only)
+    if (this.context.turnId && apiEndpoint === "/ask" && !json.servers) {
+      // Reasoning not enabled in the block: hybrid models (DeepSeek V4.x, Claude Haiku 5.5) think by default when
+      // nothing is sent, and the first spoken word comes later. For the OpenRouter models listed in
+      // VOICE_REASONING_OFF_MODELS (comma-separated id prefixes, e.g. "deepseek/,anthropic/claude-haiku") switch it
+      // off explicitly (tiledesk-llm maps it to OpenRouter's reasoning: { enabled: false }). Only listed models:
+      // models with mandatory reasoning (gpt-oss, Gemini 2.5 Pro, o4-mini...) reject it with HTTP 400.
+      if (json.llm === 'openrouter' && !json.thinking && DirAiPrompt.voiceReasoningOff(json.model && json.model.name)) {
+        json.thinking = { type: "disabled" };
+      }
+      await this.#goStreaming(action, json, AI_endpoint + apiEndpoint, headers, filled_model, ownKey,
+        trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback);
+      return;
+    }
     httpUtils.request(
       HTTPREQUEST, async (err, resbody) => {
         if (err) {
@@ -469,13 +491,15 @@ class DirAiPrompt {
             await this.chatbot.addParameter("reasoning_content", reasoning_content);
           }
 
-          if (publicKey === true) {
-            let tokens_usage = {
-              tokens: resbody.prompt_token_info?.total_tokens || 0,
-              model: json.model
-            }
-            quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          }
+          usageService.report(this.projectId, this.token, {
+            provider: action.llm,
+            model: filled_model,
+            own_key: ownKey,
+            tokens: resbody.prompt_token_info?.total_tokens || 0,
+            input_tokens: resbody.prompt_token_info?.input_tokens,
+            output_tokens: resbody.prompt_token_info?.output_tokens,
+            ref: this.requestId
+          });
         
           await this.#assignAttributes(action, answer, reasoning_content);
 
@@ -550,6 +574,89 @@ class DirAiPrompt {
     }
 
     return objectTranscript;
+  }
+
+  /**
+   * Streaming variant of the /ask call for voice turns. tiledesk-llm answers with SSE (chunk events, then a
+   * "completed" metadata event); deltas are grouped by SentenceChunker and posted to tiledesk-server /stream by
+   * StreamSender while the LLM is still generating. The flow then continues exactly as the non-streaming path
+   * (assign reply attribute, true/false intent); the text streamed is saved as "pending" so that the reply that
+   * speaks it (DirReply) carries attributes.stream_id and the channel does not speak it twice.
+   * If a newer caller message supersedes the turn, the LLM request is aborted, the part already streamed is posted
+   * as a message with attributes.interrupted and the flow stops.
+   */
+  async #goStreaming(action, json, url, headers, filled_model, ownKey, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
+    // hedged request against provider latency spikes (OpenRouter only, VOICE_HEDGE_AFTER_MS): see utils/LlmStream
+    const stream = new LlmStream(this, { label: "DirAiPrompt", hedgeAfterMs: LlmStream.hedgeAfterMs() });
+    this.logger.native("[AI Prompt] streaming answer " + stream.streamId);
+    const result = await stream.run(url, json, headers);
+
+    if (result.stopped === "superseded") {
+      this.logger.native("[AI Prompt] turn superseded, answer interrupted");
+      winston.verbose("DirAiPrompt stream " + stream.streamId + " superseded after " + result.chunks + " chunks");
+      await stream.sendInterrupted();
+      callback(true);
+      return;
+    }
+    if (result.stopped === "closed") {
+      winston.verbose("DirAiPrompt stream " + stream.streamId + ": request closed, flow stopped");
+      callback(true);
+      return;
+    }
+
+    if (result.error) {
+      const status = result.error.response && result.error.response.status;
+      const error = status ? "LLM stream error: HTTP " + status : (result.error.message || "General error executing action");
+      winston.error("DirAiPrompt error executing action: " + error);
+      this.logger.error("[AI Prompt] error executing action: ", error);
+      await this.#assignAttributes(action, "No answer");
+      if (falseIntent) {
+        await this.chatbot.addParameter("flowError", "AiPrompt Error: " + error);
+        await this.#executeCondition(false, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+        callback(true);
+        return;
+      }
+      callback();
+      return;
+    }
+
+    const completed = result.completed;
+    const answer = (completed && typeof completed.full_response === "string") ? completed.full_response : result.text;
+    this.logger.native("[AI Prompt] answer: ", answer);
+
+    const usage = completed && completed.model_used && completed.model_used.prompt_token_info;
+    usageService.report(this.projectId, this.token, {
+      provider: action.llm,
+      model: filled_model,
+      own_key: ownKey,
+      tokens: (usage && usage.total_tokens) || 0,
+      input_tokens: usage && usage.input_tokens,
+      output_tokens: usage && usage.output_tokens,
+      ref: this.requestId
+    });
+
+    await stream.savePending(answer);
+    await this.#assignAttributes(action, answer);
+    if (trueIntent) {
+      await this.#executeCondition(true, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes);
+      callback(true);
+      return;
+    }
+    callback();
+  }
+
+  /** True when the OpenRouter model id starts with one of the prefixes in VOICE_REASONING_OFF_MODELS (read per call). */
+  static voiceReasoningOff(modelName) {
+    if (!modelName) {
+      return false;
+    }
+    return (process.env.VOICE_REASONING_OFF_MODELS || "").split(",").map((p) => p.trim()).filter(Boolean)
+      .some((prefix) => String(modelName).startsWith(prefix));
+  }
+
+  /** Reads a text/event-stream body (kept for callers of the previous API: see utils/LlmStream). */
+  static readSSE(stream, onEvent) {
+    return LlmStream.readSSE(stream, onEvent);
   }
 
   async #executeCondition(result, trueIntent, trueIntentAttributes, falseIntent, falseIntentAttributes, callback) {
@@ -646,64 +753,6 @@ class DirAiPrompt {
       thinkingBudget: budget_tokens,
       thinkingLevel: level
     };
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        signal: this.context.signal, // hard stop (undefined when executions are off)
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiPrompt check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAiPrompt update quote HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiPrompt Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(httprequest) DirAiPrompt Increment token quote resbody: ", resbody);
-            resolve(true);
-          }
-        }
-      )
-    })
   }
 
   // Fields accepted by the LLM server schema. Everything else (id, native,

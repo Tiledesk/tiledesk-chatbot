@@ -1,44 +1,73 @@
 const httpUtils = require("../utils/HttpUtils");
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
 class AiService {
 
-    constructor(options){
-        this.APIURL = options.API_ENDPOINT
-        this.TOKEN = options.TOKEN
-        this.PROJECT_ID = options.PROJECT_ID
+    constructor(){}
+
+    async speechToText(url, id_project, token){
+      return new Promise((resolve, reject)=> {
+        const HTTPREQUEST = {
+            url: `${API_ENDPOINT}/${id_project}/llm/transcription`,
+            headers: {
+              'Content-Type' : 'application/json',
+              'Authorization': httpUtils.fixToken(token)
+            },
+            json: {
+              url: url
+            },
+            method: 'POST',
+            httpsOptions: this.httpsOptions
+        };
+        httpUtils.request(
+          HTTPREQUEST,
+          function(err, resbody) {
+              if (err) {
+                reject(err)
+              }
+              else {
+                resolve(resbody)
+              }
+          }
+        );
+      }); 
     }
 
-    async speechToText(url){
-        return new Promise((resolve, reject)=> {
-          const HTTPREQUEST = {
-              url: `${this.APIURL}/${this.PROJECT_ID}/llm/transcription`,
-              headers: {
-                'Content-Type' : 'application/json',
-                'Authorization': httpUtils.fixToken(this.TOKEN)
-              },
-              json: {
-                url: url
-              },
-              method: 'POST',
-              httpsOptions: this.httpsOptions
-          };
-          httpUtils.request(
-            HTTPREQUEST,
-            function(err, resbody) {
-                if (err) {
-                  reject(err)
-                }
-                else {
-                  resolve(resbody)
-                }
-            }
-          );
-        }); 
-      }
+    async textToSpeech(voiceSettings, id_project, token){
+      return new Promise((resolve, reject)=> {
+        const HTTPREQUEST = {
+          url: `${API_ENDPOINT}/${id_project}/llm/speech`,
+          headers: {
+            'Content-Type' : 'application/json',
+            'Authorization': httpUtils.fixToken(token)
+          },
+          json: {
+            text: voiceSettings.text,
+            provider: voiceSettings.provider,
+            model: voiceSettings.model,
+            voice: voiceSettings.voice,
+            language: voiceSettings.language,
+          },
+          method: 'POST',
+          httpsOptions: this.httpsOptions
+        };
+        httpUtils.request(
+          HTTPREQUEST,
+          function(err, resbody) {
+              if (err) {
+                reject(err)
+              }
+              else {
+                resolve(resbody)
+              }
+          }
+        );
+      })
+    }
 
 
 
 
 }
-
-module.exports= AiService
+const aiService = new AiService();  
+module.exports= aiService;

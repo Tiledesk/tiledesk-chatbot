@@ -12,6 +12,7 @@ const utils = require("../../utils/HttpUtils");
 const httpUtils = require("../../utils/HttpUtils");
 const integrationService = require("../../services/IntegrationService");
 const aiController = require("../../services/AIController");
+const usageService = require("../../services/UsageService");
 const { Logger } = require("../../Logger");
 const { randomUUID } = require("crypto");
 const WriteTap = require('../../executions/WriteTap');
@@ -126,6 +127,8 @@ class DirAiCondition {
     let answer = "";
     let key;
     let publicKey = false;
+    // ollama, vllm, openrouter and agentplatform always use the project's own integration
+    let ownKey = true;
     let ollama_integration;
     let vllm_model;
     let openrouter_model;
@@ -238,8 +241,35 @@ class DirAiCondition {
 
     } else {
       key = await integrationService.getKeyFromIntegrations(this.projectId, action.llm, this.token);
-  
-      if (!key && action.llm === "openai") {
+      ownKey = !!key;
+    }
+
+    const usageCheck = await usageService.check(this.projectId, this.token, {
+      provider: action.llm,
+      model: filled_model,
+      own_key: ownKey
+    });
+    if (!usageCheck.ok) {
+      this.logger.warn("[AI Condition] " + usageService.refusalMessage(usageCheck));
+      await this.chatbot.addParameter("flowError", "GPT Error: " + usageService.refusalMessage(usageCheck));
+      if (errorIntent) {
+        WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
+        await this.#executeIntent(errorIntent);
+        callback();
+        return;
+      }
+      callback();
+      return;
+    }
+
+    if (!ownKey) {
+      const managed = usageService.managedModel(usageCheck);
+      if (managed) {
+        this.logger.native("[AI Condition] Using the Tiledesk key.")
+        openrouter_model = managed;
+        key = managed.api_key;
+        publicKey = true;
+      } else if (action.llm === "openai" && process.env.GPTKEY) {
         this.logger.native("[AI Condition] Using shared OpenAI key.")
         key = process.env.GPTKEY;
         publicKey = true;
@@ -253,35 +283,6 @@ class DirAiCondition {
           WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
           await this.#executeIntent(errorIntent);
           callback(true);
-          return;
-        }
-        callback();
-        return;
-      }
-    }
-
-    if (publicKey === true) {
-      try {
-        let keep_going = await this.checkQuoteAvailability(this.projectId, this.token)
-        if (keep_going === false) {
-          this.logger.warn("[AI Condition] OpenAI tokens quota exceeded");
-          await this.chatbot.addParameter("flowError", "GPT Error: tokens quota exceeded");
-          if (errorIntent) {
-            WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
-            await this.#executeIntent(errorIntent);
-            callback();
-            return;
-          }
-          callback();
-          return;
-        }
-      } catch (err) {
-        this.logger.error("An error occured on checking token quota availability");
-        await this.chatbot.addParameter("flowError", "An error occured on checking token quota availability");
-        if (errorIntent) {
-          WriteTap.noteExit('errorIntent'); // execution tracing: the branch taken (no-op when off)
-          await this.#executeIntent(errorIntent);
-          callback();
           return;
         }
         callback();
@@ -328,7 +329,9 @@ class DirAiCondition {
       };
     }
 
-    if (action.llm === 'openrouter') {
+    if (openrouter_model) {
+      // also a credits project without its own key, served with the Tiledesk OpenRouter key
+      json.llm = 'openrouter';
       json.model = openrouter_model;
     }
 
@@ -380,13 +383,15 @@ class DirAiCondition {
           answer = resbody.answer;
           this.logger.native("[AI Condition] answer: ", answer);
 
-          // if (publicKey === true) {
-          //   let tokens_usage = {
-          //     tokens: resbody.usage.total_token,
-          //     model: json.model
-          //   }
-          //   quotasService.updateQuote(this.projectId, this.token, tokens_usage);
-          // }
+          usageService.report(this.projectId, this.token, {
+            provider: action.llm,
+            model: filled_model,
+            own_key: ownKey,
+            tokens: resbody.prompt_token_info?.total_tokens || 0,
+            input_tokens: resbody.prompt_token_info?.input_tokens,
+            output_tokens: resbody.prompt_token_info?.output_tokens,
+            ref: this.requestId
+          });
         
           await this.#assignAttributes(action, answer);
 
@@ -573,64 +578,6 @@ class DirAiCondition {
         callback();
       }
     }
-  }
-
-  async checkQuoteAvailability() {
-    return new Promise((resolve) => {
-
-      const HTTPREQUEST = {
-        signal: this.context.signal, // hard stop (undefined when executions are off)
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        method: "GET"
-      }
-      winston.debug("DirAiCondition check quote availability HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            resolve(true)
-          } else {
-            if (resbody.isAvailable === true) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          }
-        }
-      )
-    })
-  }
-
-  async updateQuote(tokens_usage) {
-    return new Promise((resolve, reject) => {
-
-      const HTTPREQUEST = {
-        url: this.API_ENDPOINT + "/" + this.context.projectId + "/quotes/incr/tokens",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'JWT ' + this.context.token
-        },
-        json: tokens_usage,
-        method: "POST"
-      }
-      winston.debug("DirAiCondition update quote HttpRequest", HTTPREQUEST);
-
-      httpUtils.request(
-        HTTPREQUEST, async (err, resbody) => {
-          if (err) {
-            winston.error("(httprequest) DirAiCondition Increment tokens quote err: ", err);
-            reject(false)
-          } else {
-            winston.debug("(httprequest) DirAiCondition Increment token quote resbody: ", resbody);
-            resolve(true);
-          }
-        }
-      )
-    })
   }
 
 }

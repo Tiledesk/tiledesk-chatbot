@@ -627,14 +627,15 @@ class TiledeskChatbotUtil {
         }
 
         const chatbot_name = chatbot.bot.name.trim();
-        if (message && message.text && message.text.trim() !== "" && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
+        const text = this.transcriptText(message);
+        if (message && text && message.sender !== "_tdinternal" && !this.isHiddenMessage(message)) {
             let transcript = await chatbot.getParameter("transcript");
             const _name_of = name_of(message, chatbot_name);
             if (transcript) {
-                transcript = transcript + "\n" + _name_of + message.text;
+                transcript = transcript + "\n" + _name_of + text;
             }
             else {
-                transcript = _name_of + " " + message.text;
+                transcript = _name_of + " " + text;
             }
             await chatbot.addParameter("transcript", transcript);
         }
@@ -651,6 +652,22 @@ class TiledeskChatbotUtil {
             }
             return "<" + fullName + ">";
         }
+    }
+
+    /**
+     * The text a message adds to the transcript: message.text or, when it is empty, the texts of its "message" commands.
+     * Voice replies (speech_form & co.) carry what is spoken in attributes.commands with text "": without this the bot's
+     * answers never reached the AI Prompt history, and a caller's "sì" to "Vuoi sapere di più?" lost its question.
+     */
+    static transcriptText(message) {
+        if (message && typeof message.text === "string" && message.text.trim() !== "") {
+            return message.text;
+        }
+        const commands = message && message.attributes && Array.isArray(message.attributes.commands) ? message.attributes.commands : [];
+        return commands
+            .filter((c) => c && c.type === "message" && c.message && typeof c.message.text === "string" && c.message.text.trim() !== "")
+            .map((c) => c.message.text.trim())
+            .join(" ");
     }
 
     static async clearConversationTranscript(chatbot, callback) {
