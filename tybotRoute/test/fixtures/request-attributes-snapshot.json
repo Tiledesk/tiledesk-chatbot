@@ -1188,6 +1188,210 @@
       "_userInput"
     ]
   },
+  "email-connector-payload": {
+    "added": [
+      [
+        "chat_url",
+        "https://base.test.local/dashboard/#/project/project1/wsrequest/support-group-p1-r1/messages"
+      ],
+      [
+        "project_id",
+        "project1"
+      ],
+      [
+        "conversation_id",
+        "support-group-p1-r1"
+      ],
+      [
+        "chatbot_name",
+        "Test bot"
+      ],
+      [
+        "chatbot_id",
+        "bot1"
+      ],
+      [
+        "chatbotToken",
+        "tok"
+      ],
+      [
+        "chatbot_jwt_token",
+        "JWT tok"
+      ],
+      [
+        "api_base_url",
+        "https://api.test.local"
+      ],
+      [
+        "last_user_text",
+        "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf)\n"
+      ],
+      [
+        "lastUserText",
+        "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf)\n"
+      ],
+      [
+        "lastUserMessageType",
+        "text"
+      ],
+      [
+        "lastUserMessage",
+        {
+          "type": "text",
+          "id": "msg-email-connector-payload",
+          "sender": "user1",
+          "text": "testo email\nAttachments:\n[Biglietti.pdf](https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf)\n",
+          "attributes": {
+            "email_toEmail": "6b069712c0419e0013c6f5a9@6790c1a05ee3a700132d4fa0.email.stage.tiledesk.com",
+            "email_toName": "",
+            "email_subject": "test v3 allegati",
+            "email_fromEmail": "sender@example.com",
+            "email_fromName": "Sender Name",
+            "email_messageId": "<CAAoNFRP2Wf1uJ93@mail.gmail.com>",
+            "email_references": "",
+            "email_replyTo": "support-group-6790c1a05ee3a700132d4fa0-1795602991909@email.stage.tiledesk.com",
+            "email_cc": "[]",
+            "email_eml": "[Original eml message](https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml)",
+            "link": [
+              "https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml"
+            ],
+            "payload": {
+              "attachments": [
+                {
+                  "filename": "uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf",
+                  "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf"
+                },
+                {
+                  "filename": "uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp Image 2026-10-15 at 17.59.06.jpeg",
+                  "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp%20Image%202026-10-15%20at%2017.59.06.jpeg"
+                }
+              ]
+            }
+          },
+          "channel": {
+            "name": "email"
+          }
+        }
+      ],
+      [
+        "chatChannel",
+        "email"
+      ],
+      [
+        "userEmail",
+        "lead@example.com"
+      ],
+      [
+        "userFullname",
+        "Lead Name"
+      ],
+      [
+        "userLeadId",
+        "lead1"
+      ],
+      [
+        "last_message_id",
+        "msg-email-connector-payload"
+      ],
+      [
+        "user_country",
+        "IT"
+      ],
+      [
+        "user_city",
+        "Rome"
+      ],
+      [
+        "user_source_page",
+        "https://example.com/page"
+      ],
+      [
+        "user_language",
+        "it"
+      ],
+      [
+        "user_agent",
+        "Mozilla/5.0"
+      ],
+      [
+        "strongAuthenticated",
+        false
+      ],
+      [
+        "department_id",
+        "dep1"
+      ],
+      [
+        "department_name",
+        "Default"
+      ],
+      [
+        "email_subject",
+        "test v3 allegati"
+      ],
+      [
+        "email_toEmail",
+        "6b069712c0419e0013c6f5a9@6790c1a05ee3a700132d4fa0.email.stage.tiledesk.com"
+      ],
+      [
+        "email_fromEmail",
+        "sender@example.com"
+      ],
+      [
+        "email_messageId",
+        "<CAAoNFRP2Wf1uJ93@mail.gmail.com>"
+      ],
+      [
+        "email_replyTo",
+        "support-group-6790c1a05ee3a700132d4fa0-1795602991909@email.stage.tiledesk.com"
+      ],
+      [
+        "email_eml",
+        "[Original eml message](https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml)"
+      ],
+      [
+        "link",
+        [
+          "https://stage.eks.tiledesk.com/api/files/download?path=uploads/eml/abc.eml"
+        ]
+      ],
+      [
+        "attachments",
+        [
+          {
+            "filename": "uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf",
+            "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf"
+          },
+          {
+            "filename": "uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp Image 2026-10-15 at 17.59.06.jpeg",
+            "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp%20Image%202026-10-15%20at%2017.59.06.jpeg"
+          }
+        ]
+      ],
+      [
+        "payload",
+        {
+          "attachments": [
+            {
+              "filename": "uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf",
+              "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/837/Biglietti.pdf"
+            },
+            {
+              "filename": "uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp Image 2026-10-15 at 17.59.06.jpeg",
+              "url": "https://stage.eks.tiledesk.com/api/files/download?path=uploads/users/6790b6c75ee3a700132d046f/files/197/WhatsApp%20Image%202026-10-15%20at%2017.59.06.jpeg"
+            }
+          ]
+        }
+      ],
+      [
+        "global_one",
+        "G1"
+      ]
+    ],
+    "deleted": [
+      "_userInput"
+    ]
+  },
   "email-without-attachments": {
     "added": [
       [

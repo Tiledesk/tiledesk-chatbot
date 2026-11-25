@@ -1,6 +1,7 @@
 # Tiledesk native chatbot
 
 # features-2611/last-user-attachments 25/11/2026
+- **fixed** (features-2611/last-user-attachments): `lastUserAttachments` also reads the email attachments from `attributes.payload.attachments`, where tiledesk-smtp-server 1.1.1 puts them: on the stage it stayed empty for emails
 - **added** (features-2611/last-user-attachments): new attribute `lastUserAttachments`, the files of the last user message in the same shape on every channel (widget, WhatsApp, Telegram, email): `[{ name, url, type, size? }]`. Written only when a message brings files; `attachments`, `lastUserImage*` and `lastUserDocument*` are unchanged. Shown in Design Studio from 3.4.0-rc9
 - **added** (features-2611/last-user-attachments): tests that pin the attributes written for 16 kinds of incoming message, so a later change to them shows up
 
