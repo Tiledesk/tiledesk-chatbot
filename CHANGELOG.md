@@ -4,24 +4,47 @@
 - **fixed** (features-2611/last-user-attachments): `lastUserAttachments` also reads the email attachments from `attributes.payload.attachments`, where tiledesk-smtp-server 1.1.1 puts them: on the stage it stayed empty for emails
 - **added** (features-2611/last-user-attachments): new attribute `lastUserAttachments`, the files of the last user message in the same shape on every channel (widget, WhatsApp, Telegram, email): `[{ name, url, type, size? }]`. Written only when a message brings files; `attachments`, `lastUserImage*` and `lastUserDocument*` are unchanged. Shown in Design Studio from 3.4.0-rc9
 - **added** (features-2611/last-user-attachments): tests that pin the attributes written for 16 kinds of incoming message, so a later change to them shows up
+# 3.3.0-rc7
+- **added** (features-2611/last-user-attachments): new attribute `lastUserAttachments`, the files of the last user message in the same shape on every channel (widget, WhatsApp, Telegram, email): `[{ name, url, type, size? }]`, written only when a message brings files. `attachments`, `lastUserImage*` and `lastUserDocument*` are unchanged; tests pin the attributes written for 16 kinds of message. Shown in Design Studio from 3.4.0-rc9
+
+# 3.3.0-rc6
+- **added** (features-2611/email-webhook): executions label the runs of email conversations with the trigger type `email`
 
 # 3.2.2
+- **released** in production: 3.2.2-rc1 (**No input** of Capture user reply)
+
+# 3.3.0-rc5
+- **added** (feature/sync-conversation-webhook): **Web Response** also fills the result slot of the sync conversation webhook (`webhook:result:<request_id>`): the first Web Response wins, later ones do not overwrite it
+- **added** (feature/sync-conversation-webhook): with executions on, a failed execution (a sub-agent's too) marks its result slot `failed`, and **Start new** marks the old one `replaced`; automation (`/block`) requests skip both
+
+# 3.3.0-rc4
+- **changed**: the usage of **Parse a document** counts apart the OCR pages of the Tiledesk model and the vision pages read by the LLM
+
+# 3.3.0-rc3
+- **changed**: **Parse a document** extracts in `full` mode by default (it was `text`); native PDFs are charged by page count
+
+# 3.3.0-rc2
+- **changed**: **Parse a document** checks and reports its token usage, vision fallback model included, and stops when the credits are not enough
+
+# 3.3.0-rc1
+- **changed**: token quotas are checked and reported through the usage service (`UsageService`, in place of `QuotasService`) in Add KB content, AI condition, AI Prompt, Ask GPT, Ask GPT v2 and GPT task
+
 # 3.2.2-rc1
 - **added**: **Capture user reply** has **No input**: no reply within the wait, the flow goes to its node (V3 agents too). Needs Design Studio 3.3.2
 - **fixed**: the connector logs its real version at start
 
 # 3.2.1
-- **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters (before, the condition always took the false exit). A variable set to null does not exist; conditions saved as `!isUndefined(x)` keep their meaning
-- **fixed**: the **length** operators count the items of a list held as JSON text: `["a","b"]` is 2, no longer 9
-- **added**: tests for reply filters, with every operator of the condition menu
+- **released** in production: 3.1.3-rc1 and 3.1.3-rc2 (**exists**, **does not exist** and **length** in conditions and reply filters)
 
 # 3.1.3-rc2
-- **fixed**: the **length** operators count the items of a list held as JSON text, as a list from a web request, a data table or a knowledge base reaches the flow: `["a","b"]` counted as nine characters instead of two items. Text that is not a list is still measured in characters. Brought from stage (main_pre), where it has been since 30/09
+- **fixed**: the **length** operators count the items of a list held as JSON text (from a web request, a data table or a knowledge base): `["a","b"]` is 2, no longer 9
 
 # 3.1.3-rc1
-- **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters. The design studio writes `exists(x)`, which the `when` evaluator did not know: the condition always took the false exit and logged a `flowError`, and the filter never hid its message. A variable set to null does not exist. Conditions saved in the older form, `!isUndefined(x)`, keep their meaning
-- **added**: tests for reply filters: every operator of the condition menu in the `when` form, ignore case, filters saved before `when`, and a broken filter that does not stop the other messages
+- **fixed**: **exists** and **does not exist** work in Condition, Condition with multiple exits and reply filters: the condition always took the false exit. A variable set to null does not exist
+- **added**: tests for reply filters: every operator of the condition menu in the `when` form, ignore case, filters saved before `when`, a broken filter that does not stop the others
 
+# 3.2.0
+- **added**: AI Prompt can call MCP servers connected with OAuth. The access is reused until it is about to expire
 
 # 3.1.2
 - **fixed**: a filter on a reply, such as "voice mode is on" or "voice mode is off", no longer stops the conversation
