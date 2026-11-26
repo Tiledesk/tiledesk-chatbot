@@ -51,40 +51,40 @@ describe('updateRequestAttributes - lastUserAttachments', function () {
 
   it('WhatsApp image without name and type: both taken from the url', async () => {
     assert.deepStrictEqual(await lastUserAttachments('whatsapp-image'), [
-      { name: 'wa-img-123.jpeg', url: byId['whatsapp-image'].metadata.src, type: 'image/jpeg' }
+      { name: 'wa-img-123.jpeg', url: byId['whatsapp-image'].metadata.src, type: 'image/jpeg', size: null }
     ]);
   });
 
   it('WhatsApp document and video', async () => {
     assert.deepStrictEqual((await lastUserAttachments('whatsapp-document'))[0].type, 'application/pdf');
     assert.deepStrictEqual(await lastUserAttachments('whatsapp-video'), [
-      { name: 'video.mp4', url: byId['whatsapp-video'].metadata.src, type: 'video/mp4' }
+      { name: 'video.mp4', url: byId['whatsapp-video'].metadata.src, type: 'video/mp4', size: null }
     ]);
   });
 
   it('Telegram photo, document and video', async () => {
     assert.deepStrictEqual(await lastUserAttachments('telegram-photo'), [
-      { name: 'file_7.jpg', url: byId['telegram-photo'].metadata.src, type: 'image/jpeg' }
+      { name: 'file_7.jpg', url: byId['telegram-photo'].metadata.src, type: 'image/jpeg', size: null }
     ]);
     assert.strictEqual((await lastUserAttachments('telegram-document'))[0].name, 'report.docx');
     assert.deepStrictEqual(await lastUserAttachments('telegram-video'), [
-      { name: 'clip.mp4', url: byId['telegram-video'].metadata.src, type: 'video/mp4' }
+      { name: 'clip.mp4', url: byId['telegram-video'].metadata.src, type: 'video/mp4', size: null }
     ]);
   });
 
   it('email: one entry per attachment, the name is the last part of filename', async () => {
     const atts = byId['email-with-attachments'].attributes.attachments;
     assert.deepStrictEqual(await lastUserAttachments('email-with-attachments'), [
-      { name: 'Biglietti.pdf', url: atts[0].url, type: 'application/pdf' },
-      { name: 'WhatsApp Image 2026-10-15 at 17.59.07.jpeg', url: atts[1].url, type: 'image/jpeg' }
+      { name: 'Biglietti.pdf', url: atts[0].url, type: 'application/pdf', size: null },
+      { name: 'WhatsApp Image 2026-10-15 at 17.59.07.jpeg', url: atts[1].url, type: 'image/jpeg', size: null }
     ]);
   });
 
   it('email from tiledesk-smtp-server: the attachments are read from the payload', async () => {
     const atts = byId['email-connector-payload'].attributes.payload.attachments;
     assert.deepStrictEqual(await lastUserAttachments('email-connector-payload'), [
-      { name: 'Biglietti.pdf', url: atts[0].url, type: 'application/pdf' },
-      { name: 'WhatsApp Image 2026-10-15 at 17.59.06.jpeg', url: atts[1].url, type: 'image/jpeg' }
+      { name: 'Biglietti.pdf', url: atts[0].url, type: 'application/pdf', size: null },
+      { name: 'WhatsApp Image 2026-10-15 at 17.59.06.jpeg', url: atts[1].url, type: 'image/jpeg', size: null }
     ]);
   });
 
@@ -99,6 +99,16 @@ describe('updateRequestAttributes - lastUserAttachments', function () {
       attachments: [{ filename: 'a.pdf', url: 'https://x/a.pdf' }],
       payload: { attachments: [{ filename: 'a.pdf', url: 'https://x/a.pdf' }, { filename: 'b.pdf', url: 'https://x/b.pdf' }] } } });
     assert.deepStrictEqual(out.map(f => f.name), ['a.pdf']);
+  });
+
+  it('size is always there: null when unknown, so {{file.size}} prints nothing in Liquid', async () => {
+    const { Liquid } = require('liquidjs');
+    const liquid = new Liquid();
+    const render = (f) => liquid.parseAndRender('[{{f.size}}]{% if f.size %}yes{% else %}no{% endif %}', { f });
+    const email = await lastUserAttachments('email-connector-payload');
+    email.forEach(f => assert.ok(Object.prototype.hasOwnProperty.call(f, 'size') && f.size === null));
+    assert.strictEqual(await render(email[0]), '[]no');
+    assert.strictEqual(await render((await lastUserAttachments('widget-file'))[0]), '[10240]yes');
   });
 
   ['widget-text', 'email-without-attachments', 'webhook-payload', 'image-without-src',
@@ -132,7 +142,7 @@ describe('buildLastUserAttachments - unexpected data never throws', function () 
 
   it('keeps the good entries of a list with broken ones', () => {
     const out = TiledeskChatbotUtil.buildLastUserAttachments({ attributes: { attachments: [null, { url: 'https://x/files/download?path=a%20b.pdf' }] } });
-    assert.deepStrictEqual(out, [{ name: 'a b.pdf', url: 'https://x/files/download?path=a%20b.pdf', type: 'application/pdf' }]);
+    assert.deepStrictEqual(out, [{ name: 'a b.pdf', url: 'https://x/files/download?path=a%20b.pdf', type: 'application/pdf', size: null }]);
   });
 
   it('odd names and urls: a name and a type are always there', () => {
@@ -141,7 +151,7 @@ describe('buildLastUserAttachments - unexpected data never throws', function () 
     assert.strictEqual(typeof out[0].name, 'string');
     assert.strictEqual(out[0].type, 'image/*');
     const sized = TiledeskChatbotUtil.buildLastUserAttachments({ type: 'file', metadata: { src: 'https://x/y.bin', size: 'big' } });
-    assert.strictEqual(sized[0].size, undefined);
+    assert.strictEqual(sized[0].size, null);
     assert.strictEqual(sized[0].type, 'application/octet-stream');
   });
 });

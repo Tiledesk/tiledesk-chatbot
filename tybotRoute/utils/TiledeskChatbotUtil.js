@@ -743,7 +743,7 @@ class TiledeskChatbotUtil {
 
     /**
      * The files of a user message, in the same shape on every channel:
-     * [{ name, url, type, size? }]. Widget, WhatsApp and Telegram bring one file in
+     * [{ name, url, type, size }] (size null when unknown). Widget, WhatsApp and Telegram bring one file in
      * message.metadata (type image, file or video); the email channel brings a list
      * ({ filename, url }, filename being the storage path) in message.attributes.attachments
      * or, from tiledesk-smtp-server, in message.attributes.payload.attachments.
@@ -788,11 +788,10 @@ class TiledeskChatbotUtil {
         if (!mimeType) {
             mimeType = messageType === 'image' ? 'image/*' : messageType === 'video' ? 'video/*' : 'application/octet-stream';
         }
-        const entry = { name: fileName, url: url, type: mimeType };
-        if (typeof size === 'number' && Number.isFinite(size)) {
-            entry.size = size;
-        }
-        return entry;
+        // size is always there, null when the channel does not send it: in Liquid
+        // {{file.size}} on an object without "size" prints its number of keys
+        const fileSize = (typeof size === 'number' && Number.isFinite(size)) ? size : null;
+        return { name: fileName, url: url, type: mimeType, size: fileSize };
     }
 
     static fileNameFromUrl(url) {
