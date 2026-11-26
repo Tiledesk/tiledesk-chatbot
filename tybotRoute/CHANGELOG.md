@@ -5,28 +5,15 @@
 available on:
  ▶️ https://www.npmjs.com/package/@tiledesk/tiledesk-tybot-connector
 
+# 3.2.4
+- added: new attribute `lastUserAttachments`, the files of the last user message in the same shape on every channel: `[{ name, url, type, size }]`, `size` null when unknown. Written only when a message brings files; the other attachment attributes are unchanged
+
 # 3.2.3
-# feature/sync-conversation-webhook 24/11/2026
-- added: **Web Response** also fills the server's result slot `webhook:result:<request_id>` of the sync conversation webhook: the first Web Response wins (compare-and-set from `pending`), later ones do not overwrite it. The publish to `/webhooks/<request_id>` is unchanged; when there is no slot nothing is written
-- added: with executions on, a failed execution marks its result slot `failed` and a **Start new** marks the old request's slot `replaced` with `replaced_by`. Automation (`/block`) requests skip both writes. A stop writes nothing: it is a resumable pause
+- added: **Web Response** also fills the result slot of the sync conversation webhook (`webhook:result:<request_id>`): the first one wins
+- added: with executions on, a failed execution marks its result slot `failed`, **Start new** marks the old one `replaced`
 
-# features-2611/rating-actions 12/11/2026
-- fixed: in V3 agents **Set rating** takes its **Success** and **else** exits. `set_rating` was missing from the V3 connectors catalogue (`OUTPUT_CATALOG`), so `trueIntent`/`falseIntent` were never filled from the `connectors` list: the rating was saved but the flow stopped after the action. Found by the regression tests of the "Test Connettori" agent on stage. **Get rating** has no exits of its own and is unchanged
-- added: tests for the `set_rating` exits in V3 (`test/connectorsV3_rating_test.js`)
-
-# features-2611/rating-actions 11/11/2026
-- added: **Set rating** `saveTo`: `rating` (the default, also when missing: rating and comment of the conversation, as before) or `attributes`, which saves the value and the message as the AI evaluation `ai_rating` / `ai_sentiment` in the conversation attributes. The other attributes are kept, the conversation rating is not touched and no satisfaction analytics event is sent, so the rating the user gives after the close webhook and the AI evaluation never overwrite each other. With force update off an `ai_rating` already saved is kept
-- added: **Get rating** `readFrom`: `rating` (the default, as before) or `attributes`, which reads `ai_rating` / `ai_sentiment` into the two variables
-- added: tests for saving to and reading from the attributes
-- added: **Set rating** and **Get rating** take an optional **Request ID** (`requestId`), the conversation to rate or read; it can hold variables and empty means the current conversation. A webhook run has no conversation of its own, so there it must be given (for a webhook called when a conversation is closed: `{{payload.payload.request_id}}`)
-- added: with no conversation to work on (a webhook run without Request ID, a Request ID that fills to empty, or the id of a webhook run) the server is not called: **Set rating** goes to the **else** exit with the reason in the error variable and in `flowError`, **Get rating** sets `flowError`. It never falls back to the current conversation, so the wrong one is never rated
-- added: tests for the Request ID
-
-# features-2611/rating-actions 10/11/2026
-- added: **Set rating** action (`set_rating`). It sets the rating of the conversation, from 1 to 5. The value can come from a variable. Any other value is not saved. An optional rating message, which can also hold variables, is saved as the comment of the rating; an empty one is not sent. With **Force update** off (the default) a rating already given is kept; with it on, the rating is always overwritten
-- added: **Set rating** has two exits, as Web Request: **Success** when the rating is saved or kept because already given, **else** when the value is not valid or the request fails. On failure the reason goes to the chosen error variable and to `flowError`; on success an error left by an earlier run is removed. With no exit connected the flow goes on to the next action
-- added: **Get rating** action (`get_rating`). It reads the rating of the conversation and its comment and saves them in two variables chosen in the action. A value the conversation does not have removes its variable, so no older value is left behind. A failed read sets `flowError`
-- added: tests for the two actions
+# 3.0.7
+- added: **Set rating** (`set_rating`) and **Get rating** (`get_rating`) actions: save or read the conversation rating (1-5) and its comment, or with `saveTo`/`readFrom: "attributes"` the AI evaluation `ai_rating` / `ai_sentiment`. Optional **Request ID**, required in webhook runs. Set rating has **Success** and **else** exits, V3 agents included
 
 # 3.0.0
 - V3 agents (`ds_version`) are routed from the bot `connectors` list: before a block runs, every exit is resolved from the list, and reply buttons are filled (`#id` plus the record params) before the reply is sent. The list adds and replaces destinations and never removes them; an exit or a button with no record keeps what the block JSON carries. The engine loads `connectors` explicitly, because the server does not return it by default. Agents without the V3 label are unchanged
