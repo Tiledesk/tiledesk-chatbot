@@ -1,5 +1,8 @@
 # Tiledesk native chatbot
 
+# 2.1.12-im1
+- Fixed flow attributes `lastUserDocumentAsAttachmentURL` and `lastUserDocumentAsInlineURL` (v0.2.60) never being set: their constants were missing from `TiledeskChatbotConst`
+
 # 2.1.12
 - Improved api key management from integration
 
